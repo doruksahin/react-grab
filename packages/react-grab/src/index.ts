@@ -7,6 +7,12 @@ export {
 } from "./core/index.js";
 export { commentPlugin } from "./core/plugins/comment.js";
 export { openPlugin } from "./core/plugins/open.js";
+export {
+  createDeepContextPlugin,
+  createImpairDeepContextPlugin,
+  impairExtractor,
+} from "./core/plugins/deep-context.js";
+export type { DeepContextConfig } from "./core/plugins/deep-context.js";
 export { generateSnippet } from "./utils/generate-snippet.js";
 export type {
   Options,
