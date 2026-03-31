@@ -245,6 +245,23 @@ export const groupComments = (
 
 export const isDefaultGroup = (groupId: string): boolean =>
   groupId === DEFAULT_GROUP_ID;
+
+/**
+ * Fuzzy match: checks if all characters in `query` appear in `text` in order.
+ * Case-insensitive. Empty query matches everything.
+ */
+export const fuzzyMatchGroup = (text: string, query: string): boolean => {
+  if (!query) return true;
+  const lowerText = text.toLowerCase();
+  const lowerQuery = query.toLowerCase();
+  let textIdx = 0;
+  for (let i = 0; i < lowerQuery.length; i++) {
+    const found = lowerText.indexOf(lowerQuery[i], textIdx);
+    if (found === -1) return false;
+    textIdx = found + 1;
+  }
+  return true;
+};
 ```
 
 **Step 2: Verify typecheck**
@@ -256,7 +273,7 @@ Expected: PASS
 
 ```bash
 git add packages/react-grab/src/groups/business/
-git commit -m "feat(groups): add business logic for grouping, counting, cascade delete"
+git commit -m "feat(groups): add business logic for grouping, counting, cascade delete, fuzzy search"
 ```
 
 ---
@@ -696,24 +713,50 @@ onDeleteGroup: (groupId: string) => void;
 onActiveGroupChange: (groupId: string) => void;
 ```
 
-**Step 2: Add imports and state for delete confirmation**
+**Step 2: Add imports and state for delete confirmation + search**
 
 ```typescript
 import { GroupCollapsible } from "../groups/components/group-collapsible.js";
-import { groupComments, countByGroup } from "../groups/business/group-operations.js";
+import { groupComments, countByGroup, fuzzyMatchGroup } from "../groups/business/group-operations.js";
 
 // Inside the component:
 const [pendingDeleteGroupId, setPendingDeleteGroupId] = createSignal<string | null>(null);
+const [searchQuery, setSearchQuery] = createSignal("");
 
 const groupedItems = createMemo(() =>
   groupComments(props.groups, props.items),
 );
 
+const filteredGroupedItems = createMemo(() => {
+  const query = searchQuery();
+  if (!query) return groupedItems();
+  return groupedItems().filter((entry) => fuzzyMatchGroup(entry.group.name, query));
+});
+
 const pendingDeleteGroup = () =>
   props.groups.find((g) => g.id === pendingDeleteGroupId());
 ```
 
-**Step 3: Replace the flat list body with grouped view**
+**Step 3: Add search bar between header and grouped list**
+
+After the header `<div>` and before the grouped list `<div>`, add:
+
+```tsx
+<div class="border-t border-[#D9D9D9] px-2 py-1">
+  <div class="flex items-center gap-1.5">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/25 shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input
+      data-react-grab-ignore-events
+      type="text"
+      placeholder="Search groups..."
+      class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/25 text-black py-0.5"
+      onInput={(e) => setSearchQuery(e.currentTarget.value)}
+    />
+  </div>
+</div>
+```
+
+**Step 4: Replace the flat list body with grouped view**
 
 Replace the `<For each={props.items}>` block (lines ~279-334) with:
 
@@ -765,24 +808,33 @@ Replace the `<For each={props.items}>` block (lines ~279-334) with:
     </Show>
   }
 >
-  <For each={groupedItems()}>
-    {(entry, index) => (
-      <GroupCollapsible
-        group={entry.group}
-        items={entry.items}
-        isFirst={index() === 0}
-        onRename={props.onRenameGroup}
-        onDelete={(groupId) => setPendingDeleteGroupId(groupId)}
-        renderItem={(item) => (
+  <Show
+    when={filteredGroupedItems().length > 0}
+    fallback={
+      <div class="px-2 py-3 text-[11px] text-black/30 text-center italic">
+        No matching groups
+      </div>
+    }
+  >
+    <For each={filteredGroupedItems()}>
+      {(entry, index) => (
+        <GroupCollapsible
+          group={entry.group}
+          items={entry.items}
+          isFirst={index() === 0}
+          onRename={props.onRenameGroup}
+          onDelete={(groupId) => setPendingDeleteGroupId(groupId)}
+          renderItem={(item) => (
           {/* Move existing per-item render JSX here — keep all event handlers intact */}
         )}
       />
     )}
   </For>
+  </Show>
 </Show>
 ```
 
-**Step 4: Add "New group..." input at the bottom of the dropdown**
+**Step 5: Add "New group..." input at the bottom of the dropdown**
 
 After the scrollable grouped list area, before the closing `</div>` of the panel, add:
 
@@ -806,20 +858,20 @@ After the scrollable grouped list area, before the closing `</div>` of the panel
 </div>
 ```
 
-**Step 5: Move the existing per-item render JSX**
+**Step 6: Move the existing per-item render JSX**
 
 Extract the existing item render (lines 281-333 of the original file) into the `renderItem` callback. Keep all existing event handlers, hover tracking, and highlight behavior intact.
 
-**Step 6: Verify typecheck**
+**Step 7: Verify typecheck**
 
 Run: `cd packages/react-grab && pnpm typecheck`
 Expected: May have errors where `CommentsDropdown` is used (needs new props). Fixed in Task 9.
 
-**Step 7: Commit**
+**Step 8: Commit**
 
 ```bash
 git add packages/react-grab/src/components/comments-dropdown.tsx
-git commit -m "feat(groups): replace flat comments list with grouped collapsibles and inline CRUD"
+git commit -m "feat(groups): replace flat comments list with grouped collapsibles, fuzzy search, and inline CRUD"
 ```
 
 ---
@@ -877,6 +929,7 @@ cd /Users/doruk/Desktop/ADCREATIVE/AdCreative-Frontend-V2 && pnpm dev
 
 Verify:
 - Comments dropdown shows grouped view with collapsible sections
+- Search bar filters groups by fuzzy match, shows "No matching groups" when empty
 - Default group exists and is used for new selections
 - Hover non-default group headers to see rename + delete actions
 - Rename works inline (click pencil, type, Enter)
@@ -897,11 +950,11 @@ Verify:
 | `src/groups/types.ts` | Create | `SelectionGroup`, `DEFAULT_GROUP_ID`, `createDefaultGroup` |
 | `src/groups/store/group-storage.ts` | Create | sessionStorage CRUD for groups |
 | `src/groups/store/index.ts` | Create | Re-export |
-| `src/groups/business/group-operations.ts` | Create | `groupComments`, `countByGroup`, `removeCommentsByGroup` |
+| `src/groups/business/group-operations.ts` | Create | `groupComments`, `countByGroup`, `removeCommentsByGroup`, `fuzzyMatchGroup` |
 | `src/groups/components/group-collapsible.tsx` | Create | Collapsible group section with inline rename/delete |
 | `src/groups/components/group-picker.tsx` | Create | Group selection dropdown |
 | `src/types.ts` | Modify | Add `groupId` to `CommentItem`, group props to `ReactGrabRendererProps` |
 | `src/utils/comment-storage.ts` | Modify | Default `groupId` on load |
-| `src/components/comments-dropdown.tsx` | Modify | Grouped collapsibles + inline delete confirm + "New group..." input |
+| `src/components/comments-dropdown.tsx` | Modify | Grouped collapsibles + fuzzy search + inline delete confirm + "New group..." input |
 | `src/components/renderer.tsx` | Modify | Pass group props to CommentsDropdown |
 | `src/core/index.tsx` | Modify | Groups signal, handlers, wire to renderer |

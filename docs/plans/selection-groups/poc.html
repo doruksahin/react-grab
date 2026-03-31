@@ -41,15 +41,32 @@
           </div>
         </div>
 
+        <!-- Search -->
+        <div class="border-t border-[#D9D9D9] px-2 py-1">
+          <div class="flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/25 shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input
+              id="group-search"
+              type="text"
+              placeholder="Search groups..."
+              class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/25 text-black py-0.5"
+              oninput="filterGroups(this.value)"
+            />
+          </div>
+        </div>
+
         <!-- Grouped list -->
-        <div class="border-t border-[#D9D9D9] max-h-[340px] overflow-y-auto scrollbar-thin">
+        <div class="border-t border-[#D9D9D9] max-h-[340px] overflow-y-auto scrollbar-thin" id="groups-list">
+
+          <!-- No search results -->
+          <div id="no-search-results" class="px-2 py-3 text-[11px] text-black/30 text-center italic" style="display: none;">No matching groups</div>
 
           <!-- Group: Default (built-in, no rename/delete) -->
           <div data-group="default">
             <div class="group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer" onclick="toggleGroup(this)">
               <div class="flex items-center gap-1.5">
                 <svg class="text-black/30 transition-transform duration-150 group-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                <span class="text-[12px] font-semibold text-black/70">Default</span>
+                <span class="text-[12px] font-semibold text-black/70 group-name">Default</span>
               </div>
               <span class="text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">3</span>
             </div>
@@ -248,6 +265,33 @@
         if (e.key === 'Enter' || e.key === 'Escape') finish();
       });
       input.addEventListener('blur', finish);
+    }
+
+    function filterGroups(query) {
+      const groups = document.querySelectorAll('[data-group]');
+      const noResults = document.getElementById('no-search-results');
+      const q = query.toLowerCase().trim();
+      let visibleCount = 0;
+
+      groups.forEach(group => {
+        const name = group.querySelector('.group-name')?.textContent?.toLowerCase() || '';
+        // Simple fuzzy: check if all chars appear in order
+        let matches = true;
+        if (q) {
+          let nameIdx = 0;
+          for (let i = 0; i < q.length; i++) {
+            const found = name.indexOf(q[i], nameIdx);
+            if (found === -1) { matches = false; break; }
+            nameIdx = found + 1;
+          }
+        }
+        group.style.display = matches ? '' : 'none';
+        if (matches) visibleCount++;
+      });
+
+      if (noResults) {
+        noResults.style.display = (q && visibleCount === 0) ? '' : 'none';
+      }
     }
 
     function showDeleteConfirm(name, count) {

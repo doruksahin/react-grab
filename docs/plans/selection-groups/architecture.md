@@ -63,6 +63,7 @@ group-storage.ts    core/index.tsx         comments-dropdown.tsx
 5. **Cascade delete** — Deleting a group deletes all its comments. No orphans. No "move to default" fallback. Explicit destructive action with confirmation.
 
 6. **Merged UI — no separate group manager panel.** Group CRUD lives directly in the comments dropdown:
+   - Search bar between header and grouped list — fuzzy match on group names
    - Group headers show rename (pencil) + delete (trash) on hover for non-default groups
    - Default group header shows count only (built-in, no actions)
    - Bottom of dropdown has a persistent "New group..." input
