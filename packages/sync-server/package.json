@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
-    "export-spec": "tsx src/export-spec.ts"
+    "dev": "wrangler dev",
+    "dev:node": "tsx watch src/index.ts",
+    "start": "wrangler dev",
+    "export-spec": "tsx src/export-spec.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply react-grab-sync --local"
   },
   "dependencies": {
     "@hono/node-server": "^1.0.0",
