@@ -57,110 +57,8 @@
 
         <!-- Grouped list -->
         <div class="border-t border-[#D9D9D9] max-h-[340px] overflow-y-auto scrollbar-thin" id="groups-list">
-
-          <!-- No search results -->
           <div id="no-search-results" class="px-2 py-3 text-[11px] text-black/30 text-center italic" style="display: none;">No matching groups</div>
-
-          <!-- Group: Default (built-in, no rename/delete) -->
-          <div data-group="default">
-            <div class="group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer" onclick="toggleGroup(this)">
-              <div class="flex items-center gap-1.5">
-                <svg class="text-black/30 transition-transform duration-150 group-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                <span class="text-[12px] font-semibold text-black/70 group-name">Default</span>
-              </div>
-              <span class="text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">3</span>
-            </div>
-            <div class="group-content" style="display: grid; grid-template-rows: 1fr; transition: grid-template-rows 150ms ease-out;">
-              <div style="min-height: 0; overflow: hidden;">
-                <div class="flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2">
-                  <span class="flex flex-col min-w-0 flex-1">
-                    <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;div&gt; · ProductCard</span>
-                    <span class="text-[11px] leading-3 text-black/40 truncate mt-0.5">Check pricing layout</span>
-                  </span>
-                  <span class="shrink-0 text-[10px] text-black/25">2m</span>
-                </div>
-                <div class="flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2">
-                  <span class="flex flex-col min-w-0 flex-1">
-                    <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;button&gt; · SubmitBtn</span>
-                  </span>
-                  <span class="shrink-0 text-[10px] text-black/25">5m</span>
-                </div>
-                <div class="flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2">
-                  <span class="flex flex-col min-w-0 flex-1">
-                    <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;nav&gt; · Sidebar</span>
-                    <span class="text-[11px] leading-3 text-black/40 truncate mt-0.5">Nav alignment off</span>
-                  </span>
-                  <span class="shrink-0 text-[10px] text-black/25">8m</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Group: Header Redesign (hover to see rename/delete) -->
-          <div data-group="header-redesign">
-            <div class="group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer border-t border-[#D9D9D9]/50" onclick="toggleGroup(this)">
-              <div class="flex items-center gap-1.5">
-                <svg class="text-black/30 transition-transform duration-150 group-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                <span class="text-[12px] font-semibold text-black/70 group-name">Header Redesign</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <!-- Hover actions (rename + delete) -->
-                <div class="flex items-center gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
-                  <button onclick="event.stopPropagation(); startRename(this)" class="text-black/30 hover:text-black/60 cursor-pointer p-0.5" title="Rename">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
-                  </button>
-                  <button onclick="event.stopPropagation(); showDeleteConfirm('Header Redesign', 2)" class="text-[#B91C1C]/50 hover:text-[#B91C1C] cursor-pointer p-0.5" title="Delete group + selections">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                  </button>
-                </div>
-                <span class="text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">2</span>
-              </div>
-            </div>
-            <div class="group-content" style="display: grid; grid-template-rows: 1fr; transition: grid-template-rows 150ms ease-out;">
-              <div style="min-height: 0; overflow: hidden;">
-                <div class="flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2">
-                  <span class="flex flex-col min-w-0 flex-1">
-                    <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;header&gt; · AppHeader</span>
-                    <span class="text-[11px] leading-3 text-black/40 truncate mt-0.5">Logo spacing</span>
-                  </span>
-                  <span class="shrink-0 text-[10px] text-black/25">1m</span>
-                </div>
-                <div class="flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2">
-                  <span class="flex flex-col min-w-0 flex-1">
-                    <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;ul&gt; · NavLinks</span>
-                  </span>
-                  <span class="shrink-0 text-[10px] text-black/25">3m</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Group: Footer Audit (empty, collapsed) -->
-          <div data-group="footer-audit">
-            <div class="group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer border-t border-[#D9D9D9]/50" onclick="toggleGroup(this)">
-              <div class="flex items-center gap-1.5">
-                <svg class="text-black/30 transition-transform duration-150 group-chevron -rotate-90" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                <span class="text-[12px] font-semibold text-black/70 group-name">Footer Audit</span>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <div class="flex items-center gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
-                  <button onclick="event.stopPropagation(); startRename(this)" class="text-black/30 hover:text-black/60 cursor-pointer p-0.5" title="Rename">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
-                  </button>
-                  <button onclick="event.stopPropagation(); showDeleteConfirm('Footer Audit', 0)" class="text-[#B91C1C]/50 hover:text-[#B91C1C] cursor-pointer p-0.5" title="Delete group">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                  </button>
-                </div>
-                <span class="text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">0</span>
-              </div>
-            </div>
-            <div class="group-content" style="display: grid; grid-template-rows: 0fr; transition: grid-template-rows 150ms ease-out;">
-              <div style="min-height: 0; overflow: hidden;">
-                <div class="px-2 py-2 text-[11px] text-black/30 text-center italic">No selections yet</div>
-              </div>
-            </div>
-          </div>
-
+          <!-- rendered by JS -->
         </div>
 
         <!-- New group input (always at bottom) -->
@@ -191,33 +89,70 @@
     </div>
 
     <!-- ======================== -->
-    <!-- GROUP PICKER (during copy) -->
+    <!-- SELECTION LABEL (on grab) -->
     <!-- ======================== -->
     <div class="flex flex-col gap-2">
-      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Group Picker (on copy/comment)</span>
-      <div class="toolbar-shadow w-[200px] bg-white rounded-lg overflow-hidden text-[13px] antialiased">
-        <div class="px-2 pt-1.5 pb-1">
-          <span class="text-[11px] font-medium text-black/40">Add to group</span>
-        </div>
-        <div class="border-t border-[#D9D9D9] py-1">
-          <button class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-black/50"><path d="m5 12 5 5L20 7"/></svg>
-            <span class="text-[12px] font-medium text-black">Default</span>
-          </button>
-          <button class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer">
-            <span class="w-[10px]"></span>
-            <span class="text-[12px] text-black/70">Header Redesign</span>
-          </button>
-          <button class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer">
-            <span class="w-[10px]"></span>
-            <span class="text-[12px] text-black/70">Footer Audit</span>
-          </button>
-        </div>
-        <div class="border-t border-[#D9D9D9] py-1">
-          <button class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/40"><path d="M12 5v14m-7-7h14"/></svg>
-            <span class="text-[12px] text-black/50">New group...</span>
-          </button>
+      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Selection Label (on grab)</span>
+
+      <!-- The label popup -->
+      <div class="relative">
+        <!-- Arrow -->
+        <div class="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0" style="border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 8px solid white;"></div>
+
+        <div id="selection-label" class="toolbar-shadow bg-white rounded-[10px] overflow-visible text-[13px] antialiased w-fit" style="font-synthesis: none; corner-shape: superellipse(1.25);">
+          <!-- Tag row -->
+          <div class="flex items-center gap-1 pt-1.5 pb-1 px-2">
+            <span class="text-[13px] leading-4 font-medium whitespace-nowrap">
+              <span class="text-black">CardDescription</span><span class="text-black/50">.div</span>
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="10" height="10" class="text-black/30 shrink-0"><path d="M12 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path><path d="M11 13l9-9"></path><path d="M15 4h5v5"></path></svg>
+          </div>
+
+          <!-- Bottom section -->
+          <div class="flex flex-col px-2 py-1.5 [border-top-width:0.5px] border-t-solid border-t-[#D9D9D9] rounded-b-[6px] min-w-[150px] max-w-[280px]">
+
+            <!-- NEW: Group row -->
+            <div class="relative flex items-center gap-1 w-full mb-1.5">
+              <button
+                id="label-group-btn"
+                onclick="toggleLabelPicker()"
+                class="flex items-center gap-1 cursor-pointer hover:bg-black/[0.04] rounded-sm px-0.5 -mx-0.5 transition-colors"
+              >
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/25 shrink-0"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                <span id="label-group-name" class="text-[11px] font-medium text-black/40 leading-none">Default</span>
+                <svg id="label-group-chevron" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-black/25 transition-transform duration-100"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+
+              <!-- Group picker flyout -->
+              <div id="label-group-picker" class="hidden absolute left-0 top-full mt-1 toolbar-shadow bg-white rounded-[10px] overflow-hidden z-50 w-[180px]" style="font-synthesis: none;">
+                <div class="px-2 pt-1.5 pb-1">
+                  <span class="text-[11px] font-medium text-black/40">Add to group</span>
+                </div>
+                <div id="label-picker-list" class="border-t border-[#D9D9D9] py-1">
+                  <!-- rendered by JS -->
+                </div>
+                <div class="border-t border-[#D9D9D9] py-1">
+                  <button onclick="createGroupFromLabel()" class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/40"><path d="M12 5v14m-7-7h14"/></svg>
+                    <span class="text-[12px] text-black/50">New group...</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Textarea row -->
+            <div class="flex justify-between items-end w-full min-h-4">
+              <textarea
+                class="text-black text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
+                placeholder="Add context"
+                rows="1"
+                style="field-sizing: content; min-height: 16px; scrollbar-width: none; max-height: 95px;"
+              ></textarea>
+              <button class="shrink-0 flex items-center justify-center size-4 rounded-full bg-black cursor-pointer ml-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none" width="10" height="10"><path d="M6 1L6 11M6 1L2 5M6 1L10 5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -231,20 +166,223 @@
     Hover non-default group headers to see rename (pencil) and delete (trash) actions.
     Type in the bottom input to create a new group.
     Delete confirmation replaces the dropdown content inline.
+    Click the group name in the selection label to pick a group before submitting.
   </div>
 
   <script>
-    function toggleGroup(header) {
+    // ── State ──────────────────────────────────────────────────────────────────
+    const GROUPS = [
+      { id: 'default',         name: 'Default',        isDefault: true },
+      { id: 'header-redesign', name: 'Header Redesign', isDefault: false },
+      { id: 'footer-audit',    name: 'Footer Audit',    isDefault: false },
+    ];
+
+    const ITEMS = [
+      { id: 'i1', groupId: 'default',         tag: 'div',    component: 'ProductCard', comment: 'Check pricing layout', time: '2m' },
+      { id: 'i2', groupId: 'default',         tag: 'button', component: 'SubmitBtn',   comment: null,                   time: '5m' },
+      { id: 'i3', groupId: 'default',         tag: 'nav',    component: 'Sidebar',     comment: 'Nav alignment off',    time: '8m' },
+      { id: 'i4', groupId: 'header-redesign', tag: 'header', component: 'AppHeader',   comment: 'Logo spacing',         time: '1m' },
+      { id: 'i5', groupId: 'header-redesign', tag: 'ul',     component: 'NavLinks',    comment: null,                   time: '3m' },
+    ];
+
+    // track which group sections are open
+    const openGroups = { 'default': true, 'header-redesign': true, 'footer-audit': false };
+    // track which item move flyout is open
+    let openMoveFlyoutId = null;
+
+    // ── Groups list renderer ───────────────────────────────────────────────────
+    function renderGroupsList(filterQuery = '') {
+      const container = document.getElementById('groups-list');
+      // keep no-results node
+      const noResults = document.getElementById('no-search-results');
+      container.innerHTML = '';
+      container.appendChild(noResults);
+
+      const q = filterQuery.toLowerCase().trim();
+      let visibleCount = 0;
+
+      GROUPS.forEach((group, index) => {
+        const items = ITEMS.filter(i => i.groupId === group.id);
+        const nameMatches = !q || fuzzyMatch(group.name, q);
+        if (!nameMatches) return;
+        visibleCount++;
+
+        const isFirst = index === 0;
+        const isOpen = openGroups[group.id] ?? true;
+
+        const wrapper = document.createElement('div');
+        wrapper.setAttribute('data-group', group.id);
+
+        // ── Header ────────────────────────────────────────────────────────────
+        const header = document.createElement('div');
+        header.className = `w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer${isFirst ? '' : ' border-t border-[#D9D9D9]/50'}`;
+        header.style.cssText = 'position:relative';
+
+        const leftSide = document.createElement('div');
+        leftSide.className = 'flex items-center gap-1.5';
+        leftSide.innerHTML = `
+          <svg class="text-black/30 transition-transform duration-150 group-chevron${isOpen ? '' : ' -rotate-90'}" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform:${isOpen ? '' : 'rotate(-90deg)'}"><path d="m6 9 6 6 6-6"/></svg>
+          <span class="text-[12px] font-semibold text-black/70 group-name">${group.name}</span>
+        `;
+
+        const rightSide = document.createElement('div');
+        rightSide.className = 'flex items-center gap-1.5';
+
+        if (!group.isDefault) {
+          const hoverActions = document.createElement('div');
+          hoverActions.className = 'header-hover-actions flex items-center gap-1 transition-opacity';
+          hoverActions.style.opacity = '0';
+          hoverActions.innerHTML = `
+            <button class="text-black/30 hover:text-black/60 cursor-pointer p-0.5" title="Rename">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
+            </button>
+            <button class="text-[#B91C1C]/50 hover:text-[#B91C1C] cursor-pointer p-0.5" title="Delete group">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>
+          `;
+          hoverActions.querySelectorAll('button')[0].onclick = (e) => { e.stopPropagation(); startRename(hoverActions); };
+          hoverActions.querySelectorAll('button')[1].onclick = (e) => { e.stopPropagation(); showDeleteConfirm(group.name, items.length); };
+          rightSide.appendChild(hoverActions);
+          header.addEventListener('mouseenter', () => hoverActions.style.opacity = '1');
+          header.addEventListener('mouseleave', () => hoverActions.style.opacity = '0');
+        }
+
+        const countBadge = document.createElement('span');
+        countBadge.className = 'item-count text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center';
+        countBadge.textContent = items.length;
+        rightSide.appendChild(countBadge);
+
+        header.appendChild(leftSide);
+        header.appendChild(rightSide);
+        header.addEventListener('click', () => toggleGroup(header, group.id));
+
+        // ── Content ───────────────────────────────────────────────────────────
+        const content = document.createElement('div');
+        content.className = 'group-content';
+        content.style.cssText = `display:grid; grid-template-rows:${isOpen ? '1fr' : '0fr'}; transition:grid-template-rows 150ms ease-out;`;
+
+        const inner = document.createElement('div');
+        inner.style.cssText = 'min-height:0; overflow:hidden;';
+
+        if (items.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'px-2 py-2 text-[11px] text-black/30 text-center italic';
+          empty.textContent = 'No selections yet';
+          inner.appendChild(empty);
+        } else {
+          items.forEach(item => inner.appendChild(renderItem(item)));
+        }
+
+        content.appendChild(inner);
+        wrapper.appendChild(header);
+        wrapper.appendChild(content);
+        container.appendChild(wrapper);
+      });
+
+      noResults.style.display = (q && visibleCount === 0) ? '' : 'none';
+    }
+
+    // ── Item renderer ──────────────────────────────────────────────────────────
+    function renderItem(item) {
+      const otherGroups = GROUPS.filter(g => g.id !== item.groupId);
+
+      const row = document.createElement('div');
+      row.className = 'relative flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2';
+      row.setAttribute('data-item-id', item.id);
+
+      const textCol = document.createElement('span');
+      textCol.className = 'flex flex-col min-w-0 flex-1';
+      textCol.innerHTML = `
+        <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;${item.tag}&gt; · ${item.component}</span>
+        ${item.comment ? `<span class="text-[11px] leading-3 text-black/40 truncate mt-0.5">${item.comment}</span>` : ''}
+      `;
+
+      const rightCol = document.createElement('div');
+      rightCol.className = 'flex items-center gap-1 shrink-0';
+
+      // Move button (hidden until hover)
+      const moveBtn = document.createElement('button');
+      moveBtn.className = 'move-btn flex items-center justify-center rounded p-0.5 text-black/25 hover:text-black/50 hover:bg-black/[0.06] cursor-pointer transition-colors';
+      moveBtn.style.opacity = '0';
+      moveBtn.title = 'Move to group';
+      moveBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>`;
+
+      // Flyout
+      const flyout = document.createElement('div');
+      flyout.className = 'move-flyout hidden absolute right-0 top-full mt-0.5 bg-white rounded-[8px] overflow-hidden z-50 w-[160px]';
+      flyout.style.cssText = 'box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.08); font-synthesis:none;';
+
+      const flyoutHeader = document.createElement('div');
+      flyoutHeader.className = 'px-2 pt-1.5 pb-1';
+      flyoutHeader.innerHTML = `<span class="text-[11px] font-medium text-black/40">Move to group</span>`;
+      flyout.appendChild(flyoutHeader);
+
+      const flyoutList = document.createElement('div');
+      flyoutList.className = 'border-t border-[#D9D9D9] py-1';
+      otherGroups.forEach(g => {
+        const opt = document.createElement('button');
+        opt.className = 'w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer text-left';
+        opt.innerHTML = `<span class="text-[12px] text-black/70">${g.name}</span>`;
+        opt.onclick = (e) => {
+          e.stopPropagation();
+          moveItem(item.id, g.id);
+        };
+        flyoutList.appendChild(opt);
+      });
+      flyout.appendChild(flyoutList);
+
+      moveBtn.onclick = (e) => {
+        e.stopPropagation();
+        const isOpen = openMoveFlyoutId === item.id;
+        closeAllMoveFlyouts();
+        if (!isOpen) {
+          openMoveFlyoutId = item.id;
+          flyout.classList.remove('hidden');
+        }
+      };
+
+      const timeEl = document.createElement('span');
+      timeEl.className = 'text-[10px] text-black/25';
+      timeEl.textContent = item.time;
+
+      rightCol.appendChild(moveBtn);
+      rightCol.appendChild(timeEl);
+
+      row.appendChild(textCol);
+      row.appendChild(rightCol);
+      row.appendChild(flyout);
+
+      row.addEventListener('mouseenter', () => moveBtn.style.opacity = '1');
+      row.addEventListener('mouseleave', () => { moveBtn.style.opacity = '0'; });
+
+      return row;
+    }
+
+    // ── Actions ────────────────────────────────────────────────────────────────
+    function moveItem(itemId, targetGroupId) {
+      const item = ITEMS.find(i => i.id === itemId);
+      if (!item) return;
+      item.groupId = targetGroupId;
+      closeAllMoveFlyouts();
+      renderGroupsList(document.getElementById('group-search').value);
+    }
+
+    function closeAllMoveFlyouts() {
+      document.querySelectorAll('.move-flyout').forEach(f => f.classList.add('hidden'));
+      openMoveFlyoutId = null;
+    }
+
+    function toggleGroup(header, groupId) {
       const content = header.nextElementSibling;
       const chevron = header.querySelector('.group-chevron');
       const isOpen = content.style.gridTemplateRows === '1fr';
       content.style.gridTemplateRows = isOpen ? '0fr' : '1fr';
       chevron.style.transform = isOpen ? 'rotate(-90deg)' : '';
+      openGroups[groupId] = !isOpen;
     }
 
-    function startRename(btn) {
-      const header = btn.closest('.group\\/header') || btn.closest('[class*="group/header"]');
-      const nameEl = header.querySelector('.group-name');
+    function startRename(hoverActions) {
+      const nameEl = hoverActions.closest('[data-group]').querySelector('.group-name');
       const currentName = nameEl.textContent;
       const input = document.createElement('input');
       input.type = 'text';
@@ -254,44 +392,21 @@
       nameEl.replaceWith(input);
       input.focus();
       input.select();
-
       const finish = () => {
+        const newName = input.value.trim() || currentName;
+        const group = GROUPS.find(g => g.name === currentName);
+        if (group) group.name = newName;
         const span = document.createElement('span');
         span.className = 'text-[12px] font-semibold text-black/70 group-name';
-        span.textContent = input.value.trim() || currentName;
+        span.textContent = newName;
         input.replaceWith(span);
       };
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === 'Escape') finish();
-      });
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === 'Escape') finish(); });
       input.addEventListener('blur', finish);
     }
 
     function filterGroups(query) {
-      const groups = document.querySelectorAll('[data-group]');
-      const noResults = document.getElementById('no-search-results');
-      const q = query.toLowerCase().trim();
-      let visibleCount = 0;
-
-      groups.forEach(group => {
-        const name = group.querySelector('.group-name')?.textContent?.toLowerCase() || '';
-        // Simple fuzzy: check if all chars appear in order
-        let matches = true;
-        if (q) {
-          let nameIdx = 0;
-          for (let i = 0; i < q.length; i++) {
-            const found = name.indexOf(q[i], nameIdx);
-            if (found === -1) { matches = false; break; }
-            nameIdx = found + 1;
-          }
-        }
-        group.style.display = matches ? '' : 'none';
-        if (matches) visibleCount++;
-      });
-
-      if (noResults) {
-        noResults.style.display = (q && visibleCount === 0) ? '' : 'none';
-      }
+      renderGroupsList(query);
     }
 
     function showDeleteConfirm(name, count) {
@@ -307,6 +422,84 @@
       document.getElementById('delete-confirm').classList.add('hidden');
       document.getElementById('dropdown-normal').classList.remove('hidden');
     }
+
+    function fuzzyMatch(text, query) {
+      const t = text.toLowerCase(), q = query.toLowerCase();
+      let ti = 0;
+      for (let i = 0; i < q.length; i++) {
+        const found = t.indexOf(q[i], ti);
+        if (found === -1) return false;
+        ti = found + 1;
+      }
+      return true;
+    }
+
+    // ── Label group picker ─────────────────────────────────────────────────────
+    let activeLabelGroupId = 'default';
+    let labelPickerOpen = false;
+
+    function renderLabelPickerList() {
+      const list = document.getElementById('label-picker-list');
+      list.innerHTML = '';
+      GROUPS.forEach(g => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer';
+        const isActive = g.id === activeLabelGroupId;
+        btn.innerHTML = isActive
+          ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-black/50 shrink-0"><path d="m5 12 5 5L20 7"/></svg><span class="text-[12px] font-medium text-black">${g.name}</span>`
+          : `<span class="w-[10px] shrink-0"></span><span class="text-[12px] text-black/70">${g.name}</span>`;
+        btn.onclick = () => selectLabelGroup(g.id, g.name);
+        list.appendChild(btn);
+      });
+    }
+
+    function selectLabelGroup(id, name) {
+      activeLabelGroupId = id;
+      document.getElementById('label-group-name').textContent = name;
+      closeLabelPicker();
+      renderLabelPickerList();
+    }
+
+    function toggleLabelPicker() {
+      labelPickerOpen = !labelPickerOpen;
+      const picker = document.getElementById('label-group-picker');
+      const chevron = document.getElementById('label-group-chevron');
+      if (labelPickerOpen) {
+        renderLabelPickerList();
+        picker.classList.remove('hidden');
+        chevron.style.transform = 'rotate(180deg)';
+      } else {
+        closeLabelPicker();
+      }
+    }
+
+    function closeLabelPicker() {
+      labelPickerOpen = false;
+      document.getElementById('label-group-picker').classList.add('hidden');
+      document.getElementById('label-group-chevron').style.transform = '';
+    }
+
+    function createGroupFromLabel() {
+      const name = prompt('Group name:');
+      if (!name || !name.trim()) return;
+      const id = 'group-' + Date.now();
+      GROUPS.push({ id, name: name.trim(), isDefault: false });
+      selectLabelGroup(id, name.trim());
+      renderGroupsList(document.getElementById('group-search').value);
+    }
+
+    // ── Global click to close flyouts ──────────────────────────────────────────
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.move-flyout') && !e.target.closest('.move-btn')) {
+        closeAllMoveFlyouts();
+      }
+      if (!e.target.closest('#label-group-btn') && !e.target.closest('#label-group-picker')) {
+        closeLabelPicker();
+      }
+    });
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+    renderGroupsList();
   </script>
 </body>
 </html>

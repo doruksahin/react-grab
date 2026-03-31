@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PoC — Group Selection at Creation</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      background: #0f0f0f;
+      color: #e5e5e5;
+      display: flex;
+      gap: 24px;
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ── */
+    .col { display: flex; flex-direction: column; gap: 16px; }
+    .col--main { flex: 1; }
+    .col--side { width: 280px; }
+
+    h2 {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 6px 10px;
+    }
+
+    .toolbar-label {
+      font-size: 11px;
+      color: #666;
+      margin-right: 4px;
+    }
+
+    /* Active group chip — this is the new element */
+    .active-group-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #252525;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .active-group-chip:hover {
+      background: #2e2e2e;
+      border-color: #444;
+    }
+    .active-group-chip .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #3b82f6;
+      flex-shrink: 0;
+    }
+    .active-group-chip .name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #d1d5db;
+    }
+    .active-group-chip .arrow {
+      color: #555;
+      font-size: 10px;
+    }
+
+    /* tooltip hint */
+    .chip-hint {
+      font-size: 11px;
+      color: #4b5563;
+    }
+
+    .toolbar-sep {
+      width: 1px;
+      height: 18px;
+      background: #2a2a2a;
+    }
+
+    /* ── Page canvas ── */
+    .canvas {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .fake-element {
+      background: #1e1e1e;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 20px 24px;
+      cursor: crosshair;
+      transition: border-color 0.15s, background 0.15s;
+      position: relative;
+    }
+    .fake-element:hover {
+      border-color: #444;
+      background: #232323;
+    }
+    .fake-element .el-tag {
+      font-size: 10px;
+      color: #555;
+      font-family: monospace;
+    }
+    .fake-element .el-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #c9d1d9;
+      margin-top: 4px;
+    }
+
+    /* ── Context menu ── */
+    .context-menu {
+      position: absolute;
+      z-index: 100;
+      background: #1c1c1c;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 6px;
+      min-width: 220px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      display: none;
+    }
+    .context-menu.visible { display: block; }
+
+    .cm-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #4b5563;
+      padding: 4px 8px 2px;
+    }
+
+    .cm-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .cm-row:hover { background: #252525; }
+    .cm-row .cm-icon {
+      width: 16px; height: 16px;
+      color: #6b7280;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+    }
+    .cm-row .cm-text {
+      flex: 1;
+      font-size: 12.5px;
+      color: #d1d5db;
+    }
+    .cm-row .cm-kbd {
+      font-size: 10px;
+      color: #4b5563;
+      background: #252525;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: monospace;
+    }
+
+    .cm-divider {
+      height: 1px;
+      background: #2a2a2a;
+      margin: 4px 0;
+    }
+
+    /* ── Group row inside context menu (THE NEW THING) ── */
+    .cm-group-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.1s;
+      background: #1e2533;
+      border: 1px solid #2a3a5a;
+      margin-bottom: 2px;
+    }
+    .cm-group-row:hover { background: #243048; }
+    .cm-group-row .cm-icon { color: #60a5fa; }
+    .cm-group-row .cm-text { color: #93c5fd; font-weight: 500; }
+    .cm-group-row .group-name-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: #3b82f6;
+      background: #1e3a5f;
+      border: 1px solid #2563eb44;
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+    .cm-group-row .cm-arrow {
+      color: #4b6fa8;
+      font-size: 10px;
+    }
+
+    /* ── Group picker flyout ── */
+    .group-picker {
+      position: absolute;
+      left: 228px;
+      top: 68px;
+      background: #1c1c1c;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 6px;
+      min-width: 180px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      display: none;
+      z-index: 101;
+    }
+    .group-picker.visible { display: block; }
+
+    .gp-header {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #4b5563;
+      padding: 4px 8px 6px;
+    }
+
+    .gp-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .gp-item:hover { background: #252525; }
+    .gp-item.active { background: #1e2f4a; }
+    .gp-item .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .gp-item .gp-name {
+      flex: 1;
+      font-size: 12.5px;
+      color: #d1d5db;
+    }
+    .gp-item.active .gp-name { color: #60a5fa; font-weight: 500; }
+    .gp-item .gp-check {
+      color: #3b82f6;
+      font-size: 12px;
+    }
+    .gp-item .gp-count {
+      font-size: 10px;
+      color: #4b5563;
+      background: #252525;
+      border-radius: 4px;
+      padding: 1px 5px;
+    }
+
+    .gp-divider { height: 1px; background: #2a2a2a; margin: 4px 0; }
+
+    .gp-add-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #6b7280;
+      transition: background 0.1s;
+    }
+    .gp-add-row:hover { background: #252525; color: #9ca3af; }
+
+    /* ── Selections panel (side) ── */
+    .selections-panel {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .sp-header {
+      padding: 10px 14px 8px;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sp-header .sp-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #9ca3af;
+    }
+    .sp-header .sp-count {
+      font-size: 11px;
+      color: #4b5563;
+      background: #252525;
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+
+    .sp-group {
+      border-bottom: 1px solid #1f1f1f;
+    }
+    .sp-group-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: #1d1d1d;
+      cursor: pointer;
+    }
+    .sp-group-header .dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .sp-group-header .gname {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 600;
+      color: #9ca3af;
+    }
+    .sp-group-header .gcount {
+      font-size: 10px;
+      color: #4b5563;
+      background: #252525;
+      border-radius: 4px;
+      padding: 1px 5px;
+    }
+
+    .sp-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px 7px 28px;
+      border-top: 1px solid #1f1f1f;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .sp-item:hover { background: #212121; }
+    .sp-item .el-icon { font-size: 11px; color: #4b5563; }
+    .sp-item .el-label {
+      flex: 1;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .sp-item .el-tag-small {
+      font-size: 10px;
+      color: #374151;
+      font-family: monospace;
+    }
+
+    /* ── State indicator ── */
+    .state-box {
+      background: #141a24;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .state-box pre {
+      font-size: 11px;
+      color: #60a5fa;
+      font-family: monospace;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    /* ── Option B: Toolbar chip group picker ── */
+    .chip-picker {
+      position: fixed;
+      top: 52px;
+      left: 370px;
+      background: #1c1c1c;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 6px;
+      min-width: 180px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      display: none;
+      z-index: 200;
+    }
+    .chip-picker.visible { display: block; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(0);
+      background: #1c2a3a;
+      border: 1px solid #2563eb44;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 12.5px;
+      color: #93c5fd;
+      display: none;
+      z-index: 300;
+      pointer-events: none;
+    }
+    .toast.show { display: block; }
+
+    /* ── Annotations ── */
+    .annotation {
+      position: absolute;
+      top: -10px; right: -10px;
+      background: #dc2626;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 4px;
+      padding: 2px 6px;
+      pointer-events: none;
+    }
+    .annotation.new {
+      background: #16a34a;
+    }
+    .annotation.gap {
+      background: #d97706;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ MAIN COLUMN -->
+<div class="col col--main">
+
+  <!-- Toolbar -->
+  <div>
+    <h2>Toolbar — active group chip (new)</h2>
+    <div class="toolbar" style="margin-top:8px;">
+      <span class="toolbar-label">Grab tool</span>
+      <div class="toolbar-sep"></div>
+
+      <!-- 🆕 Active group chip — clicking opens a picker -->
+      <div class="active-group-chip" id="toolbarChip" onclick="toggleChipPicker()" title="Click to change the group new selections will be added to">
+        <div class="dot" id="chipDot"></div>
+        <span class="name" id="chipName">Default</span>
+        <span class="arrow">▾</span>
+      </div>
+      <span class="chip-hint">selections go here</span>
+
+      <!-- chip group picker -->
+      <div class="chip-picker" id="chipPicker">
+        <div class="gp-header">Add to group</div>
+        <!-- items rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Canvas -->
+  <div>
+    <h2>Page canvas — right-click an element to grab</h2>
+    <div class="canvas" style="margin-top:8px; position: relative;">
+
+      <div class="fake-element" id="el1" oncontextmenu="showContextMenu(event,'el1','HeroSection','section')">
+        <div class="el-tag">&lt;section&gt; · HeroSection</div>
+        <div class="el-name">Hero Banner</div>
+      </div>
+
+      <div class="fake-element" id="el2" oncontextmenu="showContextMenu(event,'el2','PricingCard','div')">
+        <div class="el-tag">&lt;div&gt; · PricingCard</div>
+        <div class="el-name">Pricing Card</div>
+      </div>
+
+      <div class="fake-element" id="el3" oncontextmenu="showContextMenu(event,'el3','NavBar','nav')">
+        <div class="el-tag">&lt;nav&gt; · NavBar</div>
+        <div class="el-name">Navigation</div>
+      </div>
+
+      <!-- Context menu (shared, repositioned) -->
+      <div class="context-menu" id="contextMenu">
+        <div class="cm-section-label">Element</div>
+        <div class="cm-row">
+          <div class="cm-icon">✦</div>
+          <div class="cm-text">Grab selection</div>
+          <div class="cm-kbd">G</div>
+        </div>
+        <div class="cm-row">
+          <div class="cm-icon">⊕</div>
+          <div class="cm-text">Add to selection</div>
+          <div class="cm-kbd">A</div>
+        </div>
+
+        <div class="cm-divider"></div>
+
+        <!-- 🆕 Group row — this is the new thing inside the context menu -->
+        <div class="cm-group-row" id="cmGroupRow" onclick="toggleGroupPicker()">
+          <div class="cm-icon">⬡</div>
+          <div class="cm-text">Add to group</div>
+          <div class="group-name-badge" id="cmGroupBadge">Default</div>
+          <div class="cm-arrow">▶</div>
+          <span class="annotation new">NEW</span>
+        </div>
+
+        <div class="cm-divider"></div>
+
+        <div class="cm-row">
+          <div class="cm-icon">🔍</div>
+          <div class="cm-text">Inspect element</div>
+        </div>
+        <div class="cm-row">
+          <div class="cm-icon">↗</div>
+          <div class="cm-text">Open source</div>
+        </div>
+
+        <!-- Group picker flyout -->
+        <div class="group-picker" id="groupPicker">
+          <div class="gp-header">Choose group</div>
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- State JSON -->
+  <div>
+    <h2>Internal state</h2>
+    <div class="state-box" style="margin-top:8px;">
+      <pre id="stateOutput"></pre>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ SIDE COLUMN -->
+<div class="col col--side">
+  <div>
+    <h2>Selections panel</h2>
+    <div class="selections-panel" id="selectionsPanel" style="margin-top:8px;">
+      <div class="sp-header">
+        <span class="sp-title">Selections</span>
+        <span class="sp-count" id="totalCount">0</span>
+      </div>
+      <!-- groups rendered by JS -->
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const COLORS = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
+
+const state = {
+  activeGroupId: 'default',
+  groups: [
+    { id: 'default', name: 'Default', color: COLORS[0] },
+    { id: 'g1',      name: 'Landing',  color: COLORS[1] },
+    { id: 'g2',      name: 'Pricing',  color: COLORS[2] },
+  ],
+  selections: [
+    // pre-populated to show the problem
+    { id: 's0', groupId: 'default', label: 'Existing item', tag: 'div' },
+  ],
+};
+
+let currentContextEl = null;
+let contextMenuOpen = false;
+let groupPickerOpen = false;
+let chipPickerOpen = false;
+
+// ─── Render helpers ───────────────────────────────────────────────────────────
+function groupById(id) { return state.groups.find(g => g.id === id); }
+function colorFor(id) { return (groupById(id) || {}).color || COLORS[0]; }
+
+function renderToolbarChip() {
+  const g = groupById(state.activeGroupId);
+  document.getElementById('chipName').textContent = g ? g.name : 'Default';
+  document.getElementById('chipDot').style.background = g ? g.color : COLORS[0];
+  document.getElementById('cmGroupBadge').textContent = g ? g.name : 'Default';
+}
+
+function renderGroupPicker(containerId, onSelect) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '<div class="gp-header">Choose group</div>';
+  state.groups.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'gp-item' + (g.id === state.activeGroupId ? ' active' : '');
+    const count = state.selections.filter(s => s.groupId === g.id).length;
+    div.innerHTML = `
+      <div class="dot" style="background:${g.color}"></div>
+      <span class="gp-name">${g.name}</span>
+      <span class="gp-count">${count}</span>
+      ${g.id === state.activeGroupId ? '<span class="gp-check">✓</span>' : ''}
+    `;
+    div.onclick = () => onSelect(g.id);
+    container.appendChild(div);
+  });
+  // Add group option
+  const addDiv = document.createElement('div');
+  addDiv.className = 'gp-divider';
+  container.appendChild(addDiv);
+  const add = document.createElement('div');
+  add.className = 'gp-add-row';
+  add.innerHTML = '<span>＋</span><span>New group…</span>';
+  add.onclick = () => {
+    const name = prompt('Group name:');
+    if (!name) return;
+    const id = 'g' + Date.now();
+    state.groups.push({ id, name, color: COLORS[state.groups.length % COLORS.length] });
+    state.activeGroupId = id;
+    closeAll();
+    renderAll();
+    toast(`Created group "${name}" and set as active`);
+  };
+  container.appendChild(add);
+}
+
+function renderChipPicker() {
+  renderGroupPicker('chipPicker', (id) => {
+    state.activeGroupId = id;
+    closeAll();
+    renderAll();
+    toast(`Active group → "${groupById(id).name}"`);
+  });
+}
+
+function renderContextGroupPicker() {
+  renderGroupPicker('groupPicker', (id) => {
+    state.activeGroupId = id;
+    closeAll();
+    renderAll();
+    toast(`Active group → "${groupById(id).name}"`);
+  });
+}
+
+function renderSelectionsPanel() {
+  const panel = document.getElementById('selectionsPanel');
+  // keep header
+  let html = `<div class="sp-header"><span class="sp-title">Selections</span><span class="sp-count">${state.selections.length}</span></div>`;
+
+  state.groups.forEach(g => {
+    const items = state.selections.filter(s => s.groupId === g.id);
+    if (!items.length && g.id !== 'default') return;
+    html += `<div class="sp-group">
+      <div class="sp-group-header">
+        <div class="dot" style="background:${g.color}"></div>
+        <span class="gname">${g.name}</span>
+        <span class="gcount">${items.length}</span>
+      </div>`;
+    items.forEach(item => {
+      html += `<div class="sp-item">
+        <span class="el-icon">▣</span>
+        <span class="el-label">${item.label}</span>
+        <span class="el-tag-small">&lt;${item.tag}&gt;</span>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  panel.innerHTML = html;
+}
+
+function renderStateOutput() {
+  const out = {
+    activeGroupId: state.activeGroupId,
+    activeGroupName: (groupById(state.activeGroupId) || {}).name,
+    groups: state.groups.map(g => ({ id: g.id, name: g.name })),
+    selectionsCount: state.selections.length,
+    selectionsByGroup: Object.fromEntries(
+      state.groups.map(g => [g.name, state.selections.filter(s => s.groupId === g.id).length])
+    ),
+  };
+  document.getElementById('stateOutput').textContent = JSON.stringify(out, null, 2);
+}
+
+function renderAll() {
+  renderToolbarChip();
+  renderChipPicker();
+  renderContextGroupPicker();
+  renderSelectionsPanel();
+  renderStateOutput();
+}
+
+// ─── Context menu ─────────────────────────────────────────────────────────────
+function showContextMenu(e, elId, name, tag) {
+  e.preventDefault();
+  closeAll();
+  currentContextEl = { id: elId, name, tag };
+  const menu = document.getElementById('contextMenu');
+  menu.style.left = (e.clientX - e.currentTarget.getBoundingClientRect().left) + 'px';
+  menu.style.top  = (e.clientY - e.currentTarget.getBoundingClientRect().top)  + 'px';
+  menu.classList.add('visible');
+  contextMenuOpen = true;
+
+  // wire "Grab selection" to actually create a selection
+  menu.querySelector('.cm-row').onclick = () => {
+    grabSelection(name, tag);
+  };
+}
+
+function grabSelection(name, tag) {
+  const g = groupById(state.activeGroupId);
+  state.selections.unshift({
+    id: 's' + Date.now(),
+    groupId: state.activeGroupId,
+    label: name,
+    tag,
+  });
+  closeAll();
+  renderAll();
+  toast(`Grabbed "${name}" → group "${g ? g.name : 'Default'}"`);
+}
+
+function toggleGroupPicker() {
+  renderContextGroupPicker();
+  const picker = document.getElementById('groupPicker');
+  groupPickerOpen = !groupPickerOpen;
+  picker.classList.toggle('visible', groupPickerOpen);
+}
+
+function toggleChipPicker() {
+  renderChipPicker();
+  const picker = document.getElementById('chipPicker');
+  chipPickerOpen = !chipPickerOpen;
+  picker.classList.toggle('visible', chipPickerOpen);
+}
+
+function closeAll() {
+  document.getElementById('contextMenu').classList.remove('visible');
+  document.getElementById('groupPicker').classList.remove('visible');
+  document.getElementById('chipPicker').classList.remove('visible');
+  contextMenuOpen = false;
+  groupPickerOpen = false;
+  chipPickerOpen = false;
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#contextMenu') &&
+      !e.target.closest('#toolbarChip') &&
+      !e.target.closest('#chipPicker')) {
+    closeAll();
+  }
+});
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
