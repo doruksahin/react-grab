@@ -8,8 +8,11 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
+    "@hono/node-server": "^1.0.0",
+    "@hono/swagger-ui": "^0.6.1",
+    "@hono/zod-openapi": "^1.2.4",
     "hono": "^4.0.0",
-    "@hono/node-server": "^1.0.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "tsx": "^4.0.0",
