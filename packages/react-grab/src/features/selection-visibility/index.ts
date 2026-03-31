@@ -69,18 +69,21 @@ export function createSelectionVisibility(
   };
 
   /**
-   * Starts observing DOM mutations on document.body to detect when host app
-   * elements become available. Automatically stops when all revealed items
-   * have their elements resolved.
+   * Starts observing DOM mutations on document.body. On each mutation,
+   * re-syncs revealed previews. This handles both directions:
+   * - Elements appearing (host app mounts) → previews render
+   * - Elements disappearing (navigation, lazy unload) → previews clear
+   * Stops observing when all revealed items are resolved (no unresolved gaps).
    */
   const startObservingDOM = () => {
     stopObservingDOM();
     mutationObserver = new MutationObserver(() => {
-      if (!allRevealedElementsResolved()) return;
-      // Elements are now in the DOM — re-render and stop observing
-      stopObservingDOM();
       clearRevealedPreviews();
       showRevealedPreviews();
+      // Stop observing once all revealed items have their elements
+      if (allRevealedElementsResolved()) {
+        stopObservingDOM();
+      }
     });
     mutationObserver.observe(document.body, {
       childList: true,
