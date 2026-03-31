@@ -67,4 +67,5 @@ export type {
   SelectionGroup,
   SelectionGroupsAPI,
   SelectionGroupsDeps,
+  SelectionGroupsViewProps,
 } from "./types.js";
