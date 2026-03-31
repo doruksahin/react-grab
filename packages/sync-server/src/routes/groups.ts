@@ -1,6 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 import { createRouter } from "../lib/create-router.js";
-import { readJsonFile, writeJsonFile } from "../storage/file-storage.js";
+import { listGroups, persistGroups } from "../storage/d1-storage.js";
 import {
   WorkspaceIdParam,
   StatusResponse,
@@ -8,9 +8,7 @@ import {
   SelectionGroupArray,
 } from "../schemas/index.js";
 
-const GROUPS_FILE = "groups.json";
-
-const listGroups = createRoute({
+const listGroupsRoute = createRoute({
   method: "get",
   path: "/workspaces/{id}/groups",
   tags: ["groups"],
@@ -31,7 +29,7 @@ const listGroups = createRoute({
   },
 });
 
-const persistGroups = createRoute({
+const persistGroupsRoute = createRoute({
   method: "put",
   path: "/workspaces/{id}/groups",
   tags: ["groups"],
@@ -69,14 +67,16 @@ const persistGroups = createRoute({
 });
 
 export const groupsRoutes = createRouter()
-  .openapi(listGroups, async (c) => {
+  .openapi(listGroupsRoute, async (c) => {
     const { id } = c.req.valid("param");
-    const groups = await readJsonFile(id, GROUPS_FILE, []);
+    const db = c.get("db");
+    const groups = await listGroups(db, id);
     return c.json(groups, 200);
   })
-  .openapi(persistGroups, async (c) => {
+  .openapi(persistGroupsRoute, async (c) => {
     const { id } = c.req.valid("param");
     const body = c.req.valid("json");
-    await writeJsonFile(id, GROUPS_FILE, body);
+    const db = c.get("db");
+    await persistGroups(db, id, body);
     return c.json({ status: "ok" as const }, 200);
   });

@@ -19,7 +19,7 @@ export const listComments = async (db: Database, workspaceId: string) => {
 export const persistComments = async (
   db: Database,
   workspaceId: string,
-  items: schema.CommentInsert[],
+  items: Omit<schema.CommentInsert, "workspaceId">[],
 ) => {
   // Delete all existing comments for this workspace, then insert new ones
   await db.batch([
@@ -42,7 +42,7 @@ export const listGroups = async (db: Database, workspaceId: string) => {
 export const persistGroups = async (
   db: Database,
   workspaceId: string,
-  items: schema.GroupInsert[],
+  items: Omit<schema.GroupInsert, "workspaceId">[],
 ) => {
   await db.batch([
     db.delete(schema.groups).where(eq(schema.groups.workspaceId, workspaceId)),
