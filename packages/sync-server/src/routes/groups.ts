@@ -1,4 +1,5 @@
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
+import { createRoute } from "@hono/zod-openapi";
+import { createRouter } from "../lib/create-router.js";
 import { readJsonFile, writeJsonFile } from "../storage/file-storage.js";
 import {
   WorkspaceIdParam,
@@ -67,7 +68,7 @@ const persistGroups = createRoute({
   },
 });
 
-export const groupsRoutes = new OpenAPIHono()
+export const groupsRoutes = createRouter()
   .openapi(listGroups, async (c) => {
     const { id } = c.req.valid("param");
     const groups = await readJsonFile(id, GROUPS_FILE, []);

@@ -1,4 +1,5 @@
-import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
+import { createRoute } from "@hono/zod-openapi";
+import { createRouter } from "../lib/create-router.js";
 import { readJsonFile, writeJsonFile } from "../storage/file-storage.js";
 import {
   WorkspaceIdParam,
@@ -67,7 +68,7 @@ const persistComments = createRoute({
   },
 });
 
-export const commentsRoutes = new OpenAPIHono()
+export const commentsRoutes = createRouter()
   .openapi(listComments, async (c) => {
     const { id } = c.req.valid("param");
     const comments = await readJsonFile(id, COMMENTS_FILE, []);

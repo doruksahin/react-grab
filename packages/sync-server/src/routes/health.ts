@@ -1,4 +1,5 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
+import { createRouter } from "../lib/create-router.js";
 
 const healthResponse = z.object({
   status: z.enum(["ok"]),
@@ -22,6 +23,6 @@ const healthRoute = createRoute({
   },
 });
 
-export const healthRoutes = new OpenAPIHono().openapi(healthRoute, (c) => {
+export const healthRoutes = createRouter().openapi(healthRoute, (c) => {
   return c.json({ status: "ok" as const }, 200);
 });

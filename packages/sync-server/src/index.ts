@@ -1,4 +1,3 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { swaggerUI } from "@hono/swagger-ui";
@@ -6,17 +5,9 @@ import { serve } from "@hono/node-server";
 import { commentsRoutes } from "./routes/comments.js";
 import { groupsRoutes } from "./routes/groups.js";
 import { healthRoutes } from "./routes/health.js";
+import { createRouter } from "./lib/create-router.js";
 
-const app = new OpenAPIHono({
-  defaultHook: (result, c) => {
-    if (!result.success) {
-      return c.json(
-        { error: result.error.issues.map((i) => i.message).join(", ") },
-        400
-      );
-    }
-  },
-});
+const app = createRouter();
 
 app.use("*", cors());
 app.use("*", logger());
