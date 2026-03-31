@@ -10,6 +10,7 @@
     "export-spec": "tsx src/export-spec.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply react-grab-sync --local",
+    "db:migrate:prod": "wrangler d1 migrations apply react-grab-sync",
     "publish:worker": "wrangler deploy"
   },
   "dependencies": {
