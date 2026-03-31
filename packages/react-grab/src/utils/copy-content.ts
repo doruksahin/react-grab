@@ -24,6 +24,24 @@ interface ReactGrabMetadata {
   timestamp: number;
 }
 
+export interface ReactGrabGroupEntry {
+  tagName?: string;
+  componentName?: string;
+  content: string;
+  commentText?: string;
+}
+
+export interface ReactGrabGroup {
+  name: string;
+  entries: ReactGrabGroupEntry[];
+}
+
+interface ReactGrabMetadataV2 {
+  version: string;
+  groups: ReactGrabGroup[];
+  timestamp: number;
+}
+
 const escapeHtml = (text: string): string =>
   text
     .replace(/&/g, "&amp;")
@@ -61,6 +79,55 @@ export const copyContent = (
     event.clipboardData?.setData(
       REACT_GRAB_MIME_TYPE,
       JSON.stringify(reactGrabMetadata),
+    );
+  };
+
+  document.addEventListener("copy", copyHandler);
+
+  const textarea = document.createElement("textarea");
+  textarea.value = content;
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.ariaHidden = "true";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    if (typeof document.execCommand !== "function") {
+      return false;
+    }
+    const didCopySucceed = document.execCommand("copy");
+    if (didCopySucceed) {
+      options?.onSuccess?.();
+    }
+    return didCopySucceed;
+  } finally {
+    document.removeEventListener("copy", copyHandler);
+    textarea.remove();
+  }
+};
+
+export const copyGroupedContent = (
+  content: string,
+  groups: ReactGrabGroup[],
+  options?: { onSuccess?: () => void },
+): boolean => {
+  const metadata: ReactGrabMetadataV2 = {
+    version: VERSION,
+    groups,
+    timestamp: Date.now(),
+  };
+
+  const copyHandler = (event: ClipboardEvent) => {
+    event.preventDefault();
+    event.clipboardData?.setData("text/plain", content);
+    event.clipboardData?.setData(
+      "text/html",
+      `<meta charset='utf-8'><pre><code>${escapeHtml(content)}</code></pre>`,
+    );
+    event.clipboardData?.setData(
+      REACT_GRAB_MIME_TYPE,
+      JSON.stringify(metadata),
     );
   };
 
