@@ -333,11 +333,11 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                     <button
                       data-react-grab-ignore-events
                       class="shrink-0 flex items-center justify-center w-[18px] h-[18px] rounded hover:bg-black/5 transition-colors"
-                      onClick={(event) => {
+                      on:click={(event) => {
                         event.stopPropagation();
                         props.onToggleItemRevealed?.(item.id);
                       }}
-                      onPointerDown={(event) => event.stopPropagation()}
+                      on:pointerdown={(event) => event.stopPropagation()}
                       aria-label={item.revealed ? "Hide this selection" : "Reveal this selection"}
                     >
                       {item.revealed ? (

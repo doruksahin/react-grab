@@ -890,7 +890,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         elementSelectors,
         commentText: extraPrompt,
         timestamp: Date.now(),
-        revealed: false,
+        revealed: visibility.selectionsRevealed(),
       });
       setCommentItems(updatedCommentItems);
       setClockFlashTrigger((previous) => previous + 1);
