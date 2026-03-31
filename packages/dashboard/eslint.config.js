@@ -20,4 +20,40 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/api/**', 'src/mocks/**'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'fetch',
+          message:
+            "Use generated API hooks from src/api/ instead of raw fetch. Run 'pnpm codegen' to regenerate.",
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'axios',
+              message: 'Use generated API hooks from src/api/. No direct HTTP clients.',
+            },
+            {
+              name: 'ky',
+              message: 'Use generated API hooks from src/api/. No direct HTTP clients.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['**/api/model/*', '**/api/endpoints/*'],
+              message:
+                "Import from '@/api/model' or '@/api/endpoints' barrel exports, not deep paths.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ])
