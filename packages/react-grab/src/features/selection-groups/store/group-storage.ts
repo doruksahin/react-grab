@@ -2,6 +2,9 @@ import type { SelectionGroup } from "../types.js";
 import { createDefaultGroup, DEFAULT_GROUP_ID } from "../types.js";
 import { generateId } from "../../../utils/generate-id.js";
 import { logRecoverableError } from "../../../utils/log-recoverable-error.js";
+import type { StorageAdapter } from "../../sync/types.js";
+
+let activeAdapter: StorageAdapter | null = null;
 
 const GROUPS_KEY = "react-grab-selection-groups";
 
@@ -25,15 +28,29 @@ const loadFromSessionStorage = (): SelectionGroup[] => {
 
 let groups: SelectionGroup[] = loadFromSessionStorage();
 
+export const initGroupStorage = async (adapter: StorageAdapter): Promise<void> => {
+  activeAdapter = adapter;
+  const remoteGroups = await adapter.loadGroups();
+  groups = remoteGroups;
+};
+
 export const persistGroups = (
   nextGroups: SelectionGroup[],
 ): SelectionGroup[] => {
   groups = nextGroups;
-  try {
-    sessionStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
-  } catch (error) {
-    logRecoverableError("Failed to save groups to sessionStorage", error);
+
+  if (activeAdapter) {
+    activeAdapter.persistGroups(groups).catch(() => {
+      // Error handling is done inside the adapter
+    });
+  } else {
+    try {
+      sessionStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+    } catch (error) {
+      logRecoverableError("Failed to save groups to sessionStorage", error);
+    }
   }
+
   return groups;
 };
 
