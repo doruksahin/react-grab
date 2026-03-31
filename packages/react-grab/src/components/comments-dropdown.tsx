@@ -49,6 +49,8 @@ interface CommentsDropdownProps {
   onRenameGroup?: (groupId: string, name: string) => void;
   onDeleteGroup?: (groupId: string) => void;
   onToggleGroupRevealed?: (groupId: string) => void;
+  onCopyGroup?: (groupId: string) => void;
+  copyableCount?: number;
 }
 
 const getCommentItemDisplayName = (item: CommentItem): string => {
@@ -267,7 +269,9 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                       when={isCopyAllConfirmed()}
                       fallback={
                         <span class="text-black text-[13px] leading-3.5 font-sans font-medium">
-                          Copy
+                          {props.copyableCount != null && props.copyableCount < (props.items?.length ?? 0)
+                            ? `Copy (${props.copyableCount})`
+                            : "Copy"}
                         </span>
                       }
                     >
@@ -321,6 +325,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                     onRename={(groupId, name) => props.onRenameGroup?.(groupId, name)}
                     onDelete={(groupId) => props.onDeleteGroup?.(groupId)}
                     onToggleRevealed={(groupId) => props.onToggleGroupRevealed?.(groupId)}
+                    onCopy={(groupId) => props.onCopyGroup?.(groupId)}
                     renderItem={(item) => (
                       <div
                         data-react-grab-ignore-events

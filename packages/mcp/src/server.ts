@@ -15,11 +15,21 @@ import {
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+const agentContextEntrySchema = z.object({
+  componentName: z.string().optional(),
+  content: z.string(),
+  commentText: z.string().optional(),
+});
+
+const agentContextGroupSchema = z.object({
+  name: z.string(),
+  entries: z.array(agentContextEntrySchema),
+});
+
 const agentContextSchema = z.object({
-  content: z
-    .array(z.string())
-    .describe("Array of context strings (HTML + component stack traces)"),
-  prompt: z.string().optional().describe("User prompt or instruction"),
+  groups: z
+    .array(agentContextGroupSchema)
+    .describe("Array of selection groups, each containing entries with HTML content"),
 });
 
 type AgentContext = z.infer<typeof agentContextSchema>;
@@ -37,10 +47,28 @@ const textResult = (text: string) => ({
 
 const formatContext = (context: AgentContext): string => {
   const parts: string[] = [];
-  if (context.prompt) {
-    parts.push(`Prompt: ${context.prompt}`);
+  const nonEmpty = context.groups.filter((g) => g.entries.length > 0);
+  const multiGroup = nonEmpty.length > 1;
+  let index = 1;
+
+  for (const group of nonEmpty) {
+    if (multiGroup) {
+      parts.push(`## ${group.name}`);
+    }
+    for (const entry of group.entries) {
+      const header = entry.commentText
+        ? `[${index}] ${entry.commentText}`
+        : `[${index}]`;
+      const componentLine = entry.componentName
+        ? `${entry.componentName}:`
+        : "";
+      parts.push(
+        [header, componentLine, entry.content].filter(Boolean).join("\n"),
+      );
+      index++;
+    }
   }
-  parts.push(`Elements:\n${context.content.join("\n\n")}`);
+
   return parts.join("\n\n");
 };
 

@@ -5,15 +5,23 @@ interface McpPluginOptions {
   port?: number;
 }
 
+interface McpContextGroup {
+  name: string;
+  entries: Array<{
+    componentName?: string;
+    content: string;
+    commentText?: string;
+  }>;
+}
+
 const sendContextToServer = async (
   contextUrl: string,
-  content: string[],
-  prompt?: string,
+  groups: McpContextGroup[],
 ): Promise<void> => {
   await fetch(contextUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content, prompt }),
+    body: JSON.stringify({ groups }),
   }).catch(() => {});
 };
 
@@ -25,12 +33,19 @@ export const createMcpPlugin = (options: McpPluginOptions = {}): Plugin => {
     name: "mcp",
     hooks: {
       onCopySuccess: (_elements: Element[], content: string) => {
-        void sendContextToServer(contextUrl, [content]);
+        void sendContextToServer(contextUrl, [
+          { name: "Selection", entries: [{ content }] },
+        ]);
       },
       transformAgentContext: async (
         context: AgentContext,
       ): Promise<AgentContext> => {
-        await sendContextToServer(contextUrl, context.content, context.prompt);
+        await sendContextToServer(contextUrl, [
+          {
+            name: "Agent Session",
+            entries: context.content.map((c) => ({ content: c })),
+          },
+        ]);
         return context;
       },
     },
