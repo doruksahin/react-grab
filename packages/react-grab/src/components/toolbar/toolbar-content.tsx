@@ -4,8 +4,8 @@ import { IconSelect } from "../icons/icon-select.jsx";
 import { IconChevron } from "../icons/icon-chevron.jsx";
 import { IconComment } from "../icons/icon-comment.jsx";
 import { IconCopy } from "../icons/icon-copy.jsx";
-import { IconEye } from "../icons/icon-eye.js";
-import { IconEyeOff } from "../icons/icon-eye-off.js";
+import { IconEye } from "../icons/icon-eye.jsx";
+import { IconEyeOff } from "../icons/icon-eye-off.jsx";
 import {
   getExpandGridClass,
   getButtonSpacingClass,
@@ -31,6 +31,7 @@ export interface ToolbarContentProps {
   commentsButton?: JSX.Element;
   copyAllButton?: JSX.Element;
   toggleButton?: JSX.Element;
+  visibilityButton?: JSX.Element;
   selectionsHidden: boolean;
   onToggleSelectionsHidden?: () => void;
   collapseButton?: JSX.Element;
@@ -309,7 +310,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
               )}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
-                {defaultVisibilityButton()}
+                {props.visibilityButton ?? defaultVisibilityButton()}
               </div>
             </div>
           </div>
