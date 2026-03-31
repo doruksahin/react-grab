@@ -8,6 +8,7 @@ import type { Database } from "./storage/d1-storage.js";
 import { commentsRoutes } from "./routes/comments.js";
 import { groupsRoutes } from "./routes/groups.js";
 import { healthRoutes } from "./routes/health.js";
+import { screenshotsRoutes } from "./routes/screenshots.js";
 import { DOC_CONFIG } from "./lib/doc-config.js";
 
 const app = new OpenAPIHono<{ Bindings: Bindings; Variables: { db: Database } }>();
@@ -25,6 +26,7 @@ app.use("*", async (c, next) => {
 app.route("/", healthRoutes);
 app.route("/", commentsRoutes);
 app.route("/", groupsRoutes);
+app.route("/", screenshotsRoutes);
 
 app.doc("/doc", DOC_CONFIG);
 
