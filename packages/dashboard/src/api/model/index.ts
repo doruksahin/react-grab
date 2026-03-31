@@ -22,3 +22,4 @@ export * from './persistGroups200Status';
 export * from './persistGroups400';
 export * from './persistGroupsBodyItem';
 export * from './uploadScreenshot200';
+export * from './uploadScreenshot415';

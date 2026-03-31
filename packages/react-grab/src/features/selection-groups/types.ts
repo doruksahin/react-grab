@@ -1,15 +1,16 @@
 import type { Accessor, Setter } from "solid-js";
+import type { ServerSelectionGroup } from "../../generated/types.js";
 import type { CommentItem } from "../../types.js";
 
 export const DEFAULT_GROUP_ID = "default" as const;
 export const DEFAULT_GROUP_NAME = "Default" as const;
 
-export interface SelectionGroup {
-  id: string;
-  name: string;
-  createdAt: number;
-  revealed: boolean;
-}
+/**
+ * SelectionGroup extends the server-defined shape.
+ * All fields come from the server type (SSOT).
+ * Add UI-only fields here if needed in the future.
+ */
+export interface SelectionGroup extends ServerSelectionGroup {}
 
 export const createDefaultGroup = (): SelectionGroup => ({
   id: DEFAULT_GROUP_ID,
