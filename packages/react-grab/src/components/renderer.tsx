@@ -222,6 +222,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           isClearPromptOpen={Boolean(props.clearPromptPosition)}
           selectionsRevealed={props.selectionsRevealed}
           onToggleSelectionsRevealed={props.onToggleSelectionsRevealed}
+          syncStatus={props.syncStatus}
+          syncWorkspace={props.syncWorkspace}
         />
       </Show>
 

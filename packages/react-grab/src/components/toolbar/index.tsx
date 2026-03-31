@@ -99,6 +99,8 @@ interface ToolbarProps {
   isToolbarMenuOpen?: boolean;
   selectionsRevealed?: boolean;
   onToggleSelectionsRevealed?: () => void;
+  syncStatus?: import("../../features/sync/types.js").SyncStatus;
+  syncWorkspace?: string;
 }
 
 interface FreezeHandlersOptions {
@@ -1060,6 +1062,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         enabled={props.enabled}
         selectionsRevealed={props.selectionsRevealed ?? false}
         onToggleSelectionsRevealed={props.onToggleSelectionsRevealed}
+        syncStatus={props.syncStatus ?? "local"}
+        syncWorkspace={props.syncWorkspace}
         isCollapsed={isCollapsed()}
         snapEdge={snapEdge()}
         isShaking={isShaking()}

@@ -13,6 +13,9 @@ import {
   getHitboxConstraintClass,
 } from "../../utils/toolbar-layout.js";
 
+import type { SyncStatus } from "../../features/sync/types.js";
+import { SyncIndicator } from "../../features/sync/components/sync-indicator.jsx";
+
 export interface ToolbarContentProps {
   isActive?: boolean;
   enabled?: boolean;
@@ -36,6 +39,8 @@ export interface ToolbarContentProps {
   onToggleSelectionsRevealed?: () => void;
   collapseButton?: JSX.Element;
   transformOrigin?: string;
+  syncStatus: SyncStatus;
+  syncWorkspace?: string;
 }
 
 export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
@@ -320,6 +325,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
         </div>
       </div>
       {props.collapseButton ?? defaultCollapseButton()}
+      <SyncIndicator status={props.syncStatus} workspace={props.syncWorkspace} />
     </div>
   );
 };

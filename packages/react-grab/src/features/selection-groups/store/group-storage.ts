@@ -1,39 +1,53 @@
 import type { SelectionGroup } from "../types.js";
-import { createDefaultGroup, DEFAULT_GROUP_ID } from "../types.js";
+import { DEFAULT_GROUP_ID } from "../types.js";
 import { generateId } from "../../../utils/generate-id.js";
 import { logRecoverableError } from "../../../utils/log-recoverable-error.js";
+import type { StorageAdapter } from "../../sync/types.js";
+
+let activeAdapter: StorageAdapter | null = null;
 
 const GROUPS_KEY = "react-grab-selection-groups";
 
-const loadFromSessionStorage = (): SelectionGroup[] => {
+const loadFromLocalStorage = (): SelectionGroup[] => {
   try {
-    const serialized = sessionStorage.getItem(GROUPS_KEY);
-    if (!serialized) return [createDefaultGroup()];
+    const serialized = localStorage.getItem(GROUPS_KEY);
+    if (!serialized) return [];
     const parsed = JSON.parse(serialized) as SelectionGroup[];
-    const validated = parsed.map((group) => ({
+    return parsed.map((group) => ({
       ...group,
       revealed:
         typeof group.revealed === "boolean" ? group.revealed : false,
     }));
-    const hasDefault = validated.some((g) => g.id === DEFAULT_GROUP_ID);
-    return hasDefault ? validated : [createDefaultGroup(), ...validated];
   } catch (error) {
-    logRecoverableError("Failed to load groups from sessionStorage", error);
-    return [createDefaultGroup()];
+    logRecoverableError("Failed to load groups from localStorage", error);
+    return [];
   }
 };
 
-let groups: SelectionGroup[] = loadFromSessionStorage();
+let groups: SelectionGroup[] = loadFromLocalStorage();
+
+export const initGroupStorage = async (adapter: StorageAdapter): Promise<void> => {
+  activeAdapter = adapter;
+  groups = await adapter.loadGroups();
+};
 
 export const persistGroups = (
   nextGroups: SelectionGroup[],
 ): SelectionGroup[] => {
   groups = nextGroups;
-  try {
-    sessionStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
-  } catch (error) {
-    logRecoverableError("Failed to save groups to sessionStorage", error);
+
+  if (activeAdapter) {
+    activeAdapter.persistGroups(groups).catch(() => {
+      // Error handling is done inside the adapter
+    });
+  } else {
+    try {
+      localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+    } catch (error) {
+      logRecoverableError("Failed to save groups to localStorage", error);
+    }
   }
+
   return groups;
 };
 

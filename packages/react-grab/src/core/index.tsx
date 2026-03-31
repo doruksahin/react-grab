@@ -161,7 +161,11 @@ import {
   isClearConfirmed,
   confirmClear,
   persistCommentItems,
+  initCommentStorage,
 } from "../utils/comment-storage.js";
+import { initGroupStorage } from "../features/selection-groups/store/group-storage.js";
+import { createHttpAdapter } from "../features/sync/index.js";
+import type { SyncConfig } from "../features/sync/types.js";
 import { copyContent, copyGroupedContent, type ReactGrabGroup } from "../utils/copy-content.js";
 import { joinSnippets, joinGroupedSnippets, type GroupedSnippet } from "../utils/join-snippets.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
@@ -206,6 +210,30 @@ interface BuildActionContextOptions {
   onBeforePrompt?: () => void;
   customEnterPromptMode?: (agent?: AgentOptions) => void;
 }
+
+let syncState: { workspace: string; status: "local" | "synced" | "error" } | null = null;
+
+export const initSync = async (config: SyncConfig): Promise<void> => {
+  if (!config.enabled) {
+    syncState = { workspace: config.workspace, status: "local" };
+    return;
+  }
+
+  try {
+    const adapter = createHttpAdapter(config);
+    await Promise.all([
+      initCommentStorage(adapter),
+      initGroupStorage(adapter),
+    ]);
+    syncState = { workspace: config.workspace, status: "synced" };
+  } catch (error) {
+    // Server unreachable — fall back to localStorage (already loaded at module init)
+    // Fire the error callback so it's not silent
+    const err = error instanceof Error ? error : new Error(String(error));
+    config.onSyncError(err);
+    syncState = { workspace: config.workspace, status: "error" };
+  }
+};
 
 let hasInited = false;
 const toolbarStateChangeCallbacks = new Set<(state: ToolbarState) => void>();
@@ -4352,6 +4380,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 selectionsRevealed={visibility.selectionsRevealed()}
                 onToggleSelectionsRevealed={visibility.handleToggleParent}
                 onToggleCommentItemRevealed={visibility.handleToggleItem}
+                syncStatus={syncState?.status ?? "local"}
+                syncWorkspace={syncState?.workspace}
                 groups={selectionGroups.groups()}
                 activeGroupId={selectionGroups.activeGroupId()}
                 onAddGroup={selectionGroups.handleAddGroup}

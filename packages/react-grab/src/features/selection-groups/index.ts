@@ -4,7 +4,7 @@ import type {
   SelectionGroupsDeps,
   SelectionGroup,
 } from "./types.js";
-import { DEFAULT_GROUP_ID } from "./types.js";
+import { DEFAULT_GROUP_ID, createDefaultGroup } from "./types.js";
 import {
   loadGroups,
   addGroup as addGroupToStorage,
@@ -17,7 +17,14 @@ import { removeCommentsByGroup } from "./business/group-operations.js";
 export function createSelectionGroups(
   deps: SelectionGroupsDeps,
 ): SelectionGroupsAPI {
-  const [groups, setGroups] = createSignal(loadGroups());
+  const [rawGroups, setRawGroups] = createSignal(loadGroups());
+  const groups = (): SelectionGroup[] => {
+    const raw = rawGroups();
+    return raw.some((g) => g.id === DEFAULT_GROUP_ID)
+      ? raw
+      : [createDefaultGroup(), ...raw];
+  };
+  const setGroups = setRawGroups;
   const [activeGroupId, setActiveGroupId] = createSignal<string>(DEFAULT_GROUP_ID);
 
   const persistGroups = (nextGroups: SelectionGroup[]) => {

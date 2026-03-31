@@ -1,4 +1,4 @@
-export { init } from "./core/index.js";
+export { init, initSync } from "./core/index.js";
 export {
   getStack,
   formatElementInfo,
@@ -40,6 +40,7 @@ export type {
   PluginConfig,
   PluginHooks,
 } from "./types.js";
+export type { SyncConfig } from "./features/sync/types.js";
 
 import { init } from "./core/index.js";
 import type { Plugin, ReactGrabAPI } from "./types.js";
