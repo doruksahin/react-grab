@@ -1,9 +1,7 @@
 import type { Accessor, Setter } from "solid-js";
 import type {
   CommentItem,
-  GrabbedBox,
   OverlayBounds,
-  SelectionLabelInstance,
   ToolbarState,
 } from "../../types.js";
 
