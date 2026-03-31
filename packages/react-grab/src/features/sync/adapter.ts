@@ -14,7 +14,7 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
 
   const handleError = (error: unknown): never => {
     const err = error instanceof Error ? error : new Error(String(error));
-    config.onSyncError?.(err);
+    config.onSyncError(err);
     throw err;
   };
 
@@ -25,6 +25,9 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
         if (!response.ok) {
           throw new Error(`GET /comments failed: ${response.status}`);
         }
+        if (config.syncRevealedState) {
+          return (await response.json()) as CommentItem[];
+        }
         const serverItems = (await response.json()) as Omit<CommentItem, "revealed">[];
         return mergeRevealedIntoComments(serverItems);
       } catch (error) {
@@ -33,13 +36,17 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
     },
 
     persistComments: async (items: CommentItem[]): Promise<CommentItem[]> => {
-      saveLocalRevealedStates(items, []);
-      const stripped = stripRevealedFromComments(items);
+      const payload = config.syncRevealedState
+        ? items
+        : stripRevealedFromComments(items);
+      if (!config.syncRevealedState) {
+        saveLocalRevealedStates(items, []);
+      }
       try {
         const response = await fetch(`${baseUrl}/comments`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(stripped),
+          body: JSON.stringify(payload),
         });
         if (!response.ok) {
           throw new Error(`PUT /comments failed: ${response.status}`);
@@ -56,6 +63,9 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
         if (!response.ok) {
           throw new Error(`GET /groups failed: ${response.status}`);
         }
+        if (config.syncRevealedState) {
+          return (await response.json()) as SelectionGroup[];
+        }
         const serverGroups = (await response.json()) as Omit<SelectionGroup, "revealed">[];
         return mergeRevealedIntoGroups(serverGroups);
       } catch (error) {
@@ -64,13 +74,17 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
     },
 
     persistGroups: async (groups: SelectionGroup[]): Promise<SelectionGroup[]> => {
-      saveLocalRevealedStates([], groups);
-      const stripped = stripRevealedFromGroups(groups);
+      const payload = config.syncRevealedState
+        ? groups
+        : stripRevealedFromGroups(groups);
+      if (!config.syncRevealedState) {
+        saveLocalRevealedStates([], groups);
+      }
       try {
         const response = await fetch(`${baseUrl}/groups`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(stripped),
+          body: JSON.stringify(payload),
         });
         if (!response.ok) {
           throw new Error(`PUT /groups failed: ${response.status}`);

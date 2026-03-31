@@ -23,5 +23,6 @@ export interface StorageAdapter {
 export interface SyncConfig {
   serverUrl: string;
   workspace: string;
-  onSyncError?: (error: Error) => void;
+  syncRevealedState: boolean;
+  onSyncError: (error: Error) => void;
 }
