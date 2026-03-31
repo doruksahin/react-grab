@@ -4,12 +4,13 @@ import { logger } from "hono/logger";
 import { swaggerUI } from "@hono/swagger-ui";
 import type { Bindings } from "./types.js";
 import { createDb } from "./storage/d1-storage.js";
+import type { Database } from "./storage/d1-storage.js";
 import { commentsRoutes } from "./routes/comments.js";
 import { groupsRoutes } from "./routes/groups.js";
 import { healthRoutes } from "./routes/health.js";
 import { DOC_CONFIG } from "./lib/doc-config.js";
 
-const app = new OpenAPIHono<{ Bindings: Bindings }>();
+const app = new OpenAPIHono<{ Bindings: Bindings; Variables: { db: Database } }>();
 
 app.use("*", cors());
 app.use("*", logger());
