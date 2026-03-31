@@ -361,7 +361,7 @@ export interface SourceInfo {
   componentName: string | null;
 }
 
-export type SelectionVisibility = "reveal" | "normal" | "hidden";
+
 
 export interface ToolbarState {
   edge: "top" | "bottom" | "left" | "right";
@@ -369,7 +369,7 @@ export interface ToolbarState {
   collapsed: boolean;
   enabled: boolean;
   defaultAction?: string;
-  selectionVisibility: SelectionVisibility;
+  selectionsRevealed: boolean;
 }
 
 export interface DropdownAnchor {
@@ -450,6 +450,7 @@ export interface CommentItem {
   elementSelectors?: string[];
   commentText?: string;
   timestamp: number;
+  revealed: boolean;
 }
 
 export interface ReactGrabRendererProps {
@@ -553,8 +554,9 @@ export interface ReactGrabRendererProps {
   clearPromptPosition?: DropdownAnchor | null;
   onClearCommentsConfirm?: () => void;
   onClearCommentsCancel?: () => void;
-  selectionVisibility?: SelectionVisibility;
-  onCycleSelectionVisibility?: () => void;
+  selectionsRevealed?: boolean;
+  onToggleSelectionsRevealed?: () => void;
+  onToggleCommentItemRevealed?: (commentItemId: string) => void;
 }
 
 export interface GrabbedBox {
