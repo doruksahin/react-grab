@@ -3,165 +3,254 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Toggle Hide/Reveal Selections - UI PoC</title>
+  <title>Toggle Hide/Reveal Selections - 3-State PoC</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
     .interactive-scale { transition: transform 0.1s; }
     .interactive-scale:active { transform: scale(0.9); }
     .toolbar-shadow { filter: drop-shadow(0px 1px 2px rgba(81,81,81,0.25)); }
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
-    .selection-visible { animation: fadeIn 0.15s ease-out forwards; }
-    .selection-hidden { animation: fadeOut 0.15s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+    @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.98); } }
+    .selection-enter { animation: fadeIn 0.15s ease-out forwards; }
+    .selection-exit { animation: fadeOut 0.15s ease-out forwards; pointer-events: none; }
+    .card-hoverable { position: relative; }
+    .card-hoverable .hover-selection { opacity: 0; transition: opacity 0.15s ease-out; pointer-events: none; }
+    .card-hoverable:hover .hover-selection { opacity: 1; }
+    /* In reveal mode, force all selections visible */
+    .reveal-mode .card-hoverable .hover-selection { opacity: 1 !important; }
+    /* In hide mode, force all selections hidden */
+    .hide-mode .card-hoverable .hover-selection { opacity: 0 !important; }
+    .hide-mode .comment-selection { display: none !important; }
+    /* Comment selections in normal mode: only visible on comment hover */
+    .comment-selection { transition: opacity 0.15s ease-out; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center gap-12 p-8">
+<body class="min-h-screen flex flex-col items-center justify-center gap-8 p-8">
 
-  <h1 class="text-2xl font-semibold text-gray-800">Toggle Hide/Reveal Selections - UI PoC</h1>
-  <p class="text-gray-500 text-sm -mt-8">Click the eye button in the toolbar to toggle selection visibility</p>
+  <h1 class="text-xl font-semibold text-gray-200">3-State Visibility Toggle PoC</h1>
+  <p class="text-gray-500 text-sm -mt-4">Click the eye button to cycle: Reveal &rarr; Normal &rarr; Hide</p>
 
-  <!-- Mock page content -->
-  <div class="relative w-[600px] h-[400px] bg-white rounded-xl border border-gray-200 overflow-hidden">
-    <!-- Mock page elements -->
-    <div class="p-6 space-y-4">
-      <div class="h-8 w-48 bg-gray-100 rounded"></div>
-      <div class="h-4 w-full bg-gray-50 rounded"></div>
-      <div class="h-4 w-3/4 bg-gray-50 rounded"></div>
-      <div class="flex gap-4 mt-6">
-        <div id="mock-card-1" class="relative flex-1 h-32 bg-gray-50 rounded-lg border border-gray-100 p-4">
-          <div class="h-3 w-20 bg-gray-200 rounded"></div>
-          <div class="h-3 w-32 bg-gray-100 rounded mt-2"></div>
-        </div>
-        <div id="mock-card-2" class="relative flex-1 h-32 bg-gray-50 rounded-lg border border-gray-100 p-4">
-          <div class="h-3 w-24 bg-gray-200 rounded"></div>
-          <div class="h-3 w-28 bg-gray-100 rounded mt-2"></div>
-        </div>
-      </div>
-      <div class="h-20 w-full bg-gray-50 rounded-lg border border-gray-100 mt-4"></div>
-    </div>
+  <div class="flex gap-6 items-start">
+    <!-- Mock page content -->
+    <div id="page-container" class="relative w-[520px] h-[420px] bg-[#2a2a2a] rounded-xl border border-gray-700 overflow-hidden">
+      <!-- Mock page elements -->
+      <div class="p-5 space-y-3">
+        <div class="h-7 w-44 bg-gray-700 rounded"></div>
+        <div class="h-3 w-full bg-gray-800 rounded"></div>
+        <div class="h-3 w-3/4 bg-gray-800 rounded"></div>
 
-    <!-- Selection overlays (grabbedBoxes) -->
-    <div id="selection-overlays">
-      <div class="absolute top-[88px] left-[24px] w-[264px] h-[128px] border-2 border-purple-500 rounded-lg bg-purple-500/10 pointer-events-none selection-visible">
-        <div class="absolute -top-6 left-1 bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
-          &lt;Card&gt; - ProductCard
-        </div>
-      </div>
-      <div class="absolute top-[88px] left-[312px] w-[264px] h-[128px] border-2 border-purple-500 rounded-lg bg-purple-500/10 pointer-events-none selection-visible">
-        <div class="absolute -top-6 left-1 bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
-          &lt;Card&gt; - PricingCard
-        </div>
-      </div>
-      <div class="absolute top-[248px] left-[24px] w-[552px] h-[80px] border-2 border-purple-500 rounded-lg bg-purple-500/10 pointer-events-none selection-visible">
-        <div class="absolute -top-6 left-1 bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
-          &lt;footer&gt; - PageFooter
-        </div>
-      </div>
-    </div>
+        <!-- Card 1: has a comment -->
+        <div class="flex gap-4 mt-4">
+          <div id="card-1" class="card-hoverable flex-1 h-28 bg-gray-800 rounded-lg border border-gray-700 p-3">
+            <div class="h-3 w-16 bg-gray-600 rounded text-[9px] text-gray-400 flex items-center">AssetCard</div>
+            <div class="h-3 w-28 bg-gray-700 rounded mt-2"></div>
+            <div class="h-3 w-20 bg-gray-700 rounded mt-1"></div>
+            <!-- Hover selection (normal mode) -->
+            <div class="hover-selection absolute inset-0 border-2 border-fuchsia-500 rounded-lg bg-fuchsia-500/10">
+              <div class="absolute -top-5 left-1 bg-fuchsia-600 text-white text-[9px] px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
+                AssetCard.img
+              </div>
+            </div>
+            <!-- Comment selection (reveal mode) -->
+            <div class="comment-selection absolute inset-0 border-2 border-fuchsia-500 rounded-lg bg-fuchsia-500/10" style="opacity:0">
+              <div class="absolute -top-5 left-1 bg-fuchsia-600 text-white text-[9px] px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
+                AssetCard.img
+              </div>
+            </div>
+          </div>
 
-    <!-- Toolbar (bottom center) -->
-    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-50">
-      <div class="toolbar-shadow flex items-center gap-1.5 bg-white rounded-[10px] py-1.5 px-2" style="corner-shape: superellipse(1.25);">
-        <!-- Select button -->
-        <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale" title="Select element">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 18 18" fill="currentColor" class="text-black">
-            <path opacity="0.4" d="M7.65631 10.9565C7.31061 10.0014 7.54012 8.96635 8.25592 8.25195C8.74522 7.76615 9.38771 7.49951 10.0694 7.49951C10.3682 7.49951 10.6641 7.55171 10.9483 7.65381L16.0001 9.49902V4.75C16.0001 3.2334 14.7667 2 13.2501 2H4.75012C3.23352 2 2.00012 3.2334 2.00012 4.75V13.25C2.00012 14.7666 3.23352 16 4.75012 16H9.49962L7.65631 10.9565Z"/>
-            <path d="M17.296 11.5694L10.4415 9.06545C10.0431 8.92235 9.61441 9.01658 9.31551 9.31338C9.01671 9.61168 8.92101 10.0429 9.06551 10.4413L11.5704 17.2948C11.7247 17.7191 12.128 18.0004 12.5772 18.0004C12.585 18.0004 12.5918 17.9999 12.5987 17.9999C13.0577 17.9906 13.4591 17.6913 13.5987 17.2543L14.4854 14.4857L17.2559 13.5985C17.6914 13.4589 17.9903 13.057 18 12.599C18.0097 12.141 17.7267 11.7276 17.296 11.5694Z"/>
-          </svg>
-        </button>
-
-        <!-- Comments button -->
-        <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale" title="Comments">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#B3B3B3]">
-            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
-          </svg>
-        </button>
-
-        <!-- Copy all button -->
-        <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale" title="Copy all">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#B3B3B3]">
-            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-          </svg>
-        </button>
-
-        <!-- NEW: Visibility toggle button -->
-        <button
-          id="visibility-toggle"
-          class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale"
-          title="Toggle selection visibility"
-          onclick="toggleVisibility()"
-        >
-          <!-- Eye icon (visible state) -->
-          <svg id="icon-eye" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/70 transition-colors">
-            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-          <!-- Eye-off icon (hidden state) -->
-          <svg id="icon-eye-off" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#B3B3B3] transition-colors hidden">
-            <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
-            <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
-            <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
-            <path d="m2 2 20 20"/>
-          </svg>
-        </button>
-
-        <!-- Enabled toggle -->
-        <div class="relative shrink-0 mx-0.5">
-          <div class="relative rounded-full w-5 h-3 bg-black cursor-pointer">
-            <div class="absolute top-0.5 left-2.5 rounded-full bg-white w-2 h-2 transition-transform"></div>
+          <!-- Card 2: has a comment -->
+          <div id="card-2" class="card-hoverable flex-1 h-28 bg-gray-800 rounded-lg border border-gray-700 p-3">
+            <div class="h-3 w-20 bg-gray-600 rounded text-[9px] text-gray-400 flex items-center">PriceTag</div>
+            <div class="h-3 w-24 bg-gray-700 rounded mt-2"></div>
+            <div class="h-3 w-16 bg-gray-700 rounded mt-1"></div>
+            <!-- Hover selection -->
+            <div class="hover-selection absolute inset-0 border-2 border-fuchsia-500 rounded-lg bg-fuchsia-500/10">
+              <div class="absolute -top-5 left-1 bg-fuchsia-600 text-white text-[9px] px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
+                PriceTag
+              </div>
+            </div>
+            <!-- Comment selection -->
+            <div class="comment-selection absolute inset-0 border-2 border-fuchsia-500 rounded-lg bg-fuchsia-500/10" style="opacity:0">
+              <div class="absolute -top-5 left-1 bg-fuchsia-600 text-white text-[9px] px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
+                PriceTag
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Collapse chevron -->
-        <button class="flex items-center justify-center cursor-pointer interactive-scale" title="Collapse">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#B3B3B3] rotate-180">
-            <path d="m6 9 6 6 6-6"/>
-          </svg>
-        </button>
+        <!-- Card 3: NO comment -->
+        <div id="card-3" class="card-hoverable relative h-16 w-full bg-gray-800 rounded-lg border border-gray-700 p-3 mt-3">
+          <div class="h-3 w-24 bg-gray-600 rounded text-[9px] text-gray-400 flex items-center">Footer</div>
+          <div class="h-3 w-48 bg-gray-700 rounded mt-1"></div>
+          <!-- Hover selection only (no comment) -->
+          <div class="hover-selection absolute inset-0 border-2 border-fuchsia-500 rounded-lg bg-fuchsia-500/10">
+            <div class="absolute -top-5 left-1 bg-fuchsia-600 text-white text-[9px] px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
+              Footer
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar (bottom center) -->
+      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-50">
+        <div class="toolbar-shadow flex items-center gap-1.5 bg-white rounded-[10px] py-1.5 px-2">
+          <!-- Select button -->
+          <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale" title="Select">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 18 18" fill="currentColor" class="text-black">
+              <path opacity="0.4" d="M7.65631 10.9565C7.31061 10.0014 7.54012 8.96635 8.25592 8.25195C8.74522 7.76615 9.38771 7.49951 10.0694 7.49951C10.3682 7.49951 10.6641 7.55171 10.9483 7.65381L16.0001 9.49902V4.75C16.0001 3.2334 14.7667 2 13.2501 2H4.75012C3.23352 2 2.00012 3.2334 2.00012 4.75V13.25C2.00012 14.7666 3.23352 16 4.75012 16H9.49962L7.65631 10.9565Z"/>
+              <path d="M17.296 11.5694L10.4415 9.06545C10.0431 8.92235 9.61441 9.01658 9.31551 9.31338C9.01671 9.61168 8.92101 10.0429 9.06551 10.4413L11.5704 17.2948C11.7247 17.7191 12.128 18.0004 12.5772 18.0004C12.585 18.0004 12.5918 17.9999 12.5987 17.9999C13.0577 17.9906 13.4591 17.6913 13.5987 17.2543L14.4854 14.4857L17.2559 13.5985C17.6914 13.4589 17.9903 13.057 18 12.599C18.0097 12.141 17.7267 11.7276 17.296 11.5694Z"/>
+            </svg>
+          </button>
+          <!-- Comments button -->
+          <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale" title="Comments">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#B3B3B3]">
+              <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+            </svg>
+          </button>
+          <!-- Copy button -->
+          <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale" title="Copy all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#B3B3B3]">
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+            </svg>
+          </button>
+
+          <!-- 3-STATE VISIBILITY TOGGLE -->
+          <button id="visibility-toggle" class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale" title="Cycle: Reveal / Normal / Hide" onclick="cycleVisibility()">
+            <!-- Reveal icon: eye filled -->
+            <svg id="icon-reveal" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden text-black transition-colors">
+              <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+              <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            </svg>
+            <!-- Normal icon: eye outline (dim) -->
+            <svg id="icon-normal" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#B3B3B3] transition-colors">
+              <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <!-- Hide icon: eye-off -->
+            <svg id="icon-hide" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden text-[#B3B3B3] transition-colors">
+              <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
+              <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
+              <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
+              <path d="m2 2 20 20"/>
+            </svg>
+          </button>
+
+          <!-- Enabled toggle -->
+          <div class="relative shrink-0 mx-0.5">
+            <div class="relative rounded-full w-5 h-3 bg-black cursor-pointer">
+              <div class="absolute top-0.5 left-2.5 rounded-full bg-white w-2 h-2 transition-transform"></div>
+            </div>
+          </div>
+          <!-- Collapse chevron -->
+          <button class="flex items-center justify-center cursor-pointer interactive-scale" title="Collapse">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#B3B3B3] rotate-180">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comments panel (right side) -->
+    <div class="w-[200px] bg-[#2a2a2a] rounded-xl border border-gray-700 overflow-hidden">
+      <div class="px-3 py-2 border-b border-gray-700 flex items-center justify-between">
+        <span class="text-gray-300 text-xs font-medium">Comments</span>
+        <span class="text-gray-500 text-[10px]">2</span>
+      </div>
+      <!-- Comment 1 -->
+      <div class="comment-item px-3 py-2 border-b border-gray-700/50 hover:bg-gray-700/30 cursor-pointer transition-colors"
+           onmouseenter="highlightComment(0, true)"
+           onmouseleave="highlightComment(0, false)">
+        <div class="flex items-center gap-1.5">
+          <span class="text-gray-300 text-[11px] font-medium">AssetCard.img</span>
+          <span class="text-gray-600 text-[9px]">2m</span>
+        </div>
+        <p class="text-gray-500 text-[10px] mt-0.5">hey</p>
+      </div>
+      <!-- Comment 2 -->
+      <div class="comment-item px-3 py-2 hover:bg-gray-700/30 cursor-pointer transition-colors"
+           onmouseenter="highlightComment(1, true)"
+           onmouseleave="highlightComment(1, false)">
+        <div class="flex items-center gap-1.5">
+          <span class="text-gray-300 text-[11px] font-medium">PriceTag</span>
+          <span class="text-gray-600 text-[9px]">5m</span>
+        </div>
+        <p class="text-gray-500 text-[10px] mt-0.5">check this price</p>
       </div>
     </div>
   </div>
 
   <!-- State indicator -->
-  <div class="flex items-center gap-3">
-    <div id="state-dot" class="w-3 h-3 rounded-full bg-green-500"></div>
-    <span id="state-label" class="text-sm text-gray-600 font-medium">Selections visible (3 elements selected)</span>
+  <div class="flex items-center gap-3 bg-[#2a2a2a] rounded-lg px-4 py-2 border border-gray-700">
+    <div id="state-dot" class="w-2.5 h-2.5 rounded-full bg-[#B3B3B3]"></div>
+    <span id="state-label" class="text-xs text-gray-400 font-medium">Normal — hover to see selections</span>
+  </div>
+
+  <div class="text-gray-600 text-[10px] text-center max-w-md leading-relaxed">
+    <strong class="text-gray-500">Reveal:</strong> All comment selections always visible &nbsp;|&nbsp;
+    <strong class="text-gray-500">Normal:</strong> Selections appear on hover only &nbsp;|&nbsp;
+    <strong class="text-gray-500">Hide:</strong> Everything hidden<br>
+    <span class="text-gray-700 mt-1 block">Card 3 (Footer) has no comment — it only shows selection on hover, never in reveal mode</span>
   </div>
 
   <script>
-    let selectionsHidden = false;
+    // States: "normal" -> "reveal" -> "hidden" -> "normal" ...
+    const states = ["normal", "reveal", "hidden"];
+    let currentIndex = 0;
+    const commentSelections = document.querySelectorAll('.comment-selection');
+    const container = document.getElementById('page-container');
 
-    function toggleVisibility() {
-      selectionsHidden = !selectionsHidden;
+    function cycleVisibility() {
+      currentIndex = (currentIndex + 1) % states.length;
+      const state = states[currentIndex];
+      applyState(state);
+    }
 
-      const overlays = document.getElementById('selection-overlays');
-      const iconEye = document.getElementById('icon-eye');
-      const iconEyeOff = document.getElementById('icon-eye-off');
+    function applyState(state) {
+      const iconReveal = document.getElementById('icon-reveal');
+      const iconNormal = document.getElementById('icon-normal');
+      const iconHide = document.getElementById('icon-hide');
       const stateDot = document.getElementById('state-dot');
       const stateLabel = document.getElementById('state-label');
 
-      if (selectionsHidden) {
-        overlays.querySelectorAll('.selection-visible').forEach(el => {
-          el.classList.remove('selection-visible');
-          el.classList.add('selection-hidden');
-        });
-        iconEye.classList.add('hidden');
-        iconEyeOff.classList.remove('hidden');
-        stateDot.classList.remove('bg-green-500');
-        stateDot.classList.add('bg-gray-400');
-        stateLabel.textContent = 'Selections hidden (3 elements still selected)';
-      } else {
-        overlays.querySelectorAll('.selection-hidden').forEach(el => {
-          el.classList.remove('selection-hidden');
-          el.classList.add('selection-visible');
-        });
-        iconEye.classList.remove('hidden');
-        iconEyeOff.classList.add('hidden');
-        stateDot.classList.remove('bg-gray-400');
-        stateDot.classList.add('bg-green-500');
-        stateLabel.textContent = 'Selections visible (3 elements selected)';
+      // Reset all icons
+      iconReveal.classList.add('hidden');
+      iconNormal.classList.add('hidden');
+      iconHide.classList.add('hidden');
+
+      // Reset container classes
+      container.classList.remove('reveal-mode', 'hide-mode');
+
+      if (state === 'reveal') {
+        iconReveal.classList.remove('hidden');
+        container.classList.add('reveal-mode');
+        stateDot.className = 'w-2.5 h-2.5 rounded-full bg-fuchsia-500';
+        stateLabel.textContent = 'Reveal — all comment selections pinned';
+        // Show all comment selections
+        commentSelections.forEach(el => { el.style.opacity = '1'; });
+      } else if (state === 'normal') {
+        iconNormal.classList.remove('hidden');
+        stateDot.className = 'w-2.5 h-2.5 rounded-full bg-[#B3B3B3]';
+        stateLabel.textContent = 'Normal — hover to see selections';
+        // Hide comment selections (they show on comment hover)
+        commentSelections.forEach(el => { el.style.opacity = '0'; });
+      } else if (state === 'hidden') {
+        iconHide.classList.remove('hidden');
+        container.classList.add('hide-mode');
+        stateDot.className = 'w-2.5 h-2.5 rounded-full bg-gray-600';
+        stateLabel.textContent = 'Hidden — all selections suppressed';
+        commentSelections.forEach(el => { el.style.opacity = '0'; });
       }
+    }
+
+    // Highlight a comment's selection on comment panel hover (normal mode only)
+    function highlightComment(index, show) {
+      const state = states[currentIndex];
+      // In reveal mode, they're always visible. In hide mode, always hidden.
+      if (state !== 'normal') return;
+      commentSelections[index].style.opacity = show ? '1' : '0';
     }
   </script>
 </body>
