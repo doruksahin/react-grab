@@ -78,10 +78,41 @@ export function createSelectionVisibility(
     deps.persistCommentItems(updatedItems);
   };
 
+  const handleToggleGroup = (groupId: string) => {
+    const group = deps.groups().find((g) => g.id === groupId);
+    if (!group) return;
+    const newRevealed = !group.revealed;
+
+    // Update the group's revealed state
+    const updatedGroups = deps.groups().map((g) =>
+      g.id === groupId ? { ...g, revealed: newRevealed } : g,
+    );
+    deps.setGroups(updatedGroups);
+    deps.persistGroups(updatedGroups);
+
+    // Override all items in this group
+    const items = deps.commentItems();
+    const updatedItems = items.map((item) =>
+      item.groupId === groupId
+        ? { ...item, revealed: newRevealed }
+        : item,
+    );
+    deps.setCommentItems(updatedItems);
+    deps.persistCommentItems(updatedItems);
+  };
+
   const handleToggleParent = () => {
     const newRevealed = !selectionsRevealed();
 
-    // Override all children
+    // Override all groups
+    const updatedGroups = deps.groups().map((group) => ({
+      ...group,
+      revealed: newRevealed,
+    }));
+    deps.setGroups(updatedGroups);
+    deps.persistGroups(updatedGroups);
+
+    // Override all items
     const items = deps.commentItems();
     const updatedItems = items.map((item) => ({
       ...item,
@@ -98,6 +129,7 @@ export function createSelectionVisibility(
     selectionsRevealed,
     isItemRevealed,
     handleToggleParent,
+    handleToggleGroup,
     handleToggleItem,
   };
 }
