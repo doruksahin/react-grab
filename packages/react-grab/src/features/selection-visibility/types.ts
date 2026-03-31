@@ -60,6 +60,4 @@ export interface SelectionVisibilityAPI {
   handleToggleParent: () => void;
   /** Toggle an individual comment item's revealed state */
   handleToggleItem: (commentItemId: string) => void;
-  /** Dispose reactive effects (call on cleanup) */
-  dispose: () => void;
 }

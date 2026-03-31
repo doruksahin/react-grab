@@ -1,4 +1,4 @@
-# Reveal/Hide v3 Bug Analysis
+# Reveal/Hide v3/v4 Bug Analysis
 
 ## Bug 1: New selection disappears after "Copied" feedback when reveal is toggled ON
 
@@ -60,3 +60,44 @@ Use SolidJS native event binding (`on:click`) on the button instead of delegated
 ```
 
 With `on:click` (native DOM event), `stopPropagation()` prevents the event from reaching the document root, so SolidJS's delegated `onClick` on the parent div never fires.
+
+---
+
+## Bug 3: On page refresh, revealed selections not visible (must toggle off/on)
+
+### Symptom
+After page refresh, items with `revealed: true` in sessionStorage and `selectionsRevealed: true` in localStorage are correctly loaded, but their selection overlays don't appear. Toggling the parent off and on again makes them appear.
+
+### Root Cause
+**File:** `packages/react-grab/src/features/selection-visibility/index.ts:49`
+
+The `createEffect` was wrapped in a **nested `createRoot`**:
+
+```typescript
+const disposeEffect = createRoot((dispose) => {
+  createEffect(on(() => deps.commentItems(), handler));
+  return dispose;
+});
+```
+
+Per SolidJS docs, `createRoot` creates an **independent ownership boundary** with its own scheduling batch. The `createEffect` inside it runs in a separate reactive context from the parent `createRoot` in `core/index.tsx`.
+
+On page load, the parent root's effects (which set up the renderer, theme, activation state) run in one batch, while the nested root's effect runs in a separate batch. The nested effect's initial run fires before the renderer is fully initialized or before `computedGrabbedBoxes` can process the added boxes in the correct reactive cycle.
+
+When the user toggles off/on manually, everything is within the same reactive context and works correctly.
+
+### Fix
+Remove `createRoot` wrapper. Since `createSelectionVisibility()` is called INSIDE the main `createRoot` callback in `core/index.tsx` (line 3720), the `createEffect` inherits ownership from the parent root automatically. No `dispose` function needed — the parent root's disposal handles cleanup.
+
+```typescript
+// Before (broken): separate scheduling batch
+const disposeEffect = createRoot((dispose) => {
+  createEffect(on(() => deps.commentItems(), handler));
+  return dispose;
+});
+
+// After (fixed): inherits parent ownership
+createEffect(on(() => deps.commentItems(), handler));
+```
+
+Also removed `dispose` from `SelectionVisibilityAPI` interface and the `onCleanup(() => visibility.dispose())` call in `core/index.tsx`.

@@ -3731,7 +3731,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       currentToolbarState,
       updateToolbarState,
     });
-    onCleanup(() => visibility.dispose());
 
     const showCommentItemPreview = (
       item: CommentItem,

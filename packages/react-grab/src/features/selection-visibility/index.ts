@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createRoot, on } from "solid-js";
+import { createEffect, createMemo, on } from "solid-js";
 import type {
   PreviewEntry,
   SelectionVisibilityAPI,
@@ -46,18 +46,20 @@ export function createSelectionVisibility(
 
   // Re-render reveal previews whenever comment items change
   // (includes revealed field toggles, additions, removals)
-  const disposeEffect = createRoot((dispose) => {
-    createEffect(
-      on(
-        () => deps.commentItems(),
-        () => {
-          clearRevealedPreviews();
-          showRevealedPreviews();
-        },
-      ),
-    );
-    return dispose;
-  });
+  // NOTE: No createRoot wrapper — this function must be called inside a reactive
+  // owner (e.g., the main createRoot in core/index.tsx). The effect inherits
+  // ownership from the caller and is disposed when the parent owner is disposed.
+  // A nested createRoot would create a separate scheduling batch, causing the
+  // initial run to execute with different timing than the parent's effects.
+  createEffect(
+    on(
+      () => deps.commentItems(),
+      () => {
+        clearRevealedPreviews();
+        showRevealedPreviews();
+      },
+    ),
+  );
 
   const isItemRevealed = (commentItemId: string): boolean => {
     const item = deps.commentItems().find((i) => i.id === commentItemId);
@@ -96,7 +98,6 @@ export function createSelectionVisibility(
     isItemRevealed,
     handleToggleParent,
     handleToggleItem,
-    dispose: disposeEffect,
   };
 }
 
