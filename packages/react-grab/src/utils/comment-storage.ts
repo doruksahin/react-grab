@@ -29,6 +29,10 @@ const loadFromSessionStorage = (): CommentItem[] => {
     const parsed = JSON.parse(serialized) as CommentItem[];
     return parsed.map((commentItem) => ({
       ...commentItem,
+      groupId:
+        typeof commentItem.groupId === "string"
+          ? commentItem.groupId
+          : "default",
       elementsCount: Math.max(1, commentItem.elementsCount ?? 1),
       previewBounds: commentItem.previewBounds ?? [],
       elementSelectors: commentItem.elementSelectors ?? [],

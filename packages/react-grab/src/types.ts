@@ -1,3 +1,5 @@
+import type { SelectionGroup } from "./features/selection-groups/types.js";
+
 export interface Position {
   x: number;
   y: number;
@@ -441,6 +443,7 @@ export interface SelectionLabelInstance {
 
 export interface CommentItem {
   id: string;
+  groupId: string;
   content: string;
   elementName: string;
   tagName: string;
@@ -557,6 +560,13 @@ export interface ReactGrabRendererProps {
   selectionsRevealed?: boolean;
   onToggleSelectionsRevealed?: () => void;
   onToggleCommentItemRevealed?: (commentItemId: string) => void;
+  groups?: SelectionGroup[];
+  activeGroupId?: string;
+  onAddGroup?: (name: string) => void;
+  onRenameGroup?: (groupId: string, name: string) => void;
+  onDeleteGroup?: (groupId: string) => void;
+  onActiveGroupChange?: (groupId: string) => void;
+  onToggleGroupRevealed?: (groupId: string) => void;
 }
 
 export interface GrabbedBox {
