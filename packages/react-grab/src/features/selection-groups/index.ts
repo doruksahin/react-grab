@@ -50,6 +50,14 @@ export function createSelectionGroups(
     setGroups(updated);
   };
 
+  const handleMoveItem = (itemId: string, groupId: string) => {
+    const updated = deps.commentItems().map((i) =>
+      i.id === itemId ? { ...i, groupId } : i,
+    );
+    deps.persistCommentItems(updated);
+    deps.setCommentItems(updated);
+  };
+
   return {
     groups,
     setGroups,
@@ -59,6 +67,7 @@ export function createSelectionGroups(
     handleAddGroup,
     handleRenameGroup,
     handleDeleteGroup,
+    handleMoveItem,
   };
 }
 
@@ -67,4 +76,5 @@ export type {
   SelectionGroup,
   SelectionGroupsAPI,
   SelectionGroupsDeps,
+  SelectionGroupsViewProps,
 } from "./types.js";

@@ -1,4 +1,4 @@
-import type { SelectionGroup } from "./features/selection-groups/types.js";
+import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
 
 export interface Position {
   x: number;
@@ -456,7 +456,7 @@ export interface CommentItem {
   revealed: boolean;
 }
 
-export interface ReactGrabRendererProps {
+export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   selectionVisible?: boolean;
   selectionBounds?: OverlayBounds;
   selectionBoundsMultiple?: OverlayBounds[];
@@ -562,13 +562,6 @@ export interface ReactGrabRendererProps {
   selectionsRevealed?: boolean;
   onToggleSelectionsRevealed?: () => void;
   onToggleCommentItemRevealed?: (commentItemId: string) => void;
-  groups?: SelectionGroup[];
-  activeGroupId?: string;
-  onAddGroup?: (name: string) => void;
-  onRenameGroup?: (groupId: string, name: string) => void;
-  onDeleteGroup?: (groupId: string) => void;
-  onActiveGroupChange?: (groupId: string) => void;
-  onToggleGroupRevealed?: (groupId: string) => void;
 }
 
 export interface GrabbedBox {
@@ -643,7 +636,11 @@ export interface CompletionViewProps {
   onShowContextMenu?: () => void;
 }
 
-export interface SelectionLabelProps {
+export interface SelectionLabelProps
+  extends Pick<
+    SelectionGroupsViewProps,
+    "groups" | "activeGroupId" | "onActiveGroupChange"
+  > {
   tagName?: string;
   componentName?: string;
   elementsCount?: number;

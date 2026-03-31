@@ -154,6 +154,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             }
           }}
           isContextMenuOpen={props.contextMenuPosition !== null}
+          groups={props.groups}
+          activeGroupId={props.activeGroupId}
+          onActiveGroupChange={props.onActiveGroupChange}
         />
       </Show>
 
@@ -267,6 +270,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onToggleGroupRevealed={props.onToggleGroupRevealed}
         onCopyGroup={props.onCopyGroup}
         copyableCount={props.copyableCount}
+        onMoveItem={props.onMoveItem}
       />
     </>
   );
