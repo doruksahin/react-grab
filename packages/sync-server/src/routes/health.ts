@@ -1,9 +1,6 @@
-import { createRoute, z } from "@hono/zod-openapi";
+import { createRoute } from "@hono/zod-openapi";
 import { createRouter } from "../lib/create-router.js";
-
-const healthResponse = z.object({
-  status: z.enum(["ok"]),
-});
+import { StatusResponse } from "../schemas/index.js";
 
 const healthRoute = createRoute({
   method: "get",
@@ -16,7 +13,7 @@ const healthRoute = createRoute({
       description: "OK",
       content: {
         "application/json": {
-          schema: healthResponse,
+          schema: StatusResponse,
         },
       },
     },
