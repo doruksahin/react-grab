@@ -141,6 +141,7 @@ import { openPlugin } from "./plugins/open.js";
 import { copyHtmlPlugin } from "./plugins/copy-html.js";
 import { copyStylesPlugin } from "./plugins/copy-styles.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
+import { createSelectionGroups } from "../features/selection-groups/index.js";
 import {
   freezeAnimations,
   freezeAllAnimations,
@@ -888,6 +889,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       );
 
       const updatedCommentItems = addCommentItem({
+        groupId: selectionGroups.activeGroupId(),
         content,
         elementName: elementName ?? "element",
         tagName: tagName ?? "div",
@@ -3726,6 +3728,12 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       }
     };
 
+    const selectionGroups = createSelectionGroups({
+      commentItems,
+      setCommentItems,
+      persistCommentItems,
+    });
+
     const visibility = createSelectionVisibility({
       commentItems,
       setCommentItems,
@@ -4244,6 +4252,12 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 selectionsRevealed={visibility.selectionsRevealed()}
                 onToggleSelectionsRevealed={visibility.handleToggleParent}
                 onToggleCommentItemRevealed={visibility.handleToggleItem}
+                groups={selectionGroups.groups()}
+                activeGroupId={selectionGroups.activeGroupId()}
+                onAddGroup={selectionGroups.handleAddGroup}
+                onRenameGroup={selectionGroups.handleRenameGroup}
+                onDeleteGroup={selectionGroups.handleDeleteGroup}
+                onActiveGroupChange={selectionGroups.setActiveGroupId}
               />
             );
           }, rendererRoot);
