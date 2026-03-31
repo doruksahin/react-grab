@@ -36,6 +36,8 @@ export async function captureElement(
       quality: resolved.quality,
       type: resolved.format === "jpeg" ? "image/jpeg" : "image/png",
       filter: (node: Node) => !isReactGrabElement(node),
+      width: Math.min((element as HTMLElement).offsetWidth, resolved.maxWidth),
+      height: Math.min((element as HTMLElement).offsetHeight, resolved.maxHeight),
     });
     return blob;
   } catch {
