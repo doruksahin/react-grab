@@ -87,7 +87,6 @@ export function createSelectionVisibility(
     const updatedGroups = deps.groups().map((g) =>
       g.id === groupId ? { ...g, revealed: newRevealed } : g,
     );
-    deps.setGroups(updatedGroups);
     deps.persistGroups(updatedGroups);
 
     // Override all items in this group
@@ -109,7 +108,6 @@ export function createSelectionVisibility(
       ...group,
       revealed: newRevealed,
     }));
-    deps.setGroups(updatedGroups);
     deps.persistGroups(updatedGroups);
 
     // Override all items
