@@ -3385,6 +3385,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
     const dragVisible = createMemo(
       () =>
+        !selectionsHidden() &&
         isThemeEnabled() &&
         isDragBoxThemeEnabled() &&
         isRendererActive() &&
