@@ -1,3 +1,4 @@
+import type { ServerCommentItem } from "./generated/types.js";
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
 import type { SyncConfig, SyncStatus } from "./features/sync/types.js";
 
@@ -443,19 +444,13 @@ export interface SelectionLabelInstance {
   hideArrow?: boolean;
 }
 
-export interface CommentItem {
-  id: string;
-  groupId: string;
-  content: string;
-  elementName: string;
-  tagName: string;
-  componentName?: string;
-  elementsCount?: number;
+/**
+ * CommentItem extends the server-defined shape with UI-only fields.
+ * Server fields come from Orval (SSOT: sync-server Zod schemas).
+ * UI-only fields are added here.
+ */
+export interface CommentItem extends ServerCommentItem {
   previewBounds?: OverlayBounds[];
-  elementSelectors?: string[];
-  commentText?: string;
-  timestamp: number;
-  revealed: boolean;
 }
 
 export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
