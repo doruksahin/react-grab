@@ -479,7 +479,7 @@ importers:
         version: 1.2.4(hono@4.11.7)(zod@4.3.6)
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@opentelemetry/api@1.9.0)
+        version: 0.45.2(@cloudflare/workers-types@4.20260331.1)(@opentelemetry/api@1.9.0)
       hono:
         specifier: ^4.0.0
         version: 4.11.7
@@ -487,6 +487,9 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20260331.1
+        version: 4.20260331.1
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
@@ -498,7 +501,7 @@ importers:
         version: 5.9.3
       wrangler:
         specifier: ^4.79.0
-        version: 4.79.0
+        version: 4.79.0(@cloudflare/workers-types@4.20260331.1)
 
   packages/web-extension:
     dependencies:
@@ -990,6 +993,9 @@ packages:
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
+
+  '@cloudflare/workers-types@4.20260331.1':
+    resolution: {integrity: sha512-fsf+MWPQdQ8XPV0y3tQvqf035ETgEXfJgNTYqmiLcOHB32eH/5Kb75fyZIXS9nnBMq3x6c4+HJRTRxbovNLWiA==}
 
   '@commander-js/extra-typings@14.0.0':
     resolution: {integrity: sha512-hIn0ncNaJRLkZrxBIp5AsW/eXEHNKYQBh0aPdoUqNgD+Io3NIykQqpKFyKcuasZhicGaEZJX/JBSIkZ4e5x8Dg==}
@@ -9709,6 +9715,8 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20260329.1':
     optional: true
 
+  '@cloudflare/workers-types@4.20260331.1': {}
+
   '@commander-js/extra-typings@14.0.0(commander@14.0.2)':
     dependencies:
       commander: 14.0.2
@@ -14036,8 +14044,9 @@ snapshots:
       esbuild: 0.25.11
       tsx: 4.21.0
 
-  drizzle-orm@0.45.2(@opentelemetry/api@1.9.0):
+  drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260331.1)(@opentelemetry/api@1.9.0):
     optionalDependencies:
+      '@cloudflare/workers-types': 4.20260331.1
       '@opentelemetry/api': 1.9.0
 
   dunder-proto@1.0.1:
@@ -18229,7 +18238,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20260329.1
       '@cloudflare/workerd-windows-64': 1.20260329.1
 
-  wrangler@4.79.0:
+  wrangler@4.79.0(@cloudflare/workers-types@4.20260331.1):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.2
       '@cloudflare/unenv-preset': 2.16.0(unenv@2.0.0-rc.24)(workerd@1.20260329.1)
@@ -18240,6 +18249,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       workerd: 1.20260329.1
     optionalDependencies:
+      '@cloudflare/workers-types': 4.20260331.1
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil
