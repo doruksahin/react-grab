@@ -11,4 +11,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      "/workspaces": "http://localhost:3847",
+      "/health": "http://localhost:3847",
+    },
+  },
 })
