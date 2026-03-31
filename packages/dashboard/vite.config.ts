@@ -13,8 +13,8 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/workspaces": "http://localhost:3847",
-      "/health": "http://localhost:3847",
+      "/workspaces": "http://localhost:8787",
+      "/health": "http://localhost:8787",
     },
   },
 })
