@@ -95,7 +95,8 @@
     "publint": "publint",
     "prepublishOnly": "pnpm build",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "codegen": "pnpm --filter @react-grab/sync-server export-spec && orval"
   },
   "dependencies": {
     "@medv/finder": "^4.0.2",
