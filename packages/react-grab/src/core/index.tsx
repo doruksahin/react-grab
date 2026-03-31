@@ -342,6 +342,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         collapsed: currentState?.collapsed ?? false,
         enabled: currentState?.enabled ?? true,
         defaultAction: currentState?.defaultAction ?? DEFAULT_ACTION_ID,
+        selectionsHidden: currentState?.selectionsHidden ?? false,
         ...updates,
       };
       saveToolbarState(newState);
@@ -3253,7 +3254,12 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       () => dragPreviewBounds().length > 0,
     );
 
+    const selectionsHidden = createMemo(
+      () => currentToolbarState()?.selectionsHidden ?? false,
+    );
+
     const selectionVisible = createMemo(() => {
+      if (selectionsHidden()) return false;
       if (!isThemeEnabled()) return false;
       if (!isSelectionBoxThemeEnabled()) return false;
       if (isSelectionSuppressed()) return false;
@@ -3292,6 +3298,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     );
 
     const selectionLabelVisible = createMemo(() => {
+      if (selectionsHidden()) return false;
       if (store.contextMenuPosition !== null) return false;
       if (!isElementLabelThemeEnabled()) return false;
       if (isSelectionSuppressed()) return false;
@@ -4104,7 +4111,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 labelInstances={computedLabelInstances()}
                 dragVisible={dragVisible()}
                 dragBounds={dragBounds()}
-                grabbedBoxes={computedGrabbedBoxes()}
+                grabbedBoxes={selectionsHidden() ? [] : computedGrabbedBoxes()}
                 mouseX={
                   store.frozenElements.length > 1
                     ? undefined
@@ -4208,6 +4215,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                   handleCommentsClear();
                 }}
                 onClearCommentsCancel={dismissClearPrompt}
+                selectionsHidden={selectionsHidden()}
+                onToggleSelectionsHidden={() => {
+                  updateToolbarState({ selectionsHidden: !selectionsHidden() });
+                }}
               />
             );
           }, rendererRoot);
@@ -4320,6 +4331,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             state.defaultAction ??
             currentState?.defaultAction ??
             DEFAULT_ACTION_ID,
+          selectionsHidden:
+            state.selectionsHidden ?? currentState?.selectionsHidden ?? false,
         };
         saveToolbarState(newState);
         setCurrentToolbarState(newState);

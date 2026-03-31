@@ -551,6 +551,8 @@ export interface ReactGrabRendererProps {
   clearPromptPosition?: DropdownAnchor | null;
   onClearCommentsConfirm?: () => void;
   onClearCommentsCancel?: () => void;
+  selectionsHidden?: boolean;
+  onToggleSelectionsHidden?: () => void;
 }
 
 export interface GrabbedBox {

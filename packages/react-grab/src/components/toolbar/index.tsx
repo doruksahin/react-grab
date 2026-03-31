@@ -97,6 +97,8 @@ interface ToolbarProps {
   isCommentsPinned?: boolean;
   onToggleToolbarMenu?: () => void;
   isToolbarMenuOpen?: boolean;
+  selectionsHidden?: boolean;
+  onToggleSelectionsHidden?: () => void;
 }
 
 interface FreezeHandlersOptions {
@@ -192,6 +194,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         ratio: result.ratio,
         collapsed: isCollapsed(),
         enabled: props.enabled ?? true,
+        selectionsHidden: props.selectionsHidden ?? false,
       });
     },
     onSnapAnimationEnd: () => {
@@ -573,6 +576,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       ratio: newRatio,
       collapsed: !wasCollapsed,
       enabled: props.enabled ?? true,
+      selectionsHidden: props.selectionsHidden ?? false,
     });
 
     if (collapseAnimationTimeout) {
@@ -776,6 +780,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           ratio: newRatio,
           collapsed: isCollapsed(),
           enabled: !isCurrentlyEnabled,
+          selectionsHidden: props.selectionsHidden ?? false,
         });
       }, TOOLBAR_COLLAPSE_ANIMATION_DURATION_MS);
     } else {
@@ -784,6 +789,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         ratio: positionRatio(),
         collapsed: isCollapsed(),
         enabled: !isCurrentlyEnabled,
+        selectionsHidden: props.selectionsHidden ?? false,
       });
     }
   });
@@ -828,6 +834,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         ratio: newRatio,
         collapsed: isCollapsed(),
         enabled: props.enabled ?? true,
+        selectionsHidden: props.selectionsHidden ?? false,
       });
     }, TOOLBAR_FADE_IN_DELAY_MS);
   };
@@ -1051,6 +1058,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       <ToolbarContent
         isActive={props.isActive}
         enabled={props.enabled}
+        selectionsHidden={props.selectionsHidden ?? false}
+        onToggleSelectionsHidden={props.onToggleSelectionsHidden}
         isCollapsed={isCollapsed()}
         snapEdge={snapEdge()}
         isShaking={isShaking()}
@@ -1078,6 +1087,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               ratio: newRatio,
               collapsed: false,
               enabled: props.enabled ?? true,
+              selectionsHidden: props.selectionsHidden ?? false,
             });
             if (collapseAnimationTimeout) {
               clearTimeout(collapseAnimationTimeout);
