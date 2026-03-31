@@ -1,4 +1,4 @@
-import { createEffect, createMemo, on } from "solid-js";
+import { createEffect, createMemo, on, onCleanup } from "solid-js";
 import type {
   PreviewEntry,
   SelectionVisibilityAPI,
@@ -12,6 +12,7 @@ export function createSelectionVisibility(
 ): SelectionVisibilityAPI {
   // Private state — hover code CANNOT touch this
   let revealedPreviews: PreviewEntry[] = [];
+  let mutationObserver: MutationObserver | null = null;
 
   const selectionsRevealed = createMemo(
     () => deps.currentToolbarState()?.selectionsRevealed ?? false,
@@ -27,10 +28,21 @@ export function createSelectionVisibility(
     revealedPreviews = [];
   };
 
-  const showRevealedPreviews = () => {
+  const getRevealedItemsWithElements = () => {
+    const results: {
+      item: (typeof deps.commentItems extends () => (infer T)[] ? T : never);
+      connectedElements: Element[];
+    }[] = [];
     for (const item of deps.commentItems()) {
       if (!item.revealed) continue;
       const connectedElements = deps.getConnectedCommentElements(item);
+      results.push({ item, connectedElements });
+    }
+    return results;
+  };
+
+  const showRevealedPreviews = () => {
+    for (const { item, connectedElements } of getRevealedItemsWithElements()) {
       const previewBounds = connectedElements.map((element) =>
         deps.createElementBounds(element),
       );
@@ -44,22 +56,76 @@ export function createSelectionVisibility(
     }
   };
 
-  // Re-render reveal previews whenever comment items change
-  // (includes revealed field toggles, additions, removals)
-  // NOTE: No createRoot wrapper — this function must be called inside a reactive
-  // owner (e.g., the main createRoot in core/index.tsx). The effect inherits
-  // ownership from the caller and is disposed when the parent owner is disposed.
-  // A nested createRoot would create a separate scheduling batch, causing the
-  // initial run to execute with different timing than the parent's effects.
+  /**
+   * Checks if any revealed items have unresolved elements (not yet in DOM).
+   * Returns true if all revealed items have their elements available.
+   */
+  const allRevealedElementsResolved = (): boolean => {
+    for (const item of deps.commentItems()) {
+      if (!item.revealed) continue;
+      if (deps.getConnectedCommentElements(item).length === 0) return false;
+    }
+    return true;
+  };
+
+  /**
+   * Starts observing DOM mutations on document.body to detect when host app
+   * elements become available. Automatically stops when all revealed items
+   * have their elements resolved.
+   */
+  const startObservingDOM = () => {
+    stopObservingDOM();
+    mutationObserver = new MutationObserver(() => {
+      if (!allRevealedElementsResolved()) return;
+      // Elements are now in the DOM — re-render and stop observing
+      stopObservingDOM();
+      clearRevealedPreviews();
+      showRevealedPreviews();
+    });
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  };
+
+  const stopObservingDOM = () => {
+    if (mutationObserver) {
+      mutationObserver.disconnect();
+      mutationObserver = null;
+    }
+  };
+
+  /**
+   * Main sync function: render revealed previews, and if any elements are
+   * missing (host app not ready), start observing DOM for when they appear.
+   */
+  const syncRevealedPreviews = () => {
+    stopObservingDOM();
+    clearRevealedPreviews();
+
+    const hasRevealedItems = deps.commentItems().some((item) => item.revealed);
+    if (!hasRevealedItems) return;
+
+    showRevealedPreviews();
+
+    // If some revealed items couldn't find their DOM elements,
+    // observe mutations until they appear
+    if (!allRevealedElementsResolved()) {
+      startObservingDOM();
+    }
+  };
+
+  // React to comment item changes (toggles, additions, removals)
+  // NOTE: Must be called inside a reactive owner (e.g., the main createRoot
+  // in core/index.tsx). The effect inherits ownership from the caller.
   createEffect(
     on(
       () => deps.commentItems(),
-      () => {
-        clearRevealedPreviews();
-        showRevealedPreviews();
-      },
+      () => syncRevealedPreviews(),
     ),
   );
+
+  onCleanup(() => stopObservingDOM());
 
   const isItemRevealed = (commentItemId: string): boolean => {
     const item = deps.commentItems().find((i) => i.id === commentItemId);
