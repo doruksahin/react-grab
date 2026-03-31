@@ -15,6 +15,12 @@ export interface StorageAdapter {
   loadGroups: () => Promise<SelectionGroup[]>;
   /** Persist the full groups array. Called on every mutation. */
   persistGroups: (groups: SelectionGroup[]) => Promise<SelectionGroup[]>;
+  /** Upload a screenshot blob. Returns the storage key/URL. Optional. */
+  uploadScreenshot?: (
+    selectionId: string,
+    type: "full" | "element",
+    blob: Blob,
+  ) => Promise<string>;
 }
 
 /**
