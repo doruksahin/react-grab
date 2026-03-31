@@ -211,9 +211,14 @@ interface BuildActionContextOptions {
   customEnterPromptMode?: (agent?: AgentOptions) => void;
 }
 
-let syncState: { workspace: string; status: "synced" | "error" } | null = null;
+let syncState: { workspace: string; status: "local" | "synced" | "error" } | null = null;
 
 export const initSync = async (config: SyncConfig): Promise<void> => {
+  if (!config.enabled) {
+    syncState = { workspace: config.workspace, status: "local" };
+    return;
+  }
+
   try {
     const adapter = createHttpAdapter(config);
     await Promise.all([

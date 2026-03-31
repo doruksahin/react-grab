@@ -21,6 +21,7 @@ export interface StorageAdapter {
  * Configuration for sync. Passed via Options.sync.
  */
 export interface SyncConfig {
+  enabled: boolean;
   serverUrl: string;
   workspace: string;
   syncRevealedState: boolean;
