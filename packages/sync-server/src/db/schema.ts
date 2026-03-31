@@ -1,7 +1,7 @@
-import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real, index, primaryKey } from "drizzle-orm/sqlite-core";
 
 export const comments = sqliteTable("comments", {
-  id: text("id").primaryKey(),
+  id: text("id").notNull(),
   workspaceId: text("workspace_id").notNull(),
   groupId: text("group_id").notNull(),
   content: text("content").notNull(),
@@ -21,16 +21,18 @@ export const comments = sqliteTable("comments", {
   jiraTicketId: text("jira_ticket_id"),
   capturedBy: text("captured_by"),
 }, (table) => [
+  primaryKey({ columns: [table.id, table.workspaceId] }),
   index("comments_workspace_id_idx").on(table.workspaceId),
 ]);
 
 export const groups = sqliteTable("groups", {
-  id: text("id").primaryKey(),
+  id: text("id").notNull(),
   workspaceId: text("workspace_id").notNull(),
   name: text("name").notNull(),
   createdAt: real("created_at").notNull(),
   revealed: integer("revealed", { mode: "boolean" }).notNull(),
 }, (table) => [
+  primaryKey({ columns: [table.id, table.workspaceId] }),
   index("groups_workspace_id_idx").on(table.workspaceId),
 ]);
 
