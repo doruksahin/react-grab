@@ -31,7 +31,9 @@ let groups: SelectionGroup[] = loadFromLocalStorage();
 export const initGroupStorage = async (adapter: StorageAdapter): Promise<void> => {
   activeAdapter = adapter;
   const remoteGroups = await adapter.loadGroups();
-  groups = remoteGroups;
+  // Ensure default group exists (server may return empty array)
+  const hasDefault = remoteGroups.some((g) => g.id === DEFAULT_GROUP_ID);
+  groups = hasDefault ? remoteGroups : [createDefaultGroup(), ...remoteGroups];
 };
 
 export const persistGroups = (
