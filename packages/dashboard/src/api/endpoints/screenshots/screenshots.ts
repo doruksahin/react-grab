@@ -29,7 +29,8 @@ import type {
 
 import type {
   GetScreenshot404,
-  UploadScreenshot200
+  UploadScreenshot200,
+  UploadScreenshot415
 } from '../../model';
 
 
@@ -44,12 +45,19 @@ export type uploadScreenshotResponse200 = {
   status: 200
 }
 
+export type uploadScreenshotResponse415 = {
+  data: UploadScreenshot415
+  status: 415
+}
+
 export type uploadScreenshotResponseSuccess = (uploadScreenshotResponse200) & {
   headers: Headers;
 };
-;
+export type uploadScreenshotResponseError = (uploadScreenshotResponse415) & {
+  headers: Headers;
+};
 
-export type uploadScreenshotResponse = (uploadScreenshotResponseSuccess)
+export type uploadScreenshotResponse = (uploadScreenshotResponseSuccess | uploadScreenshotResponseError)
 
 export const getUploadScreenshotUrl = (id: string,
     selectionId: string,
@@ -85,7 +93,7 @@ export const uploadScreenshot = async (id: string,
 
 
 
-export const getUploadScreenshotMutationOptions = <TError = unknown,
+export const getUploadScreenshotMutationOptions = <TError = UploadScreenshot415,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadScreenshot>>, TError,{id: string;selectionId: string;type: 'full' | 'element';data: Blob}, TContext>, fetch?: RequestInit}
 ): UseMutationOptions<Awaited<ReturnType<typeof uploadScreenshot>>, TError,{id: string;selectionId: string;type: 'full' | 'element';data: Blob}, TContext> => {
 
@@ -114,12 +122,12 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
     export type UploadScreenshotMutationResult = NonNullable<Awaited<ReturnType<typeof uploadScreenshot>>>
     export type UploadScreenshotMutationBody = Blob
-    export type UploadScreenshotMutationError = unknown
+    export type UploadScreenshotMutationError = UploadScreenshot415
 
     /**
  * @summary Upload a screenshot
  */
-export const useUploadScreenshot = <TError = unknown,
+export const useUploadScreenshot = <TError = UploadScreenshot415,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadScreenshot>>, TError,{id: string;selectionId: string;type: 'full' | 'element';data: Blob}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof uploadScreenshot>>,
