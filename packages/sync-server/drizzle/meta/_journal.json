@@ -22,6 +22,13 @@
       "when": 1774988447024,
       "tag": "0002_reflective_pet_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1774999078761,
+      "tag": "0003_sleepy_madripoor",
+      "breakpoints": true
     }
   ]
 }

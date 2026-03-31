@@ -15,7 +15,7 @@ export const CommentItem = z.object({
   elementSelectors: z.array(z.string()).optional(),
   commentText: z.string().optional(),
   timestamp: z.number(),
-  revealed: z.boolean(),
+  revealed: z.boolean().optional(),
   status: SelectionStatus.optional(),
   pageUrl: z.string().optional(),
   pageTitle: z.string().optional(),

@@ -12,7 +12,7 @@ export const comments = sqliteTable("comments", {
   elementSelectors: text("element_selectors", { mode: "json" }).$type<string[]>(),
   commentText: text("comment_text"),
   timestamp: real("timestamp").notNull(),
-  revealed: integer("revealed", { mode: "boolean" }).notNull(),
+  revealed: integer("revealed", { mode: "boolean" }),
   status: text("status", { enum: ["open", "ticketed", "resolved"] }),
   pageUrl: text("page_url"),
   pageTitle: text("page_title"),
@@ -30,7 +30,7 @@ export const groups = sqliteTable("groups", {
   workspaceId: text("workspace_id").notNull(),
   name: text("name").notNull(),
   createdAt: real("created_at").notNull(),
-  revealed: integer("revealed", { mode: "boolean" }).notNull(),
+  revealed: integer("revealed", { mode: "boolean" }),
 }, (table) => [
   primaryKey({ columns: [table.id, table.workspaceId] }),
   index("groups_workspace_id_idx").on(table.workspaceId),
