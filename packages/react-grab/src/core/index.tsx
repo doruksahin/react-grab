@@ -4060,7 +4060,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
     createEffect(
       on(
-        () => commentItems().map((item) => item.revealed),
+        // Tracks commentItems() signal — fires on any item change (including revealed toggles).
+        // Over-reactive but harmless since clear+rebuild is idempotent.
+        () => commentItems(),
         () => {
           clearRevealedPreviews();
           showRevealedPreviews();
