@@ -60,7 +60,7 @@ const trimToSizeLimit = (items: CommentItem[]): CommentItem[] => {
   return trimmedItems;
 };
 
-const persistCommentItems = (nextItems: CommentItem[]): CommentItem[] => {
+export const persistCommentItems = (nextItems: CommentItem[]): CommentItem[] => {
   commentItems = trimToSizeLimit(nextItems);
   try {
     sessionStorage.setItem(COMMENT_ITEMS_KEY, JSON.stringify(commentItems));
