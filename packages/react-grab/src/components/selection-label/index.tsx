@@ -74,6 +74,9 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
   const [isInternalFading, setIsInternalFading] = createSignal(false);
   const [isShaking, setIsShaking] = createSignal(false);
   const [pickerOpen, setPickerOpen] = createSignal(false);
+  createEffect(() => {
+    if (!props.isPromptMode) setPickerOpen(false);
+  });
 
   const canInteract = () =>
     props.status !== "copying" &&
