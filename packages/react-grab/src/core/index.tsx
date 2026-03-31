@@ -161,7 +161,11 @@ import {
   isClearConfirmed,
   confirmClear,
   persistCommentItems,
+  initCommentStorage,
 } from "../utils/comment-storage.js";
+import { initGroupStorage } from "../features/selection-groups/store/group-storage.js";
+import { createHttpAdapter } from "../features/sync/index.js";
+import type { SyncConfig } from "../features/sync/types.js";
 import { copyContent, copyGroupedContent, type ReactGrabGroup } from "../utils/copy-content.js";
 import { joinSnippets, joinGroupedSnippets, type GroupedSnippet } from "../utils/join-snippets.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
@@ -206,6 +210,14 @@ interface BuildActionContextOptions {
   onBeforePrompt?: () => void;
   customEnterPromptMode?: (agent?: AgentOptions) => void;
 }
+
+export const initSync = async (config: SyncConfig): Promise<void> => {
+  const adapter = createHttpAdapter(config);
+  await Promise.all([
+    initCommentStorage(adapter),
+    initGroupStorage(adapter),
+  ]);
+};
 
 let hasInited = false;
 const toolbarStateChangeCallbacks = new Set<(state: ToolbarState) => void>();
