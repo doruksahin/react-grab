@@ -211,15 +211,23 @@ interface BuildActionContextOptions {
   customEnterPromptMode?: (agent?: AgentOptions) => void;
 }
 
-let syncState: { workspace: string } | null = null;
+let syncState: { workspace: string; status: "synced" | "error" } | null = null;
 
 export const initSync = async (config: SyncConfig): Promise<void> => {
-  const adapter = createHttpAdapter(config);
-  await Promise.all([
-    initCommentStorage(adapter),
-    initGroupStorage(adapter),
-  ]);
-  syncState = { workspace: config.workspace };
+  try {
+    const adapter = createHttpAdapter(config);
+    await Promise.all([
+      initCommentStorage(adapter),
+      initGroupStorage(adapter),
+    ]);
+    syncState = { workspace: config.workspace, status: "synced" };
+  } catch (error) {
+    // Server unreachable — fall back to localStorage (already loaded at module init)
+    // Fire the error callback so it's not silent
+    const err = error instanceof Error ? error : new Error(String(error));
+    config.onSyncError(err);
+    syncState = { workspace: config.workspace, status: "error" };
+  }
 };
 
 let hasInited = false;
@@ -4367,7 +4375,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 selectionsRevealed={visibility.selectionsRevealed()}
                 onToggleSelectionsRevealed={visibility.handleToggleParent}
                 onToggleCommentItemRevealed={visibility.handleToggleItem}
-                syncStatus={syncState ? "synced" : "local"}
+                syncStatus={syncState?.status ?? "local"}
                 syncWorkspace={syncState?.workspace}
                 groups={selectionGroups.groups()}
                 activeGroupId={selectionGroups.activeGroupId()}
