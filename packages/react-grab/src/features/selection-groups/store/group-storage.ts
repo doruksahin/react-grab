@@ -1,5 +1,5 @@
 import type { SelectionGroup } from "../types.js";
-import { createDefaultGroup, DEFAULT_GROUP_ID } from "../types.js";
+import { DEFAULT_GROUP_ID } from "../types.js";
 import { generateId } from "../../../utils/generate-id.js";
 import { logRecoverableError } from "../../../utils/log-recoverable-error.js";
 import type { StorageAdapter } from "../../sync/types.js";
@@ -8,29 +8,19 @@ let activeAdapter: StorageAdapter | null = null;
 
 const GROUPS_KEY = "react-grab-selection-groups";
 
-/**
- * Ensures the default group always exists in any loaded groups array.
- * Single source of truth for the default group guarantee.
- */
-const ensureDefaultGroup = (loaded: SelectionGroup[]): SelectionGroup[] => {
-  const hasDefault = loaded.some((g) => g.id === DEFAULT_GROUP_ID);
-  return hasDefault ? loaded : [createDefaultGroup(), ...loaded];
-};
-
 const loadFromLocalStorage = (): SelectionGroup[] => {
   try {
     const serialized = localStorage.getItem(GROUPS_KEY);
-    if (!serialized) return [createDefaultGroup()];
+    if (!serialized) return [];
     const parsed = JSON.parse(serialized) as SelectionGroup[];
-    const validated = parsed.map((group) => ({
+    return parsed.map((group) => ({
       ...group,
       revealed:
         typeof group.revealed === "boolean" ? group.revealed : false,
     }));
-    return ensureDefaultGroup(validated);
   } catch (error) {
     logRecoverableError("Failed to load groups from localStorage", error);
-    return [createDefaultGroup()];
+    return [];
   }
 };
 
@@ -38,8 +28,7 @@ let groups: SelectionGroup[] = loadFromLocalStorage();
 
 export const initGroupStorage = async (adapter: StorageAdapter): Promise<void> => {
   activeAdapter = adapter;
-  const remoteGroups = await adapter.loadGroups();
-  groups = ensureDefaultGroup(remoteGroups);
+  groups = await adapter.loadGroups();
 };
 
 export const persistGroups = (
