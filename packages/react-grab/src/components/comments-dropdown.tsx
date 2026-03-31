@@ -390,7 +390,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                               data-react-grab-ignore-events
                               class="flex items-center justify-center rounded p-0.5 text-black/25 hover:text-black/50 hover:bg-black/[0.06] cursor-pointer transition-colors"
                               title="Move to group"
-                              onClick={(e) => {
+                              on:click={(e) => {
                                 e.stopPropagation();
                                 setOpenMoveId((id) => (id === item.id ? null : item.id));
                               }}
