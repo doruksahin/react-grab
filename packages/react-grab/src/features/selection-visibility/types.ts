@@ -26,6 +26,8 @@ export interface SelectionVisibilityDeps {
   persistCommentItems: (items: CommentItem[]) => CommentItem[];
   /** Resolve a comment item to its connected DOM elements */
   getConnectedCommentElements: (item: CommentItem) => Element[];
+  /** Reactive set of comment IDs whose DOM elements are not connected */
+  disconnectedItemIds: Accessor<Set<string>>;
   /** Compute overlay bounds for a DOM element */
   createElementBounds: (element: Element) => OverlayBounds;
   /** Add a preview (grabbed box + label) with tracking */

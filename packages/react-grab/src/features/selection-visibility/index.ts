@@ -1,4 +1,4 @@
-import { createEffect, createMemo, on, onCleanup } from "solid-js";
+import { createEffect, createMemo, on } from "solid-js";
 import type {
   PreviewEntry,
   SelectionVisibilityAPI,
@@ -12,7 +12,6 @@ export function createSelectionVisibility(
 ): SelectionVisibilityAPI {
   // Private state — hover code CANNOT touch this
   let revealedPreviews: PreviewEntry[] = [];
-  let mutationObserver: MutationObserver | null = null;
 
   const selectionsRevealed = createMemo(
     () => deps.currentToolbarState()?.selectionsRevealed ?? false,
@@ -28,21 +27,12 @@ export function createSelectionVisibility(
     revealedPreviews = [];
   };
 
-  const getRevealedItemsWithElements = () => {
-    const results: {
-      item: (typeof deps.commentItems extends () => (infer T)[] ? T : never);
-      connectedElements: Element[];
-    }[] = [];
+  const showRevealedPreviews = () => {
+    const disconnected = deps.disconnectedItemIds();
     for (const item of deps.commentItems()) {
       if (!item.revealed) continue;
+      if (disconnected.has(item.id)) continue;
       const connectedElements = deps.getConnectedCommentElements(item);
-      results.push({ item, connectedElements });
-    }
-    return results;
-  };
-
-  const showRevealedPreviews = () => {
-    for (const { item, connectedElements } of getRevealedItemsWithElements()) {
       const previewBounds = connectedElements.map((element) =>
         deps.createElementBounds(element),
       );
@@ -56,79 +46,21 @@ export function createSelectionVisibility(
     }
   };
 
-  /**
-   * Checks if any revealed items have unresolved elements (not yet in DOM).
-   * Returns true if all revealed items have their elements available.
-   */
-  const allRevealedElementsResolved = (): boolean => {
-    for (const item of deps.commentItems()) {
-      if (!item.revealed) continue;
-      if (deps.getConnectedCommentElements(item).length === 0) return false;
-    }
-    return true;
-  };
-
-  /**
-   * Starts observing DOM mutations on document.body. On each mutation,
-   * re-syncs revealed previews. This handles both directions:
-   * - Elements appearing (host app mounts) → previews render
-   * - Elements disappearing (navigation, lazy unload) → previews clear
-   * Stops observing when all revealed items are resolved (no unresolved gaps).
-   */
-  const startObservingDOM = () => {
-    stopObservingDOM();
-    mutationObserver = new MutationObserver(() => {
-      clearRevealedPreviews();
-      showRevealedPreviews();
-      // Stop observing once all revealed items have their elements
-      if (allRevealedElementsResolved()) {
-        stopObservingDOM();
-      }
-    });
-    mutationObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-  };
-
-  const stopObservingDOM = () => {
-    if (mutationObserver) {
-      mutationObserver.disconnect();
-      mutationObserver = null;
-    }
-  };
-
-  /**
-   * Main sync function: render revealed previews, and if any elements are
-   * missing (host app not ready), start observing DOM for when they appear.
-   */
-  const syncRevealedPreviews = () => {
-    stopObservingDOM();
-    clearRevealedPreviews();
-
-    const hasRevealedItems = deps.commentItems().some((item) => item.revealed);
-    if (!hasRevealedItems) return;
-
-    showRevealedPreviews();
-
-    // If some revealed items couldn't find their DOM elements,
-    // observe mutations until they appear
-    if (!allRevealedElementsResolved()) {
-      startObservingDOM();
-    }
-  };
-
-  // React to comment item changes (toggles, additions, removals)
-  // NOTE: Must be called inside a reactive owner (e.g., the main createRoot
-  // in core/index.tsx). The effect inherits ownership from the caller.
+  // Re-render reveal previews when:
+  // - comment items change (toggles, additions, removals)
+  // - disconnected set changes (DOM elements appear/disappear)
+  // Both are reactive signals — no separate MutationObserver needed.
+  // Uses the same disconnectedItemIds memo as the comments dropdown,
+  // which is driven by a domMutationVersion signal in core.
   createEffect(
     on(
-      () => deps.commentItems(),
-      () => syncRevealedPreviews(),
+      () => [deps.commentItems(), deps.disconnectedItemIds()] as const,
+      () => {
+        clearRevealedPreviews();
+        showRevealedPreviews();
+      },
     ),
   );
-
-  onCleanup(() => stopObservingDOM());
 
   const isItemRevealed = (commentItemId: string): boolean => {
     const item = deps.commentItems().find((i) => i.id === commentItemId);

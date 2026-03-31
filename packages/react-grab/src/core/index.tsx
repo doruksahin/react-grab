@@ -336,6 +336,15 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     const [isCommentsHoverOpen, setIsCommentsHoverOpen] = createSignal(false);
     let commentsHoverPreviews: { boxId: string; labelId: string | null }[] = [];
 
+    // Incremented when DOM structure changes (host app mounts/unmounts elements).
+    // Used by commentsDisconnectedItemIds to re-evaluate element connectivity.
+    const [domMutationVersion, setDomMutationVersion] = createSignal(0);
+    const domObserver = new MutationObserver(() => {
+      setDomMutationVersion((v) => v + 1);
+    });
+    domObserver.observe(document.body, { childList: true, subtree: true });
+    onCleanup(() => domObserver.disconnect());
+
     const updateToolbarState = (updates: Partial<ToolbarState>) => {
       const currentState = currentToolbarState() ?? loadToolbarState();
       const newState: ToolbarState = {
@@ -408,8 +417,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
     const commentsDisconnectedItemIds = createMemo(
       () => {
-        // HACK: subscribe to dropdown position so connectivity refreshes when dropdown opens
         void commentsDropdownPosition();
+        void domMutationVersion();
         const disconnectedIds = new Set<string>();
         for (const item of commentItems()) {
           if (getConnectedCommentElements(item).length === 0) {
@@ -3722,6 +3731,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       setCommentItems,
       persistCommentItems,
       getConnectedCommentElements,
+      disconnectedItemIds: commentsDisconnectedItemIds,
       createElementBounds,
       addCommentItemPreview,
       actions: {
