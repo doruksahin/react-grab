@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import type { Component } from "solid-js";
 import type { CommentItem, DropdownAnchor } from "../types.js";
-import type { SelectionGroup } from "../features/selection-groups/types.js";
+import type { SelectionGroupsViewProps } from "../features/selection-groups/types.js";
 import { GroupCollapsible } from "../features/selection-groups/components/group-collapsible.jsx";
 import { groupComments, fuzzyMatchGroup } from "../features/selection-groups/business/group-operations.js";
 import {
@@ -32,7 +32,16 @@ import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { createAnchoredDropdown } from "../utils/create-anchored-dropdown.js";
 import { formatRelativeTime } from "../utils/format-relative-time.js";
 
-interface CommentsDropdownProps {
+interface CommentsDropdownProps
+  extends Pick<
+    SelectionGroupsViewProps,
+    | "groups"
+    | "onAddGroup"
+    | "onRenameGroup"
+    | "onDeleteGroup"
+    | "onToggleGroupRevealed"
+    | "onMoveItem"
+  > {
   position: DropdownAnchor | null;
   items: CommentItem[];
   disconnectedItemIds?: Set<string>;
@@ -44,11 +53,6 @@ interface CommentsDropdownProps {
   onDismiss?: () => void;
   onDropdownHover?: (isHovered: boolean) => void;
   onToggleItemRevealed?: (commentItemId: string) => void;
-  groups?: SelectionGroup[];
-  onAddGroup?: (name: string) => void;
-  onRenameGroup?: (groupId: string, name: string) => void;
-  onDeleteGroup?: (groupId: string) => void;
-  onToggleGroupRevealed?: (groupId: string) => void;
   onCopyGroup?: (groupId: string) => void;
   copyableCount?: number;
 }
