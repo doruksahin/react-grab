@@ -10,6 +10,7 @@ ENVIRONMENT = "development"
 binding = "DB"
 database_name = "react-grab-sync"
 database_id = "local"  # placeholder — real ID set after `wrangler d1 create`
+migrations_dir = "drizzle"
 
 # R2 bucket binding
 [[r2_buckets]]

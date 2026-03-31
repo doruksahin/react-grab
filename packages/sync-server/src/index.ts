@@ -16,6 +16,9 @@ import {
 } from "./schemas/index.js";
 
 // ---- inline comments routes for Node.js mode (file-storage) ----
+// TODO: These route definitions are duplicated between here and routes/comments.ts & routes/groups.ts.
+// The dual-mode design (Worker = D1/R2, Node.js = file-storage) requires separate handlers,
+// so the route objects could be extracted to a shared routes/route-defs.ts to avoid duplication.
 
 const listCommentsRoute = createRoute({
   method: "get",
