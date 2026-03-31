@@ -4,6 +4,7 @@ import type {
   SelectionVisibilityAPI,
   SelectionVisibilityDeps,
 } from "./types.js";
+import { saveLocalRevealedStates } from "../sync/transforms.js";
 
 const REVEAL_PREFIX = "reveal-pinned";
 
@@ -58,6 +59,8 @@ export function createSelectionVisibility(
       () => {
         clearRevealedPreviews();
         showRevealedPreviews();
+        // Persist revealed states locally for sync round-trip survival
+        saveLocalRevealedStates(deps.commentItems(), deps.groups());
       },
     ),
   );
