@@ -116,6 +116,7 @@ import type {
   ToolbarState,
   CommentItem,
   DropdownAnchor,
+  SelectionVisibility,
 } from "../types.js";
 import { DEFAULT_THEME } from "./theme.js";
 import { createPluginRegistry } from "./plugin-registry.js";
@@ -342,7 +343,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         collapsed: currentState?.collapsed ?? false,
         enabled: currentState?.enabled ?? true,
         defaultAction: currentState?.defaultAction ?? DEFAULT_ACTION_ID,
-        selectionsHidden: currentState?.selectionsHidden ?? false,
+        selectionVisibility: currentState?.selectionVisibility ?? "normal",
         ...updates,
       };
       saveToolbarState(newState);
@@ -3254,9 +3255,22 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       () => dragPreviewBounds().length > 0,
     );
 
-    const selectionsHidden = createMemo(
-      () => currentToolbarState()?.selectionsHidden ?? false,
+    const selectionVisibility = createMemo(
+      () => currentToolbarState()?.selectionVisibility ?? "normal",
     );
+
+    const selectionsHidden = createMemo(
+      () => selectionVisibility() === "hidden",
+    );
+
+    const cycleSelectionVisibility = () => {
+      const current = selectionVisibility();
+      const next: SelectionVisibility =
+        current === "hidden" ? "reveal" :
+        current === "reveal" ? "normal" :
+        "hidden";
+      updateToolbarState({ selectionVisibility: next });
+    };
 
     const selectionVisible = createMemo(() => {
       if (selectionsHidden()) return false;
@@ -3972,6 +3986,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     };
 
     const handleCommentItemHover = (commentItemId: string | null) => {
+      if (selectionVisibility() === "reveal") return;
       clearCommentsHoverPreviews();
       if (!commentItemId) return;
 
@@ -4026,6 +4041,27 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         showCommentItemPreview(item, "comment-all-hover");
       }
     };
+
+    createEffect(
+      on(selectionVisibility, (visibility, prevVisibility) => {
+        if (prevVisibility === "reveal" && visibility !== "reveal") {
+          clearCommentsHoverPreviews();
+        }
+        if (visibility === "reveal") {
+          clearCommentsHoverPreviews();
+          showAllCommentItemPreviews();
+        }
+      }),
+    );
+
+    createEffect(
+      on(commentItems, () => {
+        if (selectionVisibility() === "reveal") {
+          clearCommentsHoverPreviews();
+          showAllCommentItemPreviews();
+        }
+      }),
+    );
 
     const handleCommentsClear = () => {
       commentElementMap.clear();
@@ -4216,10 +4252,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                   handleCommentsClear();
                 }}
                 onClearCommentsCancel={dismissClearPrompt}
-                selectionsHidden={selectionsHidden()}
-                onToggleSelectionsHidden={() => {
-                  updateToolbarState({ selectionsHidden: !selectionsHidden() });
-                }}
+                selectionVisibility={selectionVisibility()}
+                onCycleSelectionVisibility={cycleSelectionVisibility}
               />
             );
           }, rendererRoot);
@@ -4332,8 +4366,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             state.defaultAction ??
             currentState?.defaultAction ??
             DEFAULT_ACTION_ID,
-          selectionsHidden:
-            state.selectionsHidden ?? currentState?.selectionsHidden ?? false,
+          selectionVisibility:
+            state.selectionVisibility ?? currentState?.selectionVisibility ?? "normal",
         };
         saveToolbarState(newState);
         setCurrentToolbarState(newState);

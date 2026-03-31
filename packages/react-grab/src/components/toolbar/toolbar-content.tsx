@@ -1,4 +1,5 @@
 import type { Component, JSX } from "solid-js";
+import type { SelectionVisibility } from "../../types.js";
 import { cn } from "../../utils/cn.js";
 import { IconSelect } from "../icons/icon-select.jsx";
 import { IconChevron } from "../icons/icon-chevron.jsx";
@@ -6,6 +7,7 @@ import { IconComment } from "../icons/icon-comment.jsx";
 import { IconCopy } from "../icons/icon-copy.jsx";
 import { IconEye } from "../icons/icon-eye.jsx";
 import { IconEyeOff } from "../icons/icon-eye-off.jsx";
+import { IconEyeFilled } from "../icons/icon-eye-filled.jsx";
 import {
   getExpandGridClass,
   getButtonSpacingClass,
@@ -32,8 +34,8 @@ export interface ToolbarContentProps {
   copyAllButton?: JSX.Element;
   toggleButton?: JSX.Element;
   visibilityButton?: JSX.Element;
-  selectionsHidden: boolean;
-  onToggleSelectionsHidden?: () => void;
+  selectionVisibility: SelectionVisibility;
+  onCycleSelectionVisibility?: () => void;
   collapseButton?: JSX.Element;
   transformOrigin?: string;
 }
@@ -153,26 +155,44 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
     </button>
   );
 
-  const defaultVisibilityButton = () => (
-    <button
-      data-react-grab-ignore-events
-      data-react-grab-toolbar-visibility
-      aria-label={props.selectionsHidden ? "Show selections" : "Hide selections"}
-      aria-pressed={!props.selectionsHidden}
-      class={cn(
-        "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
-        buttonSpacingClass(),
-        hitboxConstraintClass(),
-      )}
-      onClick={() => props.onToggleSelectionsHidden?.()}
-    >
-      {props.selectionsHidden ? (
-        <IconEyeOff size={14} class="text-[#B3B3B3] transition-colors" />
-      ) : (
-        <IconEye size={14} class="text-black/70 transition-colors" />
-      )}
-    </button>
-  );
+  const defaultVisibilityButton = () => {
+    const visibility = () => props.selectionVisibility;
+
+    const ariaLabel = () => {
+      switch (visibility()) {
+        case "reveal": return "Showing all selections (click for normal)";
+        case "normal": return "Normal selection mode (click to hide)";
+        case "hidden": return "Selections hidden (click to reveal)";
+      }
+    };
+
+    const icon = () => {
+      switch (visibility()) {
+        case "reveal":
+          return <IconEyeFilled size={14} class="text-black transition-colors" />;
+        case "normal":
+          return <IconEye size={14} class="text-[#B3B3B3] transition-colors" />;
+        case "hidden":
+          return <IconEyeOff size={14} class="text-[#B3B3B3] transition-colors" />;
+      }
+    };
+
+    return (
+      <button
+        data-react-grab-ignore-events
+        data-react-grab-toolbar-visibility
+        aria-label={ariaLabel()}
+        class={cn(
+          "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
+          buttonSpacingClass(),
+          hitboxConstraintClass(),
+        )}
+        onClick={() => props.onCycleSelectionVisibility?.()}
+      >
+        {icon()}
+      </button>
+    );
+  };
 
   const defaultToggleButton = () => (
     <button

@@ -217,8 +217,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onToggleToolbarMenu={props.onToggleToolbarMenu}
           isToolbarMenuOpen={Boolean(props.toolbarMenuPosition)}
           isClearPromptOpen={Boolean(props.clearPromptPosition)}
-          selectionsHidden={props.selectionsHidden}
-          onToggleSelectionsHidden={props.onToggleSelectionsHidden}
+          selectionVisibility={props.selectionVisibility}
+          onCycleSelectionVisibility={props.onCycleSelectionVisibility}
         />
       </Show>
 

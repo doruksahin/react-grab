@@ -361,13 +361,15 @@ export interface SourceInfo {
   componentName: string | null;
 }
 
+export type SelectionVisibility = "reveal" | "normal" | "hidden";
+
 export interface ToolbarState {
   edge: "top" | "bottom" | "left" | "right";
   ratio: number;
   collapsed: boolean;
   enabled: boolean;
   defaultAction?: string;
-  selectionsHidden: boolean;
+  selectionVisibility: SelectionVisibility;
 }
 
 export interface DropdownAnchor {
@@ -551,8 +553,8 @@ export interface ReactGrabRendererProps {
   clearPromptPosition?: DropdownAnchor | null;
   onClearCommentsConfirm?: () => void;
   onClearCommentsCancel?: () => void;
-  selectionsHidden?: boolean;
-  onToggleSelectionsHidden?: () => void;
+  selectionVisibility?: SelectionVisibility;
+  onCycleSelectionVisibility?: () => void;
 }
 
 export interface GrabbedBox {

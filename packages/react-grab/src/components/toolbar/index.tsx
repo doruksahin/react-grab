@@ -7,7 +7,7 @@ import {
   Show,
 } from "solid-js";
 import type { Component } from "solid-js";
-import type { Position } from "../../types.js";
+import type { Position, SelectionVisibility } from "../../types.js";
 import { cn } from "../../utils/cn.js";
 import { formatShortcut } from "../../utils/format-shortcut.js";
 import {
@@ -97,8 +97,8 @@ interface ToolbarProps {
   isCommentsPinned?: boolean;
   onToggleToolbarMenu?: () => void;
   isToolbarMenuOpen?: boolean;
-  selectionsHidden?: boolean;
-  onToggleSelectionsHidden?: () => void;
+  selectionVisibility?: SelectionVisibility;
+  onCycleSelectionVisibility?: () => void;
 }
 
 interface FreezeHandlersOptions {
@@ -194,7 +194,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         ratio: result.ratio,
         collapsed: isCollapsed(),
         enabled: props.enabled ?? true,
-        selectionsHidden: props.selectionsHidden ?? false,
+        selectionVisibility: props.selectionVisibility ?? "normal",
       });
     },
     onSnapAnimationEnd: () => {
@@ -576,7 +576,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       ratio: newRatio,
       collapsed: !wasCollapsed,
       enabled: props.enabled ?? true,
-      selectionsHidden: props.selectionsHidden ?? false,
+      selectionVisibility: props.selectionVisibility ?? "normal",
     });
 
     if (collapseAnimationTimeout) {
@@ -780,7 +780,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           ratio: newRatio,
           collapsed: isCollapsed(),
           enabled: !isCurrentlyEnabled,
-          selectionsHidden: props.selectionsHidden ?? false,
+          selectionVisibility: props.selectionVisibility ?? "normal",
         });
       }, TOOLBAR_COLLAPSE_ANIMATION_DURATION_MS);
     } else {
@@ -789,7 +789,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         ratio: positionRatio(),
         collapsed: isCollapsed(),
         enabled: !isCurrentlyEnabled,
-        selectionsHidden: props.selectionsHidden ?? false,
+        selectionVisibility: props.selectionVisibility ?? "normal",
       });
     }
   });
@@ -834,7 +834,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         ratio: newRatio,
         collapsed: isCollapsed(),
         enabled: props.enabled ?? true,
-        selectionsHidden: props.selectionsHidden ?? false,
+        selectionVisibility: props.selectionVisibility ?? "normal",
       });
     }, TOOLBAR_FADE_IN_DELAY_MS);
   };
@@ -1058,8 +1058,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       <ToolbarContent
         isActive={props.isActive}
         enabled={props.enabled}
-        selectionsHidden={props.selectionsHidden ?? false}
-        onToggleSelectionsHidden={props.onToggleSelectionsHidden}
+        selectionVisibility={props.selectionVisibility ?? "normal"}
+        onCycleSelectionVisibility={props.onCycleSelectionVisibility}
         isCollapsed={isCollapsed()}
         snapEdge={snapEdge()}
         isShaking={isShaking()}
@@ -1087,7 +1087,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               ratio: newRatio,
               collapsed: false,
               enabled: props.enabled ?? true,
-              selectionsHidden: props.selectionsHidden ?? false,
+              selectionVisibility: props.selectionVisibility ?? "normal",
             });
             if (collapseAnimationTimeout) {
               clearTimeout(collapseAnimationTimeout);

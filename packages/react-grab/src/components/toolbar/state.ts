@@ -36,10 +36,12 @@ export const loadToolbarState = (): ToolbarState | null => {
         typeof record.defaultAction === "string"
           ? record.defaultAction
           : DEFAULT_ACTION_ID,
-      selectionsHidden:
-        typeof record.selectionsHidden === "boolean"
-          ? record.selectionsHidden
-          : false,
+      selectionVisibility:
+        record.selectionVisibility === "reveal" ||
+        record.selectionVisibility === "normal" ||
+        record.selectionVisibility === "hidden"
+          ? record.selectionVisibility
+          : "normal",
     };
   } catch (error) {
     console.warn(
