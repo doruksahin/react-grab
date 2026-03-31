@@ -46,7 +46,14 @@ const getScreenshot = createRoute({
   },
   responses: {
     200: { description: "Screenshot image" },
-    404: { description: "Not found" },
+    404: {
+      description: "Not found",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
   },
 });
 
