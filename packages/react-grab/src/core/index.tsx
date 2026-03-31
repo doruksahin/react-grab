@@ -4364,6 +4364,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 selectionsRevealed={visibility.selectionsRevealed()}
                 onToggleSelectionsRevealed={visibility.handleToggleParent}
                 onToggleCommentItemRevealed={visibility.handleToggleItem}
+                syncStatus={initialOptions.sync ? "synced" : "local"}
+                syncWorkspace={initialOptions.sync?.workspace}
                 groups={selectionGroups.groups()}
                 activeGroupId={selectionGroups.activeGroupId()}
                 onAddGroup={selectionGroups.handleAddGroup}

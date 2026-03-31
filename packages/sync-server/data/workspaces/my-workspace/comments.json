@@ -1,6 +1,30 @@
 [
   {
     "groupId": "default",
+    "content": "hey\n\n<img loading=\"eager\" class=\"h-full w-full o...\" data-testid=\"FeatureCardMedi...\" data-slot=\"card-media-imag...\" data-insp-path=\"src/adc-ui/card...\" src=\"/assets/images/...\" />\n  in CardMedia (at /src/adc-ui/card/card-media/card-media.tsx:98)",
+    "elementName": "CardMedia",
+    "tagName": "img",
+    "componentName": "CardMedia",
+    "elementsCount": 1,
+    "previewBounds": [
+      {
+        "borderRadius": "0px",
+        "height": 187,
+        "transform": "none",
+        "width": 138.1328125,
+        "x": 1207.53125,
+        "y": 388
+      }
+    ],
+    "elementSelectors": [
+      "div:nth-of-type(2) > .self-end > .object-contain"
+    ],
+    "commentText": "hey",
+    "timestamp": 1774973095014,
+    "id": "comment-1774973095014-icxcmnp"
+  },
+  {
+    "groupId": "default",
     "content": "hey\n\n<div class=\"text-text2 flex...\" data-testid=\"CardDescription\" data-slot=\"card-descriptio...\" data-insp-path=\"src/adc-ui/card...\">\n  Let AI craft authentic human-style videos for your brand.\n</div>\n  in CardDescription (at /src/adc-ui/card/card-description/card-description.tsx:38)",
     "elementName": "CardDescription",
     "tagName": "div",

@@ -564,6 +564,8 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   selectionsRevealed?: boolean;
   onToggleSelectionsRevealed?: () => void;
   onToggleCommentItemRevealed?: (commentItemId: string) => void;
+  syncStatus?: "local" | "synced" | "error";
+  syncWorkspace?: string;
 }
 
 export interface GrabbedBox {

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sync Indicator PoC</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .interactive-scale { transition: transform 0.1s; }
+    .interactive-scale:active { transform: scale(0.9); }
+    .toolbar-shadow { filter: drop-shadow(0px 1px 2px rgba(81,81,81,0.25)); }
+    .tooltip-container { position: relative; }
+    .tooltip-container .tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      color: #e5e5e5;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      border: 1px solid #333;
+    }
+    .tooltip-container:hover .tooltip { opacity: 1; }
+    .tooltip .dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center gap-10 p-8">
+
+  <h1 class="text-lg font-semibold text-gray-200">Sync Indicator PoC</h1>
+  <p class="text-gray-500 text-xs -mt-6">Click the dot to toggle between states. Hover for tooltip.</p>
+
+  <!-- Option A: Dot before chevron -->
+  <div>
+    <p class="text-gray-500 text-[10px] mb-2 text-center">Option A: Dot before chevron</p>
+    <div class="toolbar-shadow flex items-center gap-1.5 bg-white rounded-[10px] py-1.5 px-2">
+      <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 18 18" fill="currentColor" class="text-black">
+          <path opacity="0.4" d="M7.65631 10.9565C7.31061 10.0014 7.54012 8.96635 8.25592 8.25195C8.74522 7.76615 9.38771 7.49951 10.0694 7.49951C10.3682 7.49951 10.6641 7.55171 10.9483 7.65381L16.0001 9.49902V4.75C16.0001 3.2334 14.7667 2 13.2501 2H4.75012C3.23352 2 2.00012 3.2334 2.00012 4.75V13.25C2.00012 14.7666 3.23352 16 4.75012 16H9.49962L7.65631 10.9565Z"/>
+          <path d="M17.296 11.5694L10.4415 9.06545C10.0431 8.92235 9.61441 9.01658 9.31551 9.31338C9.01671 9.61168 8.92101 10.0429 9.06551 10.4413L11.5704 17.2948C11.7247 17.7191 12.128 18.0004 12.5772 18.0004C12.585 18.0004 12.5918 17.9999 12.5987 17.9999C13.0577 17.9906 13.4591 17.6913 13.5987 17.2543L14.4854 14.4857L17.2559 13.5985C17.6914 13.4589 17.9903 13.057 18 12.599C18.0097 12.141 17.7267 11.7276 17.296 11.5694Z"/>
+        </svg>
+      </button>
+      <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#B3B3B3]"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+      </button>
+      <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#B3B3B3]"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+      </button>
+      <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#B3B3B3]">
+          <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
+          <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
+          <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
+          <path d="m2 2 20 20"/>
+        </svg>
+      </button>
+      <div class="relative shrink-0 mx-0.5">
+        <div class="relative rounded-full w-5 h-3 bg-black cursor-pointer">
+          <div class="absolute top-0.5 left-2.5 rounded-full bg-white w-2 h-2"></div>
+        </div>
+      </div>
+      <!-- Sync indicator dot -->
+      <div class="tooltip-container" id="indicator-a" onclick="toggleState('a')">
+        <div class="tooltip" id="tooltip-a"><span class="dot" id="dot-tooltip-a" style="background:#9ca3af"></span><span id="label-a">Local storage</span></div>
+        <div id="dot-a" class="w-[6px] h-[6px] rounded-full cursor-pointer transition-colors" style="background:#9ca3af"></div>
+      </div>
+      <button class="flex items-center justify-center cursor-pointer interactive-scale">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#B3B3B3] rotate-180"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Option B: Dot after chevron (very end) -->
+  <div>
+    <p class="text-gray-500 text-[10px] mb-2 text-center">Option B: Dot after chevron (edge of toolbar)</p>
+    <div class="toolbar-shadow flex items-center gap-1.5 bg-white rounded-[10px] py-1.5 px-2">
+      <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 18 18" fill="currentColor" class="text-black">
+          <path opacity="0.4" d="M7.65631 10.9565C7.31061 10.0014 7.54012 8.96635 8.25592 8.25195C8.74522 7.76615 9.38771 7.49951 10.0694 7.49951C10.3682 7.49951 10.6641 7.55171 10.9483 7.65381L16.0001 9.49902V4.75C16.0001 3.2334 14.7667 2 13.2501 2H4.75012C3.23352 2 2.00012 3.2334 2.00012 4.75V13.25C2.00012 14.7666 3.23352 16 4.75012 16H9.49962L7.65631 10.9565Z"/>
+          <path d="M17.296 11.5694L10.4415 9.06545C10.0431 8.92235 9.61441 9.01658 9.31551 9.31338C9.01671 9.61168 8.92101 10.0429 9.06551 10.4413L11.5704 17.2948C11.7247 17.7191 12.128 18.0004 12.5772 18.0004C12.585 18.0004 12.5918 17.9999 12.5987 17.9999C13.0577 17.9906 13.4591 17.6913 13.5987 17.2543L14.4854 14.4857L17.2559 13.5985C17.6914 13.4589 17.9903 13.057 18 12.599C18.0097 12.141 17.7267 11.7276 17.296 11.5694Z"/>
+        </svg>
+      </button>
+      <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#B3B3B3]"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+      </button>
+      <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#B3B3B3]"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+      </button>
+      <button class="flex items-center justify-center w-7 h-7 cursor-pointer interactive-scale">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#B3B3B3]">
+          <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
+          <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
+          <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
+          <path d="m2 2 20 20"/>
+        </svg>
+      </button>
+      <div class="relative shrink-0 mx-0.5">
+        <div class="relative rounded-full w-5 h-3 bg-black cursor-pointer">
+          <div class="absolute top-0.5 left-2.5 rounded-full bg-white w-2 h-2"></div>
+        </div>
+      </div>
+      <button class="flex items-center justify-center cursor-pointer interactive-scale">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#B3B3B3] rotate-180"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <!-- Sync indicator dot at very end -->
+      <div class="tooltip-container" id="indicator-b" onclick="toggleState('b')">
+        <div class="tooltip" id="tooltip-b"><span class="dot" id="dot-tooltip-b" style="background:#9ca3af"></span><span id="label-b">Local storage</span></div>
+        <div id="dot-b" class="w-[6px] h-[6px] rounded-full cursor-pointer transition-colors" style="background:#9ca3af"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option C: Text label in comments dropdown header -->
+  <div>
+    <p class="text-gray-500 text-[10px] mb-2 text-center">Option C: In comments dropdown header</p>
+    <div class="w-[220px] bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg">
+      <div class="px-3 py-2 border-b border-gray-200 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-[12px] font-medium text-black/60">Comments</span>
+          <div class="tooltip-container" id="indicator-c" onclick="toggleState('c')">
+            <div class="tooltip" id="tooltip-c"><span class="dot" id="dot-tooltip-c" style="background:#9ca3af"></span><span id="label-c">Local storage</span></div>
+            <div class="flex items-center gap-1 cursor-pointer">
+              <div id="dot-c" class="w-[5px] h-[5px] rounded-full transition-colors" style="background:#9ca3af"></div>
+              <span id="text-c" class="text-[9px] text-black/30 transition-colors">local</span>
+            </div>
+          </div>
+        </div>
+        <span class="text-[10px] text-black/30">2</span>
+      </div>
+      <div class="px-3 py-2 border-b border-gray-100">
+        <div class="text-[12px] font-medium text-black">CardContent</div>
+        <div class="text-[11px] text-black/40">hey</div>
+      </div>
+      <div class="px-3 py-2">
+        <div class="text-[12px] font-medium text-black">NavBar</div>
+        <div class="text-[11px] text-black/40">check this</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="flex gap-6 text-[10px] text-gray-500 bg-[#2a2a2a] rounded-lg px-4 py-2 border border-gray-700">
+    <div class="flex items-center gap-1.5"><div class="w-[6px] h-[6px] rounded-full bg-gray-400"></div> Local storage</div>
+    <div class="flex items-center gap-1.5"><div class="w-[6px] h-[6px] rounded-full bg-green-500"></div> Synced (server)</div>
+    <div class="flex items-center gap-1.5"><div class="w-[6px] h-[6px] rounded-full bg-red-500"></div> Sync error</div>
+  </div>
+  <p class="text-gray-600 text-[10px]">Click any dot to cycle: local → synced → error → local</p>
+
+  <script>
+    const states = [
+      { color: '#9ca3af', label: 'Local storage', text: 'local' },
+      { color: '#22c55e', label: 'Synced · my-workspace', text: 'synced' },
+      { color: '#ef4444', label: 'Sync error · server unreachable', text: 'error' },
+    ];
+    const current = { a: 0, b: 0, c: 0 };
+
+    function toggleState(id) {
+      current[id] = (current[id] + 1) % states.length;
+      const s = states[current[id]];
+      document.getElementById(`dot-${id}`).style.background = s.color;
+      document.getElementById(`dot-tooltip-${id}`).style.background = s.color;
+      document.getElementById(`label-${id}`).textContent = s.label;
+      if (id === 'c') {
+        document.getElementById(`text-${id}`).textContent = s.text;
+        document.getElementById(`text-${id}`).style.color = s.color;
+      }
+    }
+  </script>
+</body>
+</html>
