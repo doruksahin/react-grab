@@ -1,21 +1,10 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { createRouter } from "./lib/create-router.js";
-import { commentsRoutes } from "./routes/comments.js";
-import { groupsRoutes } from "./routes/groups.js";
-import { healthRoutes } from "./routes/health.js";
-import { screenshotsRoutes } from "./routes/screenshots.js";
-import { DOC_CONFIG } from "./lib/doc-config.js";
+import { createApp } from "./app.js";
 
-const app = createRouter();
-app.route("/", healthRoutes);
-app.route("/", commentsRoutes);
-app.route("/", groupsRoutes);
-app.route("/", screenshotsRoutes);
+// No middleware needed — we only introspect routes, never execute handlers
+const app = createApp();
 
-app.doc("/doc", DOC_CONFIG);
-
-// Fetch the spec from the app without starting a server
 const response = await app.request("/doc");
 if (!response.ok) {
   console.error(`[sync-server] /doc returned ${response.status}`);

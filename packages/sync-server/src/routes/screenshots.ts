@@ -77,9 +77,7 @@ export const screenshotsRoutes = createRouter()
     const key = `${id}/screenshots/${selectionId}/${type}.${extension}`;
 
     const body = await c.req.arrayBuffer();
-    await c.env.BUCKET.put(key, body, {
-      httpMetadata: { contentType },
-    });
+    await c.var.screenshots.upload(key, body, contentType);
 
     return c.json({ key }, 200);
   })
@@ -89,12 +87,12 @@ export const screenshotsRoutes = createRouter()
     // Try both extensions
     for (const ext of ["png", "jpg"]) {
       const key = `${id}/screenshots/${selectionId}/${type}.${ext}`;
-      const object = await c.env.BUCKET.get(key);
-      if (object) {
+      const result = await c.var.screenshots.get(key);
+      if (result) {
         const headers = new Headers();
-        headers.set("Content-Type", object.httpMetadata?.contentType ?? "image/png");
+        headers.set("Content-Type", result.contentType);
         headers.set("Cache-Control", "public, max-age=31536000, immutable");
-        return new Response(object.body, { headers });
+        return new Response(result.body, { headers });
       }
     }
 

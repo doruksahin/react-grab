@@ -1,6 +1,5 @@
 import { createRoute } from "@hono/zod-openapi";
 import { createRouter } from "../lib/create-router.js";
-import { listGroups, persistGroups } from "../storage/d1-storage.js";
 import {
   WorkspaceIdParam,
   StatusResponse,
@@ -69,14 +68,12 @@ const persistGroupsRoute = createRoute({
 export const groupsRoutes = createRouter()
   .openapi(listGroupsRoute, async (c) => {
     const { id } = c.req.valid("param");
-    const db = c.get("db");
-    const groups = await listGroups(db, id);
+    const groups = await c.var.repo.listGroups(id);
     return c.json(groups, 200);
   })
   .openapi(persistGroupsRoute, async (c) => {
     const { id } = c.req.valid("param");
     const body = c.req.valid("json");
-    const db = c.get("db");
-    await persistGroups(db, id, body);
+    await c.var.repo.persistGroups(id, body);
     return c.json({ status: "ok" as const }, 200);
   });

@@ -1,6 +1,5 @@
 import { createRoute } from "@hono/zod-openapi";
 import { createRouter } from "../lib/create-router.js";
-import { listComments, persistComments } from "../storage/d1-storage.js";
 import {
   WorkspaceIdParam,
   StatusResponse,
@@ -69,14 +68,12 @@ const persistCommentsRoute = createRoute({
 export const commentsRoutes = createRouter()
   .openapi(listCommentsRoute, async (c) => {
     const { id } = c.req.valid("param");
-    const db = c.get("db");
-    const comments = await listComments(db, id);
+    const comments = await c.var.repo.listComments(id);
     return c.json(comments, 200);
   })
   .openapi(persistCommentsRoute, async (c) => {
     const { id } = c.req.valid("param");
     const body = c.req.valid("json");
-    const db = c.get("db");
-    await persistComments(db, id, body);
+    await c.var.repo.persistComments(id, body);
     return c.json({ status: "ok" as const }, 200);
   });

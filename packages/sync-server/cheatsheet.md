@@ -6,22 +6,67 @@
 https://react-grab-sync-server.doruksahin98.workers.dev
 ```
 
+## Architecture
+
+```
+src/
+  app.ts                    ← createApp() — single route composition
+  worker.ts                 ← Cloudflare Worker entry (4 lines)
+  export-spec.ts            ← Generates openapi.json without running server
+
+  schemas/                  ← Zod schemas (SSOT for all API types)
+  db/schema.ts              ← Drizzle tables (mirrors Zod schemas)
+
+  repositories/
+    types.ts                ← SyncRepository + ScreenshotStore interfaces
+    d1.repo.ts              ← D1 implementation (Drizzle queries)
+    r2.store.ts             ← R2 implementation (blob storage)
+
+  middleware/
+    inject-repos.ts         ← DI: creates repo + store from Cloudflare bindings
+
+  routes/                   ← OpenAPIHono routes, handlers use c.var.repo
+  lib/                      ← createRouter(), doc-config
+  types.ts                  ← AppEnv (Bindings + Variables)
+```
+
 ## Setup
 
 ```bash
-# Install deps (already done)
 pnpm install
-
-# Apply local D1 migrations (run once, or after schema changes)
-pnpm db:migrate:local
+pnpm db:migrate:local       # Apply D1 migrations locally (run once, or after schema changes)
 ```
 
-## Dev Modes
+## Dev
 
 ```bash
-pnpm dev        # Wrangler — D1 + R2, http://localhost:8787
-pnpm dev:node   # Node.js  — file storage, http://localhost:3847
+pnpm dev                    # Wrangler — D1 + R2 emulated locally, http://localhost:8787
 ```
+
+## Type flow (SSOT)
+
+```
+schemas/*.ts (Zod)          ← EDIT HERE to add/change fields
+  ↓ pnpm export-spec
+openapi.json                ← derived artifact
+  ↓ pnpm --filter dashboard codegen
+dashboard/src/api/          ← Orval-generated hooks + types + MSW mocks
+  ↓ pnpm --filter react-grab codegen (planned)
+react-grab/src/generated/   ← Orval-generated types (planned)
+```
+
+One source of truth. Never hand-write API types in dashboard or react-grab.
+
+## Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `pnpm dev` | Start with Wrangler (D1 + R2 local emulation) |
+| `pnpm export-spec` | Generate `openapi.json` from Zod schemas |
+| `pnpm db:generate` | Generate Drizzle migration after schema changes |
+| `pnpm db:migrate:local` | Apply migrations to local D1 |
+| `pnpm db:migrate:prod` | Apply migrations to production D1 |
+| `pnpm publish:worker` | Deploy to Cloudflare Workers |
 
 ## Endpoints
 
@@ -37,87 +82,79 @@ pnpm dev:node   # Node.js  — file storage, http://localhost:3847
 | PUT | `/workspaces/:id/screenshots/:selectionId/:type` | Upload screenshot (`type`: `full` or `element`) |
 | GET | `/workspaces/:id/screenshots/:selectionId/:type` | Get screenshot |
 
-## curl Examples
+## curl examples
 
 ```bash
 # Health
 curl http://localhost:8787/health
 
-# List comments (empty on fresh DB)
-curl http://localhost:8787/workspaces/test/comments
+# List comments
+curl http://localhost:8787/workspaces/my-workspace/comments
 
 # Persist comments
-curl -X PUT http://localhost:8787/workspaces/test/comments \
+curl -X PUT http://localhost:8787/workspaces/my-workspace/comments \
   -H "Content-Type: application/json" \
   -d '[{"id":"c1","groupId":"g1","content":"<div/>","elementName":"Div","tagName":"div","timestamp":1234,"revealed":true}]'
 
 # List groups
-curl http://localhost:8787/workspaces/test/groups
+curl http://localhost:8787/workspaces/my-workspace/groups
 
 # Persist groups
-curl -X PUT http://localhost:8787/workspaces/test/groups \
+curl -X PUT http://localhost:8787/workspaces/my-workspace/groups \
   -H "Content-Type: application/json" \
   -d '[{"id":"g1","name":"My Group","createdAt":1234,"revealed":true}]'
 
-# Upload screenshot (jpeg)
-curl -X PUT http://localhost:8787/workspaces/test/screenshots/c1/element \
-  -H "Content-Type: image/jpeg" \
-  --data-binary @/path/to/image.jpg
-
-# Upload screenshot (png)
-curl -X PUT http://localhost:8787/workspaces/test/screenshots/c1/full \
+# Upload screenshot
+curl -X PUT http://localhost:8787/workspaces/my-workspace/screenshots/c1/element \
   -H "Content-Type: image/png" \
-  --data-binary @/path/to/image.png
+  --data-binary @screenshot.png
 
-# Get screenshot (save to file)
-curl http://localhost:8787/workspaces/test/screenshots/c1/element -o retrieved.jpg
+# Get screenshot
+curl http://localhost:8787/workspaces/my-workspace/screenshots/c1/element -o retrieved.png
 
-# Get screenshot (open in browser)
-open http://localhost:8787/workspaces/test/screenshots/c1/element
+# OpenAPI spec
+curl http://localhost:8787/doc | jq .
+
+# Swagger UI (browser)
+open http://localhost:8787/ui
 ```
 
 ## Database
 
 ```bash
-pnpm db:generate        # Generate new migration after schema changes
-pnpm db:migrate:local   # Apply migrations to local D1
+pnpm db:generate            # Generate new migration after schema changes
+pnpm db:migrate:local       # Apply migrations to local D1
+pnpm db:migrate:prod        # Apply migrations to production D1
 ```
 
-Schema: `src/db/schema.ts`
-Migrations: `drizzle/`
+- Schema: `src/db/schema.ts`
+- Migrations: `drizzle/`
 
-## Production Deploy
+## Adding a new field
+
+1. Add to Zod schema in `src/schemas/*.ts`
+2. Add to Drizzle schema in `src/db/schema.ts`
+3. `pnpm db:generate` → new migration file
+4. `pnpm db:migrate:local` → apply locally
+5. `pnpm export-spec` → update `openapi.json`
+6. `pnpm --filter dashboard codegen` → regenerate dashboard types
+7. Update repository if needed (`repositories/d1.repo.ts`)
+
+## Production deploy
 
 ```bash
-# 0. Login (once)
+# First time only
 wrangler login
-
-# 1. Create D1 database (once)
-wrangler d1 create react-grab-sync
-# → paste the returned database_id into wrangler.toml:
-#   database_id = "xxxx-xxxx-xxxx-xxxx"  (replace "local")
-
-# 2. Create R2 bucket (once)
 wrangler r2 bucket create react-grab-screenshots
 
-# 3. Apply migrations to production D1
-cd packages/sync-server
-wrangler d1 migrations apply react-grab-sync
+# Deploy
+pnpm db:migrate:prod        # Apply migrations to production D1
+pnpm publish:worker         # Deploy worker
 
-# 4. Deploy — outputs a *.workers.dev URL
-wrangler deploy
-```
-
-## Export OpenAPI spec + Dashboard codegen
-
-```bash
-pnpm export-spec                              # generates openapi.json
-pnpm --filter dashboard codegen              # regenerates Orval hooks
+# Verify
+curl https://react-grab-sync-server.doruksahin98.workers.dev/health
 ```
 
 ## Known TODOs
 
 - Squash 3 migrations into 1 before first production deploy
-- Replace `database_id = "local"` in `wrangler.toml` with real D1 ID
-- Extract duplicate route definitions from `index.ts` into shared `route-defs.ts`
-- Fix Swagger UI server URL (hardcoded port 3847, Wrangler uses 8787)

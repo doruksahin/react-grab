@@ -1,9 +1,8 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import type { Bindings } from "../types.js";
-import type { Database } from "../storage/d1-storage.js";
+import type { AppEnv } from "../types.js";
 
 export function createRouter() {
-  return new OpenAPIHono<{ Bindings: Bindings; Variables: { db: Database } }>({
+  return new OpenAPIHono<AppEnv>({
     defaultHook: (result, c) => {
       if (!result.success) {
         return c.json(
