@@ -3748,6 +3748,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       },
       currentToolbarState,
       updateToolbarState,
+      // NEW: group deps
+      groups: selectionGroups.groups,
+      setGroups: selectionGroups.setGroups,
+      persistGroups: selectionGroups.persistGroups,
     });
 
     const showCommentItemPreview = (
@@ -4258,6 +4262,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onRenameGroup={selectionGroups.handleRenameGroup}
                 onDeleteGroup={selectionGroups.handleDeleteGroup}
                 onActiveGroupChange={selectionGroups.setActiveGroupId}
+                onToggleGroupRevealed={visibility.handleToggleGroup}
               />
             );
           }, rendererRoot);
