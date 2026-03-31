@@ -4358,6 +4358,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onRenameGroup={selectionGroups.handleRenameGroup}
                 onDeleteGroup={selectionGroups.handleDeleteGroup}
                 onActiveGroupChange={selectionGroups.setActiveGroupId}
+                onMoveItem={selectionGroups.handleMoveItem}
                 onToggleGroupRevealed={visibility.handleToggleGroup}
               />
             );
