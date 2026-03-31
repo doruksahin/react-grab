@@ -403,13 +403,13 @@ importers:
         version: link:../cli
       bippy:
         specifier: ^0.5.32
-        version: 0.5.32(@types/react@19.2.11)(react@19.2.3)
+        version: 0.5.32(@types/react@19.2.11)(react@19.2.4)
       element-source:
         specifier: ^0.0.3
-        version: 0.0.3(@types/react@19.2.11)(react@19.2.3)
+        version: 0.0.3(@types/react@19.2.11)(react@19.2.4)
       react:
         specifier: '>=17.0.0'
-        version: 19.2.3
+        version: 19.2.4
       solid-js:
         specifier: ^1.9.10
         version: 1.9.10
@@ -444,6 +444,9 @@ importers:
       esbuild-plugin-babel:
         specifier: ^0.2.3
         version: 0.2.3(@babel/core@7.28.5)
+      orval:
+        specifier: ^8.6.2
+        version: 8.6.2(@faker-js/faker@10.4.0)(prettier@3.8.1)(typescript@5.9.3)
       oxlint:
         specifier: ^1.42.0
         version: 1.42.0
@@ -7794,10 +7797,6 @@ packages:
     resolution: {integrity: sha512-DGrYcCWK7tvYMnWh79yrPHt+vdx9tY+1gPZa7nJQtO/p8bLTDaHp4dzwEhQB7pZ4Xe3ok4XKuEPrVuc+wlpkmw==}
     engines: {node: '>=0.10.0'}
 
-  react@19.2.3:
-    resolution: {integrity: sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA==}
-    engines: {node: '>=0.10.0'}
-
   react@19.2.4:
     resolution: {integrity: sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==}
     engines: {node: '>=0.10.0'}
@@ -12436,7 +12435,7 @@ snapshots:
     dependencies:
       '@scalar/helpers': 0.2.18
       pathe: 2.0.3
-      yaml: 2.8.1
+      yaml: 2.8.3
 
   '@scalar/openapi-parser@0.24.17':
     dependencies:
@@ -12449,7 +12448,7 @@ snapshots:
       ajv-formats: 3.0.1(ajv@8.17.1)
       jsonpointer: 5.0.1
       leven: 4.1.0
-      yaml: 2.8.1
+      yaml: 2.8.3
 
   '@scalar/openapi-types@0.5.3':
     dependencies:
@@ -13588,10 +13587,10 @@ snapshots:
     dependencies:
       is-windows: 1.0.2
 
-  bippy@0.5.32(@types/react@19.2.11)(react@19.2.3):
+  bippy@0.5.32(@types/react@19.2.11)(react@19.2.4):
     dependencies:
       '@types/react-reconciler': 0.28.9(@types/react@19.2.11)
-      react: 19.2.3
+      react: 19.2.4
     transitivePeerDependencies:
       - '@types/react'
 
@@ -14105,9 +14104,9 @@ snapshots:
 
   electron-to-chromium@1.5.237: {}
 
-  element-source@0.0.3(@types/react@19.2.11)(react@19.2.3):
+  element-source@0.0.3(@types/react@19.2.11)(react@19.2.4):
     dependencies:
-      bippy: 0.5.32(@types/react@19.2.11)(react@19.2.3)
+      bippy: 0.5.32(@types/react@19.2.11)(react@19.2.4)
     transitivePeerDependencies:
       - '@types/react'
       - react
@@ -16836,8 +16835,6 @@ snapshots:
   react@19.1.2: {}
 
   react@19.2.1: {}
-
-  react@19.2.3: {}
 
   react@19.2.4: {}
 

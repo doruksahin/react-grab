@@ -115,6 +115,7 @@
     "clsx": "^2.1.1",
     "concurrently": "^9.1.2",
     "esbuild-plugin-babel": "^0.2.3",
+    "orval": "^8.6.2",
     "oxlint": "^1.42.0",
     "publint": "^0.2.12",
     "tailwindcss": "^4.1.0",
