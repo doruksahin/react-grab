@@ -50,6 +50,7 @@ interface CommentsDropdownProps {
   onDeleteGroup?: (groupId: string) => void;
   onToggleGroupRevealed?: (groupId: string) => void;
   onCopyGroup?: (groupId: string) => void;
+  copyableCount?: number;
 }
 
 const getCommentItemDisplayName = (item: CommentItem): string => {
@@ -268,7 +269,9 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                       when={isCopyAllConfirmed()}
                       fallback={
                         <span class="text-black text-[13px] leading-3.5 font-sans font-medium">
-                          Copy
+                          {props.copyableCount != null && props.copyableCount < (props.items?.length ?? 0)
+                            ? `Copy (${props.copyableCount})`
+                            : "Copy"}
                         </span>
                       }
                     >

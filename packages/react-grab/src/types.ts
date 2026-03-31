@@ -546,6 +546,7 @@ export interface ReactGrabRendererProps {
   onCommentsCopyAll?: () => void;
   onCommentsCopyAllHover?: (isHovered: boolean) => void;
   onCopyGroup?: (groupId: string) => void;
+  copyableCount?: number;
   onCommentsClear?: () => void;
   onCommentsDismiss?: () => void;
   onCommentsDropdownHover?: (isHovered: boolean) => void;

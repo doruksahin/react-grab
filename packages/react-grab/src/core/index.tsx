@@ -441,6 +441,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       },
     );
 
+    const copyableItemCount = createMemo(() => {
+      const disconnected = commentsDisconnectedItemIds();
+      return commentItems().filter(
+        (item) => item.revealed && !disconnected.has(item.id),
+      ).length;
+    });
+
     const clearHoldTimer = () => {
       if (activationHoldState.timerId !== null) {
         clearTimeout(activationHoldState.timerId);
@@ -4321,6 +4328,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onCommentsCopyAll={handleCommentsCopyAll}
                 onCommentsCopyAllHover={handleCommentsCopyAllHover}
                 onCommentsClear={handleCommentsClear}
+                copyableCount={copyableItemCount()}
                 onCopyGroup={handleCopyGroup}
                 onCommentsDismiss={dismissCommentsDropdown}
                 onCommentsDropdownHover={handleCommentsDropdownHover}

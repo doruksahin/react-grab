@@ -266,6 +266,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onDeleteGroup={props.onDeleteGroup}
         onToggleGroupRevealed={props.onToggleGroupRevealed}
         onCopyGroup={props.onCopyGroup}
+        copyableCount={props.copyableCount}
       />
     </>
   );
