@@ -39,4 +39,20 @@ export interface SelectionGroupsAPI {
   handleAddGroup: (name: string) => void;
   handleRenameGroup: (groupId: string, name: string) => void;
   handleDeleteGroup: (groupId: string) => void;
+  handleMoveItem: (itemId: string, groupId: string) => void;
+}
+
+/**
+ * All group-related props passed through the renderer chain.
+ * ReactGrabRendererProps extends this. Component props Pick<> their subset.
+ */
+export interface SelectionGroupsViewProps {
+  groups?: SelectionGroup[];
+  activeGroupId?: string;
+  onActiveGroupChange?: (groupId: string) => void;
+  onAddGroup?: (name: string) => void;
+  onRenameGroup?: (groupId: string, name: string) => void;
+  onDeleteGroup?: (groupId: string) => void;
+  onToggleGroupRevealed?: (groupId: string) => void;
+  onMoveItem?: (itemId: string, groupId: string) => void;
 }
