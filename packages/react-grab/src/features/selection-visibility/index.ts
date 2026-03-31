@@ -56,13 +56,9 @@ export function createSelectionVisibility(
   createEffect(
     on(
       () => [deps.commentItems(), deps.disconnectedItemIds()] as const,
-      ([items, disconnected]) => {
-        const revealedCount = items.filter((i) => i.revealed).length;
-        const disconnectedCount = disconnected.size;
-        console.log(`[reveal-debug] effect fired: items=${items.length} revealed=${revealedCount} disconnected=${disconnectedCount}`);
+      () => {
         clearRevealedPreviews();
         showRevealedPreviews();
-        console.log(`[reveal-debug] after show: previews=${revealedPreviews.length}`);
         // Persist revealed states locally for sync round-trip survival
         saveLocalRevealedStates(deps.commentItems(), deps.groups());
       },

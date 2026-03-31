@@ -1,18 +1,8 @@
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroup } from "../selection-groups/types.js";
-import { loadToolbarState } from "../../components/toolbar/state.js";
 
 const REVEALED_COMMENTS_KEY = "react-grab-revealed-comments";
 const REVEALED_GROUPS_KEY = "react-grab-revealed-groups";
-
-/**
- * Check if the parent reveal toggle is ON in localStorage (ToolbarState).
- * Used as fallback when per-item revealed states are missing from localStorage.
- */
-const isParentRevealedOn = (): boolean => {
-  const toolbarState = loadToolbarState();
-  return toolbarState?.selectionsRevealed ?? false;
-};
 
 /**
  * Strip `revealed` from comments before sending to server.
@@ -60,19 +50,16 @@ export const saveLocalRevealedStates = (
 export const mergeRevealedIntoComments = (
   serverItems: Omit<CommentItem, "revealed">[],
 ): CommentItem[] => {
-  let revealedMap: Record<string, boolean> | null = null;
+  let revealedMap: Record<string, boolean> = {};
   try {
     const stored = localStorage.getItem(REVEALED_COMMENTS_KEY);
     if (stored) revealedMap = JSON.parse(stored);
   } catch {
     // ignore
   }
-  // If we have per-item overrides, use them.
-  // Otherwise fall back to the parent toggle state from localStorage.
-  const fallback = revealedMap === null ? isParentRevealedOn() : false;
   return serverItems.map((item) => ({
     ...item,
-    revealed: revealedMap?.[item.id] ?? fallback,
+    revealed: revealedMap[item.id] ?? false,
   }));
 };
 
@@ -82,16 +69,15 @@ export const mergeRevealedIntoComments = (
 export const mergeRevealedIntoGroups = (
   serverGroups: Omit<SelectionGroup, "revealed">[],
 ): SelectionGroup[] => {
-  let revealedMap: Record<string, boolean> | null = null;
+  let revealedMap: Record<string, boolean> = {};
   try {
     const stored = localStorage.getItem(REVEALED_GROUPS_KEY);
     if (stored) revealedMap = JSON.parse(stored);
   } catch {
     // ignore
   }
-  const fallback = revealedMap === null ? isParentRevealedOn() : false;
   return serverGroups.map((group) => ({
     ...group,
-    revealed: revealedMap?.[group.id] ?? fallback,
+    revealed: revealedMap[group.id] ?? false,
   }));
 };
