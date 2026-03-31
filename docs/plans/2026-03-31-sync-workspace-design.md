@@ -169,6 +169,71 @@ Workspace `project-x` on dev is completely isolated from `project-x` on prod.
 - MCP server (independent system, not affected)
 - Copy flow (copies from in-memory state, doesn't care where it came from)
 
+## Design Decisions (from review)
+
+### 1. Async writes, sync reads
+
+The current `persistCommentItems` is synchronous. Making it async would cascade through every caller. Instead:
+
+- **Reads:** Synchronous from in-memory cache (populated at init)
+- **Writes:** Update cache synchronously (callers see immediate result), then fire async PUT. On PUT failure, surface error via an `onSyncError` callback in the sync config — NOT via throw (can't throw from async in a sync caller).
+
+```typescript
+// Sync config with error handling
+init({
+  sync: {
+    serverUrl: "http://localhost:3847",
+    workspace: "project-x",
+    onSyncError: (error) => {
+      // Show toast, log, etc. — host app decides
+      console.error("Sync failed:", error);
+    },
+  },
+});
+```
+
+This preserves the synchronous function signatures. No existing code changes.
+
+### 2. Deferred initialization
+
+Both storage files eagerly initialize at module import time (`let commentItems = loadFromSessionStorage()`). With sync, the initial load is async (HTTP GET).
+
+Solution: storage files export an `init()` async function. When sync is configured, `core/index.tsx` calls `await init()` before creating signals. When no sync is configured, `init()` is a no-op (data is already loaded from sessionStorage at import time).
+
+```
+Module load:
+  comment-storage.ts imports → loadFromSessionStorage() (sync, immediate)
+
+App init (async, in core/index.tsx):
+  if (syncConfig) {
+    await commentStorage.init(syncConfig) → GET /comments → replace cache
+    await groupStorage.init(syncConfig)   → GET /groups   → replace cache
+  }
+  // Now create signals from cache (sync)
+```
+
+This works because `core/index.tsx` already has an async phase (dynamic renderer import).
+
+### 3. `revealed` state is per-user, not synced
+
+`CommentItem.revealed` and `SelectionGroup.revealed` are view preferences, not shared data. They stay in sessionStorage.
+
+What syncs to server:
+- `CommentItem` fields: `id, groupId, content, elementName, tagName, componentName, elementsCount, previewBounds, elementSelectors, commentText, timestamp`
+- `SelectionGroup` fields: `id, name, createdAt`
+
+What stays local (sessionStorage):
+- `CommentItem.revealed` — per-user view state
+- `SelectionGroup.revealed` — per-user view state
+- `ToolbarState.selectionsRevealed` — per-user preference (already in localStorage)
+- `isClearConfirmed` flag — per-user UI state
+
+On load: fetch from server (shared data), merge with local revealed states from sessionStorage.
+
+### 4. No size limits on server
+
+The current `trimToSizeLimit` (2MB sessionStorage cap) doesn't apply to server storage. For an internal tool with file-based JSON, this is acceptable. If workspace data grows unbounded, add a max-items limit to the server later.
+
 ## Not In Scope
 
 - Real-time sync (WebSocket, SSE) — user refreshes to see colleague's changes
