@@ -11,6 +11,7 @@ import type { Component } from "solid-js";
 import type { CommentItem, DropdownAnchor } from "../types.js";
 import type { SelectionGroupsViewProps } from "../features/selection-groups/types.js";
 import { GroupCollapsible } from "../features/selection-groups/components/group-collapsible.jsx";
+import { GroupPickerFlyout } from "../features/selection-groups/components/group-picker-flyout.jsx";
 import { groupComments, fuzzyMatchGroup } from "../features/selection-groups/business/group-operations.js";
 import {
   DROPDOWN_EDGE_TRANSFORM_ORIGIN,
@@ -103,6 +104,8 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
   >(null);
   const [isCopyAllConfirmed, setIsCopyAllConfirmed] = createSignal(false);
   const [searchQuery, setSearchQuery] = createSignal("");
+  const [hoveredItemId, setHoveredItemId] = createSignal<string | null>(null);
+  const [openMoveId, setOpenMoveId] = createSignal<string | null>(null);
 
   let copyAllFeedbackTimeout: ReturnType<typeof setTimeout> | undefined;
 
@@ -360,10 +363,12 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                           if (!props.disconnectedItemIds?.has(item.id)) {
                             props.onItemHover?.(item.id);
                           }
+                          setHoveredItemId(item.id);
                           updateHighlight(event.currentTarget);
                         }}
                         onMouseLeave={() => {
                           props.onItemHover?.(null);
+                          setHoveredItemId(null);
                           clearHighlight();
                         }}
                         onFocus={(event) => updateHighlight(event.currentTarget)}
@@ -379,33 +384,70 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                             </span>
                           </Show>
                         </span>
-                        <span class="shrink-0 text-[10px] font-sans text-black/25 flex items-center justify-end">
-                          {formatRelativeTime(item.timestamp)}
-                        </span>
-                        <button
-                          data-react-grab-ignore-events
-                          class="shrink-0 flex items-center justify-center w-[18px] h-[18px] rounded hover:bg-black/5 transition-colors"
-                          on:click={(event) => {
-                            event.stopPropagation();
-                            props.onToggleItemRevealed?.(item.id);
-                          }}
-                          on:pointerdown={(event) => event.stopPropagation()}
-                          aria-label={item.revealed ? "Hide this selection" : "Reveal this selection"}
-                        >
-                          {item.revealed ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500">
-                              <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
-                              <circle cx="12" cy="12" r="3" fill="currentColor"/>
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/20 group-hover:text-black/40 transition-colors">
-                              <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
-                              <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
-                              <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
-                              <path d="m2 2 20 20"/>
-                            </svg>
-                          )}
-                        </button>
+                        <div class="flex items-center gap-1 shrink-0">
+                          <Show when={hoveredItemId() === item.id || openMoveId() === item.id}>
+                            <button
+                              data-react-grab-ignore-events
+                              class="flex items-center justify-center rounded p-0.5 text-black/25 hover:text-black/50 hover:bg-black/[0.06] cursor-pointer transition-colors"
+                              title="Move to group"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMoveId((id) => (id === item.id ? null : item.id));
+                              }}
+                            >
+                              <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+                              </svg>
+                            </button>
+                          </Show>
+                          <span class="text-[10px] font-sans text-black/25 flex items-center justify-end">
+                            {formatRelativeTime(item.timestamp)}
+                          </span>
+                          <button
+                            data-react-grab-ignore-events
+                            class="flex items-center justify-center w-[18px] h-[18px] rounded hover:bg-black/5 transition-colors"
+                            on:click={(event) => {
+                              event.stopPropagation();
+                              props.onToggleItemRevealed?.(item.id);
+                            }}
+                            on:pointerdown={(event) => event.stopPropagation()}
+                            aria-label={item.revealed ? "Hide this selection" : "Reveal this selection"}
+                          >
+                            {item.revealed ? (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500">
+                                <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+                                <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                              </svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/20 group-hover:text-black/40 transition-colors">
+                                <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
+                                <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
+                                <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
+                                <path d="m2 2 20 20"/>
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                        <Show when={openMoveId() === item.id}>
+                          <GroupPickerFlyout
+                            groups={props.groups ?? []}
+                            excludeGroupId={item.groupId}
+                            onSelect={(groupId) => {
+                              props.onMoveItem?.(item.id, groupId);
+                              setOpenMoveId(null);
+                            }}
+                            onClose={() => setOpenMoveId(null)}
+                          />
+                        </Show>
                       </div>
                     )}
                   />
