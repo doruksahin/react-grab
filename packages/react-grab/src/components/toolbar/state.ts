@@ -36,6 +36,10 @@ export const loadToolbarState = (): ToolbarState | null => {
         typeof record.defaultAction === "string"
           ? record.defaultAction
           : DEFAULT_ACTION_ID,
+      selectionsRevealed:
+        typeof record.selectionsRevealed === "boolean"
+          ? record.selectionsRevealed
+          : false,
     };
   } catch (error) {
     console.warn(

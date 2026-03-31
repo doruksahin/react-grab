@@ -32,6 +32,7 @@ const loadFromSessionStorage = (): CommentItem[] => {
       elementsCount: Math.max(1, commentItem.elementsCount ?? 1),
       previewBounds: commentItem.previewBounds ?? [],
       elementSelectors: commentItem.elementSelectors ?? [],
+      revealed: typeof commentItem.revealed === "boolean" ? commentItem.revealed : false,
     }));
   } catch (error) {
     logRecoverableError("Failed to load comments from sessionStorage", error);
@@ -59,7 +60,7 @@ const trimToSizeLimit = (items: CommentItem[]): CommentItem[] => {
   return trimmedItems;
 };
 
-const persistCommentItems = (nextItems: CommentItem[]): CommentItem[] => {
+export const persistCommentItems = (nextItems: CommentItem[]): CommentItem[] => {
   commentItems = trimToSizeLimit(nextItems);
   try {
     sessionStorage.setItem(COMMENT_ITEMS_KEY, JSON.stringify(commentItems));

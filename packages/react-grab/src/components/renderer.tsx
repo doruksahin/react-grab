@@ -217,6 +217,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onToggleToolbarMenu={props.onToggleToolbarMenu}
           isToolbarMenuOpen={Boolean(props.toolbarMenuPosition)}
           isClearPromptOpen={Boolean(props.clearPromptPosition)}
+          selectionsRevealed={props.selectionsRevealed}
+          onToggleSelectionsRevealed={props.onToggleSelectionsRevealed}
         />
       </Show>
 
@@ -257,6 +259,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onClearAll={props.onCommentsClear}
         onDismiss={props.onCommentsDismiss}
         onDropdownHover={props.onCommentsDropdownHover}
+        onToggleItemRevealed={props.onToggleCommentItemRevealed}
       />
     </>
   );

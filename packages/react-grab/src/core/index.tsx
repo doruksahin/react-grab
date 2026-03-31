@@ -158,6 +158,7 @@ import {
   clearComments,
   isClearConfirmed,
   confirmClear,
+  persistCommentItems,
 } from "../utils/comment-storage.js";
 import { copyContent } from "../utils/copy-content.js";
 import { joinSnippets } from "../utils/join-snippets.js";
@@ -333,6 +334,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     const [clockFlashTrigger, setClockFlashTrigger] = createSignal(0);
     const [isCommentsHoverOpen, setIsCommentsHoverOpen] = createSignal(false);
     let commentsHoverPreviews: { boxId: string; labelId: string | null }[] = [];
+    let revealedPreviews: { boxId: string; labelId: string | null }[] = [];
 
     const updateToolbarState = (updates: Partial<ToolbarState>) => {
       const currentState = currentToolbarState() ?? loadToolbarState();
@@ -342,6 +344,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         collapsed: currentState?.collapsed ?? false,
         enabled: currentState?.enabled ?? true,
         defaultAction: currentState?.defaultAction ?? DEFAULT_ACTION_ID,
+        selectionsRevealed: currentState?.selectionsRevealed ?? false,
         ...updates,
       };
       saveToolbarState(newState);
@@ -887,6 +890,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         elementSelectors,
         commentText: extraPrompt,
         timestamp: Date.now(),
+        revealed: false,
       });
       setCommentItems(updatedCommentItems);
       setClockFlashTrigger((previous) => previous + 1);
@@ -3253,6 +3257,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       () => dragPreviewBounds().length > 0,
     );
 
+    const selectionsRevealed = createMemo(
+      () => currentToolbarState()?.selectionsRevealed ?? false,
+    );
+
     const selectionVisible = createMemo(() => {
       if (!isThemeEnabled()) return false;
       if (!isSelectionBoxThemeEnabled()) return false;
@@ -3671,11 +3679,39 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       commentsHoverPreviews = [];
     };
 
+    const clearRevealedPreviews = () => {
+      for (const { boxId, labelId } of revealedPreviews) {
+        actions.removeGrabbedBox(boxId);
+        if (labelId) {
+          actions.removeLabelInstance(labelId);
+        }
+      }
+      revealedPreviews = [];
+    };
+
+    const showRevealedPreviews = () => {
+      for (const item of commentItems()) {
+        if (!item.revealed) continue;
+        const connectedElements = getConnectedCommentElements(item);
+        const previewBounds = connectedElements.map((element) =>
+          createElementBounds(element),
+        );
+        addCommentItemPreview(
+          item,
+          previewBounds,
+          connectedElements,
+          "reveal-pinned",
+          revealedPreviews,
+        );
+      }
+    };
+
     const addCommentItemPreview = (
       item: CommentItem,
       previewBounds: OverlayBounds[],
       previewElements: Element[],
       idPrefix: string,
+      trackingArray: { boxId: string; labelId: string | null }[] = commentsHoverPreviews,
     ) => {
       if (previewBounds.length === 0) return;
 
@@ -3708,7 +3744,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           });
         }
 
-        commentsHoverPreviews.push({ boxId, labelId });
+        trackingArray.push({ boxId, labelId });
       }
     };
 
@@ -3964,13 +4000,14 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     };
 
     const handleCommentItemHover = (commentItemId: string | null) => {
+      // Don't show hover preview for items already revealed (they have pinned previews)
       clearCommentsHoverPreviews();
       if (!commentItemId) return;
-
       const item = commentItems().find(
         (innerItem) => innerItem.id === commentItemId,
       );
       if (!item) return;
+      if (item.revealed) return;
       showCommentItemPreview(item, "comment-hover");
     };
 
@@ -3983,7 +4020,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           commentsDropdownPosition() === null &&
           clearPromptPosition() === null
         ) {
-          showAllCommentItemPreviews();
+          for (const item of commentItems()) {
+            if (!item.revealed) {
+              showCommentItemPreview(item, "comment-all-hover");
+            }
+          }
           commentsHoverOpenTimeoutId = setTimeout(() => {
             commentsHoverOpenTimeoutId = null;
             setIsCommentsHoverOpen(true);
@@ -4007,16 +4048,54 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       clearCommentsHoverPreviews();
       if (isHovered) {
         cancelCommentsHoverCloseTimeout();
-        showAllCommentItemPreviews();
+        for (const item of commentItems()) {
+          if (!item.revealed) {
+            showCommentItemPreview(item, "comment-all-hover");
+          }
+        }
       } else if (isCommentsHoverOpen()) {
         scheduleCommentsHoverClose();
       }
     };
 
-    const showAllCommentItemPreviews = () => {
-      for (const item of commentItems()) {
-        showCommentItemPreview(item, "comment-all-hover");
-      }
+    createEffect(
+      on(
+        // Tracks commentItems() signal — fires on any item change (including revealed toggles).
+        // Over-reactive but harmless since clear+rebuild is idempotent.
+        () => commentItems(),
+        () => {
+          clearRevealedPreviews();
+          showRevealedPreviews();
+        },
+      ),
+    );
+
+    const handleToggleCommentItemRevealed = (commentItemId: string) => {
+      const items = commentItems();
+      const updatedItems = items.map((item) =>
+        item.id === commentItemId
+          ? { ...item, revealed: !item.revealed }
+          : item,
+      );
+      setCommentItems(updatedItems);
+      persistCommentItems(updatedItems);
+    };
+
+    const handleToggleSelectionsRevealed = () => {
+      const currentState = selectionsRevealed();
+      const newRevealed = !currentState;
+
+      // Override all children
+      const items = commentItems();
+      const updatedItems = items.map((item) => ({
+        ...item,
+        revealed: newRevealed,
+      }));
+      setCommentItems(updatedItems);
+      persistCommentItems(updatedItems);
+
+      // Update toolbar state
+      updateToolbarState({ selectionsRevealed: newRevealed });
     };
 
     const handleCommentsClear = () => {
@@ -4208,6 +4287,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                   handleCommentsClear();
                 }}
                 onClearCommentsCancel={dismissClearPrompt}
+                selectionsRevealed={selectionsRevealed()}
+                onToggleSelectionsRevealed={handleToggleSelectionsRevealed}
+                onToggleCommentItemRevealed={handleToggleCommentItemRevealed}
               />
             );
           }, rendererRoot);
@@ -4320,6 +4402,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             state.defaultAction ??
             currentState?.defaultAction ??
             DEFAULT_ACTION_ID,
+          selectionsRevealed:
+            state.selectionsRevealed ?? currentState?.selectionsRevealed ?? false,
         };
         saveToolbarState(newState);
         setCurrentToolbarState(newState);

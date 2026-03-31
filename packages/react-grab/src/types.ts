@@ -361,12 +361,15 @@ export interface SourceInfo {
   componentName: string | null;
 }
 
+
+
 export interface ToolbarState {
   edge: "top" | "bottom" | "left" | "right";
   ratio: number;
   collapsed: boolean;
   enabled: boolean;
   defaultAction?: string;
+  selectionsRevealed: boolean;
 }
 
 export interface DropdownAnchor {
@@ -447,6 +450,7 @@ export interface CommentItem {
   elementSelectors?: string[];
   commentText?: string;
   timestamp: number;
+  revealed: boolean;
 }
 
 export interface ReactGrabRendererProps {
@@ -550,6 +554,9 @@ export interface ReactGrabRendererProps {
   clearPromptPosition?: DropdownAnchor | null;
   onClearCommentsConfirm?: () => void;
   onClearCommentsCancel?: () => void;
+  selectionsRevealed?: boolean;
+  onToggleSelectionsRevealed?: () => void;
+  onToggleCommentItemRevealed?: (commentItemId: string) => void;
 }
 
 export interface GrabbedBox {

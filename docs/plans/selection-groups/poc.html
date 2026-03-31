@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selection Groups - UI PoC (Merged)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .toolbar-shadow { filter: drop-shadow(0px 1px 2px rgba(81,81,81,0.25)); }
+    .press-scale:active { transform: scale(0.95); }
+    .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center gap-8 p-8">
+
+  <h1 class="text-2xl font-semibold text-gray-800">Selection Groups - UI PoC</h1>
+  <p class="text-gray-500 text-sm -mt-4">Merged: group CRUD lives inside the comments dropdown. No separate manager panel.</p>
+
+  <div class="flex gap-8 items-start">
+
+    <!-- ================================== -->
+    <!-- COMMENTS DROPDOWN (merged with groups) -->
+    <!-- ================================== -->
+    <div class="flex flex-col gap-2">
+      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Comments Dropdown</span>
+      <div id="dropdown-normal" class="toolbar-shadow w-[280px] bg-white rounded-[10px] overflow-hidden text-[13px] antialiased" style="font-synthesis: none; corner-shape: superellipse(1.25);">
+
+        <!-- Header (unchanged from original) -->
+        <div class="shrink-0 flex items-center justify-between px-2 pt-1.5 pb-1">
+          <span class="text-[11px] font-medium text-black/40">Comments</span>
+          <div class="flex items-center gap-[5px]">
+            <button class="shrink-0 flex items-center justify-center px-[3px] py-px rounded-sm bg-[#FEF2F2] cursor-pointer hover:bg-[#FEE2E2] press-scale h-[17px] text-[#B91C1C]" title="Clear all">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>
+            <button class="shrink-0 flex items-center justify-center px-[3px] py-px rounded-sm bg-white [border-width:0.5px] border-solid border-[#B3B3B3] cursor-pointer hover:bg-[#F5F5F5] press-scale h-[17px]" title="Copy all">
+              <span class="text-black text-[13px] leading-3.5 font-medium">Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="border-t border-[#D9D9D9] px-2 py-1">
+          <div class="flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/25 shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input
+              id="group-search"
+              type="text"
+              placeholder="Search groups..."
+              class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/25 text-black py-0.5"
+              oninput="filterGroups(this.value)"
+            />
+          </div>
+        </div>
+
+        <!-- Grouped list -->
+        <div class="border-t border-[#D9D9D9] max-h-[340px] overflow-y-auto scrollbar-thin" id="groups-list">
+
+          <!-- No search results -->
+          <div id="no-search-results" class="px-2 py-3 text-[11px] text-black/30 text-center italic" style="display: none;">No matching groups</div>
+
+          <!-- Group: Default (built-in, no rename/delete) -->
+          <div data-group="default">
+            <div class="group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer" onclick="toggleGroup(this)">
+              <div class="flex items-center gap-1.5">
+                <svg class="text-black/30 transition-transform duration-150 group-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="text-[12px] font-semibold text-black/70 group-name">Default</span>
+              </div>
+              <span class="text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">3</span>
+            </div>
+            <div class="group-content" style="display: grid; grid-template-rows: 1fr; transition: grid-template-rows 150ms ease-out;">
+              <div style="min-height: 0; overflow: hidden;">
+                <div class="flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2">
+                  <span class="flex flex-col min-w-0 flex-1">
+                    <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;div&gt; · ProductCard</span>
+                    <span class="text-[11px] leading-3 text-black/40 truncate mt-0.5">Check pricing layout</span>
+                  </span>
+                  <span class="shrink-0 text-[10px] text-black/25">2m</span>
+                </div>
+                <div class="flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2">
+                  <span class="flex flex-col min-w-0 flex-1">
+                    <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;button&gt; · SubmitBtn</span>
+                  </span>
+                  <span class="shrink-0 text-[10px] text-black/25">5m</span>
+                </div>
+                <div class="flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2">
+                  <span class="flex flex-col min-w-0 flex-1">
+                    <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;nav&gt; · Sidebar</span>
+                    <span class="text-[11px] leading-3 text-black/40 truncate mt-0.5">Nav alignment off</span>
+                  </span>
+                  <span class="shrink-0 text-[10px] text-black/25">8m</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group: Header Redesign (hover to see rename/delete) -->
+          <div data-group="header-redesign">
+            <div class="group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer border-t border-[#D9D9D9]/50" onclick="toggleGroup(this)">
+              <div class="flex items-center gap-1.5">
+                <svg class="text-black/30 transition-transform duration-150 group-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="text-[12px] font-semibold text-black/70 group-name">Header Redesign</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <!-- Hover actions (rename + delete) -->
+                <div class="flex items-center gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+                  <button onclick="event.stopPropagation(); startRename(this)" class="text-black/30 hover:text-black/60 cursor-pointer p-0.5" title="Rename">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
+                  </button>
+                  <button onclick="event.stopPropagation(); showDeleteConfirm('Header Redesign', 2)" class="text-[#B91C1C]/50 hover:text-[#B91C1C] cursor-pointer p-0.5" title="Delete group + selections">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                </div>
+                <span class="text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">2</span>
+              </div>
+            </div>
+            <div class="group-content" style="display: grid; grid-template-rows: 1fr; transition: grid-template-rows 150ms ease-out;">
+              <div style="min-height: 0; overflow: hidden;">
+                <div class="flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2">
+                  <span class="flex flex-col min-w-0 flex-1">
+                    <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;header&gt; · AppHeader</span>
+                    <span class="text-[11px] leading-3 text-black/40 truncate mt-0.5">Logo spacing</span>
+                  </span>
+                  <span class="shrink-0 text-[10px] text-black/25">1m</span>
+                </div>
+                <div class="flex items-start justify-between w-full px-2 py-1 cursor-pointer hover:bg-black/[0.03] gap-2">
+                  <span class="flex flex-col min-w-0 flex-1">
+                    <span class="text-[12px] leading-4 font-medium text-black truncate">&lt;ul&gt; · NavLinks</span>
+                  </span>
+                  <span class="shrink-0 text-[10px] text-black/25">3m</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group: Footer Audit (empty, collapsed) -->
+          <div data-group="footer-audit">
+            <div class="group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer border-t border-[#D9D9D9]/50" onclick="toggleGroup(this)">
+              <div class="flex items-center gap-1.5">
+                <svg class="text-black/30 transition-transform duration-150 group-chevron -rotate-90" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                <span class="text-[12px] font-semibold text-black/70 group-name">Footer Audit</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+                  <button onclick="event.stopPropagation(); startRename(this)" class="text-black/30 hover:text-black/60 cursor-pointer p-0.5" title="Rename">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
+                  </button>
+                  <button onclick="event.stopPropagation(); showDeleteConfirm('Footer Audit', 0)" class="text-[#B91C1C]/50 hover:text-[#B91C1C] cursor-pointer p-0.5" title="Delete group">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                </div>
+                <span class="text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">0</span>
+              </div>
+            </div>
+            <div class="group-content" style="display: grid; grid-template-rows: 0fr; transition: grid-template-rows 150ms ease-out;">
+              <div style="min-height: 0; overflow: hidden;">
+                <div class="px-2 py-2 text-[11px] text-black/30 text-center italic">No selections yet</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- New group input (always at bottom) -->
+        <div class="border-t border-[#D9D9D9] px-2 py-1.5">
+          <div class="flex items-center gap-1.5">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/25 shrink-0"><path d="M12 5v14m-7-7h14"/></svg>
+            <input
+              type="text"
+              placeholder="New group..."
+              class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/25 text-black"
+              onkeydown="if(event.key==='Enter' && this.value.trim()) { alert('Create group: ' + this.value.trim()); this.value=''; }"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete confirmation (inline, replaces dropdown content) -->
+      <div id="delete-confirm" class="toolbar-shadow w-[280px] bg-white rounded-[10px] overflow-hidden text-[13px] antialiased hidden" style="font-synthesis: none; corner-shape: superellipse(1.25);">
+        <div class="px-3 pt-2.5 pb-1.5">
+          <span class="text-[12px] font-semibold text-black">Delete "<span id="delete-group-name"></span>"?</span>
+          <p class="text-[11px] text-black/50 mt-1 leading-[14px]" id="delete-message"></p>
+        </div>
+        <div class="flex items-center justify-end gap-1.5 px-2 pb-2">
+          <button onclick="hideDeleteConfirm()" class="text-[11px] font-medium text-black/50 hover:text-black/70 cursor-pointer px-2 py-1 rounded hover:bg-black/[0.03]">Cancel</button>
+          <button onclick="hideDeleteConfirm()" class="text-[11px] font-medium text-white bg-[#B91C1C] hover:bg-[#991B1B] cursor-pointer px-2 py-1 rounded">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== -->
+    <!-- GROUP PICKER (during copy) -->
+    <!-- ======================== -->
+    <div class="flex flex-col gap-2">
+      <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Group Picker (on copy/comment)</span>
+      <div class="toolbar-shadow w-[200px] bg-white rounded-lg overflow-hidden text-[13px] antialiased">
+        <div class="px-2 pt-1.5 pb-1">
+          <span class="text-[11px] font-medium text-black/40">Add to group</span>
+        </div>
+        <div class="border-t border-[#D9D9D9] py-1">
+          <button class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-black/50"><path d="m5 12 5 5L20 7"/></svg>
+            <span class="text-[12px] font-medium text-black">Default</span>
+          </button>
+          <button class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer">
+            <span class="w-[10px]"></span>
+            <span class="text-[12px] text-black/70">Header Redesign</span>
+          </button>
+          <button class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer">
+            <span class="w-[10px]"></span>
+            <span class="text-[12px] text-black/70">Footer Audit</span>
+          </button>
+        </div>
+        <div class="border-t border-[#D9D9D9] py-1">
+          <button class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/40"><path d="M12 5v14m-7-7h14"/></svg>
+            <span class="text-[12px] text-black/50">New group...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Interaction guide -->
+  <div class="text-sm text-gray-400 mt-4 text-center max-w-xl">
+    <strong class="text-gray-600">Interactions:</strong>
+    Click group headers to collapse/expand.
+    Hover non-default group headers to see rename (pencil) and delete (trash) actions.
+    Type in the bottom input to create a new group.
+    Delete confirmation replaces the dropdown content inline.
+  </div>
+
+  <script>
+    function toggleGroup(header) {
+      const content = header.nextElementSibling;
+      const chevron = header.querySelector('.group-chevron');
+      const isOpen = content.style.gridTemplateRows === '1fr';
+      content.style.gridTemplateRows = isOpen ? '0fr' : '1fr';
+      chevron.style.transform = isOpen ? 'rotate(-90deg)' : '';
+    }
+
+    function startRename(btn) {
+      const header = btn.closest('.group\\/header') || btn.closest('[class*="group/header"]');
+      const nameEl = header.querySelector('.group-name');
+      const currentName = nameEl.textContent;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = currentName;
+      input.className = 'text-[12px] font-semibold text-black/70 bg-transparent outline-none border-b border-black/30 w-full';
+      input.style.maxWidth = '120px';
+      nameEl.replaceWith(input);
+      input.focus();
+      input.select();
+
+      const finish = () => {
+        const span = document.createElement('span');
+        span.className = 'text-[12px] font-semibold text-black/70 group-name';
+        span.textContent = input.value.trim() || currentName;
+        input.replaceWith(span);
+      };
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') finish();
+      });
+      input.addEventListener('blur', finish);
+    }
+
+    function filterGroups(query) {
+      const groups = document.querySelectorAll('[data-group]');
+      const noResults = document.getElementById('no-search-results');
+      const q = query.toLowerCase().trim();
+      let visibleCount = 0;
+
+      groups.forEach(group => {
+        const name = group.querySelector('.group-name')?.textContent?.toLowerCase() || '';
+        // Simple fuzzy: check if all chars appear in order
+        let matches = true;
+        if (q) {
+          let nameIdx = 0;
+          for (let i = 0; i < q.length; i++) {
+            const found = name.indexOf(q[i], nameIdx);
+            if (found === -1) { matches = false; break; }
+            nameIdx = found + 1;
+          }
+        }
+        group.style.display = matches ? '' : 'none';
+        if (matches) visibleCount++;
+      });
+
+      if (noResults) {
+        noResults.style.display = (q && visibleCount === 0) ? '' : 'none';
+      }
+    }
+
+    function showDeleteConfirm(name, count) {
+      document.getElementById('dropdown-normal').classList.add('hidden');
+      document.getElementById('delete-confirm').classList.remove('hidden');
+      document.getElementById('delete-group-name').textContent = name;
+      document.getElementById('delete-message').textContent = count > 0
+        ? `This will delete the group and all ${count} selection${count !== 1 ? 's' : ''} in it.`
+        : 'This will delete the empty group.';
+    }
+
+    function hideDeleteConfirm() {
+      document.getElementById('delete-confirm').classList.add('hidden');
+      document.getElementById('dropdown-normal').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

@@ -4,6 +4,8 @@ import { IconSelect } from "../icons/icon-select.jsx";
 import { IconChevron } from "../icons/icon-chevron.jsx";
 import { IconComment } from "../icons/icon-comment.jsx";
 import { IconCopy } from "../icons/icon-copy.jsx";
+import { IconEyeOff } from "../icons/icon-eye-off.jsx";
+import { IconEyeFilled } from "../icons/icon-eye-filled.jsx";
 import {
   getExpandGridClass,
   getButtonSpacingClass,
@@ -29,6 +31,9 @@ export interface ToolbarContentProps {
   commentsButton?: JSX.Element;
   copyAllButton?: JSX.Element;
   toggleButton?: JSX.Element;
+  visibilityButton?: JSX.Element;
+  selectionsRevealed: boolean;
+  onToggleSelectionsRevealed?: () => void;
   collapseButton?: JSX.Element;
   transformOrigin?: string;
 }
@@ -145,6 +150,27 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
       )}
     >
       <IconCopy size={14} class="text-[#B3B3B3] transition-colors" />
+    </button>
+  );
+
+  const defaultVisibilityButton = () => (
+    <button
+      data-react-grab-ignore-events
+      data-react-grab-toolbar-visibility
+      aria-label={props.selectionsRevealed ? "Hide all selections" : "Reveal all selections"}
+      aria-pressed={props.selectionsRevealed}
+      class={cn(
+        "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
+        buttonSpacingClass(),
+        hitboxConstraintClass(),
+      )}
+      onClick={() => props.onToggleSelectionsRevealed?.()}
+    >
+      {props.selectionsRevealed ? (
+        <IconEyeFilled size={14} class="text-black transition-colors" />
+      ) : (
+        <IconEyeOff size={14} class="text-[#B3B3B3] transition-colors" />
+      )}
     </button>
   );
 
@@ -274,6 +300,17 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
                 {props.copyAllButton ?? defaultCopyAllButton()}
+              </div>
+            </div>
+            <div
+              class={cn(
+                "grid",
+                gridTransitionClass(),
+                expandGridClass(Boolean(props.enabled)),
+              )}
+            >
+              <div class={cn("relative overflow-visible", minDimensionClass())}>
+                {props.visibilityButton ?? defaultVisibilityButton()}
               </div>
             </div>
           </div>
