@@ -1,4 +1,4 @@
-import type { SelectionGroup, SelectionGroupsViewProps } from "./features/selection-groups/types.js";
+import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
 
 export interface Position {
   x: number;
