@@ -13,7 +13,8 @@ import {
   getHitboxConstraintClass,
 } from "../../utils/toolbar-layout.js";
 
-export type SyncStatus = "local" | "synced" | "error";
+import type { SyncStatus } from "../../features/sync/types.js";
+import { SyncIndicator } from "../../features/sync/components/sync-indicator.jsx";
 
 export interface ToolbarContentProps {
   isActive?: boolean;
@@ -324,32 +325,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
         </div>
       </div>
       {props.collapseButton ?? defaultCollapseButton()}
-      <div
-          class="relative shrink-0 group/sync"
-          data-react-grab-ignore-events
-        >
-          <div
-            class={cn(
-              "w-[6px] h-[6px] rounded-full transition-colors",
-              props.syncStatus === "local" && "bg-[#9ca3af]",
-              props.syncStatus === "synced" && "bg-[#22c55e]",
-              props.syncStatus === "error" && "bg-[#ef4444]",
-            )}
-          />
-          <div class="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 bg-[#1a1a1a] text-[#e5e5e5] text-[11px] px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover/sync:opacity-100 transition-opacity border border-[#333]">
-            <span
-              class={cn(
-                "inline-block w-[6px] h-[6px] rounded-full mr-1.5 align-middle",
-                props.syncStatus === "local" && "bg-[#9ca3af]",
-                props.syncStatus === "synced" && "bg-[#22c55e]",
-                props.syncStatus === "error" && "bg-[#ef4444]",
-              )}
-            />
-            {props.syncStatus === "local" && "Local storage"}
-            {props.syncStatus === "synced" && `Synced · ${props.syncWorkspace}`}
-            {props.syncStatus === "error" && "Sync error"}
-          </div>
-        </div>
+      <SyncIndicator status={props.syncStatus} workspace={props.syncWorkspace} />
     </div>
   );
 };

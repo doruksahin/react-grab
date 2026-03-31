@@ -99,7 +99,7 @@ interface ToolbarProps {
   isToolbarMenuOpen?: boolean;
   selectionsRevealed?: boolean;
   onToggleSelectionsRevealed?: () => void;
-  syncStatus?: import("./toolbar-content.js").SyncStatus;
+  syncStatus?: import("../../features/sync/types.js").SyncStatus;
   syncWorkspace?: string;
 }
 

@@ -1,5 +1,5 @@
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
-import type { SyncConfig } from "./features/sync/types.js";
+import type { SyncConfig, SyncStatus } from "./features/sync/types.js";
 
 export interface Position {
   x: number;
@@ -564,7 +564,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   selectionsRevealed?: boolean;
   onToggleSelectionsRevealed?: () => void;
   onToggleCommentItemRevealed?: (commentItemId: string) => void;
-  syncStatus?: "local" | "synced" | "error";
+  syncStatus?: SyncStatus;
   syncWorkspace?: string;
 }
 

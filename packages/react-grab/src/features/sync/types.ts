@@ -26,3 +26,5 @@ export interface SyncConfig {
   syncRevealedState: boolean;
   onSyncError: (error: Error) => void;
 }
+
+export type SyncStatus = "local" | "synced" | "error";

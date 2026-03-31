@@ -1,2 +1,3 @@
 export { createHttpAdapter } from "./adapter.js";
-export type { StorageAdapter, SyncConfig } from "./types.js";
+export { SyncIndicator } from "./components/sync-indicator.jsx";
+export type { StorageAdapter, SyncConfig, SyncStatus } from "./types.js";
