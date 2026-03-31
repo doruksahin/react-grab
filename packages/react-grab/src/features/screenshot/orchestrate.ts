@@ -1,11 +1,8 @@
-import type { ScreenshotConfig } from "../../types.js";
+import type { CommentItem, ScreenshotConfig } from "../../types.js";
 import type { StorageAdapter } from "../sync/types.js";
 import { captureElement, captureFullPage } from "./capture.js";
 
-interface ScreenshotResult {
-  screenshotElement?: string | null;
-  screenshotFullPage?: string | null;
-}
+type ScreenshotResult = Pick<CommentItem, "screenshotElement" | "screenshotFullPage">;
 
 /**
  * Captures screenshots for a selection and uploads them.
@@ -18,10 +15,7 @@ export async function captureAndUploadScreenshots(
   config: ScreenshotConfig,
   adapter: StorageAdapter | null,
 ): Promise<ScreenshotResult> {
-  const result: ScreenshotResult = {
-    screenshotElement: null,
-    screenshotFullPage: null,
-  };
+  const result: ScreenshotResult = {};
 
   // Capture element screenshot
   const elementBlob = await captureElement(element, config);
