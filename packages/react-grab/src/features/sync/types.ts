@@ -15,10 +15,17 @@ export interface StorageAdapter {
   loadGroups: () => Promise<SelectionGroup[]>;
   /** Persist the full groups array. Called on every mutation. */
   persistGroups: (groups: SelectionGroup[]) => Promise<SelectionGroup[]>;
+  /** Upload a screenshot blob. Returns the storage key/URL. Optional. */
+  uploadScreenshot?: (
+    selectionId: string,
+    type: "full" | "element",
+    blob: Blob,
+  ) => Promise<string>;
 }
 
 /**
- * Configuration for sync. Passed via Options.sync.
+ * Configuration for sync. Passed to initSync().
+ * Optional `options` field is forwarded to init() when it auto-fires.
  */
 export interface SyncConfig {
   enabled: boolean;
@@ -26,6 +33,8 @@ export interface SyncConfig {
   workspace: string;
   syncRevealedState: boolean;
   onSyncError: (error: Error) => void;
+  /** Options forwarded to init() — use this to set screenshot config etc. */
+  options?: import("../../types.js").Options;
 }
 
 export type SyncStatus = "local" | "synced" | "error";

@@ -18,6 +18,7 @@ import type {
   SettableOptions,
   AgentContext,
   ActionContext,
+  ScreenshotConfig,
 } from "../types.js";
 import { DEFAULT_THEME, deepMergeTheme } from "./theme.js";
 import {
@@ -38,6 +39,7 @@ interface OptionsState {
   activationKey: ActivationKey | undefined;
   getContent: ((elements: Element[]) => Promise<string> | string) | undefined;
   freezeReactUpdates: boolean;
+  screenshot?: ScreenshotConfig;
 }
 
 const DEFAULT_OPTIONS: OptionsState = {

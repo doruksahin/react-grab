@@ -4,7 +4,7 @@ export const SelectionGroup = z.object({
   id: z.string(),
   name: z.string(),
   createdAt: z.number(),
-  revealed: z.boolean(),
+  revealed: z.boolean().optional(),
 });
 
 export const SelectionGroupArray = z.array(SelectionGroup);

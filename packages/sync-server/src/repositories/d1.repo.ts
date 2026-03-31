@@ -67,6 +67,8 @@ function rowToComment(
     elementsCount: rest.elementsCount ?? undefined,
     elementSelectors: rest.elementSelectors ?? undefined,
     commentText: rest.commentText ?? undefined,
+    timestamp: rest.timestamp,
+    revealed: rest.revealed ?? undefined,
     status: rest.status ?? undefined,
     pageUrl: rest.pageUrl ?? undefined,
     pageTitle: rest.pageTitle ?? undefined,
@@ -81,5 +83,8 @@ function rowToGroup(
   row: typeof schema.groups.$inferSelect,
 ): Group {
   const { workspaceId, ...rest } = row;
-  return rest;
+  return {
+    ...rest,
+    revealed: rest.revealed ?? undefined,
+  };
 }

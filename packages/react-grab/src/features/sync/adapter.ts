@@ -94,5 +94,29 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
         return handleError(error);
       }
     },
+
+    uploadScreenshot: async (
+      selectionId: string,
+      type: "full" | "element",
+      blob: Blob,
+    ): Promise<string> => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/screenshots/${encodeURIComponent(selectionId)}/${type}`,
+          {
+            method: "PUT",
+            body: blob,
+            headers: { "Content-Type": blob.type },
+          },
+        );
+        if (!response.ok) {
+          throw new Error(`PUT /screenshots failed: ${response.status}`);
+        }
+        const result = (await response.json()) as { key: string };
+        return result.key;
+      } catch (error) {
+        return handleError(error);
+      }
+    },
   };
 };
