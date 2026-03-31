@@ -99,7 +99,16 @@ const persistGroupsRoute = createRoute({
 
 // ---- app ----
 
-const app = new OpenAPIHono();
+const app = new OpenAPIHono({
+  defaultHook: (result, c) => {
+    if (!result.success) {
+      return c.json(
+        { error: result.error.issues.map((i) => i.message).join(", ") },
+        400,
+      );
+    }
+  },
+});
 
 app.use("*", cors());
 app.use("*", logger());
