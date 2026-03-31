@@ -215,8 +215,14 @@ interface BuildActionContextOptions {
 }
 
 let syncState: { workspace: string; status: "local" | "synced" | "error" } | null = null;
+let pendingSyncOptions: Options | undefined;
 
 export const initSync = async (config: SyncConfig): Promise<void> => {
+  // Store options to forward to init() when it auto-fires
+  if (config.options) {
+    pendingSyncOptions = config.options;
+  }
+
   if (!config.enabled) {
     syncState = { workspace: config.workspace, status: "local" };
     return;
@@ -255,6 +261,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     allowActivationInsideInput: true,
     maxContextLines: DEFAULT_MAX_CONTEXT_LINES,
     ...scriptOptions,
+    ...pendingSyncOptions,
     ...rawOptions,
   };
 
