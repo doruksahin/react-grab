@@ -36,12 +36,10 @@ export const loadToolbarState = (): ToolbarState | null => {
         typeof record.defaultAction === "string"
           ? record.defaultAction
           : DEFAULT_ACTION_ID,
-      selectionVisibility:
-        record.selectionVisibility === "reveal" ||
-        record.selectionVisibility === "normal" ||
-        record.selectionVisibility === "hidden"
-          ? record.selectionVisibility
-          : "normal",
+      selectionsRevealed:
+        typeof record.selectionsRevealed === "boolean"
+          ? record.selectionsRevealed
+          : false,
     };
   } catch (error) {
     console.warn(
