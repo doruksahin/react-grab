@@ -1,20 +1,81 @@
-import { Hono } from "hono";
+import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { readJsonFile, writeJsonFile } from "../storage/file-storage.js";
+import {
+  WorkspaceIdParam,
+  StatusResponse,
+  ErrorResponse,
+  SelectionGroupArray,
+} from "../schemas/index.js";
 
 const GROUPS_FILE = "groups.json";
 
-export const groupsRoutes = new Hono()
-  .get("/workspaces/:id/groups", async (c) => {
-    const workspaceId = c.req.param("id");
-    const groups = await readJsonFile(workspaceId, GROUPS_FILE, []);
-    return c.json(groups);
+const listGroups = createRoute({
+  method: "get",
+  path: "/workspaces/{id}/groups",
+  tags: ["groups"],
+  summary: "List all groups in a workspace",
+  operationId: "listGroups",
+  request: {
+    params: WorkspaceIdParam,
+  },
+  responses: {
+    200: {
+      description: "Array of groups",
+      content: {
+        "application/json": {
+          schema: SelectionGroupArray,
+        },
+      },
+    },
+  },
+});
+
+const persistGroups = createRoute({
+  method: "put",
+  path: "/workspaces/{id}/groups",
+  tags: ["groups"],
+  summary: "Replace all groups in a workspace",
+  operationId: "persistGroups",
+  request: {
+    params: WorkspaceIdParam,
+    body: {
+      content: {
+        "application/json": {
+          schema: SelectionGroupArray,
+        },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: "Success",
+      content: {
+        "application/json": {
+          schema: StatusResponse,
+        },
+      },
+    },
+    400: {
+      description: "Invalid body",
+      content: {
+        "application/json": {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+});
+
+export const groupsRoutes = new OpenAPIHono()
+  .openapi(listGroups, async (c) => {
+    const { id } = c.req.valid("param");
+    const groups = await readJsonFile(id, GROUPS_FILE, []);
+    return c.json(groups, 200);
   })
-  .put("/workspaces/:id/groups", async (c) => {
-    const workspaceId = c.req.param("id");
-    const body = await c.req.json();
-    if (!Array.isArray(body)) {
-      return c.json({ error: "Body must be an array" }, 400);
-    }
-    await writeJsonFile(workspaceId, GROUPS_FILE, body);
-    return c.json({ status: "ok" });
+  .openapi(persistGroups, async (c) => {
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    await writeJsonFile(id, GROUPS_FILE, body);
+    return c.json({ status: "ok" as const }, 200);
   });
