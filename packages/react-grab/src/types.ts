@@ -367,6 +367,7 @@ export interface ToolbarState {
   collapsed: boolean;
   enabled: boolean;
   defaultAction?: string;
+  selectionsHidden: boolean;
 }
 
 export interface DropdownAnchor {
