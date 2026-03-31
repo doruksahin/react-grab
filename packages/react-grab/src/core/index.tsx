@@ -4025,6 +4025,73 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       });
     };
 
+    const handleCopyGroup = (groupId: string) => {
+      const disconnected = commentsDisconnectedItemIds();
+      const currentItems = commentItems();
+      const currentGroups = selectionGroups.groups();
+      const group = currentGroups.find((g) => g.id === groupId);
+      if (!group) return;
+
+      // Filter: items in this group that are revealed + connected
+      const copyableItems = currentItems.filter(
+        (item) =>
+          item.groupId === groupId &&
+          item.revealed &&
+          !disconnected.has(item.id),
+      );
+      if (copyableItems.length === 0) return;
+
+      // Single group — no header needed
+      const groupedSnippets: GroupedSnippet[] = [
+        {
+          groupName: group.name,
+          entries: copyableItems.map((item) => ({
+            content: item.content,
+            commentText: item.commentText,
+          })),
+        },
+      ];
+      const combinedContent = joinGroupedSnippets(groupedSnippets);
+
+      const metadataGroups: ReactGrabGroup[] = [
+        {
+          name: group.name,
+          entries: copyableItems.map((item) => ({
+            tagName: item.tagName,
+            componentName: item.componentName ?? item.elementName,
+            content: item.content,
+            commentText: item.commentText,
+          })),
+        },
+      ];
+      copyGroupedContent(combinedContent, metadataGroups);
+
+      // Show "copied" labels for copied items
+      nativeRequestAnimationFrame(() => {
+        batch(() => {
+          for (const item of copyableItems) {
+            const connectedElements = getConnectedCommentElements(item);
+            for (const element of connectedElements) {
+              const bounds = createElementBounds(element);
+              const labelId = generateId("label");
+
+              actions.addLabelInstance({
+                id: labelId,
+                bounds,
+                tagName: item.tagName,
+                componentName: item.componentName,
+                status: "copied",
+                createdAt: Date.now(),
+                element,
+                mouseX: bounds.x + bounds.width / 2,
+              });
+              scheduleLabelFade(labelId);
+            }
+          }
+        });
+      });
+    };
+
     const handleCommentItemHover = (commentItemId: string | null) => {
       // Don't show hover preview for items already revealed (they have pinned previews)
       clearCommentsHoverPreviews();
@@ -4254,6 +4321,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onCommentsCopyAll={handleCommentsCopyAll}
                 onCommentsCopyAllHover={handleCommentsCopyAllHover}
                 onCommentsClear={handleCommentsClear}
+                onCopyGroup={handleCopyGroup}
                 onCommentsDismiss={dismissCommentsDropdown}
                 onCommentsDropdownHover={handleCommentsDropdownHover}
                 toolbarMenuPosition={toolbarMenuPosition()}
