@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1774986899517,
+      "tag": "0000_greedy_hemingway",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1774987130470,
+      "tag": "0001_chubby_odin",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774988447024,
+      "tag": "0002_reflective_pet_avengers",
+      "breakpoints": true
+    }
+  ]
+}

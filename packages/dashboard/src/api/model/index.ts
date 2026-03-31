@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './getScreenshot404';
 export * from './healthCheck200';
 export * from './healthCheck200Status';
 export * from './listComments200Item';
@@ -20,3 +21,4 @@ export * from './persistGroups200';
 export * from './persistGroups200Status';
 export * from './persistGroups400';
 export * from './persistGroupsBodyItem';
+export * from './uploadScreenshot200';

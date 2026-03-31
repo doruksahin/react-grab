@@ -1,6 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 import { createRouter } from "../lib/create-router.js";
-import { readJsonFile, writeJsonFile } from "../storage/file-storage.js";
+import { listComments, persistComments } from "../storage/d1-storage.js";
 import {
   WorkspaceIdParam,
   StatusResponse,
@@ -8,9 +8,7 @@ import {
   CommentItemArray,
 } from "../schemas/index.js";
 
-const COMMENTS_FILE = "comments.json";
-
-const listComments = createRoute({
+const listCommentsRoute = createRoute({
   method: "get",
   path: "/workspaces/{id}/comments",
   tags: ["comments"],
@@ -31,7 +29,7 @@ const listComments = createRoute({
   },
 });
 
-const persistComments = createRoute({
+const persistCommentsRoute = createRoute({
   method: "put",
   path: "/workspaces/{id}/comments",
   tags: ["comments"],
@@ -69,14 +67,16 @@ const persistComments = createRoute({
 });
 
 export const commentsRoutes = createRouter()
-  .openapi(listComments, async (c) => {
+  .openapi(listCommentsRoute, async (c) => {
     const { id } = c.req.valid("param");
-    const comments = await readJsonFile(id, COMMENTS_FILE, []);
+    const db = c.get("db");
+    const comments = await listComments(db, id);
     return c.json(comments, 200);
   })
-  .openapi(persistComments, async (c) => {
+  .openapi(persistCommentsRoute, async (c) => {
     const { id } = c.req.valid("param");
     const body = c.req.valid("json");
-    await writeJsonFile(id, COMMENTS_FILE, body);
+    const db = c.get("db");
+    await persistComments(db, id, body);
     return c.json({ status: "ok" as const }, 200);
   });

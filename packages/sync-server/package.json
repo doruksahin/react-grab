@@ -4,19 +4,27 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
-    "export-spec": "tsx src/export-spec.ts"
+    "dev": "wrangler dev",
+    "dev:node": "tsx watch src/index.ts",
+    "start": "wrangler dev",
+    "export-spec": "tsx src/export-spec.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply react-grab-sync --local"
   },
   "dependencies": {
     "@hono/node-server": "^1.0.0",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.2.4",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260331.1",
+    "@types/node": "^25.5.0",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "wrangler": "^4.79.0"
   }
 }

@@ -4,12 +4,14 @@ import { createRouter } from "./lib/create-router.js";
 import { commentsRoutes } from "./routes/comments.js";
 import { groupsRoutes } from "./routes/groups.js";
 import { healthRoutes } from "./routes/health.js";
+import { screenshotsRoutes } from "./routes/screenshots.js";
 import { DOC_CONFIG } from "./lib/doc-config.js";
 
 const app = createRouter();
 app.route("/", healthRoutes);
 app.route("/", commentsRoutes);
 app.route("/", groupsRoutes);
+app.route("/", screenshotsRoutes);
 
 app.doc("/doc", DOC_CONFIG);
 
