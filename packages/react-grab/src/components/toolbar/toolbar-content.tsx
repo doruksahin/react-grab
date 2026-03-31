@@ -38,7 +38,7 @@ export interface ToolbarContentProps {
   onToggleSelectionsRevealed?: () => void;
   collapseButton?: JSX.Element;
   transformOrigin?: string;
-  syncStatus?: SyncStatus;
+  syncStatus: SyncStatus;
   syncWorkspace?: string;
 }
 
@@ -324,8 +324,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
         </div>
       </div>
       {props.collapseButton ?? defaultCollapseButton()}
-      {props.syncStatus && (
-        <div
+      <div
           class="relative shrink-0 group/sync"
           data-react-grab-ignore-events
         >
@@ -351,7 +350,6 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
             {props.syncStatus === "error" && "Sync error"}
           </div>
         </div>
-      )}
     </div>
   );
 };

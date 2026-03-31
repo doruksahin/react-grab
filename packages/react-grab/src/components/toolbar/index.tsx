@@ -1062,7 +1062,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         enabled={props.enabled}
         selectionsRevealed={props.selectionsRevealed ?? false}
         onToggleSelectionsRevealed={props.onToggleSelectionsRevealed}
-        syncStatus={props.syncStatus}
+        syncStatus={props.syncStatus ?? "local"}
         syncWorkspace={props.syncWorkspace}
         isCollapsed={isCollapsed()}
         snapEdge={snapEdge()}

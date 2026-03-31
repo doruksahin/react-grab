@@ -211,12 +211,15 @@ interface BuildActionContextOptions {
   customEnterPromptMode?: (agent?: AgentOptions) => void;
 }
 
+let syncState: { workspace: string } | null = null;
+
 export const initSync = async (config: SyncConfig): Promise<void> => {
   const adapter = createHttpAdapter(config);
   await Promise.all([
     initCommentStorage(adapter),
     initGroupStorage(adapter),
   ]);
+  syncState = { workspace: config.workspace };
 };
 
 let hasInited = false;
@@ -4364,8 +4367,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 selectionsRevealed={visibility.selectionsRevealed()}
                 onToggleSelectionsRevealed={visibility.handleToggleParent}
                 onToggleCommentItemRevealed={visibility.handleToggleItem}
-                syncStatus={initialOptions.sync ? "synced" : "local"}
-                syncWorkspace={initialOptions.sync?.workspace}
+                syncStatus={syncState ? "synced" : "local"}
+                syncWorkspace={syncState?.workspace}
                 groups={selectionGroups.groups()}
                 activeGroupId={selectionGroups.activeGroupId()}
                 onAddGroup={selectionGroups.handleAddGroup}
