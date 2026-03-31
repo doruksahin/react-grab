@@ -6,6 +6,7 @@ import { commentsRoutes } from "./routes/comments.js";
 import { groupsRoutes } from "./routes/groups.js";
 import { healthRoutes } from "./routes/health.js";
 import { createRouter } from "./lib/create-router.js";
+import { DOC_CONFIG } from "./lib/doc-config.js";
 
 const app = createRouter();
 
@@ -16,15 +17,7 @@ app.route("/", commentsRoutes);
 app.route("/", groupsRoutes);
 
 // OpenAPI spec endpoint — this is the single source of truth
-app.doc("/doc", {
-  openapi: "3.0.3",
-  info: {
-    title: "react-grab Sync API",
-    version: "0.1.0",
-    description: "API for the react-grab dashboard — comments, groups, workspaces.",
-  },
-  servers: [{ url: "http://localhost:3847", description: "Local" }],
-});
+app.doc("/doc", DOC_CONFIG);
 
 // Swagger UI for browsing the spec
 app.get("/ui", swaggerUI({ url: "/doc" }));
