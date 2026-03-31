@@ -7,7 +7,6 @@ import type { AppEnv } from "../types.js";
 
 export const injectRepos = createMiddleware<AppEnv>(async (c, next) => {
   const db = drizzle(c.env.DB, { schema });
-  c.set("db", db); // deprecated — kept for backward compat until route migration
   c.set("repo", new D1SyncRepository(db));
   c.set("screenshots", new R2ScreenshotStore(c.env.BUCKET));
   await next();
