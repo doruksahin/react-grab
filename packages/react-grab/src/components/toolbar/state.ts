@@ -36,6 +36,10 @@ export const loadToolbarState = (): ToolbarState | null => {
         typeof record.defaultAction === "string"
           ? record.defaultAction
           : DEFAULT_ACTION_ID,
+      selectionsHidden:
+        typeof record.selectionsHidden === "boolean"
+          ? record.selectionsHidden
+          : false,
     };
   } catch (error) {
     console.warn(
