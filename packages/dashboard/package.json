@@ -10,7 +10,7 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "codegen": "orval",
+    "codegen": "pnpm --filter @react-grab/sync-server export-spec && orval",
     "codegen:watch": "orval --watch"
   },
   "dependencies": {

@@ -3,7 +3,7 @@ import { defineConfig } from "orval";
 export default defineConfig({
   dashboard: {
     input: {
-      target: "./api-spec.yaml",
+      target: "../sync-server/openapi.json",
     },
     output: {
       mode: "tags-split",
@@ -12,29 +12,6 @@ export default defineConfig({
       client: "react-query",
       mock: true,
       override: {
-        zod: {
-          strict: {
-            param: true,
-            query: true,
-            header: true,
-            body: true,
-            response: true,
-          },
-          generate: {
-            param: true,
-            query: true,
-            header: true,
-            body: true,
-            response: true,
-          },
-          coerce: {
-            param: true,
-            query: true,
-            header: true,
-            body: true,
-            response: true,
-          },
-        },
         query: {
           useQuery: true,
           useSuspenseQuery: true,

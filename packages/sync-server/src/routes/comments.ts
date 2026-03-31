@@ -1,20 +1,82 @@
-import { Hono } from "hono";
+import { createRoute } from "@hono/zod-openapi";
+import { createRouter } from "../lib/create-router.js";
 import { readJsonFile, writeJsonFile } from "../storage/file-storage.js";
+import {
+  WorkspaceIdParam,
+  StatusResponse,
+  ErrorResponse,
+  CommentItemArray,
+} from "../schemas/index.js";
 
 const COMMENTS_FILE = "comments.json";
 
-export const commentsRoutes = new Hono()
-  .get("/workspaces/:id/comments", async (c) => {
-    const workspaceId = c.req.param("id");
-    const comments = await readJsonFile(workspaceId, COMMENTS_FILE, []);
-    return c.json(comments);
+const listComments = createRoute({
+  method: "get",
+  path: "/workspaces/{id}/comments",
+  tags: ["comments"],
+  summary: "List all comments in a workspace",
+  operationId: "listComments",
+  request: {
+    params: WorkspaceIdParam,
+  },
+  responses: {
+    200: {
+      description: "Array of comments",
+      content: {
+        "application/json": {
+          schema: CommentItemArray,
+        },
+      },
+    },
+  },
+});
+
+const persistComments = createRoute({
+  method: "put",
+  path: "/workspaces/{id}/comments",
+  tags: ["comments"],
+  summary: "Replace all comments in a workspace",
+  operationId: "persistComments",
+  request: {
+    params: WorkspaceIdParam,
+    body: {
+      content: {
+        "application/json": {
+          schema: CommentItemArray,
+        },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: "Success",
+      content: {
+        "application/json": {
+          schema: StatusResponse,
+        },
+      },
+    },
+    400: {
+      description: "Invalid body",
+      content: {
+        "application/json": {
+          schema: ErrorResponse,
+        },
+      },
+    },
+  },
+});
+
+export const commentsRoutes = createRouter()
+  .openapi(listComments, async (c) => {
+    const { id } = c.req.valid("param");
+    const comments = await readJsonFile(id, COMMENTS_FILE, []);
+    return c.json(comments, 200);
   })
-  .put("/workspaces/:id/comments", async (c) => {
-    const workspaceId = c.req.param("id");
-    const body = await c.req.json();
-    if (!Array.isArray(body)) {
-      return c.json({ error: "Body must be an array" }, 400);
-    }
-    await writeJsonFile(workspaceId, COMMENTS_FILE, body);
-    return c.json({ status: "ok" });
+  .openapi(persistComments, async (c) => {
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    await writeJsonFile(id, COMMENTS_FILE, body);
+    return c.json({ status: "ok" as const }, 200);
   });
