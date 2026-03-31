@@ -40,6 +40,7 @@ interface CommentsDropdownProps {
   onClearAll?: () => void;
   onDismiss?: () => void;
   onDropdownHover?: (isHovered: boolean) => void;
+  onToggleItemRevealed?: (commentItemId: string) => void;
 }
 
 const getCommentItemDisplayName = (item: CommentItem): string => {
@@ -329,6 +330,30 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                     <span class="shrink-0 text-[10px] font-sans text-black/25 flex items-center justify-end">
                       {formatRelativeTime(item.timestamp)}
                     </span>
+                    <button
+                      data-react-grab-ignore-events
+                      class="shrink-0 flex items-center justify-center w-[18px] h-[18px] rounded hover:bg-black/5 transition-colors"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        props.onToggleItemRevealed?.(item.id);
+                      }}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      aria-label={item.revealed ? "Hide this selection" : "Reveal this selection"}
+                    >
+                      {item.revealed ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500">
+                          <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+                          <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/20 group-hover:text-black/40 transition-colors">
+                          <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
+                          <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
+                          <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
+                          <path d="m2 2 20 20"/>
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 )}
               </For>
