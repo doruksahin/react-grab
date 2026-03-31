@@ -8,9 +8,9 @@ let activeAdapter: StorageAdapter | null = null;
 
 const GROUPS_KEY = "react-grab-selection-groups";
 
-const loadFromSessionStorage = (): SelectionGroup[] => {
+const loadFromLocalStorage = (): SelectionGroup[] => {
   try {
-    const serialized = sessionStorage.getItem(GROUPS_KEY);
+    const serialized = localStorage.getItem(GROUPS_KEY);
     if (!serialized) return [createDefaultGroup()];
     const parsed = JSON.parse(serialized) as SelectionGroup[];
     const validated = parsed.map((group) => ({
@@ -21,12 +21,12 @@ const loadFromSessionStorage = (): SelectionGroup[] => {
     const hasDefault = validated.some((g) => g.id === DEFAULT_GROUP_ID);
     return hasDefault ? validated : [createDefaultGroup(), ...validated];
   } catch (error) {
-    logRecoverableError("Failed to load groups from sessionStorage", error);
+    logRecoverableError("Failed to load groups from localStorage", error);
     return [createDefaultGroup()];
   }
 };
 
-let groups: SelectionGroup[] = loadFromSessionStorage();
+let groups: SelectionGroup[] = loadFromLocalStorage();
 
 export const initGroupStorage = async (adapter: StorageAdapter): Promise<void> => {
   activeAdapter = adapter;
@@ -45,9 +45,9 @@ export const persistGroups = (
     });
   } else {
     try {
-      sessionStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+      localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
     } catch (error) {
-      logRecoverableError("Failed to save groups to sessionStorage", error);
+      logRecoverableError("Failed to save groups to localStorage", error);
     }
   }
 

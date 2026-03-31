@@ -7,7 +7,7 @@ const REVEALED_GROUPS_KEY = "react-grab-revealed-groups";
 
 /**
  * Check if the parent reveal toggle is ON in localStorage (ToolbarState).
- * Used as fallback when per-item revealed states are missing from sessionStorage.
+ * Used as fallback when per-item revealed states are missing from localStorage.
  */
 const isParentRevealedOn = (): boolean => {
   const toolbarState = loadToolbarState();
@@ -31,7 +31,7 @@ export const stripRevealedFromGroups = (
   groups.map(({ revealed, ...rest }) => rest);
 
 /**
- * Save revealed states locally (sessionStorage) so they survive server round-trips.
+ * Save revealed states locally (localStorage) so they survive server round-trips.
  */
 export const saveLocalRevealedStates = (
   items: CommentItem[],
@@ -42,15 +42,15 @@ export const saveLocalRevealedStates = (
     for (const item of items) {
       if (item.revealed) commentRevealed[item.id] = true;
     }
-    sessionStorage.setItem(REVEALED_COMMENTS_KEY, JSON.stringify(commentRevealed));
+    localStorage.setItem(REVEALED_COMMENTS_KEY, JSON.stringify(commentRevealed));
 
     const groupRevealed: Record<string, boolean> = {};
     for (const group of groups) {
       if (group.revealed) groupRevealed[group.id] = true;
     }
-    sessionStorage.setItem(REVEALED_GROUPS_KEY, JSON.stringify(groupRevealed));
+    localStorage.setItem(REVEALED_GROUPS_KEY, JSON.stringify(groupRevealed));
   } catch {
-    // sessionStorage may be unavailable
+    // localStorage may be unavailable
   }
 };
 
@@ -62,7 +62,7 @@ export const mergeRevealedIntoComments = (
 ): CommentItem[] => {
   let revealedMap: Record<string, boolean> | null = null;
   try {
-    const stored = sessionStorage.getItem(REVEALED_COMMENTS_KEY);
+    const stored = localStorage.getItem(REVEALED_COMMENTS_KEY);
     if (stored) revealedMap = JSON.parse(stored);
   } catch {
     // ignore
@@ -84,7 +84,7 @@ export const mergeRevealedIntoGroups = (
 ): SelectionGroup[] => {
   let revealedMap: Record<string, boolean> | null = null;
   try {
-    const stored = sessionStorage.getItem(REVEALED_GROUPS_KEY);
+    const stored = localStorage.getItem(REVEALED_GROUPS_KEY);
     if (stored) revealedMap = JSON.parse(stored);
   } catch {
     // ignore

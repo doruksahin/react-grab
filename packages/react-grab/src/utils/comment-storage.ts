@@ -15,19 +15,19 @@ const CLEAR_CONFIRMED_KEY = "react-grab-clear-confirmed";
 
 const migrateFromLegacyStorage = (): void => {
   try {
-    const legacyData = sessionStorage.getItem(LEGACY_COMMENT_ITEMS_KEY);
-    if (legacyData && !sessionStorage.getItem(COMMENT_ITEMS_KEY)) {
-      sessionStorage.setItem(COMMENT_ITEMS_KEY, legacyData);
+    const legacyData = localStorage.getItem(LEGACY_COMMENT_ITEMS_KEY);
+    if (legacyData && !localStorage.getItem(COMMENT_ITEMS_KEY)) {
+      localStorage.setItem(COMMENT_ITEMS_KEY, legacyData);
     }
-    sessionStorage.removeItem(LEGACY_COMMENT_ITEMS_KEY);
+    localStorage.removeItem(LEGACY_COMMENT_ITEMS_KEY);
   } catch {
-    // HACK: sessionStorage can throw in private browsing or when quota is exceeded
+    // HACK: localStorage can throw in private browsing or when quota is exceeded
   }
 };
 
-const loadFromSessionStorage = (): CommentItem[] => {
+const loadFromLocalStorage = (): CommentItem[] => {
   try {
-    const serialized = sessionStorage.getItem(COMMENT_ITEMS_KEY);
+    const serialized = localStorage.getItem(COMMENT_ITEMS_KEY);
     if (!serialized) return [];
     const parsed = JSON.parse(serialized) as CommentItem[];
     return parsed.map((commentItem) => ({
@@ -42,14 +42,14 @@ const loadFromSessionStorage = (): CommentItem[] => {
       revealed: typeof commentItem.revealed === "boolean" ? commentItem.revealed : false,
     }));
   } catch (error) {
-    logRecoverableError("Failed to load comments from sessionStorage", error);
+    logRecoverableError("Failed to load comments from localStorage", error);
     return [];
   }
 };
 
 const readSessionFlag = (key: string): boolean => {
   try {
-    return sessionStorage.getItem(key) === "1";
+    return localStorage.getItem(key) === "1";
   } catch {
     return false;
   }
@@ -76,9 +76,9 @@ export const persistCommentItems = (nextItems: CommentItem[]): CommentItem[] => 
     });
   } else {
     try {
-      sessionStorage.setItem(COMMENT_ITEMS_KEY, JSON.stringify(commentItems));
+      localStorage.setItem(COMMENT_ITEMS_KEY, JSON.stringify(commentItems));
     } catch (error) {
-      logRecoverableError("Failed to save comments to sessionStorage", error);
+      logRecoverableError("Failed to save comments to localStorage", error);
     }
   }
 
@@ -86,7 +86,7 @@ export const persistCommentItems = (nextItems: CommentItem[]): CommentItem[] => 
 };
 
 migrateFromLegacyStorage();
-let commentItems: CommentItem[] = loadFromSessionStorage();
+let commentItems: CommentItem[] = loadFromLocalStorage();
 let didConfirmClear = readSessionFlag(CLEAR_CONFIRMED_KEY);
 
 export const initCommentStorage = async (adapter: StorageAdapter): Promise<void> => {
@@ -119,9 +119,9 @@ export const isClearConfirmed = (): boolean => didConfirmClear;
 export const confirmClear = (): void => {
   didConfirmClear = true;
   try {
-    sessionStorage.setItem(CLEAR_CONFIRMED_KEY, "1");
+    localStorage.setItem(CLEAR_CONFIRMED_KEY, "1");
   } catch (error) {
-    // HACK: sessionStorage can throw in private browsing or when quota is exceeded
-    logRecoverableError("Failed to save clear preference to sessionStorage", error);
+    // HACK: localStorage can throw in private browsing or when quota is exceeded
+    logRecoverableError("Failed to save clear preference to localStorage", error);
   }
 };
