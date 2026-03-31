@@ -162,8 +162,9 @@ import {
   confirmClear,
   persistCommentItems,
 } from "../utils/comment-storage.js";
-import { copyContent } from "../utils/copy-content.js";
-import { joinSnippets } from "../utils/join-snippets.js";
+import { copyContent, copyGroupedContent, type ReactGrabGroup } from "../utils/copy-content.js";
+import { joinSnippets, joinGroupedSnippets, type GroupedSnippet } from "../utils/join-snippets.js";
+import { groupComments } from "../features/selection-groups/business/group-operations.js";
 import { generateId } from "../utils/generate-id.js";
 import { logRecoverableError } from "../utils/log-recoverable-error.js";
 import { lockViewportZoom } from "../utils/lock-viewport-zoom.js";
@@ -3953,23 +3954,42 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
     const handleCommentsCopyAll = () => {
       clearCommentsHoverPreviews();
-      const currentCommentItems = commentItems();
-      if (currentCommentItems.length === 0) return;
 
-      const combinedContent = joinSnippets(
-        currentCommentItems.map((commentItem) => commentItem.content),
+      const disconnected = commentsDisconnectedItemIds();
+      const currentItems = commentItems();
+      const currentGroups = selectionGroups.groups();
+
+      // Filter: only revealed + connected items
+      const copyableItems = currentItems.filter(
+        (item) => item.revealed && !disconnected.has(item.id),
       );
+      if (copyableItems.length === 0) return;
 
-      const firstItem = currentCommentItems[0];
-      copyContent(combinedContent, {
-        componentName: firstItem.componentName ?? firstItem.tagName,
-        entries: currentCommentItems.map((commentItem) => ({
-          tagName: commentItem.tagName,
-          componentName: commentItem.componentName ?? commentItem.elementName,
-          content: commentItem.content,
-          commentText: commentItem.commentText,
+      // Group the copyable items
+      const grouped = groupComments(currentGroups, copyableItems);
+      const nonEmptyGroups = grouped.filter((g) => g.items.length > 0);
+
+      // Build grouped snippets for text/plain
+      const groupedSnippets: GroupedSnippet[] = nonEmptyGroups.map((g) => ({
+        groupName: g.group.name,
+        entries: g.items.map((item) => ({
+          content: item.content,
+          commentText: item.commentText,
         })),
-      });
+      }));
+      const combinedContent = joinGroupedSnippets(groupedSnippets);
+
+      // Build grouped metadata for clipboard
+      const metadataGroups: ReactGrabGroup[] = nonEmptyGroups.map((g) => ({
+        name: g.group.name,
+        entries: g.items.map((item) => ({
+          tagName: item.tagName,
+          componentName: item.componentName ?? item.elementName,
+          content: item.content,
+          commentText: item.commentText,
+        })),
+      }));
+      copyGroupedContent(combinedContent, metadataGroups);
 
       if (isClearConfirmed()) {
         handleCommentsClear();
@@ -3982,8 +4002,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       // HACK: defer to next frame so idle preview labels clear visually before "copied" appears
       nativeRequestAnimationFrame(() => {
         batch(() => {
-          for (const commentItem of currentCommentItems) {
-            const connectedElements = getConnectedCommentElements(commentItem);
+          for (const item of copyableItems) {
+            const connectedElements = getConnectedCommentElements(item);
             for (const element of connectedElements) {
               const bounds = createElementBounds(element);
               const labelId = generateId("label");
@@ -3991,8 +4011,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
               actions.addLabelInstance({
                 id: labelId,
                 bounds,
-                tagName: commentItem.tagName,
-                componentName: commentItem.componentName,
+                tagName: item.tagName,
+                componentName: item.componentName,
                 status: "copied",
                 createdAt: Date.now(),
                 element,
