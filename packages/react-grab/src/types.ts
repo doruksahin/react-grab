@@ -339,6 +339,23 @@ export interface Plugin {
   setup?: (api: ReactGrabAPI, hooks: ActionContextHooks) => PluginConfig | void;
 }
 
+export interface ScreenshotConfig {
+  /** Enable screenshot capture on selection. @default false */
+  enabled: boolean;
+  /** Device pixel ratio for capture. @default 2 */
+  scale?: number;
+  /** Image quality (0-1). Only applies when format is 'jpeg'. @default 0.8 */
+  quality?: number;
+  /** Capture full page in addition to element. @default true */
+  captureFullPage?: boolean;
+  /** Image format. @default 'png' */
+  format?: "png" | "jpeg";
+  /** Max width of screenshot in pixels. @default 1920 */
+  maxWidth?: number;
+  /** Max height of screenshot in pixels. @default 1080 */
+  maxHeight?: number;
+}
+
 export interface Options {
   enabled?: boolean;
   activationMode?: ActivationMode;
@@ -354,6 +371,7 @@ export interface Options {
    */
   freezeReactUpdates?: boolean;
   sync?: SyncConfig;
+  screenshot?: ScreenshotConfig;
 }
 
 export interface SettableOptions extends Options {

@@ -41,6 +41,7 @@ export type {
   PluginHooks,
 } from "./types.js";
 export type { SyncConfig } from "./features/sync/types.js";
+export type { ScreenshotConfig } from "./types.js";
 
 import { init } from "./core/index.js";
 import type { Plugin, ReactGrabAPI } from "./types.js";
