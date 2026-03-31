@@ -28,6 +28,7 @@ import { getTagDisplay } from "../../utils/get-tag-display.js";
 import { formatShortcut } from "../../utils/format-shortcut.js";
 import { IconReply } from "../icons/icon-reply.jsx";
 import { IconSubmit } from "../icons/icon-submit.jsx";
+import { GroupPickerFlyout } from "../../features/selection-groups/components/group-picker-flyout.jsx";
 import { IconLoader } from "../icons/icon-loader.jsx";
 import { Arrow } from "./arrow.js";
 import { TagBadge } from "./tag-badge.js";
@@ -72,6 +73,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
   const [viewportVersion, setViewportVersion] = createSignal(0);
   const [isInternalFading, setIsInternalFading] = createSignal(false);
   const [isShaking, setIsShaking] = createSignal(false);
+  const [pickerOpen, setPickerOpen] = createSignal(false);
 
   const canInteract = () =>
     props.status !== "copying" &&
@@ -614,6 +616,63 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   onHoverChange={handleTagHoverChange}
                   forceShowIcon
                 />
+              </div>
+              <div class="relative px-2 pb-1">
+                <button
+                  data-react-grab-ignore-events
+                  class="flex items-center gap-1 cursor-pointer hover:bg-black/[0.04] rounded-sm px-0.5 -mx-0.5 transition-colors"
+                  onClick={(e) => {
+                    e.stopImmediatePropagation();
+                    setPickerOpen((v) => !v);
+                  }}
+                >
+                  <svg
+                    width="9"
+                    height="9"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="text-black/25 shrink-0"
+                  >
+                    <rect x="2" y="7" width="20" height="14" rx="2" />
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                  </svg>
+                  <span class="text-[11px] font-medium text-black/40 leading-none">
+                    {props.groups?.find((g) => g.id === props.activeGroupId)
+                      ?.name ?? "Default"}
+                  </span>
+                  <svg
+                    width="8"
+                    height="8"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="text-black/25"
+                    style={{
+                      transform: pickerOpen() ? "rotate(180deg)" : "",
+                      transition: "transform 100ms",
+                    }}
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+                <Show when={pickerOpen()}>
+                  <GroupPickerFlyout
+                    groups={props.groups ?? []}
+                    activeGroupId={props.activeGroupId}
+                    onSelect={(id) => {
+                      props.onActiveGroupChange?.(id);
+                      setPickerOpen(false);
+                    }}
+                    onClose={() => setPickerOpen(false)}
+                  />
+                </Show>
               </div>
               <BottomSection>
                 <Show when={props.replyToPrompt}>
