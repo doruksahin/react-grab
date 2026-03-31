@@ -13,6 +13,7 @@ interface GroupCollapsibleProps {
   onRename: (groupId: string, name: string) => void;
   onDelete: (groupId: string) => void;
   onToggleRevealed: (groupId: string) => void;
+  onCopy?: (groupId: string) => void;
 }
 
 export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
@@ -88,6 +89,21 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
                 }}
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
+              </button>
+              <button
+                data-react-grab-ignore-events
+                class="flex items-center justify-center w-[18px] h-[18px] rounded hover:bg-black/5 transition-colors"
+                on:click={(e) => {
+                  e.stopPropagation();
+                  props.onCopy?.(props.group.id);
+                }}
+                on:pointerdown={(e) => e.stopPropagation()}
+                aria-label="Copy group selections"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/20 hover:text-black/50 transition-colors">
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                </svg>
               </button>
               <button
                 data-react-grab-ignore-events
