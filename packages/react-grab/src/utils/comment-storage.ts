@@ -32,6 +32,7 @@ const loadFromSessionStorage = (): CommentItem[] => {
       elementsCount: Math.max(1, commentItem.elementsCount ?? 1),
       previewBounds: commentItem.previewBounds ?? [],
       elementSelectors: commentItem.elementSelectors ?? [],
+      revealed: typeof commentItem.revealed === "boolean" ? commentItem.revealed : false,
     }));
   } catch (error) {
     logRecoverableError("Failed to load comments from sessionStorage", error);
