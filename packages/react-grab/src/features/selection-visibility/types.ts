@@ -4,6 +4,7 @@ import type {
   OverlayBounds,
   ToolbarState,
 } from "../../types.js";
+import type { SelectionGroup } from "../selection-groups/types.js";
 
 /**
  * Tracking entry for a pinned preview (grabbed box + optional label).
@@ -47,6 +48,12 @@ export interface SelectionVisibilityDeps {
   currentToolbarState: Accessor<ToolbarState | null>;
   /** Update toolbar state (merges partial updates) */
   updateToolbarState: (updates: Partial<ToolbarState>) => ToolbarState;
+  /** Reactive signal of all selection groups */
+  groups: Accessor<SelectionGroup[]>;
+  /** Setter for the groups signal */
+  setGroups: Setter<SelectionGroup[]>;
+  /** Persist groups to sessionStorage */
+  persistGroups: (groups: SelectionGroup[]) => SelectionGroup[];
 }
 
 /**
@@ -62,4 +69,6 @@ export interface SelectionVisibilityAPI {
   handleToggleParent: () => void;
   /** Toggle an individual comment item's revealed state */
   handleToggleItem: (commentItemId: string) => void;
+  /** Toggle a group's revealed state (overrides all items in group) */
+  handleToggleGroup: (groupId: string) => void;
 }
