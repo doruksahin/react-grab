@@ -32,6 +32,14 @@ const uploadScreenshot = createRoute({
         },
       },
     },
+    415: {
+      description: "Unsupported Media Type",
+      content: {
+        "application/json": {
+          schema: z.object({ error: z.string() }),
+        },
+      },
+    },
   },
 });
 
@@ -61,6 +69,10 @@ export const screenshotsRoutes = createRouter()
   .openapi(uploadScreenshot, async (c) => {
     const { id, selectionId, type } = c.req.valid("param");
     const contentType = c.req.header("Content-Type") ?? "image/png";
+    const ALLOWED_TYPES = ["image/png", "image/jpeg"];
+    if (!ALLOWED_TYPES.some((t) => contentType.startsWith(t))) {
+      return c.json({ error: "Unsupported content type" }, 415);
+    }
     const extension = contentType.includes("jpeg") ? "jpg" : "png";
     const key = `${id}/screenshots/${selectionId}/${type}.${extension}`;
 
