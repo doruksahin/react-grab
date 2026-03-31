@@ -52,7 +52,7 @@ export function createSelectionGroups(
   return {
     groups,
     setGroups,
-    persistGroups: persistGroupsToStorage,
+    persistGroups,
     activeGroupId,
     setActiveGroupId,
     handleAddGroup,
