@@ -31,9 +31,8 @@ groups/
 │   ├── group-storage.ts  ← CRUD for groups (sessionStorage, same pattern as comment-storage)
 │   └── index.ts          ← re-export
 ├── components/
-│   ├── group-collapsible.tsx    ← single group section with header + items
-│   ├── group-picker.tsx         ← dropdown to select group when creating/editing comment
-│   └── group-manager.tsx        ← CRUD UI for groups (create, rename, delete)
+│   ├── group-collapsible.tsx    ← single group section with header + items + inline rename/delete
+│   └── group-picker.tsx         ← dropdown to select group when creating/editing comment
 └── business/
     └── group-operations.ts      ← cascade delete, move between groups, default group logic
 ```
@@ -55,7 +54,7 @@ group-storage.ts    core/index.tsx         comments-dropdown.tsx
 
 1. **`groupId` on `CommentItem`** — SSOT. Each comment belongs to exactly one group. No separate mapping table.
 
-2. **Default group** — Created on init with `id: "default"`, `name: "Default"`. Cannot be deleted. New comments go here unless user picks another group.
+2. **Default group** — Created on init with `id: "default"`, `name: "Default"`. Cannot be deleted or renamed. New comments go here unless user picks another group.
 
 3. **Feature folder** — `src/groups/` with `types.ts`, `store/`, `components/`, `business/`. Extends existing patterns, doesn't modify `store.ts`.
 
@@ -63,7 +62,11 @@ group-storage.ts    core/index.tsx         comments-dropdown.tsx
 
 5. **Cascade delete** — Deleting a group deletes all its comments. No orphans. No "move to default" fallback. Explicit destructive action with confirmation.
 
-6. **Comments dropdown becomes grouped** — `<For each={groups}>` wrapping `<For each={groupItems}>` with collapsible sections. Header shows group name + count.
+6. **Merged UI — no separate group manager panel.** Group CRUD lives directly in the comments dropdown:
+   - Group headers show rename (pencil) + delete (trash) on hover for non-default groups
+   - Default group header shows count only (built-in, no actions)
+   - Bottom of dropdown has a persistent "New group..." input
+   - Delete confirmation replaces dropdown content inline
 
 7. **Group picker** — Shown when creating a new comment (during copy flow). Simple dropdown, not a modal. Uses existing dropdown positioning utils.
 
@@ -76,9 +79,8 @@ group-storage.ts    core/index.tsx         comments-dropdown.tsx
 | `types.ts` | `SelectionGroup` interface, `DEFAULT_GROUP_ID` constant |
 | `store/group-storage.ts` | sessionStorage CRUD for groups |
 | `store/index.ts` | Re-export |
-| `components/group-collapsible.tsx` | Collapsible group section |
+| `components/group-collapsible.tsx` | Collapsible group section with inline rename/delete hover actions |
 | `components/group-picker.tsx` | Group selection dropdown |
-| `components/group-manager.tsx` | Create/rename/delete groups UI |
 | `business/group-operations.ts` | Cascade delete, default group init |
 
 ### Modified files
@@ -87,7 +89,7 @@ group-storage.ts    core/index.tsx         comments-dropdown.tsx
 |------|--------|
 | `types.ts` | Add `groupId: string` to `CommentItem` |
 | `utils/comment-storage.ts` | Default `groupId` to `DEFAULT_GROUP_ID` on load, pass through on add |
-| `components/comments-dropdown.tsx` | Replace flat list with grouped collapsibles |
+| `components/comments-dropdown.tsx` | Replace flat list with grouped collapsibles + "New group..." input at bottom + inline delete confirmation |
 | `core/index.tsx` | Add `groups` signal, wire group picker into copy flow, pass groups to renderer |
 
 ## Non-Goals
@@ -96,3 +98,4 @@ group-storage.ts    core/index.tsx         comments-dropdown.tsx
 - No group colors/icons
 - No multi-group selection (a comment belongs to exactly one group)
 - No group export/import
+- No separate group manager panel

@@ -2,9 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Group selections (comments) into named, collapsible groups with CRUD operations, a default group, and a group picker on comment creation.
+**Goal:** Group selections (comments) into named, collapsible groups with inline CRUD operations, a default group, and a group picker on comment creation.
 
-**Architecture:** New `src/groups/` feature folder with `types.ts`, `store/`, `components/`, `business/`. `CommentItem` gains a `groupId` field referencing `SelectionGroup.id`. Groups persisted to sessionStorage alongside comments. Comments dropdown replaced with grouped collapsibles.
+**Architecture:** New `src/groups/` feature folder with `types.ts`, `store/`, `components/`, `business/`. `CommentItem` gains a `groupId` field referencing `SelectionGroup.id`. Groups persisted to sessionStorage alongside comments. Comments dropdown replaced with grouped collapsibles — group management (rename, delete, create) is inline within the dropdown, no separate panel.
 
 **Tech Stack:** SolidJS (signals, createStore, For, Show), Tailwind CSS, sessionStorage
 
@@ -366,7 +366,7 @@ git commit -m "feat(core): wire group signals, handlers, and activeGroupId into 
 
 **Step 1: Create the component**
 
-This is a SolidJS component that renders a single group section with a collapsible header and items list. It receives items and renders them in the same style as the current flat list in `comments-dropdown.tsx`.
+This is a SolidJS component that renders a single group section: collapsible header with inline rename/delete hover actions (for non-default groups), and items list. The header shows group name + item count badge. Hover reveals pencil (rename) and trash (delete) icons between the name and the count badge.
 
 ```typescript
 import { createSignal, For, Show } from "solid-js";
@@ -381,22 +381,48 @@ interface GroupCollapsibleProps {
   items: CommentItem[];
   renderItem: (item: CommentItem) => JSX.Element;
   isFirst: boolean;
+  onRename: (groupId: string, name: string) => void;
+  onDelete: (groupId: string) => void;
 }
 
 export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
   const [isOpen, setIsOpen] = createSignal(true);
+  const [isRenaming, setIsRenaming] = createSignal(false);
+  let renameInputRef: HTMLInputElement | undefined;
+
+  const handleRenameSubmit = () => {
+    if (!renameInputRef || !renameInputRef.value.trim()) {
+      setIsRenaming(false);
+      return;
+    }
+    props.onRename(props.group.id, renameInputRef.value.trim());
+    setIsRenaming(false);
+  };
+
+  const startRename = (event: MouseEvent) => {
+    event.stopPropagation();
+    setIsRenaming(true);
+    requestAnimationFrame(() => {
+      renameInputRef?.focus();
+      renameInputRef?.select();
+    });
+  };
+
+  const handleDeleteClick = (event: MouseEvent) => {
+    event.stopPropagation();
+    props.onDelete(props.group.id);
+  };
 
   return (
     <div>
-      <button
-        data-react-grab-ignore-events
+      <div
         class={cn(
-          "w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer",
+          "group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer",
           !props.isFirst && "border-t border-[#D9D9D9]/50",
         )}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => !isRenaming() && setIsOpen((prev) => !prev)}
       >
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 min-w-0 flex-1">
           <svg
             width="10"
             height="10"
@@ -407,20 +433,61 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
             stroke-linecap="round"
             stroke-linejoin="round"
             class={cn(
-              "text-black/30 transition-transform duration-150",
+              "text-black/30 transition-transform duration-150 shrink-0",
               !isOpen() && "-rotate-90",
             )}
           >
             <path d="m6 9 6 6 6-6" />
           </svg>
-          <span class="text-[12px] font-semibold text-black/70">
-            {props.group.name}
+          <Show
+            when={!isRenaming()}
+            fallback={
+              <input
+                ref={renameInputRef}
+                type="text"
+                value={props.group.name}
+                class="text-[12px] font-semibold text-black/70 bg-transparent outline-none border-b border-black/30 min-w-0 flex-1"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleRenameSubmit();
+                  if (e.key === "Escape") setIsRenaming(false);
+                }}
+                onFocusOut={handleRenameSubmit}
+              />
+            }
+          >
+            <span class="text-[12px] font-semibold text-black/70 truncate">
+              {props.group.name}
+            </span>
+          </Show>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          {/* Hover actions for non-default groups */}
+          <Show when={!isDefaultGroup(props.group.id)}>
+            <div class="flex items-center gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+              <button
+                data-react-grab-ignore-events
+                class="text-black/30 hover:text-black/60 cursor-pointer p-0.5"
+                onClick={startRename}
+              >
+                {/* Pencil icon */}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
+              </button>
+              <button
+                data-react-grab-ignore-events
+                class="text-[#B91C1C]/50 hover:text-[#B91C1C] cursor-pointer p-0.5"
+                onClick={handleDeleteClick}
+              >
+                {/* Trash icon */}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </Show>
+          <span class="text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+            {props.items.length}
           </span>
         </div>
-        <span class="text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-          {props.items.length}
-        </span>
-      </button>
+      </div>
       <div
         class="grid transition-[grid-template-rows] duration-150 ease-out"
         style={{
@@ -456,7 +523,7 @@ Expected: PASS
 
 ```bash
 git add packages/react-grab/src/groups/components/group-collapsible.tsx
-git commit -m "feat(groups): add GroupCollapsible component for grouped comment display"
+git commit -m "feat(groups): add GroupCollapsible with inline rename/delete hover actions"
 ```
 
 ---
@@ -468,7 +535,7 @@ git commit -m "feat(groups): add GroupCollapsible component for grouped comment 
 
 **Step 1: Create the component**
 
-A dropdown that shows available groups with a checkmark on the active one. Includes "New group..." action at the bottom.
+A dropdown that shows available groups with a checkmark on the active one. Includes "New group..." action at the bottom with inline input.
 
 ```typescript
 import { For, Show, createSignal } from "solid-js";
@@ -608,242 +675,12 @@ git commit -m "feat(groups): add GroupPicker dropdown component"
 
 ---
 
-### Task 8: Create group manager component
-
-**Files:**
-- Create: `packages/react-grab/src/groups/components/group-manager.tsx`
-
-**Step 1: Create the component**
-
-CRUD UI for groups: list all groups, rename (inline edit), delete with confirmation, create new. Default group shows "built-in" label and cannot be deleted.
-
-```typescript
-import { For, Show, createSignal } from "solid-js";
-import type { Component } from "solid-js";
-import type { CommentItem } from "../../types.js";
-import type { SelectionGroup } from "../types.js";
-import { isDefaultGroup, countByGroup } from "../business/group-operations.js";
-import { cn } from "../../utils/cn.js";
-
-interface GroupManagerProps {
-  groups: SelectionGroup[];
-  comments: CommentItem[];
-  onRename: (groupId: string, name: string) => void;
-  onDelete: (groupId: string) => void;
-  onCreate: (name: string) => void;
-  onClose: () => void;
-}
-
-export const GroupManager: Component<GroupManagerProps> = (props) => {
-  const [editingId, setEditingId] = createSignal<string | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = createSignal<string | null>(null);
-  let renameInputRef: HTMLInputElement | undefined;
-  let createInputRef: HTMLInputElement | undefined;
-
-  const handleRename = (groupId: string) => {
-    if (!renameInputRef || !renameInputRef.value.trim()) return;
-    props.onRename(groupId, renameInputRef.value.trim());
-    setEditingId(null);
-  };
-
-  const handleCreate = () => {
-    if (!createInputRef || !createInputRef.value.trim()) return;
-    props.onCreate(createInputRef.value.trim());
-    createInputRef.value = "";
-  };
-
-  const confirmDelete = () => {
-    const id = pendingDeleteId();
-    if (id) {
-      props.onDelete(id);
-      setPendingDeleteId(null);
-    }
-  };
-
-  const pendingDeleteGroup = () =>
-    props.groups.find((g) => g.id === pendingDeleteId());
-
-  return (
-    <div>
-      <div class="flex items-center justify-between px-2 pt-1.5 pb-1">
-        <span class="text-[11px] font-medium text-black/40">
-          Manage Groups
-        </span>
-        <button
-          data-react-grab-ignore-events
-          class="text-black/30 hover:text-black/60 cursor-pointer"
-          onClick={props.onClose}
-        >
-          <svg
-            width="11"
-            height="11"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Delete confirmation overlay */}
-      <Show when={pendingDeleteGroup()}>
-        {(group) => {
-          const count = () => countByGroup(props.comments, group().id);
-          return (
-            <div class="border-t border-[#D9D9D9] px-3 pt-2.5 pb-2">
-              <span class="text-[12px] font-semibold text-black">
-                Delete "{group().name}"?
-              </span>
-              <Show when={count() > 0}>
-                <p class="text-[11px] text-black/50 mt-1 leading-[14px]">
-                  This will delete the group and all {count()} selection{count() !== 1 ? "s" : ""} in it.
-                </p>
-              </Show>
-              <div class="flex items-center justify-end gap-1.5 mt-2">
-                <button
-                  data-react-grab-ignore-events
-                  class="text-[11px] font-medium text-black/50 hover:text-black/70 cursor-pointer px-2 py-1 rounded hover:bg-black/[0.03]"
-                  onClick={() => setPendingDeleteId(null)}
-                >
-                  Cancel
-                </button>
-                <button
-                  data-react-grab-ignore-events
-                  class="text-[11px] font-medium text-white bg-[#B91C1C] hover:bg-[#991B1B] cursor-pointer px-2 py-1 rounded"
-                  onClick={confirmDelete}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          );
-        }}
-      </Show>
-
-      {/* Group list */}
-      <Show when={!pendingDeleteId()}>
-        <div class="border-t border-[#D9D9D9] py-1">
-          <For each={props.groups}>
-            {(group) => (
-              <div class="group flex items-center justify-between px-2 py-1 hover:bg-black/[0.03]">
-                <Show
-                  when={editingId() === group.id}
-                  fallback={
-                    <div class="flex items-center gap-2">
-                      <span
-                        class={cn(
-                          "text-[12px]",
-                          isDefaultGroup(group.id)
-                            ? "font-medium text-black"
-                            : "text-black/70",
-                        )}
-                      >
-                        {group.name}
-                      </span>
-                      <span class="text-[10px] text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5">
-                        {countByGroup(props.comments, group.id)}
-                      </span>
-                    </div>
-                  }
-                >
-                  <input
-                    ref={renameInputRef}
-                    type="text"
-                    value={group.name}
-                    class="flex-1 text-[12px] bg-transparent outline-none text-black border-b border-black/20 py-0.5"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleRename(group.id);
-                      if (e.key === "Escape") setEditingId(null);
-                    }}
-                    onFocusOut={() => setEditingId(null)}
-                  />
-                </Show>
-
-                <Show
-                  when={isDefaultGroup(group.id)}
-                  fallback={
-                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        data-react-grab-ignore-events
-                        class="text-black/30 hover:text-black/60 cursor-pointer p-0.5"
-                        onClick={() => {
-                          setEditingId(group.id);
-                          requestAnimationFrame(() => {
-                            renameInputRef?.focus();
-                            renameInputRef?.select();
-                          });
-                        }}
-                      >
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
-                      </button>
-                      <button
-                        data-react-grab-ignore-events
-                        class="text-[#B91C1C]/50 hover:text-[#B91C1C] cursor-pointer p-0.5"
-                        onClick={() => setPendingDeleteId(group.id)}
-                      >
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                      </button>
-                    </div>
-                  }
-                >
-                  <span class="text-[10px] text-black/20 italic">built-in</span>
-                </Show>
-              </div>
-            )}
-          </For>
-        </div>
-
-        {/* New group input */}
-        <div class="border-t border-[#D9D9D9] px-2 py-1.5">
-          <div class="flex items-center gap-1.5">
-            <input
-              ref={createInputRef}
-              type="text"
-              placeholder="New group name..."
-              class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/25 text-black"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCreate();
-              }}
-            />
-            <button
-              data-react-grab-ignore-events
-              class="text-[10px] font-medium text-black/40 hover:text-black/70 cursor-pointer px-1"
-              onClick={handleCreate}
-            >
-              Add
-            </button>
-          </div>
-        </div>
-      </Show>
-    </div>
-  );
-};
-```
-
-**Step 2: Verify typecheck**
-
-Run: `cd packages/react-grab && pnpm typecheck`
-Expected: PASS
-
-**Step 3: Commit**
-
-```bash
-git add packages/react-grab/src/groups/components/group-manager.tsx
-git commit -m "feat(groups): add GroupManager CRUD component with delete confirmation"
-```
-
----
-
-### Task 9: Replace flat comments dropdown with grouped view
+### Task 8: Replace flat comments dropdown with grouped view
 
 **Files:**
 - Modify: `packages/react-grab/src/components/comments-dropdown.tsx`
 
-This is the biggest UI change. The flat `<For each={props.items}>` becomes grouped collapsibles.
+This is the biggest UI change. The flat `<For each={props.items}>` becomes grouped collapsibles with inline group CRUD.
 
 **Step 1: Add group-related props to `CommentsDropdownProps`**
 
@@ -859,47 +696,73 @@ onDeleteGroup: (groupId: string) => void;
 onActiveGroupChange: (groupId: string) => void;
 ```
 
-**Step 2: Add group manager toggle state**
-
-Inside the component, add:
+**Step 2: Add imports and state for delete confirmation**
 
 ```typescript
-const [showManager, setShowManager] = createSignal(false);
+import { GroupCollapsible } from "../groups/components/group-collapsible.js";
+import { groupComments, countByGroup } from "../groups/business/group-operations.js";
+
+// Inside the component:
+const [pendingDeleteGroupId, setPendingDeleteGroupId] = createSignal<string | null>(null);
+
+const groupedItems = createMemo(() =>
+  groupComments(props.groups, props.items),
+);
+
+const pendingDeleteGroup = () =>
+  props.groups.find((g) => g.id === pendingDeleteGroupId());
 ```
 
-**Step 3: Add manage groups button to the header**
+**Step 3: Replace the flat list body with grouped view**
 
-In the header area (after the Copy button, line ~258), add:
-
-```tsx
-<button
-  data-react-grab-ignore-events
-  class="shrink-0 flex items-center justify-center px-[3px] py-px rounded-sm bg-white [border-width:0.5px] border-solid border-[#B3B3B3] cursor-pointer transition-all hover:bg-[#F5F5F5] press-scale h-[17px]"
-  onClick={(event) => {
-    event.stopPropagation();
-    setShowManager((prev) => !prev);
-  }}
->
-  {/* Gear/settings icon SVG */}
-</button>
-```
-
-**Step 4: Replace flat list body**
-
-Replace the flat `<For each={props.items}>` block (lines ~279-334) with:
+Replace the `<For each={props.items}>` block (lines ~279-334) with:
 
 ```tsx
 <Show
-  when={!showManager()}
+  when={!pendingDeleteGroupId()}
   fallback={
-    <GroupManager
-      groups={props.groups}
-      comments={props.items}
-      onRename={props.onRenameGroup}
-      onDelete={props.onDeleteGroup}
-      onCreate={props.onAddGroup}
-      onClose={() => setShowManager(false)}
-    />
+    /* Inline delete confirmation */
+    <Show when={pendingDeleteGroup()}>
+      {(group) => {
+        const count = () => countByGroup(props.items, group().id);
+        return (
+          <div class="px-3 pt-2.5 pb-2">
+            <span class="text-[12px] font-semibold text-black">
+              Delete "{group().name}"?
+            </span>
+            <Show when={count() > 0}>
+              <p class="text-[11px] text-black/50 mt-1 leading-[14px]">
+                This will delete the group and all {count()} selection{count() !== 1 ? "s" : ""} in it.
+              </p>
+            </Show>
+            <Show when={count() === 0}>
+              <p class="text-[11px] text-black/50 mt-1 leading-[14px]">
+                This will delete the empty group.
+              </p>
+            </Show>
+            <div class="flex items-center justify-end gap-1.5 mt-2">
+              <button
+                data-react-grab-ignore-events
+                class="text-[11px] font-medium text-black/50 hover:text-black/70 cursor-pointer px-2 py-1 rounded hover:bg-black/[0.03]"
+                onClick={() => setPendingDeleteGroupId(null)}
+              >
+                Cancel
+              </button>
+              <button
+                data-react-grab-ignore-events
+                class="text-[11px] font-medium text-white bg-[#B91C1C] hover:bg-[#991B1B] cursor-pointer px-2 py-1 rounded"
+                onClick={() => {
+                  props.onDeleteGroup(group().id);
+                  setPendingDeleteGroupId(null);
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        );
+      }}
+    </Show>
   }
 >
   <For each={groupedItems()}>
@@ -908,8 +771,10 @@ Replace the flat `<For each={props.items}>` block (lines ~279-334) with:
         group={entry.group}
         items={entry.items}
         isFirst={index() === 0}
+        onRename={props.onRenameGroup}
+        onDelete={(groupId) => setPendingDeleteGroupId(groupId)}
         renderItem={(item) => (
-          {/* existing item render JSX from the current flat list */}
+          {/* Move existing per-item render JSX here — keep all event handlers intact */}
         )}
       />
     )}
@@ -917,35 +782,49 @@ Replace the flat `<For each={props.items}>` block (lines ~279-334) with:
 </Show>
 ```
 
-Where `groupedItems` is a memo:
+**Step 4: Add "New group..." input at the bottom of the dropdown**
 
-```typescript
-import { groupComments } from "../groups/business/group-operations.js";
+After the scrollable grouped list area, before the closing `</div>` of the panel, add:
 
-const groupedItems = createMemo(() =>
-  groupComments(props.groups, props.items),
-);
+```tsx
+<div class="border-t border-[#D9D9D9] px-2 py-1.5">
+  <div class="flex items-center gap-1.5">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/25 shrink-0"><path d="M12 5v14m-7-7h14"/></svg>
+    <input
+      data-react-grab-ignore-events
+      type="text"
+      placeholder="New group..."
+      class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/25 text-black"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && e.currentTarget.value.trim()) {
+          props.onAddGroup(e.currentTarget.value.trim());
+          e.currentTarget.value = "";
+        }
+      }}
+    />
+  </div>
+</div>
 ```
 
 **Step 5: Move the existing per-item render JSX**
 
-Extract the existing item render (lines 281-333) into the `renderItem` callback. Keep all existing event handlers, hover tracking, and highlight behavior intact.
+Extract the existing item render (lines 281-333 of the original file) into the `renderItem` callback. Keep all existing event handlers, hover tracking, and highlight behavior intact.
 
 **Step 6: Verify typecheck**
 
 Run: `cd packages/react-grab && pnpm typecheck`
-Expected: May have errors where `CommentsDropdown` is used (needs new props). Fixed in Task 10.
+Expected: May have errors where `CommentsDropdown` is used (needs new props). Fixed in Task 9.
 
 **Step 7: Commit**
 
 ```bash
 git add packages/react-grab/src/components/comments-dropdown.tsx
-git commit -m "feat(groups): replace flat comments list with grouped collapsibles and manager"
+git commit -m "feat(groups): replace flat comments list with grouped collapsibles and inline CRUD"
 ```
 
 ---
 
-### Task 10: Wire everything through renderer
+### Task 9: Wire everything through renderer
 
 **Files:**
 - Modify: `packages/react-grab/src/components/renderer.tsx`
@@ -982,7 +861,7 @@ git commit -m "feat(groups): wire group props through renderer to comments dropd
 
 ---
 
-### Task 11: Build, link, and verify in AdCreative
+### Task 10: Build, link, and verify in AdCreative
 
 **Step 1: Build react-grab**
 
@@ -999,11 +878,13 @@ cd /Users/doruk/Desktop/ADCREATIVE/AdCreative-Frontend-V2 && pnpm dev
 Verify:
 - Comments dropdown shows grouped view with collapsible sections
 - Default group exists and is used for new selections
-- Group picker appears (or active group is used) when creating comments
-- Groups can be created, renamed, deleted via the manager
-- Deleting a group with selections shows confirmation and removes all its selections
+- Hover non-default group headers to see rename + delete actions
+- Rename works inline (click pencil, type, Enter)
+- Delete shows inline confirmation with selection count, then removes group + selections
+- "New group..." input at bottom creates a new group
 - Counts update reactively when adding/removing selections
 - Groups persist across page reloads (sessionStorage)
+- Group picker works during copy flow
 
 **Step 3: Fix any issues found**
 
@@ -1017,11 +898,10 @@ Verify:
 | `src/groups/store/group-storage.ts` | Create | sessionStorage CRUD for groups |
 | `src/groups/store/index.ts` | Create | Re-export |
 | `src/groups/business/group-operations.ts` | Create | `groupComments`, `countByGroup`, `removeCommentsByGroup` |
-| `src/groups/components/group-collapsible.tsx` | Create | Collapsible group section |
+| `src/groups/components/group-collapsible.tsx` | Create | Collapsible group section with inline rename/delete |
 | `src/groups/components/group-picker.tsx` | Create | Group selection dropdown |
-| `src/groups/components/group-manager.tsx` | Create | CRUD UI with delete confirmation |
 | `src/types.ts` | Modify | Add `groupId` to `CommentItem`, group props to `ReactGrabRendererProps` |
 | `src/utils/comment-storage.ts` | Modify | Default `groupId` on load |
-| `src/components/comments-dropdown.tsx` | Modify | Replace flat list with grouped collapsibles + manager toggle |
+| `src/components/comments-dropdown.tsx` | Modify | Grouped collapsibles + inline delete confirm + "New group..." input |
 | `src/components/renderer.tsx` | Modify | Pass group props to CommentsDropdown |
 | `src/core/index.tsx` | Modify | Groups signal, handlers, wire to renderer |
