@@ -9,6 +9,8 @@ import type { StorageAdapter } from "../features/sync/types.js";
 
 let activeAdapter: StorageAdapter | null = null;
 
+export const getActiveAdapter = (): StorageAdapter | null => activeAdapter;
+
 const COMMENT_ITEMS_KEY = "react-grab-comment-items";
 const LEGACY_COMMENT_ITEMS_KEY = "react-grab-history-items";
 const CLEAR_CONFIRMED_KEY = "react-grab-clear-confirmed";
@@ -104,6 +106,16 @@ export const addCommentItem = (
     [{ ...item, id: generateId("comment") }, ...commentItems].slice(
       0,
       MAX_COMMENT_ITEMS,
+    ),
+  );
+
+export const patchCommentItem = (
+  id: string,
+  patch: Partial<CommentItem>,
+): CommentItem[] =>
+  persistCommentItems(
+    commentItems.map((item) =>
+      item.id === id ? { ...item, ...patch } : item,
     ),
   );
 

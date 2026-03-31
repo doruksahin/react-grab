@@ -156,13 +156,16 @@ import { freezeUpdates } from "../utils/freeze-updates.js";
 import {
   loadComments,
   addCommentItem,
+  patchCommentItem,
   removeCommentItem,
   clearComments,
   isClearConfirmed,
   confirmClear,
   persistCommentItems,
   initCommentStorage,
+  getActiveAdapter,
 } from "../utils/comment-storage.js";
+import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
 import { initGroupStorage } from "../features/selection-groups/store/group-storage.js";
 import { createHttpAdapter } from "../features/sync/index.js";
 import type { SyncConfig } from "../features/sync/types.js";
@@ -953,6 +956,21 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         if (!currentItemIds.has(mapItemId)) {
           commentElementMap.delete(mapItemId);
         }
+      }
+
+      // Fire-and-forget screenshot capture
+      if (newestCommentItem && pluginRegistry.store.options.screenshot?.enabled && copiedElements[0]) {
+        captureAndUploadScreenshots(
+          copiedElements[0],
+          newestCommentItem.id,
+          pluginRegistry.store.options.screenshot,
+          getActiveAdapter(),
+        ).then((screenshots) => {
+          if (screenshots.screenshotElement || screenshots.screenshotFullPage) {
+            const patched = patchCommentItem(newestCommentItem.id, screenshots);
+            setCommentItems(patched);
+          }
+        });
       }
     };
 
