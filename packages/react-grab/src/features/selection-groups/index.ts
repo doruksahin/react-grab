@@ -46,6 +46,7 @@ export function createSelectionGroups(
     deps.setCommentItems(remainingComments);
 
     const updated = removeGroupFromStorage(groupId);
+    if (activeGroupId() === groupId) setActiveGroupId(DEFAULT_GROUP_ID);
     setGroups(updated);
   };
 
