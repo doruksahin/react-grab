@@ -5,6 +5,9 @@ import {
 import type { CommentItem } from "../types.js";
 import { generateId } from "./generate-id.js";
 import { logRecoverableError } from "./log-recoverable-error.js";
+import type { StorageAdapter } from "../features/sync/types.js";
+
+let activeAdapter: StorageAdapter | null = null;
 
 const COMMENT_ITEMS_KEY = "react-grab-comment-items";
 const LEGACY_COMMENT_ITEMS_KEY = "react-grab-history-items";
@@ -65,19 +68,32 @@ const trimToSizeLimit = (items: CommentItem[]): CommentItem[] => {
 };
 
 export const persistCommentItems = (nextItems: CommentItem[]): CommentItem[] => {
-  commentItems = trimToSizeLimit(nextItems);
-  try {
-    sessionStorage.setItem(COMMENT_ITEMS_KEY, JSON.stringify(commentItems));
-  } catch (error) {
-    // HACK: sessionStorage can throw in private browsing or when quota is exceeded
-    logRecoverableError("Failed to save comments to sessionStorage", error);
+  commentItems = activeAdapter ? nextItems : trimToSizeLimit(nextItems);
+
+  if (activeAdapter) {
+    activeAdapter.persistComments(commentItems).catch(() => {
+      // Error handling is done inside the adapter (calls onSyncError)
+    });
+  } else {
+    try {
+      sessionStorage.setItem(COMMENT_ITEMS_KEY, JSON.stringify(commentItems));
+    } catch (error) {
+      logRecoverableError("Failed to save comments to sessionStorage", error);
+    }
   }
+
   return commentItems;
 };
 
 migrateFromLegacyStorage();
 let commentItems: CommentItem[] = loadFromSessionStorage();
 let didConfirmClear = readSessionFlag(CLEAR_CONFIRMED_KEY);
+
+export const initCommentStorage = async (adapter: StorageAdapter): Promise<void> => {
+  activeAdapter = adapter;
+  const remoteItems = await adapter.loadComments();
+  commentItems = remoteItems;
+};
 
 export const loadComments = (): CommentItem[] => commentItems;
 
