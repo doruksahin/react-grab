@@ -5,8 +5,8 @@
  * API for the react-grab dashboard — comments, groups, workspaces.
  * OpenAPI spec version: 0.1.0
  */
-import type { HealthCheck200Status } from './healthCheck200Status';
+import type { PersistGroups200Status } from './persistGroups200Status';
 
-export type HealthCheck200 = {
-  status: HealthCheck200Status;
+export type PersistGroups200 = {
+  status: PersistGroups200Status;
 };
