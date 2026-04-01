@@ -8,7 +8,6 @@ import {
   JiraPriority,
   JiraTicketStatus,
   GroupIdParam,
-  WorkspaceIdParam,
   ErrorResponse,
 } from "../schemas/index.js";
 
@@ -102,14 +101,19 @@ export const jiraRoutes = createRouter()
   .openapi(createTicket, async (c) => {
     const { id: workspaceId, groupId } = c.req.valid("param");
     const body = c.req.valid("json");
-    const result = await c.var.jira.createTicketFromGroup(
-      body,
-      workspaceId,
-      groupId,
-      c.var.repo,
-      c.var.screenshots,
-    );
-    return c.json(result, 200);
+    try {
+      const result = await c.var.jira.createTicketFromGroup(
+        body,
+        workspaceId,
+        groupId,
+        c.var.repo,
+        c.var.screenshots,
+      );
+      return c.json(result, 200);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to create JIRA ticket";
+      return c.json({ error: message }, 400);
+    }
   })
   .openapi(getTicketStatus, async (c) => {
     const { id: workspaceId, groupId } = c.req.valid("param");
