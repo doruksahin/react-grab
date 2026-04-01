@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "../db/schema.js";
 import type { Comment, Group, SyncRepository } from "./types.js";
@@ -44,14 +44,20 @@ export class D1SyncRepository implements SyncRepository {
     workspaceId: string,
     items: Group[],
   ): Promise<void> {
-    await this.db.batch([
-      this.db
-        .delete(schema.groups)
-        .where(eq(schema.groups.workspaceId, workspaceId)),
-      ...items.map((item) =>
-        this.db.insert(schema.groups).values({ ...item, workspaceId }),
-      ),
-    ]);
+    if (items.length === 0) return;
+    const rows = items.map((item) => ({ ...item, workspaceId }));
+    await this.db
+      .insert(schema.groups)
+      .values(rows)
+      .onConflictDoUpdate({
+        target: [schema.groups.id, schema.groups.workspaceId],
+        set: {
+          name: sql`excluded.name`,
+          createdAt: sql`excluded.created_at`,
+          revealed: sql`excluded.revealed`,
+          // status and jiraTicketId deliberately NOT updated — preserve existing JIRA values
+        },
+      });
   }
 
   async updateGroupJira(workspaceId: string, groupId: string, jiraTicketId: string): Promise<void> {
