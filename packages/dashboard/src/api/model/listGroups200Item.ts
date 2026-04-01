@@ -5,10 +5,14 @@
  * API for the react-grab dashboard — comments, groups, workspaces.
  * OpenAPI spec version: 0.1.0
  */
+import type { ListGroups200ItemStatus } from './listGroups200ItemStatus';
 
 export type ListGroups200Item = {
   id: string;
   name: string;
   createdAt: number;
-  revealed: boolean;
+  revealed?: boolean;
+  /** Lifecycle status of a group */
+  status?: ListGroups200ItemStatus;
+  jiraTicketId?: string;
 };

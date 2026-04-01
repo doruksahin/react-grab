@@ -19,7 +19,7 @@ export type PersistCommentsBodyItem = {
   elementSelectors?: string[];
   commentText?: string;
   timestamp: number;
-  revealed: boolean;
+  revealed?: boolean;
   /** Lifecycle status of a selection */
   status?: PersistCommentsBodyItemStatus;
   pageUrl?: string;

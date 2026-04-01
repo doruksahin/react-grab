@@ -5,10 +5,14 @@
  * API for the react-grab dashboard — comments, groups, workspaces.
  * OpenAPI spec version: 0.1.0
  */
+import type { PersistGroupsBodyItemStatus } from './persistGroupsBodyItemStatus';
 
 export type PersistGroupsBodyItem = {
   id: string;
   name: string;
   createdAt: number;
-  revealed: boolean;
+  revealed?: boolean;
+  /** Lifecycle status of a group */
+  status?: PersistGroupsBodyItemStatus;
+  jiraTicketId?: string;
 };

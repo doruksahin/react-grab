@@ -6,12 +6,21 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './createJiraTicket200';
+export * from './createJiraTicket400';
+export * from './createJiraTicketBody';
+export * from './getJiraTicketStatus200';
+export * from './getJiraTicketStatus404';
 export * from './getScreenshot404';
 export * from './healthCheck200';
 export * from './healthCheck200Status';
 export * from './listComments200Item';
 export * from './listComments200ItemStatus';
 export * from './listGroups200Item';
+export * from './listGroups200ItemStatus';
+export * from './listJiraIssueTypes200Item';
+export * from './listJiraPriorities200Item';
+export * from './listJiraProjects200Item';
 export * from './persistComments200';
 export * from './persistComments200Status';
 export * from './persistComments400';
@@ -21,5 +30,6 @@ export * from './persistGroups200';
 export * from './persistGroups200Status';
 export * from './persistGroups400';
 export * from './persistGroupsBodyItem';
+export * from './persistGroupsBodyItemStatus';
 export * from './uploadScreenshot200';
 export * from './uploadScreenshot415';
