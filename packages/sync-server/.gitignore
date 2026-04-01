@@ -1,3 +1,4 @@
 openapi.json
 .wrangler/
 retrieved.jpg
+.dev.vars
