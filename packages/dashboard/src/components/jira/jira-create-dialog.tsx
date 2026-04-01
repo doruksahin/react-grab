@@ -21,7 +21,7 @@ interface JiraCreateDialogProps {
   onCreated: (ticketId: string) => void;
 }
 
-function generateDescription(group: GroupWithComments): string {
+function generateDescription(group: GroupWithComments, screenshotCount: number): string {
   let desc = `## Group: ${group.name}\n\n`;
   group.comments.forEach((c, i) => {
     desc += `### ${i + 1}. ${c.componentName ?? c.elementName} <${c.tagName}>\n`;
@@ -29,7 +29,7 @@ function generateDescription(group: GroupWithComments): string {
     if (c.elementSelectors?.[0]) desc += `Selector: \`${c.elementSelectors[0]}\`\n`;
     desc += "\n";
   });
-  desc += `## Evidence\nSee attached screenshots (${group.comments.length * 2} images).\n\n_Created by react-grab dashboard_`;
+  desc += `## Evidence\nSee attached screenshots (${screenshotCount} images).\n\n_Created by react-grab dashboard_`;
   return desc;
 }
 
@@ -45,7 +45,10 @@ export function JiraCreateDialog({ group, onCreated }: JiraCreateDialogProps) {
   const [issueType, setIssueType] = useState("Bug");
   const [priority, setPriority] = useState("Medium");
   const [summary, setSummary] = useState(generateSummary(group));
-  const [description, setDescription] = useState(generateDescription(group));
+  const screenshotCount =
+    group.comments.filter((c) => c.screenshotFullPage).length +
+    group.comments.filter((c) => c.screenshotElement).length;
+  const [description, setDescription] = useState(generateDescription(group, screenshotCount));
 
   const projects = useListJiraProjects();
   const issueTypes = useListJiraIssueTypes();
@@ -155,7 +158,7 @@ export function JiraCreateDialog({ group, onCreated }: JiraCreateDialogProps) {
         {/* Attachments preview */}
         <div className="space-y-1">
           <label className="text-xs text-muted-foreground font-medium">
-            Attachments ({group.comments.length * 2} screenshots)
+            Attachments ({screenshotCount} screenshots)
           </label>
           <div className="space-y-1">
             {group.comments.map((c) => (
@@ -179,6 +182,9 @@ export function JiraCreateDialog({ group, onCreated }: JiraCreateDialogProps) {
 
         {/* Actions */}
         <div className="flex justify-end gap-2 pt-2 border-t">
+          {createTicket.isError && (
+            <p className="text-xs text-destructive mr-auto">Failed to create ticket. Please try again.</p>
+          )}
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
