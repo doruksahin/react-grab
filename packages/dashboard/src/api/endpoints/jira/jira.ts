@@ -34,8 +34,11 @@ import type {
   GetJiraTicketStatus200,
   GetJiraTicketStatus404,
   ListJiraIssueTypes200Item,
+  ListJiraIssueTypes500,
   ListJiraPriorities200Item,
-  ListJiraProjects200Item
+  ListJiraPriorities500,
+  ListJiraProjects200Item,
+  ListJiraProjects500
 } from '../../model';
 
 
@@ -337,12 +340,19 @@ export type listJiraProjectsResponse200 = {
   status: 200
 }
 
+export type listJiraProjectsResponse500 = {
+  data: ListJiraProjects500
+  status: 500
+}
+
 export type listJiraProjectsResponseSuccess = (listJiraProjectsResponse200) & {
   headers: Headers;
 };
-;
+export type listJiraProjectsResponseError = (listJiraProjectsResponse500) & {
+  headers: Headers;
+};
 
-export type listJiraProjectsResponse = (listJiraProjectsResponseSuccess)
+export type listJiraProjectsResponse = (listJiraProjectsResponseSuccess | listJiraProjectsResponseError)
 
 export const getListJiraProjectsUrl = () => {
 
@@ -380,7 +390,7 @@ export const getListJiraProjectsQueryKey = () => {
     }
 
 
-export const getListJiraProjectsQueryOptions = <TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraProjectsQueryOptions = <TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
@@ -399,10 +409,10 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type ListJiraProjectsQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraProjects>>>
-export type ListJiraProjectsQueryError = unknown
+export type ListJiraProjectsQueryError = ListJiraProjects500
 
 
-export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = unknown>(
+export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraProjects>>,
@@ -412,7 +422,7 @@ export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraPr
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = unknown>(
+export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraProjects>>,
@@ -422,7 +432,7 @@ export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraPr
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = unknown>(
+export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -430,7 +440,7 @@ export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraPr
  * @summary List JIRA projects
  */
 
-export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = unknown>(
+export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -445,7 +455,7 @@ export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraPr
 
 
 
-export const getListJiraProjectsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraProjectsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
@@ -464,18 +474,18 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type ListJiraProjectsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraProjects>>>
-export type ListJiraProjectsSuspenseQueryError = unknown
+export type ListJiraProjectsSuspenseQueryError = ListJiraProjects500
 
 
-export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = unknown>(
+export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
   options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = unknown>(
+export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
   options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = unknown>(
+export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
   options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -483,7 +493,7 @@ export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof li
  * @summary List JIRA projects
  */
 
-export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = unknown>(
+export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
   options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -506,12 +516,19 @@ export type listJiraIssueTypesResponse200 = {
   status: 200
 }
 
+export type listJiraIssueTypesResponse500 = {
+  data: ListJiraIssueTypes500
+  status: 500
+}
+
 export type listJiraIssueTypesResponseSuccess = (listJiraIssueTypesResponse200) & {
   headers: Headers;
 };
-;
+export type listJiraIssueTypesResponseError = (listJiraIssueTypesResponse500) & {
+  headers: Headers;
+};
 
-export type listJiraIssueTypesResponse = (listJiraIssueTypesResponseSuccess)
+export type listJiraIssueTypesResponse = (listJiraIssueTypesResponseSuccess | listJiraIssueTypesResponseError)
 
 export const getListJiraIssueTypesUrl = () => {
 
@@ -549,7 +566,7 @@ export const getListJiraIssueTypesQueryKey = () => {
     }
 
 
-export const getListJiraIssueTypesQueryOptions = <TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraIssueTypesQueryOptions = <TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
@@ -568,10 +585,10 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type ListJiraIssueTypesQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraIssueTypes>>>
-export type ListJiraIssueTypesQueryError = unknown
+export type ListJiraIssueTypesQueryError = ListJiraIssueTypes500
 
 
-export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = unknown>(
+export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraIssueTypes>>,
@@ -581,7 +598,7 @@ export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJira
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = unknown>(
+export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraIssueTypes>>,
@@ -591,7 +608,7 @@ export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJira
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = unknown>(
+export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -599,7 +616,7 @@ export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJira
  * @summary List JIRA issue types
  */
 
-export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = unknown>(
+export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -614,7 +631,7 @@ export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJira
 
 
 
-export const getListJiraIssueTypesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraIssueTypesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
@@ -633,18 +650,18 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type ListJiraIssueTypesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraIssueTypes>>>
-export type ListJiraIssueTypesSuspenseQueryError = unknown
+export type ListJiraIssueTypesSuspenseQueryError = ListJiraIssueTypes500
 
 
-export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = unknown>(
+export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
   options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = unknown>(
+export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
   options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = unknown>(
+export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
   options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -652,7 +669,7 @@ export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof 
  * @summary List JIRA issue types
  */
 
-export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = unknown>(
+export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
   options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -675,12 +692,19 @@ export type listJiraPrioritiesResponse200 = {
   status: 200
 }
 
+export type listJiraPrioritiesResponse500 = {
+  data: ListJiraPriorities500
+  status: 500
+}
+
 export type listJiraPrioritiesResponseSuccess = (listJiraPrioritiesResponse200) & {
   headers: Headers;
 };
-;
+export type listJiraPrioritiesResponseError = (listJiraPrioritiesResponse500) & {
+  headers: Headers;
+};
 
-export type listJiraPrioritiesResponse = (listJiraPrioritiesResponseSuccess)
+export type listJiraPrioritiesResponse = (listJiraPrioritiesResponseSuccess | listJiraPrioritiesResponseError)
 
 export const getListJiraPrioritiesUrl = () => {
 
@@ -718,7 +742,7 @@ export const getListJiraPrioritiesQueryKey = () => {
     }
 
 
-export const getListJiraPrioritiesQueryOptions = <TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraPrioritiesQueryOptions = <TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
@@ -737,10 +761,10 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type ListJiraPrioritiesQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraPriorities>>>
-export type ListJiraPrioritiesQueryError = unknown
+export type ListJiraPrioritiesQueryError = ListJiraPriorities500
 
 
-export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = unknown>(
+export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraPriorities>>,
@@ -750,7 +774,7 @@ export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJira
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = unknown>(
+export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraPriorities>>,
@@ -760,7 +784,7 @@ export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJira
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = unknown>(
+export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -768,7 +792,7 @@ export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJira
  * @summary List JIRA priorities
  */
 
-export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = unknown>(
+export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -783,7 +807,7 @@ export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJira
 
 
 
-export const getListJiraPrioritiesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraPrioritiesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
@@ -802,18 +826,18 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type ListJiraPrioritiesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraPriorities>>>
-export type ListJiraPrioritiesSuspenseQueryError = unknown
+export type ListJiraPrioritiesSuspenseQueryError = ListJiraPriorities500
 
 
-export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = unknown>(
+export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
   options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = unknown>(
+export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
   options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = unknown>(
+export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
   options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
@@ -821,7 +845,7 @@ export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof 
  * @summary List JIRA priorities
  */
 
-export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = unknown>(
+export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
   options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
