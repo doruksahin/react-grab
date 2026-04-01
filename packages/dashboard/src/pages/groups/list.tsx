@@ -6,9 +6,8 @@ import { useGroupsWithComments } from "@/hooks/use-groups-with-comments";
 import type { GroupWithComments } from "@/lib/types";
 
 function deriveGroupStatus(group: GroupWithComments): "open" | "ticketed" | "resolved" {
-  const statuses = group.comments.map((c) => c.status).filter(Boolean);
-  if (statuses.length > 0 && statuses.every((s) => s === "resolved")) return "resolved";
-  if (statuses.some((s) => s === "ticketed")) return "ticketed";
+  if (group.status) return group.status as "open" | "ticketed" | "resolved";
+  if (group.jiraTicketId) return "ticketed";
   return "open";
 }
 
@@ -92,16 +91,29 @@ export default function GroupListPage() {
                       {group.comments.length} selection{group.comments.length !== 1 ? "s" : ""}
                     </div>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      group.derivedStatus === "open" ? "text-blue-500 border-blue-500/30 bg-blue-500/10" :
-                      group.derivedStatus === "ticketed" ? "text-yellow-500 border-yellow-500/30 bg-yellow-500/10" :
-                      "text-green-500 border-green-500/30 bg-green-500/10"
-                    }
-                  >
-                    {group.derivedStatus.charAt(0).toUpperCase() + group.derivedStatus.slice(1)}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {group.jiraTicketId && (
+                      <a
+                        href={`https://appier.atlassian.net/browse/${group.jiraTicketId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-xs font-medium text-blue-500 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {group.jiraTicketId}
+                      </a>
+                    )}
+                    <Badge
+                      variant="outline"
+                      className={
+                        group.derivedStatus === "open" ? "text-blue-500 border-blue-500/30 bg-blue-500/10" :
+                        group.derivedStatus === "ticketed" ? "text-yellow-500 border-yellow-500/30 bg-yellow-500/10" :
+                        "text-green-500 border-green-500/30 bg-green-500/10"
+                      }
+                    >
+                      {group.derivedStatus.charAt(0).toUpperCase() + group.derivedStatus.slice(1)}
+                    </Badge>
+                  </div>
                 </div>
                 {/* Nested comments */}
                 {group.comments.length > 0 && (
