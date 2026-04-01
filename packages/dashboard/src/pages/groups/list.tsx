@@ -6,7 +6,7 @@ import { useGroupsWithComments } from "@/hooks/use-groups-with-comments";
 import type { GroupWithComments } from "@/lib/types";
 
 function deriveGroupStatus(group: GroupWithComments): "open" | "ticketed" | "resolved" {
-  if (group.status) return group.status as "open" | "ticketed" | "resolved";
+  if (group.status) return group.status;
   if (group.jiraTicketId) return "ticketed";
   return "open";
 }
