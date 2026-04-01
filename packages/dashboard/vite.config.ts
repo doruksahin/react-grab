@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         "/workspaces": syncServerUrl,
         "/health": syncServerUrl,
+        "/jira": syncServerUrl,
       },
     },
   }
