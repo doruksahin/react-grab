@@ -1,13 +1,20 @@
 import { useParams, Link } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useGroupsWithComments } from "@/hooks/use-groups-with-comments";
 import { ScreenshotImage } from "@/components/shared/screenshot-image";
+import { JiraCreateDialog } from "@/components/jira/jira-create-dialog";
+import { JiraStatusBanner } from "@/components/jira/jira-status-banner";
+import { getListGroupsQueryKey } from "@/api/endpoints/groups/groups";
+import { getListCommentsQueryKey } from "@/api/endpoints/comments/comments";
+import { WORKSPACE_ID } from "@/lib/config";
 
 export default function GroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>();
   const { data: groups, isLoading } = useGroupsWithComments();
+  const queryClient = useQueryClient();
 
   if (isLoading) return <div className="text-muted-foreground">Loading...</div>;
 
@@ -112,6 +119,30 @@ export default function GroupDetailPage() {
             </Card>
           );
         })}
+      </div>
+
+      {/* JIRA section */}
+      <div className="mt-6 pt-6 border-t border-border">
+        {group.jiraTicketId ? (
+          <JiraStatusBanner
+            groupId={group.id}
+            jiraTicketId={group.jiraTicketId}
+          />
+        ) : (
+          <div className="space-y-2">
+            <JiraCreateDialog
+              group={group}
+              onCreated={() => {
+                // Refetch groups to pick up the new jiraTicketId
+                queryClient.invalidateQueries({ queryKey: getListGroupsQueryKey(WORKSPACE_ID) });
+                queryClient.invalidateQueries({ queryKey: getListCommentsQueryKey(WORKSPACE_ID) });
+              }}
+            />
+            <p className="text-center text-xs text-muted-foreground">
+              {group.comments.length} selections &middot; {group.comments.filter(c => c.screenshotFullPage).length + group.comments.filter(c => c.screenshotElement).length} screenshots will be attached
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
