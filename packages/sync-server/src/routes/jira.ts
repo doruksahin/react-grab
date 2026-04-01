@@ -66,6 +66,10 @@ const listProjects = createRoute({
       description: "List of projects",
       content: { "application/json": { schema: z.array(JiraProject) } },
     },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: ErrorResponse } },
+    },
   },
 });
 
@@ -80,6 +84,10 @@ const listIssueTypes = createRoute({
       description: "List of issue types",
       content: { "application/json": { schema: z.array(JiraIssueType) } },
     },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: ErrorResponse } },
+    },
   },
 });
 
@@ -93,6 +101,10 @@ const listPriorities = createRoute({
     200: {
       description: "List of priorities",
       content: { "application/json": { schema: z.array(JiraPriority) } },
+    },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: ErrorResponse } },
     },
   },
 });
@@ -126,14 +138,29 @@ export const jiraRoutes = createRouter()
     return c.json(status, 200);
   })
   .openapi(listProjects, async (c) => {
-    const projects = await c.var.jira.getProjects();
-    return c.json(projects, 200);
+    try {
+      const projects = await c.var.jira.getProjects();
+      return c.json(projects, 200);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to list JIRA projects";
+      return c.json({ error: message }, 500);
+    }
   })
   .openapi(listIssueTypes, async (c) => {
-    const types = await c.var.jira.getIssueTypes();
-    return c.json(types, 200);
+    try {
+      const types = await c.var.jira.getIssueTypes();
+      return c.json(types, 200);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to list JIRA issue types";
+      return c.json({ error: message }, 500);
+    }
   })
   .openapi(listPriorities, async (c) => {
-    const priorities = await c.var.jira.getPriorities();
-    return c.json(priorities, 200);
+    try {
+      const priorities = await c.var.jira.getPriorities();
+      return c.json(priorities, 200);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to list JIRA priorities";
+      return c.json({ error: message }, 500);
+    }
   });
