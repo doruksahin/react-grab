@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "../db/schema.js";
 import type { Comment, Group, SyncRepository } from "./types.js";
@@ -53,6 +53,18 @@ export class D1SyncRepository implements SyncRepository {
       ),
     ]);
   }
+
+  async updateGroupJira(workspaceId: string, groupId: string, jiraTicketId: string): Promise<void> {
+    await this.db
+      .update(schema.groups)
+      .set({ jiraTicketId, status: "ticketed" })
+      .where(
+        and(
+          eq(schema.groups.id, groupId),
+          eq(schema.groups.workspaceId, workspaceId),
+        ),
+      );
+  }
 }
 
 // ── Row mappers (null → undefined for optional Zod fields) ──────────
@@ -86,5 +98,7 @@ function rowToGroup(
   return {
     ...rest,
     revealed: rest.revealed ?? undefined,
+    status: rest.status ?? undefined,
+    jiraTicketId: rest.jiraTicketId ?? undefined,
   };
 }

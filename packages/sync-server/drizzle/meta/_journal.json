@@ -29,6 +29,13 @@
       "when": 1774999078761,
       "tag": "0003_sleepy_madripoor",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1775004084201,
+      "tag": "0004_condemned_loa",
+      "breakpoints": true
     }
   ]
 }
