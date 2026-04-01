@@ -86,7 +86,7 @@ export class JiraService {
         const screenshot = await screenshots.get(key);
         if (!screenshot) continue;
 
-        // Read the stream into a buffer
+        // Read the stream into a blob
         const chunks: Uint8Array[] = [];
         const reader = screenshot.body.getReader();
         let done = false;
@@ -95,15 +95,29 @@ export class JiraService {
           if (result.value) chunks.push(result.value);
           done = result.done;
         }
-        const buffer = Buffer.concat(chunks);
+        const blob = new Blob(chunks as BlobPart[], { type: screenshot.contentType });
 
-        await this.client.issueAttachments.addAttachment({
-          issueIdOrKey: ticketId,
-          attachment: {
-            filename: `${comment.id}-${type}.png`,
-            file: buffer,
+        // Use raw fetch instead of jira.js for attachments —
+        // jira.js sets a custom Content-Type on FormData which
+        // conflicts with Cloudflare Workers' fetch implementation.
+        const form = new FormData();
+        form.append("file", blob, `${comment.id}-${type}.png`);
+
+        const authHeader = "Basic " + btoa(`${this.config.email}:${this.config.apiToken}`);
+        const attachResponse = await fetch(
+          `${this.config.baseUrl}/rest/api/3/issue/${ticketId}/attachments`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: authHeader,
+              "X-Atlassian-Token": "no-check",
+            },
+            body: form,
           },
-        });
+        );
+        if (!attachResponse.ok) {
+          console.error(`Failed to attach ${type} screenshot for ${comment.id}: ${attachResponse.status}`);
+        }
       }
     }
 
