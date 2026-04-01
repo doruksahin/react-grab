@@ -1,6 +1,5 @@
 import { Version3Client } from "jira.js";
-import type { SyncRepository } from "../repositories/types.js";
-import type { ScreenshotStore } from "../repositories/types.js";
+import type { SyncRepository, ScreenshotStore } from "../repositories/types.js";
 
 interface JiraConfig {
   baseUrl: string;
@@ -45,6 +44,16 @@ export class JiraService {
     repo: SyncRepository,
     screenshots: ScreenshotStore,
   ): Promise<CreateTicketResult> {
+    // Idempotency: bail early if group already has a ticket
+    const allGroups = await repo.listGroups(workspaceId);
+    const existingGroup = allGroups.find((g) => g.id === groupId);
+    if (existingGroup?.jiraTicketId) {
+      return {
+        jiraTicketId: existingGroup.jiraTicketId,
+        jiraUrl: `${this.config.baseUrl}/browse/${existingGroup.jiraTicketId}`,
+      };
+    }
+
     // 1. Load comments for this group
     const comments = await repo.listComments(workspaceId);
     const groupComments = comments.filter((c) => c.groupId === groupId);
@@ -64,7 +73,8 @@ export class JiraService {
       },
     });
 
-    const ticketId = issue.key!;
+    const ticketId = issue.key;
+    if (!ticketId) throw new Error("Jira createIssue returned no issue key");
     const ticketUrl = `${this.config.baseUrl}/browse/${ticketId}`;
 
     // 4. Attach screenshots
@@ -97,34 +107,35 @@ export class JiraService {
       }
     }
 
-    // 5. Update group in D1
-    await repo.updateGroupJira(workspaceId, groupId, ticketId);
+    // 5. Update group in D1 (wrap separately to detect partial failure)
+    try {
+      await repo.updateGroupJira(workspaceId, groupId, ticketId);
+    } catch (err) {
+      throw new Error(`Jira ticket ${ticketId} created but D1 update failed: ${err}`);
+    }
 
     return { jiraTicketId: ticketId, jiraUrl: ticketUrl };
   }
 
   async getProjects() {
     const result = await this.client.projects.searchProjects();
-    return result.values?.map((p) => ({
-      key: p.key!,
-      name: p.name!,
-    })) ?? [];
+    return (result.values ?? [])
+      .filter((p) => p.key && p.name)
+      .map((p) => ({ key: p.key!, name: p.name! }));
   }
 
-  async getIssueTypes(projectKey: string) {
+  async getIssueTypes() {
     const types = await this.client.issueTypes.getIssueAllTypes();
-    return types.map((t) => ({
-      id: t.id!,
-      name: t.name!,
-    }));
+    return types
+      .filter((t) => t.id && t.name)
+      .map((t) => ({ id: t.id!, name: t.name! }));
   }
 
   async getPriorities() {
     const priorities = await this.client.issuePriorities.getPriorities();
-    return priorities.map((p) => ({
-      id: p.id!,
-      name: p.name!,
-    }));
+    return priorities
+      .filter((p) => p.id && p.name)
+      .map((p) => ({ id: p.id!, name: p.name! }));
   }
 
   async getIssueStatus(ticketId: string) {
