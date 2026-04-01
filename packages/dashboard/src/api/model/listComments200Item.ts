@@ -19,7 +19,7 @@ export type ListComments200Item = {
   elementSelectors?: string[];
   commentText?: string;
   timestamp: number;
-  revealed: boolean;
+  revealed?: boolean;
   /** Lifecycle status of a selection */
   status?: ListComments200ItemStatus;
   pageUrl?: string;

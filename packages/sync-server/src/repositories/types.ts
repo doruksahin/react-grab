@@ -12,6 +12,7 @@ export interface SyncRepository {
   persistComments(workspaceId: string, items: Comment[]): Promise<void>;
   listGroups(workspaceId: string): Promise<Group[]>;
   persistGroups(workspaceId: string, items: Group[]): Promise<void>;
+  updateGroupJira(workspaceId: string, groupId: string, jiraTicketId: string): Promise<void>;
 }
 
 /** Storage contract for binary assets (screenshots). */

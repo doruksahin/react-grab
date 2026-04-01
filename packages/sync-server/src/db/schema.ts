@@ -31,6 +31,8 @@ export const groups = sqliteTable("groups", {
   name: text("name").notNull(),
   createdAt: real("created_at").notNull(),
   revealed: integer("revealed", { mode: "boolean" }),
+  status: text("status", { enum: ["open", "ticketed", "resolved"] }),
+  jiraTicketId: text("jira_ticket_id"),
 }, (table) => [
   primaryKey({ columns: [table.id, table.workspaceId] }),
   index("groups_workspace_id_idx").on(table.workspaceId),

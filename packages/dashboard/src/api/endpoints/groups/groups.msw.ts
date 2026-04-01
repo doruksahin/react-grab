@@ -23,7 +23,7 @@ import type {
 } from '../../model';
 
 
-export const getListGroupsResponseMock = (): ListGroups200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.number.float({fractionDigits: 2}), revealed: faker.datatype.boolean()})))
+export const getListGroupsResponseMock = (): ListGroups200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.number.float({fractionDigits: 2}), revealed: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), status: faker.helpers.arrayElement([faker.helpers.arrayElement(['open','ticketed','resolved'] as const), undefined]), jiraTicketId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})))
 
 export const getPersistGroupsResponseMock = (overrideResponse: Partial<Extract<PersistGroups200, object>> = {}): PersistGroups200 => ({status: faker.helpers.arrayElement(['ok'] as const), ...overrideResponse})
 

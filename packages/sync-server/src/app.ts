@@ -7,6 +7,7 @@ import { commentsRoutes } from "./routes/comments.js";
 import { groupsRoutes } from "./routes/groups.js";
 import { healthRoutes } from "./routes/health.js";
 import { screenshotsRoutes } from "./routes/screenshots.js";
+import { jiraRoutes } from "./routes/jira.js";
 import { DOC_CONFIG } from "./lib/doc-config.js";
 
 interface CreateAppOptions {
@@ -30,6 +31,7 @@ export function createApp(options?: CreateAppOptions) {
   app.route("/", commentsRoutes);
   app.route("/", groupsRoutes);
   app.route("/", screenshotsRoutes);
+  app.route("/", jiraRoutes);
 
   app.doc("/doc", DOC_CONFIG);
   app.get("/ui", swaggerUI({ url: "/doc" }));

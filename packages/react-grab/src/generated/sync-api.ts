@@ -40,7 +40,7 @@ export type ListComments200Item = {
   elementSelectors?: string[];
   commentText?: string;
   timestamp: number;
-  revealed: boolean;
+  revealed?: boolean;
   /** Lifecycle status of a selection */
   status?: ListComments200ItemStatus;
   pageUrl?: string;
@@ -77,7 +77,7 @@ export type PersistCommentsBodyItem = {
   elementSelectors?: string[];
   commentText?: string;
   timestamp: number;
-  revealed: boolean;
+  revealed?: boolean;
   /** Lifecycle status of a selection */
   status?: PersistCommentsBodyItemStatus;
   pageUrl?: string;
@@ -105,18 +105,48 @@ export type PersistComments400 = {
   error: string;
 };
 
+/**
+ * Lifecycle status of a group
+ */
+export type ListGroups200ItemStatus = typeof ListGroups200ItemStatus[keyof typeof ListGroups200ItemStatus];
+
+
+export const ListGroups200ItemStatus = {
+  open: 'open',
+  ticketed: 'ticketed',
+  resolved: 'resolved',
+} as const;
+
 export type ListGroups200Item = {
   id: string;
   name: string;
   createdAt: number;
-  revealed: boolean;
+  revealed?: boolean;
+  /** Lifecycle status of a group */
+  status?: ListGroups200ItemStatus;
+  jiraTicketId?: string;
 };
+
+/**
+ * Lifecycle status of a group
+ */
+export type PersistGroupsBodyItemStatus = typeof PersistGroupsBodyItemStatus[keyof typeof PersistGroupsBodyItemStatus];
+
+
+export const PersistGroupsBodyItemStatus = {
+  open: 'open',
+  ticketed: 'ticketed',
+  resolved: 'resolved',
+} as const;
 
 export type PersistGroupsBodyItem = {
   id: string;
   name: string;
   createdAt: number;
-  revealed: boolean;
+  revealed?: boolean;
+  /** Lifecycle status of a group */
+  status?: PersistGroupsBodyItemStatus;
+  jiraTicketId?: string;
 };
 
 export type PersistGroups200Status = typeof PersistGroups200Status[keyof typeof PersistGroups200Status];
@@ -144,6 +174,47 @@ export type UploadScreenshot415 = {
 
 export type GetScreenshot404 = {
   error: string;
+};
+
+export type CreateJiraTicketBody = {
+  projectKey: string;
+  issueType: string;
+  priority: string;
+  summary: string;
+  description: string;
+};
+
+export type CreateJiraTicket200 = {
+  jiraTicketId: string;
+  jiraUrl: string;
+};
+
+export type CreateJiraTicket400 = {
+  error: string;
+};
+
+export type GetJiraTicketStatus200 = {
+  status: string;
+  statusCategory: string;
+};
+
+export type GetJiraTicketStatus404 = {
+  error: string;
+};
+
+export type ListJiraProjects200Item = {
+  key: string;
+  name: string;
+};
+
+export type ListJiraIssueTypes200Item = {
+  id: string;
+  name: string;
+};
+
+export type ListJiraPriorities200Item = {
+  id: string;
+  name: string;
 };
 
 /**
@@ -478,4 +549,234 @@ export const getScreenshot = async (id: string,
 
   const data: getScreenshotResponse['data'] = body ? JSON.parse(body) : {}
   return { data, status: res.status, headers: res.headers } as getScreenshotResponse
+}
+
+
+
+/**
+ * @summary Create a JIRA ticket from a group
+ */
+export type createJiraTicketResponse200 = {
+  data: CreateJiraTicket200
+  status: 200
+}
+
+export type createJiraTicketResponse400 = {
+  data: CreateJiraTicket400
+  status: 400
+}
+
+export type createJiraTicketResponseSuccess = (createJiraTicketResponse200) & {
+  headers: Headers;
+};
+export type createJiraTicketResponseError = (createJiraTicketResponse400) & {
+  headers: Headers;
+};
+
+export type createJiraTicketResponse = (createJiraTicketResponseSuccess | createJiraTicketResponseError)
+
+export const getCreateJiraTicketUrl = (id: string,
+    groupId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/groups/${groupId}/jira-ticket`
+}
+
+export const createJiraTicket = async (id: string,
+    groupId: string,
+    createJiraTicketBody: CreateJiraTicketBody, options?: RequestInit): Promise<createJiraTicketResponse> => {
+
+  const res = await fetch(getCreateJiraTicketUrl(id,groupId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createJiraTicketBody,)
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: createJiraTicketResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as createJiraTicketResponse
+}
+
+
+
+/**
+ * @summary Get JIRA ticket status for a group
+ */
+export type getJiraTicketStatusResponse200 = {
+  data: GetJiraTicketStatus200
+  status: 200
+}
+
+export type getJiraTicketStatusResponse404 = {
+  data: GetJiraTicketStatus404
+  status: 404
+}
+
+export type getJiraTicketStatusResponseSuccess = (getJiraTicketStatusResponse200) & {
+  headers: Headers;
+};
+export type getJiraTicketStatusResponseError = (getJiraTicketStatusResponse404) & {
+  headers: Headers;
+};
+
+export type getJiraTicketStatusResponse = (getJiraTicketStatusResponseSuccess | getJiraTicketStatusResponseError)
+
+export const getGetJiraTicketStatusUrl = (id: string,
+    groupId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/groups/${groupId}/jira-status`
+}
+
+export const getJiraTicketStatus = async (id: string,
+    groupId: string, options?: RequestInit): Promise<getJiraTicketStatusResponse> => {
+
+  const res = await fetch(getGetJiraTicketStatusUrl(id,groupId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getJiraTicketStatusResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getJiraTicketStatusResponse
+}
+
+
+
+/**
+ * @summary List JIRA projects
+ */
+export type listJiraProjectsResponse200 = {
+  data: ListJiraProjects200Item[]
+  status: 200
+}
+
+export type listJiraProjectsResponseSuccess = (listJiraProjectsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listJiraProjectsResponse = (listJiraProjectsResponseSuccess)
+
+export const getListJiraProjectsUrl = () => {
+
+
+
+
+  return `/jira/projects`
+}
+
+export const listJiraProjects = async ( options?: RequestInit): Promise<listJiraProjectsResponse> => {
+
+  const res = await fetch(getListJiraProjectsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listJiraProjectsResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as listJiraProjectsResponse
+}
+
+
+
+/**
+ * @summary List JIRA issue types
+ */
+export type listJiraIssueTypesResponse200 = {
+  data: ListJiraIssueTypes200Item[]
+  status: 200
+}
+
+export type listJiraIssueTypesResponseSuccess = (listJiraIssueTypesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listJiraIssueTypesResponse = (listJiraIssueTypesResponseSuccess)
+
+export const getListJiraIssueTypesUrl = () => {
+
+
+
+
+  return `/jira/issue-types`
+}
+
+export const listJiraIssueTypes = async ( options?: RequestInit): Promise<listJiraIssueTypesResponse> => {
+
+  const res = await fetch(getListJiraIssueTypesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listJiraIssueTypesResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as listJiraIssueTypesResponse
+}
+
+
+
+/**
+ * @summary List JIRA priorities
+ */
+export type listJiraPrioritiesResponse200 = {
+  data: ListJiraPriorities200Item[]
+  status: 200
+}
+
+export type listJiraPrioritiesResponseSuccess = (listJiraPrioritiesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listJiraPrioritiesResponse = (listJiraPrioritiesResponseSuccess)
+
+export const getListJiraPrioritiesUrl = () => {
+
+
+
+
+  return `/jira/priorities`
+}
+
+export const listJiraPriorities = async ( options?: RequestInit): Promise<listJiraPrioritiesResponse> => {
+
+  const res = await fetch(getListJiraPrioritiesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listJiraPrioritiesResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as listJiraPrioritiesResponse
 }

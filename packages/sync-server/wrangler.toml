@@ -6,6 +6,8 @@ workers_dev = true
 
 [vars]
 ENVIRONMENT = "development"
+JIRA_BASE_URL = "https://appier.atlassian.net"
+JIRA_EMAIL = ""
 
 # D1 database binding
 [[d1_databases]]
