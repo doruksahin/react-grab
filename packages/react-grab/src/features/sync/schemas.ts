@@ -24,6 +24,7 @@ export const SelectionGroupSchema = z.object({
   id: z.string(),
   name: z.string(),
   createdAt: z.number(),
+  status: z.enum(["open", "ticketed", "resolved"]).optional(),
   jiraTicketId: z.string().optional(),
 });
 
