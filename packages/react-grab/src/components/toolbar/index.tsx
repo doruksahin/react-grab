@@ -103,7 +103,6 @@ interface ToolbarProps {
   syncWorkspace?: string;
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
-  groupCount?: number;
   onDashboardBtnRef?: (el: HTMLButtonElement) => void;
 }
 
@@ -1070,7 +1069,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         syncWorkspace={props.syncWorkspace}
         sidebarOpen={props.sidebarOpen}
         onToggleSidebar={props.onToggleSidebar}
-        groupCount={props.groupCount}
         onDashboardBtnRef={props.onDashboardBtnRef}
         isCollapsed={isCollapsed()}
         snapEdge={snapEdge()}

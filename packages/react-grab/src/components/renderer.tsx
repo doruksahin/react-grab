@@ -242,7 +242,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           syncWorkspace={props.syncWorkspace}
           sidebarOpen={sidebarOpen()}
           onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
-          groupCount={props.groups?.length ?? 0}
           onDashboardBtnRef={(el) => { dashboardBtnRef = el; }}
         />
       </Show>

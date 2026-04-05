@@ -40,7 +40,6 @@ export interface ToolbarContentProps {
   onToggleSelectionsRevealed?: () => void;
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
-  groupCount?: number;
   onDashboardBtnRef?: (el: HTMLButtonElement) => void;
   collapseButton?: JSX.Element;
   transformOrigin?: string;
