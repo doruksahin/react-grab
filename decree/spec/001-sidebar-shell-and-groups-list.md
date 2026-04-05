@@ -448,31 +448,31 @@ export interface SelectionGroup extends ServerSelectionGroup {
 
 ## Acceptance Criteria
 
-- [ ] Dashboard button added to toolbar between Visibility and Toggle buttons
-- [ ] Dashboard button shows active state when sidebar is open
-- [ ] Dashboard button shows group count badge when sidebar is closed
-- [ ] Sidebar opens as a 380px fixed overlay on the left
-- [ ] Sidebar renders inside Shadow DOM host
-- [ ] Sidebar z-index is 2147483646 (below labels, above canvas)
-- [ ] Host page does not shift, resize, or reflow when sidebar opens/closes
-- [ ] Sidebar header shows sync connection status (green dot = synced, red = error)
-- [ ] Stats bar shows total groups, total selections, open count, ticketed count
-- [ ] Filter tabs work: All, Open, Ticketed, Resolved (Resolved filter shows empty until Phase 3 adds JIRA polling)
-- [ ] Group cards show: name, selection count, status badge, JIRA ticket link (if any), comment previews (max 3 + overflow)
-- [ ] Clicking a group card is wired to `onGroupClick` (Phase 2 will implement navigation)
-- [ ] Empty state shown when no groups exist
-- [ ] Empty state shown when no groups match active filter
-- [ ] Error state shown when sync server is unreachable, with retry button
-- [ ] Escape key dismisses sidebar when it has focus and returns focus to dashboard button
-- [ ] Close button dismisses sidebar and returns focus to dashboard button
-- [ ] `Z_INDEX_SIDEBAR` constant added to `constants.ts`
-- [ ] All unit tests pass (filtering logic, component rendering)
-- [ ] Integration tests pass (open/close, signal reactivity, z-index stacking)
-- [ ] No layout shift verified on a real host page at 1280px+ viewport
-- [ ] Zod schemas added for CommentItem and SelectionGroup in `features/sync/schemas.ts`
-- [ ] All 5 `as` casts in `adapter.ts` replaced with Zod `.parse()` calls
-- [ ] Empty `SelectionGroup` extension documented with comment explaining intent
-- [ ] `deriveStatus()` compiles without accessing nonexistent `jiraStatus` field
+- [x] Dashboard button added to toolbar between Visibility and Toggle buttons
+- [x] Dashboard button shows active state when sidebar is open
+- [ ] Dashboard button shows group count badge when sidebar is closed *(deferred — requires Phase 2 signal wiring)*
+- [x] Sidebar opens as a 380px fixed overlay on the left
+- [x] Sidebar renders inside Shadow DOM host
+- [x] Sidebar z-index is 2147483646 (below labels, above canvas)
+- [x] Host page does not shift, resize, or reflow when sidebar opens/closes
+- [x] Sidebar header shows sync connection status (green dot = synced, red = error)
+- [x] Stats bar shows total groups, total selections, open count, ticketed count
+- [x] Filter tabs work: All, Open, Ticketed, Resolved (Resolved filter shows empty until Phase 3 adds JIRA polling)
+- [x] Group cards show: name, selection count, status badge, JIRA ticket link (if any), comment previews (max 3 + overflow)
+- [x] Clicking a group card is wired to `onGroupClick` (Phase 2 will implement navigation)
+- [x] Empty state shown when no groups exist
+- [x] Empty state shown when no groups match active filter
+- [x] Error state shown when sync server is unreachable, with retry button
+- [x] Escape key dismisses sidebar when it has focus and returns focus to dashboard button
+- [x] Close button dismisses sidebar and returns focus to dashboard button
+- [x] `Z_INDEX_SIDEBAR` constant added to `constants.ts`
+- [ ] All unit tests pass (filtering logic, component rendering) *(e2e tests written, unit tests deferred)*
+- [x] Integration tests pass (open/close, signal reactivity, z-index stacking)
+- [ ] No layout shift verified on a real host page at 1280px+ viewport *(pending manual verification)*
+- [x] Zod schemas added for CommentItem and SelectionGroup in `features/sync/schemas.ts`
+- [x] All 5 `as` casts in `adapter.ts` replaced with Zod `.parse()` calls
+- [x] Empty `SelectionGroup` extension documented with comment explaining intent
+- [x] `deriveStatus()` compiles without accessing nonexistent `jiraStatus` field
 
 ### Deferred (Phase 2+)
 
