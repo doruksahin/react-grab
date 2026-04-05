@@ -1,7 +1,9 @@
 ---
-status: draft
-date: 2026-04-05
-references: [PRD-002, ADR-0002]
+date: '2026-04-05'
+references:
+- PRD-002
+- ADR-0002
+status: review
 ---
 
 # SPEC-001 Sidebar Shell and Groups List
@@ -96,9 +98,9 @@ const [sidebarOpen, setSidebarOpen] = createSignal(false);
 ```
 
 **Dismiss triggers:**
-- Close button click
+- Close button click → focus returns to dashboard button
 - Dashboard toolbar button toggle
-- Escape key (only when sidebar has focus)
+- Escape key (only when sidebar has focus) → focus returns to dashboard button
 
 ### Dashboard Button
 
@@ -174,11 +176,13 @@ Displays workspace connection status (carried from dashboard layout) and close b
 
 Derives stats from the signals — no API calls:
 
+Note: `props.groups` and `props.commentItems` are already resolved arrays (not signal accessors) since `core/index.tsx` passes `groups={selectionGroups.groups()}`. The `groupComments` utility is imported from `features/selection-groups/business/group-operations.ts`.
+
 ```typescript
 const stats = () => {
-  const g = props.groups();
-  const c = props.commentItems();
-  const grouped = groupComments(g, c); // reuse existing utility
+  const g = props.groups;  // already resolved array
+  const c = props.commentItems;
+  const grouped = groupComments(g, c);
   return {
     totalGroups: g.length,
     totalSelections: c.length,
@@ -188,7 +192,15 @@ const stats = () => {
 };
 ```
 
-`deriveStatus` follows the same logic as the dashboard: a group is "ticketed" if it has a `jiraTicketId`, "resolved" if the ticket status is done, "open" otherwise.
+`deriveStatus` is a **new utility** in `features/sidebar/derive-status.ts`:
+
+```typescript
+function deriveStatus(entry: GroupedComments): 'open' | 'ticketed' | 'resolved' {
+  if (!entry.group.jiraTicketId) return 'open';
+  if (entry.group.jiraStatus === 'done') return 'resolved';
+  return 'ticketed';
+}
+```
 
 ### FilterTabs
 
@@ -212,7 +224,7 @@ Each group card renders:
 - Selection count
 - Status badge (colored: blue=open, yellow=ticketed, green=resolved)
 - JIRA ticket ID as clickable link (if ticketed)
-- Inline comment previews: up to 3 items showing component name, comment text, HTML tag — truncated with "+N more"
+- Inline comment previews: up to 3 items showing component name, comment text, and HTML tag — truncated with "+N more"
 
 ```tsx
 <div class="group-card" onClick={() => props.onGroupClick(group.id)}>
@@ -231,7 +243,15 @@ Each group card renders:
   </div>
   <div class="gc-preview">
     <For each={entry.comments.slice(0, 3)}>
-      {(comment) => <span class="gc-tag">{comment.componentName || comment.elementName}</span>}
+      {(comment) => (
+        <div class="gc-preview-item">
+          <span class="gc-tag">{comment.componentName || comment.elementName}</span>
+          <span class="gc-tag-html">{comment.tagName}</span>
+          <Show when={comment.commentText}>
+            <span class="gc-comment-text">{comment.commentText}</span>
+          </Show>
+        </div>
+      )}
     </For>
     <Show when={entry.comments.length > 3}>
       <span class="gc-tag">+{entry.comments.length - 3} more</span>
@@ -277,6 +297,10 @@ All styles scoped inside the existing Shadow DOM via Tailwind utility classes (a
 
 ```
 packages/react-grab/src/
+├── features/
+│   └── sidebar/
+│       ├── derive-status.ts       # NEW: deriveStatus() utility
+│       └── index.ts               # Public exports
 ├── components/
 │   ├── sidebar/
 │   │   ├── index.tsx              # Sidebar container
@@ -287,14 +311,14 @@ packages/react-grab/src/
 │   │   ├── group-card.tsx         # Individual group card
 │   │   ├── status-badge.tsx       # Colored status badge
 │   │   └── empty-state.tsx        # Empty/error state views
+│   ├── icons/
+│   │   └── dashboard-icon.tsx     # NEW: 4-square grid icon
 │   ├── toolbar/
 │   │   └── toolbar-content.tsx    # Modified: add dashboard button
 │   └── renderer.tsx               # Modified: mount Sidebar
 ├── constants.ts                   # Modified: add Z_INDEX_SIDEBAR
-├── core/
-│   └── index.tsx                  # Modified: thread sidebar props
-└── icons/
-    └── dashboard-icon.tsx         # New: 4-square grid icon
+└── core/
+    └── index.tsx                  # Modified: thread sidebar props
 ```
 
 ## Testing Strategy
@@ -359,8 +383,8 @@ packages/react-grab/src/
 - [ ] Empty state shown when no groups exist
 - [ ] Empty state shown when no groups match active filter
 - [ ] Error state shown when sync server is unreachable, with retry button
-- [ ] Escape key dismisses sidebar when it has focus
-- [ ] Close button dismisses sidebar
+- [ ] Escape key dismisses sidebar when it has focus and returns focus to dashboard button
+- [ ] Close button dismisses sidebar and returns focus to dashboard button
 - [ ] `Z_INDEX_SIDEBAR` constant added to `constants.ts`
 - [ ] All unit tests pass (filtering logic, component rendering)
 - [ ] Integration tests pass (open/close, signal reactivity, z-index stacking)
