@@ -1,4 +1,4 @@
-import { Show, Index } from "solid-js";
+import { Show, Index, createSignal, createEffect, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 import type { AgentSession, ReactGrabRendererProps } from "../types.js";
 import {
@@ -17,8 +17,24 @@ import { ContextMenu } from "./context-menu.js";
 import { ToolbarMenu } from "./toolbar/toolbar-menu.js";
 import { CommentsDropdown } from "./comments-dropdown.js";
 import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
+import { Sidebar } from "./sidebar/index.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
+  const [sidebarOpen, setSidebarOpen] = createSignal(false);
+  let dashboardBtnRef: HTMLButtonElement | undefined;
+
+  createEffect(() => {
+    if (!sidebarOpen()) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSidebarOpen(false);
+        dashboardBtnRef?.focus();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    onCleanup(() => document.removeEventListener("keydown", handler));
+  });
+
   const getSessionStatus = (
     session: AgentSession,
   ): "copying" | "copied" | "fading" => {
@@ -224,6 +240,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onToggleSelectionsRevealed={props.onToggleSelectionsRevealed}
           syncStatus={props.syncStatus}
           syncWorkspace={props.syncWorkspace}
+          sidebarOpen={sidebarOpen()}
+          onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+          onDashboardBtnRef={(el) => { dashboardBtnRef = el; }}
         />
       </Show>
 
@@ -274,6 +293,21 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         copyableCount={props.copyableCount}
         onMoveItem={props.onMoveItem}
       />
+
+      <Show when={sidebarOpen()}>
+        <Sidebar
+          groups={props.groups ?? []}
+          commentItems={props.commentItems ?? []}
+          syncStatus={props.syncStatus ?? "local"}
+          onClose={() => {
+            setSidebarOpen(false);
+            dashboardBtnRef?.focus();
+          }}
+          onGroupClick={(groupId) => {
+            /* Phase 2: navigate to detail */
+          }}
+        />
+      </Show>
     </>
   );
 };

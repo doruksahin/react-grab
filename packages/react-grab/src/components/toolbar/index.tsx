@@ -101,6 +101,9 @@ interface ToolbarProps {
   onToggleSelectionsRevealed?: () => void;
   syncStatus?: import("../../features/sync/types.js").SyncStatus;
   syncWorkspace?: string;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
+  onDashboardBtnRef?: (el: HTMLButtonElement) => void;
 }
 
 interface FreezeHandlersOptions {
@@ -1064,6 +1067,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         onToggleSelectionsRevealed={props.onToggleSelectionsRevealed}
         syncStatus={props.syncStatus ?? "local"}
         syncWorkspace={props.syncWorkspace}
+        sidebarOpen={props.sidebarOpen}
+        onToggleSidebar={props.onToggleSidebar}
+        onDashboardBtnRef={props.onDashboardBtnRef}
         isCollapsed={isCollapsed()}
         snapEdge={snapEdge()}
         isShaking={isShaking()}
