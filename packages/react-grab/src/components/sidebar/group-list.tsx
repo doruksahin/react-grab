@@ -4,7 +4,7 @@ import { GroupCard } from "./group-card";
 
 interface GroupListProps {
   groupedItems: GroupedEntry[];
-  onGroupClick: (groupId: string) => void;
+  onGroupClick: (groupId: string, cardEl: HTMLElement) => void;
 }
 
 export const GroupList: Component<GroupListProps> = (props) => {
@@ -14,7 +14,7 @@ export const GroupList: Component<GroupListProps> = (props) => {
         {(entry) => (
           <GroupCard
             entry={entry}
-            onClick={() => props.onGroupClick(entry.group.id)}
+            onClick={props.onGroupClick}
           />
         )}
       </For>

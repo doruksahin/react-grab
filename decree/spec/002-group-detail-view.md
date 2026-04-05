@@ -4,7 +4,7 @@ references:
 - PRD-002
 - ADR-0002
 - SPEC-001
-status: approved
+status: implemented
 ---
 
 # SPEC-002 Group Detail View

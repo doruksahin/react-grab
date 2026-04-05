@@ -1,0 +1,119 @@
+// packages/react-grab/src/components/sidebar/selection-card.tsx
+import { type Component, createMemo, Show } from "solid-js";
+import type { CommentItem } from "../../types";
+import {
+  extractFilePath,
+  relativeTime,
+  screenshotUrl,
+} from "../../features/sidebar";
+import { ScreenshotPair } from "./screenshot-pair";
+
+export interface SelectionCardProps {
+  item: CommentItem;
+  syncServerUrl?: string;
+  syncWorkspace?: string;
+  scrollRoot: () => Element | null;
+}
+
+export const SelectionCard: Component<SelectionCardProps> = (props) => {
+  const filePath = createMemo(() =>
+    extractFilePath(props.item.content ?? ""),
+  );
+
+  const elementSrc = createMemo(() =>
+    props.syncServerUrl &&
+    props.syncWorkspace &&
+    props.item.screenshotElement
+      ? screenshotUrl(
+          props.syncServerUrl,
+          props.syncWorkspace,
+          props.item.id,
+          "element",
+        )
+      : undefined,
+  );
+
+  const fullPageSrc = createMemo(() =>
+    props.syncServerUrl &&
+    props.syncWorkspace &&
+    props.item.screenshotFullPage
+      ? screenshotUrl(
+          props.syncServerUrl,
+          props.syncWorkspace,
+          props.item.id,
+          "full",
+        )
+      : undefined,
+  );
+
+  return (
+    <div
+      class="bg-[#232323] rounded-lg p-3 mb-1.5 border border-white/5"
+      style={{ "pointer-events": "auto" }}
+    >
+      {/* Row 1: component name + tag badge + timestamp */}
+      <div class="flex items-center justify-between mb-1.5">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="text-[13px] font-semibold text-white truncate">
+            {props.item.componentName || props.item.elementName}
+          </span>
+          <span class="px-1.5 py-0.5 rounded bg-white/10 text-white/50 text-[10px] font-mono shrink-0">
+            {props.item.tagName}
+          </span>
+        </div>
+        <span class="text-[10px] text-white/30 shrink-0 ml-2">
+          {relativeTime(props.item.timestamp)}
+        </span>
+      </div>
+
+      {/* Row 2: comment text */}
+      <Show when={props.item.commentText}>
+        <p class="text-[11px] text-white/70 mb-1.5">{props.item.commentText}</p>
+      </Show>
+
+      {/* Row 3: source file path (omit when extraction returns null — A-014) */}
+      <Show when={filePath()}>
+        {(fp) => (
+          <div
+            class="text-[10px] text-white/40 font-mono truncate mb-1.5"
+            title={fp().path}
+          >
+            {fp().path}
+            <Show when={fp().line !== null}>
+              <span class="text-white/30">:{fp().line}</span>
+            </Show>
+          </div>
+        )}
+      </Show>
+
+      {/* Row 4: screenshots — hidden entirely when both are absent (A-018) */}
+      <Show when={elementSrc() || fullPageSrc()}>
+        <ScreenshotPair
+          elementSrc={elementSrc()}
+          fullPageSrc={fullPageSrc()}
+          scrollRoot={props.scrollRoot}
+        />
+      </Show>
+
+      {/* Row 5: CSS selector */}
+      <Show when={props.item.elementSelectors?.length}>
+        <div
+          class="text-[10px] text-white/40 font-mono truncate mt-1.5"
+          title={props.item.elementSelectors?.[0]}
+        >
+          {props.item.elementSelectors?.[0]}
+        </div>
+      </Show>
+
+      {/* Row 6: collapsible raw HTML — collapsed by default */}
+      <details class="mt-1.5">
+        <summary class="text-[10px] text-white/30 cursor-pointer select-none hover:text-white/50">
+          Raw HTML
+        </summary>
+        <pre class="mt-1 text-[9px] text-white/40 bg-white/5 rounded p-2 overflow-x-auto max-h-[200px] overflow-y-auto whitespace-pre-wrap break-all">
+          {props.item.content}
+        </pre>
+      </details>
+    </div>
+  );
+};

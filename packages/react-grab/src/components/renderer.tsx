@@ -299,12 +299,11 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           groups={props.groups ?? []}
           commentItems={props.commentItems ?? []}
           syncStatus={props.syncStatus ?? "local"}
+          syncServerUrl={props.syncServerUrl}
+          syncWorkspace={props.syncWorkspace}
           onClose={() => {
             setSidebarOpen(false);
             dashboardBtnRef?.focus();
-          }}
-          onGroupClick={(groupId) => {
-            /* Phase 2: navigate to detail */
           }}
         />
       </Show>

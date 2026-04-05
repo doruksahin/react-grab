@@ -579,6 +579,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onToggleCommentItemRevealed?: (commentItemId: string) => void;
   syncStatus?: SyncStatus;
   syncWorkspace?: string;
+  syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
 }
 
 export interface GrabbedBox {
