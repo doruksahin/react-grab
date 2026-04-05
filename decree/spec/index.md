@@ -4,4 +4,4 @@
 
 | SPEC | Title | Status | Date |
 |-----|-----|-----|-----|
-| SPEC-001 | SPEC-001 Sidebar Shell and Groups List | draft | 2026-04-05 |
+| SPEC-001 | SPEC-001 Sidebar Shell and Groups List | approved | 2026-04-05 |
