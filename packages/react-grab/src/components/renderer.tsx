@@ -18,6 +18,7 @@ import { ToolbarMenu } from "./toolbar/toolbar-menu.js";
 import { CommentsDropdown } from "./comments-dropdown.js";
 import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
+import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
@@ -296,7 +297,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       <Show when={sidebarOpen()}>
         <Sidebar
-          groups={props.groups ?? []}
+          groups={(props.groups ?? []) as SelectionGroupWithJira[]}
           commentItems={props.commentItems ?? []}
           syncStatus={props.syncStatus ?? "local"}
           syncServerUrl={props.syncServerUrl}

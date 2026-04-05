@@ -12,6 +12,10 @@ interface GroupDetailViewProps {
   syncServerUrl?: string;
   syncWorkspace?: string;
   onBack: () => void;
+  /** Called when a JIRA ticket is successfully created for the group. */
+  onTicketCreated?: (groupId: string, ticketId: string, ticketUrl: string) => void;
+  /** Called when polling detects a status change on the JIRA ticket. */
+  onStatusUpdate?: (groupId: string, status: { status: string; statusCategory: string }) => void;
 }
 
 export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {

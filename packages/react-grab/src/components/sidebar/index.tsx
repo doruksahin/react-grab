@@ -6,21 +6,25 @@ import {
   createSignal,
   Show,
 } from "solid-js";
-import type { SelectionGroup } from "../../features/selection-groups/types";
-import type { CommentItem } from "../../types";
-import type { SyncStatus } from "../../features/sync/types";
-import { Z_INDEX_SIDEBAR } from "../../constants";
-import { SidebarHeader } from "./sidebar-header";
-import { EmptyState } from "./empty-state";
-import { StatsBar } from "./stats-bar";
-import { FilterTabs, type FilterStatus } from "./filter-tabs";
-import { GroupList } from "./group-list";
-import { GroupDetailView } from "./group-detail-view";
-import { groupComments } from "../../features/selection-groups/business/group-operations";
-import { deriveStatus, type GroupedEntry } from "../../features/sidebar";
+import type { CommentItem } from "../../types.js";
+import type { SyncStatus } from "../../features/sync/types.js";
+import { Z_INDEX_SIDEBAR } from "../../constants.js";
+import { SidebarHeader } from "./sidebar-header.js";
+import { EmptyState } from "./empty-state.js";
+import { StatsBar } from "./stats-bar.js";
+import { FilterTabs, type FilterStatus } from "./filter-tabs.js";
+import { GroupList } from "./group-list.js";
+import { GroupDetailView } from "./group-detail-view.js";
+import { groupComments } from "../../features/selection-groups/business/group-operations.js";
+import {
+  deriveEntryStatus,
+  type GroupedEntry,
+} from "../../features/sidebar/index.js";
+import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import { ShadowRootContext } from "../../features/sidebar/shadow-context.js";
 
 export interface SidebarProps {
-  groups: SelectionGroup[];
+  groups: SelectionGroupWithJira[];
   commentItems: CommentItem[];
   syncStatus: SyncStatus;
   syncServerUrl?: string;
@@ -32,6 +36,31 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // Instance-scoped (not module-scoped) — safe for multiple Sidebar instances
   let lastFocusedCard: HTMLElement | undefined;
   let detailViewRef: HTMLDivElement | undefined;
+  let containerRef: HTMLDivElement | undefined;
+
+  // Local groups signal: allows JIRA fields (jiraResolved, jiraStatus, jiraUrl)
+  // to be mutated client-side without a server round-trip.
+  const [groups, setGroups] = createSignal<SelectionGroupWithJira[]>(
+    props.groups,
+  );
+
+  // Keep local signal in sync when parent updates (new groups from sync).
+  // Preserve local JIRA fields when merging.
+  createEffect(() => {
+    setGroups((prev) =>
+      props.groups.map((pg) => {
+        const local = prev.find((lg) => lg.id === pg.id);
+        if (!local) return pg;
+        return {
+          ...pg,
+          jiraResolved: local.jiraResolved,
+          jiraStatus: local.jiraStatus,
+          jiraStatusCategory: local.jiraStatusCategory,
+          jiraUrl: local.jiraUrl,
+        };
+      }),
+    );
+  });
 
   const [activeFilter, setActiveFilter] = createSignal<FilterStatus>("all");
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
@@ -39,13 +68,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   >(null);
 
   const activeGroup = createMemo(
-    () => props.groups.find((g) => g.id === activeDetailGroupId()) ?? null,
+    () => groups().find((g) => g.id === activeDetailGroupId()) ?? null,
   );
 
   // Guard: if the active group is deleted while the detail view is open, return to list
   createEffect(() => {
     const id = activeDetailGroupId();
-    if (id !== null && !props.groups.find((g) => g.id === id)) {
+    if (id !== null && !groups().find((g) => g.id === id)) {
       setActiveDetailGroupId(null);
     }
   });
@@ -64,91 +93,142 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         if (lastFocusedCard?.isConnected) {
           lastFocusedCard.focus();
         }
-        // If card was removed from DOM, focus falls to the sidebar container naturally
       });
     }
   });
 
   const groupedItems = createMemo(() =>
-    groupComments(props.groups, props.commentItems),
+    groupComments(groups(), props.commentItems),
   );
 
   const filteredGroups = createMemo(() => {
     const filter = activeFilter();
     const items = groupedItems();
     if (filter === "all") return items;
-    return items.filter((entry: GroupedEntry) => deriveStatus(entry) === filter);
+    return items.filter(
+      (entry: GroupedEntry) => deriveEntryStatus(entry) === filter,
+    );
   });
 
+  function handleTicketCreated(
+    groupId: string,
+    ticketId: string,
+    ticketUrl: string,
+  ) {
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === groupId
+          ? { ...g, jiraTicketId: ticketId, jiraUrl: ticketUrl }
+          : g,
+      ),
+    );
+  }
+
+  function handleStatusUpdate(
+    groupId: string,
+    status: { status: string; statusCategory: string },
+  ) {
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === groupId
+          ? {
+              ...g,
+              jiraStatus: status.status,
+              jiraStatusCategory: status.statusCategory,
+              jiraResolved:
+                status.statusCategory.toLowerCase() === "done",
+            }
+          : g,
+      ),
+    );
+  }
+
+  // Shadow root: resolved from the container element (same pattern as
+  // comments-dropdown.tsx:81 and toolbar/index.tsx:126).
+  const shadowRoot = () =>
+    (containerRef?.getRootNode() as ShadowRoot | Document | null) instanceof
+    ShadowRoot
+      ? (containerRef!.getRootNode() as ShadowRoot)
+      : null;
+
   return (
-    <div
-      data-react-grab-ignore-events
-      class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-[#1a1a1a] text-[#e5e5e5] animate-slide-in-left"
-      style={{ "z-index": String(Z_INDEX_SIDEBAR), "pointer-events": "auto" }}
-      role="dialog"
-      aria-modal="false"
-      aria-label="React Grab Dashboard"
-    >
-      <SidebarHeader syncStatus={props.syncStatus} onClose={props.onClose} />
-
-      {/* Phase 1 sync error state — must remain intact */}
-      <Show
-        when={props.syncStatus !== "error"}
-        fallback={
-          <EmptyState
-            message="Could not connect to sync server."
-            action={{ label: "Retry", onClick: () => {} }}
-          />
-        }
+    <ShadowRootContext.Provider value={shadowRoot()}>
+      <div
+        ref={(el) => { containerRef = el; }}
+        data-react-grab-ignore-events
+        class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-[#1a1a1a] text-[#e5e5e5] animate-slide-in-left"
+        style={{ "z-index": String(Z_INDEX_SIDEBAR), "pointer-events": "auto" }}
+        role="dialog"
+        aria-modal="false"
+        aria-label="React Grab Dashboard"
       >
-        {/* Phase 2 navigation: list view vs detail view */}
-        <Show
-          when={activeDetailGroupId() !== null && activeGroup() !== null}
-          fallback={
-            <>
-              <StatsBar groupedItems={groupedItems()} />
-              <FilterTabs
-                activeFilter={activeFilter()}
-                onFilterChange={setActiveFilter}
-              />
+        <SidebarHeader syncStatus={props.syncStatus} onClose={props.onClose} />
 
-              <Show
-                when={props.groups.length > 0}
-                fallback={
-                  <EmptyState
-                    message="No selections yet."
-                    submessage="Select elements on the page to get started."
-                  />
-                }
-              >
-                <Show
-                  when={filteredGroups().length > 0}
-                  fallback={
-                    <EmptyState message={`No ${activeFilter()} groups.`} />
-                  }
-                >
-                  <GroupList
-                    groupedItems={filteredGroups()}
-                    onGroupClick={(id: string, cardEl: HTMLElement) => {
-                      lastFocusedCard = cardEl;
-                      setActiveDetailGroupId(id);
-                    }}
-                  />
-                </Show>
-              </Show>
-            </>
+        {/* Phase 1 sync error state — must remain intact */}
+        <Show
+          when={props.syncStatus !== "error"}
+          fallback={
+            <EmptyState
+              message="Could not connect to sync server."
+              action={{ label: "Retry", onClick: () => {} }}
+            />
           }
         >
-          <GroupDetailView
-            ref={(el: HTMLDivElement) => { detailViewRef = el; }}
-            group={activeGroup()!}
-            commentItems={props.commentItems}
-            syncServerUrl={props.syncServerUrl}
-            syncWorkspace={props.syncWorkspace}
-            onBack={() => setActiveDetailGroupId(null)}
-          />
+          {/* Phase 2 navigation: list view vs detail view */}
+          <Show
+            when={activeDetailGroupId() !== null && activeGroup() !== null}
+            fallback={
+              <>
+                <StatsBar groupedItems={groupedItems()} />
+                <FilterTabs
+                  activeFilter={activeFilter()}
+                  onFilterChange={setActiveFilter}
+                />
+
+                <Show
+                  when={groups().length > 0}
+                  fallback={
+                    <EmptyState
+                      message="No selections yet."
+                      submessage="Select elements on the page to get started."
+                    />
+                  }
+                >
+                  <Show
+                    when={filteredGroups().length > 0}
+                    fallback={
+                      <EmptyState
+                        message={`No ${activeFilter()} groups.`}
+                      />
+                    }
+                  >
+                    <GroupList
+                      groupedItems={filteredGroups()}
+                      onGroupClick={(id: string, cardEl: HTMLElement) => {
+                        lastFocusedCard = cardEl;
+                        setActiveDetailGroupId(id);
+                      }}
+                    />
+                  </Show>
+                </Show>
+              </>
+            }
+          >
+            <GroupDetailView
+              ref={(el: HTMLDivElement) => {
+                detailViewRef = el;
+              }}
+              group={activeGroup()!}
+              commentItems={props.commentItems}
+              syncServerUrl={props.syncServerUrl}
+              syncWorkspace={props.syncWorkspace}
+              onBack={() => setActiveDetailGroupId(null)}
+              onTicketCreated={handleTicketCreated}
+              onStatusUpdate={handleStatusUpdate}
+            />
+          </Show>
         </Show>
-      </Show>
-    </div>
+      </div>
+    </ShadowRootContext.Provider>
   );
 };

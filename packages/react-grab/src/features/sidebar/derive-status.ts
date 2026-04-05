@@ -1,5 +1,7 @@
-import type { SelectionGroup } from "../selection-groups/types";
-import type { CommentItem } from "../../types";
+// packages/react-grab/src/features/sidebar/derive-status.ts
+import type { SelectionGroup } from "../selection-groups/types.js";
+import type { CommentItem } from "../../types.js";
+import type { SelectionGroupWithJira } from "./jira-types.js";
 
 export type GroupStatus = "open" | "ticketed" | "resolved";
 
@@ -9,11 +11,21 @@ export interface GroupedEntry {
 }
 
 /**
- * Phase 1: derives status from jiraTicketId only.
- * Phase 3 will add a jiraStatusMap parameter for resolved detection.
+ * Derives the display status of a group.
+ * - "open": no JIRA ticket
+ * - "ticketed": has a ticket, not yet done
+ * - "resolved": ticket done (jiraResolved = true, set by polling)
  */
-export function deriveStatus(entry: GroupedEntry): GroupStatus {
-  if (!entry.group.jiraTicketId) return "open";
-  // Phase 3: check jiraStatusMap.get(group.jiraTicketId) === 'done' → 'resolved'
+export function deriveStatus(group: SelectionGroupWithJira): GroupStatus {
+  if (!group.jiraTicketId) return "open";
+  if (group.jiraResolved) return "resolved";
   return "ticketed";
+}
+
+/**
+ * Derives status from a GroupedEntry (used by filter tabs and stats bar).
+ * Delegates to deriveStatus on the group.
+ */
+export function deriveEntryStatus(entry: GroupedEntry): GroupStatus {
+  return deriveStatus(entry.group as SelectionGroupWithJira);
 }
