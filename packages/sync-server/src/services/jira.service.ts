@@ -1,4 +1,5 @@
 import { Version3Client } from "jira.js";
+import { markdownToAdf } from "marklassian";
 import type { SyncRepository, ScreenshotStore } from "../repositories/types.js";
 
 interface JiraConfig {
@@ -58,7 +59,6 @@ export class JiraService {
     const comments = await repo.listComments(workspaceId);
     const groupComments = comments.filter((c) => c.groupId === groupId);
 
-    // 2. Build description — jira.js auto-converts plain text to ADF
     const descriptionText = this.buildDescription(params.description, groupComments);
 
     // 3. Create the issue
@@ -66,7 +66,8 @@ export class JiraService {
       fields: {
         project: { key: params.projectKey },
         summary: params.summary,
-        description: descriptionText,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        description: descriptionText as any,
         issuetype: { name: params.issueType },
         priority: { name: params.priority },
         labels: ["react-grab"],
@@ -165,17 +166,33 @@ export class JiraService {
 
   private buildDescription(
     userDescription: string,
-    comments: Array<{ id: string; componentName?: string; elementName: string; tagName: string; commentText?: string; elementSelectors?: string[] }>,
-  ): string {
-    let desc = userDescription + "\n\n---\n\n";
-    desc += "## Selections\n\n";
-    comments.forEach((c, i) => {
-      desc += `### ${i + 1}. ${c.componentName ?? c.elementName} <${c.tagName}>\n`;
-      if (c.commentText) desc += `${c.commentText}\n`;
-      if (c.elementSelectors?.[0]) desc += `Selector: \`${c.elementSelectors[0]}\`\n`;
-      desc += "\n";
-    });
-    desc += "\n_Created by react-grab dashboard_";
-    return desc;
+    comments: Array<{
+      id: string;
+      componentName?: string;
+      elementName: string;
+      tagName: string;
+      commentText?: string;
+      elementSelectors?: string[];
+    }>,
+  ): object {
+    const markdown = [
+      userDescription,
+      "---",
+      "## Selections",
+      ...comments.map((c, i) =>
+        [
+          `### ${i + 1}. ${c.componentName ?? c.elementName} <${c.tagName}>`,
+          c.commentText ?? "",
+          c.elementSelectors?.[0]
+            ? `Selector: \`${c.elementSelectors[0]}\``
+            : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      ),
+      "_Created by react-grab_",
+    ].join("\n\n");
+
+    return markdownToAdf(markdown);
   }
 }

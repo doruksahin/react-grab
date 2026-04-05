@@ -495,6 +495,9 @@ importers:
       jira.js:
         specifier: ^5.3.1
         version: 5.3.1
+      marklassian:
+        specifier: ^1.2.1
+        version: 1.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -6963,6 +6966,14 @@ packages:
   markdown-it@14.1.1:
     resolution: {integrity: sha512-BuU2qnTti9YKgK5N+IeMubp14ZUKUUw7yeJbkjtosvHiP0AZ5c8IAgEMk79D0eC8F23r4Ac/q8cAIFdm2FtyoA==}
     hasBin: true
+
+  marked@16.4.2:
+    resolution: {integrity: sha512-TI3V8YYWvkVf3KJe1dRkpnjs68JUPyEa5vjKrp1XEEJUAOaQc+Qj+L1qWbPd0SJuAdQkFU0h73sXXqwDYxsiDA==}
+    engines: {node: '>= 20'}
+    hasBin: true
+
+  marklassian@1.2.1:
+    resolution: {integrity: sha512-xqsslmU//fP0yWV7Qbw+Eq250cuYzi7uEOBElykAAM5cU2i30p1CDYjb1gRrkrt3Gg33XaqK0jk6838cRjxKJg==}
 
   marky@1.3.0:
     resolution: {integrity: sha512-ocnPZQLNpvbedwTy9kNrQEsknEfgvcLMvOtz3sFeWApDq1MXH1TqkCIx58xlpESsfwQOnuBO9beyQuNGzVvuhQ==}
@@ -15965,6 +15976,12 @@ snapshots:
       mdurl: 2.0.0
       punycode.js: 2.3.1
       uc.micro: 2.1.0
+
+  marked@16.4.2: {}
+
+  marklassian@1.2.1:
+    dependencies:
+      marked: 16.4.2
 
   marky@1.3.0: {}
 
