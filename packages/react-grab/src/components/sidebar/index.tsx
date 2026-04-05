@@ -15,6 +15,8 @@ export interface SidebarProps {
   groups: SelectionGroup[];
   commentItems: CommentItem[];
   syncStatus: SyncStatus;
+  syncServerUrl?: string;
+  syncWorkspace?: string;
   onClose: () => void;
   onGroupClick: (groupId: string) => void;
 }
