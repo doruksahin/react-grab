@@ -39,24 +39,6 @@ const isSidebarVisible = async (
   }, ATTR);
 };
 
-/** Returns the text content of an element inside the shadow root, or null. */
-const getShadowText = async (
-  page: import("@playwright/test").Page,
-  selector: string,
-): Promise<string | null> => {
-  return page.evaluate(
-    ({ attrName, sel }) => {
-      const host = document.querySelector(`[${attrName}]`);
-      const shadowRoot = host?.shadowRoot;
-      if (!shadowRoot) return null;
-      const root = shadowRoot.querySelector(`[${attrName}]`);
-      if (!root) return null;
-      const el = root.querySelector<HTMLElement>(sel);
-      return el ? el.textContent : null;
-    },
-    { attrName: ATTR, sel: selector },
-  );
-};
 
 test.describe("Sidebar", () => {
   test.beforeEach(async ({ reactGrab }) => {
