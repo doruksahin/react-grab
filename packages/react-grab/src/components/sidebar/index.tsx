@@ -33,8 +33,9 @@ export const Sidebar: Component<SidebarProps> = (props) => {
 
   return (
     <div
+      data-react-grab-ignore-events
       class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-[#1a1a1a] text-[#e5e5e5] animate-slide-in-left"
-      style={{ "z-index": String(Z_INDEX_SIDEBAR) }}
+      style={{ "z-index": String(Z_INDEX_SIDEBAR), "pointer-events": "auto" }}
       role="dialog"
       aria-modal="false"
       aria-label="React Grab Dashboard"
