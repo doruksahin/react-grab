@@ -1,7 +1,6 @@
 // packages/react-grab/src/components/sidebar/jira-create-dialog.tsx
 import { type Component, Show } from "solid-js";
 import { Portal } from "solid-js/web";
-import { useShadowRoot } from "../../features/sidebar/shadow-context.js";
 import { JiraCreateForm } from "./jira-create-form.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import type { CommentItem } from "../../types.js";
@@ -12,16 +11,19 @@ interface JiraCreateDialogProps {
   groupId: string;
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
+  /** Shadow root for Portal mounting. Passed as a prop to avoid context timing
+   *  issues where useShadowRoot() may return null before the ref is set. */
+  shadowRoot?: ShadowRoot | null;
   onTicketCreated: (groupId: string, ticketId: string, ticketUrl: string) => void;
   onClose: () => void;
 }
 
 export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
-  const shadowRoot = useShadowRoot();
+  const mountTarget = () => props.shadowRoot ?? document.body;
 
   return (
     <Show when={props.open}>
-      <Portal mount={shadowRoot ?? document.body}>
+      <Portal mount={mountTarget()}>
         {/* Backdrop */}
         <div
           class="fixed inset-0 bg-black/60"

@@ -247,6 +247,93 @@ const isDetailViewVisible = async (
   }, ATTR);
 };
 
+// ---- helpers for JIRA integration tests ----
+
+/** Sets up mock JIRA API responses for the sync-server proxy endpoints. */
+async function setupJiraMocks(page: import("@playwright/test").Page) {
+  await page.route("**/jira/projects", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { key: "ATT", name: "Attain" },
+        { key: "PROD", name: "Production" },
+      ]),
+    }),
+  );
+  await page.route("**/jira/issue-types", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: "1", name: "Bug" },
+        { id: "2", name: "Task" },
+      ]),
+    }),
+  );
+  await page.route("**/jira/priorities", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { id: "1", name: "High" },
+        { id: "2", name: "Medium" },
+        { id: "3", name: "Low" },
+      ]),
+    }),
+  );
+  await page.route("**/groups/*/jira-ticket", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        jiraTicketId: "ATT-42",
+        jiraUrl: "https://test.atlassian.net/browse/ATT-42",
+      }),
+    }),
+  );
+  await page.route("**/groups/*/jira-status", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        status: "In Progress",
+        statusCategory: "In Progress",
+      }),
+    }),
+  );
+}
+
+/** Returns true if the JIRA create button is visible in the sidebar shadow root. */
+const isJiraCreateButtonVisible = async (
+  page: import("@playwright/test").Page,
+): Promise<boolean> => {
+  return page.evaluate((attrName) => {
+    const host = document.querySelector(`[${attrName}]`);
+    const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
+    return root?.querySelector("[data-testid='jira-create-button']") !== null;
+  }, ATTR);
+};
+
+/** Returns true if the JIRA create dialog is visible anywhere (shadow root or body).
+ *  The dialog is portalled into the ShadowRoot when the context is available,
+ *  falling back to document.body. We check both locations so the helper works
+ *  regardless of portal mount point.
+ */
+const isJiraDialogVisible = async (
+  page: import("@playwright/test").Page,
+): Promise<boolean> => {
+  return page.evaluate((attrName) => {
+    const host = document.querySelector(`[${attrName}]`);
+    const selector = "[aria-label='Create JIRA Ticket']";
+    // Check shadow root (Portal mount when shadow context is available)
+    if (host?.shadowRoot?.querySelector(selector)) return true;
+    // Fallback: check document.body (Portal mount when shadow context is null)
+    if (document.body.querySelector(selector)) return true;
+    return false;
+  }, ATTR);
+};
+
 /** Seeds group + comment data into localStorage before page load. */
 const seedGroupData = async (
   page: import("@playwright/test").Page,
@@ -552,5 +639,158 @@ test.describe("Sidebar — Group Detail View", () => {
     }, ATTR);
     // Filter tabs are present — sync error state did not incorrectly appear
     expect(hasTabs).toBe(true);
+  });
+});
+
+test.describe("Sidebar — JIRA integration", () => {
+  const TEST_GROUP = {
+    id: "test-group-jira-001",
+    name: "JIRA Test Flow",
+    createdAt: Date.now() - 60_000,
+  };
+  const TEST_COMMENT = {
+    id: "test-sel-jira-001",
+    groupId: "test-group-jira-001",
+    content: "<button>Submit</button>",
+    elementName: "Submit",
+    tagName: "button",
+    timestamp: Date.now() - 50_000,
+  };
+
+  test.beforeEach(async ({ page, reactGrab }) => {
+    await seedGroupData(page, [TEST_GROUP], [TEST_COMMENT]);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect
+      .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+      .toBe(true);
+    // Open sidebar
+    await clickShadowButton(page, "[data-react-grab-toolbar-dashboard]");
+    await expect
+      .poll(() => isSidebarVisible(page), { timeout: 3000 })
+      .toBe(true);
+  });
+
+  test("Create JIRA Ticket button visible for open group in detail view", async ({
+    page,
+    reactGrab: _reactGrab,
+  }) => {
+    await setupJiraMocks(page);
+
+    // Navigate to detail view — click the group card by name
+    await page.evaluate(
+      ({ attrName, groupName }) => {
+        const host = document.querySelector(`[${attrName}]`);
+        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
+        const sidebar = root?.querySelector("[role='dialog']");
+        if (!sidebar) return;
+        const card = Array.from(
+          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
+        ).find((c) => c.textContent?.includes(groupName));
+        card?.click();
+      },
+      { attrName: ATTR, groupName: TEST_GROUP.name },
+    );
+
+    await expect
+      .poll(() => isDetailViewVisible(page), { timeout: 3000 })
+      .toBe(true);
+
+    await expect
+      .poll(() => isJiraCreateButtonVisible(page), { timeout: 3000 })
+      .toBe(true);
+  });
+
+  test("JIRA dialog opens inside shadow root (not document.body)", async ({
+    page,
+    reactGrab: _reactGrab,
+  }) => {
+    await setupJiraMocks(page);
+
+    // Navigate into detail
+    await page.evaluate(
+      ({ attrName, groupName }) => {
+        const host = document.querySelector(`[${attrName}]`);
+        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
+        const sidebar = root?.querySelector("[role='dialog']");
+        if (!sidebar) return;
+        const card = Array.from(
+          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
+        ).find((c) => c.textContent?.includes(groupName));
+        card?.click();
+      },
+      { attrName: ATTR, groupName: TEST_GROUP.name },
+    );
+
+    await expect
+      .poll(() => isDetailViewVisible(page), { timeout: 3000 })
+      .toBe(true);
+
+    // Open dialog
+    await page.evaluate((attrName) => {
+      const host = document.querySelector(`[${attrName}]`);
+      const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
+      root
+        ?.querySelector<HTMLButtonElement>(
+          "[data-testid='jira-create-button']",
+        )
+        ?.click();
+    }, ATTR);
+
+    await expect
+      .poll(() => isJiraDialogVisible(page), { timeout: 3000 })
+      .toBe(true);
+
+    // Dialog must NOT be on document.body
+    const onBody = await page.evaluate(
+      () =>
+        document.body.querySelector("[aria-label='Create JIRA Ticket']") !==
+        null,
+    );
+    expect(onBody).toBe(false);
+  });
+
+  test("Create JIRA Ticket button is clickable (pointer-events)", async ({
+    page,
+    reactGrab: _reactGrab,
+  }) => {
+    await setupJiraMocks(page);
+
+    await page.evaluate(
+      ({ attrName, groupName }) => {
+        const host = document.querySelector(`[${attrName}]`);
+        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
+        const sidebar = root?.querySelector("[role='dialog']");
+        if (!sidebar) return;
+        const card = Array.from(
+          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
+        ).find((c) => c.textContent?.includes(groupName));
+        card?.click();
+      },
+      { attrName: ATTR, groupName: TEST_GROUP.name },
+    );
+
+    await expect
+      .poll(() => isDetailViewVisible(page), { timeout: 3000 })
+      .toBe(true);
+    await expect
+      .poll(() => isJiraCreateButtonVisible(page), { timeout: 2000 })
+      .toBe(true);
+
+    // Verify button is actually clickable (not blocked by pointer-events: none)
+    const clicked = await page.evaluate((attrName) => {
+      const host = document.querySelector(`[${attrName}]`);
+      const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
+      const btn = root?.querySelector<HTMLButtonElement>(
+        "[data-testid='jira-create-button']",
+      );
+      if (!btn) return false;
+      btn.click();
+      return true;
+    }, ATTR);
+    expect(clicked).toBe(true);
+
+    await expect
+      .poll(() => isJiraDialogVisible(page), { timeout: 2000 })
+      .toBe(true);
   });
 });

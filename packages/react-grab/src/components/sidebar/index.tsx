@@ -36,7 +36,11 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // Instance-scoped (not module-scoped) — safe for multiple Sidebar instances
   let lastFocusedCard: HTMLElement | undefined;
   let detailViewRef: HTMLDivElement | undefined;
-  let containerRef: HTMLDivElement | undefined;
+  // containerRef is a signal so that shadowRoot() can reactively re-derive
+  // after the ref callback fires (refs run after initial render).
+  const [containerRef, setContainerRef] = createSignal<
+    HTMLDivElement | undefined
+  >(undefined);
 
   // Local groups signal: allows JIRA fields (jiraResolved, jiraStatus, jiraUrl)
   // to be mutated client-side without a server round-trip.
@@ -143,18 +147,20 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     );
   }
 
-  // Shadow root: resolved from the container element (same pattern as
-  // comments-dropdown.tsx:81 and toolbar/index.tsx:126).
-  const shadowRoot = () =>
-    (containerRef?.getRootNode() as ShadowRoot | Document | null) instanceof
-    ShadowRoot
-      ? (containerRef!.getRootNode() as ShadowRoot)
+  // Shadow root: resolved reactively from the container element so that
+  // the context value is updated after the ref callback fires on mount.
+  const shadowRoot = () => {
+    const el = containerRef();
+    return (el?.getRootNode() as ShadowRoot | Document | null) instanceof
+      ShadowRoot
+      ? (el!.getRootNode() as ShadowRoot)
       : null;
+  };
 
   return (
     <ShadowRootContext.Provider value={shadowRoot()}>
       <div
-        ref={(el) => { containerRef = el; }}
+        ref={(el) => setContainerRef(el)}
         data-react-grab-ignore-events
         class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-[#1a1a1a] text-[#e5e5e5] animate-slide-in-left"
         style={{ "z-index": String(Z_INDEX_SIDEBAR), "pointer-events": "auto" }}
@@ -222,6 +228,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               commentItems={props.commentItems}
               syncServerUrl={props.syncServerUrl}
               syncWorkspace={props.syncWorkspace}
+              shadowRoot={shadowRoot()}
               onBack={() => setActiveDetailGroupId(null)}
               onTicketCreated={handleTicketCreated}
               onStatusUpdate={handleStatusUpdate}
