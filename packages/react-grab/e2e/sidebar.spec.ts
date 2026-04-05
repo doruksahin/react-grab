@@ -116,52 +116,58 @@ test.describe("Sidebar", () => {
   test("sidebar shows empty state when no groups", async ({ reactGrab }) => {
     const { page } = reactGrab;
 
+    // Open the sidebar first so we can inspect its state.
     await clickShadowButton(page, "[data-react-grab-toolbar-dashboard]");
     await expect
       .poll(() => isSidebarVisible(page), { timeout: 3000 })
       .toBe(true);
 
-    // Look for the empty state message inside the sidebar in shadow DOM.
-    // The sidebar shows either "No selections yet." (no groups) or a filter
-    // empty message. We verify the sidebar content is rendered at all by
-    // checking that either an empty state paragraph or the filter tabs exist.
-    const sidebarHasContent = await page.evaluate((attrName) => {
+    // Check whether the app already has groups — if it does, the empty state
+    // cannot be shown and the test is skipped (not a bug, just wrong fixture state).
+    const groupCount = await page.evaluate((attrName) => {
       const host = document.querySelector(`[${attrName}]`);
       const shadowRoot = host?.shadowRoot;
-      if (!shadowRoot) return false;
+      if (!shadowRoot) return -1;
       const root = shadowRoot.querySelector(`[${attrName}]`);
-      if (!root) return false;
+      if (!root) return -1;
       const sidebar = root.querySelector(
         "[role='dialog'][aria-label='React Grab Dashboard']",
       );
-      if (!sidebar) return false;
-      // If there are no groups, the empty state paragraph will be present.
-      // If there are groups, the group list will be present.
-      // Either way, the sidebar body content must be non-empty.
-      return sidebar.children.length > 0;
-    }, ATTR);
-
-    expect(sidebarHasContent).toBe(true);
-
-    // Check specifically for empty state or group list — if no groups exist,
-    // the text "No selections yet." must appear somewhere in the sidebar.
-    const hasEmptyStateOrGroups = await page.evaluate((attrName) => {
-      const host = document.querySelector(`[${attrName}]`);
-      const shadowRoot = host?.shadowRoot;
-      if (!shadowRoot) return false;
-      const root = shadowRoot.querySelector(`[${attrName}]`);
-      if (!root) return false;
-      const sidebarText = root.querySelector(
-        "[role='dialog'][aria-label='React Grab Dashboard']",
-      )?.textContent ?? "";
-      // Either groups are shown, or the empty state message is present
-      return (
-        sidebarText.includes("No selections yet") ||
-        sidebarText.length > 50 // sidebar has meaningful content (filter tabs + something)
+      if (!sidebar) return -1;
+      // StatsBar shows the group count as the first bold number inside the stats row.
+      const boldNums = Array.from(
+        sidebar.querySelectorAll<HTMLElement>(".text-lg.font-bold"),
       );
+      const firstNum = boldNums[0];
+      return firstNum ? parseInt(firstNum.textContent ?? "0", 10) : 0;
     }, ATTR);
 
-    expect(hasEmptyStateOrGroups).toBe(true);
+    // If the e2e fixture already has groups we cannot test the empty state — skip.
+    test.skip(groupCount > 0, "Skipping: e2e app has pre-existing groups; empty state cannot be shown");
+
+    // This test assumes the e2e app has no pre-existing groups.
+    // The empty state message "No selections yet" must appear when there are no groups.
+    await expect
+      .poll(
+        () =>
+          page.evaluate((attrName) => {
+            const host = document.querySelector(`[${attrName}]`);
+            const shadowRoot = host?.shadowRoot;
+            if (!shadowRoot) return false;
+            const root = shadowRoot.querySelector(`[${attrName}]`);
+            if (!root) return false;
+            const sidebar = root.querySelector(
+              "[role='dialog'][aria-label='React Grab Dashboard']",
+            );
+            if (!sidebar) return false;
+            const paragraphs = Array.from(sidebar.querySelectorAll("p"));
+            return paragraphs.some((p) =>
+              p.textContent?.includes("No selections yet"),
+            );
+          }, ATTR),
+        { timeout: 3000 },
+      )
+      .toBe(true);
   });
 
   test("filter tabs are interactive", async ({ reactGrab }) => {
@@ -211,6 +217,9 @@ test.describe("Sidebar", () => {
     }, ATTR);
 
     expect(openTabActive).toBe(true);
+
+    // Wait for React state update to propagate after the click
+    await page.waitForTimeout(100);
 
     // After clicking Open, the active class (pink background) should be applied to that tab
     const openTabHasActiveClass = await page.evaluate((attrName) => {
