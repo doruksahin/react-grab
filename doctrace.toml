@@ -1,0 +1,40 @@
+[doctrace]
+scan_extensions = ["*.md"]
+exclude_dirs = [".git", "node_modules", "dist", ".venv", "__pycache__"]
+exclude_paths = []
+link_required_in = ["*.md"]
+
+[[doctrace.registries]]
+name = "assumption"
+pattern = 'A-\d{3}'
+source = "docs/assumptions.md"
+source_type = "markdown_table"
+id_column = "ID"
+description_column = "Assumption"
+status_column = "Status"
+link_required_in = ["decree/**/*.md"]
+definition_files = ["docs/assumptions.md"]
+orphan_check = false
+
+[[doctrace.registries]]
+name = "risk"
+pattern = 'R-\d{3}'
+source = "docs/risks.md"
+source_type = "markdown_table"
+id_column = "ID"
+description_column = "Risk"
+status_column = "Status"
+link_required_in = ["decree/**/*.md"]
+definition_files = ["docs/risks.md"]
+orphan_check = false
+
+[[doctrace.registries]]
+name = "decision"
+pattern = 'ADR-\d{4}'
+source = "decree/adr/"
+source_type = "filename"
+id_prefix = "ADR-"
+definition_files = ["decree/adr/index.md"]
+link_required_in = ["decree/**/*.md"]
+exclude_paths = ["decree/adr/index.md"]
+orphan_check = false

@@ -24,13 +24,13 @@ Embed all `packages/dashboard/` capabilities — group management, detail views,
 **Requirements:**
 - A new **dashboard button** on the floating toolbar opens a left-anchored sidebar
 - The sidebar **overlays** the host page (no layout shift — the host page must not move or resize)
-- The sidebar renders inside react-grab's existing Shadow DOM host for style isolation
+- The sidebar renders inside react-grab's existing Shadow DOM host for style isolation [A-015](../../docs/assumptions.md)
 - The sidebar is dismissible via close button, the toolbar toggle, or pressing Escape
-- When the sidebar opens, focus moves into it; pressing Escape returns focus to the dashboard button
+- When the sidebar opens, focus moves into it; pressing Escape returns focus to the dashboard button [A-019](../../docs/assumptions.md)
 - Display all selection groups with: name, selection count, status badge (open / ticketed / resolved), JIRA ticket ID as a clickable link (if ticketed), inline list of comments per group showing component name, comment text, and HTML tag (truncated to 3 items with "+N more" overflow)
 - Summary stats bar: total groups, total selections, open count, ticketed count
 - Filter tabs: All, Open, Ticketed, Resolved
-- Clicking a group navigates to its detail view within the sidebar
+- Clicking a group navigates to its detail view within the sidebar [R-003](../../docs/risks.md)
 - Empty state: when no groups exist, show a message directing the user to select elements first
 - Error state: when the sync-server is unreachable, show a clear error with retry action
 - Sync-connection status indicator in the sidebar header (carries over from dashboard layout)
@@ -46,10 +46,10 @@ Embed all `packages/dashboard/` capabilities — group management, detail views,
   - Component name (highlighted)
   - HTML tag badge
   - Comment text
-  - Source file path and line number (extracted from content)
+  - Source file path and line number (extracted from content) [A-014](../../docs/assumptions.md)
   - Timestamp (human-readable relative time)
   - Element screenshot thumbnail
-  - Full-page screenshot thumbnail (both types displayed, labeled)
+  - Full-page screenshot thumbnail (both types displayed, labeled) [A-018](../../docs/assumptions.md)
   - CSS selector
   - Collapsible raw HTML content (collapsed by default)
 - Empty state: when a group has no selections, show a message
@@ -66,12 +66,12 @@ Embed all `packages/dashboard/` capabilities — group management, detail views,
   - Searchable issue type selector
   - Priority selector
   - Summary field (auto-generated from group name and component names, editable)
-  - Description field (auto-generated markdown with group info, selections, and selectors, editable)
-  - Attachments section showing count and filename list of screenshots that will be attached
-- JIRA base URL resolved from sync-server configuration (not hardcoded)
+  - Description field (auto-generated markdown with group info, selections, and selectors, editable) [R-002](../../docs/risks.md)
+  - Attachments section showing count and filename list of screenshots that will be attached [A-016](../../docs/assumptions.md)
+- JIRA base URL resolved from sync-server configuration (not hardcoded) [A-013](../../docs/assumptions.md)
 - For **ticketed** groups: show JIRA status banner with ticket ID (linked to JIRA), current status text, and progress dots (created → to do → in progress → done)
 - Poll JIRA ticket status every 30 seconds while the detail view is open
-- Status transitions: open → ticketed (on ticket creation), ticketed → resolved (when JIRA status reaches "done")
+- Status transitions: open → ticketed (on ticket creation), ticketed → resolved (when JIRA status reaches "done") [A-012](../../docs/assumptions.md)
 - Error states: JIRA auth failure shows inline error with guidance; ticket creation failure shows error with retry
 - Dialog popovers must render correctly within Shadow DOM (no portaling to `document.body`)
 
@@ -80,7 +80,7 @@ Embed all `packages/dashboard/` capabilities — group management, detail views,
 #### Phase 4 — Data Layer + Polish
 
 **Requirements:**
-- TypeScript types and runtime validators generated from the OpenAPI spec (no hand-written API types)
+- TypeScript types and runtime validators generated from the OpenAPI spec (no hand-written API types) [A-017](../../docs/assumptions.md)
 - The sidebar data layer must not depend on React-specific libraries
 - Reuse the sync-server API endpoints already defined in the OpenAPI spec (`/workspaces/`, `/jira/`)
 - Screenshots served from the same R2-backed endpoint
