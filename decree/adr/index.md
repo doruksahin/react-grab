@@ -5,3 +5,6 @@
 | ADR | Title | Status | Date | Supersedes |
 |-----|-------|--------|------|------------|
 | ADR-0002 | ADR-0002 Solid.js Sidebar with Orval-Generated Types | accepted | 2026-04-05 |  |
+| ADR-0003 | ADR-0003 JIRA API client — sidebar-to-sync-server vs sidebar-to-JIRA-direct | accepted | 2026-04-05 |  |
+| ADR-0004 | ADR-0004 Markdown to ADF conversion for JIRA ticket description | accepted | 2026-04-05 |  |
+| ADR-0005 | ADR-0005 Dialog and popover rendering inside Shadow DOM | accepted | 2026-04-05 |  |

@@ -4,5 +4,6 @@
 
 | SPEC | Title | Status | Date |
 |-----|-----|-----|-----|
+| SPEC-003 | SPEC-003 JIRA integration — ticket creation and status tracking | approved | 2026-04-05 |
 | SPEC-001 | SPEC-001 Sidebar Shell and Groups List | implemented | 2026-04-05 |
 | SPEC-002 | SPEC-002 Group Detail View | implemented | 2026-04-05 |
