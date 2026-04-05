@@ -6,9 +6,9 @@ export const DEFAULT_GROUP_ID = "default" as const;
 export const DEFAULT_GROUP_NAME = "Default" as const;
 
 /**
- * SelectionGroup extends the server-defined shape.
- * All fields come from the server type (SSOT).
- * Add UI-only fields here if needed in the future.
+ * Application-level group type. Extends the server type with UI-only fields.
+ * Currently empty — placeholder for future fields like local UI state.
+ * Do not add server-persisted fields here; update the OpenAPI spec instead.
  */
 export interface SelectionGroup extends ServerSelectionGroup {}
 

@@ -1,6 +1,8 @@
+import { z } from "zod";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroup } from "../selection-groups/types.js";
 import type { StorageAdapter, SyncConfig } from "./types.js";
+import { CommentItemSchema, SelectionGroupSchema, UploadResultSchema } from "./schemas.js";
 import {
   stripRevealedFromComments,
   stripRevealedFromGroups,
@@ -26,9 +28,11 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
           throw new Error(`GET /comments failed: ${response.status}`);
         }
         if (config.syncRevealedState) {
-          return (await response.json()) as CommentItem[];
+          const raw = await response.json();
+          return z.array(CommentItemSchema).parse(raw) as CommentItem[];
         }
-        const serverItems = (await response.json()) as Omit<CommentItem, "revealed">[];
+        const raw = await response.json();
+        const serverItems = z.array(CommentItemSchema).parse(raw);
         return mergeRevealedIntoComments(serverItems);
       } catch (error) {
         return handleError(error);
@@ -64,9 +68,11 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
           throw new Error(`GET /groups failed: ${response.status}`);
         }
         if (config.syncRevealedState) {
-          return (await response.json()) as SelectionGroup[];
+          const raw = await response.json();
+          return z.array(SelectionGroupSchema).parse(raw) as SelectionGroup[];
         }
-        const serverGroups = (await response.json()) as Omit<SelectionGroup, "revealed">[];
+        const raw = await response.json();
+        const serverGroups = z.array(SelectionGroupSchema).parse(raw);
         return mergeRevealedIntoGroups(serverGroups);
       } catch (error) {
         return handleError(error);
@@ -112,7 +118,8 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
         if (!response.ok) {
           throw new Error(`PUT /screenshots failed: ${response.status}`);
         }
-        const result = (await response.json()) as { key: string };
+        const raw = await response.json();
+        const result = UploadResultSchema.parse(raw);
         return result.key;
       } catch (error) {
         return handleError(error);
