@@ -40,6 +40,7 @@ export const AUTO_SCROLL_SPEED_PX = 10;
 export const Z_INDEX_HOST = 2147483647;
 export const Z_INDEX_LABEL = 2147483647;
 export const Z_INDEX_OVERLAY_CANVAS = 2147483645;
+export const Z_INDEX_SIDEBAR = 2147483646;
 
 export const DRAG_LERP_FACTOR = 0.7;
 export const LERP_CONVERGENCE_THRESHOLD_PX = 0.5;
