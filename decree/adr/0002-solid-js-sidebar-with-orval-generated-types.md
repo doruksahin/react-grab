@@ -12,17 +12,18 @@ PRD-002 requires embedding the dashboard's group management and JIRA integration
 
 1. **UI framework:** The sidebar must render inside react-grab's existing Shadow DOM host. React-grab's floating UI is built entirely with Solid.js — the toolbar, selection labels, overlay canvas, and comments dropdown are all Solid components using Solid's reactive store. The dashboard, by contrast, is a standalone React 19 app with React Router, TanStack React Query, and shadcn/ui components. We must decide whether the sidebar uses Solid.js (matching the host) or introduces React (matching the dashboard source).
 
-2. **Data layer and type generation:** The dashboard uses Orval to generate TanStack React Query hooks and TypeScript types from the sync-server's OpenAPI spec (`packages/sync-server/openapi.json`). The generated output includes both React-specific hooks (`useListGroups`, `useCreateJiraTicket`) and raw async functions (`listGroups()`, `createJiraTicket()`). React-grab's existing sync feature uses a hand-written `StorageAdapter` pattern with raw `fetch()` calls to the same endpoints. We must decide how the sidebar fetches data and whether to reuse the Orval pipeline.
+2. **Data layer and type generation:** The dashboard uses Orval to generate TanStack React Query hooks and TypeScript types from the sync-server's OpenAPI spec (`packages/sync-server/openapi.json`). React-grab **already has its own Orval config** (`packages/react-grab/orval.config.ts`) with `client: "fetch"` that generates types to `src/generated/sync-api.ts`. However, the generated fetch functions are **not used** — the `StorageAdapter` in `adapter.ts` makes manual `fetch()` calls. Only the generated types (`ServerCommentItem`, `ServerSelectionGroup`) are consumed. We must decide how the sidebar fetches JIRA data (which is not covered by the existing adapter) and whether to leverage the unused generated fetch functions.
 
-The decisions are coupled: the UI framework constrains which data-fetching primitives are available.
+The decisions are partially coupled: the UI framework constrains which data-fetching primitives wrap the API calls, but the API layer itself is framework-agnostic.
 
 ## Decision Drivers
 
 - The sidebar renders inside react-grab's Shadow DOM — mixing two reactive runtimes (React + Solid) in one Shadow DOM tree adds complexity and bundle size
 - React-grab's sync feature already fetches group and comment data from the server — the sidebar should reuse this data, not maintain a parallel cache
 - The OpenAPI spec is the single source of truth for API types — hand-writing types creates drift risk
-- Orval already generates raw async functions alongside React Query hooks — these are framework-agnostic
-- The sync feature's `StorageAdapter` already covers GET/PUT for groups, comments, and screenshots — but not JIRA endpoints
+- React-grab already has an Orval config generating `client: "fetch"` output — types are used, fetch functions are not
+- The sync feature's `StorageAdapter` covers GET/PUT for groups, comments, and screenshots — but not JIRA endpoints
+- Sync is **one-shot load + fire-and-forget persist** — not polling. JIRA status tracking requires a new polling pattern
 - Developer familiarity: the team has working knowledge of Orval configuration and the existing React Query setup
 - Bundle size matters: react-grab is a third-party script injected into host pages
 
@@ -30,14 +31,15 @@ The decisions are coupled: the UI framework constrains which data-fetching primi
 
 ### Option A: Solid.js sidebar + Orval with custom fetch client (no React)
 
-Keep the entire react-grab codebase on Solid.js. Add a new Orval config in `packages/react-grab/` that outputs **framework-agnostic fetch functions only** (no React Query hooks). Optionally configure Orval's `zod` client to also generate Zod validators for runtime API response validation — this does not exist in the codebase today and would be new configuration [A-001](../../docs/assumptions.md). The sidebar uses Solid's `createResource` and `createSignal` for reactivity [A-006](../../docs/assumptions.md), calling the Orval-generated fetch functions directly.
+Keep the entire react-grab codebase on Solid.js. Use the **existing Orval config** (`packages/react-grab/orval.config.ts`, `client: "fetch"`) which already generates framework-agnostic fetch functions and types to `src/generated/sync-api.ts`. Optionally configure Orval's `zod` client to also generate Zod validators for runtime validation — this does not exist today and would be new configuration [A-001](../../docs/assumptions.md).
 
-Orval supports a custom `client` option — set it to generate plain `fetch` wrappers instead of React Query hooks. The generated TypeScript types are already framework-agnostic.
+**For groups and comments (Phase 1-2):** Solid signals for `commentItems()` and `groups()` **already exist** — they are created via `createSignal` in `init()` (`core/index.tsx`) and passed as props to the comments dropdown. The sidebar subscribes to these same signals. No new API calls, no data layer refactoring. The module-level `let` variables in `comment-storage.ts` and `group-storage.ts` are the persistence layer; the Solid signals are the reactive layer on top. Both already exist and work.
 
-For groups and comments, the sidebar needs access to data already fetched by the sync feature's `StorageAdapter`. Currently, group data lives in a plain module-level variable (`let groups` in `group-storage.ts`), not a reactive Solid store — this will need to be refactored into Solid signals or a store for the sidebar to get live reactive updates. For JIRA endpoints (not covered by `StorageAdapter`), the sidebar calls the Orval-generated fetch functions directly.
+**For JIRA endpoints (Phase 3):** The `StorageAdapter` does not cover JIRA. The sidebar calls the Orval-generated fetch functions (already in `src/generated/sync-api.ts` but currently unused) directly, wrapped in Solid's `createResource` [A-006](../../docs/assumptions.md). JIRA status polling is a **new pattern** — the existing sync is one-shot load + fire-and-forget persist, not polling. The sidebar introduces `setInterval` + `refetch()` for 30-second JIRA status updates.
 
 - Good: single reactive runtime, no React in the bundle, types stay spec-driven, smallest bundle delta
-- Good: Orval's raw async functions (`listGroups()`, `createJiraTicket()`) already exist in the dashboard's generated output — however, those files import `@tanstack/react-query` at the top level, so a separate Orval config for react-grab is required from the start (not optional) to avoid pulling React Query into the bundle [A-009](../../docs/assumptions.md)
+- Good: groups/comments data is **already reactive** — Solid signals exist in `init()`, the sidebar just subscribes (same pattern as comments dropdown)
+- Good: Orval config with `client: "fetch"` **already exists** in react-grab — generated fetch functions and types are in `src/generated/sync-api.ts`, currently unused but available for JIRA endpoints [A-009](../../docs/assumptions.md)
 - Bad: Solid.js has a smaller ecosystem than React — no off-the-shelf component library equivalent to shadcn/ui, select/combobox/dialog components must be built or ported
 - Bad: team must learn Solid's `createResource` API if unfamiliar (though it's simpler than React Query)
 - Risk: the JIRA create dialog needs searchable selects, modals, and popovers — these are non-trivial to build from scratch in Solid.js inside Shadow DOM
@@ -71,9 +73,9 @@ Keep Solid.js. Skip Orval entirely for the sidebar. Extend the existing `Storage
 
 1. **Single runtime:** Keeping everything on Solid.js avoids the complexity, bundle bloat, and event-system conflicts of embedding React inside the same Shadow DOM tree. PRD-002's risk section already flags Shadow DOM portal conflicts — adding React makes this worse, not better.
 
-2. **Store integration:** The sync feature already fetches group and comment data from the server. Currently this data lives in a plain module-level variable (`group-storage.ts`), not a reactive Solid store. Phase 1 will refactor this into Solid signals so the sidebar gets live reactive updates without a duplicate cache or bridge layer [A-011](../../docs/assumptions.md). This refactoring is straightforward (wrapping existing data in `createSignal`) [A-005](../../docs/assumptions.md) and yields a cleaner architecture regardless of the sidebar.
+2. **Store integration:** Solid signals for `commentItems()` and `groups()` already exist in `init()` — the comments dropdown already subscribes to them via props. The sidebar follows the same proven pattern. No refactoring of the storage layer is needed; the reactive layer is already in place. The module-level `let` variables (`comment-storage.ts`, `group-storage.ts`) remain the persistence layer, and the existing signals remain the reactive layer. The sidebar simply receives the same signal accessors [A-005](../../docs/assumptions.md).
 
-3. **Spec-driven types without React dependency:** A new Orval config in `packages/react-grab/` will generate fetch-only functions and TypeScript types from the same OpenAPI spec [A-002](../../docs/assumptions.md). The dashboard's existing generated files cannot be imported directly because they include `@tanstack/react-query` imports at the top level, making a separate config a prerequisite (not a nice-to-have). Optionally, Orval's `zod` client can be configured to also generate runtime validators — this would be new capability not currently in the codebase.
+3. **Spec-driven types already available:** An Orval config with `client: "fetch"` already exists in `packages/react-grab/orval.config.ts`, generating types and fetch functions to `src/generated/sync-api.ts` [A-002](../../docs/assumptions.md). The generated types (`ServerCommentItem`, `ServerSelectionGroup`) are already consumed by the app. The generated fetch functions exist but are unused — the sidebar's JIRA module will be the first consumer. Optionally, Orval's `zod` client can be configured to also generate runtime validators — this would be new capability not currently in the codebase.
 
 4. **JIRA endpoints:** The sync feature's `StorageAdapter` covers groups, comments, and screenshots but not JIRA endpoints [R-001](../../docs/risks.md). Rather than extending the adapter (which is designed for bidirectional sync, not one-off API calls), the sidebar calls the Orval-generated JIRA functions directly. This keeps the adapter focused on sync and the sidebar's JIRA layer thin.
 
@@ -86,26 +88,27 @@ Option C (hand-written types) was rejected because the OpenAPI spec is the sourc
 ## Consequences
 
 - The sidebar is built entirely with Solid.js — no React dependency in `packages/react-grab`
-- A new Orval config in `packages/react-grab/` generates framework-agnostic fetch functions and TypeScript types from `packages/sync-server/openapi.json` (Zod validators can be added as an optional enhancement)
-- Group and comment data in `group-storage.ts` is refactored from plain module-level variables into Solid signals, enabling the sidebar to reactively subscribe to sync feature data without separate API calls
-- JIRA endpoints (projects, issue-types, priorities, create-ticket, get-status) are called via Orval-generated fetch functions, wrapped in Solid's `createResource`
+- The existing Orval config (`packages/react-grab/orval.config.ts`, `client: "fetch"`) already generates framework-agnostic fetch functions and types from `packages/sync-server/openapi.json` — the sidebar's JIRA module will be the first consumer of the generated fetch functions (Zod validators can be added as an optional enhancement)
+- **No storage layer refactoring needed:** Solid signals for `commentItems()` and `groups()` already exist in `init()`. The sidebar receives these signal accessors as props, the same pattern used by the comments dropdown
+- JIRA endpoints (projects, issue-types, priorities, create-ticket, get-status) are called via the already-generated fetch functions in `src/generated/sync-api.ts`, wrapped in Solid's `createResource`
+- JIRA status polling introduces a **new pattern** to react-grab: `setInterval` + `createResource.refetch()` for 30-second updates, scoped to the sidebar detail view lifecycle
 - Searchable select, dialog, and popover components must be implemented in Solid.js, rendering inside Shadow DOM (evaluate Kobalte as a base)
 - The `packages/dashboard/` Orval config remains unchanged — it continues generating React Query hooks for as long as the dashboard exists
 
 ## Affected Files
 
-- `packages/react-grab/orval.config.ts` — new Orval config for fetch-only client output
 - `packages/react-grab/src/features/sidebar/` — new feature directory for sidebar components
-- `packages/react-grab/src/features/sidebar/api/` — Orval-generated fetch functions + types
 - `packages/react-grab/src/components/sidebar/` — Solid.js sidebar UI components
 - `packages/react-grab/src/components/toolbar/toolbar-content.tsx` — add dashboard button
-- `packages/react-grab/src/components/renderer.tsx` — mount sidebar component
-- `packages/react-grab/src/features/selection-groups/store/group-storage.ts` — refactor from plain `let` variable to Solid signals for reactive sidebar reads
+- `packages/react-grab/src/components/renderer.tsx` — mount sidebar component, pass existing signal accessors as props
+- `packages/react-grab/src/core/index.tsx` — thread `commentItems()`, `groups()`, and `selectionGroups` API to sidebar (same pattern as comments dropdown)
+- `packages/react-grab/orval.config.ts` — may need to add JIRA endpoint tags if not already included in generated output
+- `packages/react-grab/src/generated/sync-api.ts` — verify JIRA fetch functions are generated (already exists, may need regeneration)
 
 ## Validation Needed
 
-1. Verify that Orval can generate fetch-only output (no React Query) from the existing OpenAPI spec — run a test codegen with the custom client config and confirm zero `@tanstack/react-query` imports in the output
-2. Confirm that Solid's `createResource` can wrap the Orval-generated async functions without type conflicts
+1. Verify that the existing generated output in `src/generated/sync-api.ts` includes JIRA endpoint functions (projects, issue-types, priorities, create-ticket, get-status) — if missing, regenerate via `pnpm codegen` and confirm zero `@tanstack/react-query` imports
+2. Confirm that Solid's `createResource` can wrap the generated JIRA fetch functions without type conflicts, and that the polling pattern (`setInterval` + `refetch()`) cleanly handles component unmount via `onCleanup`
 3. Prototype a searchable select component in Solid.js inside Shadow DOM — validate that popovers render and position correctly without `document.body` access. If Kobalte proves incompatible with Shadow DOM constraints, fall back to minimal DOM-API dialogs without a component library
 4. Measure bundle size delta: baseline react-grab bundle vs. bundle with sidebar components + Orval-generated fetch layer
 5. Define testing strategy: verify that Solid sidebar components can be unit-tested in a JSDOM/happy-dom environment with Shadow DOM support [A-008](../../docs/assumptions.md), and integration-tested against the sync layer with mocked API responses
