@@ -192,15 +192,23 @@ const stats = () => {
 };
 ```
 
-`deriveStatus` is a **new utility** in `features/sidebar/derive-status.ts`:
+`deriveStatus` is a **new utility** in `features/sidebar/derive-status.ts`. In Phase 1, it only distinguishes `open` vs `ticketed` based on `jiraTicketId` — which already exists on `SelectionGroup`. The `resolved` state requires JIRA status polling (Phase 3) and will be added then via a separate status map signal.
 
 ```typescript
-function deriveStatus(entry: GroupedComments): 'open' | 'ticketed' | 'resolved' {
+type GroupStatus = 'open' | 'ticketed' | 'resolved';
+
+/**
+ * Phase 1: derives status from jiraTicketId only.
+ * Phase 3 will add a jiraStatusMap parameter for resolved detection.
+ */
+function deriveStatus(entry: GroupedComments): GroupStatus {
   if (!entry.group.jiraTicketId) return 'open';
-  if (entry.group.jiraStatus === 'done') return 'resolved';
+  // Phase 3: check jiraStatusMap.get(group.jiraTicketId) === 'done' → 'resolved'
   return 'ticketed';
 }
 ```
+
+**Why not read `group.jiraStatus`?** The OpenAPI spec's group list response has no `jiraStatus` field — JIRA status is returned by a separate endpoint (`GET /workspaces/{id}/groups/{groupId}/jira-status`). Reading a nonexistent field would cause a TypeScript compilation error. Phase 3 will introduce a `createResource`-based polling signal that maps ticket IDs to statuses, and `deriveStatus` will accept that map as a second parameter.
 
 ### FilterTabs
 
@@ -298,9 +306,12 @@ All styles scoped inside the existing Shadow DOM via Tailwind utility classes (a
 ```
 packages/react-grab/src/
 ├── features/
-│   └── sidebar/
-│       ├── derive-status.ts       # NEW: deriveStatus() utility
-│       └── index.ts               # Public exports
+│   ├── sidebar/
+│   │   ├── derive-status.ts       # NEW: deriveStatus() utility
+│   │   └── index.ts               # Public exports
+│   └── sync/
+│       ├── schemas.ts             # NEW: Zod schemas for adapter validation
+│       └── adapter.ts             # Modified: replace `as` casts with Zod parse
 ├── components/
 │   ├── sidebar/
 │   │   ├── index.tsx              # Sidebar container
@@ -319,6 +330,75 @@ packages/react-grab/src/
 ├── constants.ts                   # Modified: add Z_INDEX_SIDEBAR
 └── core/
     └── index.tsx                  # Modified: thread sidebar props
+```
+
+### Pre-implementation Cleanup
+
+These changes improve type safety before the sidebar work begins. They are not sidebar-specific but reduce risk for the sidebar (and all future consumers of synced data).
+
+#### Zod validation at the adapter boundary
+
+The `StorageAdapter` in `features/sync/adapter.ts` has 5 `as` casts on `response.json()` returns — the exact boundary where external data enters the app. Replace these with Zod parse calls to catch API schema drift at runtime instead of silently passing wrong shapes into Solid signals.
+
+Add `features/sync/schemas.ts`:
+
+```typescript
+import { z } from 'zod';
+
+export const CommentItemSchema = z.object({
+  id: z.string(),
+  groupId: z.string(),
+  content: z.string(),
+  elementName: z.string(),
+  tagName: z.string(),
+  componentName: z.string().optional(),
+  elementsCount: z.number().optional(),
+  elementSelectors: z.array(z.string()).optional(),
+  commentText: z.string().optional(),
+  timestamp: z.number(),
+  status: z.enum(['open', 'ticketed', 'resolved']).optional(),
+  pageUrl: z.string().optional(),
+  pageTitle: z.string().optional(),
+  screenshotFullPage: z.string().optional(),
+  screenshotElement: z.string().optional(),
+  jiraTicketId: z.string().optional(),
+  capturedBy: z.string().optional(),
+});
+
+export const SelectionGroupSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  createdAt: z.number(),
+  jiraTicketId: z.string().optional(),
+});
+```
+
+In `adapter.ts`, replace `as` casts:
+
+```typescript
+// Before:
+const data = await response.json() as CommentItem[];
+
+// After:
+const raw = await response.json();
+const data = z.array(CommentItemSchema).parse(raw);
+```
+
+This catches schema drift at the sync boundary with a clear Zod error instead of silently passing malformed data to the sidebar.
+
+#### Document the empty SelectionGroup extension
+
+In `features/selection-groups/types.ts`, the `SelectionGroup extends ServerSelectionGroup` extension currently adds no fields. Add a comment:
+
+```typescript
+/**
+ * Application-level group type. Extends the server type with UI-only fields.
+ * Currently empty — placeholder for future fields like local UI state.
+ * Do not add server-persisted fields here; update the OpenAPI spec instead.
+ */
+export interface SelectionGroup extends ServerSelectionGroup {
+  // Phase 2+ may add: expanded?: boolean, lastViewedAt?: number
+}
 ```
 
 ## Testing Strategy
@@ -377,7 +457,7 @@ packages/react-grab/src/
 - [ ] Host page does not shift, resize, or reflow when sidebar opens/closes
 - [ ] Sidebar header shows sync connection status (green dot = synced, red = error)
 - [ ] Stats bar shows total groups, total selections, open count, ticketed count
-- [ ] Filter tabs work: All, Open, Ticketed, Resolved
+- [ ] Filter tabs work: All, Open, Ticketed, Resolved (Resolved filter shows empty until Phase 3 adds JIRA polling)
 - [ ] Group cards show: name, selection count, status badge, JIRA ticket link (if any), comment previews (max 3 + overflow)
 - [ ] Clicking a group card is wired to `onGroupClick` (Phase 2 will implement navigation)
 - [ ] Empty state shown when no groups exist
@@ -389,6 +469,10 @@ packages/react-grab/src/
 - [ ] All unit tests pass (filtering logic, component rendering)
 - [ ] Integration tests pass (open/close, signal reactivity, z-index stacking)
 - [ ] No layout shift verified on a real host page at 1280px+ viewport
+- [ ] Zod schemas added for CommentItem and SelectionGroup in `features/sync/schemas.ts`
+- [ ] All 5 `as` casts in `adapter.ts` replaced with Zod `.parse()` calls
+- [ ] Empty `SelectionGroup` extension documented with comment explaining intent
+- [ ] `deriveStatus()` compiles without accessing nonexistent `jiraStatus` field
 
 ### Deferred (Phase 2+)
 
