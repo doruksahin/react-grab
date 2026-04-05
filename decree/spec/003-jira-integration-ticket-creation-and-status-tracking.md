@@ -7,7 +7,7 @@ references:
 - ADR-0004
 - ADR-0005
 - SPEC-002
-status: approved
+status: implemented
 ---
 
 # SPEC-003 JIRA integration — ticket creation and status tracking

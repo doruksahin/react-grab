@@ -99,6 +99,8 @@
     "codegen": "pnpm --filter @react-grab/sync-server export-spec && orval"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.6",
+    "@kobalte/core": "^0.13.11",
     "@medv/finder": "^4.0.2",
     "@react-grab/cli": "workspace:*",
     "bippy": "^0.5.32",
