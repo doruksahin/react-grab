@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>react-grab Dashboard — JIRA Integration PoC</title>
+<style>
+  :root {
+    --bg: #09090b; --bg-card: #18181b; --bg-sidebar: #111113;
+    --border: #27272a; --text: #fafafa; --text-muted: #a1a1aa; --text-dim: #71717a;
+    --accent: #6d28d9; --accent-light: #8b5cf6;
+    --green: #22c55e; --green-bg: rgba(34,197,94,0.12);
+    --yellow: #eab308; --yellow-bg: rgba(234,179,8,0.12);
+    --blue: #3b82f6; --blue-bg: rgba(59,130,246,0.1);
+    --red: #ef4444; --red-bg: rgba(239,68,68,0.1);
+    --radius: 8px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; display: flex; min-height: 100vh; }
+
+  .sidebar { width: 240px; background: var(--bg-sidebar); border-right: 1px solid var(--border); padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .sidebar-logo { font-size: 15px; font-weight: 600; padding: 8px 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .sidebar-logo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-light); }
+  .sidebar-section { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); padding: 16px 12px 6px; font-weight: 500; }
+  .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; cursor: pointer; color: var(--text-muted); font-size: 13px; transition: all 0.15s; }
+  .sidebar-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .sidebar-item.active { background: rgba(255,255,255,0.08); color: var(--text); font-weight: 500; }
+  .sidebar-item .badge { margin-left: auto; background: var(--accent); color: white; font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 500; }
+  .sidebar-workspace { margin-top: auto; padding: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); }
+  .sidebar-workspace strong { color: var(--text-muted); display: block; font-size: 13px; }
+  .sidebar-jira { padding: 8px 12px; margin-top: 4px; border-radius: 6px; background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); }
+  .sidebar-jira .jira-label { font-size: 11px; color: var(--blue); font-weight: 500; }
+  .sidebar-jira .jira-org { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+  .main { flex: 1; overflow-y: auto; padding: 32px; max-width: 1000px; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .page-subtitle { color: var(--text-dim); font-size: 13px; margin-top: 2px; }
+
+  /* Status */
+  .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+  .status .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .status-open { color: var(--blue); background: var(--blue-bg); }
+  .status-open .dot { background: var(--blue); }
+  .status-ticketed { color: var(--yellow); background: var(--yellow-bg); }
+  .status-ticketed .dot { background: var(--yellow); }
+  .status-resolved { color: var(--green); background: var(--green-bg); }
+  .status-resolved .dot { background: var(--green); }
+
+  .jira-link { color: var(--blue); text-decoration: none; font-size: 12px; font-weight: 500; font-family: var(--mono); }
+  .jira-link:hover { text-decoration: underline; }
+
+  /* Cards */
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+
+  /* Group detail header */
+  .detail-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+  .detail-header h2 { font-size: 18px; font-weight: 600; }
+  .detail-header .meta { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+  /* Selection cards */
+  .selection-card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; background: rgba(255,255,255,0.02); }
+  .selection-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .selection-header .comp { font-family: var(--mono); font-size: 13px; color: var(--accent-light); font-weight: 600; }
+  .selection-header .tag { font-family: var(--mono); font-size: 11px; color: var(--text-dim); background: rgba(255,255,255,0.05); padding: 1px 8px; border-radius: 4px; }
+  .selection-comment { font-size: 13px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; }
+  .screenshots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .screenshot-box { height: 120px; border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-dim); }
+  .screenshot-box.full { background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); }
+  .screenshot-box.elem { background: linear-gradient(135deg, #1a2e1a, #162e3e, #0f6034); }
+
+  /* JIRA section */
+  .jira-section { padding: 20px 24px; border-top: 1px solid var(--border); }
+
+  /* JIRA connected banner */
+  .jira-banner { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 8px; }
+  .jira-banner.connected { background: var(--yellow-bg); border: 1px solid rgba(234,179,8,0.2); }
+  .jira-banner.resolved { background: var(--green-bg); border: 1px solid rgba(34,197,94,0.2); }
+  .jira-banner .icon { font-size: 22px; }
+  .jira-banner .info { flex: 1; }
+  .jira-banner .ticket-id { font-weight: 600; font-size: 13px; }
+  .jira-banner.connected .ticket-id { color: var(--yellow); }
+  .jira-banner.resolved .ticket-id { color: var(--green); }
+  .jira-banner .ticket-title { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .jira-banner .ticket-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; display: flex; gap: 12px; }
+  .jira-banner .ticket-meta span { display: flex; align-items: center; gap: 4px; }
+
+  /* JIRA status timeline */
+  .jira-timeline { margin-top: 16px; display: flex; align-items: center; gap: 0; }
+  .timeline-step { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .timeline-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--border); }
+  .timeline-dot.done { background: var(--green); border-color: var(--green); }
+  .timeline-dot.current { background: var(--yellow); border-color: var(--yellow); }
+  .timeline-label { font-size: 10px; color: var(--text-dim); }
+  .timeline-line { flex: 1; height: 2px; background: var(--border); margin: 0 -8px; position: relative; top: -12px; }
+  .timeline-line.done { background: var(--green); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; font-family: var(--font); cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-jira { background: #0052CC; color: white; }
+  .btn-jira:hover { background: #0065FF; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--text-dim); color: var(--text); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* Overlay / Dialog */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; backdrop-filter: blur(4px); }
+  .overlay.active { display: flex; justify-content: center; align-items: flex-start; padding: 40px; overflow-y: auto; }
+  .dialog { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 640px; overflow: hidden; }
+  .dialog-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+  .dialog-header h2 { font-size: 16px; font-weight: 600; }
+  .dialog-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .dialog-close:hover { background: rgba(255,255,255,0.05); }
+  .dialog-body { padding: 20px 24px; }
+
+  /* Form */
+  .form-row { display: grid; gap: 12px; margin-bottom: 14px; }
+  .form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row-2 { grid-template-columns: 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+  .form-group input, .form-group select, .form-group textarea { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text); font-family: var(--font); font-size: 13px; }
+  .form-group textarea { min-height: 140px; resize: vertical; line-height: 1.6; font-family: var(--mono); font-size: 12px; }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--accent-light); }
+  .form-group .hint { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .form-group select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+
+  .attachment { display: flex; align-items: center; gap: 8px; padding: 5px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 12px; color: var(--text-muted); margin-bottom: 3px; }
+  .attachment .check { color: var(--green); font-size: 13px; }
+  .attachment .size { margin-left: auto; color: var(--text-dim); font-size: 11px; }
+
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 8px; }
+
+  /* Loading state */
+  .loading-spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--green); border-radius: 8px; padding: 12px 20px; display: none; align-items: center; gap: 10px; font-size: 13px; z-index: 200; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+  .toast.active { display: flex; }
+  .toast .check { color: var(--green); font-size: 16px; }
+
+  /* Scenario tabs */
+  .scenarios { display: flex; gap: 2px; margin-bottom: 24px; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 3px; border: 1px solid var(--border); }
+  .scenario-tab { flex: 1; padding: 8px 12px; border-radius: 6px; font-size: 12px; text-align: center; cursor: pointer; color: var(--text-dim); transition: all 0.15s; border: none; background: none; font-family: var(--font); }
+  .scenario-tab:hover { color: var(--text-muted); }
+  .scenario-tab.active { background: rgba(255,255,255,0.08); color: var(--text); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo"><span class="dot"></span>react-grab</div>
+  <div class="sidebar-section">Review</div>
+  <div class="sidebar-item active"><span>Groups</span><span class="badge">4</span></div>
+  <div class="sidebar-section">Settings</div>
+  <div class="sidebar-item"><span>Workspace</span></div>
+  <div class="sidebar-item"><span>JIRA connection</span></div>
+  <div class="sidebar-jira">
+    <div class="jira-label">JIRA Connected</div>
+    <div class="jira-org">appier.atlassian.net</div>
+  </div>
+  <div class="sidebar-workspace">
+    <strong>staging-v2</strong>
+    Connected to sync-server
+  </div>
+</nav>
+
+<div class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">JIRA Integration — PoC Scenarios</div>
+      <div class="page-subtitle">Click through each scenario to see the flow</div>
+    </div>
+  </div>
+
+  <div class="scenarios">
+    <button class="scenario-tab active" onclick="showScenario('create')">1. Create ticket</button>
+    <button class="scenario-tab" onclick="showScenario('linked')">2. Ticket linked</button>
+    <button class="scenario-tab" onclick="showScenario('progress')">3. In Progress</button>
+    <button class="scenario-tab" onclick="showScenario('resolved')">4. Resolved</button>
+  </div>
+
+  <!-- SCENARIO 1: Open group, no ticket yet -->
+  <div class="scenario active" id="scenario-create">
+    <div class="card">
+      <div class="detail-header">
+        <div>
+          <h2>Dashboard Fixes</h2>
+          <div class="meta">3 selections &middot; created yesterday</div>
+        </div>
+        <span class="status status-open"><span class="dot"></span>Open</span>
+      </div>
+
+      <div style="padding: 20px 24px;">
+        <div style="font-size:11px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;font-weight:500;">Selections</div>
+        <div class="selection-card">
+          <div class="selection-header">
+            <span class="comp">NavHeader</span>
+            <span class="tag">&lt;nav&gt;</span>
+          </div>
+          <div class="selection-comment">"Active state not visible in dark mode"</div>
+          <div class="screenshots">
+            <div class="screenshot-box full">Full page</div>
+            <div class="screenshot-box elem">Element</div>
+          </div>
+        </div>
+        <div class="selection-card">
+          <div class="selection-header">
+            <span class="comp">SearchInput</span>
+            <span class="tag">&lt;input&gt;</span>
+          </div>
+          <div class="selection-comment">"Placeholder text truncated on narrow screens"</div>
+          <div class="screenshots">
+            <div class="screenshot-box full">Full page</div>
+            <div class="screenshot-box elem">Element</div>
+          </div>
+        </div>
+        <div class="selection-card">
+          <div class="selection-header">
+            <span class="comp">DataTable</span>
+            <span class="tag">&lt;table&gt;</span>
+          </div>
+          <div class="selection-comment">"Column headers misaligned with cell data"</div>
+          <div class="screenshots">
+            <div class="screenshot-box full">Full page</div>
+            <div class="screenshot-box elem">Element</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="jira-section">
+        <button class="btn btn-jira" onclick="openCreateDialog()" style="width:100%;justify-content:center;">
+          Create JIRA ticket for this group
+        </button>
+        <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--text-dim);">
+          3 selections &middot; 6 screenshots will be attached
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENARIO 2: Ticket linked -->
+  <div class="scenario" id="scenario-linked">
+    <div class="card">
+      <div class="detail-header">
+        <div>
+          <h2>Dashboard Fixes</h2>
+          <div class="meta">3 selections &middot; created yesterday</div>
+        </div>
+        <span class="status status-ticketed"><span class="dot"></span>Ticketed</span>
+      </div>
+
+      <div class="jira-section" style="border-top:none;">
+        <div class="jira-banner connected">
+          <span class="icon">&#127915;</span>
+          <div class="info">
+            <div class="ticket-id">ATT-1847</div>
+            <div class="ticket-title">Dashboard Fixes — NavHeader, SearchInput, DataTable</div>
+            <div class="ticket-meta">
+              <span>Status: To Do</span>
+              <span>Assignee: Unassigned</span>
+              <span>Priority: Medium</span>
+            </div>
+          </div>
+          <a href="#" class="btn btn-outline btn-sm">Open in JIRA &#8599;</a>
+        </div>
+
+        <div class="jira-timeline">
+          <div class="timeline-step">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-label">Created</div>
+          </div>
+          <div class="timeline-line done"></div>
+          <div class="timeline-step">
+            <div class="timeline-dot current"></div>
+            <div class="timeline-label">To Do</div>
+          </div>
+          <div class="timeline-line"></div>
+          <div class="timeline-step">
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">In Progress</div>
+          </div>
+          <div class="timeline-line"></div>
+          <div class="timeline-step">
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">Done</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;">
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">Attached to ticket</div>
+          <div class="attachment"><span class="check">&#10003;</span> NavHeader-full.png <span class="size">148 KB</span></div>
+          <div class="attachment"><span class="check">&#10003;</span> NavHeader-element.png <span class="size">32 KB</span></div>
+          <div class="attachment"><span class="check">&#10003;</span> SearchInput-full.png <span class="size">152 KB</span></div>
+          <div class="attachment"><span class="check">&#10003;</span> SearchInput-element.png <span class="size">18 KB</span></div>
+          <div class="attachment"><span class="check">&#10003;</span> DataTable-full.png <span class="size">210 KB</span></div>
+          <div class="attachment"><span class="check">&#10003;</span> DataTable-element.png <span class="size">45 KB</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENARIO 3: In Progress -->
+  <div class="scenario" id="scenario-progress">
+    <div class="card">
+      <div class="detail-header">
+        <div>
+          <h2>Dashboard Fixes</h2>
+          <div class="meta">3 selections &middot; created 2 days ago</div>
+        </div>
+        <span class="status status-ticketed"><span class="dot"></span>In Progress</span>
+      </div>
+
+      <div class="jira-section" style="border-top:none;">
+        <div class="jira-banner connected">
+          <span class="icon">&#127915;</span>
+          <div class="info">
+            <div class="ticket-id">ATT-1847</div>
+            <div class="ticket-title">Dashboard Fixes — NavHeader, SearchInput, DataTable</div>
+            <div class="ticket-meta">
+              <span>Status: In Progress</span>
+              <span>Assignee: @sarah</span>
+              <span>Priority: Medium</span>
+            </div>
+          </div>
+          <a href="#" class="btn btn-outline btn-sm">Open in JIRA &#8599;</a>
+        </div>
+
+        <div class="jira-timeline">
+          <div class="timeline-step">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-label">Created</div>
+          </div>
+          <div class="timeline-line done"></div>
+          <div class="timeline-step">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-label">To Do</div>
+          </div>
+          <div class="timeline-line done"></div>
+          <div class="timeline-step">
+            <div class="timeline-dot current"></div>
+            <div class="timeline-label">In Progress</div>
+          </div>
+          <div class="timeline-line"></div>
+          <div class="timeline-step">
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">Done</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;">
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px;">Last synced from JIRA: 5 minutes ago</div>
+          <div style="font-size:12px;color:var(--text-muted);">Assigned to @sarah on Sprint 24</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENARIO 4: Resolved -->
+  <div class="scenario" id="scenario-resolved">
+    <div class="card">
+      <div class="detail-header">
+        <div>
+          <h2>Dashboard Fixes</h2>
+          <div class="meta">3 selections &middot; created 5 days ago</div>
+        </div>
+        <span class="status status-resolved"><span class="dot"></span>Resolved</span>
+      </div>
+
+      <div class="jira-section" style="border-top:none;">
+        <div class="jira-banner resolved">
+          <span class="icon">&#9989;</span>
+          <div class="info">
+            <div class="ticket-id">ATT-1847</div>
+            <div class="ticket-title">Dashboard Fixes — NavHeader, SearchInput, DataTable</div>
+            <div class="ticket-meta">
+              <span>Status: Done</span>
+              <span>Resolved by: @sarah</span>
+              <span>Resolved: 2 hours ago</span>
+            </div>
+          </div>
+          <a href="#" class="btn btn-outline btn-sm">Open in JIRA &#8599;</a>
+        </div>
+
+        <div class="jira-timeline">
+          <div class="timeline-step">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-label">Created</div>
+          </div>
+          <div class="timeline-line done"></div>
+          <div class="timeline-step">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-label">To Do</div>
+          </div>
+          <div class="timeline-line done"></div>
+          <div class="timeline-step">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-label">In Progress</div>
+          </div>
+          <div class="timeline-line done"></div>
+          <div class="timeline-step">
+            <div class="timeline-dot done"></div>
+            <div class="timeline-label">Done</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding:12px;background:var(--green-bg);border:1px solid rgba(34,197,94,0.2);border-radius:8px;">
+          <div style="font-size:12px;color:var(--green);font-weight:500;">All 3 selections resolved</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Feedback loop closed. This group can be archived.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Ticket Dialog -->
+<div class="overlay" id="create-overlay" onclick="if(event.target===this)closeCreateDialog()">
+  <div class="dialog">
+    <div class="dialog-header">
+      <h2>Create JIRA ticket</h2>
+      <button class="dialog-close" onclick="closeCreateDialog()">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <!-- Project / Type / Priority — populated from useListJiraProjects, useListJiraIssueTypes, useListJiraPriorities -->
+      <div class="form-row form-row-3">
+        <div class="form-group">
+          <label>Project</label>
+          <select id="jira-project">
+            <option value="ATT">ATT — Ad Tech Team</option>
+            <option value="FRONT">FRONT — Frontend</option>
+            <option value="PLAT">PLAT — Platform</option>
+          </select>
+          <div class="hint">From useListJiraProjects()</div>
+        </div>
+        <div class="form-group">
+          <label>Issue Type</label>
+          <select id="jira-type">
+            <option>Bug</option>
+            <option>Task</option>
+            <option>Story</option>
+          </select>
+          <div class="hint">From useListJiraIssueTypes()</div>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="jira-priority">
+            <option>Medium</option>
+            <option>High</option>
+            <option>Low</option>
+            <option>Critical</option>
+          </select>
+          <div class="hint">From useListJiraPriorities()</div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Summary</label>
+        <input type="text" id="jira-summary" value="Dashboard Fixes — NavHeader, SearchInput, DataTable" />
+        <div class="hint">Pre-filled from group name + component names</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Description</label>
+        <textarea id="jira-desc">## Group: Dashboard Fixes
+
+### 1. NavHeader &lt;nav&gt;
+Active state not visible in dark mode. Contrast ratio fails WCAG AA.
+Selector: `[data-testid="NavHeader"]`
+
+### 2. SearchInput &lt;input&gt;
+Placeholder text truncated on narrow screens
+Selector: `[data-testid="SearchInput"]`
+
+### 3. DataTable &lt;table&gt;
+Column headers misaligned with cell data
+Selector: `[data-testid="DataTable"]`
+
+## Evidence
+See attached screenshots (6 images).
+
+_Created by react-grab dashboard_</textarea>
+        <div class="hint">Auto-generated from all selections in the group. Editable.</div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Attachments (auto-attached from R2)</label>
+        <div class="attachment"><span class="check">&#10003;</span> NavHeader-full.png <span class="size">148 KB</span></div>
+        <div class="attachment"><span class="check">&#10003;</span> NavHeader-element.png <span class="size">32 KB</span></div>
+        <div class="attachment"><span class="check">&#10003;</span> SearchInput-full.png <span class="size">152 KB</span></div>
+        <div class="attachment"><span class="check">&#10003;</span> SearchInput-element.png <span class="size">18 KB</span></div>
+        <div class="attachment"><span class="check">&#10003;</span> DataTable-full.png <span class="size">210 KB</span></div>
+        <div class="attachment"><span class="check">&#10003;</span> DataTable-element.png <span class="size">45 KB</span></div>
+        <div class="hint" style="margin-top:4px;">Screenshots fetched from R2, attached via sync-server proxy to JIRA API</div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-outline" onclick="closeCreateDialog()">Cancel</button>
+        <button class="btn btn-jira" id="create-btn" onclick="createTicket()">
+          Create ticket
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="check">&#10003;</span>
+  <span id="toast-text">Ticket ATT-1847 created</span>
+  <a href="#" class="jira-link" style="margin-left:8px;">Open in JIRA &#8599;</a>
+</div>
+
+<script>
+function showScenario(id) {
+  document.querySelectorAll('.scenario').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.scenario-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('scenario-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+function openCreateDialog() {
+  document.getElementById('create-overlay').classList.add('active');
+}
+
+function closeCreateDialog() {
+  document.getElementById('create-overlay').classList.remove('active');
+}
+
+function createTicket() {
+  const btn = document.getElementById('create-btn');
+  btn.innerHTML = '<span class="loading-spinner"></span> Creating...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    closeCreateDialog();
+    btn.innerHTML = 'Create ticket';
+    btn.disabled = false;
+
+    // Show toast
+    const toast = document.getElementById('toast');
+    toast.classList.add('active');
+    setTimeout(() => toast.classList.remove('active'), 4000);
+
+    // Switch to linked scenario
+    showScenarioById('linked');
+  }, 1500);
+}
+
+function showScenarioById(id) {
+  document.querySelectorAll('.scenario').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.scenario-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('scenario-' + id).classList.add('active');
+  document.querySelectorAll('.scenario-tab')[1].classList.add('active');
+}
+</script>
+</body>
+</html>
