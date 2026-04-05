@@ -646,43 +646,43 @@ packages/react-grab/src/
 
 ## Acceptance Criteria
 
-- [ ] `activeDetailGroupId` signal added to `Sidebar` — navigates to detail on `GroupCard` click, returns to list on back button click
-- [ ] `SidebarProps.onGroupClick` prop removed; `renderer.tsx` stub removed; all test files that passed `onGroupClick` updated; `tsc --noEmit` reports zero errors after the change (Issue 2)
-- [ ] `syncServerUrl?: string` and `syncWorkspace?: string` added to `SidebarProps`; threaded from `renderer.tsx` and `core/index.tsx`
-- [ ] Group-deletion guard: if active group is deleted from `props.groups`, sidebar returns to list view automatically
-- [ ] `GroupDetailView` component renders inside sidebar when a group is selected
-- [ ] `DetailHeader` shows back button (←) with `aria-label="Back to groups list"`, group name with `title`, and status badge
-- [ ] `SelectionList` renders a `SelectionCard` for each selection in the group
-- [ ] `SelectionCard` renders: component name, HTML tag badge, relative timestamp
-- [ ] `SelectionCard` renders comment text when present; omits when absent
-- [ ] `SelectionCard` renders source file path + line when `extractFilePath` matches; omits when null (A-014)
-- [ ] `extractFilePath` returns `null` on no match — never crashes or guesses (A-014)
-- [ ] `screenshotUrl()` builds the correct server URL from `serverUrl`, `workspace`, `selectionId`, and `type` (Issue 1)
-- [ ] `ScreenshotPair` shows element screenshot `<img>` labeled "Element" when `screenshotElement` key is present and sync is enabled (A-018)
-- [ ] `ScreenshotPair` shows full-page screenshot `<img>` labeled "Full page" when `screenshotFullPage` key is present and sync is enabled (A-018)
-- [ ] `ScreenshotPair` shows per-slot placeholder when a slot's key is absent (A-018)
-- [ ] `ScreenshotPair` hidden entirely when both screenshot keys are absent (A-018)
-- [ ] `ScreenshotPair` not rendered when `syncServerUrl` is absent (sync disabled)
-- [ ] Screenshots lazy-load: `<img src>` not set until card enters scroll viewport; `useLazyVisible` receives `SelectionList` scroll container as `root` (Issue 6)
-- [ ] `useLazyVisible` disconnects `IntersectionObserver` on component unmount
-- [ ] `SelectionCard` renders CSS selector in monospace when `elementSelectors[0]` is present
-- [ ] Raw HTML collapsible uses `<details>`/`<summary>` with `max-h-[200px] overflow-y-auto` on `<pre>`; collapsed by default
-- [ ] `GroupDetailView`, `DetailHeader`, `SelectionList`, `SelectionCard`, `ScreenshotPair` all carry `pointer-events: auto` on their container elements (Issue 4)
-- [ ] `GroupDetailView` has `tabIndex={-1}` and receives programmatic focus after list→detail transition (A-019)
-- [ ] Focus returns to clicked `GroupCard` after detail→list transition; falls back to sidebar container if card removed from DOM (A-019)
-- [ ] `lastFocusedCard` and `detailViewRef` declared inside `Sidebar` component body, not at module scope (Issue 3)
-- [ ] `GroupCard.onClick` receives `(groupId: string, cardEl: HTMLElement)` — event target stored before signal update (Issue 3)
-- [ ] `GroupList.onGroupClick` prop type updated to match extended signature
-- [ ] Empty state shown when selected group has no selections
-- [ ] Sync error empty state from Phase 1 still renders when `syncStatus === 'error'` (Issue 7)
-- [ ] `relativeTime` moved to `features/sidebar/relative-time.ts`; imported by both `GroupCard` and `SelectionCard` (Issue 9)
-- [ ] `extractFilePath` exported from `features/sidebar/index.ts` (Issue 8)
-- [ ] `useLazyVisible` exported from `features/sidebar/index.ts` (Issue 8)
-- [ ] `screenshotUrl` exported from `features/sidebar/index.ts` (Issue 8)
-- [ ] `relativeTime` exported from `features/sidebar/index.ts` (Issue 8)
-- [ ] All new unit tests pass: `extractFilePath` (7 cases), `screenshotUrl` (3 cases), `useLazyVisible` (5 cases), `relativeTime` (4 cases), `SelectionCard` (12 cases), `GroupDetailView` (4 cases), `DetailHeader` (3 cases)
-- [ ] Integration tests pass: view transitions, pointer-events, signal consistency, screenshot lazy loading, sync disabled, Phase 1 regression
-- [ ] `decree lint` passes with zero errors
+- [x] `activeDetailGroupId` signal added to `Sidebar` — navigates to detail on `GroupCard` click, returns to list on back button click
+- [x] `SidebarProps.onGroupClick` prop removed; `renderer.tsx` stub removed; all test files that passed `onGroupClick` updated; `tsc --noEmit` reports zero errors after the change (Issue 2)
+- [x] `syncServerUrl?: string` and `syncWorkspace?: string` added to `SidebarProps`; threaded from `renderer.tsx` and `core/index.tsx`
+- [x] Group-deletion guard: if active group is deleted from `props.groups`, sidebar returns to list view automatically
+- [x] `GroupDetailView` component renders inside sidebar when a group is selected
+- [x] `DetailHeader` shows back button (←) with `aria-label="Back to groups list"`, group name with `title`, and status badge
+- [x] `SelectionList` renders a `SelectionCard` for each selection in the group
+- [x] `SelectionCard` renders: component name, HTML tag badge, relative timestamp
+- [x] `SelectionCard` renders comment text when present; omits when absent
+- [x] `SelectionCard` renders source file path + line when `extractFilePath` matches; omits when null (A-014)
+- [x] `extractFilePath` returns `null` on no match — never crashes or guesses (A-014)
+- [x] `screenshotUrl()` builds the correct server URL from `serverUrl`, `workspace`, `selectionId`, and `type` (Issue 1)
+- [x] `ScreenshotPair` shows element screenshot `<img>` labeled "Element" when `screenshotElement` key is present and sync is enabled (A-018)
+- [x] `ScreenshotPair` shows full-page screenshot `<img>` labeled "Full page" when `screenshotFullPage` key is present and sync is enabled (A-018)
+- [x] `ScreenshotPair` shows per-slot placeholder when a slot's key is absent (A-018)
+- [x] `ScreenshotPair` hidden entirely when both screenshot keys are absent (A-018)
+- [x] `ScreenshotPair` not rendered when `syncServerUrl` is absent (sync disabled)
+- [x] Screenshots lazy-load: `<img src>` not set until card enters scroll viewport; `useLazyVisible` receives `SelectionList` scroll container as `root` (Issue 6)
+- [x] `useLazyVisible` disconnects `IntersectionObserver` on component unmount
+- [x] `SelectionCard` renders CSS selector in monospace when `elementSelectors[0]` is present
+- [x] Raw HTML collapsible uses `<details>`/`<summary>` with `max-h-[200px] overflow-y-auto` on `<pre>`; collapsed by default
+- [x] `GroupDetailView`, `DetailHeader`, `SelectionList`, `SelectionCard`, `ScreenshotPair` all carry `pointer-events: auto` on their container elements (Issue 4)
+- [x] `GroupDetailView` has `tabIndex={-1}` and receives programmatic focus after list→detail transition (A-019)
+- [x] Focus returns to clicked `GroupCard` after detail→list transition; falls back to sidebar container if card removed from DOM (A-019)
+- [x] `lastFocusedCard` and `detailViewRef` declared inside `Sidebar` component body, not at module scope (Issue 3)
+- [x] `GroupCard.onClick` receives `(groupId: string, cardEl: HTMLElement)` — event target stored before signal update (Issue 3)
+- [x] `GroupList.onGroupClick` prop type updated to match extended signature
+- [x] Empty state shown when selected group has no selections
+- [x] Sync error empty state from Phase 1 still renders when `syncStatus === 'error'` (Issue 7)
+- [x] `relativeTime` moved to `features/sidebar/relative-time.ts`; imported by both `GroupCard` and `SelectionCard` (Issue 9)
+- [x] `extractFilePath` exported from `features/sidebar/index.ts` (Issue 8)
+- [x] `useLazyVisible` exported from `features/sidebar/index.ts` (Issue 8)
+- [x] `screenshotUrl` exported from `features/sidebar/index.ts` (Issue 8)
+- [x] `relativeTime` exported from `features/sidebar/index.ts` (Issue 8)
+- [ ] All new unit tests pass *(e2e tests written, unit tests deferred)*
+- [x] Integration tests pass: view transitions, pointer-events, signal consistency, screenshot lazy loading, sync disabled, Phase 1 regression
+- [x] `decree lint` passes with zero errors
 
 ### Deferred (Phase 3+)
 

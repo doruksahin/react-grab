@@ -3,7 +3,7 @@ date: '2026-04-05'
 references:
 - PRD-002
 - ADR-0002
-status: approved
+status: implemented
 ---
 
 # SPEC-001 Sidebar Shell and Groups List
