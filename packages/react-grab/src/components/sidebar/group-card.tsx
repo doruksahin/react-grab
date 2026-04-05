@@ -5,7 +5,7 @@ import { StatusBadge } from "./status-badge";
 
 interface GroupCardProps {
   entry: GroupedEntry;
-  onClick: () => void;
+  onClick: (groupId: string, cardEl: HTMLElement) => void;
 }
 
 export const GroupCard: Component<GroupCardProps> = (props) => {
@@ -15,7 +15,7 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
   return (
     <div
       class="bg-[#232323] rounded-lg p-3 mb-1.5 cursor-pointer border border-transparent hover:border-white/10 hover:bg-[#2a2a2a] transition-colors"
-      onClick={props.onClick}
+      onClick={(e) => props.onClick(props.entry.group.id, e.currentTarget as HTMLElement)}
     >
       <div class="flex items-center justify-between mb-1.5">
         <span class="font-semibold text-[13px] text-white">{props.entry.group.name}</span>

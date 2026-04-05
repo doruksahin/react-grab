@@ -18,7 +18,6 @@ export interface SidebarProps {
   syncServerUrl?: string;
   syncWorkspace?: string;
   onClose: () => void;
-  onGroupClick: (groupId: string) => void;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {

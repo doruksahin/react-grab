@@ -305,9 +305,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             setSidebarOpen(false);
             dashboardBtnRef?.focus();
           }}
-          onGroupClick={(groupId) => {
-            /* Phase 2: navigate to detail */
-          }}
         />
       </Show>
     </>
