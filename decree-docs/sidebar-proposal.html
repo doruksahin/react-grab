@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React Grab Sidebar Proposal</title>
+<style>
+  :root {
+    --grab-pink: #b21c8e;
+    --grab-purple: rgb(210, 57, 192);
+    --sidebar-w: 380px;
+    --toolbar-bg: #1a1a1a;
+    --card-bg: #232323;
+    --card-hover: #2a2a2a;
+    --border: #333;
+    --text: #e5e5e5;
+    --text-dim: #888;
+    --blue: #3b82f6;
+    --yellow: #eab308;
+    --green: #22c55e;
+    --red: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ── Fake host page ── */
+  .host-page {
+    height: 100vh;
+    padding: 40px;
+    transition: margin-left 0.3s cubic-bezier(0.4,0,0.2,1);
+    overflow-y: auto;
+  }
+  .host-page.pushed { margin-left: var(--sidebar-w); }
+
+  .host-page h1 { font-size: 28px; color: #111; margin-bottom: 8px; }
+  .host-page p { color: #666; margin-bottom: 32px; }
+
+  .fake-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .fake-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    height: 180px;
+  }
+  .fake-card .bar { height: 12px; border-radius: 6px; background: #e5e5e5; margin-bottom: 10px; }
+  .fake-card .bar.short { width: 60%; }
+  .fake-card .bar.med { width: 85%; }
+  .fake-card .bar.tiny { width: 40%; background: #eee; }
+
+  /* ── Floating toolbar ── */
+  .toolbar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--toolbar-bg);
+    border-radius: 10px;
+    padding: 4px;
+    display: flex;
+    gap: 2px;
+    z-index: 9999;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    transition: transform 0.3s;
+  }
+  .toolbar.shifted { transform: translateX(calc(-50% + var(--sidebar-w) / 2)); }
+
+  .tb-btn {
+    width: 28px; height: 28px;
+    border: none;
+    background: transparent;
+    color: #999;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .tb-btn:hover { background: #333; color: #fff; }
+  .tb-btn.active { background: var(--grab-pink); color: #fff; }
+  .tb-btn .badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    background: var(--grab-pink);
+    color: #fff;
+    font-size: 9px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
+  .tb-btn.new-btn {
+    border: 1px dashed var(--grab-pink);
+    color: var(--grab-pink);
+    animation: pulse-border 2s infinite;
+  }
+  @keyframes pulse-border {
+    0%, 100% { border-color: var(--grab-pink); }
+    50% { border-color: var(--grab-purple); }
+  }
+  .tb-sep {
+    width: 1px;
+    background: #333;
+    margin: 4px 2px;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--toolbar-bg);
+    color: var(--text);
+    z-index: 9998;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+    font-size: 13px;
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  /* Sidebar header */
+  .sb-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .sb-header h2 {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sb-header h2 .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+  .sb-close {
+    width: 24px; height: 24px;
+    background: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  .sb-close:hover { background: #333; color: #fff; }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 0;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .stat {
+    flex: 1;
+    text-align: center;
+    padding: 10px 4px;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .stat:hover { background: #222; }
+  .stat.active { border-bottom-color: var(--grab-pink); }
+  .stat .num { font-size: 18px; font-weight: 700; color: #fff; }
+  .stat .lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Filter tabs */
+  .filter-tabs {
+    display: flex;
+    padding: 8px 16px;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .ftab {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-dim);
+    transition: all 0.15s;
+  }
+  .ftab:hover { background: #2a2a2a; color: var(--text); }
+  .ftab.active { background: var(--grab-pink); color: #fff; }
+
+  /* Group list */
+  .group-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .group-list::-webkit-scrollbar { width: 4px; }
+  .group-list::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+
+  .group-card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .group-card:hover { border-color: #444; background: var(--card-hover); }
+  .group-card.selected { border-color: var(--grab-pink); background: #2a1a28; }
+
+  .gc-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .gc-name { font-weight: 600; font-size: 13px; }
+  .gc-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .gc-badge.open { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .gc-badge.ticketed { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .gc-badge.resolved { background: rgba(34,197,94,0.15); color: var(--green); }
+
+  .gc-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .gc-meta span { display: flex; align-items: center; gap: 4px; }
+
+  .gc-preview {
+    margin-top: 8px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .gc-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #333;
+    color: #bbb;
+  }
+
+  /* ── Detail panel (replaces list) ── */
+  .detail-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: none;
+  }
+  .detail-panel::-webkit-scrollbar { width: 4px; }
+  .detail-panel::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+  .detail-panel.visible { display: block; }
+
+  .dp-back {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    margin-bottom: 12px;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .dp-back:hover { color: #fff; }
+
+  .dp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .dp-title { font-size: 16px; font-weight: 700; }
+
+  /* JIRA status mini-banner */
+  .jira-banner {
+    background: #1e293b;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .jira-banner .jb-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .jira-banner .jb-icon {
+    width: 20px; height: 20px;
+    background: var(--blue);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .jira-banner .jb-id { font-size: 12px; font-weight: 600; color: var(--blue); }
+  .jira-banner .jb-status { font-size: 10px; color: var(--text-dim); }
+  .jira-dots {
+    display: flex;
+    gap: 4px;
+  }
+  .jira-dots .jd {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #444;
+  }
+  .jira-dots .jd.done { background: var(--green); }
+  .jira-dots .jd.current { background: var(--yellow); }
+
+  /* Selection items */
+  .sel-item {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+  .si-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .si-component {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--grab-purple);
+  }
+  .si-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #333;
+    color: #999;
+  }
+  .si-comment {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+  .si-screenshot {
+    width: 100%;
+    height: 80px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #2a2a2a 0%, #333 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-size: 11px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .si-screenshot .mock-thumb {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1e1e3a, #2a1a38);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .si-screenshot .mock-thumb .rect {
+    width: 40px; height: 20px;
+    border-radius: 3px;
+    border: 1px solid #444;
+  }
+  .si-selector {
+    font-size: 10px;
+    color: #666;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    padding: 4px 8px;
+    background: #1a1a1a;
+    border-radius: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Create JIRA button */
+  .jira-create-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .jira-create-btn:hover { background: #2563eb; }
+
+  /* ── Annotation layer ── */
+  .annotation {
+    position: fixed;
+    background: var(--grab-pink);
+    color: #fff;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    z-index: 10001;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+    white-space: nowrap;
+  }
+  .annotation.visible { opacity: 1; }
+  .annotation::after {
+    content: '';
+    position: absolute;
+    width: 8px; height: 8px;
+    background: var(--grab-pink);
+    transform: rotate(45deg);
+  }
+  .annotation.arrow-left::after { left: -4px; top: 50%; margin-top: -4px; }
+  .annotation.arrow-down::after { bottom: -4px; left: 50%; margin-left: -4px; }
+  .annotation.arrow-right::after { right: -4px; top: 50%; margin-top: -4px; }
+
+  #ann-toolbar { bottom: 52px; left: 50%; transform: translateX(-50%); }
+  #ann-toolbar.shifted { left: calc(50% + var(--sidebar-w) / 2); }
+  #ann-toolbar::after { bottom: -4px; left: 50%; margin-left: -4px; }
+
+  #ann-sidebar { top: 50%; left: calc(var(--sidebar-w) + 8px); transform: translateY(-50%); }
+  #ann-sidebar::after { left: -4px; top: 50%; margin-top: -4px; }
+
+  #ann-detail { top: 160px; left: calc(var(--sidebar-w) + 8px); }
+  #ann-detail::after { left: -4px; top: 50%; margin-top: -4px; }
+
+  /* ── Intro overlay ── */
+  .intro-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 10002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .intro-overlay.hidden { display: none; }
+
+  .intro-box {
+    background: #1a1a1a;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 520px;
+    text-align: center;
+    color: var(--text);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .intro-box h1 {
+    font-size: 24px;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .intro-box .subtitle {
+    color: var(--grab-pink);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .intro-box p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #aaa;
+    margin-bottom: 24px;
+  }
+  .intro-box .highlight {
+    background: #232323;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .intro-box .highlight .hi-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+  .intro-box .highlight .hi-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: rgba(178,28,142,0.15);
+    color: var(--grab-pink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .start-btn {
+    background: var(--grab-pink);
+    color: #fff;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .start-btn:hover { background: #9a1879; }
+
+  /* ── View toggle for list vs detail ── */
+  .view-list, .view-detail { display: none; }
+  .view-list.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+  .view-detail.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+  /* ── Step indicator ── */
+  .step-nav {
+    position: fixed;
+    bottom: 60px;
+    right: 20px;
+    display: flex;
+    gap: 8px;
+    z-index: 10001;
+  }
+  .step-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .step-btn.prev { background: #333; color: #aaa; }
+  .step-btn.prev:hover { background: #444; color: #fff; }
+  .step-btn.next { background: var(--grab-pink); color: #fff; }
+  .step-btn.next:hover { background: #9a1879; }
+  .step-btn:disabled { opacity: 0.3; cursor: default; }
+
+  .step-indicator {
+    position: fixed;
+    bottom: 64px;
+    right: 180px;
+    display: flex;
+    gap: 6px;
+    z-index: 10001;
+    align-items: center;
+  }
+  .step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #444;
+    transition: all 0.2s;
+  }
+  .step-dot.active { background: var(--grab-pink); width: 20px; border-radius: 4px; }
+
+  .step-label {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    z-index: 10001;
+    font-size: 12px;
+    color: #999;
+    text-align: right;
+    max-width: 220px;
+    background: rgba(26,26,26,0.95);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #333;
+  }
+  .step-label strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- Fake host page -->
+<div class="host-page" id="hostPage">
+  <h1>My Application</h1>
+  <p>This is the host page where react-grab is running. Click the sidebar button on the toolbar below.</p>
+  <div class="fake-grid">
+    <div class="fake-card"><div class="bar med"></div><div class="bar short"></div><div class="bar tiny"></div></div>
+    <div class="fake-card"><div class="bar short"></div><div class="bar med"></div><div class="bar tiny"></div></div>
+    <div class="fake-card"><div class="bar med"></div><div class="bar tiny"></div><div class="bar short"></div></div>
+    <div class="fake-card"><div class="bar tiny"></div><div class="bar med"></div><div class="bar short"></div></div>
+    <div class="fake-card"><div class="bar short"></div><div class="bar tiny"></div><div class="bar med"></div></div>
+    <div class="fake-card"><div class="bar med"></div><div class="bar short"></div><div class="bar tiny"></div></div>
+  </div>
+</div>
+
+<!-- Floating toolbar -->
+<div class="toolbar" id="toolbar">
+  <button class="tb-btn" title="Select">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-6 2-4 6z"/></svg>
+  </button>
+  <button class="tb-btn" title="Comments" id="commentsBtn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    <span class="badge">7</span>
+  </button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn new-btn" title="Dashboard" id="dashboardBtn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+  </button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" title="Visibility">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+  </button>
+  <button class="tb-btn" title="More">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+  </button>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sb-header">
+    <h2><span class="dot"></span> react-grab</h2>
+    <button class="sb-close" id="sidebarClose">&times;</button>
+  </div>
+
+  <!-- List view -->
+  <div class="view-list active" id="viewList">
+    <div class="stats-bar">
+      <div class="stat active">
+        <div class="num">3</div>
+        <div class="lbl">Groups</div>
+      </div>
+      <div class="stat">
+        <div class="num">7</div>
+        <div class="lbl">Items</div>
+      </div>
+      <div class="stat">
+        <div class="num">1</div>
+        <div class="lbl">Open</div>
+      </div>
+      <div class="stat">
+        <div class="num">1</div>
+        <div class="lbl">Ticketed</div>
+      </div>
+    </div>
+
+    <div class="filter-tabs">
+      <button class="ftab active">All</button>
+      <button class="ftab">Open</button>
+      <button class="ftab">Ticketed</button>
+      <button class="ftab">Resolved</button>
+    </div>
+
+    <div class="group-list">
+      <div class="group-card" data-group="header" onclick="showDetail('header')">
+        <div class="gc-top">
+          <span class="gc-name">Header Redesign</span>
+          <span class="gc-badge ticketed">ticketed</span>
+        </div>
+        <div class="gc-meta">
+          <span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            3 selections
+          </span>
+          <span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            2h ago
+          </span>
+          <span style="color:var(--blue);">GRAB-142</span>
+        </div>
+        <div class="gc-preview">
+          <span class="gc-tag">NavBar</span>
+          <span class="gc-tag">Logo</span>
+          <span class="gc-tag">SearchInput</span>
+        </div>
+      </div>
+
+      <div class="group-card" data-group="cards" onclick="showDetail('cards')">
+        <div class="gc-top">
+          <span class="gc-name">Card Grid Alignment</span>
+          <span class="gc-badge open">open</span>
+        </div>
+        <div class="gc-meta">
+          <span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            2 selections
+          </span>
+          <span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            5h ago
+          </span>
+        </div>
+        <div class="gc-preview">
+          <span class="gc-tag">ProductCard</span>
+          <span class="gc-tag">GridLayout</span>
+        </div>
+      </div>
+
+      <div class="group-card" data-group="footer" onclick="showDetail('footer')">
+        <div class="gc-top">
+          <span class="gc-name">Footer Links</span>
+          <span class="gc-badge resolved">resolved</span>
+        </div>
+        <div class="gc-meta">
+          <span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            2 selections
+          </span>
+          <span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            1d ago
+          </span>
+          <span style="color:var(--green);">GRAB-138 done</span>
+        </div>
+        <div class="gc-preview">
+          <span class="gc-tag">Footer</span>
+          <span class="gc-tag">LinkList</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail view -->
+  <div class="view-detail" id="viewDetail">
+    <div class="detail-panel visible">
+      <button class="dp-back" onclick="showList()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m0 0l7 7m-7-7l7-7"/></svg>
+        Back to groups
+      </button>
+
+      <div class="dp-header">
+        <span class="dp-title" id="detailTitle">Header Redesign</span>
+        <span class="gc-badge ticketed" id="detailBadge">ticketed</span>
+      </div>
+
+      <!-- JIRA banner (shown for ticketed) -->
+      <div class="jira-banner" id="jiraBanner">
+        <div class="jb-left">
+          <div class="jb-icon">J</div>
+          <div>
+            <div class="jb-id">GRAB-142</div>
+            <div class="jb-status">In Progress</div>
+          </div>
+        </div>
+        <div class="jira-dots">
+          <div class="jd done"></div>
+          <div class="jd done"></div>
+          <div class="jd current"></div>
+          <div class="jd"></div>
+        </div>
+      </div>
+
+      <!-- Create JIRA (shown for open) -->
+      <button class="jira-create-btn" id="jiraCreateBtn" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+        Create JIRA Ticket
+      </button>
+
+      <!-- Selections -->
+      <div id="detailSelections">
+        <div class="sel-item">
+          <div class="si-top">
+            <span class="si-component">NavBar</span>
+            <span class="si-tag">nav</span>
+          </div>
+          <div class="si-comment">"Logo alignment is off on mobile viewport"</div>
+          <div class="si-screenshot"><div class="mock-thumb"><div class="rect" style="border-color:#b21c8e"></div><div class="rect"></div><div class="rect"></div></div></div>
+          <div class="si-selector">div.navbar &gt; nav &gt; .logo-wrapper</div>
+        </div>
+
+        <div class="sel-item">
+          <div class="si-top">
+            <span class="si-component">Logo</span>
+            <span class="si-tag">img</span>
+          </div>
+          <div class="si-comment">"Needs retina version"</div>
+          <div class="si-screenshot"><div class="mock-thumb"><div class="rect" style="border-color:#b21c8e; width:60px"></div></div></div>
+          <div class="si-selector">img.logo[src="/logo.svg"]</div>
+        </div>
+
+        <div class="sel-item">
+          <div class="si-top">
+            <span class="si-component">SearchInput</span>
+            <span class="si-tag">input</span>
+          </div>
+          <div class="si-comment">"Placeholder text is cut off"</div>
+          <div class="si-screenshot"><div class="mock-thumb"><div class="rect" style="width:100px; border-color:#b21c8e"></div></div></div>
+          <div class="si-selector">input.search-bar[type="text"]</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Annotations -->
+<div class="annotation arrow-down" id="ann-toolbar">NEW: Dashboard button opens sidebar</div>
+<div class="annotation arrow-left" id="ann-sidebar">Groups list with status, stats, filters</div>
+<div class="annotation arrow-left" id="ann-detail">Detail view with selections, screenshots, JIRA</div>
+
+<!-- Step navigation -->
+<div class="step-label" id="stepLabel"><strong>Step 1/4:</strong> The toolbar gets a new dashboard button</div>
+<div class="step-indicator">
+  <div class="step-dot active" data-step="0"></div>
+  <div class="step-dot" data-step="1"></div>
+  <div class="step-dot" data-step="2"></div>
+  <div class="step-dot" data-step="3"></div>
+</div>
+<div class="step-nav">
+  <button class="step-btn prev" id="prevBtn" disabled>&larr; Prev</button>
+  <button class="step-btn next" id="nextBtn">Next &rarr;</button>
+</div>
+
+<!-- Intro overlay -->
+<div class="intro-overlay" id="introOverlay">
+  <div class="intro-box">
+    <h1>Sidebar Proposal</h1>
+    <div class="subtitle">Deprecate packages/dashboard &mdash; bring it into react-grab</div>
+    <p>
+      Instead of a separate dashboard app, embed the same group-management
+      and JIRA-tracking features directly into the react-grab floating UI
+      as a slide-out sidebar.
+    </p>
+    <div class="highlight">
+      <div class="hi-row">
+        <div class="hi-icon">1</div>
+        <span>New <strong>dashboard button</strong> on the floating toolbar</span>
+      </div>
+      <div class="hi-row">
+        <div class="hi-icon">2</div>
+        <span><strong>Left sidebar</strong> slides in with groups, stats, filters</span>
+      </div>
+      <div class="hi-row">
+        <div class="hi-icon">3</div>
+        <span><strong>Detail view</strong> with selections, screenshots, JIRA status</span>
+      </div>
+      <div class="hi-row">
+        <div class="hi-icon">4</div>
+        <span><strong>JIRA integration</strong> — create tickets inline, track status</span>
+      </div>
+    </div>
+    <button class="start-btn" onclick="startDemo()">Start Walkthrough</button>
+  </div>
+</div>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toolbar = document.getElementById('toolbar');
+  const hostPage = document.getElementById('hostPage');
+  const dashboardBtn = document.getElementById('dashboardBtn');
+  const sidebarClose = document.getElementById('sidebarClose');
+  const viewList = document.getElementById('viewList');
+  const viewDetail = document.getElementById('viewDetail');
+  const introOverlay = document.getElementById('introOverlay');
+  const stepLabel = document.getElementById('stepLabel');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const dots = document.querySelectorAll('.step-dot');
+
+  let sidebarOpen = false;
+  let currentStep = 0;
+
+  const steps = [
+    {
+      label: '<strong>Step 1/4:</strong> The toolbar gets a new dashboard button (pulsing)',
+      action: () => {
+        closeSidebar();
+        hideAnnotations();
+        setTimeout(() => {
+          document.getElementById('ann-toolbar').classList.add('visible');
+        }, 300);
+      }
+    },
+    {
+      label: '<strong>Step 2/4:</strong> Click opens sidebar — groups list with stats & filters',
+      action: () => {
+        hideAnnotations();
+        openSidebar();
+        showList();
+        setTimeout(() => {
+          document.getElementById('ann-sidebar').classList.add('visible');
+        }, 400);
+      }
+    },
+    {
+      label: '<strong>Step 3/4:</strong> Click a group to see detail — selections, screenshots, JIRA',
+      action: () => {
+        hideAnnotations();
+        openSidebar();
+        showDetail('header');
+        setTimeout(() => {
+          document.getElementById('ann-detail').classList.add('visible');
+        }, 300);
+      }
+    },
+    {
+      label: '<strong>Step 4/4:</strong> Open groups show "Create JIRA Ticket" button instead',
+      action: () => {
+        hideAnnotations();
+        openSidebar();
+        showDetail('cards');
+      }
+    }
+  ];
+
+  function startDemo() {
+    introOverlay.classList.add('hidden');
+    currentStep = 0;
+    runStep();
+  }
+
+  function runStep() {
+    stepLabel.innerHTML = steps[currentStep].label;
+    dots.forEach((d, i) => d.classList.toggle('active', i === currentStep));
+    prevBtn.disabled = currentStep === 0;
+    nextBtn.textContent = currentStep === steps.length - 1 ? 'Restart' : 'Next \u2192';
+    steps[currentStep].action();
+  }
+
+  prevBtn.onclick = () => { if (currentStep > 0) { currentStep--; runStep(); } };
+  nextBtn.onclick = () => {
+    if (currentStep === steps.length - 1) { currentStep = 0; } else { currentStep++; }
+    runStep();
+  };
+
+  function openSidebar() {
+    sidebarOpen = true;
+    sidebar.classList.add('open');
+    toolbar.classList.add('shifted');
+    hostPage.classList.add('pushed');
+    dashboardBtn.classList.add('active');
+    dashboardBtn.classList.remove('new-btn');
+    document.getElementById('ann-toolbar').classList.remove('visible');
+  }
+
+  function closeSidebar() {
+    sidebarOpen = false;
+    sidebar.classList.remove('open');
+    toolbar.classList.remove('shifted');
+    hostPage.classList.remove('pushed');
+    dashboardBtn.classList.remove('active');
+    dashboardBtn.classList.add('new-btn');
+  }
+
+  function showList() {
+    viewList.classList.add('active');
+    viewDetail.classList.remove('active');
+    document.querySelectorAll('.group-card').forEach(c => c.classList.remove('selected'));
+  }
+
+  function showDetail(groupId) {
+    viewList.classList.remove('active');
+    viewDetail.classList.add('active');
+
+    const data = {
+      header: { title: 'Header Redesign', badge: 'ticketed', badgeClass: 'ticketed', jira: true, open: false },
+      cards: { title: 'Card Grid Alignment', badge: 'open', badgeClass: 'open', jira: false, open: true },
+      footer: { title: 'Footer Links', badge: 'resolved', badgeClass: 'resolved', jira: true, open: false }
+    };
+
+    const g = data[groupId] || data.header;
+    document.getElementById('detailTitle').textContent = g.title;
+    const badge = document.getElementById('detailBadge');
+    badge.textContent = g.badge;
+    badge.className = 'gc-badge ' + g.badgeClass;
+    document.getElementById('jiraBanner').style.display = g.jira ? 'flex' : 'none';
+    document.getElementById('jiraCreateBtn').style.display = g.open ? 'flex' : 'none';
+  }
+
+  function hideAnnotations() {
+    document.querySelectorAll('.annotation').forEach(a => a.classList.remove('visible'));
+  }
+
+  dashboardBtn.onclick = () => { sidebarOpen ? closeSidebar() : openSidebar(); showList(); };
+  sidebarClose.onclick = closeSidebar;
+
+  // Filter tabs
+  document.querySelectorAll('.ftab').forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    };
+  });
+</script>
+
+</body>
+</html>
