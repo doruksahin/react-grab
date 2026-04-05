@@ -41,6 +41,7 @@ export interface ToolbarContentProps {
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
   groupCount?: number;
+  onDashboardBtnRef?: (el: HTMLButtonElement) => void;
   collapseButton?: JSX.Element;
   transformOrigin?: string;
   syncStatus: SyncStatus;
@@ -331,6 +332,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
                 <button
+                  ref={props.onDashboardBtnRef}
                   data-react-grab-ignore-events
                   data-react-grab-toolbar-dashboard
                   aria-label={props.sidebarOpen ? "Close dashboard" : "Open dashboard"}
