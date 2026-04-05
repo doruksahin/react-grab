@@ -4,4 +4,3 @@
 
 | SPEC | Title | Status | Date |
 |-----|-----|-----|-----|
-| SPEC-001 | SPEC-001 Task Storage API | approved | 2026-01-20 |

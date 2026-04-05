@@ -4,5 +4,4 @@
 
 | PRD | Title | Status | Date |
 |-----|-----|-----|-----|
-| PRD-001 | PRD-001 Task Management CLI | approved | 2026-01-15 |
 | PRD-002 | PRD-002 Embedded Dashboard Sidebar | draft | 2026-04-05 |

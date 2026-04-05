@@ -4,5 +4,4 @@
 
 | ADR | Title | Status | Date | Supersedes |
 |-----|-------|--------|------|------------|
-| ADR-0001 | ADR-0001 SQLite for Local Storage | accepted | 2026-01-18 |  |
-| ADR-0002 | ADR-0002 Solid.js Sidebar with Orval-Generated Types | proposed | 2026-04-05 |  |
+| ADR-0002 | ADR-0002 Solid.js Sidebar with Orval-Generated Types | accepted | 2026-04-05 |  |

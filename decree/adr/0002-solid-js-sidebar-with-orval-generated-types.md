@@ -1,7 +1,8 @@
 ---
-status: proposed
-date: 2026-04-05
-references: [PRD-002]
+date: '2026-04-05'
+references:
+- PRD-002
+status: accepted
 ---
 
 # ADR-0002 Solid.js Sidebar with Orval-Generated Types
