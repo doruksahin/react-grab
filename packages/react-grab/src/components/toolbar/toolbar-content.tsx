@@ -6,6 +6,7 @@ import { IconComment } from "../icons/icon-comment.jsx";
 import { IconCopy } from "../icons/icon-copy.jsx";
 import { IconEyeOff } from "../icons/icon-eye-off.jsx";
 import { IconEyeFilled } from "../icons/icon-eye-filled.jsx";
+import { DashboardIcon } from "../icons/dashboard-icon";
 import {
   getExpandGridClass,
   getButtonSpacingClass,
@@ -37,6 +38,9 @@ export interface ToolbarContentProps {
   visibilityButton?: JSX.Element;
   selectionsRevealed: boolean;
   onToggleSelectionsRevealed?: () => void;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
+  groupCount?: number;
   collapseButton?: JSX.Element;
   transformOrigin?: string;
   syncStatus: SyncStatus;
@@ -316,6 +320,37 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
                 {props.visibilityButton ?? defaultVisibilityButton()}
+              </div>
+            </div>
+            <div
+              class={cn(
+                "grid",
+                gridTransitionClass(),
+                expandGridClass(Boolean(props.enabled)),
+              )}
+            >
+              <div class={cn("relative overflow-visible", minDimensionClass())}>
+                <button
+                  data-react-grab-ignore-events
+                  data-react-grab-toolbar-dashboard
+                  aria-label={props.sidebarOpen ? "Close dashboard" : "Open dashboard"}
+                  aria-pressed={props.sidebarOpen}
+                  class={cn(
+                    "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
+                    buttonSpacingClass(),
+                    hitboxConstraintClass(),
+                    props.sidebarOpen && "text-[var(--color-grab-pink)]",
+                  )}
+                  onClick={() => props.onToggleSidebar?.()}
+                >
+                  <DashboardIcon
+                    size={14}
+                    class={cn(
+                      "transition-colors",
+                      props.sidebarOpen ? "text-black" : "text-[#B3B3B3]",
+                    )}
+                  />
+                </button>
               </div>
             </div>
           </div>
