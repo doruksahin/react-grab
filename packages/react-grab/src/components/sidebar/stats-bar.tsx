@@ -9,13 +9,18 @@ interface StatsBarProps {
 export const StatsBar: Component<StatsBarProps> = (props) => {
   const stats = () => {
     const items = props.groupedItems;
-    const totalSelections = items.reduce((sum, e) => sum + e.items.length, 0);
-    return {
-      groups: items.length,
-      selections: totalSelections,
-      open: items.filter((e) => deriveStatus(e) === "open").length,
-      ticketed: items.filter((e) => deriveStatus(e) === "ticketed").length,
-    };
+    return items.reduce(
+      (acc, e) => {
+        const s = deriveStatus(e);
+        return {
+          groups: acc.groups + 1,
+          selections: acc.selections + e.items.length,
+          open: acc.open + (s === "open" ? 1 : 0),
+          ticketed: acc.ticketed + (s === "ticketed" ? 1 : 0),
+        };
+      },
+      { groups: 0, selections: 0, open: 0, ticketed: 0 },
+    );
   };
 
   return (

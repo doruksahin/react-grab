@@ -14,7 +14,11 @@ export const SidebarHeader: Component<SidebarHeaderProps> = (props) => {
         <span
           class={cn(
             "w-2 h-2 rounded-full",
-            props.syncStatus === "synced" ? "bg-green-500" : "bg-red-500",
+            props.syncStatus === "synced"
+              ? "bg-green-500"
+              : props.syncStatus === "error"
+                ? "bg-red-500"
+                : "bg-white/30",
           )}
         />
         react-grab

@@ -1,4 +1,4 @@
-import { type Component, createSignal, Show } from "solid-js";
+import { type Component, createMemo, createSignal, Show } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types";
 import type { CommentItem } from "../../types";
 import type { SyncStatus } from "../../features/sync/types";
@@ -22,14 +22,14 @@ export interface SidebarProps {
 export const Sidebar: Component<SidebarProps> = (props) => {
   const [activeFilter, setActiveFilter] = createSignal<FilterStatus>("all");
 
-  const groupedItems = () => groupComments(props.groups, props.commentItems);
+  const groupedItems = createMemo(() => groupComments(props.groups, props.commentItems));
 
-  const filteredGroups = () => {
+  const filteredGroups = createMemo(() => {
     const filter = activeFilter();
     const items = groupedItems();
     if (filter === "all") return items;
     return items.filter((entry) => deriveStatus(entry) === filter);
-  };
+  });
 
   return (
     <div
