@@ -66,7 +66,7 @@ Embed all `packages/dashboard/` capabilities — group management, detail views,
   - Searchable issue type selector
   - Priority selector
   - Summary field (auto-generated from group name and component names, editable)
-  - Description field (auto-generated markdown with group info, selections, and selectors, editable) [R-002](../../docs/risks.md)
+  - Description field (auto-generated markdown with group info, selections, and selectors, editable) [R-002](../../docs/risks.md) — ADF conversion via `marklassian` [R-004](../../docs/risks.md)
   - Attachments section showing count and filename list of screenshots that will be attached [A-016](../../docs/assumptions.md)
 - JIRA base URL resolved from sync-server configuration (not hardcoded) [A-013](../../docs/assumptions.md)
 - For **ticketed** groups: show JIRA status banner with ticket ID (linked to JIRA), current status text, and progress dots (created → to do → in progress → done)

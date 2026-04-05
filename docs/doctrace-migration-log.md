@@ -56,3 +56,26 @@ Audit trail for implicit assumption/risk/decision extraction from decree documen
 
 ### Verification
 `doctrace index` exit 0 — 24 IDs, 41 refs, 0 dangling
+
+---
+
+## Library scan research — 2026-04-05
+
+Source: `docs/research/2026-04-05-leverageable-libraries.md` (not a decree doc — research output)
+
+### New IDs registered
+- [x] `jira.js` Axios/Node transport incompatible with Workers → R-004 (from research)
+- [x] Kobalte portal `document.body` hard-code + open bug #445 → R-005 (from research)
+- [x] `@floating-ui/dom` `strategy: 'fixed'` resolves shadow DOM offsetParent → A-020 (from research)
+- [x] `solid-focus-trap` handles open shadow roots correctly → A-021 (from research)
+- [x] A-004 updated: Kobalte portal limitation confirmed + workaround documented
+- [x] R-002 mitigated: `marklassian` identified as ADF conversion library
+
+### References injected
+- `decree/prd/002-embedded-dashboard-sidebar.md` line 69: added [R-004]
+- `decree/adr/0002-solid-js-sidebar-with-orval-generated-types.md` line 85: added [R-005]
+- `decree/adr/0002-solid-js-sidebar-with-orval-generated-types.md` line 96: added [R-005], [A-020]
+- `decree/adr/0002-solid-js-sidebar-with-orval-generated-types.md` line 113: added [R-005], [A-020], [A-021]
+
+### Not injected
+- SPEC-001 (`001-sidebar-shell-and-groups-list.md`): no relevant claims — Phase 1 does not touch JIRA client, ADF, or overlay components

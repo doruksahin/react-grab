@@ -82,7 +82,7 @@ Keep Solid.js. Skip Orval entirely for the sidebar. Extend the existing `Storage
 
 5. **Bundle size:** React + ReactDOM would add ~40KB+ [A-003](../../docs/assumptions.md) to a script injected into every host page. Solid.js is already in the bundle; adding sidebar components adds only the component code, not a new framework.
 
-The main tradeoff is that Solid.js lacks an equivalent to shadcn/ui — the JIRA create dialog's searchable selects, modals, and popovers must be built or adapted. This is real effort (estimated as the majority of Phase 3 work), but it's a one-time cost that keeps the architecture clean. Libraries like Kobalte (Solid.js headless UI) [A-004](../../docs/assumptions.md) [A-010](../../docs/assumptions.md) can accelerate this if the Shadow DOM constraint permits.
+The main tradeoff is that Solid.js lacks an equivalent to shadcn/ui — the JIRA create dialog's searchable selects, modals, and popovers must be built or adapted. This is real effort (estimated as the majority of Phase 3 work), but it's a one-time cost that keeps the architecture clean. Libraries like Kobalte (Solid.js headless UI) [A-004](../../docs/assumptions.md) [A-010](../../docs/assumptions.md) can accelerate this if the Shadow DOM constraint permits [R-005](../../docs/risks.md).
 
 Option C (hand-written types) was rejected because the OpenAPI spec is the source of truth and Orval already solves the type-generation problem. Discarding it reintroduces manual drift risk that the team has already eliminated on the dashboard side.
 
@@ -93,7 +93,7 @@ Option C (hand-written types) was rejected because the OpenAPI spec is the sourc
 - **No storage layer refactoring needed:** Solid signals for `commentItems()` and `groups()` already exist in `init()`. The sidebar receives these signal accessors as props, the same pattern used by the comments dropdown
 - JIRA endpoints (projects, issue-types, priorities, create-ticket, get-status) are called via the already-generated fetch functions in `src/generated/sync-api.ts`, wrapped in Solid's `createResource`
 - JIRA status polling introduces a **new pattern** to react-grab: `setInterval` + `createResource.refetch()` for 30-second updates, scoped to the sidebar detail view lifecycle
-- Searchable select, dialog, and popover components must be implemented in Solid.js, rendering inside Shadow DOM (evaluate Kobalte as a base)
+- Searchable select, dialog, and popover components must be implemented in Solid.js, rendering inside Shadow DOM (evaluate Kobalte as a base) [R-005](../../docs/risks.md) [A-020](../../docs/assumptions.md)
 - The `packages/dashboard/` Orval config remains unchanged — it continues generating React Query hooks for as long as the dashboard exists
 
 ## Affected Files
@@ -110,6 +110,6 @@ Option C (hand-written types) was rejected because the OpenAPI spec is the sourc
 
 1. Verify that the existing generated output in `src/generated/sync-api.ts` includes JIRA endpoint functions (projects, issue-types, priorities, create-ticket, get-status) — if missing, regenerate via `pnpm codegen` and confirm zero `@tanstack/react-query` imports
 2. Confirm that Solid's `createResource` can wrap the generated JIRA fetch functions without type conflicts, and that the polling pattern (`setInterval` + `refetch()`) cleanly handles component unmount via `onCleanup`
-3. Prototype a searchable select component in Solid.js inside Shadow DOM — validate that popovers render and position correctly without `document.body` access. If Kobalte proves incompatible with Shadow DOM constraints, fall back to minimal DOM-API dialogs without a component library
+3. Prototype a searchable select component in Solid.js inside Shadow DOM — validate that popovers render and position correctly without `document.body` access. If Kobalte proves incompatible with Shadow DOM constraints, fall back to minimal DOM-API dialogs without a component library [R-005](../../docs/risks.md) [A-020](../../docs/assumptions.md) [A-021](../../docs/assumptions.md)
 4. Measure bundle size delta: baseline react-grab bundle vs. bundle with sidebar components + Orval-generated fetch layer
 5. Define testing strategy: verify that Solid sidebar components can be unit-tested in a JSDOM/happy-dom environment with Shadow DOM support [A-008](../../docs/assumptions.md), and integration-tested against the sync layer with mocked API responses
