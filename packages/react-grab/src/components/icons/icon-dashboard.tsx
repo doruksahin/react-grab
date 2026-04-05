@@ -1,11 +1,11 @@
 import type { Component } from "solid-js";
 
-interface DashboardIconProps {
+interface IconDashboardProps {
   size?: number;
   class?: string;
 }
 
-export const DashboardIcon: Component<DashboardIconProps> = (props) => {
+export const IconDashboard: Component<IconDashboardProps> = (props) => {
   const size = () => props.size ?? 14;
   return (
     <svg

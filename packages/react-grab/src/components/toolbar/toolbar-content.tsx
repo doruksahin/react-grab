@@ -6,7 +6,7 @@ import { IconComment } from "../icons/icon-comment.jsx";
 import { IconCopy } from "../icons/icon-copy.jsx";
 import { IconEyeOff } from "../icons/icon-eye-off.jsx";
 import { IconEyeFilled } from "../icons/icon-eye-filled.jsx";
-import { DashboardIcon } from "../icons/dashboard-icon";
+import { IconDashboard } from "../icons/icon-dashboard.jsx";
 import {
   getExpandGridClass,
   getButtonSpacingClass,
@@ -334,7 +334,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
                   data-react-grab-ignore-events
                   data-react-grab-toolbar-dashboard
                   aria-label={props.sidebarOpen ? "Close dashboard" : "Open dashboard"}
-                  aria-pressed={props.sidebarOpen}
+                  aria-pressed={Boolean(props.sidebarOpen)}
                   class={cn(
                     "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
                     buttonSpacingClass(),
@@ -343,7 +343,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
                   )}
                   onClick={() => props.onToggleSidebar?.()}
                 >
-                  <DashboardIcon
+                  <IconDashboard
                     size={14}
                     class={cn(
                       "transition-colors",
