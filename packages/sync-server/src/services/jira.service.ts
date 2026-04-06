@@ -171,6 +171,8 @@ export class JiraService {
       statusCategory: issue.fields.status?.statusCategory?.name ?? "Unknown",
       assignee: issue.fields.assignee?.displayName ?? null,
       reporter: issue.fields.reporter?.displayName ?? null,
+      assigneeAvatar: issue.fields.assignee?.avatarUrls?.['48x48'] ?? null,
+      reporterAvatar: issue.fields.reporter?.avatarUrls?.['48x48'] ?? null,
       jiraUrl: `${this.config.baseUrl}/browse/${ticketId}`,
       labels: (issue.fields.labels as string[] | undefined) ?? [],
     };
