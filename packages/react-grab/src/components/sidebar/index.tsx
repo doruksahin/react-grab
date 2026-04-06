@@ -6,6 +6,7 @@ import {
   createSignal,
   Show,
 } from "solid-js";
+import createFocusTrap from "solid-focus-trap";
 import type { CommentItem } from "../../types.js";
 import type { SyncStatus } from "../../features/sync/types.js";
 import { Z_INDEX_LABEL } from "../../constants.js";
@@ -30,6 +31,8 @@ export interface SidebarProps {
   syncServerUrl?: string;
   syncWorkspace?: string;
   onClose: () => void;
+  onActiveDetailGroupChange: (groupId: string | null) => void;
+  onJiraResolved?: (groupId: string) => void;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -41,6 +44,10 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   const [containerRef, setContainerRef] = createSignal<
     HTMLDivElement | undefined
   >(undefined);
+
+  // Trap focus inside the sidebar for the duration it is mounted.
+  // solid-focus-trap restores focus to the previously focused element on cleanup.
+  createFocusTrap({ element: containerRef, enabled: () => true });
 
   // Local groups signal: allows JIRA fields (jiraResolved, jiraStatus, jiraUrl)
   // to be mutated client-side without a server round-trip.
@@ -81,6 +88,11 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     if (id !== null && !groups().find((g) => g.id === id)) {
       setActiveDetailGroupId(null);
     }
+  });
+
+  // Notify parent when active detail group changes (for canvas glow)
+  createEffect(() => {
+    props.onActiveDetailGroupChange(activeDetailGroupId());
   });
 
   // Focus management: list → detail
@@ -132,19 +144,17 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     groupId: string,
     status: { status: string; statusCategory: string },
   ) {
+    const resolved = status.statusCategory.toLowerCase() === "done";
     setGroups((prev) =>
       prev.map((g) =>
         g.id === groupId
-          ? {
-              ...g,
-              jiraStatus: status.status,
-              jiraStatusCategory: status.statusCategory,
-              jiraResolved:
-                status.statusCategory.toLowerCase() === "done",
-            }
+          ? { ...g, jiraStatus: status.status, jiraStatusCategory: status.statusCategory, jiraResolved: resolved }
           : g,
       ),
     );
+    if (resolved) {
+      props.onJiraResolved?.(groupId);
+    }
   }
 
   // Shadow root: resolved reactively from the container element so that
@@ -165,7 +175,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-[#1a1a1a] text-[#e5e5e5] animate-slide-in-left"
         style={{ "z-index": String(Z_INDEX_LABEL), "pointer-events": "auto" }}
         role="dialog"
-        aria-modal="false"
+        aria-modal="true"
         aria-label="React Grab Dashboard"
       >
         <SidebarHeader syncStatus={props.syncStatus} onClose={props.onClose} />

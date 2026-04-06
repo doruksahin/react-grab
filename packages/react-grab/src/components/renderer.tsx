@@ -1,4 +1,4 @@
-import { Show, Index, createSignal, createEffect, onCleanup } from "solid-js";
+import { Show, Index, createSignal, createEffect, createRenderEffect, onCleanup, on } from "solid-js";
 import type { Component } from "solid-js";
 import type { AgentSession, ReactGrabRendererProps } from "../types.js";
 import {
@@ -22,7 +22,18 @@ import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
+  const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<string | null>(null);
   let dashboardBtnRef: HTMLButtonElement | undefined;
+
+  // Performance instrumentation: bracket sidebar render time.
+  // createRenderEffect fires before DOM mutations (marks the start of the render).
+  // createEffect fires after DOM mutations (marks when sidebar is in the DOM).
+  createRenderEffect(on(() => sidebarOpen(), (isOpen) => {
+    if (isOpen) performance.mark("sidebar-open-start");
+  }, { defer: true }));
+  createEffect(on(() => sidebarOpen(), (isOpen) => {
+    if (isOpen) performance.mark("sidebar-open-end");
+  }, { defer: true }));
 
   createEffect(() => {
     if (!sidebarOpen()) return;
@@ -65,6 +76,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         grabbedBoxes={props.grabbedBoxes}
         agentSessions={props.agentSessions}
         labelInstances={props.labelInstances}
+        activeGroupId={activeDetailGroupId()}
       />
 
       <div
@@ -304,8 +316,11 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           syncStatus={props.syncStatus ?? "local"}
           syncServerUrl={props.syncServerUrl}
           syncWorkspace={props.syncWorkspace}
+          onActiveDetailGroupChange={setActiveDetailGroupId}
+          onJiraResolved={props.onJiraResolved}
           onClose={() => {
             setSidebarOpen(false);
+            setActiveDetailGroupId(null);
             dashboardBtnRef?.focus();
           }}
         />

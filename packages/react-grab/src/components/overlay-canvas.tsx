@@ -21,13 +21,38 @@ import {
   OVERLAY_FILL_COLOR_DEFAULT,
   OVERLAY_BORDER_COLOR_INSPECT,
   OVERLAY_FILL_COLOR_INSPECT,
+  ACTIVE_GROUP_BORDER_COLOR,
+  ACTIVE_GROUP_FILL_COLOR,
+  ACTIVE_GROUP_STROKE_WIDTH,
+  ACTIVE_GROUP_SHADOW_PASSES,
+  STATUS_OVERLAY_BORDER_ALPHA,
+  STATUS_OVERLAY_FILL_ALPHA,
+  SHAKE_DURATION_MS,
+  SHAKE_AMPLITUDE_PX,
+  SHAKE_PERIOD_MS,
 } from "../constants.js";
 import {
   nativeCancelAnimationFrame,
   nativeRequestAnimationFrame,
 } from "../utils/native-raf.js";
 import { supportsDisplayP3 } from "../utils/supports-display-p3.js";
-import { statusOverlayColor } from "../utils/overlay-color.js";
+import { statusOverlayColor, activeGroupOverlayColor } from "../utils/overlay-color.js";
+
+/**
+ * Returns the horizontal shake offset (in px) for a decaying sine oscillation.
+ * Amplitude decays linearly to zero over SHAKE_DURATION_MS.
+ * Returns 0 once the animation has completed.
+ */
+const computeShakeOffset = (shakeStartTime: number, now: number): number => {
+  const elapsed = now - shakeStartTime;
+  if (elapsed >= SHAKE_DURATION_MS) return 0;
+  const decay = 1 - elapsed / SHAKE_DURATION_MS;
+  const oscillation = Math.sin((elapsed / SHAKE_PERIOD_MS) * Math.PI * 2);
+  return oscillation * SHAKE_AMPLITUDE_PX * decay;
+};
+
+const isShakeActive = (shakeStartTime: number | undefined, now: number): boolean =>
+  shakeStartTime !== undefined && now - shakeStartTime < SHAKE_DURATION_MS;
 
 const DEFAULT_LAYER_STYLE = {
   borderColor: OVERLAY_BORDER_COLOR_DEFAULT,
@@ -71,6 +96,10 @@ interface AnimatedBounds {
   isInitialized: boolean;
   borderColor?: string;
   fillColor?: string;
+  strokeWidth?: number;
+  shadowPasses?: ReadonlyArray<{ blur: number; alpha: number }>;
+  shadowBaseColor?: string;
+  shakeStartTime?: number;
 }
 
 export interface OverlayCanvasProps {
@@ -95,6 +124,8 @@ export interface OverlayCanvasProps {
   agentSessions?: Map<string, AgentSession>;
 
   labelInstances?: SelectionLabelInstance[];
+
+  activeGroupId?: string | null;
 }
 
 export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
@@ -118,6 +149,9 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
   let grabbedAnimations: AnimatedBounds[] = [];
   let processingAnimations: AnimatedBounds[] = [];
   let inspectAnimations: AnimatedBounds[] = [];
+  // Set once when activeGroupId changes — shared across all label animations for that frame.
+  // Never re-assigned on labelInstances re-renders, so the shake does not restart.
+  let shakeEpoch: number | null = null;
 
   const canvasColorSpace: PredefinedColorSpace = supportsDisplayP3()
     ? "display-p3"
@@ -230,6 +264,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
     fillColor: string,
     strokeColor: string,
     opacity: number = 1,
+    strokeWidth: number = 1,
   ) => {
     if (rectWidth <= 0 || rectHeight <= 0) return;
 
@@ -252,7 +287,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
     context.fillStyle = fillColor;
     context.fill();
     context.strokeStyle = strokeColor;
-    context.lineWidth = 1;
+    context.lineWidth = strokeWidth;
     context.stroke();
     context.globalAlpha = 1;
   };
@@ -309,6 +344,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
   const renderBoundsLayer = (
     layerName: keyof typeof LAYER_STYLES,
     animations: AnimatedBounds[],
+    now: number,
   ) => {
     const layer = layers[layerName];
     if (!layer.context) return;
@@ -319,21 +355,52 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
     const style = LAYER_STYLES[layerName];
 
     for (const animation of animations) {
-      drawRoundedRectangle(
-        context,
-        animation.current.x,
-        animation.current.y,
-        animation.current.width,
-        animation.current.height,
-        animation.borderRadius,
-        animation.fillColor ?? style.fillColor,
-        animation.borderColor ?? style.borderColor,
-        animation.opacity,
-      );
+      const fillColor = animation.fillColor ?? style.fillColor;
+      const borderColor = animation.borderColor ?? style.borderColor;
+      const strokeWidth = animation.strokeWidth ?? 1;
+      const drawX =
+        animation.current.x +
+        (animation.shakeStartTime !== undefined
+          ? computeShakeOffset(animation.shakeStartTime, now)
+          : 0);
+
+      if (animation.shadowPasses && animation.shadowBaseColor) {
+        for (const pass of animation.shadowPasses) {
+          context.shadowColor = activeGroupOverlayColor(pass.alpha);
+          context.shadowBlur = pass.blur;
+          drawRoundedRectangle(
+            context,
+            drawX,
+            animation.current.y,
+            animation.current.width,
+            animation.current.height,
+            animation.borderRadius,
+            fillColor,
+            borderColor,
+            animation.opacity,
+            strokeWidth,
+          );
+        }
+        context.shadowColor = "transparent";
+        context.shadowBlur = 0;
+      } else {
+        drawRoundedRectangle(
+          context,
+          drawX,
+          animation.current.y,
+          animation.current.width,
+          animation.current.height,
+          animation.borderRadius,
+          fillColor,
+          borderColor,
+          animation.opacity,
+          strokeWidth,
+        );
+      }
     }
   };
 
-  const compositeAllLayers = () => {
+  const compositeAllLayers = (now: number) => {
     if (!mainContext || !canvasRef) return;
 
     mainContext.setTransform(1, 0, 0, 1, 0, 0);
@@ -342,9 +409,9 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
 
     renderDragLayer();
     renderSelectionLayer();
-    renderBoundsLayer("grabbed", grabbedAnimations);
-    renderBoundsLayer("processing", processingAnimations);
-    renderBoundsLayer("inspect", inspectAnimations);
+    renderBoundsLayer("grabbed", grabbedAnimations, now);
+    renderBoundsLayer("processing", processingAnimations, now);
+    renderBoundsLayer("inspect", inspectAnimations, now);
 
     const layerRenderOrder: LayerName[] = [
       "inspect",
@@ -415,6 +482,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
   };
 
   const runAnimationFrame = () => {
+    const now = Date.now();
     let shouldContinueAnimating = false;
 
     if (dragAnimation?.isInitialized) {
@@ -431,7 +499,6 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
       }
     }
 
-    const currentTimestamp = Date.now();
     grabbedAnimations = grabbedAnimations.filter((animation) => {
       const isLabelAnimation = animation.id.startsWith("label-");
 
@@ -446,8 +513,12 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
         }
       }
 
+      if (isShakeActive(animation.shakeStartTime, now)) {
+        shouldContinueAnimating = true;
+      }
+
       if (animation.createdAt) {
-        const elapsed = currentTimestamp - animation.createdAt;
+        const elapsed = now - animation.createdAt;
         const fadeOutDeadline = FEEDBACK_DURATION_MS + FADE_OUT_BUFFER_MS;
 
         if (elapsed >= fadeOutDeadline) {
@@ -493,7 +564,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
       }
     }
 
-    compositeAllLayers();
+    compositeAllLayers(now);
 
     if (shouldContinueAnimating) {
       animationFrameId = nativeRequestAnimationFrame(runAnimationFrame);
@@ -586,8 +657,8 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
 
   createEffect(
     on(
-      () => [props.grabbedBoxes, props.labelInstances] as const,
-      ([grabbedBoxes, labelInstances]) => {
+      () => [props.grabbedBoxes, props.labelInstances, props.activeGroupId] as const,
+      ([grabbedBoxes, labelInstances]) => { // activeGroupId accessed via props.activeGroupId
         const boxesToProcess = grabbedBoxes ?? [];
         const activeBoxIds = new Set(boxesToProcess.map((box) => box.id));
         const existingAnimationIds = new Set(
@@ -614,13 +685,27 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
         }
 
         const instancesToProcess = labelInstances ?? [];
+        const currentActiveGroupId = props.activeGroupId;
 
         for (const instance of instancesToProcess) {
           const boundsToRender = resolveBoundsArray(instance);
           const targetOpacity = instance.status === "fading" ? 0 : 1;
-          const groupStatus = instance.groupStatus ?? "open";
-          const instanceBorderColor = statusOverlayColor(groupStatus, 0.5);
-          const instanceFillColor = statusOverlayColor(groupStatus, 0.08);
+          const isActiveGroup =
+            currentActiveGroupId != null &&
+            instance.groupId === currentActiveGroupId;
+          const instanceBorderColor = isActiveGroup
+            ? ACTIVE_GROUP_BORDER_COLOR
+            : instance.groupStatus
+              ? statusOverlayColor(instance.groupStatus, STATUS_OVERLAY_BORDER_ALPHA)
+              : OVERLAY_BORDER_COLOR_DEFAULT;
+          const instanceFillColor = isActiveGroup
+            ? ACTIVE_GROUP_FILL_COLOR
+            : instance.groupStatus
+              ? statusOverlayColor(instance.groupStatus, STATUS_OVERLAY_FILL_ALPHA)
+              : OVERLAY_FILL_COLOR_DEFAULT;
+          const instanceShadowPasses = isActiveGroup
+            ? ACTIVE_GROUP_SHADOW_PASSES
+            : undefined;
 
           for (let index = 0; index < boundsToRender.length; index++) {
             const bounds = boundsToRender[index];
@@ -633,6 +718,11 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
               updateAnimationTarget(existingAnimation, bounds, targetOpacity);
               existingAnimation.borderColor = instanceBorderColor;
               existingAnimation.fillColor = instanceFillColor;
+              existingAnimation.strokeWidth = isActiveGroup ? ACTIVE_GROUP_STROKE_WIDTH : undefined;
+              existingAnimation.shadowPasses = instanceShadowPasses;
+              existingAnimation.shadowBaseColor = isActiveGroup ? ACTIVE_GROUP_BORDER_COLOR : undefined;
+              existingAnimation.shakeStartTime =
+                isActiveGroup && shakeEpoch !== null ? shakeEpoch : undefined;
             } else {
               const anim = createAnimatedBounds(animationId, bounds, {
                 opacity: 1,
@@ -640,6 +730,11 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
               });
               anim.borderColor = instanceBorderColor;
               anim.fillColor = instanceFillColor;
+              anim.strokeWidth = isActiveGroup ? ACTIVE_GROUP_STROKE_WIDTH : undefined;
+              anim.shadowPasses = instanceShadowPasses;
+              anim.shadowBaseColor = isActiveGroup ? ACTIVE_GROUP_BORDER_COLOR : undefined;
+              anim.shakeStartTime =
+                isActiveGroup && shakeEpoch !== null ? shakeEpoch : undefined;
               grabbedAnimations.push(anim);
             }
           }
@@ -724,6 +819,19 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
           return createAnimatedBounds(animationId, ancestorBounds);
         });
 
+        scheduleAnimationFrame();
+      },
+    ),
+  );
+
+  // Dedicated effect: set shakeEpoch only when activeGroupId changes.
+  // Decoupled from labelInstances so the epoch is never re-assigned on re-renders,
+  // which would restart the shake after it completes.
+  createEffect(
+    on(
+      () => props.activeGroupId,
+      (activeGroupId) => {
+        shakeEpoch = activeGroupId != null ? Date.now() : null;
         scheduleAnimationFrame();
       },
     ),

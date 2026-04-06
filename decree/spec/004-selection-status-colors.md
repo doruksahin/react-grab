@@ -165,12 +165,43 @@ export const activeGroupOverlayColor = (alpha: number): string =>
     : `rgba(${ACTIVE_GROUP_COLORS.srgb}, ${alpha})`;
 ```
 
-**Glow effect:** The canvas draws the active group's selections with:
-- Border: `activeGroupOverlayColor(0.7)` — brighter than normal
-- Fill: `activeGroupOverlayColor(0.12)` — subtle tinted fill
-- Shadow: `ctx.shadowColor = activeGroupOverlayColor(0.5)`, `ctx.shadowBlur = 12` — the glow
+**Glow effect:** The canvas draws the active group's selections with a two-pass shadow technique for a neon look:
 
-**Data threading:** `activeDetailGroupId` from the sidebar needs to reach the overlay canvas. Thread it from `renderer.tsx` to `OverlayCanvas` as a new prop:
+- **Border:** `activeGroupOverlayColor(0.9)`, `lineWidth: 2` — thicker and brighter than normal (1px)
+- **Fill:** `activeGroupOverlayColor(0.12)` — subtle tinted fill
+- **Pass 1 (outer glow):** `shadowColor: activeGroupOverlayColor(0.35)`, `shadowBlur: 20` — wide soft halo
+- **Pass 2 (core glow):** `shadowColor: activeGroupOverlayColor(0.7)`, `shadowBlur: 6` — tight bright edge
+
+Each pass redraws the same rect. Alpha accumulates across passes, making the center appear brighter — the standard canvas neon technique. Reset `shadowColor/shadowBlur/lineWidth` after both passes.
+
+Store shadow passes as `shadowPasses?: Array<{ blur: number; alpha: number }>` on `AnimatedBounds` so `renderBoundsLayer` can iterate them without per-animation branching.
+
+Constants to add to `constants.ts`:
+```typescript
+export const ACTIVE_GROUP_SHADOW_PASSES = [
+  { blur: 20, alpha: 0.35 }, // outer glow
+  { blur: 6,  alpha: 0.7  }, // core glow
+] as const;
+export const ACTIVE_GROUP_STROKE_WIDTH = 2;
+```
+
+**Data threading:** `activeDetailGroupId` lives as local state inside `Sidebar`. It must be lifted to `renderer.tsx` so it can reach `OverlayCanvas`.
+
+Signal chain:
+```
+Sidebar.activeDetailGroupId (internal signal)
+  → props.onActiveDetailGroupChange(id | null)  [new SidebarProps callback]
+    → renderer.tsx: activeDetailGroupId signal
+      → OverlayCanvas.activeGroupId prop
+```
+
+- Add `onActiveDetailGroupChange?: (groupId: string | null) => void` to `SidebarProps`
+- Sidebar calls it via `createEffect` whenever `activeDetailGroupId` changes
+- `renderer.tsx` holds `const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<string | null>(null)`
+- On sidebar close, reset: `setActiveDetailGroupId(null)`
+- Pass `activeDetailGroupId()` to `OverlayCanvas` as `activeGroupId`
+
+**Do NOT use `selectionGroups.activeGroupId`** for the glow — that tracks the assignment group for new selections, not the sidebar detail view.
 
 ```typescript
 // OverlayCanvasProps — add:
@@ -199,9 +230,11 @@ packages/react-grab/src/
 │   ├── icon-ticket.tsx               NEW: clipboard-check icon (12px)
 │   └── icon-check.tsx                NEW: checkmark icon (12px)
 ├── core/
-│   └── index.tsx                     Modified: add groupStatus to labelInstances, thread activeDetailGroupId to canvas
+│   └── index.tsx                     Modified: add groupStatus to labelInstances
 ├── components/
-│   └── renderer.tsx                  Modified: pass activeDetailGroupId to OverlayCanvas
+│   ├── renderer.tsx                  Modified: hold activeDetailGroupId signal, pass to OverlayCanvas, reset on close
+│   └── sidebar/
+│       └── index.tsx                 Modified: add onActiveDetailGroupChange callback to SidebarProps
 └── types.ts                          Modified: add groupStatus, groupId to SelectionLabelInstance
 ```
 

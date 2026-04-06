@@ -7,10 +7,14 @@ export const DEFAULT_GROUP_NAME = "Default" as const;
 
 /**
  * Application-level group type. Extends the server type with UI-only fields.
- * Currently empty — placeholder for future fields like local UI state.
- * Do not add server-persisted fields here; update the OpenAPI spec instead.
+ * Extends the server type with UI-layer fields that are persisted locally
+ * (localStorage / D1 via the storage adapter) but not part of the OpenAPI spec.
  */
-export interface SelectionGroup extends ServerSelectionGroup {}
+export interface SelectionGroup extends ServerSelectionGroup {
+  /** True when JIRA polling confirms statusCategory === "done". Persisted so it
+   *  survives page refresh without waiting for the next poll cycle. */
+  jiraResolved?: boolean;
+}
 
 export const createDefaultGroup = (): SelectionGroup => ({
   id: DEFAULT_GROUP_ID,
@@ -56,4 +60,5 @@ export interface SelectionGroupsViewProps {
   onDeleteGroup?: (groupId: string) => void;
   onToggleGroupRevealed?: (groupId: string) => void;
   onMoveItem?: (itemId: string, groupId: string) => void;
+  onJiraResolved?: (groupId: string) => void;
 }

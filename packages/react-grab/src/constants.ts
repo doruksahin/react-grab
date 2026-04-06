@@ -1,4 +1,4 @@
-import { overlayColor } from "./utils/overlay-color.js";
+import { overlayColor, statusOverlayColor, activeGroupOverlayColor } from "./utils/overlay-color.js";
 
 export const VERSION = process.env.VERSION as string;
 
@@ -56,6 +56,28 @@ export const OVERLAY_BORDER_COLOR_INSPECT = overlayColor(0.3);
 export const OVERLAY_FILL_COLOR_INSPECT = overlayColor(0.04);
 export const FROZEN_GLOW_COLOR = overlayColor(0.15);
 export const FROZEN_GLOW_EDGE_PX = 50;
+
+export const STATUS_OVERLAY_BORDER_ALPHA = 0.5;
+export const STATUS_OVERLAY_FILL_ALPHA = 0.08;
+
+export const OVERLAY_BORDER_COLOR_STATUS_OPEN = statusOverlayColor("open", STATUS_OVERLAY_BORDER_ALPHA);
+export const OVERLAY_FILL_COLOR_STATUS_OPEN = statusOverlayColor("open", STATUS_OVERLAY_FILL_ALPHA);
+export const OVERLAY_BORDER_COLOR_STATUS_TICKETED = statusOverlayColor("ticketed", STATUS_OVERLAY_BORDER_ALPHA);
+export const OVERLAY_FILL_COLOR_STATUS_TICKETED = statusOverlayColor("ticketed", STATUS_OVERLAY_FILL_ALPHA);
+export const OVERLAY_BORDER_COLOR_STATUS_RESOLVED = statusOverlayColor("resolved", STATUS_OVERLAY_BORDER_ALPHA);
+export const OVERLAY_FILL_COLOR_STATUS_RESOLVED = statusOverlayColor("resolved", STATUS_OVERLAY_FILL_ALPHA);
+
+export const SHAKE_DURATION_MS = 600;
+export const SHAKE_AMPLITUDE_PX = 3;
+export const SHAKE_PERIOD_MS = 60;
+
+export const ACTIVE_GROUP_BORDER_COLOR = activeGroupOverlayColor(0.9);
+export const ACTIVE_GROUP_FILL_COLOR = activeGroupOverlayColor(0.12);
+export const ACTIVE_GROUP_STROKE_WIDTH = 2;
+export const ACTIVE_GROUP_SHADOW_PASSES = [
+  { blur: 20, alpha: 0.35 }, // outer glow
+  { blur: 6, alpha: 0.7 },   // core glow
+] as const;
 
 export const ARROW_HEIGHT_PX = 8;
 export const ARROW_MIN_SIZE_PX = 4;
