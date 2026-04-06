@@ -1,12 +1,18 @@
 import type { CommentItem, ScreenshotConfig } from "../../types.js";
 import type { StorageAdapter } from "../sync/types.js";
-import { captureElement, captureFullPage } from "./capture.js";
+import {
+  capturePageCanvas,
+  canvasToBlob,
+  cropElementFromCanvas,
+  drawHighlightOnCanvas,
+} from "./capture.js";
 
 type ScreenshotResult = Pick<CommentItem, "screenshotElement" | "screenshotFullPage">;
 
 /**
  * Captures screenshots for a selection and uploads them.
- * Returns the storage keys to patch onto the CommentItem.
+ * Renders the full page once, then derives both the element crop and full-page
+ * blob from the same canvas pass.
  * Fire-and-forget — failures return null keys silently.
  */
 export async function captureAndUploadScreenshots(
@@ -17,8 +23,11 @@ export async function captureAndUploadScreenshots(
 ): Promise<ScreenshotResult> {
   const result: ScreenshotResult = {};
 
-  // Capture element screenshot
-  const elementBlob = await captureElement(element, config);
+  const canvas = await capturePageCanvas(config, element);
+  if (!canvas) return result;
+
+  // Element crop — before highlight so the selected element shot is clean
+  const elementBlob = await cropElementFromCanvas(canvas, element, config);
   if (elementBlob) {
     if (adapter?.uploadScreenshot) {
       try {
@@ -31,14 +40,14 @@ export async function captureAndUploadScreenshots(
         // Silent fail — screenshot is best-effort
       }
     } else {
-      // Local-only mode: use blob URL
       result.screenshotElement = URL.createObjectURL(elementBlob);
     }
   }
 
-  // Capture full page screenshot
+  // Full-page blob — draw highlight first, then export
   if (config.captureFullPage !== false) {
-    const fullPageBlob = await captureFullPage(config, element);
+    drawHighlightOnCanvas(canvas, element, config);
+    const fullPageBlob = await canvasToBlob(canvas, config);
     if (fullPageBlob) {
       if (adapter?.uploadScreenshot) {
         try {
