@@ -169,6 +169,7 @@ export class JiraService {
       statusCategory: issue.fields.status?.statusCategory?.name ?? "Unknown",
       assignee: issue.fields.assignee?.displayName ?? null,
       reporter: issue.fields.reporter?.displayName ?? null,
+      jiraUrl: `${this.config.baseUrl}/browse/${ticketId}`,
     };
   }
 

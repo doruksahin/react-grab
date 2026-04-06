@@ -201,6 +201,7 @@ export type GetJiraTicketStatus200 = {
   assignee: string | null;
   /** @nullable */
   reporter: string | null;
+  jiraUrl: string;
 };
 
 export type GetJiraTicketStatus404 = {

@@ -3861,6 +3861,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 jiraAssignee: status.assignee,
                 jiraReporter: status.reporter,
                 jiraResolved: resolved,
+                jiraUrl: status.jiraUrl,
               }
             : g,
         );
