@@ -5,6 +5,7 @@ import {
   createMemo,
   createSignal,
   Show,
+  untrack,
 } from "solid-js";
 import createFocusTrap from "solid-focus-trap";
 import type { CommentItem } from "../../types.js";
@@ -132,14 +133,19 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     );
   });
 
+  // NOTE: groups() is read via untrack() to prevent a reactive loop:
+  // filter effect → setGroupsRevealed → persistGroups → props.groups changes
+  // → merge effect → setGroups() → groups() changes → filter effect re-runs → LOOP
+  // Only filterState() is tracked — this effect re-runs only when the user changes filters.
   createEffect(() => {
     const filter = filterState();
-    const allIds = groups().map((g) => g.id);
+    const allGroups = untrack(() => groups());
+    const allIds = allGroups.map((g) => g.id);
     if (!isFilterActive(filter)) {
       props.onFilterVisibilityChange?.(new Set(allIds), allIds);
       return;
     }
-    const filtered = applyFilters(groups(), filter);
+    const filtered = applyFilters(allGroups, filter);
     const visibleIds = new Set(filtered.map((g) => g.id));
     props.onFilterVisibilityChange?.(visibleIds, allIds);
   });
