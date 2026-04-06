@@ -640,10 +640,14 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
             instance.groupId === currentActiveGroupId;
           const instanceBorderColor = isActiveGroup
             ? ACTIVE_GROUP_BORDER_COLOR
-            : statusOverlayColor(instance.groupStatus ?? "open", 0.5);
+            : instance.groupStatus
+              ? statusOverlayColor(instance.groupStatus, 0.5)
+              : OVERLAY_BORDER_COLOR_DEFAULT;
           const instanceFillColor = isActiveGroup
             ? ACTIVE_GROUP_FILL_COLOR
-            : statusOverlayColor(instance.groupStatus ?? "open", 0.08);
+            : instance.groupStatus
+              ? statusOverlayColor(instance.groupStatus, 0.08)
+              : OVERLAY_FILL_COLOR_DEFAULT;
           const instanceShadowColor = isActiveGroup
             ? ACTIVE_GROUP_SHADOW_COLOR
             : undefined;
