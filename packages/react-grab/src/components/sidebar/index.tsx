@@ -16,7 +16,7 @@ import { EmptyState } from "./empty-state.js";
 import { StatsBar } from "./stats-bar.js";
 import { FilterBar } from "./filter-bar.js";
 import { FilterChips } from "./filter-chips.js";
-import { type FilterState, EMPTY_FILTER, isFilterActive, applyFilters, getDistinctAssignees, getDistinctReporters } from "../../features/sidebar/filter-state.js";
+import { type FilterState, EMPTY_FILTER, isFilterActive, applyFilters, getDistinctAssignees, getDistinctReporters, getDistinctLabels } from "../../features/sidebar/filter-state.js";
 import { GroupList } from "./group-list.js";
 import { GroupDetailView } from "./group-detail-view.js";
 import { StatusLegend } from "./status-legend.js";
@@ -173,6 +173,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   filter={filterState()}
                   assignees={getDistinctAssignees(props.groups)}
                   reporters={getDistinctReporters(props.groups)}
+                  labels={getDistinctLabels(props.groups)}
                   onFilterChange={setFilterState}
                 />
                 <FilterChips
