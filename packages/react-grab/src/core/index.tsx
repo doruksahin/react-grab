@@ -3823,6 +3823,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           jiraStatusCategory: group?.jiraStatusCategory,
           jiraAssignee: group?.jiraAssignee,
           jiraReporter: group?.jiraReporter,
+          jiraAssigneeAvatar: group?.jiraAssigneeAvatar,
+          jiraReporterAvatar: group?.jiraReporterAvatar,
           jiraLabels: group?.jiraLabels,
         };
       }),

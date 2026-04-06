@@ -1,9 +1,10 @@
 import { type Component, Show, For } from "solid-js";
 import type { SelectionLabelInstance } from "../../types.js";
 import { getStatusColor } from "../../features/sidebar/status-colors.js";
+import { UserAvatar } from "../sidebar/UserAvatar.js";
 
 type JiraMetaProps = Required<Pick<SelectionLabelInstance, "jiraTicketId">> &
-  Pick<SelectionLabelInstance, "jiraUrl" | "jiraAssignee" | "jiraReporter"> & {
+  Pick<SelectionLabelInstance, "jiraUrl" | "jiraAssignee" | "jiraReporter" | "jiraAssigneeAvatar" | "jiraReporterAvatar"> & {
     jiraStatus?: string;
     labels?: string[];
   };
@@ -36,13 +37,23 @@ export const JiraMeta: Component<JiraMetaProps> = (props) => (
         )}
       </Show>
       <Show when={props.jiraAssignee}>
-        <span class="text-[10px] text-black/40 truncate">
-          👤 {props.jiraAssignee}
+        <span class="flex items-center gap-1 text-[10px] text-black/40 truncate">
+          <UserAvatar
+            avatarUrl={props.jiraAssigneeAvatar}
+            displayName={props.jiraAssignee}
+            size={14}
+          />
+          {props.jiraAssignee}
         </span>
       </Show>
       <Show when={props.jiraReporter}>
-        <span class="text-[10px] text-black/30 truncate">
-          ✏️ {props.jiraReporter}
+        <span class="flex items-center gap-1 text-[10px] text-black/30 truncate">
+          <UserAvatar
+            avatarUrl={props.jiraReporterAvatar}
+            displayName={props.jiraReporter}
+            size={14}
+          />
+          {props.jiraReporter}
         </span>
       </Show>
     </div>
