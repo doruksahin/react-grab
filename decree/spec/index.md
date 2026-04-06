@@ -9,3 +9,4 @@
 | SPEC-003 | SPEC-003 JIRA integration — ticket creation and status tracking | implemented | 2026-04-05 |
 | SPEC-004 | SPEC-004 Selection Status Colors | implemented | 2026-04-06 |
 | SPEC-005 | SPEC-005 Full-Page Screenshot Element Highlighting | draft | 2026-04-06 |
+| SPEC-006 | SPEC-006 ATT Status Visualization and Filtering | draft | 2026-04-06 |

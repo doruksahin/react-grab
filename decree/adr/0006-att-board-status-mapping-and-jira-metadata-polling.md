@@ -1,7 +1,10 @@
 ---
-status: proposed
-date: 2026-04-06
-references: [PRD-004, ADR-0002, ADR-0003]
+date: '2026-04-06'
+references:
+- PRD-004
+- ADR-0002
+- ADR-0003
+status: accepted
 ---
 
 # ADR-0006 ATT Board Status Mapping and JIRA Metadata Polling
