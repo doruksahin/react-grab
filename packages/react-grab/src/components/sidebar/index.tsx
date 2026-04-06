@@ -290,7 +290,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               shadowRoot={shadowRoot()}
               onBack={() => setActiveDetailGroupId(null)}
               onTicketCreated={handleTicketCreated}
-              onStatusUpdate={handleStatusUpdate}
             />
           </Show>
         </Show>
