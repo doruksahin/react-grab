@@ -28,7 +28,7 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
         <div
           class="fixed inset-0 bg-black/60"
           style={{
-            "z-index": "10000",
+            "z-index": "2147483647",
             "pointer-events": "auto",
           }}
           onClick={props.onClose}
@@ -36,7 +36,7 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
         {/* Dialog panel */}
         <div
           class="fixed inset-0 flex items-center justify-center"
-          style={{ "z-index": "10001", "pointer-events": "none" }}
+          style={{ "z-index": "2147483647", "pointer-events": "none" }}
         >
           <div
             class="bg-[#1a1a1a] rounded-xl w-[480px] max-h-[80vh] overflow-y-auto p-6 border border-white/10"
