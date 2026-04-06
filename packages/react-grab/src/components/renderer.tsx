@@ -208,6 +208,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             hideArrow={instance().hideArrow}
             groupStatus={instance().groupStatus}
             jiraTicketId={instance().jiraTicketId}
+            jiraUrl={instance().jiraUrl}
             groups={props.groups}
             activeGroupId={props.activeGroupId}
             onActiveGroupChange={props.onActiveGroupChange}
