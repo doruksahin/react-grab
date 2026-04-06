@@ -604,10 +604,7 @@ All new overlay components must carry `pointer-events: auto` on container elemen
 - [x] `Sidebar` owns a local `createSignal<SelectionGroupWithJira[]>` for groups; synced from `props.groups` via `createEffect` (preserving local jira fields)
 - [x] `GroupDetailView` renders `JiraCreateButton` when `deriveStatus(group) === "open"` (PRD-002)
 - [x] `GroupDetailView` renders `JiraStatusBanner` when status is `"ticketed"` or `"resolved"` (PRD-002)
-- [x] `JiraCreateDialog` opens on button click; uses `<Portal mount={shadowRoot}>` for shadow DOM rendering *(native dialog instead of Kobalte Dialog — Kobalte Combobox deferred to Phase 4)*
-- [ ] `disableOutsidePointerEvents={true}` applied on `Dialog.Content` (ADR-0005 Issue #445 workaround) *(deferred — using native dialog, not Kobalte)*
-- [ ] Project selector: `Combobox` with `forceMount={true}` + `<Portal mount={shadowRoot}>`; filters options as user types *(deferred — using native `<select>` for Phase 3)*
-- [ ] Issue type selector: `Combobox` with `forceMount={true}` + `<Portal mount={shadowRoot}>`; filters options as user types *(deferred — using native `<select>`, project-scoped)*
+- [x] `JiraCreateDialog` opens on button click; uses `<Portal mount={shadowRoot}>` for shadow DOM rendering
 - [x] Priority selector: native `<select>` defaults to "Medium"
 - [x] Summary field pre-filled with `defaultSummary(group)`; user-editable
 - [x] Description field pre-filled with `defaultDescription(group, commentItems)`; user-editable
@@ -628,15 +625,20 @@ All new overlay components must carry `pointer-events: auto` on container elemen
 - [x] `defaultSummary` and `defaultDescription` exported from `features/sidebar/jira-defaults.ts`
 - [x] `ShadowRootContext`, `useShadowRoot` exported from `features/sidebar/shadow-context.ts`
 - [x] `SelectionGroupWithJira` exported from `features/sidebar/jira-types.ts`
-- [ ] Unit tests pass *(e2e tests written, unit tests deferred)*
+- [x] E2e tests pass (unit tests not needed — see Won't Do below)
 - [x] Integration tests pass: dialog open/close, form submission, status transition, polling lifecycle
 - [x] `decree lint` passes with zero errors
 
+### Won't Do
+
+These items were in the original SPEC but are intentionally dropped:
+
+- **Kobalte Combobox for project/issue-type selectors.** Native `<select>` works. With the ATT project filter on the API, the project list is small enough that search isn't needed. Adding Kobalte introduces the Shadow DOM portal complexity (R-005, ADR-0005) for no user-facing benefit. If feedback shows users need search, revisit.
+- **Kobalte `disableOutsidePointerEvents` workaround.** Not applicable — we used a native dialog with `<Portal mount={shadowRoot}>` instead of Kobalte Dialog. The Kobalte Issue #445 workaround is irrelevant.
+- **Dedicated unit tests for JIRA components.** E2e tests cover the full create/poll/status workflow. The individual functions (`defaultSummary`, `defaultDescription`, `deriveStatus`) are simple pure functions that are implicitly tested through e2e. Adding vitest + solid-testing-library for these adds test infrastructure overhead with diminishing returns.
+
 ### Deferred (Phase 4+)
 
-- [ ] Focus trapping inside JIRA dialog (Phase 4 — `solid-focus-trap`)
-- [ ] `aria-modal="true"` on dialog for screen reader isolation (Phase 4)
-- [ ] Keyboard navigation in project/issue-type comboboxes beyond Kobalte defaults (Phase 4)
-- [ ] Kobalte Issue #445 workaround removal when upstream fix is released (ongoing)
-- [ ] Persist `jiraResolved` to D1 so refresh does not reset to `ticketed` (Phase 4+)
-- [ ] JIRA status polling for `resolved` groups (currently polling stops at `open`/`ticketed`) — re-evaluate if polling `resolved` groups is needed
+- [ ] Focus trapping inside JIRA dialog (`solid-focus-trap`)
+- [ ] `aria-modal="true"` on dialog for screen reader isolation
+- [ ] Persist `jiraResolved` to D1 so refresh does not reset to `ticketed`
