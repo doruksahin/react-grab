@@ -25,6 +25,8 @@ import {
   ACTIVE_GROUP_FILL_COLOR,
   ACTIVE_GROUP_SHADOW_COLOR,
   ACTIVE_GROUP_SHADOW_BLUR,
+  STATUS_OVERLAY_BORDER_ALPHA,
+  STATUS_OVERLAY_FILL_ALPHA,
 } from "../constants.js";
 import {
   nativeCancelAnimationFrame,
@@ -641,12 +643,12 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
           const instanceBorderColor = isActiveGroup
             ? ACTIVE_GROUP_BORDER_COLOR
             : instance.groupStatus
-              ? statusOverlayColor(instance.groupStatus, 0.5)
+              ? statusOverlayColor(instance.groupStatus, STATUS_OVERLAY_BORDER_ALPHA)
               : OVERLAY_BORDER_COLOR_DEFAULT;
           const instanceFillColor = isActiveGroup
             ? ACTIVE_GROUP_FILL_COLOR
             : instance.groupStatus
-              ? statusOverlayColor(instance.groupStatus, 0.08)
+              ? statusOverlayColor(instance.groupStatus, STATUS_OVERLAY_FILL_ALPHA)
               : OVERLAY_FILL_COLOR_DEFAULT;
           const instanceShadowColor = isActiveGroup
             ? ACTIVE_GROUP_SHADOW_COLOR
