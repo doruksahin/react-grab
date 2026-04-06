@@ -60,24 +60,10 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     props.groups,
   );
 
-  // Keep local signal in sync when parent updates (new groups from sync).
-  // Preserve local JIRA fields when merging.
+  // Keep local signal in sync when parent updates.
+  // Core is now the source of truth for JIRA status fields (polled there).
   createEffect(() => {
-    setGroups((prev) =>
-      props.groups.map((pg) => {
-        const local = prev.find((lg) => lg.id === pg.id);
-        if (!local) return pg;
-        return {
-          ...pg,
-          jiraResolved: local.jiraResolved,
-          jiraStatus: local.jiraStatus,
-          jiraStatusCategory: local.jiraStatusCategory,
-          jiraUrl: local.jiraUrl,
-          jiraAssignee: local.jiraAssignee,
-          jiraReporter: local.jiraReporter,
-        };
-      }),
-    );
+    setGroups(props.groups as SelectionGroupWithJira[]);
   });
 
   const [showLegend, setShowLegend] = createSignal(false);
