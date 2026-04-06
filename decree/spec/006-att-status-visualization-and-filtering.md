@@ -1,5 +1,5 @@
 ---
-status: draft
+status: approved
 date: 2026-04-06
 references: [PRD-004, ADR-0006, SPEC-003, SPEC-004]
 ---
@@ -120,6 +120,38 @@ export type SelectionGroupWithJira = SelectionGroup & {
 };
 ```
 
+### 3a. Update `handleStatusUpdate` in `components/sidebar/index.tsx`
+
+The existing function stores `status` and `statusCategory`. Extend it to also store `assignee` and `reporter`:
+
+```typescript
+function handleStatusUpdate(
+  groupId: string,
+  status: { status: string; statusCategory: string; assignee: string | null; reporter: string | null },
+) {
+  const resolved = status.statusCategory.toLowerCase() === "done";
+  setGroups((prev) =>
+    prev.map((g) =>
+      g.id === groupId
+        ? {
+            ...g,
+            jiraStatus: status.status,
+            jiraStatusCategory: status.statusCategory,
+            jiraAssignee: status.assignee,
+            jiraReporter: status.reporter,
+            jiraResolved: resolved,
+          }
+        : g,
+    ),
+  );
+  if (resolved) {
+    props.onJiraResolved?.(groupId);
+  }
+}
+```
+
+Also update the merge effect (lines 60-74) to preserve `jiraAssignee` and `jiraReporter` alongside existing fields.
+
 ### 4. Filter State (`features/sidebar/filter-state.ts`)
 
 ```typescript
@@ -188,24 +220,83 @@ Each chip has a dismiss (✕) button that clears that filter dimension only.
 
 ### 7. Reveal/Hide Integration
 
-When filters change in `Sidebar.index.tsx`:
+**Problem:** The Sidebar component doesn't have access to the `SelectionVisibility` API — it only reaches the sidebar through `core/index.tsx → renderer.tsx → comments-dropdown.tsx`. Additionally, `handleToggleGroup` is a toggle (flips `!revealed`), not a setter — using it in a loop is O(n²) and fragile.
+
+**Solution:** Add a batch setter `setGroupsRevealed` to `SelectionVisibilityAPI` and expose it to the Sidebar via a new callback prop.
+
+#### 7a. New batch method on `SelectionVisibilityAPI`
+
+`features/selection-visibility/types.ts` — add to interface:
+
+```typescript
+export interface SelectionVisibilityAPI {
+  // ... existing methods ...
+  /** Batch set revealed state for groups by filter results */
+  setGroupsRevealed: (visibleIds: Set<string>, allGroupIds: string[]) => void;
+}
+```
+
+`features/selection-visibility/index.ts` — implement:
+
+```typescript
+const setGroupsRevealed = (visibleIds: Set<string>, allGroupIds: string[]) => {
+  const updatedGroups = deps.groups().map((g) =>
+    allGroupIds.includes(g.id)
+      ? { ...g, revealed: visibleIds.has(g.id) }
+      : g,
+  );
+  deps.persistGroups(updatedGroups);
+
+  const items = deps.commentItems();
+  const updatedItems = items.map((item) =>
+    item.groupId && allGroupIds.includes(item.groupId)
+      ? { ...item, revealed: visibleIds.has(item.groupId) }
+      : item,
+  );
+  deps.setCommentItems(updatedItems);
+  deps.persistCommentItems(updatedItems);
+};
+```
+
+One pass, no toggle, no reactivity loop.
+
+#### 7b. New callback prop on `SidebarProps`
+
+```typescript
+export interface SidebarProps {
+  // ... existing props ...
+  onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
+}
+```
+
+Wired in `core/index.tsx`:
+
+```typescript
+<Sidebar
+  onFilterVisibilityChange={visibility.setGroupsRevealed}
+  // ... existing props ...
+/>
+```
+
+#### 7c. Filter effect in `Sidebar.index.tsx`
 
 ```typescript
 createEffect(() => {
-  const filtered = applyFilters(groups(), filterState());
-  const filteredIds = new Set(filtered.map(g => g.id));
-
-  // Hide groups not matching filters
-  for (const group of groups()) {
-    const shouldReveal = filteredIds.has(group.id);
-    if (group.revealed !== shouldReveal) {
-      visibility.handleToggleGroup(group.id);
-    }
+  const filter = filterState();
+  if (!isFilterActive(filter)) {
+    // No filter active — restore all groups to revealed
+    const allIds = groups().map(g => g.id);
+    props.onFilterVisibilityChange?.(new Set(allIds), allIds);
+    return;
   }
+  const filtered = applyFilters(groups(), filter);
+  const visibleIds = new Set(filtered.map(g => g.id));
+  const allIds = groups().map(g => g.id);
+  props.onFilterVisibilityChange?.(visibleIds, allIds);
 });
 ```
 
-This leverages the existing `SelectionVisibility` API — `handleToggleGroup(groupId)` toggles the `revealed` flag on all comments in the group, which the overlay canvas already respects. No new visibility system needed.
+This reads `filterState()` (owned by sidebar) and `groups()` (local signal), then calls out to core via the callback — no writes back into the sidebar's own signal graph.
 
 ### 8. Status Legend (`components/sidebar/status-legend.tsx`)
 
@@ -225,7 +316,77 @@ Triggered by (i) button in `SidebarHeader`. Renders as a full-sidebar overlay (s
 
 ### 10. Canvas Overlay Colors
 
-`overlay-canvas.tsx` uses `getStatusColor(instance.groupStatus).hex` to set `strokeStyle` and a lower-alpha version for `fillStyle`. This replaces the current `statusOverlayColor()` approach from SPEC-004.
+**Type change required:** The current `GroupStatus = "open" | "ticketed" | "resolved"` type permeates `types.ts`, `overlay-canvas.tsx`, `selection-label/index.tsx`, `overlay-color.ts`, and `constants.ts`. It must be widened to carry the JIRA status name.
+
+#### 10a. Replace `GroupStatus` type
+
+`types.ts`:
+
+```typescript
+// Replace: export type GroupStatus = "open" | "ticketed" | "resolved";
+// With:
+export type GroupStatus = string | undefined;
+// undefined = no JIRA ticket ("No Task"), string = JIRA status name
+```
+
+#### 10b. Update `core/index.tsx` instance creation
+
+```typescript
+// Replace: groupStatus: group ? deriveStatus(group) : ("open" as const),
+// With:
+groupStatus: group?.jiraStatus,
+```
+
+This passes the JIRA status name (e.g., `"In Progress"`) to the overlay instance. `undefined` means no ticket.
+
+#### 10c. Update `overlay-canvas.tsx`
+
+Replace `statusOverlayColor(instance.groupStatus, alpha)` calls with `getStatusColor(instance.groupStatus)`:
+
+```typescript
+import { getStatusColor } from "../features/sidebar/status-colors.js";
+
+// Border:
+const instanceBorderColor = isActiveGroup
+  ? ACTIVE_GROUP_BORDER_COLOR
+  : getStatusColor(instance.groupStatus).hex;
+
+// Fill (use hex with alpha):
+const instanceFillColor = isActiveGroup
+  ? ACTIVE_GROUP_FILL_COLOR
+  : hexToRgba(getStatusColor(instance.groupStatus).hex, STATUS_OVERLAY_FILL_ALPHA);
+```
+
+Add a `hexToRgba` utility to convert hex to rgba string for the fill alpha.
+
+#### 10d. Update `selection-label/index.tsx`
+
+The current badge shows ticket/check icons based on `groupStatus === "ticketed"` / `"resolved"`. Replace with:
+
+```typescript
+import { getStatusColor, getStatusLabel } from "../../features/sidebar/status-colors.js";
+
+// Show badge whenever there's a JIRA status or "No Task" status that isn't the default
+<Show when={props.groupStatus !== undefined || props.jiraTicketId}>
+  <div
+    style={{ background: getStatusColor(props.groupStatus).hex }}
+    // ... badge rendering with status-appropriate icon
+  >
+    {/* Icon logic: check icon for Done/Won't Do, ticket icon for others */}
+  </div>
+</Show>
+```
+
+#### 10e. Remove dead code
+
+After migration, remove:
+- `statusOverlayColor()` from `utils/overlay-color.ts`
+- `STATUS_COLORS` object from `utils/overlay-color.ts`
+- `OVERLAY_BORDER_COLOR_STATUS_*` / `OVERLAY_FILL_COLOR_STATUS_*` constants from `constants.ts`
+- `deriveStatus()` from `features/sidebar/derive-status.ts` (replaced by direct `jiraStatus` read)
+- The old `GroupStatus` union type
+
+**Note:** `overlayColor()` and `activeGroupOverlayColor()` remain — they handle the non-status default overlay colors.
 
 ## Testing Strategy
 
@@ -320,14 +481,21 @@ These are manual checks to confirm the feature works end-to-end:
 - [ ] **UI verify:** Apply a filter → chip appears → click ✕ → filter clears, groups reappear
 
 ### Reveal/Hide Integration
+- [ ] `setGroupsRevealed` batch method added to `SelectionVisibilityAPI`
+- [ ] `SidebarProps` extended with `onFilterVisibilityChange` callback
+- [ ] `core/index.tsx` wires `visibility.setGroupsRevealed` to sidebar callback
 - [ ] When filters active, non-matching groups' selections hidden on canvas (overlay boxes + labels disappear)
-- [ ] Uses existing `SelectionVisibility` API (`handleToggleGroup`) — no new visibility system
 - [ ] When filters cleared, all selections reappear on canvas
+- [ ] No reactivity loops — filter effect reads `filterState()` + `groups()`, writes only via callback to core
 - [ ] **UI verify:** Apply status filter → look at the page → only matching group's selections visible → clear filter → all selections return
 
-### Canvas Colors
-- [ ] Canvas overlay border color comes from `getStatusColor().hex`
-- [ ] Canvas fill uses same hex at lower alpha
+### Canvas Colors & Type Migration
+- [ ] `GroupStatus` type changed from `"open" | "ticketed" | "resolved"` to `string | undefined`
+- [ ] `core/index.tsx` passes `group?.jiraStatus` instead of `deriveStatus(group)` as `groupStatus`
+- [ ] `overlay-canvas.tsx` uses `getStatusColor(instance.groupStatus).hex` for border
+- [ ] `overlay-canvas.tsx` uses `hexToRgba()` helper for fill alpha
+- [ ] `selection-label/index.tsx` badges updated for new status model
+- [ ] Dead code removed: `statusOverlayColor()`, old `STATUS_COLORS`, old `OVERLAY_*_STATUS_*` constants, `deriveStatus()`
 - [ ] **UI verify:** Selection border color on the page matches the badge color in the sidebar
 
 ### Status Legend
@@ -340,7 +508,8 @@ These are manual checks to confirm the feature works end-to-end:
 
 ### Extended Group Type
 - [ ] `jiraAssignee` and `jiraReporter` added to `SelectionGroupWithJira`
-- [ ] `handleStatusUpdate` stores assignee/reporter from poll response
+- [ ] `handleStatusUpdate` stores `assignee` and `reporter` from poll response (updated signature)
+- [ ] Merge effect (lines 60-74) preserves `jiraAssignee` and `jiraReporter` alongside existing fields
 - [ ] **UI verify:** Open a group detail → assignee name visible (if assigned in JIRA)
 
 ### Deferred
