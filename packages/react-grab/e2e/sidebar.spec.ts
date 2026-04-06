@@ -299,6 +299,12 @@ async function setupJiraMocks(page: import("@playwright/test").Page) {
       body: JSON.stringify({
         status: "In Progress",
         statusCategory: "In Progress",
+        assignee: "Jane Doe",
+        reporter: "John Smith",
+        assigneeAvatar: "https://example.com/avatar-jane.png",
+        reporterAvatar: null,
+        jiraUrl: "https://test.atlassian.net/browse/ATT-42",
+        labels: [],
       }),
     }),
   );
@@ -792,5 +798,42 @@ test.describe("Sidebar — JIRA integration", () => {
     await expect
       .poll(() => isJiraDialogVisible(page), { timeout: 2000 })
       .toBe(true);
+  });
+
+  test("group card shows assignee avatar img and reporter initials after status poll", async ({
+    page,
+    reactGrab: _reactGrab,
+  }) => {
+    await setupJiraMocks(page);
+
+    // Assignee avatar: URL provided → img renders
+    // Poll inside the shadow root since waitForSelector cannot pierce shadow DOM
+    await expect
+      .poll(
+        () =>
+          page.evaluate((attrName) => {
+            const host = document.querySelector(`[${attrName}]`);
+            const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
+            return (
+              root
+                ?.querySelector("[data-testid='user-avatar-img']")
+                ?.getAttribute("src") ?? null
+            );
+          }, ATTR),
+        { timeout: 5000 },
+      )
+      .toBe("https://example.com/avatar-jane.png");
+
+    // Reporter avatar: null URL → initials fallback renders with "JS"
+    const reporterInitialsText = await page.evaluate((attrName) => {
+      const host = document.querySelector(`[${attrName}]`);
+      const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
+      return (
+        root
+          ?.querySelector("[data-testid='user-avatar-initials']")
+          ?.textContent?.trim() ?? null
+      );
+    }, ATTR);
+    expect(reporterInitialsText).toBe("JS");
   });
 });
