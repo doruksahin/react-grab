@@ -30,7 +30,7 @@ interface GroupDetailViewProps {
   onTicketCreated?: (groupId: string, ticketId: string, ticketUrl: string) => void;
   onStatusUpdate?: (
     groupId: string,
-    status: { status: string; statusCategory: string },
+    status: { status: string; statusCategory: string; assignee: string | null; reporter: string | null },
   ) => void;
 }
 
