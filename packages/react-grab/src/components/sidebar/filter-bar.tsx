@@ -1,4 +1,4 @@
-import { type Component, Show } from "solid-js";
+import { type Component, Show, For } from "solid-js";
 import type { FilterState } from "../../features/sidebar/filter-state.js";
 import { ALL_ATT_STATUSES } from "../../features/sidebar/status-colors.js";
 
@@ -55,22 +55,16 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
       </select>
       <select class={selectClass} onChange={handleAssigneeChange} value={props.filter.assignee ?? ""}>
         <option value="">All Assignees</option>
-        {props.assignees.map((a) => (
-          <option value={a}>{a}</option>
-        ))}
+        <For each={props.assignees}>{(a) => <option value={a}>{a}</option>}</For>
       </select>
       <select class={selectClass} onChange={handleReporterChange} value={props.filter.reporter ?? ""}>
         <option value="">All Reporters</option>
-        {props.reporters.map((r) => (
-          <option value={r}>{r}</option>
-        ))}
+        <For each={props.reporters}>{(r) => <option value={r}>{r}</option>}</For>
       </select>
       <Show when={props.labels.length > 0}>
         <select class={selectClass} onChange={handleLabelChange} value={props.filter.label ?? ""}>
           <option value="">All Labels</option>
-          {props.labels.map((l) => (
-            <option value={l}>{l}</option>
-          ))}
+          <For each={props.labels}>{(l) => <option value={l}>{l}</option>}</For>
         </select>
       </Show>
       <Show when={hasActiveFilter()}>

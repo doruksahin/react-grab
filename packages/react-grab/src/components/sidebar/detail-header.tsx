@@ -67,7 +67,7 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
             </span>
           </Show>
         </div>
-        <Show when={(groupWithJira().jiraLabels ?? []).length > 0}>
+        <Show when={groupWithJira().jiraLabels?.length}>
           <div class="flex flex-wrap gap-1 mt-1 pl-7">
             <For each={groupWithJira().jiraLabels}>
               {(lbl) => (
