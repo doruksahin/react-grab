@@ -4472,6 +4472,14 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                   );
                   selectionGroups.persistGroups(updated);
                 }}
+                onTicketCreated={(groupId, ticketId, ticketUrl) => {
+                  const updated = selectionGroups.groups().map((g) =>
+                    g.id === groupId
+                      ? { ...g, jiraTicketId: ticketId, jiraUrl: ticketUrl }
+                      : g,
+                  );
+                  selectionGroups.persistGroups(updated);
+                }}
               />
             );
           }, rendererRoot);
