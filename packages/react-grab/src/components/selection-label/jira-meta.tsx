@@ -1,8 +1,10 @@
 import { type Component, Show, For } from "solid-js";
 import type { SelectionLabelInstance } from "../../types.js";
+import { getStatusColor } from "../../features/sidebar/status-colors.js";
 
 type JiraMetaProps = Required<Pick<SelectionLabelInstance, "jiraTicketId">> &
   Pick<SelectionLabelInstance, "jiraUrl" | "jiraAssignee" | "jiraReporter"> & {
+    jiraStatus?: string;
     labels?: string[];
   };
 
@@ -20,6 +22,19 @@ export const JiraMeta: Component<JiraMetaProps> = (props) => (
       >
         {props.jiraTicketId}
       </a>
+      <Show when={props.jiraStatus}>
+        {(status) => (
+          <span
+            class="text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0"
+            style={{
+              background: getStatusColor(status()).bg,
+              color: getStatusColor(status()).text,
+            }}
+          >
+            {status()}
+          </span>
+        )}
+      </Show>
       <Show when={props.jiraAssignee}>
         <span class="text-[10px] text-black/40 truncate">
           👤 {props.jiraAssignee}
