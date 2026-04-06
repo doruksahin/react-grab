@@ -8,12 +8,12 @@ export interface FilterState {
   label: string | null;         // null = all
 }
 
-export const export const EMPTY_FILTER: FilterState = {
+export const export const export const EMPTY_FILTER: FilterState = {
   statuses: new Set(),
   assignee: null,
   reporter: null,
   label: null,
-};;
+};;;
 
 export function isFilterActive(filter: FilterState): boolean {
   return filter.statuses.size > 0 || filter.assignee !== null || filter.reporter !== null || filter.label !== null;
