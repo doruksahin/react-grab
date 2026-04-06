@@ -5,6 +5,7 @@
  * API for the react-grab dashboard — comments, groups, workspaces.
  * OpenAPI spec version: 0.1.0
  */
+import { customFetch } from './custom-fetch.js';
 export type HealthCheck200Status = typeof HealthCheck200Status[keyof typeof HealthCheck200Status];
 
 
@@ -207,14 +208,26 @@ export type ListJiraProjects200Item = {
   name: string;
 };
 
+export type ListJiraProjects500 = {
+  error: string;
+};
+
 export type ListJiraIssueTypes200Item = {
   id: string;
   name: string;
 };
 
+export type ListJiraIssueTypes500 = {
+  error: string;
+};
+
 export type ListJiraPriorities200Item = {
   id: string;
   name: string;
+};
+
+export type ListJiraPriorities500 = {
+  error: string;
 };
 
 /**
@@ -242,20 +255,14 @@ export const getHealthCheckUrl = () => {
 
 export const healthCheck = async ( options?: RequestInit): Promise<healthCheckResponse> => {
 
-  const res = await fetch(getHealthCheckUrl(),
+  return customFetch<healthCheckResponse>(getHealthCheckUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: healthCheckResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as healthCheckResponse
-}
+);}
 
 
 
@@ -284,20 +291,14 @@ export const getListCommentsUrl = (id: string,) => {
 
 export const listComments = async (id: string, options?: RequestInit): Promise<listCommentsResponse> => {
 
-  const res = await fetch(getListCommentsUrl(id),
+  return customFetch<listCommentsResponse>(getListCommentsUrl(id),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: listCommentsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as listCommentsResponse
-}
+);}
 
 
 
@@ -334,7 +335,7 @@ export const getPersistCommentsUrl = (id: string,) => {
 export const persistComments = async (id: string,
     persistCommentsBodyItem: PersistCommentsBodyItem[], options?: RequestInit): Promise<persistCommentsResponse> => {
 
-  const res = await fetch(getPersistCommentsUrl(id),
+  return customFetch<persistCommentsResponse>(getPersistCommentsUrl(id),
   {
     ...options,
     method: 'PUT',
@@ -342,13 +343,7 @@ export const persistComments = async (id: string,
     body: JSON.stringify(
       persistCommentsBodyItem,)
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: persistCommentsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as persistCommentsResponse
-}
+);}
 
 
 
@@ -377,20 +372,14 @@ export const getListGroupsUrl = (id: string,) => {
 
 export const listGroups = async (id: string, options?: RequestInit): Promise<listGroupsResponse> => {
 
-  const res = await fetch(getListGroupsUrl(id),
+  return customFetch<listGroupsResponse>(getListGroupsUrl(id),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: listGroupsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as listGroupsResponse
-}
+);}
 
 
 
@@ -427,7 +416,7 @@ export const getPersistGroupsUrl = (id: string,) => {
 export const persistGroups = async (id: string,
     persistGroupsBodyItem: PersistGroupsBodyItem[], options?: RequestInit): Promise<persistGroupsResponse> => {
 
-  const res = await fetch(getPersistGroupsUrl(id),
+  return customFetch<persistGroupsResponse>(getPersistGroupsUrl(id),
   {
     ...options,
     method: 'PUT',
@@ -435,13 +424,7 @@ export const persistGroups = async (id: string,
     body: JSON.stringify(
       persistGroupsBodyItem,)
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: persistGroupsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as persistGroupsResponse
-}
+);}
 
 
 
@@ -482,7 +465,7 @@ export const uploadScreenshot = async (id: string,
     type: 'full' | 'element',
     uploadScreenshotBody: Blob, options?: RequestInit): Promise<uploadScreenshotResponse> => {
 
-  const res = await fetch(getUploadScreenshotUrl(id,selectionId,type),
+  return customFetch<uploadScreenshotResponse>(getUploadScreenshotUrl(id,selectionId,type),
   {
     ...options,
     method: 'PUT',
@@ -490,13 +473,7 @@ export const uploadScreenshot = async (id: string,
     body: JSON.stringify(
       uploadScreenshotBody,)
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: uploadScreenshotResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as uploadScreenshotResponse
-}
+);}
 
 
 
@@ -536,20 +513,14 @@ export const getScreenshot = async (id: string,
     selectionId: string,
     type: 'full' | 'element', options?: RequestInit): Promise<getScreenshotResponse> => {
 
-  const res = await fetch(getGetScreenshotUrl(id,selectionId,type),
+  return customFetch<getScreenshotResponse>(getGetScreenshotUrl(id,selectionId,type),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: getScreenshotResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getScreenshotResponse
-}
+);}
 
 
 
@@ -588,7 +559,7 @@ export const createJiraTicket = async (id: string,
     groupId: string,
     createJiraTicketBody: CreateJiraTicketBody, options?: RequestInit): Promise<createJiraTicketResponse> => {
 
-  const res = await fetch(getCreateJiraTicketUrl(id,groupId),
+  return customFetch<createJiraTicketResponse>(getCreateJiraTicketUrl(id,groupId),
   {
     ...options,
     method: 'POST',
@@ -596,13 +567,7 @@ export const createJiraTicket = async (id: string,
     body: JSON.stringify(
       createJiraTicketBody,)
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: createJiraTicketResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as createJiraTicketResponse
-}
+);}
 
 
 
@@ -640,20 +605,14 @@ export const getGetJiraTicketStatusUrl = (id: string,
 export const getJiraTicketStatus = async (id: string,
     groupId: string, options?: RequestInit): Promise<getJiraTicketStatusResponse> => {
 
-  const res = await fetch(getGetJiraTicketStatusUrl(id,groupId),
+  return customFetch<getJiraTicketStatusResponse>(getGetJiraTicketStatusUrl(id,groupId),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: getJiraTicketStatusResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getJiraTicketStatusResponse
-}
+);}
 
 
 
@@ -665,12 +624,19 @@ export type listJiraProjectsResponse200 = {
   status: 200
 }
 
+export type listJiraProjectsResponse500 = {
+  data: ListJiraProjects500
+  status: 500
+}
+
 export type listJiraProjectsResponseSuccess = (listJiraProjectsResponse200) & {
   headers: Headers;
 };
-;
+export type listJiraProjectsResponseError = (listJiraProjectsResponse500) & {
+  headers: Headers;
+};
 
-export type listJiraProjectsResponse = (listJiraProjectsResponseSuccess)
+export type listJiraProjectsResponse = (listJiraProjectsResponseSuccess | listJiraProjectsResponseError)
 
 export const getListJiraProjectsUrl = () => {
 
@@ -682,20 +648,14 @@ export const getListJiraProjectsUrl = () => {
 
 export const listJiraProjects = async ( options?: RequestInit): Promise<listJiraProjectsResponse> => {
 
-  const res = await fetch(getListJiraProjectsUrl(),
+  return customFetch<listJiraProjectsResponse>(getListJiraProjectsUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: listJiraProjectsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as listJiraProjectsResponse
-}
+);}
 
 
 
@@ -707,12 +667,19 @@ export type listJiraIssueTypesResponse200 = {
   status: 200
 }
 
+export type listJiraIssueTypesResponse500 = {
+  data: ListJiraIssueTypes500
+  status: 500
+}
+
 export type listJiraIssueTypesResponseSuccess = (listJiraIssueTypesResponse200) & {
   headers: Headers;
 };
-;
+export type listJiraIssueTypesResponseError = (listJiraIssueTypesResponse500) & {
+  headers: Headers;
+};
 
-export type listJiraIssueTypesResponse = (listJiraIssueTypesResponseSuccess)
+export type listJiraIssueTypesResponse = (listJiraIssueTypesResponseSuccess | listJiraIssueTypesResponseError)
 
 export const getListJiraIssueTypesUrl = () => {
 
@@ -724,20 +691,14 @@ export const getListJiraIssueTypesUrl = () => {
 
 export const listJiraIssueTypes = async ( options?: RequestInit): Promise<listJiraIssueTypesResponse> => {
 
-  const res = await fetch(getListJiraIssueTypesUrl(),
+  return customFetch<listJiraIssueTypesResponse>(getListJiraIssueTypesUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: listJiraIssueTypesResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as listJiraIssueTypesResponse
-}
+);}
 
 
 
@@ -749,12 +710,19 @@ export type listJiraPrioritiesResponse200 = {
   status: 200
 }
 
+export type listJiraPrioritiesResponse500 = {
+  data: ListJiraPriorities500
+  status: 500
+}
+
 export type listJiraPrioritiesResponseSuccess = (listJiraPrioritiesResponse200) & {
   headers: Headers;
 };
-;
+export type listJiraPrioritiesResponseError = (listJiraPrioritiesResponse500) & {
+  headers: Headers;
+};
 
-export type listJiraPrioritiesResponse = (listJiraPrioritiesResponseSuccess)
+export type listJiraPrioritiesResponse = (listJiraPrioritiesResponseSuccess | listJiraPrioritiesResponseError)
 
 export const getListJiraPrioritiesUrl = () => {
 
@@ -766,17 +734,11 @@ export const getListJiraPrioritiesUrl = () => {
 
 export const listJiraPriorities = async ( options?: RequestInit): Promise<listJiraPrioritiesResponse> => {
 
-  const res = await fetch(getListJiraPrioritiesUrl(),
+  return customFetch<listJiraPrioritiesResponse>(getListJiraPrioritiesUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: listJiraPrioritiesResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as listJiraPrioritiesResponse
-}
+);}

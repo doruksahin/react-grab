@@ -10,8 +10,10 @@ export default defineConfig({
       target: "src/generated/sync-api.ts",
       client: "fetch",
       override: {
-        // We only want the types — the generated fetch functions won't be used
-        // but "fetch" is the lightest client option with no extra dependencies
+        mutator: {
+          path: "./src/generated/custom-fetch.ts",
+          name: "customFetch",
+        },
       },
     },
   },

@@ -1,5 +1,6 @@
 // @ts-expect-error - CSS imported as text via tsup loader
 import cssText from "../../dist/styles.css";
+import { setApiBaseUrl } from "../generated/custom-fetch.js";
 import {
   createMemo,
   createRoot,
@@ -223,6 +224,11 @@ export const initSync = async (config: SyncConfig): Promise<void> => {
   // Store options to forward to init() when it auto-fires
   if (config.options) {
     pendingSyncOptions = config.options;
+  }
+
+  // Set base URL for Orval-generated API functions (JIRA endpoints, etc.)
+  if (config.serverUrl) {
+    setApiBaseUrl(config.serverUrl);
   }
 
   if (!config.enabled) {
