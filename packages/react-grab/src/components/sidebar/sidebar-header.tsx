@@ -1,5 +1,6 @@
 import type { Component } from "solid-js";
 import type { SyncStatus } from "../../features/sync/types";
+import { APP_NAME } from "../../constants";
 import { cn } from "../../utils/cn";
 
 interface SidebarHeaderProps {
@@ -22,7 +23,7 @@ export const SidebarHeader: Component<SidebarHeaderProps> = (props) => {
                 : "bg-white/30",
           )}
         />
-        react-grab
+        {APP_NAME}
       </h2>
       <div class="flex items-center gap-1.5">
         <button

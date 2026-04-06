@@ -2,6 +2,8 @@ import { Version3Client } from "jira.js";
 import { markdownToAdf } from "marklassian";
 import type { SyncRepository, ScreenshotStore } from "../repositories/types.js";
 
+const APP_NAME = "UI Ticket Manager";
+
 interface JiraConfig {
   baseUrl: string;
   email: string;
@@ -70,7 +72,7 @@ export class JiraService {
         description: descriptionText as any,
         issuetype: { name: params.issueType },
         priority: { name: params.priority },
-        labels: ["react-grab"],
+        labels: [APP_NAME],
       },
     });
 
@@ -199,7 +201,7 @@ export class JiraService {
           .filter(Boolean)
           .join("\n"),
       ),
-      "_Created by react-grab_",
+      `_Created by ${APP_NAME}_`,
     ].join("\n\n");
 
     return markdownToAdf(markdown);

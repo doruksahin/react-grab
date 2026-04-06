@@ -1,5 +1,7 @@
 import { overlayColor, activeGroupOverlayColor } from "./utils/overlay-color.js";
 
+export const APP_NAME = "UI Ticket Manager";
+
 export const VERSION = process.env.VERSION as string;
 
 export const VIEWPORT_MARGIN_PX = 8;
