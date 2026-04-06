@@ -68,6 +68,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           jiraStatus: local.jiraStatus,
           jiraStatusCategory: local.jiraStatusCategory,
           jiraUrl: local.jiraUrl,
+          jiraAssignee: local.jiraAssignee,
+          jiraReporter: local.jiraReporter,
         };
       }),
     );
@@ -142,13 +144,20 @@ export const Sidebar: Component<SidebarProps> = (props) => {
 
   function handleStatusUpdate(
     groupId: string,
-    status: { status: string; statusCategory: string },
+    status: { status: string; statusCategory: string; assignee: string | null; reporter: string | null },
   ) {
     const resolved = status.statusCategory.toLowerCase() === "done";
     setGroups((prev) =>
       prev.map((g) =>
         g.id === groupId
-          ? { ...g, jiraStatus: status.status, jiraStatusCategory: status.statusCategory, jiraResolved: resolved }
+          ? {
+              ...g,
+              jiraStatus: status.status,
+              jiraStatusCategory: status.statusCategory,
+              jiraAssignee: status.assignee,
+              jiraReporter: status.reporter,
+              jiraResolved: resolved,
+            }
           : g,
       ),
     );
