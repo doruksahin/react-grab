@@ -28,3 +28,10 @@ export const statusOverlayColor = (
     ? `color(display-p3 ${c.p3} / ${alpha})`
     : `rgba(${c.srgb}, ${alpha})`;
 };
+
+const ACTIVE_GROUP_COLORS = { srgb: "56, 189, 248", p3: "0.22 0.74 0.97" };
+
+export const activeGroupOverlayColor = (alpha: number): string =>
+  isWideGamut
+    ? `color(display-p3 ${ACTIVE_GROUP_COLORS.p3} / ${alpha})`
+    : `rgba(${ACTIVE_GROUP_COLORS.srgb}, ${alpha})`;
