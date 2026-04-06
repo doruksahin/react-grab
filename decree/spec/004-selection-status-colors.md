@@ -165,10 +165,25 @@ export const activeGroupOverlayColor = (alpha: number): string =>
     : `rgba(${ACTIVE_GROUP_COLORS.srgb}, ${alpha})`;
 ```
 
-**Glow effect:** The canvas draws the active group's selections with:
-- Border: `activeGroupOverlayColor(0.7)` — brighter than normal
-- Fill: `activeGroupOverlayColor(0.12)` — subtle tinted fill
-- Shadow: `ctx.shadowColor = activeGroupOverlayColor(0.5)`, `ctx.shadowBlur = 12` — the glow
+**Glow effect:** The canvas draws the active group's selections with a two-pass shadow technique for a neon look:
+
+- **Border:** `activeGroupOverlayColor(0.9)`, `lineWidth: 2` — thicker and brighter than normal (1px)
+- **Fill:** `activeGroupOverlayColor(0.12)` — subtle tinted fill
+- **Pass 1 (outer glow):** `shadowColor: activeGroupOverlayColor(0.35)`, `shadowBlur: 20` — wide soft halo
+- **Pass 2 (core glow):** `shadowColor: activeGroupOverlayColor(0.7)`, `shadowBlur: 6` — tight bright edge
+
+Each pass redraws the same rect. Alpha accumulates across passes, making the center appear brighter — the standard canvas neon technique. Reset `shadowColor/shadowBlur/lineWidth` after both passes.
+
+Store shadow passes as `shadowPasses?: Array<{ blur: number; alpha: number }>` on `AnimatedBounds` so `renderBoundsLayer` can iterate them without per-animation branching.
+
+Constants to add to `constants.ts`:
+```typescript
+export const ACTIVE_GROUP_SHADOW_PASSES = [
+  { blur: 20, alpha: 0.35 }, // outer glow
+  { blur: 6,  alpha: 0.7  }, // core glow
+] as const;
+export const ACTIVE_GROUP_STROKE_WIDTH = 2;
+```
 
 **Data threading:** `activeDetailGroupId` lives as local state inside `Sidebar`. It must be lifted to `renderer.tsx` so it can reach `OverlayCanvas`.
 

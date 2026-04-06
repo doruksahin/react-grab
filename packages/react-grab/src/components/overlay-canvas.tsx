@@ -23,8 +23,8 @@ import {
   OVERLAY_FILL_COLOR_INSPECT,
   ACTIVE_GROUP_BORDER_COLOR,
   ACTIVE_GROUP_FILL_COLOR,
-  ACTIVE_GROUP_SHADOW_COLOR,
-  ACTIVE_GROUP_SHADOW_BLUR,
+  ACTIVE_GROUP_STROKE_WIDTH,
+  ACTIVE_GROUP_SHADOW_PASSES,
   STATUS_OVERLAY_BORDER_ALPHA,
   STATUS_OVERLAY_FILL_ALPHA,
 } from "../constants.js";
@@ -33,7 +33,7 @@ import {
   nativeRequestAnimationFrame,
 } from "../utils/native-raf.js";
 import { supportsDisplayP3 } from "../utils/supports-display-p3.js";
-import { statusOverlayColor } from "../utils/overlay-color.js";
+import { statusOverlayColor, activeGroupOverlayColor } from "../utils/overlay-color.js";
 
 const DEFAULT_LAYER_STYLE = {
   borderColor: OVERLAY_BORDER_COLOR_DEFAULT,
@@ -77,8 +77,9 @@ interface AnimatedBounds {
   isInitialized: boolean;
   borderColor?: string;
   fillColor?: string;
-  shadowColor?: string;
-  shadowBlur?: number;
+  strokeWidth?: number;
+  shadowPasses?: ReadonlyArray<{ blur: number; alpha: number }>;
+  shadowBaseColor?: string;
 }
 
 export interface OverlayCanvasProps {
@@ -240,6 +241,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
     fillColor: string,
     strokeColor: string,
     opacity: number = 1,
+    strokeWidth: number = 1,
   ) => {
     if (rectWidth <= 0 || rectHeight <= 0) return;
 
@@ -262,7 +264,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
     context.fillStyle = fillColor;
     context.fill();
     context.strokeStyle = strokeColor;
-    context.lineWidth = 1;
+    context.lineWidth = strokeWidth;
     context.stroke();
     context.globalAlpha = 1;
   };
@@ -329,24 +331,42 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
     const style = LAYER_STYLES[layerName];
 
     for (const animation of animations) {
-      if (animation.shadowColor) {
-        context.shadowColor = animation.shadowColor;
-        context.shadowBlur = animation.shadowBlur ?? 0;
-      }
-      drawRoundedRectangle(
-        context,
-        animation.current.x,
-        animation.current.y,
-        animation.current.width,
-        animation.current.height,
-        animation.borderRadius,
-        animation.fillColor ?? style.fillColor,
-        animation.borderColor ?? style.borderColor,
-        animation.opacity,
-      );
-      if (animation.shadowColor) {
+      const fillColor = animation.fillColor ?? style.fillColor;
+      const borderColor = animation.borderColor ?? style.borderColor;
+      const strokeWidth = animation.strokeWidth ?? 1;
+
+      if (animation.shadowPasses && animation.shadowBaseColor) {
+        for (const pass of animation.shadowPasses) {
+          context.shadowColor = activeGroupOverlayColor(pass.alpha);
+          context.shadowBlur = pass.blur;
+          drawRoundedRectangle(
+            context,
+            animation.current.x,
+            animation.current.y,
+            animation.current.width,
+            animation.current.height,
+            animation.borderRadius,
+            fillColor,
+            borderColor,
+            animation.opacity,
+            strokeWidth,
+          );
+        }
         context.shadowColor = "transparent";
         context.shadowBlur = 0;
+      } else {
+        drawRoundedRectangle(
+          context,
+          animation.current.x,
+          animation.current.y,
+          animation.current.width,
+          animation.current.height,
+          animation.borderRadius,
+          fillColor,
+          borderColor,
+          animation.opacity,
+          strokeWidth,
+        );
       }
     }
   };
@@ -650,8 +670,8 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
             : instance.groupStatus
               ? statusOverlayColor(instance.groupStatus, STATUS_OVERLAY_FILL_ALPHA)
               : OVERLAY_FILL_COLOR_DEFAULT;
-          const instanceShadowColor = isActiveGroup
-            ? ACTIVE_GROUP_SHADOW_COLOR
+          const instanceShadowPasses = isActiveGroup
+            ? ACTIVE_GROUP_SHADOW_PASSES
             : undefined;
 
           for (let index = 0; index < boundsToRender.length; index++) {
@@ -665,8 +685,9 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
               updateAnimationTarget(existingAnimation, bounds, targetOpacity);
               existingAnimation.borderColor = instanceBorderColor;
               existingAnimation.fillColor = instanceFillColor;
-              existingAnimation.shadowColor = instanceShadowColor;
-              existingAnimation.shadowBlur = isActiveGroup ? ACTIVE_GROUP_SHADOW_BLUR : undefined;
+              existingAnimation.strokeWidth = isActiveGroup ? ACTIVE_GROUP_STROKE_WIDTH : undefined;
+              existingAnimation.shadowPasses = instanceShadowPasses;
+              existingAnimation.shadowBaseColor = isActiveGroup ? ACTIVE_GROUP_BORDER_COLOR : undefined;
             } else {
               const anim = createAnimatedBounds(animationId, bounds, {
                 opacity: 1,
@@ -674,8 +695,9 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
               });
               anim.borderColor = instanceBorderColor;
               anim.fillColor = instanceFillColor;
-              anim.shadowColor = instanceShadowColor;
-              anim.shadowBlur = isActiveGroup ? ACTIVE_GROUP_SHADOW_BLUR : undefined;
+              anim.strokeWidth = isActiveGroup ? ACTIVE_GROUP_STROKE_WIDTH : undefined;
+              anim.shadowPasses = instanceShadowPasses;
+              anim.shadowBaseColor = isActiveGroup ? ACTIVE_GROUP_BORDER_COLOR : undefined;
               grabbedAnimations.push(anim);
             }
           }

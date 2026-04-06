@@ -67,10 +67,13 @@ export const OVERLAY_FILL_COLOR_STATUS_TICKETED = statusOverlayColor("ticketed",
 export const OVERLAY_BORDER_COLOR_STATUS_RESOLVED = statusOverlayColor("resolved", STATUS_OVERLAY_BORDER_ALPHA);
 export const OVERLAY_FILL_COLOR_STATUS_RESOLVED = statusOverlayColor("resolved", STATUS_OVERLAY_FILL_ALPHA);
 
-export const ACTIVE_GROUP_BORDER_COLOR = activeGroupOverlayColor(0.7);
+export const ACTIVE_GROUP_BORDER_COLOR = activeGroupOverlayColor(0.9);
 export const ACTIVE_GROUP_FILL_COLOR = activeGroupOverlayColor(0.12);
-export const ACTIVE_GROUP_SHADOW_COLOR = activeGroupOverlayColor(0.5);
-export const ACTIVE_GROUP_SHADOW_BLUR = 12;
+export const ACTIVE_GROUP_STROKE_WIDTH = 2;
+export const ACTIVE_GROUP_SHADOW_PASSES = [
+  { blur: 20, alpha: 0.35 }, // outer glow
+  { blur: 6, alpha: 0.7 },   // core glow
+] as const;
 
 export const ARROW_HEIGHT_PX = 8;
 export const ARROW_MIN_SIZE_PX = 4;
