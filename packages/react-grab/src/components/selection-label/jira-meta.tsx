@@ -2,7 +2,9 @@ import { type Component, Show } from "solid-js";
 import type { SelectionLabelInstance } from "../../types.js";
 
 type JiraMetaProps = Required<Pick<SelectionLabelInstance, "jiraTicketId">> &
-  Pick<SelectionLabelInstance, "jiraUrl" | "jiraAssignee" | "jiraReporter">;
+  Pick<SelectionLabelInstance, "jiraUrl" | "jiraAssignee" | "jiraReporter"> & {
+  labels?: string[];
+};
 
 export const JiraMeta: Component<JiraMetaProps> = (props) => (
   <div data-react-grab-jira-meta class="flex gap-2 items-center w-full mb-1 overflow-hidden">
@@ -26,6 +28,15 @@ export const JiraMeta: Component<JiraMetaProps> = (props) => (
       <span class="text-[10px] text-black/30 truncate">
         ✏️ {props.jiraReporter}
       </span>
+    </Show>
+    <Show when={(props.labels ?? []).length > 0}>
+      <div class="flex flex-wrap gap-1 mt-0.5">
+        {(props.labels ?? []).map((lbl) => (
+          <span class="text-[8px] px-1 py-0.5 rounded-full bg-black/10 text-black/40">
+            {lbl}
+          </span>
+        ))}
+      </div>
     </Show>
   </div>
 );

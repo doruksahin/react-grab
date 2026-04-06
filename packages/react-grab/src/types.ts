@@ -470,6 +470,7 @@ export interface SelectionLabelInstance {
   jiraStatusCategory?: string;
   jiraAssignee?: string | null;
   jiraReporter?: string | null;
+  jiraLabels?: string[];
 }
 
 /**
@@ -721,4 +722,5 @@ export interface SelectionLabelProps
   jiraStatusCategory?: string;
   jiraAssignee?: string | null;
   jiraReporter?: string | null;
+  jiraLabels?: string[];
 }
