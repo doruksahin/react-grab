@@ -1,5 +1,5 @@
 ---
-status: draft
+status: implemented
 date: 2026-04-06
 references: [PRD-002, SPEC-003]
 ---

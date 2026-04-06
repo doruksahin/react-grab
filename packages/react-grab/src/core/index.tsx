@@ -142,6 +142,8 @@ import { copyHtmlPlugin } from "./plugins/copy-html.js";
 import { copyStylesPlugin } from "./plugins/copy-styles.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
+import { deriveStatus } from "../features/sidebar/derive-status.js";
+import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import {
   freezeAnimations,
   freezeAllAnimations,
@@ -3782,6 +3784,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             createdAt: 0,
             element: previewElement,
             mouseX: bounds.x + bounds.width / 2,
+            groupId: item.groupId,
           });
         }
 
@@ -3794,6 +3797,22 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       setCommentItems,
       persistCommentItems,
     });
+
+    const computedLabelInstancesWithStatus = createMemo(() =>
+      computedLabelInstances().map((instance) => {
+        if (!instance.groupId) return instance;
+        const group = selectionGroups
+          .groups()
+          .find((g) => g.id === instance.groupId) as
+          | SelectionGroupWithJira
+          | undefined;
+        return {
+          ...instance,
+          groupStatus: group ? deriveStatus(group) : ("open" as const),
+          jiraTicketId: group?.jiraTicketId,
+        };
+      }),
+    );
 
     const visibility = createSelectionVisibility({
       commentItems,
@@ -4293,7 +4312,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onArrowNavigationSelect={handleArrowNavigationSelect}
                 inspectNavigationState={inspectNavigationState()}
                 onInspectSelect={handleInspectSelect}
-                labelInstances={computedLabelInstances()}
+                labelInstances={computedLabelInstancesWithStatus()}
                 dragVisible={dragVisible()}
                 dragBounds={dragBounds()}
                 grabbedBoxes={computedGrabbedBoxes()}

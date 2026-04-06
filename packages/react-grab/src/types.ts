@@ -434,6 +434,8 @@ export interface OverlayBounds {
   y: number;
 }
 
+export type GroupStatus = "open" | "ticketed" | "resolved";
+
 export type SelectionLabelStatus =
   | "idle"
   | "copying"
@@ -460,6 +462,9 @@ export interface SelectionLabelInstance {
   mouseXOffsetRatio?: number;
   errorMessage?: string;
   hideArrow?: boolean;
+  groupId?: string;
+  groupStatus?: GroupStatus;
+  jiraTicketId?: string;
 }
 
 /**
@@ -703,4 +708,6 @@ export interface SelectionLabelProps
   onShowContextMenu?: () => void;
   onHoverChange?: (isHovered: boolean) => void;
   hideArrow?: boolean;
+  groupStatus?: GroupStatus;
+  jiraTicketId?: string;
 }

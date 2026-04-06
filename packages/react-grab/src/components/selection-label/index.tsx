@@ -28,6 +28,8 @@ import { getTagDisplay } from "../../utils/get-tag-display.js";
 import { formatShortcut } from "../../utils/format-shortcut.js";
 import { IconReply } from "../icons/icon-reply.jsx";
 import { IconSubmit } from "../icons/icon-submit.jsx";
+import { IconCheck } from "../icons/icon-check.jsx";
+import { IconTicket } from "../icons/icon-ticket.jsx";
 import { GroupPickerFlyout } from "../../features/selection-groups/components/group-picker-flyout.jsx";
 import { IconLoader } from "../icons/icon-loader.jsx";
 import { Arrow } from "./arrow.js";
@@ -443,7 +445,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         <div
           ref={panelRef}
           class={cn(
-            "contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]",
+            "relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]",
             "bg-white",
             isShaking() && "animate-shake",
           )}
@@ -452,6 +454,29 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           }}
           onAnimationEnd={() => setIsShaking(false)}
         >
+          <Show when={(props.groupStatus ?? "open") !== "open"}>
+            <div
+              data-react-grab-status-badge={props.groupStatus}
+              class="absolute -top-1.5 -right-1.5 w-[22px] h-[22px] rounded-[6px] flex items-center justify-center border-2 border-white"
+              style={{
+                background:
+                  props.groupStatus === "ticketed" ? "#eab308" : "#22c55e",
+                "pointer-events": "auto",
+              }}
+              title={
+                props.groupStatus === "ticketed"
+                  ? `Ticketed — ${props.jiraTicketId ?? ""}`
+                  : "Resolved"
+              }
+            >
+              <Show when={props.groupStatus === "ticketed"}>
+                <IconTicket size={12} class="text-white" />
+              </Show>
+              <Show when={props.groupStatus === "resolved"}>
+                <IconCheck size={12} class="text-white" />
+              </Show>
+            </div>
+          </Show>
           <Show when={props.status === "copying" && !props.isPendingAbort}>
             <div
               class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit max-w-[280px]"
