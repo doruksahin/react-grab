@@ -26,7 +26,6 @@ import {
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { ShadowRootContext } from "../../features/sidebar/shadow-context.js";
-import type { GetJiraTicketStatus200 } from "../../generated/sync-api.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -149,30 +148,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           : g,
       ),
     );
-  }
-
-  function handleStatusUpdate(
-    groupId: string,
-    status: GetJiraTicketStatus200,
-  ) {
-    const resolved = status.statusCategory.toLowerCase() === "done";
-    setGroups((prev) =>
-      prev.map((g) =>
-        g.id === groupId
-          ? {
-              ...g,
-              jiraStatus: status.status,
-              jiraStatusCategory: status.statusCategory,
-              jiraAssignee: status.assignee,
-              jiraReporter: status.reporter,
-              jiraResolved: resolved,
-            }
-          : g,
-      ),
-    );
-    if (resolved) {
-      props.onJiraResolved?.(groupId);
-    }
   }
 
   // Shadow root: resolved reactively from the container element so that
