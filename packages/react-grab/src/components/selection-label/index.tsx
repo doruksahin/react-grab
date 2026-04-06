@@ -463,7 +463,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 href={props.jiraUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="absolute -top-1.5 -right-1.5 w-[22px] h-[22px] rounded-[6px] flex items-center justify-center border-2 border-white cursor-pointer hover:scale-110 transition-transform"
+                class="absolute -top-3.5 -right-3 w-[22px] h-[22px] rounded-[6px] flex items-center justify-center border-2 border-white cursor-pointer hover:scale-110 transition-transform"
                 style={{
                   background: getStatusColor(props.groupStatus).hex,
                   "pointer-events": "auto",
@@ -484,7 +484,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
             ) : (
               <div
                 data-react-grab-status-badge={props.groupStatus ?? "no-task"}
-                class="absolute -top-1.5 -right-1.5 w-[22px] h-[22px] rounded-[6px] flex items-center justify-center border-2 border-white"
+                class="absolute -top-3.5 -right-3 w-[22px] h-[22px] rounded-[6px] flex items-center justify-center border-2 border-white"
                 style={{
                   background: getStatusColor(props.groupStatus).hex,
                   "pointer-events": "auto",
