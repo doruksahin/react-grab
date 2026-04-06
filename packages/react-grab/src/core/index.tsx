@@ -4441,6 +4441,12 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onActiveGroupChange={selectionGroups.setActiveGroupId}
                 onMoveItem={selectionGroups.handleMoveItem}
                 onToggleGroupRevealed={visibility.handleToggleGroup}
+                onJiraResolved={(groupId) => {
+                  const updated = selectionGroups.groups().map((g) =>
+                    g.id === groupId ? { ...g, jiraResolved: true } : g,
+                  );
+                  selectionGroups.persistGroups(updated);
+                }}
               />
             );
           }, rendererRoot);
