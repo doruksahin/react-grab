@@ -164,7 +164,7 @@ export class JiraService {
   async getIssueStatus(ticketId: string) {
     const issue = await this.client.issues.getIssue({
       issueIdOrKey: ticketId,
-      fields: ["status", "assignee", "reporter"],
+      fields: ["status", "assignee", "reporter", "labels"],
     });
     return {
       status: issue.fields.status?.name ?? "Unknown",
@@ -172,6 +172,7 @@ export class JiraService {
       assignee: issue.fields.assignee?.displayName ?? null,
       reporter: issue.fields.reporter?.displayName ?? null,
       jiraUrl: `${this.config.baseUrl}/browse/${ticketId}`,
+      labels: (issue.fields.labels as string[] | undefined) ?? [],
     };
   }
 
