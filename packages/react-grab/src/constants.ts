@@ -67,6 +67,10 @@ export const OVERLAY_FILL_COLOR_STATUS_TICKETED = statusOverlayColor("ticketed",
 export const OVERLAY_BORDER_COLOR_STATUS_RESOLVED = statusOverlayColor("resolved", STATUS_OVERLAY_BORDER_ALPHA);
 export const OVERLAY_FILL_COLOR_STATUS_RESOLVED = statusOverlayColor("resolved", STATUS_OVERLAY_FILL_ALPHA);
 
+export const SHAKE_DURATION_MS = 600;
+export const SHAKE_AMPLITUDE_PX = 3;
+export const SHAKE_PERIOD_MS = 60;
+
 export const ACTIVE_GROUP_BORDER_COLOR = activeGroupOverlayColor(0.9);
 export const ACTIVE_GROUP_FILL_COLOR = activeGroupOverlayColor(0.12);
 export const ACTIVE_GROUP_STROKE_WIDTH = 2;
