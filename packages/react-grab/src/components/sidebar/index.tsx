@@ -4,8 +4,6 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  onCleanup,
-  onMount,
   Show,
   untrack,
 } from "solid-js";
@@ -28,7 +26,8 @@ import {
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { ShadowRootContext } from "../../features/sidebar/shadow-context.js";
-import { getJiraTicketStatus, type GetJiraTicketStatus200 } from "../../generated/sync-api.js";
+import type { GetJiraTicketStatus200 } from "../../generated/sync-api.js";
+import { createJiraStatusPoller } from "../../features/sidebar/jira-status-poller.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -191,34 +190,10 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     }
   }
 
-  // Poll JIRA status for ALL ticketed groups on sidebar mount.
-  // Without this, jiraStatus stays undefined until the user clicks into
-  // a group's detail view (which has its own poll).
-  onMount(() => {
-    if (!props.syncWorkspace) return;
-
-    const pollAllTicketed = async () => {
-      const ticketed = groups().filter((g) => g.jiraTicketId);
-      await Promise.allSettled(
-        ticketed.map(async (g) => {
-          try {
-            const result = await getJiraTicketStatus(
-              props.syncWorkspace!,
-              g.id,
-            );
-            if (result.status === 200) {
-              handleStatusUpdate(g.id, result.data);
-            }
-          } catch {
-            // Silent — poll failures do not show errors per SPEC-003
-          }
-        }),
-      );
-    };
-
-    pollAllTicketed();
-    const intervalId = setInterval(pollAllTicketed, 30_000);
-    onCleanup(() => clearInterval(intervalId));
+  createJiraStatusPoller({
+    groups,
+    syncWorkspace: () => props.syncWorkspace,
+    onStatusUpdate: handleStatusUpdate,
   });
 
   // Shadow root: resolved reactively from the container element so that
