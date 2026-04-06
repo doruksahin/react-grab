@@ -3823,6 +3823,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           jiraStatusCategory: group?.jiraStatusCategory,
           jiraAssignee: group?.jiraAssignee,
           jiraReporter: group?.jiraReporter,
+          jiraLabels: group?.jiraLabels,
         };
       }),
     );
@@ -3863,6 +3864,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 jiraStatusCategory: status.statusCategory,
                 jiraAssignee: status.assignee,
                 jiraReporter: status.reporter,
+                jiraLabels: status.labels,
                 jiraResolved: resolved,
                 jiraUrl: status.jiraUrl,
               }

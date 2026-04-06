@@ -31,6 +31,12 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
         onDismiss: () => props.onFilterChange({ ...props.filter, reporter: null }),
       });
     }
+    if (props.filter.label) {
+      result.push({
+        label: `Label: ${props.filter.label}`,
+        onDismiss: () => props.onFilterChange({ ...props.filter, label: null }),
+      });
+    }
     return result;
   };
 

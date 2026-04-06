@@ -1,4 +1,4 @@
-import { type Component, Show } from "solid-js";
+import { type Component, Show, For } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types";
 import { getStatusLabel, getStatusColor } from "../../features/sidebar/status-colors.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
@@ -67,6 +67,17 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
             </span>
           </Show>
         </div>
+        <Show when={groupWithJira().jiraLabels?.length}>
+          <div class="flex flex-wrap gap-1 mt-1 pl-7">
+            <For each={groupWithJira().jiraLabels}>
+              {(lbl) => (
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/50">
+                  {lbl}
+                </span>
+              )}
+            </For>
+          </div>
+        </Show>
       </Show>
     </div>
   );
