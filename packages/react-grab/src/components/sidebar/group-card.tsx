@@ -2,6 +2,8 @@ import { type Component, For, Show } from "solid-js";
 import type { GroupedEntry } from "../../features/sidebar";
 import { relativeTime } from "../../features/sidebar";
 import { getStatusColor, getStatusLabel } from "../../features/sidebar/status-colors.js";
+import { UserAvatar } from "./UserAvatar.js";
+import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 
 interface GroupCardProps {
   entry: GroupedEntry;
@@ -46,13 +48,23 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
       <Show when={props.entry.group.jiraAssignee || props.entry.group.jiraReporter}>
         <div class="flex gap-3 text-[11px] mb-2">
           <Show when={props.entry.group.jiraAssignee}>
-            <span class="text-[10px] text-white/50">
-              👤 {props.entry.group.jiraAssignee}
+            <span class="flex items-center gap-1.5 text-[10px] text-white/50">
+              <UserAvatar
+                avatarUrl={(props.entry.group as SelectionGroupWithJira).jiraAssigneeAvatar}
+                displayName={props.entry.group.jiraAssignee}
+                size={16}
+              />
+              {props.entry.group.jiraAssignee}
             </span>
           </Show>
           <Show when={props.entry.group.jiraReporter}>
-            <span class="text-[10px] text-white/30">
-              ✏️ {props.entry.group.jiraReporter}
+            <span class="flex items-center gap-1.5 text-[10px] text-white/30">
+              <UserAvatar
+                avatarUrl={(props.entry.group as SelectionGroupWithJira).jiraReporterAvatar}
+                displayName={props.entry.group.jiraReporter}
+                size={16}
+              />
+              {props.entry.group.jiraReporter}
             </span>
           </Show>
         </div>

@@ -348,6 +348,8 @@ export interface ScreenshotConfig {
   quality?: number;
   /** Capture full page in addition to element. @default true */
   captureFullPage?: boolean;
+  /** Padding in pixels around the cropped element screenshot. @default 16 */
+  elementPadding?: number;
   /** Image format. @default 'png' */
   format?: "png" | "jpeg";
   /** Max width of screenshot in pixels. @default 1920 */
@@ -470,6 +472,8 @@ export interface SelectionLabelInstance {
   jiraStatusCategory?: string;
   jiraAssignee?: string | null;
   jiraReporter?: string | null;
+  jiraAssigneeAvatar?: string | null;
+  jiraReporterAvatar?: string | null;
   jiraLabels?: string[];
 }
 
@@ -722,5 +726,7 @@ export interface SelectionLabelProps
   jiraStatusCategory?: string;
   jiraAssignee?: string | null;
   jiraReporter?: string | null;
+  jiraAssigneeAvatar?: string | null;
+  jiraReporterAvatar?: string | null;
   jiraLabels?: string[];
 }

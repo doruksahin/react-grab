@@ -693,6 +693,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                       jiraUrl={props.jiraUrl}
                       jiraAssignee={props.jiraAssignee}
                       jiraReporter={props.jiraReporter}
+                      jiraAssigneeAvatar={props.jiraAssigneeAvatar}
+                      jiraReporterAvatar={props.jiraReporterAvatar}
                       jiraStatus={props.groupStatus}
                       labels={props.jiraLabels}
                     />

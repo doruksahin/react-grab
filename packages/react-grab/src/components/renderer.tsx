@@ -212,6 +212,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             jiraStatusCategory={instance().jiraStatusCategory}
             jiraAssignee={instance().jiraAssignee}
             jiraReporter={instance().jiraReporter}
+            jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
+            jiraReporterAvatar={instance().jiraReporterAvatar}
             jiraLabels={instance().jiraLabels}
             groups={props.groups}
             activeGroupId={props.activeGroupId}

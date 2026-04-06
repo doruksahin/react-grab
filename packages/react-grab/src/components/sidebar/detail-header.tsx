@@ -2,6 +2,7 @@ import { type Component, Show, For } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types";
 import { getStatusLabel, getStatusColor } from "../../features/sidebar/status-colors.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import { UserAvatar } from "./UserAvatar.js";
 
 interface DetailHeaderProps {
   group: SelectionGroup;
@@ -57,13 +58,23 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
             {groupWithJira().jiraTicketId}
           </a>
           <Show when={groupWithJira().jiraAssignee}>
-            <span class="text-[10px] text-white/50">
-              👤 {groupWithJira().jiraAssignee}
+            <span class="flex items-center gap-1.5 text-[10px] text-white/50">
+              <UserAvatar
+                avatarUrl={groupWithJira().jiraAssigneeAvatar}
+                displayName={groupWithJira().jiraAssignee}
+                size={16}
+              />
+              {groupWithJira().jiraAssignee}
             </span>
           </Show>
           <Show when={groupWithJira().jiraReporter}>
-            <span class="text-[10px] text-white/30">
-              ✏️ {groupWithJira().jiraReporter}
+            <span class="flex items-center gap-1.5 text-[10px] text-white/30">
+              <UserAvatar
+                avatarUrl={groupWithJira().jiraReporterAvatar}
+                displayName={groupWithJira().jiraReporter}
+                size={16}
+              />
+              {groupWithJira().jiraReporter}
             </span>
           </Show>
         </div>
