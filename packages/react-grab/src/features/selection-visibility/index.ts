@@ -126,12 +126,30 @@ export function createSelectionVisibility(
     deps.updateToolbarState({ selectionsRevealed: newRevealed });
   };
 
+  const setGroupsRevealed = (visibleIds: Set<string>, allGroupIds: string[]) => {
+    const allIdSet = new Set(allGroupIds);
+    const updatedGroups = deps.groups().map((g) =>
+      allIdSet.has(g.id) ? { ...g, revealed: visibleIds.has(g.id) } : g,
+    );
+    deps.persistGroups(updatedGroups);
+
+    const items = deps.commentItems();
+    const updatedItems = items.map((item) =>
+      item.groupId && allIdSet.has(item.groupId)
+        ? { ...item, revealed: visibleIds.has(item.groupId) }
+        : item,
+    );
+    deps.setCommentItems(updatedItems);
+    deps.persistCommentItems(updatedItems);
+  };
+
   return {
     selectionsRevealed,
     isItemRevealed,
     handleToggleParent,
     handleToggleGroup,
     handleToggleItem,
+    setGroupsRevealed,
   };
 }
 

@@ -71,4 +71,6 @@ export interface SelectionVisibilityAPI {
   handleToggleItem: (commentItemId: string) => void;
   /** Toggle a group's revealed state (overrides all items in group) */
   handleToggleGroup: (groupId: string) => void;
+  /** Batch set revealed state for groups by filter results */
+  setGroupsRevealed: (visibleIds: Set<string>, allGroupIds: string[]) => void;
 }
