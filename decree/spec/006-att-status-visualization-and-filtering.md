@@ -220,7 +220,8 @@ Triggered by (i) button in `SidebarHeader`. Renders as a full-sidebar overlay (s
 `group-card.tsx` changes:
 - Left border color: `getStatusColor(group.jiraStatus).hex`
 - Badge: shows `getStatusLabel(group)` with dynamic color from `getStatusColor()`
-- Assignee shown in meta row when present: `👤 Alice`
+- Assignee shown in meta row when present (person icon, normal opacity)
+- Reporter shown in meta row when present (pen icon, dimmer opacity to differentiate from assignee)
 
 ### 10. Canvas Overlay Colors
 
@@ -294,7 +295,8 @@ These are manual checks to confirm the feature works end-to-end:
 ### Group Card Updates
 - [ ] Group card left border uses `getStatusColor().hex`
 - [ ] Status badge shows `getStatusLabel()` with dynamic color
-- [ ] Assignee displayed in meta row when present
+- [ ] Assignee displayed in meta row with person icon when present
+- [ ] Reporter displayed in meta row with pen icon (dimmer) when present
 - [ ] **UI verify:** Cards visually match the HTML proposal — colored left border, status badge, assignee line
 
 ### Filter Bar
