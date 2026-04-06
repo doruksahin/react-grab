@@ -10,4 +10,6 @@
 | SPEC-003 | SPEC-003 JIRA integration — ticket creation and status tracking | implemented | 2026-04-05 |
 | SPEC-004 | SPEC-004 Selection Status Colors | implemented | 2026-04-06 |
 | SPEC-005 | SPEC-005 Full-Page Screenshot Element Highlighting | implemented | 2026-04-06 |
+| SPEC-008 | SPEC-008 Jira assignee and reporter avatar display | implemented | 2026-04-06 |
 | SPEC-007 | SPEC-007 Group Dropdown Consistency — Unified New Group Action | draft | 2026-04-06 |
+| SPEC-009 | SPEC-009 Hardcode ATT project in JIRA create dialog | draft | 2026-04-06 |
