@@ -3819,6 +3819,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           ...instance,
           groupStatus: group?.jiraStatus,
           jiraTicketId: group?.jiraTicketId,
+          jiraUrl: group?.jiraUrl,
         };
       }),
     );

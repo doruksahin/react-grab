@@ -456,25 +456,52 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           onAnimationEnd={() => setIsShaking(false)}
         >
           <Show when={props.groupStatus || props.jiraTicketId}>
-            <div
-              data-react-grab-status-badge={props.groupStatus ?? "no-task"}
-              class="absolute -top-1.5 -right-1.5 w-[22px] h-[22px] rounded-[6px] flex items-center justify-center border-2 border-white"
-              style={{
-                background: getStatusColor(props.groupStatus).hex,
-                "pointer-events": "auto",
-              }}
-              title={props.groupStatus ?? "No Task"}
-            >
-              <Show when={props.groupStatus === "Done" || props.groupStatus === "Won't Do"}>
-                <IconCheck size={12} class="text-white" />
-              </Show>
-              <Show when={props.groupStatus && props.groupStatus !== "Done" && props.groupStatus !== "Won't Do"}>
-                <IconTicket size={12} class="text-white" />
-              </Show>
-              <Show when={!props.groupStatus && props.jiraTicketId}>
-                <IconTicket size={12} class="text-white" />
-              </Show>
-            </div>
+            {props.jiraUrl ? (
+              <a
+                data-react-grab-ignore-events
+                data-react-grab-status-badge={props.groupStatus ?? "no-task"}
+                href={props.jiraUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="absolute -top-1.5 -right-1.5 w-[22px] h-[22px] rounded-[6px] flex items-center justify-center border-2 border-white cursor-pointer hover:scale-110 transition-transform"
+                style={{
+                  background: getStatusColor(props.groupStatus).hex,
+                  "pointer-events": "auto",
+                }}
+                title={`${props.groupStatus ?? "No Task"} — ${props.jiraTicketId} (click to open)`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Show when={props.groupStatus === "Done" || props.groupStatus === "Won't Do"}>
+                  <IconCheck size={12} class="text-white" />
+                </Show>
+                <Show when={props.groupStatus && props.groupStatus !== "Done" && props.groupStatus !== "Won't Do"}>
+                  <IconTicket size={12} class="text-white" />
+                </Show>
+                <Show when={!props.groupStatus && props.jiraTicketId}>
+                  <IconTicket size={12} class="text-white" />
+                </Show>
+              </a>
+            ) : (
+              <div
+                data-react-grab-status-badge={props.groupStatus ?? "no-task"}
+                class="absolute -top-1.5 -right-1.5 w-[22px] h-[22px] rounded-[6px] flex items-center justify-center border-2 border-white"
+                style={{
+                  background: getStatusColor(props.groupStatus).hex,
+                  "pointer-events": "auto",
+                }}
+                title={props.groupStatus ?? "No Task"}
+              >
+                <Show when={props.groupStatus === "Done" || props.groupStatus === "Won't Do"}>
+                  <IconCheck size={12} class="text-white" />
+                </Show>
+                <Show when={props.groupStatus && props.groupStatus !== "Done" && props.groupStatus !== "Won't Do"}>
+                  <IconTicket size={12} class="text-white" />
+                </Show>
+                <Show when={!props.groupStatus && props.jiraTicketId}>
+                  <IconTicket size={12} class="text-white" />
+                </Show>
+              </div>
+            )}
           </Show>
           <Show when={props.status === "copying" && !props.isPendingAbort}>
             <div

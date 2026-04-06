@@ -466,6 +466,7 @@ export interface SelectionLabelInstance {
   groupId?: string;
   groupStatus?: GroupStatus;
   jiraTicketId?: string;
+  jiraUrl?: string;
 }
 
 /**
@@ -713,4 +714,5 @@ export interface SelectionLabelProps
   hideArrow?: boolean;
   groupStatus?: GroupStatus;
   jiraTicketId?: string;
+  jiraUrl?: string;
 }
