@@ -1,9 +1,9 @@
 // packages/react-grab/src/features/sidebar/derive-status.ts
 import type { SelectionGroup } from "../selection-groups/types.js";
-import type { CommentItem } from "../../types.js";
+import type { CommentItem, GroupStatus } from "../../types.js";
 import type { SelectionGroupWithJira } from "./jira-types.js";
 
-export type GroupStatus = "open" | "ticketed" | "resolved";
+export type { GroupStatus };
 
 export interface GroupedEntry {
   group: SelectionGroup;
