@@ -10,6 +10,7 @@ interface JiraStatusBannerProps {
 export const JiraStatusBanner: Component<JiraStatusBannerProps> = (props) => {
   return (
     <div
+      data-react-grab-jira-status
       class="m-3 p-3 rounded-lg bg-white/5 border border-white/10 shrink-0"
       style={{ "pointer-events": "auto" }}
     >

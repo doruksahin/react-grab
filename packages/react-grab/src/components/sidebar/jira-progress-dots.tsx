@@ -24,7 +24,7 @@ export const JiraProgressDots: Component<JiraProgressDotsProps> = (props) => {
   const active = () => activeDotIndex(props.statusCategory);
 
   return (
-    <div class="flex items-center gap-1.5 mt-2" style={{ "pointer-events": "auto" }}>
+    <div data-react-grab-jira-dots class="flex items-center gap-1.5 mt-2" style={{ "pointer-events": "auto" }}>
       <For each={STAGES}>
         {(stage, i) => (
           <>

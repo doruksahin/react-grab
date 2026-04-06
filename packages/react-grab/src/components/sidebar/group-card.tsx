@@ -15,6 +15,7 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
 
   return (
     <div
+      data-react-grab-group-card
       class="bg-[#232323] rounded-lg p-3 mb-1.5 cursor-pointer border border-transparent hover:border-white/10 hover:bg-[#2a2a2a] transition-colors"
       style={{ "border-left": `2px solid ${statusColor().hex}` }}
       onClick={(e) => props.onClick(props.entry.group.id, e.currentTarget as HTMLElement)}

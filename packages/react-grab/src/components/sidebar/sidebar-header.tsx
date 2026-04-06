@@ -10,7 +10,7 @@ interface SidebarHeaderProps {
 
 export const SidebarHeader: Component<SidebarHeaderProps> = (props) => {
   return (
-    <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
+    <div data-react-grab-sidebar-header class="flex items-center justify-between px-4 py-3 border-b border-white/10">
       <h2 class="flex items-center gap-2 text-sm font-semibold text-white">
         <span
           class={cn(

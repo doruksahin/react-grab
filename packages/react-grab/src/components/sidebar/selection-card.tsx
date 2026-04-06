@@ -48,6 +48,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
 
   return (
     <div
+      data-react-grab-selection-card
       class="bg-[#232323] rounded-lg p-3 mb-1.5 border border-white/5"
       style={{ "pointer-events": "auto" }}
     >

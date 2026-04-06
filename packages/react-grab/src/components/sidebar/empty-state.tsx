@@ -8,7 +8,7 @@ interface EmptyStateProps {
 
 export const EmptyState: Component<EmptyStateProps> = (props) => {
   return (
-    <div class="flex flex-col items-center justify-center py-12 px-4 text-center">
+    <div data-react-grab-empty-state class="flex flex-col items-center justify-center py-12 px-4 text-center">
       <p class="text-sm text-white/60">{props.message}</p>
       {props.submessage && (
         <p class="text-xs text-white/40 mt-1">{props.submessage}</p>

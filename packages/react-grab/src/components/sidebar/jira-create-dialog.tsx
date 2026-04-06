@@ -39,6 +39,7 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
           style={{ "z-index": "2147483647", "pointer-events": "none" }}
         >
           <div
+            data-react-grab-jira-dialog
             class="bg-[#1a1a1a] rounded-xl w-[480px] max-h-[80vh] overflow-y-auto p-6 border border-white/10"
             style={{ "pointer-events": "auto" }}
             role="dialog"

@@ -48,7 +48,7 @@ const ScreenshotSlot: Component<{
 
 export const ScreenshotPair: Component<ScreenshotPairProps> = (props) => {
   return (
-    <div class="flex gap-2 mt-1.5" style={{ "pointer-events": "auto" }}>
+    <div data-react-grab-screenshot-pair class="flex gap-2 mt-1.5" style={{ "pointer-events": "auto" }}>
       <ScreenshotSlot
         src={props.elementSrc}
         label="Element"

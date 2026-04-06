@@ -97,7 +97,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ "pointer-events": "auto" }}>
+    <form data-react-grab-jira-form onSubmit={handleSubmit} style={{ "pointer-events": "auto" }}>
       <h2 class="text-[16px] font-semibold text-white mb-4">
         Create JIRA Ticket
       </h2>

@@ -37,6 +37,7 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
 
   return (
     <div
+      data-react-grab-group-detail
       tabIndex={-1}
       ref={props.ref}
       class="flex flex-col flex-1 overflow-hidden outline-none"

@@ -15,6 +15,7 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
 
   return (
     <div
+      data-react-grab-detail-header
       class="flex items-center gap-2 p-3 border-b border-white/10 shrink-0"
       style={{ "pointer-events": "auto" }}
     >
