@@ -27,6 +27,7 @@ import {
   nativeRequestAnimationFrame,
 } from "../utils/native-raf.js";
 import { supportsDisplayP3 } from "../utils/supports-display-p3.js";
+import { statusOverlayColor } from "../utils/overlay-color.js";
 
 const DEFAULT_LAYER_STYLE = {
   borderColor: OVERLAY_BORDER_COLOR_DEFAULT,
@@ -68,6 +69,8 @@ interface AnimatedBounds {
   targetOpacity: number;
   createdAt?: number;
   isInitialized: boolean;
+  borderColor?: string;
+  fillColor?: string;
 }
 
 export interface OverlayCanvasProps {
@@ -323,8 +326,8 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
         animation.current.width,
         animation.current.height,
         animation.borderRadius,
-        style.fillColor,
-        style.borderColor,
+        animation.fillColor ?? style.fillColor,
+        animation.borderColor ?? style.borderColor,
         animation.opacity,
       );
     }
@@ -615,6 +618,9 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
         for (const instance of instancesToProcess) {
           const boundsToRender = resolveBoundsArray(instance);
           const targetOpacity = instance.status === "fading" ? 0 : 1;
+          const groupStatus = instance.groupStatus ?? "open";
+          const instanceBorderColor = statusOverlayColor(groupStatus, 0.5);
+          const instanceFillColor = statusOverlayColor(groupStatus, 0.08);
 
           for (let index = 0; index < boundsToRender.length; index++) {
             const bounds = boundsToRender[index];
@@ -625,13 +631,16 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
 
             if (existingAnimation) {
               updateAnimationTarget(existingAnimation, bounds, targetOpacity);
+              existingAnimation.borderColor = instanceBorderColor;
+              existingAnimation.fillColor = instanceFillColor;
             } else {
-              grabbedAnimations.push(
-                createAnimatedBounds(animationId, bounds, {
-                  opacity: 1,
-                  targetOpacity,
-                }),
-              );
+              const anim = createAnimatedBounds(animationId, bounds, {
+                opacity: 1,
+                targetOpacity,
+              });
+              anim.borderColor = instanceBorderColor;
+              anim.fillColor = instanceFillColor;
+              grabbedAnimations.push(anim);
             }
           }
         }
