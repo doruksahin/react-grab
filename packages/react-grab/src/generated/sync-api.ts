@@ -212,6 +212,13 @@ export type ListJiraProjects500 = {
   error: string;
 };
 
+export type ListJiraIssueTypesParams = {
+/**
+ * Project key (e.g. ATT)
+ */
+projectKey: string;
+};
+
 export type ListJiraIssueTypes200Item = {
   id: string;
   name: string;
@@ -660,7 +667,7 @@ export const listJiraProjects = async ( options?: RequestInit): Promise<listJira
 
 
 /**
- * @summary List JIRA issue types
+ * @summary List JIRA issue types for a project
  */
 export type listJiraIssueTypesResponse200 = {
   data: ListJiraIssueTypes200Item[]
@@ -681,17 +688,24 @@ export type listJiraIssueTypesResponseError = (listJiraIssueTypesResponse500) & 
 
 export type listJiraIssueTypesResponse = (listJiraIssueTypesResponseSuccess | listJiraIssueTypesResponseError)
 
-export const getListJiraIssueTypesUrl = () => {
+export const getListJiraIssueTypesUrl = (params: ListJiraIssueTypesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/jira/issue-types`
+  return stringifiedParams.length > 0 ? `/jira/issue-types?${stringifiedParams}` : `/jira/issue-types`
 }
 
-export const listJiraIssueTypes = async ( options?: RequestInit): Promise<listJiraIssueTypesResponse> => {
+export const listJiraIssueTypes = async (params: ListJiraIssueTypesParams, options?: RequestInit): Promise<listJiraIssueTypesResponse> => {
 
-  return customFetch<listJiraIssueTypesResponse>(getListJiraIssueTypesUrl(),
+  return customFetch<listJiraIssueTypesResponse>(getListJiraIssueTypesUrl(params),
   {
     ...options,
     method: 'GET'

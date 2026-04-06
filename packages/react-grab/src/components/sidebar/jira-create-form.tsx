@@ -38,15 +38,18 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
-  // Load all three lists in parallel on mount
+  // Load projects and priorities on mount
   const [projects] = createResource(() =>
     listJiraProjects().then((r) => r.data),
   );
-  const [issueTypes] = createResource(() =>
-    listJiraIssueTypes().then((r) => r.data),
-  );
   const [priorities] = createResource(() =>
     listJiraPriorities().then((r) => r.data),
+  );
+
+  // Load issue types only when a project is selected
+  const [issueTypes] = createResource(
+    () => projectKey() || undefined,
+    (key) => listJiraIssueTypes({ projectKey: key }).then((r) => r.data),
   );
 
   // Screenshot filenames for the informational attachments section
@@ -107,7 +110,10 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
             class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10"
             style={{ "pointer-events": "auto" }}
             value={projectKey()}
-            onChange={(e) => setProjectKey(e.currentTarget.value)}
+            onChange={(e) => {
+              setProjectKey(e.currentTarget.value);
+              setIssueType(""); // reset issue type when project changes
+            }}
             required
           >
             <option value="">Select project…</option>
@@ -117,17 +123,18 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
           </select>
         </div>
 
-        {/* Issue type selector */}
+        {/* Issue type selector — disabled until project is selected */}
         <div class="mb-3">
-          <label class="block text-[11px] text-white/50 mb-1">Issue Type *</label>
+          <label class="block text-[11px] text-white/50 mb-1">Work Type *</label>
           <select
-            class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10"
+            class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ "pointer-events": "auto" }}
             value={issueType()}
             onChange={(e) => setIssueType(e.currentTarget.value)}
+            disabled={!projectKey()}
             required
           >
-            <option value="">Select type…</option>
+            <option value="">{!projectKey() ? "Select a project first…" : issueTypes.loading ? "Loading…" : "Select type…"}</option>
             <For each={issueTypes()}>
               {(t) => <option value={t.name}>{t.name}</option>}
             </For>

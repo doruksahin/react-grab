@@ -77,11 +77,16 @@ const listIssueTypes = createRoute({
   method: "get",
   path: "/jira/issue-types",
   tags: ["jira"],
-  summary: "List JIRA issue types",
+  summary: "List JIRA issue types for a project",
   operationId: "listJiraIssueTypes",
+  request: {
+    query: z.object({
+      projectKey: z.string().openapi({ description: "Project key (e.g. ATT)", example: "ATT" }),
+    }),
+  },
   responses: {
     200: {
-      description: "List of issue types",
+      description: "List of issue types for the project",
       content: { "application/json": { schema: z.array(JiraIssueType) } },
     },
     500: {
@@ -147,8 +152,9 @@ export const jiraRoutes = createRouter()
     }
   })
   .openapi(listIssueTypes, async (c) => {
+    const { projectKey } = c.req.valid("query");
     try {
-      const types = await c.var.jira.getIssueTypes();
+      const types = await c.var.jira.getIssueTypes(projectKey);
       return c.json(types, 200);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to list JIRA issue types";

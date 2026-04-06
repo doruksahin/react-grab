@@ -141,10 +141,14 @@ export class JiraService {
       .map((p) => ({ key: p.key!, name: p.name! }));
   }
 
-  async getIssueTypes() {
-    const types = await this.client.issueTypes.getIssueAllTypes();
-    return types
-      .filter((t) => t.id && t.name)
+  async getIssueTypes(projectKey: string) {
+    const result = await this.client.issues.getCreateIssueMeta({
+      projectKeys: [projectKey],
+      expand: "projects.issuetypes",
+    });
+    const project = result.projects?.find((p) => p.key === projectKey);
+    return (project?.issuetypes ?? [])
+      .filter((t) => !t.subtask && t.id && t.name)
       .map((t) => ({ id: t.id!, name: t.name! }));
   }
 
