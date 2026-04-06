@@ -665,7 +665,7 @@ export interface CompletionViewProps {
 export interface SelectionLabelProps
   extends Pick<
     SelectionGroupsViewProps,
-    "groups" | "activeGroupId" | "onActiveGroupChange"
+    "groups" | "activeGroupId" | "onActiveGroupChange" | "onAddGroup"
   > {
   tagName?: string;
   componentName?: string;

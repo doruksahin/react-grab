@@ -186,6 +186,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           groups={props.groups}
           activeGroupId={props.activeGroupId}
           onActiveGroupChange={props.onActiveGroupChange}
+          onAddGroup={props.onAddGroup}
         />
       </Show>
 
@@ -207,6 +208,10 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             hideArrow={instance().hideArrow}
             groupStatus={instance().groupStatus}
             jiraTicketId={instance().jiraTicketId}
+            groups={props.groups}
+            activeGroupId={props.activeGroupId}
+            onActiveGroupChange={props.onActiveGroupChange}
+            onAddGroup={props.onAddGroup}
             onShowContextMenu={(() => {
               const currentInstance = instance();
               const hasCompletedStatus =
