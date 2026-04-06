@@ -25,6 +25,24 @@ function isReactGrabElement(node: Node): boolean {
   return false;
 }
 
+function createHighlightOverlay(element: Element): HTMLDivElement {
+  const rect = element.getBoundingClientRect();
+  const overlay = document.createElement("div");
+  Object.assign(overlay.style, {
+    position: "absolute",
+    top: `${rect.top + window.scrollY}px`,
+    left: `${rect.left + window.scrollX}px`,
+    width: `${(element as HTMLElement).offsetWidth}px`,
+    height: `${(element as HTMLElement).offsetHeight}px`,
+    border: "3px solid #f59e0b",
+    background: "rgba(245, 158, 11, 0.15)",
+    pointerEvents: "none",
+    zIndex: "999999",
+    boxSizing: "border-box",
+  });
+  return overlay;
+}
+
 export async function captureElement(
   element: Element,
   config: ScreenshotConfig,
@@ -47,8 +65,11 @@ export async function captureElement(
 
 export async function captureFullPage(
   config: ScreenshotConfig,
+  element: Element,
 ): Promise<Blob | null> {
   const resolved = resolveConfig(config);
+  const overlay = createHighlightOverlay(element);
+  document.body.appendChild(overlay);
   try {
     const blob = await domToBlob(document.documentElement, {
       scale: resolved.scale,
@@ -64,5 +85,7 @@ export async function captureFullPage(
     return blob;
   } catch {
     return null;
+  } finally {
+    overlay?.remove();
   }
 }

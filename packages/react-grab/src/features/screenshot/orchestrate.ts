@@ -38,7 +38,7 @@ export async function captureAndUploadScreenshots(
 
   // Capture full page screenshot
   if (config.captureFullPage !== false) {
-    const fullPageBlob = await captureFullPage(config);
+    const fullPageBlob = await captureFullPage(config, element);
     if (fullPageBlob) {
       if (adapter?.uploadScreenshot) {
         try {
