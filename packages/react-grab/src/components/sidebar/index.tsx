@@ -26,8 +26,6 @@ import {
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { ShadowRootContext } from "../../features/sidebar/shadow-context.js";
-import type { GetJiraTicketStatus200 } from "../../generated/sync-api.js";
-import { createJiraStatusPoller } from "../../features/sidebar/jira-status-poller.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -38,6 +36,7 @@ export interface SidebarProps {
   onClose: () => void;
   onActiveDetailGroupChange: (groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
+  onTicketCreated?: (groupId: string, ticketId: string, ticketUrl: string) => void;
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
 }
 
@@ -55,32 +54,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // solid-focus-trap restores focus to the previously focused element on cleanup.
   createFocusTrap({ element: containerRef, enabled: () => true });
 
-  // Local groups signal: allows JIRA fields (jiraResolved, jiraStatus, jiraUrl)
-  // to be mutated client-side without a server round-trip.
-  const [groups, setGroups] = createSignal<SelectionGroupWithJira[]>(
-    props.groups,
-  );
-
-  // Keep local signal in sync when parent updates (new groups from sync).
-  // Preserve local JIRA fields when merging.
-  createEffect(() => {
-    setGroups((prev) =>
-      props.groups.map((pg) => {
-        const local = prev.find((lg) => lg.id === pg.id);
-        if (!local) return pg;
-        return {
-          ...pg,
-          jiraResolved: local.jiraResolved,
-          jiraStatus: local.jiraStatus,
-          jiraStatusCategory: local.jiraStatusCategory,
-          jiraUrl: local.jiraUrl,
-          jiraAssignee: local.jiraAssignee,
-          jiraReporter: local.jiraReporter,
-        };
-      }),
-    );
-  });
-
   const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
@@ -88,13 +61,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   >(null);
 
   const activeGroup = createMemo(
-    () => groups().find((g) => g.id === activeDetailGroupId()) ?? null,
+    () => props.groups.find((g) => g.id === activeDetailGroupId()) ?? null,
   );
 
   // Guard: if the active group is deleted while the detail view is open, return to list
   createEffect(() => {
     const id = activeDetailGroupId();
-    if (id !== null && !groups().find((g) => g.id === id)) {
+    if (id !== null && !props.groups.find((g) => g.id === id)) {
       setActiveDetailGroupId(null);
     }
   });
@@ -123,25 +96,25 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   });
 
   const groupedItems = createMemo(() =>
-    groupComments(groups(), props.commentItems),
+    groupComments(props.groups, props.commentItems),
   );
 
   const filteredGroups = createMemo(() => {
     const filter = filterState();
     if (!isFilterActive(filter)) return groupedItems();
-    const filtered = applyFilters(groups(), filter);
+    const filtered = applyFilters(props.groups, filter);
     return groupedItems().filter((entry: GroupedEntry) =>
       filtered.some((g) => g.id === entry.group.id),
     );
   });
 
-  // NOTE: groups() is read via untrack() to prevent a reactive loop:
+  // NOTE: props.groups is read via untrack() to prevent a reactive loop:
   // filter effect → setGroupsRevealed → persistGroups → props.groups changes
-  // → merge effect → setGroups() → groups() changes → filter effect re-runs → LOOP
+  // → filter effect re-runs (if tracking props.groups) → LOOP
   // Only filterState() is tracked — this effect re-runs only when the user changes filters.
   createEffect(() => {
     const filter = filterState();
-    const allGroups = untrack(() => groups());
+    const allGroups = untrack(() => props.groups);
     const allIds = allGroups.map((g) => g.id);
     if (!isFilterActive(filter)) {
       props.onFilterVisibilityChange?.(new Set(allIds), allIds);
@@ -150,50 +123,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     const filtered = applyFilters(allGroups, filter);
     const visibleIds = new Set(filtered.map((g) => g.id));
     props.onFilterVisibilityChange?.(visibleIds, allIds);
-  });
-
-  function handleTicketCreated(
-    groupId: string,
-    ticketId: string,
-    ticketUrl: string,
-  ) {
-    setGroups((prev) =>
-      prev.map((g) =>
-        g.id === groupId
-          ? { ...g, jiraTicketId: ticketId, jiraUrl: ticketUrl }
-          : g,
-      ),
-    );
-  }
-
-  function handleStatusUpdate(
-    groupId: string,
-    status: GetJiraTicketStatus200,
-  ) {
-    const resolved = status.statusCategory.toLowerCase() === "done";
-    setGroups((prev) =>
-      prev.map((g) =>
-        g.id === groupId
-          ? {
-              ...g,
-              jiraStatus: status.status,
-              jiraStatusCategory: status.statusCategory,
-              jiraAssignee: status.assignee,
-              jiraReporter: status.reporter,
-              jiraResolved: resolved,
-            }
-          : g,
-      ),
-    );
-    if (resolved) {
-      props.onJiraResolved?.(groupId);
-    }
-  }
-
-  createJiraStatusPoller({
-    groups,
-    syncWorkspace: () => props.syncWorkspace,
-    onStatusUpdate: handleStatusUpdate,
   });
 
   // Shadow root: resolved reactively from the container element so that
@@ -241,8 +170,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 <StatsBar groupedItems={groupedItems()} />
                 <FilterBar
                   filter={filterState()}
-                  assignees={getDistinctAssignees(groups())}
-                  reporters={getDistinctReporters(groups())}
+                  assignees={getDistinctAssignees(props.groups)}
+                  reporters={getDistinctReporters(props.groups)}
                   onFilterChange={setFilterState}
                 />
                 <FilterChips
@@ -251,7 +180,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 />
 
                 <Show
-                  when={groups().length > 0}
+                  when={props.groups.length > 0}
                   fallback={
                     <EmptyState
                       message="No selections yet."
@@ -289,7 +218,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               syncWorkspace={props.syncWorkspace}
               shadowRoot={shadowRoot()}
               onBack={() => setActiveDetailGroupId(null)}
-              onTicketCreated={handleTicketCreated}
+              onTicketCreated={props.onTicketCreated}
             />
           </Show>
         </Show>

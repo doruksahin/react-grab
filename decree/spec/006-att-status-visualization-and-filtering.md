@@ -12,6 +12,39 @@ Replace the three-state status model (`open | ticketed | resolved`) with the ful
 
 This is ATT-specific — the status-color map is hardcoded per ADR-0006. Assignee/reporter come from expanding the existing `getIssueStatus` poll endpoint.
 
+## Data Flow
+
+```
+                    JIRA API
+                       │
+                       ▼
+              sync-server proxy
+              (getIssueStatus)
+                       │
+                       ▼
+        ┌─── core/index.tsx ◄── createJiraStatusPoller
+        │    selectionGroups.persistGroups()
+        │           │
+        │           ▼
+        │    core's groups signal              ← jiraStatus lives HERE
+        │           │
+        │     ┌─────┴──────────┐
+        │     ▼                ▼
+        │  computedLabel...  props.groups → sidebar
+        │  groupStatus:        │
+        │  group?.jiraStatus   ▼
+        │     │            sidebar reads from props
+        │     ▼            (no local enrichment needed)
+        │  overlay-canvas
+        │  getStatusColor("In Progress").hex
+        │
+        └─── ✅ canvas colors work
+             ✅ sidebar badges work (reads from props.groups)
+             ✅ works WITHOUT opening sidebar
+```
+
+**Key principle:** Core owns JIRA metadata. The poller runs at react-grab init (not sidebar open) and stores `jiraStatus`, `jiraAssignee`, `jiraReporter` on the core groups signal. Both the canvas overlay and the sidebar read from the same source.
+
 ## Technical Design
 
 ### Module Architecture (SRP per PRD-004)

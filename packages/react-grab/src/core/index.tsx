@@ -144,6 +144,7 @@ import { copyStylesPlugin } from "./plugins/copy-styles.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
+import { createJiraStatusPoller } from "../features/sidebar/jira-status-poller.js";
 import {
   freezeAnimations,
   freezeAllAnimations,
@@ -3839,6 +3840,30 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       persistGroups: selectionGroups.persistGroups,
     });
 
+    // Poll JIRA status for all ticketed groups on init.
+    // Stores jiraStatus on core groups signal so canvas overlays
+    // and selection labels show correct status colors without opening the sidebar.
+    createJiraStatusPoller({
+      groups: selectionGroups.groups as () => SelectionGroupWithJira[],
+      syncWorkspace: () => syncState?.workspace,
+      onStatusUpdate: (groupId, status) => {
+        const resolved = status.statusCategory.toLowerCase() === "done";
+        const updated = selectionGroups.groups().map((g) =>
+          g.id === groupId
+            ? {
+                ...g,
+                jiraStatus: status.status,
+                jiraStatusCategory: status.statusCategory,
+                jiraAssignee: status.assignee,
+                jiraReporter: status.reporter,
+                jiraResolved: resolved,
+              }
+            : g,
+        );
+        selectionGroups.persistGroups(updated);
+      },
+    });
+
     const showCommentItemPreview = (
       item: CommentItem,
       idPrefix: string,
@@ -4444,6 +4469,14 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onJiraResolved={(groupId) => {
                   const updated = selectionGroups.groups().map((g) =>
                     g.id === groupId ? { ...g, jiraResolved: true } : g,
+                  );
+                  selectionGroups.persistGroups(updated);
+                }}
+                onTicketCreated={(groupId, ticketId, ticketUrl) => {
+                  const updated = selectionGroups.groups().map((g) =>
+                    g.id === groupId
+                      ? { ...g, jiraTicketId: ticketId, jiraUrl: ticketUrl }
+                      : g,
                   );
                   selectionGroups.persistGroups(updated);
                 }}
