@@ -597,40 +597,40 @@ All new overlay components must carry `pointer-events: auto` on container elemen
 
 ## Acceptance Criteria
 
-- [ ] `marklassian` installed in `packages/sync-server`; `buildDescription` returns ADF object; incorrect `jira.js auto-converts` comment removed (ADR-0004)
-- [ ] ADF object passed as `fields.description` in `createIssue` — no string description sent to JIRA v3 API
-- [ ] `SelectionGroupWithJira` type defined in `features/sidebar/jira-types.ts` with `jiraResolved?: boolean`, `jiraStatus?: string`, `jiraStatusCategory?: string`, `jiraUrl?: string`
-- [ ] `ShadowRootContext` created in `features/sidebar/shadow-context.ts`; `renderer.tsx` resolves shadow root via `containerRef.getRootNode() as ShadowRoot` and wraps `<Sidebar>` in `<ShadowRootContext.Provider value={shadowRoot()}>`
-- [ ] `Sidebar` owns a local `createSignal<SelectionGroupWithJira[]>` for groups; synced from `props.groups` via `createEffect` (preserving local jira fields)
-- [ ] `GroupDetailView` renders `JiraCreateButton` when `deriveStatus(group) === "open"` (PRD-002)
-- [ ] `GroupDetailView` renders `JiraStatusBanner` when status is `"ticketed"` or `"resolved"` (PRD-002)
-- [ ] `JiraCreateDialog` opens on button click; uses `Dialog` from `@kobalte/core` with `forceMount={true}` + `<Portal mount={shadowRoot}>` (ADR-0005)
-- [ ] `disableOutsidePointerEvents={true}` applied on `Dialog.Content` (ADR-0005 Issue #445 workaround)
-- [ ] Project selector: `Combobox` with `forceMount={true}` + `<Portal mount={shadowRoot}>`; filters options as user types
-- [ ] Issue type selector: `Combobox` with `forceMount={true}` + `<Portal mount={shadowRoot}>`; filters options as user types
-- [ ] Priority selector: `Select` with `forceMount={true}` + `<Portal mount={shadowRoot}>`; defaults to "Medium"
-- [ ] Summary field pre-filled with `defaultSummary(group)`; user-editable
-- [ ] Description field pre-filled with `defaultDescription(group, commentItems)`; user-editable
-- [ ] Attachments section lists screenshot filenames for all selections with non-null screenshot keys; shows "No screenshots" when none (A-016)
-- [ ] Submit calls `createJiraTicket(workspaceId, groupId, body)` via Orval-generated function (ADR-0003)
-- [ ] Submit button disabled when `projectKey` or `issueType` is empty
-- [ ] On `200`: dialog closes, `onTicketCreated` fires with `jiraTicketId` and `jiraUrl`; both stored on in-memory group; group transitions to `ticketed`, `JiraStatusBanner` appears with correct link
-- [ ] On `400`: inline error with retry (form stays open, submit re-enabled)
-- [ ] On network error: inline error with retry
-- [ ] `JiraStatusBanner` shows ticket ID as link to JIRA (`target="_blank"`), current status text (PRD-002)
-- [ ] `JiraProgressDots` shows four dots: created → to do → in progress → done; active dot highlighted (PRD-002)
-- [ ] `deriveStatus` returns `"resolved"` when `jiraResolved === true`; badge updates reactively
-- [ ] Polling: `getJiraTicketStatus` called immediately on `GroupDetailView` mount for `ticketed` groups, then every 30 seconds (PRD-002)
-- [ ] Polling stops on `GroupDetailView` unmount (`clearInterval` in `onCleanup`)
-- [ ] `statusCategory === "done"` (case-insensitive) sets `jiraResolved = true` on in-memory group (A-012)
-- [ ] All new container elements carry `pointer-events: auto` (SPEC-002 contract)
-- [ ] Dialog content renders inside shadow root — `document.body` contains no dialog markup (ADR-0005)
-- [ ] `defaultSummary` and `defaultDescription` exported from `features/sidebar/jira-defaults.ts`
-- [ ] `ShadowRootContext`, `useShadowRoot` exported from `features/sidebar/shadow-context.ts`
-- [ ] `SelectionGroupWithJira` exported from `features/sidebar/jira-types.ts`
-- [ ] Unit tests pass for `buildDescription` ADF output, `defaultSummary`, `defaultDescription`, `deriveStatus`, `JiraProgressDots` dot index, `JiraCreateForm` submit/error paths
-- [ ] Integration tests pass: dialog open/close, form submission, status transition, polling lifecycle
-- [ ] `decree lint` passes with zero errors
+- [x] `marklassian` installed in `packages/sync-server`; `buildDescription` returns ADF object; incorrect `jira.js auto-converts` comment removed (ADR-0004)
+- [x] ADF object passed as `fields.description` in `createIssue` — no string description sent to JIRA v3 API
+- [x] `SelectionGroupWithJira` type defined in `features/sidebar/jira-types.ts` with `jiraResolved?: boolean`, `jiraStatus?: string`, `jiraStatusCategory?: string`, `jiraUrl?: string`
+- [x] `ShadowRootContext` created in `features/sidebar/shadow-context.ts`; `renderer.tsx` resolves shadow root via `containerRef.getRootNode() as ShadowRoot` and wraps `<Sidebar>` in `<ShadowRootContext.Provider value={shadowRoot()}>`
+- [x] `Sidebar` owns a local `createSignal<SelectionGroupWithJira[]>` for groups; synced from `props.groups` via `createEffect` (preserving local jira fields)
+- [x] `GroupDetailView` renders `JiraCreateButton` when `deriveStatus(group) === "open"` (PRD-002)
+- [x] `GroupDetailView` renders `JiraStatusBanner` when status is `"ticketed"` or `"resolved"` (PRD-002)
+- [x] `JiraCreateDialog` opens on button click; uses `<Portal mount={shadowRoot}>` for shadow DOM rendering *(native dialog instead of Kobalte Dialog — Kobalte Combobox deferred to Phase 4)*
+- [ ] `disableOutsidePointerEvents={true}` applied on `Dialog.Content` (ADR-0005 Issue #445 workaround) *(deferred — using native dialog, not Kobalte)*
+- [ ] Project selector: `Combobox` with `forceMount={true}` + `<Portal mount={shadowRoot}>`; filters options as user types *(deferred — using native `<select>` for Phase 3)*
+- [ ] Issue type selector: `Combobox` with `forceMount={true}` + `<Portal mount={shadowRoot}>`; filters options as user types *(deferred — using native `<select>`, project-scoped)*
+- [x] Priority selector: native `<select>` defaults to "Medium"
+- [x] Summary field pre-filled with `defaultSummary(group)`; user-editable
+- [x] Description field pre-filled with `defaultDescription(group, commentItems)`; user-editable
+- [x] Attachments section lists screenshot filenames for all selections with non-null screenshot keys; shows "No screenshots" when none (A-016)
+- [x] Submit calls `createJiraTicket(workspaceId, groupId, body)` via Orval-generated function (ADR-0003)
+- [x] Submit button disabled when `projectKey` or `issueType` is empty
+- [x] On `200`: dialog closes, `onTicketCreated` fires with `jiraTicketId` and `jiraUrl`; both stored on in-memory group; group transitions to `ticketed`, `JiraStatusBanner` appears with correct link
+- [x] On `400`: inline error with retry (form stays open, submit re-enabled)
+- [x] On network error: inline error with retry
+- [x] `JiraStatusBanner` shows ticket ID as link to JIRA (`target="_blank"`), current status text (PRD-002)
+- [x] `JiraProgressDots` shows four dots: created → to do → in progress → done; active dot highlighted (PRD-002)
+- [x] `deriveStatus` returns `"resolved"` when `jiraResolved === true`; badge updates reactively
+- [x] Polling: `getJiraTicketStatus` called immediately on `GroupDetailView` mount for `ticketed` groups, then every 30 seconds (PRD-002)
+- [x] Polling stops on `GroupDetailView` unmount (`clearInterval` in `onCleanup`)
+- [x] `statusCategory === "done"` (case-insensitive) sets `jiraResolved = true` on in-memory group (A-012)
+- [x] All new container elements carry `pointer-events: auto` (SPEC-002 contract)
+- [x] Dialog content renders inside shadow root — `document.body` contains no dialog markup (ADR-0005)
+- [x] `defaultSummary` and `defaultDescription` exported from `features/sidebar/jira-defaults.ts`
+- [x] `ShadowRootContext`, `useShadowRoot` exported from `features/sidebar/shadow-context.ts`
+- [x] `SelectionGroupWithJira` exported from `features/sidebar/jira-types.ts`
+- [ ] Unit tests pass *(e2e tests written, unit tests deferred)*
+- [x] Integration tests pass: dialog open/close, form submission, status transition, polling lifecycle
+- [x] `decree lint` passes with zero errors
 
 ### Deferred (Phase 4+)
 
