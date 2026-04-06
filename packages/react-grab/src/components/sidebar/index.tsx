@@ -18,6 +18,7 @@ import { FilterChips } from "./filter-chips.js";
 import { type FilterState, EMPTY_FILTER, isFilterActive, applyFilters, getDistinctAssignees, getDistinctReporters } from "../../features/sidebar/filter-state.js";
 import { GroupList } from "./group-list.js";
 import { GroupDetailView } from "./group-detail-view.js";
+import { StatusLegend } from "./status-legend.js";
 import { groupComments } from "../../features/selection-groups/business/group-operations.js";
 import {
   type GroupedEntry,
@@ -77,6 +78,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     );
   });
 
+  const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
     string | null
@@ -201,7 +203,11 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         aria-modal="true"
         aria-label="React Grab Dashboard"
       >
-        <SidebarHeader syncStatus={props.syncStatus} onClose={props.onClose} />
+        <SidebarHeader syncStatus={props.syncStatus} onClose={props.onClose} onInfoClick={() => setShowLegend(true)} />
+
+        <Show when={showLegend()}>
+          <StatusLegend onClose={() => setShowLegend(false)} />
+        </Show>
 
         {/* Phase 1 sync error state — must remain intact */}
         <Show
