@@ -67,6 +67,15 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
             </span>
           </Show>
         </div>
+        <Show when={(groupWithJira().jiraLabels ?? []).length > 0}>
+          <div class="flex flex-wrap gap-1 mt-1 pl-7">
+            {(groupWithJira().jiraLabels ?? []).map((lbl) => (
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/50">
+                {lbl}
+              </span>
+            ))}
+          </div>
+        </Show>
       </Show>
     </div>
   );
