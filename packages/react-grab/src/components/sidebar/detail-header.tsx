@@ -1,8 +1,7 @@
 import { type Component } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types";
-import type { GroupedEntry } from "../../features/sidebar";
-import { deriveStatus } from "../../features/sidebar";
-import { StatusBadge } from "./status-badge";
+import { getStatusLabel, getStatusColor } from "../../features/sidebar/status-colors.js";
+import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 
 interface DetailHeaderProps {
   group: SelectionGroup;
@@ -10,9 +9,9 @@ interface DetailHeaderProps {
 }
 
 export const DetailHeader: Component<DetailHeaderProps> = (props) => {
-  // deriveStatus needs a GroupedEntry; construct a minimal one for the header badge
-  const status = () =>
-    deriveStatus({ group: props.group, items: [] } as GroupedEntry);
+  const groupWithJira = () => props.group as SelectionGroupWithJira;
+  const statusLabel = () => getStatusLabel(groupWithJira());
+  const statusColor = () => getStatusColor(groupWithJira().jiraStatus);
 
   return (
     <div
@@ -32,7 +31,16 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
       >
         {props.group.name}
       </span>
-      <StatusBadge status={status()} />
+      <span
+        class="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+        style={{
+          background: statusColor().bg,
+          color: statusColor().text,
+          border: `1px solid ${statusColor().hex}`,
+        }}
+      >
+        {statusLabel()}
+      </span>
     </div>
   );
 };

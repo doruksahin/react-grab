@@ -434,7 +434,8 @@ export interface OverlayBounds {
   y: number;
 }
 
-export type GroupStatus = "open" | "ticketed" | "resolved";
+/** JIRA status name (e.g. "In Progress") or undefined for no ticket */
+export type GroupStatus = string | undefined;
 
 export type SelectionLabelStatus =
   | "idle"
@@ -585,6 +586,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   syncStatus?: SyncStatus;
   syncWorkspace?: string;
   syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
+  onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
 }
 
 export interface GrabbedBox {

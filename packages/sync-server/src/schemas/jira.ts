@@ -31,6 +31,8 @@ export const JiraPriority = z.object({
 export const JiraTicketStatus = z.object({
   status: z.string(),
   statusCategory: z.string(),
+  assignee: z.string().nullable(),
+  reporter: z.string().nullable(),
 });
 
 export const GroupIdParam = z.object({

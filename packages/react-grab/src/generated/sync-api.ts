@@ -5,7 +5,7 @@
  * API for the react-grab dashboard — comments, groups, workspaces.
  * OpenAPI spec version: 0.1.0
  */
-import { customFetch } from './custom-fetch.js';
+import { customFetch } from './custom-fetch';
 export type HealthCheck200Status = typeof HealthCheck200Status[keyof typeof HealthCheck200Status];
 
 
@@ -197,6 +197,10 @@ export type CreateJiraTicket400 = {
 export type GetJiraTicketStatus200 = {
   status: string;
   statusCategory: string;
+  /** @nullable */
+  assignee: string | null;
+  /** @nullable */
+  reporter: string | null;
 };
 
 export type GetJiraTicketStatus404 = {

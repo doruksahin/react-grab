@@ -1,6 +1,5 @@
 import type { Component } from "solid-js";
 import type { GroupedEntry } from "../../features/sidebar";
-import { deriveStatus } from "../../features/sidebar";
 
 interface StatsBarProps {
   groupedItems: GroupedEntry[];
@@ -11,15 +10,13 @@ export const StatsBar: Component<StatsBarProps> = (props) => {
     const items = props.groupedItems;
     return items.reduce(
       (acc, e) => {
-        const s = deriveStatus(e);
         return {
           groups: acc.groups + 1,
           selections: acc.selections + e.items.length,
-          open: acc.open + (s === "open" ? 1 : 0),
-          ticketed: acc.ticketed + (s === "ticketed" ? 1 : 0),
+          ticketed: acc.ticketed + (e.group.jiraTicketId ? 1 : 0),
         };
       },
-      { groups: 0, selections: 0, open: 0, ticketed: 0 },
+      { groups: 0, selections: 0, ticketed: 0 },
     );
   };
 
@@ -27,7 +24,6 @@ export const StatsBar: Component<StatsBarProps> = (props) => {
     <div class="flex border-b border-white/10">
       <StatCell value={stats().groups} label="Groups" />
       <StatCell value={stats().selections} label="Items" />
-      <StatCell value={stats().open} label="Open" />
       <StatCell value={stats().ticketed} label="Ticketed" />
     </div>
   );

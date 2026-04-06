@@ -5,6 +5,7 @@ import { cn } from "../../utils/cn";
 interface SidebarHeaderProps {
   syncStatus: SyncStatus;
   onClose: () => void;
+  onInfoClick?: () => void;
 }
 
 export const SidebarHeader: Component<SidebarHeaderProps> = (props) => {
@@ -23,13 +24,22 @@ export const SidebarHeader: Component<SidebarHeaderProps> = (props) => {
         />
         react-grab
       </h2>
-      <button
-        class="w-6 h-6 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 rounded cursor-pointer"
-        onClick={props.onClose}
-        aria-label="Close sidebar"
-      >
-        &times;
-      </button>
+      <div class="flex items-center gap-1.5">
+        <button
+          class="w-6 h-6 rounded-full border border-white/20 text-[11px] text-white/60 hover:text-white/80 hover:border-white/40 cursor-pointer flex items-center justify-center"
+          onClick={() => props.onInfoClick?.()}
+          title="Status legend"
+        >
+          i
+        </button>
+        <button
+          class="w-6 h-6 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 rounded cursor-pointer"
+          onClick={props.onClose}
+          aria-label="Close sidebar"
+        >
+          &times;
+        </button>
+      </div>
     </div>
   );
 };

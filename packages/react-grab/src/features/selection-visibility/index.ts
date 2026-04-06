@@ -1,4 +1,4 @@
-import { createEffect, createMemo, on } from "solid-js";
+import { createEffect, createMemo, on, untrack } from "solid-js";
 import type {
   PreviewEntry,
   SelectionVisibilityAPI,
@@ -126,12 +126,36 @@ export function createSelectionVisibility(
     deps.updateToolbarState({ selectionsRevealed: newRevealed });
   };
 
+  // untrack: this function may be called from within a createEffect (e.g. the
+  // sidebar's filter visibility effect). Without untrack, deps.groups() and
+  // deps.commentItems() would register as dependencies of that outer effect,
+  // and the subsequent persistGroups (which updates deps.groups()) would
+  // re-trigger the caller — creating an infinite loop.
+  const setGroupsRevealed = (visibleIds: Set<string>, allGroupIds: string[]) => {
+    const allIdSet = new Set(allGroupIds);
+    const currentGroups = untrack(() => deps.groups());
+    const updatedGroups = currentGroups.map((g) =>
+      allIdSet.has(g.id) ? { ...g, revealed: visibleIds.has(g.id) } : g,
+    );
+    deps.persistGroups(updatedGroups);
+
+    const items = untrack(() => deps.commentItems());
+    const updatedItems = items.map((item) =>
+      item.groupId && allIdSet.has(item.groupId)
+        ? { ...item, revealed: visibleIds.has(item.groupId) }
+        : item,
+    );
+    deps.setCommentItems(updatedItems);
+    deps.persistCommentItems(updatedItems);
+  };
+
   return {
     selectionsRevealed,
     isItemRevealed,
     handleToggleParent,
     handleToggleGroup,
     handleToggleItem,
+    setGroupsRevealed,
   };
 }
 

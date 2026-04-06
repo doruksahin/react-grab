@@ -5,6 +5,7 @@ import {
   createMemo,
   createSignal,
   Show,
+  untrack,
 } from "solid-js";
 import createFocusTrap from "solid-focus-trap";
 import type { CommentItem } from "../../types.js";
@@ -13,12 +14,14 @@ import { Z_INDEX_LABEL } from "../../constants.js";
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
 import { StatsBar } from "./stats-bar.js";
-import { FilterTabs, type FilterStatus } from "./filter-tabs.js";
+import { FilterBar } from "./filter-bar.js";
+import { FilterChips } from "./filter-chips.js";
+import { type FilterState, EMPTY_FILTER, isFilterActive, applyFilters, getDistinctAssignees, getDistinctReporters } from "../../features/sidebar/filter-state.js";
 import { GroupList } from "./group-list.js";
 import { GroupDetailView } from "./group-detail-view.js";
+import { StatusLegend } from "./status-legend.js";
 import { groupComments } from "../../features/selection-groups/business/group-operations.js";
 import {
-  deriveEntryStatus,
   type GroupedEntry,
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
@@ -33,6 +36,7 @@ export interface SidebarProps {
   onClose: () => void;
   onActiveDetailGroupChange: (groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
+  onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -68,12 +72,15 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           jiraStatus: local.jiraStatus,
           jiraStatusCategory: local.jiraStatusCategory,
           jiraUrl: local.jiraUrl,
+          jiraAssignee: local.jiraAssignee,
+          jiraReporter: local.jiraReporter,
         };
       }),
     );
   });
 
-  const [activeFilter, setActiveFilter] = createSignal<FilterStatus>("all");
+  const [showLegend, setShowLegend] = createSignal(false);
+  const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
     string | null
   >(null);
@@ -118,12 +125,29 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   );
 
   const filteredGroups = createMemo(() => {
-    const filter = activeFilter();
-    const items = groupedItems();
-    if (filter === "all") return items;
-    return items.filter(
-      (entry: GroupedEntry) => deriveEntryStatus(entry) === filter,
+    const filter = filterState();
+    if (!isFilterActive(filter)) return groupedItems();
+    const filtered = applyFilters(groups(), filter);
+    return groupedItems().filter((entry: GroupedEntry) =>
+      filtered.some((g) => g.id === entry.group.id),
     );
+  });
+
+  // NOTE: groups() is read via untrack() to prevent a reactive loop:
+  // filter effect → setGroupsRevealed → persistGroups → props.groups changes
+  // → merge effect → setGroups() → groups() changes → filter effect re-runs → LOOP
+  // Only filterState() is tracked — this effect re-runs only when the user changes filters.
+  createEffect(() => {
+    const filter = filterState();
+    const allGroups = untrack(() => groups());
+    const allIds = allGroups.map((g) => g.id);
+    if (!isFilterActive(filter)) {
+      props.onFilterVisibilityChange?.(new Set(allIds), allIds);
+      return;
+    }
+    const filtered = applyFilters(allGroups, filter);
+    const visibleIds = new Set(filtered.map((g) => g.id));
+    props.onFilterVisibilityChange?.(visibleIds, allIds);
   });
 
   function handleTicketCreated(
@@ -142,13 +166,20 @@ export const Sidebar: Component<SidebarProps> = (props) => {
 
   function handleStatusUpdate(
     groupId: string,
-    status: { status: string; statusCategory: string },
+    status: { status: string; statusCategory: string; assignee: string | null; reporter: string | null },
   ) {
     const resolved = status.statusCategory.toLowerCase() === "done";
     setGroups((prev) =>
       prev.map((g) =>
         g.id === groupId
-          ? { ...g, jiraStatus: status.status, jiraStatusCategory: status.statusCategory, jiraResolved: resolved }
+          ? {
+              ...g,
+              jiraStatus: status.status,
+              jiraStatusCategory: status.statusCategory,
+              jiraAssignee: status.assignee,
+              jiraReporter: status.reporter,
+              jiraResolved: resolved,
+            }
           : g,
       ),
     );
@@ -178,7 +209,11 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         aria-modal="true"
         aria-label="React Grab Dashboard"
       >
-        <SidebarHeader syncStatus={props.syncStatus} onClose={props.onClose} />
+        <SidebarHeader syncStatus={props.syncStatus} onClose={props.onClose} onInfoClick={() => setShowLegend(true)} />
+
+        <Show when={showLegend()}>
+          <StatusLegend onClose={() => setShowLegend(false)} />
+        </Show>
 
         {/* Phase 1 sync error state — must remain intact */}
         <Show
@@ -196,9 +231,15 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             fallback={
               <>
                 <StatsBar groupedItems={groupedItems()} />
-                <FilterTabs
-                  activeFilter={activeFilter()}
-                  onFilterChange={setActiveFilter}
+                <FilterBar
+                  filter={filterState()}
+                  assignees={getDistinctAssignees(groups())}
+                  reporters={getDistinctReporters(groups())}
+                  onFilterChange={setFilterState}
+                />
+                <FilterChips
+                  filter={filterState()}
+                  onFilterChange={setFilterState}
                 />
 
                 <Show
@@ -214,7 +255,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     when={filteredGroups().length > 0}
                     fallback={
                       <EmptyState
-                        message={`No ${activeFilter()} groups.`}
+                        message={"No groups match the active filters."}
                       />
                     }
                   >

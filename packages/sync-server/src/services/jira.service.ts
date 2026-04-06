@@ -162,11 +162,13 @@ export class JiraService {
   async getIssueStatus(ticketId: string) {
     const issue = await this.client.issues.getIssue({
       issueIdOrKey: ticketId,
-      fields: ["status"],
+      fields: ["status", "assignee", "reporter"],
     });
     return {
       status: issue.fields.status?.name ?? "Unknown",
       statusCategory: issue.fields.status?.statusCategory?.name ?? "Unknown",
+      assignee: issue.fields.assignee?.displayName ?? null,
+      reporter: issue.fields.reporter?.displayName ?? null,
     };
   }
 
