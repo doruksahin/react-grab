@@ -18,6 +18,7 @@ interface GroupDetailViewProps {
   commentItems: CommentItem[];
   syncServerUrl?: string;
   syncWorkspace?: string;
+  jiraProjectKey?: string;
   /** Shadow root for Portal mounting in JiraCreateDialog. Passed explicitly
    *  to avoid context timing issues (context value may be null on first render). */
   shadowRoot?: ShadowRoot | null;
@@ -60,6 +61,7 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
           groupId={props.group.id}
           group={props.group}
           commentItems={groupItems()}
+          jiraProjectKey={props.jiraProjectKey ?? ""}
           shadowRoot={props.shadowRoot}
           onTicketCreated={(groupId, ticketId, ticketUrl) => {
             props.onTicketCreated?.(groupId, ticketId, ticketUrl);

@@ -33,6 +33,7 @@ export interface SidebarProps {
   syncStatus: SyncStatus;
   syncServerUrl?: string;
   syncWorkspace?: string;
+  jiraProjectKey?: string;
   onClose: () => void;
   onActiveDetailGroupChange: (groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
@@ -218,6 +219,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               commentItems={props.commentItems}
               syncServerUrl={props.syncServerUrl}
               syncWorkspace={props.syncWorkspace}
+              jiraProjectKey={props.jiraProjectKey}
               shadowRoot={shadowRoot()}
               onBack={() => setActiveDetailGroupId(null)}
               onTicketCreated={props.onTicketCreated}
