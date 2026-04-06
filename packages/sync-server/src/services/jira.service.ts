@@ -133,7 +133,9 @@ export class JiraService {
   }
 
   async getProjects() {
-    const result = await this.client.projects.searchProjects();
+    const result = await this.client.projects.searchProjects({
+      query: "ATT",
+    });
     return (result.values ?? [])
       .filter((p) => p.key && p.name)
       .map((p) => ({ key: p.key!, name: p.name! }));
