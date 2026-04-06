@@ -152,6 +152,51 @@ function handleStatusUpdate(
 
 Also update the merge effect (lines 60-74) to preserve `jiraAssignee` and `jiraReporter` alongside existing fields.
 
+### 3b. Sidebar-Level JIRA Status Polling
+
+**Problem:** The existing JIRA status poll lives inside `GroupDetailView.onMount` — it only runs when a user clicks into a specific group's detail view. With the old 3-state model, `deriveStatus()` could return "ticketed" from `jiraTicketId` alone, so the group list didn't need the actual JIRA status. Now that we show real status names (e.g., "In Progress", "Code Review"), we need to poll ALL ticketed groups when the sidebar opens.
+
+**Solution:** Move the initial status poll to `sidebar/index.tsx`. Poll all ticketed groups on sidebar mount, then every 30 seconds. Keep the detail view poll for the actively viewed group only.
+
+`components/sidebar/index.tsx` — add on mount:
+
+```typescript
+onMount(() => {
+  if (!props.syncWorkspace) return;
+
+  const pollAllTicketed = async () => {
+    const ticketed = groups().filter((g) => g.jiraTicketId);
+    await Promise.allSettled(
+      ticketed.map(async (g) => {
+        try {
+          const result = await getJiraTicketStatus(props.syncWorkspace!, g.id);
+          if (result.status === 200) {
+            handleStatusUpdate(g.id, result.data);
+          }
+        } catch {
+          // Silent — poll failures do not show errors per SPEC-003
+        }
+      }),
+    );
+  };
+
+  pollAllTicketed(); // immediate first poll
+  const intervalId = setInterval(pollAllTicketed, 30_000);
+  onCleanup(() => clearInterval(intervalId));
+});
+```
+
+`components/sidebar/group-detail-view.tsx` — update `onStatusUpdate` prop type to include assignee/reporter:
+
+```typescript
+onStatusUpdate?: (
+  groupId: string,
+  status: { status: string; statusCategory: string; assignee: string | null; reporter: string | null },
+) => void;
+```
+
+The detail view poll remains for responsive updates when the user is actively viewing a group — but the sidebar-level poll ensures all group cards show correct status on mount.
+
 ### 4. Filter State (`features/sidebar/filter-state.ts`)
 
 ```typescript
@@ -511,6 +556,12 @@ These are manual checks to confirm the feature works end-to-end:
 - [ ] `handleStatusUpdate` stores `assignee` and `reporter` from poll response (updated signature)
 - [ ] Merge effect (lines 60-74) preserves `jiraAssignee` and `jiraReporter` alongside existing fields
 - [ ] **UI verify:** Open a group detail → assignee name visible (if assigned in JIRA)
+
+### Sidebar-Level JIRA Status Polling
+- [ ] `sidebar/index.tsx` polls all ticketed groups on mount via `getJiraTicketStatus`
+- [ ] Poll repeats every 30 seconds
+- [ ] `GroupDetailView` `onStatusUpdate` prop type updated with `assignee`/`reporter`
+- [ ] **UI verify:** Open sidebar without clicking a group → all ticketed groups show actual JIRA status (not "To Do")
 
 ### Deferred
 
