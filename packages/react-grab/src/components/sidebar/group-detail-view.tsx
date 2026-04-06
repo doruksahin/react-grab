@@ -13,7 +13,7 @@ import { SelectionList } from "./selection-list.js";
 import { JiraCreateButton } from "./jira-create-button.js";
 import { JiraCreateDialog } from "./jira-create-dialog.js";
 import { JiraStatusBanner } from "./jira-status-banner.js";
-import { deriveStatus } from "../../features/sidebar/index.js";
+import { getStatusLabel } from "../../features/sidebar/status-colors.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { getJiraTicketStatus } from "../../generated/sync-api.js";
 
@@ -40,12 +40,12 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
   const groupItems = () =>
     props.commentItems.filter((c) => c.groupId === props.group.id);
 
-  const status = () => deriveStatus(props.group);
+  const statusLabel = () => getStatusLabel(props.group);
 
   // Poll JIRA status every 30s when group is ticketed.
   // Starts immediately on mount; stops on unmount.
   onMount(() => {
-    if (status() !== "ticketed") return;
+    if (!props.group.jiraTicketId) return;
     if (!props.syncWorkspace) return;
 
     const poll = async () => {
@@ -86,7 +86,7 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
 
       {/* JIRA section — bottom of detail view */}
       <Switch>
-        <Match when={status() === "open"}>
+        <Match when={statusLabel() === "No Task"}>
           <JiraCreateButton onOpen={() => setDialogOpen(true)} />
           <JiraCreateDialog
             open={dialogOpen()}
@@ -101,7 +101,7 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
             onClose={() => setDialogOpen(false)}
           />
         </Match>
-        <Match when={status() === "ticketed" || status() === "resolved"}>
+        <Match when={props.group.jiraTicketId}>
           <JiraStatusBanner group={props.group} />
         </Match>
       </Switch>

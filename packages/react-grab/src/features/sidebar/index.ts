@@ -1,4 +1,4 @@
-export { deriveStatus, deriveEntryStatus, type GroupStatus, type GroupedEntry } from "./derive-status.js";
+export { type GroupedEntry } from "./derive-status.js";
 export { relativeTime } from "./relative-time";
 export { extractFilePath } from "./extract-file-path";
 export { screenshotUrl } from "./screenshot-url";
