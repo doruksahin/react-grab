@@ -152,50 +152,45 @@ function handleStatusUpdate(
 
 Also update the merge effect (lines 60-74) to preserve `jiraAssignee` and `jiraReporter` alongside existing fields.
 
-### 3b. Sidebar-Level JIRA Status Polling
+### 3b. Core-Level JIRA Status Polling
 
-**Problem:** The existing JIRA status poll lives inside `GroupDetailView.onMount` — it only runs when a user clicks into a specific group's detail view. With the old 3-state model, `deriveStatus()` could return "ticketed" from `jiraTicketId` alone, so the group list didn't need the actual JIRA status. Now that we show real status names (e.g., "In Progress", "Code Review"), we need to poll ALL ticketed groups when the sidebar opens.
+**Problem:** Canvas overlay borders and selection label badges need JIRA status colors even when the sidebar is closed. The status data (`jiraStatus`, `jiraAssignee`, `jiraReporter`) must live on the **core** groups signal (`selectionGroups.groups()`), not on the sidebar's local signal — otherwise `instance.groupStatus` on the overlay canvas is always `undefined`, and all selection boxes render with the "No Task" pink color.
 
-**Solution:** Move the initial status poll to `sidebar/index.tsx`. Poll all ticketed groups on sidebar mount, then every 30 seconds. Keep the detail view poll for the actively viewed group only.
+**Solution:** Move the JIRA status poller to `core/index.tsx`. It runs on react-grab initialization (not sidebar open), polls all ticketed groups immediately and every 30 seconds, and stores status data directly on the core groups signal. The sidebar reads this via `props.groups` — no local enrichment needed.
 
-`components/sidebar/index.tsx` — add on mount:
+**Data flow:**
+
+```
+core/index.tsx (createJiraStatusPoller)
+  → getJiraTicketStatus per ticketed group
+  → selectionGroups.persistGroups(updated)  // jiraStatus on core signal
+  → computedLabelInstancesWithStatus reads group?.jiraStatus
+  → overlay-canvas reads instance.groupStatus
+  → getStatusColor(instance.groupStatus).hex  // correct color
+```
+
+`core/index.tsx` — after `createSelectionVisibility`:
 
 ```typescript
-onMount(() => {
-  if (!props.syncWorkspace) return;
-
-  const pollAllTicketed = async () => {
-    const ticketed = groups().filter((g) => g.jiraTicketId);
-    await Promise.allSettled(
-      ticketed.map(async (g) => {
-        try {
-          const result = await getJiraTicketStatus(props.syncWorkspace!, g.id);
-          if (result.status === 200) {
-            handleStatusUpdate(g.id, result.data);
-          }
-        } catch {
-          // Silent — poll failures do not show errors per SPEC-003
-        }
-      }),
+createJiraStatusPoller({
+  groups: selectionGroups.groups as Accessor<SelectionGroupWithJira[]>,
+  syncWorkspace: () => syncConfig?.workspace,
+  onStatusUpdate: (groupId, status) => {
+    const resolved = status.statusCategory.toLowerCase() === "done";
+    const updated = selectionGroups.groups().map((g) =>
+      g.id === groupId
+        ? { ...g, jiraStatus: status.status, jiraStatusCategory: status.statusCategory,
+            jiraAssignee: status.assignee, jiraReporter: status.reporter, jiraResolved: resolved }
+        : g,
     );
-  };
-
-  pollAllTicketed(); // immediate first poll
-  const intervalId = setInterval(pollAllTicketed, 30_000);
-  onCleanup(() => clearInterval(intervalId));
+    selectionGroups.persistGroups(updated);
+  },
 });
 ```
 
-`components/sidebar/group-detail-view.tsx` — update `onStatusUpdate` prop type to include assignee/reporter:
+The sidebar's local `groups()` signal and merge effect continue to work — they read `jiraStatus` from `props.groups` (which now has it from core). The sidebar's `handleStatusUpdate` remains for ticket creation flows. The `createJiraStatusPoller` primitive (in `features/sidebar/jira-status-poller.ts`) is reused unchanged.
 
-```typescript
-onStatusUpdate?: (
-  groupId: string,
-  status: { status: string; statusCategory: string; assignee: string | null; reporter: string | null },
-) => void;
-```
-
-The detail view poll remains for responsive updates when the user is actively viewing a group — but the sidebar-level poll ensures all group cards show correct status on mount.
+**Removed:** The sidebar-level `createJiraStatusPoller` call and `GroupDetailView.onStatusUpdate` prop — polling is now solely owned by core.
 
 ### 4. Filter State (`features/sidebar/filter-state.ts`)
 
@@ -557,11 +552,14 @@ These are manual checks to confirm the feature works end-to-end:
 - [ ] Merge effect (lines 60-74) preserves `jiraAssignee` and `jiraReporter` alongside existing fields
 - [ ] **UI verify:** Open a group detail → assignee name visible (if assigned in JIRA)
 
-### Sidebar-Level JIRA Status Polling
-- [ ] `sidebar/index.tsx` polls all ticketed groups on mount via `getJiraTicketStatus`
+### Core-Level JIRA Status Polling
+- [ ] `core/index.tsx` calls `createJiraStatusPoller` on init — NOT on sidebar open
+- [ ] Poll stores `jiraStatus`, `jiraStatusCategory`, `jiraAssignee`, `jiraReporter` on core groups signal
 - [ ] Poll repeats every 30 seconds
-- [ ] `GroupDetailView` `onStatusUpdate` prop type updated with `assignee`/`reporter`
-- [ ] **UI verify:** Open sidebar without clicking a group → all ticketed groups show actual JIRA status (not "To Do")
+- [ ] Sidebar's local `createJiraStatusPoller` call removed — core owns polling
+- [ ] `GroupDetailView.onStatusUpdate` prop removed — no duplicate poll
+- [ ] **UI verify:** Without opening sidebar, canvas selection boxes show correct JIRA status colors
+- [ ] **UI verify:** Open sidebar → all ticketed groups show actual JIRA status immediately (not "To Do")
 
 ### Deferred
 
