@@ -279,30 +279,39 @@ packages/react-grab/src/
 
 ## Acceptance Criteria
 
-- [ ] `statusOverlayColor(status, alpha)` function added to `utils/overlay-color.ts`
-- [ ] Overlay canvas renders pink borders for open selections (unchanged behavior)
-- [ ] Overlay canvas renders yellow borders for ticketed selections
-- [ ] Overlay canvas renders green borders for resolved selections
-- [ ] Fill color tints match border status (pink/yellow/green at lower alpha)
-- [ ] `groupStatus` field added to `SelectionLabelInstance` type
-- [ ] `groupStatus` computed from `deriveStatus()` when building label instances in `core/index.tsx`
-- [ ] Selection label shows no status icon when group is open
-- [ ] Selection label shows yellow clipboard-check badge for ticketed groups
-- [ ] Selection label shows green checkmark badge for resolved groups
-- [ ] Status icon positioned top-right (-6px, -6px) with white border
-- [ ] Status icon tooltip shows "Ticketed — {ticketId}" or "Resolved"
-- [ ] Status icon has `pointer-events: auto`
-- [ ] `icon-ticket.tsx` and `icon-check.tsx` created in `components/icons/`
+- [x] `statusOverlayColor(status, alpha)` function added to `utils/overlay-color.ts`
+- [x] Overlay canvas renders pink borders for open selections (unchanged behavior)
+- [x] Overlay canvas renders yellow borders for ticketed selections
+- [x] Overlay canvas renders green borders for resolved selections
+- [x] Fill color tints match border status (pink/yellow/green at lower alpha)
+- [x] `groupStatus` field added to `SelectionLabelInstance` type
+- [x] `groupStatus` computed from `deriveStatus()` when building label instances in `core/index.tsx`
+- [x] Selection label shows no status icon when group is open
+- [x] Selection label shows yellow clipboard-check badge for ticketed groups
+- [x] Selection label shows green checkmark badge for resolved groups
+- [x] Status icon positioned top-right (-6px, -6px) with white border
+- [x] Status icon tooltip shows "Ticketed — {ticketId}" or "Resolved"
+- [x] Status icon has `pointer-events: auto`
+- [x] `icon-ticket.tsx` and `icon-check.tsx` created in `components/icons/`
 - [ ] Unit tests pass for `statusOverlayColor`
 - [ ] Integration tests pass for canvas colors and label icons
-- [ ] `activeGroupOverlayColor(alpha)` function added to `utils/overlay-color.ts` (lightblue)
-- [ ] `activeGroupId?: string | null` prop added to `OverlayCanvasProps`
-- [ ] `activeDetailGroupId` threaded from renderer to overlay canvas
-- [ ] Canvas draws lightblue border + fill for selections in the active sidebar group
-- [ ] Canvas draws glow effect (`shadowColor` + `shadowBlur: 12`) for active group selections
-- [ ] Glow appears when group detail view is open, disappears on back navigation
-- [ ] Selections outside the active group retain their status color while glow is active
+- [x] `activeGroupOverlayColor(alpha)` function added to `utils/overlay-color.ts` (lightblue)
+- [x] `activeGroupId?: string | null` prop added to `OverlayCanvasProps`
+- [x] `activeDetailGroupId` threaded from renderer to overlay canvas via `onActiveDetailGroupChange` callback
+- [x] Canvas draws lightblue border + fill for selections in the active sidebar group
+- [x] Canvas draws two-pass neon glow (shadowBlur 20+6) + 2px stroke for active group selections
+- [x] Glow appears when group detail view is open, disappears on back navigation
+- [x] Selections outside the active group retain their status color while glow is active
 - [ ] `decree lint` passes
+
+### Phase 4 Polish (implemented alongside SPEC-004)
+
+- [x] `solid-focus-trap` added to sidebar container — Tab cycles within sidebar when open
+- [x] `aria-modal="true"` set on sidebar dialog container
+- [x] `performance.mark("sidebar-open-start/end")` bracketing sidebar render in renderer.tsx
+- [x] `jiraResolved` persisted to storage adapter (localStorage/D1) when polling detects `statusCategory === "done"`
+- [x] `jiraResolved` moved from session-only `SelectionGroupWithJira` to persisted `SelectionGroup` base type
+- [x] One-time decaying shake effect on active group canvas selections (600ms, `shakeEpoch` pattern)
 
 ### Deferred
 
