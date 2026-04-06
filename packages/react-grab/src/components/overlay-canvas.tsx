@@ -21,13 +21,17 @@ import {
   OVERLAY_FILL_COLOR_DEFAULT,
   OVERLAY_BORDER_COLOR_INSPECT,
   OVERLAY_FILL_COLOR_INSPECT,
+  ACTIVE_GROUP_BORDER_COLOR,
+  ACTIVE_GROUP_FILL_COLOR,
+  ACTIVE_GROUP_SHADOW_COLOR,
+  ACTIVE_GROUP_SHADOW_BLUR,
 } from "../constants.js";
 import {
   nativeCancelAnimationFrame,
   nativeRequestAnimationFrame,
 } from "../utils/native-raf.js";
 import { supportsDisplayP3 } from "../utils/supports-display-p3.js";
-import { statusOverlayColor, activeGroupOverlayColor } from "../utils/overlay-color.js";
+import { statusOverlayColor } from "../utils/overlay-color.js";
 
 const DEFAULT_LAYER_STYLE = {
   borderColor: OVERLAY_BORDER_COLOR_DEFAULT,
@@ -635,13 +639,13 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
             currentActiveGroupId != null &&
             instance.groupId === currentActiveGroupId;
           const instanceBorderColor = isActiveGroup
-            ? activeGroupOverlayColor(0.7)
+            ? ACTIVE_GROUP_BORDER_COLOR
             : statusOverlayColor(instance.groupStatus ?? "open", 0.5);
           const instanceFillColor = isActiveGroup
-            ? activeGroupOverlayColor(0.12)
+            ? ACTIVE_GROUP_FILL_COLOR
             : statusOverlayColor(instance.groupStatus ?? "open", 0.08);
           const instanceShadowColor = isActiveGroup
-            ? activeGroupOverlayColor(0.5)
+            ? ACTIVE_GROUP_SHADOW_COLOR
             : undefined;
 
           for (let index = 0; index < boundsToRender.length; index++) {
@@ -656,7 +660,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
               existingAnimation.borderColor = instanceBorderColor;
               existingAnimation.fillColor = instanceFillColor;
               existingAnimation.shadowColor = instanceShadowColor;
-              existingAnimation.shadowBlur = isActiveGroup ? 12 : undefined;
+              existingAnimation.shadowBlur = isActiveGroup ? ACTIVE_GROUP_SHADOW_BLUR : undefined;
             } else {
               const anim = createAnimatedBounds(animationId, bounds, {
                 opacity: 1,
@@ -665,7 +669,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
               anim.borderColor = instanceBorderColor;
               anim.fillColor = instanceFillColor;
               anim.shadowColor = instanceShadowColor;
-              anim.shadowBlur = isActiveGroup ? 12 : undefined;
+              anim.shadowBlur = isActiveGroup ? ACTIVE_GROUP_SHADOW_BLUR : undefined;
               grabbedAnimations.push(anim);
             }
           }

@@ -1,4 +1,4 @@
-import { overlayColor } from "./utils/overlay-color.js";
+import { overlayColor, statusOverlayColor, activeGroupOverlayColor } from "./utils/overlay-color.js";
 
 export const VERSION = process.env.VERSION as string;
 
@@ -56,6 +56,18 @@ export const OVERLAY_BORDER_COLOR_INSPECT = overlayColor(0.3);
 export const OVERLAY_FILL_COLOR_INSPECT = overlayColor(0.04);
 export const FROZEN_GLOW_COLOR = overlayColor(0.15);
 export const FROZEN_GLOW_EDGE_PX = 50;
+
+export const OVERLAY_BORDER_COLOR_STATUS_OPEN = statusOverlayColor("open", 0.5);
+export const OVERLAY_FILL_COLOR_STATUS_OPEN = statusOverlayColor("open", 0.08);
+export const OVERLAY_BORDER_COLOR_STATUS_TICKETED = statusOverlayColor("ticketed", 0.5);
+export const OVERLAY_FILL_COLOR_STATUS_TICKETED = statusOverlayColor("ticketed", 0.08);
+export const OVERLAY_BORDER_COLOR_STATUS_RESOLVED = statusOverlayColor("resolved", 0.5);
+export const OVERLAY_FILL_COLOR_STATUS_RESOLVED = statusOverlayColor("resolved", 0.08);
+
+export const ACTIVE_GROUP_BORDER_COLOR = activeGroupOverlayColor(0.7);
+export const ACTIVE_GROUP_FILL_COLOR = activeGroupOverlayColor(0.12);
+export const ACTIVE_GROUP_SHADOW_COLOR = activeGroupOverlayColor(0.5);
+export const ACTIVE_GROUP_SHADOW_BLUR = 12;
 
 export const ARROW_HEIGHT_PX = 8;
 export const ARROW_MIN_SIZE_PX = 4;
