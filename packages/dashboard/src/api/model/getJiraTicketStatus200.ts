@@ -9,4 +9,14 @@
 export type GetJiraTicketStatus200 = {
   status: string;
   statusCategory: string;
+  /** @nullable */
+  assignee: string | null;
+  /** @nullable */
+  reporter: string | null;
+  /** @nullable */
+  assigneeAvatar: string | null;
+  /** @nullable */
+  reporterAvatar: string | null;
+  jiraUrl: string;
+  labels: string[];
 };

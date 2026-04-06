@@ -33,6 +33,8 @@ export const JiraTicketStatus = z.object({
   statusCategory: z.string(),
   assignee: z.string().nullable(),
   reporter: z.string().nullable(),
+  assigneeAvatar: z.string().nullable(),
+  reporterAvatar: z.string().nullable(),
   jiraUrl: z.string(),
   labels: z.array(z.string()),
 });
