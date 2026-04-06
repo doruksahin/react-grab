@@ -1,5 +1,4 @@
 import { supportsDisplayP3 } from "./supports-display-p3.js";
-import type { GroupStatus } from "../types.js";
 
 const isWideGamut = supportsDisplayP3();
 const SRGB_COMPONENTS = "210, 57, 192";
@@ -10,24 +9,13 @@ export const overlayColor = (alpha: number): string =>
     ? `color(display-p3 ${P3_COMPONENTS} / ${alpha})`
     : `rgba(${SRGB_COMPONENTS}, ${alpha})`;
 
-const STATUS_COLORS: Record<
-  GroupStatus,
-  { srgb: string; p3: string }
-> = {
-  open: { srgb: "210, 57, 192", p3: "0.84 0.19 0.78" },
-  ticketed: { srgb: "234, 179, 8", p3: "0.92 0.70 0.03" },
-  resolved: { srgb: "34, 197, 94", p3: "0.13 0.77 0.37" },
-};
-
-export const statusOverlayColor = (
-  status: GroupStatus,
-  alpha: number,
-): string => {
-  const c = STATUS_COLORS[status];
-  return isWideGamut
-    ? `color(display-p3 ${c.p3} / ${alpha})`
-    : `rgba(${c.srgb}, ${alpha})`;
-};
+/** Convert hex color to rgba string */
+export function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 const ACTIVE_GROUP_COLORS = { srgb: "56, 189, 248", p3: "0.22 0.74 0.97" };
 

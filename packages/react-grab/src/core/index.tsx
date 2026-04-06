@@ -143,7 +143,6 @@ import { copyHtmlPlugin } from "./plugins/copy-html.js";
 import { copyStylesPlugin } from "./plugins/copy-styles.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
-import { deriveStatus } from "../features/sidebar/derive-status.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import {
   freezeAnimations,
@@ -3814,7 +3813,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           | undefined;
         return {
           ...instance,
-          groupStatus: group ? deriveStatus(group) : ("open" as const),
+          groupStatus: group?.jiraStatus,
           jiraTicketId: group?.jiraTicketId,
         };
       }),

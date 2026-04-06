@@ -25,7 +25,6 @@ import {
   ACTIVE_GROUP_FILL_COLOR,
   ACTIVE_GROUP_STROKE_WIDTH,
   ACTIVE_GROUP_SHADOW_PASSES,
-  STATUS_OVERLAY_BORDER_ALPHA,
   STATUS_OVERLAY_FILL_ALPHA,
   SHAKE_DURATION_MS,
   SHAKE_AMPLITUDE_PX,
@@ -36,7 +35,8 @@ import {
   nativeRequestAnimationFrame,
 } from "../utils/native-raf.js";
 import { supportsDisplayP3 } from "../utils/supports-display-p3.js";
-import { statusOverlayColor, activeGroupOverlayColor } from "../utils/overlay-color.js";
+import { activeGroupOverlayColor, hexToRgba } from "../utils/overlay-color.js";
+import { getStatusColor } from "../features/sidebar/status-colors.js";
 
 /**
  * Returns the horizontal shake offset (in px) for a decaying sine oscillation.
@@ -695,14 +695,10 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
             instance.groupId === currentActiveGroupId;
           const instanceBorderColor = isActiveGroup
             ? ACTIVE_GROUP_BORDER_COLOR
-            : instance.groupStatus
-              ? statusOverlayColor(instance.groupStatus, STATUS_OVERLAY_BORDER_ALPHA)
-              : OVERLAY_BORDER_COLOR_DEFAULT;
+            : getStatusColor(instance.groupStatus).hex;
           const instanceFillColor = isActiveGroup
             ? ACTIVE_GROUP_FILL_COLOR
-            : instance.groupStatus
-              ? statusOverlayColor(instance.groupStatus, STATUS_OVERLAY_FILL_ALPHA)
-              : OVERLAY_FILL_COLOR_DEFAULT;
+            : hexToRgba(getStatusColor(instance.groupStatus).hex, STATUS_OVERLAY_FILL_ALPHA);
           const instanceShadowPasses = isActiveGroup
             ? ACTIVE_GROUP_SHADOW_PASSES
             : undefined;
