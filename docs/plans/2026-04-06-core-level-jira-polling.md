@@ -108,13 +108,13 @@ Confirm the chain works by reading the code:
 3. `overlay-canvas.tsx` reads `instance.groupStatus` → `getStatusColor(instance.groupStatus).hex` → correct color
 4. `selection-label/index.tsx` reads `props.groupStatus` → `getStatusColor(props.groupStatus).hex` → correct badge color
 
-### Step 2: Verify the merge effect doesn't clobber jiraStatus
+### Step 2: Fix the merge effect — don't clobber core's jiraStatus
 
 The sidebar's merge effect (line 66) does `...pg` (parent group) then overrides with local jira fields. Since core now HAS `jiraStatus` on the parent group, `...pg` will include it. The local override `jiraStatus: local.jiraStatus` would overwrite with the local value. On first render, `local.jiraStatus` is `undefined` (sidebar just initialized).
 
 **This is a bug.** The merge effect preserves LOCAL jira fields over parent. But now the parent (core) is the source of truth for jira status. The merge effect should NOT override parent jira fields with stale local values.
 
-Fix: Remove jira field preservation from the merge effect. The sidebar's local signal should simply mirror core groups:
+**Fix:** Simplify the merge effect to just mirror core groups:
 
 ```typescript
 createEffect(() => {
@@ -122,7 +122,9 @@ createEffect(() => {
 });
 ```
 
-Or if other local-only fields need preservation, be selective about which fields are local-only vs core-owned.
+**Reviewed edge case (accepted):** `handleTicketCreated` sets `jiraTicketId` and `jiraUrl` on the local signal as an optimistic update before core polls. With the simplified merge, the next `props.groups` sync (triggered by any core signal change) would overwrite the optimistic values with core's version — which won't have `jiraTicketId` until the next 30s poll. This creates a ≤30 second window where the sidebar briefly loses the optimistic ticket state.
+
+**Decision: acceptable.** The user just created the ticket and saw it immediately. Core confirms on the next poll cycle. The 30-second gap is invisible in practice — the user has already moved on. The alternative (selective field merging) adds complexity for a negligible UX gain.
 
 ### Step 3: Commit if fix needed
 
