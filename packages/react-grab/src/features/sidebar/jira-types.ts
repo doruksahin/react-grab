@@ -18,4 +18,6 @@ export type SelectionGroupWithJira = SelectionGroup & {
   jiraAssignee?: string | null;
   /** JIRA reporter display name, null if unknown */
   jiraReporter?: string | null;
+  /** JIRA labels array, e.g. ["UI Ticket Manager", "frontend"] */
+  jiraLabels?: string[];
 };
