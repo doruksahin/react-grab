@@ -1,5 +1,5 @@
 ---
-status: draft
+status: implemented
 date: 2026-04-06
 references: [PRD-003]
 ---
@@ -55,33 +55,30 @@ Key details:
 
 ### Modified function: `captureFullPage`
 
-Signature change: accepts an optional `element` parameter.
+Signature change: accepts a required `element` parameter.
 
 ```ts
 export async function captureFullPage(
   config: ScreenshotConfig,
-  element?: Element,
+  element: Element,
 ): Promise<Blob | null>
 ```
 
 Implementation:
-1. If `element` is provided, call `createHighlightOverlay(element)` and append to `document.body`
+1. Call `createHighlightOverlay(element)` and append to `document.body`
 2. Call `domToBlob(document.documentElement, ...)` as before
-3. In a `finally` block, remove the overlay if it was created
+3. In a `finally` block, remove the overlay
 
 ```ts
-let overlay: HTMLDivElement | undefined;
-if (element) {
-  overlay = createHighlightOverlay(element);
-  document.body.appendChild(overlay);
-}
+const overlay = createHighlightOverlay(element);
+document.body.appendChild(overlay);
 try {
   const blob = await domToBlob(document.documentElement, { ... });
   return blob;
 } catch {
   return null;
 } finally {
-  overlay?.remove();
+  overlay.remove();
 }
 ```
 
@@ -112,7 +109,6 @@ The overlay `<div>` intentionally lacks `data-react-grab`, so `isReactGrabElemen
 ### Integration tests
 
 - `captureFullPage(config, element)` appends an overlay before capture and removes it after
-- `captureFullPage(config)` (no element) still works without overlay — backward compatible
 - After `captureFullPage` resolves, no overlay div remains in `document.body`
 - After `captureFullPage` rejects/throws, no overlay div remains in `document.body` (finally block)
 
@@ -122,14 +118,13 @@ The overlay `<div>` intentionally lacks `data-react-grab`, so `isReactGrabElemen
 
 ## Acceptance Criteria
 
-- [ ] `createHighlightOverlay` function added to `capture.ts`
-- [ ] `captureFullPage` accepts optional `element` parameter
-- [ ] Overlay injected before `domToBlob` and removed in `finally` block
-- [ ] `orchestrate.ts` passes `element` to `captureFullPage`
-- [ ] Overlay uses absolute positioning with scroll offset
-- [ ] Overlay styled: 3px solid #f59e0b border, rgba(245,158,11,0.15) background
-- [ ] Overlay does NOT have `data-react-grab` attribute
-- [ ] No DOM artifacts remain after capture (success or failure)
-- [ ] Backward compatible — `captureFullPage(config)` without element still works
-- [ ] Unit tests for overlay creation and cleanup
+- [x] `createHighlightOverlay` function added to `capture.ts`
+- [x] `captureFullPage` accepts required `element` parameter
+- [x] Overlay injected before `domToBlob` and removed in `finally` block
+- [x] `orchestrate.ts` passes `element` to `captureFullPage`
+- [x] Overlay uses absolute positioning with scroll offset
+- [x] Overlay styled: 3px solid #f59e0b border, rgba(245,158,11,0.15) background
+- [x] Overlay does NOT have `data-react-grab` attribute
+- [x] No DOM artifacts remain after capture (success or failure)
+- [x] Unit tests for overlay creation and cleanup
 - [ ] Manual visual verification of highlight in full-page screenshot
