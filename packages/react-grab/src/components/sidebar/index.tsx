@@ -8,7 +8,7 @@ import {
 } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SyncStatus } from "../../features/sync/types.js";
-import { Z_INDEX_SIDEBAR } from "../../constants.js";
+import { Z_INDEX_LABEL } from "../../constants.js";
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
 import { StatsBar } from "./stats-bar.js";
@@ -163,7 +163,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         ref={(el) => setContainerRef(el)}
         data-react-grab-ignore-events
         class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-[#1a1a1a] text-[#e5e5e5] animate-slide-in-left"
-        style={{ "z-index": String(Z_INDEX_SIDEBAR), "pointer-events": "auto" }}
+        style={{ "z-index": String(Z_INDEX_LABEL), "pointer-events": "auto" }}
         role="dialog"
         aria-modal="false"
         aria-label="React Grab Dashboard"
