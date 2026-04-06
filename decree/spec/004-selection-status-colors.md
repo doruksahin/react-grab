@@ -170,7 +170,23 @@ export const activeGroupOverlayColor = (alpha: number): string =>
 - Fill: `activeGroupOverlayColor(0.12)` — subtle tinted fill
 - Shadow: `ctx.shadowColor = activeGroupOverlayColor(0.5)`, `ctx.shadowBlur = 12` — the glow
 
-**Data threading:** `activeDetailGroupId` from the sidebar needs to reach the overlay canvas. Thread it from `renderer.tsx` to `OverlayCanvas` as a new prop:
+**Data threading:** `activeDetailGroupId` lives as local state inside `Sidebar`. It must be lifted to `renderer.tsx` so it can reach `OverlayCanvas`.
+
+Signal chain:
+```
+Sidebar.activeDetailGroupId (internal signal)
+  → props.onActiveDetailGroupChange(id | null)  [new SidebarProps callback]
+    → renderer.tsx: activeDetailGroupId signal
+      → OverlayCanvas.activeGroupId prop
+```
+
+- Add `onActiveDetailGroupChange?: (groupId: string | null) => void` to `SidebarProps`
+- Sidebar calls it via `createEffect` whenever `activeDetailGroupId` changes
+- `renderer.tsx` holds `const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<string | null>(null)`
+- On sidebar close, reset: `setActiveDetailGroupId(null)`
+- Pass `activeDetailGroupId()` to `OverlayCanvas` as `activeGroupId`
+
+**Do NOT use `selectionGroups.activeGroupId`** for the glow — that tracks the assignment group for new selections, not the sidebar detail view.
 
 ```typescript
 // OverlayCanvasProps — add:
@@ -199,9 +215,11 @@ packages/react-grab/src/
 │   ├── icon-ticket.tsx               NEW: clipboard-check icon (12px)
 │   └── icon-check.tsx                NEW: checkmark icon (12px)
 ├── core/
-│   └── index.tsx                     Modified: add groupStatus to labelInstances, thread activeDetailGroupId to canvas
+│   └── index.tsx                     Modified: add groupStatus to labelInstances
 ├── components/
-│   └── renderer.tsx                  Modified: pass activeDetailGroupId to OverlayCanvas
+│   ├── renderer.tsx                  Modified: hold activeDetailGroupId signal, pass to OverlayCanvas, reset on close
+│   └── sidebar/
+│       └── index.tsx                 Modified: add onActiveDetailGroupChange callback to SidebarProps
 └── types.ts                          Modified: add groupStatus, groupId to SelectionLabelInstance
 ```
 

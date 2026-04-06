@@ -22,6 +22,7 @@ import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
+  const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<string | null>(null);
   let dashboardBtnRef: HTMLButtonElement | undefined;
 
   createEffect(() => {
@@ -65,7 +66,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         grabbedBoxes={props.grabbedBoxes}
         agentSessions={props.agentSessions}
         labelInstances={props.labelInstances}
-        activeGroupId={props.activeGroupId}
+        activeGroupId={activeDetailGroupId()}
       />
 
       <div
@@ -305,8 +306,10 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           syncStatus={props.syncStatus ?? "local"}
           syncServerUrl={props.syncServerUrl}
           syncWorkspace={props.syncWorkspace}
+          onActiveDetailGroupChange={setActiveDetailGroupId}
           onClose={() => {
             setSidebarOpen(false);
+            setActiveDetailGroupId(null);
             dashboardBtnRef?.focus();
           }}
         />

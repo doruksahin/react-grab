@@ -30,6 +30,7 @@ export interface SidebarProps {
   syncServerUrl?: string;
   syncWorkspace?: string;
   onClose: () => void;
+  onActiveDetailGroupChange?: (groupId: string | null) => void;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -81,6 +82,11 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     if (id !== null && !groups().find((g) => g.id === id)) {
       setActiveDetailGroupId(null);
     }
+  });
+
+  // Notify parent when active detail group changes (for canvas glow)
+  createEffect(() => {
+    props.onActiveDetailGroupChange?.(activeDetailGroupId());
   });
 
   // Focus management: list → detail
