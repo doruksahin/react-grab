@@ -193,6 +193,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             inputValue={instance().inputValue}
             error={instance().errorMessage}
             hideArrow={instance().hideArrow}
+            groupStatus={instance().groupStatus}
+            jiraTicketId={instance().jiraTicketId}
             onShowContextMenu={(() => {
               const currentInstance = instance();
               const hasCompletedStatus =
