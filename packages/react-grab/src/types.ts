@@ -595,6 +595,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   syncStatus?: SyncStatus;
   syncWorkspace?: string;
   syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
+  jiraProjectKey?: string;
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
   onTicketCreated?: (groupId: string, ticketId: string, ticketUrl: string) => void;
 }

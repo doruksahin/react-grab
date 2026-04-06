@@ -11,6 +11,7 @@ interface JiraCreateDialogProps {
   groupId: string;
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
+  jiraProjectKey: string;
   /** Shadow root for Portal mounting. Passed as a prop to avoid context timing
    *  issues where useShadowRoot() may return null before the ref is set. */
   shadowRoot?: ShadowRoot | null;
@@ -52,6 +53,7 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
               groupId={props.groupId}
               group={props.group}
               commentItems={props.commentItems}
+              jiraProjectKey={props.jiraProjectKey}
               onSuccess={props.onTicketCreated}
               onClose={props.onClose}
             />

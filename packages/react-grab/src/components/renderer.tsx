@@ -328,6 +328,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           syncStatus={props.syncStatus ?? "local"}
           syncServerUrl={props.syncServerUrl}
           syncWorkspace={props.syncWorkspace}
+          jiraProjectKey={props.jiraProjectKey}
           onActiveDetailGroupChange={setActiveDetailGroupId}
           onJiraResolved={props.onJiraResolved}
           onTicketCreated={props.onTicketCreated}

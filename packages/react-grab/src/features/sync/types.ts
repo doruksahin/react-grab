@@ -31,6 +31,7 @@ export interface SyncConfig {
   enabled: boolean;
   serverUrl: string;
   workspace: string;
+  jiraProjectKey: string;
   syncRevealedState: boolean;
   onSyncError: (error: Error) => void;
   /** Options forwarded to init() — use this to set screenshot config etc. */

@@ -4,11 +4,11 @@ import {
   createResource,
   createSignal,
   For,
+  Match,
   Show,
-  Suspense,
+  Switch,
 } from "solid-js";
 import {
-  listJiraProjects,
   listJiraIssueTypes,
   listJiraPriorities,
   createJiraTicket,
@@ -17,20 +17,29 @@ import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.j
 import type { CommentItem } from "../../types.js";
 import { defaultSummary, defaultDescription } from "../../features/sidebar/jira-defaults.js";
 
+const DEFAULT_ISSUE_TYPE = "Task";
+const DEFAULT_PRIORITY = "Medium";
+
 interface JiraCreateFormProps {
   /** Workspace ID — the `id` param in Orval-generated createJiraTicket(id, groupId, body) */
   workspaceId: string;
   groupId: string;
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
+  jiraProjectKey: string;
   onSuccess: (groupId: string, ticketId: string, ticketUrl: string) => void;
   onClose: () => void;
 }
 
-export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
-  const [projectKey, setProjectKey] = createSignal("");
-  const [issueType, setIssueType] = createSignal("");
-  const [priority, setPriority] = createSignal("Medium");
+interface JiraCreateFormReadyProps extends JiraCreateFormProps {
+  issueTypes: Array<{ id: string; name: string }>;
+  priorities: Array<{ id: string; name: string }>;
+}
+
+const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
+  const projectKey = props.jiraProjectKey;
+  const [issueType, setIssueType] = createSignal(DEFAULT_ISSUE_TYPE);
+  const [priority, setPriority] = createSignal(DEFAULT_PRIORITY);
   const [summary, setSummary] = createSignal(defaultSummary(props.group));
   const [description, setDescription] = createSignal(
     defaultDescription(props.group, props.commentItems),
@@ -38,21 +47,6 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
-  // Load projects and priorities on mount
-  const [projects] = createResource(() =>
-    listJiraProjects().then((r) => r.data),
-  );
-  const [priorities] = createResource(() =>
-    listJiraPriorities().then((r) => r.data),
-  );
-
-  // Load issue types only when a project is selected
-  const [issueTypes] = createResource(
-    () => projectKey() || undefined,
-    (key) => listJiraIssueTypes({ projectKey: key }).then((r) => r.data),
-  );
-
-  // Screenshot filenames for the informational attachments section
   const screenshotList = () =>
     props.commentItems.flatMap((item) => {
       const names: string[] = [];
@@ -63,7 +57,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
-    if (!projectKey() || !issueType()) return;
+    if (!issueType()) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -71,7 +65,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
         props.workspaceId,
         props.groupId,
         {
-          projectKey: projectKey(),
+          projectKey,
           issueType: issueType(),
           priority: priority(),
           summary: summary(),
@@ -102,60 +96,36 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
         Create JIRA Ticket
       </h2>
 
-      <Suspense fallback={<div class="text-white/40 text-[12px]">Loading JIRA data…</div>}>
-        {/* Project selector — native <select> for Phase 3; Kobalte Combobox in Phase 4 */}
-        <div class="mb-3">
-          <label class="block text-[11px] text-white/50 mb-1">Project *</label>
-          <select
-            class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10"
-            style={{ "pointer-events": "auto" }}
-            value={projectKey()}
-            onChange={(e) => {
-              setProjectKey(e.currentTarget.value);
-              setIssueType(""); // reset issue type when project changes
-            }}
-            required
-          >
-            <option value="">Select project…</option>
-            <For each={projects()}>
-              {(p) => <option value={p.key}>{p.name} ({p.key})</option>}
-            </For>
-          </select>
-        </div>
+      {/* Issue type — pre-selected to "Task" */}
+      <div class="mb-3">
+        <label class="block text-[11px] text-white/50 mb-1">Work Type *</label>
+        <select
+          class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10"
+          style={{ "pointer-events": "auto" }}
+          value={issueType()}
+          onChange={(e) => setIssueType(e.currentTarget.value)}
+          required
+        >
+          <For each={props.issueTypes}>
+            {(t) => <option value={t.name}>{t.name}</option>}
+          </For>
+        </select>
+      </div>
 
-        {/* Issue type selector — disabled until project is selected */}
-        <div class="mb-3">
-          <label class="block text-[11px] text-white/50 mb-1">Work Type *</label>
-          <select
-            class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ "pointer-events": "auto" }}
-            value={issueType()}
-            onChange={(e) => setIssueType(e.currentTarget.value)}
-            disabled={!projectKey()}
-            required
-          >
-            <option value="">{!projectKey() ? "Select a project first…" : issueTypes.loading ? "Loading…" : "Select type…"}</option>
-            <For each={issueTypes()}>
-              {(t) => <option value={t.name}>{t.name}</option>}
-            </For>
-          </select>
-        </div>
-
-        {/* Priority selector */}
-        <div class="mb-3">
-          <label class="block text-[11px] text-white/50 mb-1">Priority</label>
-          <select
-            class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10"
-            style={{ "pointer-events": "auto" }}
-            value={priority()}
-            onChange={(e) => setPriority(e.currentTarget.value)}
-          >
-            <For each={priorities()}>
-              {(p) => <option value={p.name}>{p.name}</option>}
-            </For>
-          </select>
-        </div>
-      </Suspense>
+      {/* Priority — pre-selected to "Medium" */}
+      <div class="mb-3">
+        <label class="block text-[11px] text-white/50 mb-1">Priority</label>
+        <select
+          class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10"
+          style={{ "pointer-events": "auto" }}
+          value={priority()}
+          onChange={(e) => setPriority(e.currentTarget.value)}
+        >
+          <For each={props.priorities}>
+            {(p) => <option value={p.name}>{p.name}</option>}
+          </For>
+        </select>
+      </div>
 
       {/* Summary */}
       <div class="mb-3">
@@ -221,7 +191,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
         </button>
         <button
           type="submit"
-          disabled={submitting() || !projectKey() || !issueType()}
+          disabled={submitting() || !issueType()}
           class="px-3 py-1.5 text-[12px] bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
           style={{ "pointer-events": "auto" }}
         >
@@ -229,5 +199,59 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
         </button>
       </div>
     </form>
+  );
+};
+
+export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
+  const projectKey = props.jiraProjectKey;
+
+  const [issueTypes] = createResource(() =>
+    listJiraIssueTypes({ projectKey }).then((r) => {
+      if (r.status !== 200) throw new Error("Failed to load issue types");
+      return r.data;
+    }),
+  );
+  const [priorities] = createResource(() =>
+    listJiraPriorities().then((r) => {
+      if (r.status !== 200) throw new Error("Failed to load priorities");
+      return r.data;
+    }),
+  );
+
+  const validation = () => {
+    const types = issueTypes();
+    const prios = priorities();
+    if (!types || !prios) return null; // still loading
+
+    const errors: string[] = [];
+    if (!types.find((t) => t.name === DEFAULT_ISSUE_TYPE))
+      errors.push(`Issue type "${DEFAULT_ISSUE_TYPE}" not found in ${projectKey}`);
+    if (!prios.find((p) => p.name === DEFAULT_PRIORITY))
+      errors.push(`Priority "${DEFAULT_PRIORITY}" not found in JIRA`);
+
+    return errors.length > 0 ? { ok: false as const, errors } : { ok: true as const };
+  };
+
+  return (
+    <Switch>
+      <Match when={issueTypes.loading || priorities.loading}>
+        <div class="text-white/40 text-[12px]">Loading JIRA data…</div>
+      </Match>
+      <Match when={validation()?.ok === false}>
+        <div class="p-3 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300">
+          <p class="font-semibold mb-1">Configuration error</p>
+          <For each={(validation() as { ok: false; errors: string[] }).errors}>
+            {(err) => <p>{err}</p>}
+          </For>
+        </div>
+      </Match>
+      <Match when={validation()?.ok}>
+        <JiraCreateFormReady
+          {...props}
+          issueTypes={issueTypes()!}
+          priorities={priorities()!}
+        />
+      </Match>
+    </Switch>
   );
 };

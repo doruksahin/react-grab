@@ -217,10 +217,13 @@ interface BuildActionContextOptions {
   customEnterPromptMode?: (agent?: AgentOptions) => void;
 }
 
-let syncState: { workspace: string; serverUrl: string; status: "local" | "synced" | "error" } | null = null;
+let syncState: { workspace: string; serverUrl: string; jiraProjectKey: string; status: "local" | "synced" | "error" } | null = null;
 let pendingSyncOptions: Options | undefined;
 
 export const initSync = async (config: SyncConfig): Promise<void> => {
+  if (!config.jiraProjectKey) {
+    throw new Error("react-grab: SyncConfig.jiraProjectKey is required (e.g. 'ATT')");
+  }
   // Store options to forward to init() when it auto-fires
   if (config.options) {
     pendingSyncOptions = config.options;
@@ -232,7 +235,7 @@ export const initSync = async (config: SyncConfig): Promise<void> => {
   }
 
   if (!config.enabled) {
-    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, status: "local" };
+    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "local" };
     return;
   }
 
@@ -242,13 +245,13 @@ export const initSync = async (config: SyncConfig): Promise<void> => {
       initCommentStorage(adapter),
       initGroupStorage(adapter),
     ]);
-    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, status: "synced" };
+    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "synced" };
   } catch (error) {
     // Server unreachable — fall back to localStorage (already loaded at module init)
     // Fire the error callback so it's not silent
     const err = error instanceof Error ? error : new Error(String(error));
     config.onSyncError(err);
-    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, status: "error" };
+    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "error" };
   }
 };
 
@@ -4471,6 +4474,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 syncStatus={syncState?.status ?? "local"}
                 syncWorkspace={syncState?.workspace}
                 syncServerUrl={syncState?.serverUrl}
+                jiraProjectKey={syncState?.jiraProjectKey}
                 groups={selectionGroups.groups()}
                 activeGroupId={selectionGroups.activeGroupId()}
                 onAddGroup={selectionGroups.handleAddGroup}
