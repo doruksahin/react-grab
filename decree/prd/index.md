@@ -6,3 +6,4 @@
 |-----|-----|-----|-----|
 | PRD-002 | PRD-002 Embedded Dashboard Sidebar | draft | 2026-04-05 |
 | PRD-003 | PRD-003 Full-Page Screenshot Element Highlighting | draft | 2026-04-06 |
+| PRD-004 | PRD-004 JIRA Status Visualization and Filtering | draft | 2026-04-06 |
