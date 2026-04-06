@@ -13,12 +13,13 @@ import { Z_INDEX_LABEL } from "../../constants.js";
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
 import { StatsBar } from "./stats-bar.js";
-import { FilterTabs, type FilterStatus } from "./filter-tabs.js";
+import { FilterBar } from "./filter-bar.js";
+import { FilterChips } from "./filter-chips.js";
+import { type FilterState, EMPTY_FILTER, isFilterActive, applyFilters, getDistinctAssignees, getDistinctReporters } from "../../features/sidebar/filter-state.js";
 import { GroupList } from "./group-list.js";
 import { GroupDetailView } from "./group-detail-view.js";
 import { groupComments } from "../../features/selection-groups/business/group-operations.js";
 import {
-  deriveEntryStatus,
   type GroupedEntry,
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
@@ -33,6 +34,7 @@ export interface SidebarProps {
   onClose: () => void;
   onActiveDetailGroupChange: (groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
+  onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -75,7 +77,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     );
   });
 
-  const [activeFilter, setActiveFilter] = createSignal<FilterStatus>("all");
+  const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
     string | null
   >(null);
@@ -120,12 +122,24 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   );
 
   const filteredGroups = createMemo(() => {
-    const filter = activeFilter();
-    const items = groupedItems();
-    if (filter === "all") return items;
-    return items.filter(
-      (entry: GroupedEntry) => deriveEntryStatus(entry) === filter,
+    const filter = filterState();
+    if (!isFilterActive(filter)) return groupedItems();
+    const filtered = applyFilters(groups(), filter);
+    return groupedItems().filter((entry: GroupedEntry) =>
+      filtered.some((g) => g.id === entry.group.id),
     );
+  });
+
+  createEffect(() => {
+    const filter = filterState();
+    const allIds = groups().map((g) => g.id);
+    if (!isFilterActive(filter)) {
+      props.onFilterVisibilityChange?.(new Set(allIds), allIds);
+      return;
+    }
+    const filtered = applyFilters(groups(), filter);
+    const visibleIds = new Set(filtered.map((g) => g.id));
+    props.onFilterVisibilityChange?.(visibleIds, allIds);
   });
 
   function handleTicketCreated(
@@ -205,9 +219,15 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             fallback={
               <>
                 <StatsBar groupedItems={groupedItems()} />
-                <FilterTabs
-                  activeFilter={activeFilter()}
-                  onFilterChange={setActiveFilter}
+                <FilterBar
+                  filter={filterState()}
+                  assignees={getDistinctAssignees(groups())}
+                  reporters={getDistinctReporters(groups())}
+                  onFilterChange={setFilterState}
+                />
+                <FilterChips
+                  filter={filterState()}
+                  onFilterChange={setFilterState}
                 />
 
                 <Show
@@ -223,7 +243,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     when={filteredGroups().length > 0}
                     fallback={
                       <EmptyState
-                        message={`No ${activeFilter()} groups.`}
+                        message={"No groups match the active filters."}
                       />
                     }
                   >

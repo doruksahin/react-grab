@@ -586,6 +586,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   syncStatus?: SyncStatus;
   syncWorkspace?: string;
   syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
+  onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
 }
 
 export interface GrabbedBox {

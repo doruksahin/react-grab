@@ -318,6 +318,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           syncWorkspace={props.syncWorkspace}
           onActiveDetailGroupChange={setActiveDetailGroupId}
           onJiraResolved={props.onJiraResolved}
+          onFilterVisibilityChange={props.onFilterVisibilityChange}
           onClose={() => {
             setSidebarOpen(false);
             setActiveDetailGroupId(null);
