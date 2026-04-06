@@ -34,6 +34,7 @@ import { IconLoader } from "../icons/icon-loader.jsx";
 import { Arrow } from "./arrow.js";
 import { TagBadge } from "./tag-badge.js";
 import { BottomSection } from "./bottom-section.js";
+import { JiraMeta } from "./jira-meta.js";
 import { DiscardPrompt } from "./discard-prompt.js";
 import { ErrorView } from "./error-view.js";
 import { CompletionView } from "./completion-view.js";
@@ -685,6 +686,16 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 </Show>
               </div>
               <BottomSection>
+                <Show when={props.jiraTicketId}>
+                  {(ticketId) => (
+                    <JiraMeta
+                      jiraTicketId={ticketId()}
+                      jiraUrl={props.jiraUrl}
+                      jiraAssignee={props.jiraAssignee}
+                      jiraReporter={props.jiraReporter}
+                    />
+                  )}
+                </Show>
                 <Show when={props.replyToPrompt}>
                   <div class="flex items-center gap-1 w-full mb-1 overflow-hidden">
                     <IconReply size={10} class="text-black/30 shrink-0" />

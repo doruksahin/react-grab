@@ -467,6 +467,9 @@ export interface SelectionLabelInstance {
   groupStatus?: GroupStatus;
   jiraTicketId?: string;
   jiraUrl?: string;
+  jiraStatusCategory?: string;
+  jiraAssignee?: string | null;
+  jiraReporter?: string | null;
 }
 
 /**
@@ -715,4 +718,7 @@ export interface SelectionLabelProps
   groupStatus?: GroupStatus;
   jiraTicketId?: string;
   jiraUrl?: string;
+  jiraStatusCategory?: string;
+  jiraAssignee?: string | null;
+  jiraReporter?: string | null;
 }
