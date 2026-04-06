@@ -153,38 +153,6 @@ export type SelectionGroupWithJira = SelectionGroup & {
 };
 ```
 
-### 3a. Update `handleStatusUpdate` in `components/sidebar/index.tsx`
-
-The existing function stores `status` and `statusCategory`. Extend it to also store `assignee` and `reporter`:
-
-```typescript
-function handleStatusUpdate(
-  groupId: string,
-  status: { status: string; statusCategory: string; assignee: string | null; reporter: string | null },
-) {
-  const resolved = status.statusCategory.toLowerCase() === "done";
-  setGroups((prev) =>
-    prev.map((g) =>
-      g.id === groupId
-        ? {
-            ...g,
-            jiraStatus: status.status,
-            jiraStatusCategory: status.statusCategory,
-            jiraAssignee: status.assignee,
-            jiraReporter: status.reporter,
-            jiraResolved: resolved,
-          }
-        : g,
-    ),
-  );
-  if (resolved) {
-    props.onJiraResolved?.(groupId);
-  }
-}
-```
-
-Also update the merge effect (lines 60-74) to preserve `jiraAssignee` and `jiraReporter` alongside existing fields.
-
 ### 3b. Core-Level JIRA Status Polling
 
 **Problem:** Canvas overlay borders and selection label badges need JIRA status colors even when the sidebar is closed. The status data (`jiraStatus`, `jiraAssignee`, `jiraReporter`) must live on the **core** groups signal (`selectionGroups.groups()`), not on the sidebar's local signal — otherwise `instance.groupStatus` on the overlay canvas is always `undefined`, and all selection boxes render with the "No Task" pink color.
@@ -581,16 +549,17 @@ These are manual checks to confirm the feature works end-to-end:
 
 ### Extended Group Type
 - [ ] `jiraAssignee` and `jiraReporter` added to `SelectionGroupWithJira`
-- [ ] `handleStatusUpdate` stores `assignee` and `reporter` from poll response (updated signature)
-- [ ] Merge effect (lines 60-74) preserves `jiraAssignee` and `jiraReporter` alongside existing fields
+- [ ] Core's `onStatusUpdate` callback stores `assignee` and `reporter` from poll response via `selectionGroups.persistGroups()`
+- [ ] Sidebar has no `handleStatusUpdate` for poll results — mutations are owned by core
 - [ ] **UI verify:** Open a group detail → assignee name visible (if assigned in JIRA)
 
 ### Core-Level JIRA Status Polling
-- [ ] `core/index.tsx` calls `createJiraStatusPoller` on init — NOT on sidebar open
-- [ ] Poll stores `jiraStatus`, `jiraStatusCategory`, `jiraAssignee`, `jiraReporter` on core groups signal
-- [ ] Poll repeats every 30 seconds
-- [ ] Sidebar's local `createJiraStatusPoller` call removed — core owns polling
-- [ ] `GroupDetailView.onStatusUpdate` prop removed — no duplicate poll
+- [x] `core/index.tsx` calls `createJiraStatusPoller` on init — NOT on sidebar open
+- [x] Poll stores `jiraStatus`, `jiraStatusCategory`, `jiraAssignee`, `jiraReporter` on core groups signal via `selectionGroups.persistGroups()`
+- [x] Poll repeats every 30 seconds
+- [x] Sidebar's local `createJiraStatusPoller` call removed — core owns polling
+- [x] `GroupDetailView.onStatusUpdate` prop removed — no duplicate poll
+- [x] Sidebar local groups signal removed — sidebar reads from `props.groups` (core signal)
 - [ ] **UI verify:** Without opening sidebar, canvas selection boxes show correct JIRA status colors
 - [ ] **UI verify:** Open sidebar → all ticketed groups show actual JIRA status immediately (not "To Do")
 

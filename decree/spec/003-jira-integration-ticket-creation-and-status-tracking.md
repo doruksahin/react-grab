@@ -91,7 +91,7 @@ export function deriveStatus(group: SelectionGroup): GroupStatus {
 }
 ```
 
-`jiraResolved: boolean` is a **client-side signal field** — it does not need a D1 schema change. It is stored on the `SelectionGroup` signal in memory and updated when polling detects `statusCategory === "Done"`. The transition is: sidebar receives a poll response with `statusCategory === "Done"` → sets `jiraResolved = true` on the in-memory group object → `deriveStatus` returns `"resolved"` → status badge updates reactively.
+`jiraResolved: boolean` is a **client-side signal field** — it does not need a D1 schema change. It is stored on the core groups signal (`selectionGroups.groups`) and updated when the core-level poller detects `statusCategory === "Done"`. The transition is: poller calls `onStatusUpdate` → core calls `selectionGroups.persistGroups(updated)` with `jiraResolved: true` → `deriveStatus` returns `"resolved"` → status badge updates reactively.
 
 If the app is refreshed, `jiraResolved` is not persisted — the group returns to `ticketed` status until the next poll cycle resolves it again. This is acceptable for Phase 3 (A-012).
 
@@ -130,7 +130,9 @@ export interface GroupDetailViewProps {
 }
 ```
 
-`onTicketCreated` is called by the JIRA dialog on success. `GroupDetailView` passes the result up to `Sidebar`, which updates the group signal with `jiraTicketId`.
+`onTicketCreated` is called by the JIRA dialog on success. `GroupDetailView` passes the result up to the sidebar which calls `props.onTicketCreated` (wired to core in `renderer.tsx`). Core then calls `selectionGroups.persistGroups(updated)` with the new `jiraTicketId` and `jiraUrl` stored on the group.
+
+**Note:** `onStatusUpdate` is NOT a prop of `GroupDetailView`. Status polling is handled exclusively at the core level (see SPEC-006 §3b) — the detail view is not involved in polling.
 
 Inside `GroupDetailView`, the footer area below `SelectionList` conditionally renders based on `deriveStatus(props.group)`:
 
@@ -390,67 +392,13 @@ The banner reads `jiraStatus` and `jiraStatusCategory` from `props.group` (both 
 
 ### Status Polling
 
-Polling is scoped to `GroupDetailView`'s lifecycle. When the detail view mounts for a `ticketed` group, polling starts. When it unmounts (back navigation), polling stops.
+**Polling is handled at the core level — not in `GroupDetailView`.**
 
-```typescript
-// Inside GroupDetailView
-onMount(() => {
-  if (deriveStatus(props.group) !== "ticketed") return;
+`core/index.tsx` calls `createJiraStatusPoller` on react-grab initialization. It polls all ticketed groups immediately and every 30 seconds, storing `jiraStatus`, `jiraStatusCategory`, `jiraAssignee`, `jiraReporter`, and `jiraResolved` directly on the core groups signal via `selectionGroups.persistGroups(updated)`. See SPEC-006 §3b for the full implementation.
 
-  const poll = async () => {
-    try {
-      const result = await getJiraTicketStatus(props.syncWorkspace!, props.group.id);
-      if (result.status === 200) {
-        props.onStatusUpdate(result.data);   // bubbles up to Sidebar
-      }
-    } catch {
-      // silent — poll failures do not show errors
-    }
-  };
+`GroupDetailView` has no `onMount` polling, no `setInterval`, and no `onStatusUpdate` prop. The sidebar reads updated JIRA status data from `props.groups` (which reflects the core signal).
 
-  poll(); // immediate first poll
-  const id = setInterval(poll, 30_000);
-  onCleanup(() => clearInterval(id));
-});
-```
-
-`props.onStatusUpdate` is a new prop of type `(status: { status: string; statusCategory: string }) => void`. `Sidebar` uses it to update the in-memory group:
-
-```typescript
-// Sidebar
-function handleStatusUpdate(groupId: string, status: { status: string; statusCategory: string }) {
-  setGroups((prev) =>
-    prev.map((g) =>
-      g.id === groupId
-        ? {
-            ...g,
-            jiraStatus: status.status,
-            jiraStatusCategory: status.statusCategory,
-            jiraResolved: status.statusCategory.toLowerCase() === "done",
-          }
-        : g,
-    ),
-  );
-}
-```
-
-`setGroups` requires `groups` to be a writable signal in `Sidebar`. Currently `groups` is passed as a prop from `renderer.tsx` (read from the `selectionGroups` signal in `core/index.tsx`). Phase 3 upgrades this: `Sidebar` owns a local `createSignal<SelectionGroupWithJira[]>` that is initialized from `props.groups` and kept in sync with a `createEffect`. This local signal is the one mutated by `handleStatusUpdate` and `handleTicketCreated`.
-
-```typescript
-// Sidebar — groups signal
-const [groups, setGroups] = createSignal<SelectionGroupWithJira[]>(props.groups);
-createEffect(() => {
-  // Re-sync if parent updates (new group added via sync)
-  setGroups((prev) => {
-    const parentIds = new Set(props.groups.map((g) => g.id));
-    // Merge: keep jiraResolved/jiraStatus from local state, add new groups from parent
-    return props.groups.map((pg) => {
-      const local = prev.find((lg) => lg.id === pg.id);
-      return local ? { ...pg, jiraResolved: local.jiraResolved, jiraStatus: local.jiraStatus, jiraStatusCategory: local.jiraStatusCategory } : pg;
-    });
-  });
-});
-```
+**Sidebar groups ownership:** The sidebar does NOT own a local `createSignal` for groups. `props.groups` is the source of truth (the core signal passed down). Mutations (ticket creation, status updates) go through core via callbacks wired in `renderer.tsx`. There is no merge effect in the sidebar.
 
 ### `GroupDetailView` — updated prop signature (full)
 
@@ -460,15 +408,21 @@ export interface GroupDetailViewProps {
   commentItems: CommentItem[];
   syncServerUrl?: string;
   syncWorkspace?: string;
+  shadowRoot: ShadowRoot | null;
   onBack: () => void;
-  onTicketCreated: (groupId: string, ticketId: string, ticketUrl: string) => void;  // NEW
-  onStatusUpdate: (groupId: string, status: { status: string; statusCategory: string }) => void;  // NEW
+  onTicketCreated: (ticketId: string, ticketUrl: string) => void;  // NEW — wired to core in renderer.tsx
 }
 ```
+
+There is no `onStatusUpdate` prop. Polling is owned by core (`createJiraStatusPoller` in `core/index.tsx`) and never reaches `GroupDetailView`.
 
 ### Component Tree (Phase 3 additions)
 
 ```
+core/index.tsx
+├── createJiraStatusPoller                          NEW — runs on init, polls all ticketed groups
+└── <Sidebar>                                       via renderer.tsx
+
 Sidebar
 ├── ShadowRootContext.Provider                      NEW — wraps entire sidebar
 ├── SidebarHeader                                   unchanged
@@ -476,17 +430,17 @@ Sidebar
     ├── [activeDetailGroupId === null]
     │   ├── StatsBar, FilterTabs, GroupList         unchanged
     └── [activeDetailGroupId !== null]
-        └── GroupDetailView                         modified
+        └── GroupDetailView                         modified (no polling — reads from props.group)
             ├── DetailHeader                        unchanged
             ├── SelectionList                       unchanged
             ├── [status === "open"]
             │   └── JiraCreateButton                NEW
             │       └── JiraCreateDialog            NEW (modal)
-            │           ├── Dialog.Overlay          Kobalte + Portal mount
+            │           ├── Dialog.Overlay          native + Portal mount
             │           └── JiraCreateForm          NEW
-            │               ├── ProjectCombobox     Kobalte Combobox + Portal mount
-            │               ├── IssueTypeCombobox   Kobalte Combobox + Portal mount
-            │               ├── PrioritySelect      Kobalte Select + Portal mount
+            │               ├── ProjectSelect       native <select>
+            │               ├── IssueTypeSelect     native <select>
+            │               ├── PrioritySelect      native <select>
             │               ├── SummaryTextarea     native
             │               ├── DescriptionTextarea native
             │               └── AttachmentsSection  read-only list
@@ -601,7 +555,7 @@ All new overlay components must carry `pointer-events: auto` on container elemen
 - [x] ADF object passed as `fields.description` in `createIssue` — no string description sent to JIRA v3 API
 - [x] `SelectionGroupWithJira` type defined in `features/sidebar/jira-types.ts` with `jiraResolved?: boolean`, `jiraStatus?: string`, `jiraStatusCategory?: string`, `jiraUrl?: string`
 - [x] `ShadowRootContext` created in `features/sidebar/shadow-context.ts`; `renderer.tsx` resolves shadow root via `containerRef.getRootNode() as ShadowRoot` and wraps `<Sidebar>` in `<ShadowRootContext.Provider value={shadowRoot()}>`
-- [x] `Sidebar` owns a local `createSignal<SelectionGroupWithJira[]>` for groups; synced from `props.groups` via `createEffect` (preserving local jira fields)
+- [x] `Sidebar` reads groups from `props.groups` (no local signal); mutations flow through core callbacks wired in `renderer.tsx`
 - [x] `GroupDetailView` renders `JiraCreateButton` when `deriveStatus(group) === "open"` (PRD-002)
 - [x] `GroupDetailView` renders `JiraStatusBanner` when status is `"ticketed"` or `"resolved"` (PRD-002)
 - [x] `JiraCreateDialog` opens on button click; uses `<Portal mount={shadowRoot}>` for shadow DOM rendering
@@ -617,8 +571,8 @@ All new overlay components must carry `pointer-events: auto` on container elemen
 - [x] `JiraStatusBanner` shows ticket ID as link to JIRA (`target="_blank"`), current status text (PRD-002)
 - [x] `JiraProgressDots` shows four dots: created → to do → in progress → done; active dot highlighted (PRD-002)
 - [x] `deriveStatus` returns `"resolved"` when `jiraResolved === true`; badge updates reactively
-- [x] Polling: `getJiraTicketStatus` called immediately on `GroupDetailView` mount for `ticketed` groups, then every 30 seconds (PRD-002)
-- [x] Polling stops on `GroupDetailView` unmount (`clearInterval` in `onCleanup`)
+- [x] Polling: `getJiraTicketStatus` called on core init via `createJiraStatusPoller` for all ticketed groups, then every 30 seconds (PRD-002) — see SPEC-006 §3b
+- [x] `GroupDetailView` has no `onMount` polling and no `onStatusUpdate` prop — polling is owned by core
 - [x] `statusCategory === "done"` (case-insensitive) sets `jiraResolved = true` on in-memory group (A-012)
 - [x] All new container elements carry `pointer-events: auto` (SPEC-002 contract)
 - [x] Dialog content renders inside shadow root — `document.body` contains no dialog markup (ADR-0005)
