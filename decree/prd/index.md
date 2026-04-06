@@ -5,3 +5,4 @@
 | PRD | Title | Status | Date |
 |-----|-----|-----|-----|
 | PRD-002 | PRD-002 Embedded Dashboard Sidebar | draft | 2026-04-05 |
+| PRD-003 | PRD-003 Full-Page Screenshot Element Highlighting | draft | 2026-04-06 |
