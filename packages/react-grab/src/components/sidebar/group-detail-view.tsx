@@ -15,7 +15,7 @@ import { JiraCreateDialog } from "./jira-create-dialog.js";
 import { JiraStatusBanner } from "./jira-status-banner.js";
 import { getStatusLabel } from "../../features/sidebar/status-colors.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
-import { getJiraTicketStatus } from "../../generated/sync-api.js";
+import { getJiraTicketStatus, type GetJiraTicketStatus200 } from "../../generated/sync-api.js";
 
 interface GroupDetailViewProps {
   ref?: (el: HTMLDivElement) => void;
@@ -30,7 +30,7 @@ interface GroupDetailViewProps {
   onTicketCreated?: (groupId: string, ticketId: string, ticketUrl: string) => void;
   onStatusUpdate?: (
     groupId: string,
-    status: { status: string; statusCategory: string; assignee: string | null; reporter: string | null },
+    status: GetJiraTicketStatus200,
   ) => void;
 }
 

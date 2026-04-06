@@ -28,7 +28,7 @@ import {
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { ShadowRootContext } from "../../features/sidebar/shadow-context.js";
-import { getJiraTicketStatus } from "../../generated/sync-api.js";
+import { getJiraTicketStatus, type GetJiraTicketStatus200 } from "../../generated/sync-api.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -169,7 +169,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
 
   function handleStatusUpdate(
     groupId: string,
-    status: { status: string; statusCategory: string; assignee: string | null; reporter: string | null },
+    status: GetJiraTicketStatus200,
   ) {
     const resolved = status.statusCategory.toLowerCase() === "done";
     setGroups((prev) =>
