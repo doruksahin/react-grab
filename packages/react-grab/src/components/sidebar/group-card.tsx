@@ -58,6 +58,18 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
         </div>
       </Show>
 
+      <Show when={props.entry.group.jiraLabels?.length}>
+        <div class="flex flex-wrap gap-1 mb-2">
+          <For each={props.entry.group.jiraLabels}>
+            {(lbl) => (
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/50">
+                {lbl}
+              </span>
+            )}
+          </For>
+        </div>
+      </Show>
+
       <div class="flex flex-col gap-1">
         <For each={comments().slice(0, 3)}>
           {(comment) => (
