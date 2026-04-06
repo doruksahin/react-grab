@@ -149,6 +149,9 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
   let grabbedAnimations: AnimatedBounds[] = [];
   let processingAnimations: AnimatedBounds[] = [];
   let inspectAnimations: AnimatedBounds[] = [];
+  // Set once when activeGroupId changes — shared across all label animations for that frame.
+  // Never re-assigned on labelInstances re-renders, so the shake does not restart.
+  let shakeEpoch: number | null = null;
 
   const canvasColorSpace: PredefinedColorSpace = supportsDisplayP3()
     ? "display-p3"
@@ -718,12 +721,8 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
               existingAnimation.strokeWidth = isActiveGroup ? ACTIVE_GROUP_STROKE_WIDTH : undefined;
               existingAnimation.shadowPasses = instanceShadowPasses;
               existingAnimation.shadowBaseColor = isActiveGroup ? ACTIVE_GROUP_BORDER_COLOR : undefined;
-              // Trigger shake only when transitioning into active (not if already shaking)
-              if (isActiveGroup && !isShakeActive(existingAnimation.shakeStartTime, Date.now())) {
-                existingAnimation.shakeStartTime = Date.now();
-              } else if (!isActiveGroup) {
-                existingAnimation.shakeStartTime = undefined;
-              }
+              existingAnimation.shakeStartTime =
+                isActiveGroup && shakeEpoch !== null ? shakeEpoch : undefined;
             } else {
               const anim = createAnimatedBounds(animationId, bounds, {
                 opacity: 1,
@@ -734,7 +733,8 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
               anim.strokeWidth = isActiveGroup ? ACTIVE_GROUP_STROKE_WIDTH : undefined;
               anim.shadowPasses = instanceShadowPasses;
               anim.shadowBaseColor = isActiveGroup ? ACTIVE_GROUP_BORDER_COLOR : undefined;
-              anim.shakeStartTime = isActiveGroup ? Date.now() : undefined;
+              anim.shakeStartTime =
+                isActiveGroup && shakeEpoch !== null ? shakeEpoch : undefined;
               grabbedAnimations.push(anim);
             }
           }
@@ -819,6 +819,19 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
           return createAnimatedBounds(animationId, ancestorBounds);
         });
 
+        scheduleAnimationFrame();
+      },
+    ),
+  );
+
+  // Dedicated effect: set shakeEpoch only when activeGroupId changes.
+  // Decoupled from labelInstances so the epoch is never re-assigned on re-renders,
+  // which would restart the shake after it completes.
+  createEffect(
+    on(
+      () => props.activeGroupId,
+      (activeGroupId) => {
+        shakeEpoch = activeGroupId != null ? Date.now() : null;
         scheduleAnimationFrame();
       },
     ),
