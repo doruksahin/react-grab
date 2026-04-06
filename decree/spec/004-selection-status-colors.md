@@ -148,10 +148,68 @@ packages/react-grab/src/
 └── types.ts                          Modified: add groupStatus to SelectionLabelInstance
 ```
 
+### Active Group Highlight — Sidebar Selection Glow
+
+When a user clicks a group in the sidebar (entering the detail view), all selections belonging to that group are highlighted on the overlay canvas with a **lightblue glow effect** to visually connect the sidebar detail view with the on-page elements.
+
+**Color:** Lightblue — `rgba(56, 189, 248, alpha)` (sky-400) / `color(display-p3 0.22 0.74 0.97 / alpha)` for wide-gamut.
+
+Add to `overlay-color.ts`:
+
+```typescript
+const ACTIVE_GROUP_COLORS = { srgb: "56, 189, 248", p3: "0.22 0.74 0.97" };
+
+export const activeGroupOverlayColor = (alpha: number): string =>
+  isWideGamut
+    ? `color(display-p3 ${ACTIVE_GROUP_COLORS.p3} / ${alpha})`
+    : `rgba(${ACTIVE_GROUP_COLORS.srgb}, ${alpha})`;
+```
+
+**Glow effect:** The canvas draws the active group's selections with:
+- Border: `activeGroupOverlayColor(0.7)` — brighter than normal
+- Fill: `activeGroupOverlayColor(0.12)` — subtle tinted fill
+- Shadow: `ctx.shadowColor = activeGroupOverlayColor(0.5)`, `ctx.shadowBlur = 12` — the glow
+
+**Data threading:** `activeDetailGroupId` from the sidebar needs to reach the overlay canvas. Thread it from `renderer.tsx` to `OverlayCanvas` as a new prop:
+
+```typescript
+// OverlayCanvasProps — add:
+activeGroupId?: string | null;
+```
+
+In the canvas render loop for `labelInstances`, when `instance.groupId === props.activeGroupId`, use the active group layer style instead of the status-based style.
+
+**Behavior:**
+- Glow appears when a group detail view is open in the sidebar
+- Glow disappears when navigating back to the groups list (`activeDetailGroupId === null`)
+- Selections not belonging to the active group render with their normal status color (pink/yellow/green)
+- The glow is purely visual — no interaction change
+
+### File Changes
+
+```
+packages/react-grab/src/
+├── utils/
+│   └── overlay-color.ts              Modified: add statusOverlayColor(), activeGroupOverlayColor()
+├── components/
+│   ├── overlay-canvas.tsx            Modified: use statusOverlayColor for label instances, activeGroupOverlayColor + shadow glow for active group
+│   └── selection-label/
+│       └── index.tsx                 Modified: add status icon badge
+├── components/icons/
+│   ├── icon-ticket.tsx               NEW: clipboard-check icon (12px)
+│   └── icon-check.tsx                NEW: checkmark icon (12px)
+├── core/
+│   └── index.tsx                     Modified: add groupStatus to labelInstances, thread activeDetailGroupId to canvas
+├── components/
+│   └── renderer.tsx                  Modified: pass activeDetailGroupId to OverlayCanvas
+└── types.ts                          Modified: add groupStatus, groupId to SelectionLabelInstance
+```
+
 ### Dependencies
 
 - Depends on SPEC-003 (Phase 3) for `jiraTicketId` and `jiraResolved` on groups
 - Depends on `deriveStatus()` from `features/sidebar/derive-status.ts` (already exists)
+- Depends on `activeDetailGroupId` signal from sidebar (SPEC-002, already exists)
 - No new npm dependencies
 
 ## Testing Strategy
@@ -172,6 +230,9 @@ packages/react-grab/src/
 - Selection label for a ticketed group shows yellow badge with clipboard icon
 - Selection label for a resolved group shows green badge with checkmark icon
 - Status icon tooltip shows ticket ID for ticketed selections
+- Clicking a group in the sidebar highlights that group's selections with lightblue glow on the canvas
+- Navigating back to the groups list removes the lightblue glow
+- Selections not in the active group retain their status color while the glow is active
 
 ### Manual Verification
 
@@ -179,6 +240,9 @@ packages/react-grab/src/
 - Verify colors are visually distinct at a glance (pink/yellow/green)
 - Verify wide-gamut colors render correctly on P3 displays
 - Verify status icons don't overlap with the label arrow or tag text
+- Open a group detail in sidebar — verify lightblue glow appears on the matching selections
+- Verify glow is visible against both light and dark host page backgrounds
+- Verify glow disappears when navigating back to group list
 
 ## Acceptance Criteria
 
@@ -198,6 +262,13 @@ packages/react-grab/src/
 - [ ] `icon-ticket.tsx` and `icon-check.tsx` created in `components/icons/`
 - [ ] Unit tests pass for `statusOverlayColor`
 - [ ] Integration tests pass for canvas colors and label icons
+- [ ] `activeGroupOverlayColor(alpha)` function added to `utils/overlay-color.ts` (lightblue)
+- [ ] `activeGroupId?: string | null` prop added to `OverlayCanvasProps`
+- [ ] `activeDetailGroupId` threaded from renderer to overlay canvas
+- [ ] Canvas draws lightblue border + fill for selections in the active sidebar group
+- [ ] Canvas draws glow effect (`shadowColor` + `shadowBlur: 12`) for active group selections
+- [ ] Glow appears when group detail view is open, disappears on back navigation
+- [ ] Selections outside the active group retain their status color while glow is active
 - [ ] `decree lint` passes
 
 ### Deferred
