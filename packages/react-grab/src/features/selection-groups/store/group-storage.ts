@@ -26,9 +26,18 @@ const loadFromLocalStorage = (): SelectionGroup[] => {
 
 let groups: SelectionGroup[] = loadFromLocalStorage();
 
+let onGroupsLoadedCallback: ((groups: SelectionGroup[]) => void) | null = null;
+
+export const registerGroupsLoadedCallback = (
+  cb: (groups: SelectionGroup[]) => void,
+): void => {
+  onGroupsLoadedCallback = cb;
+};
+
 export const initGroupStorage = async (adapter: StorageAdapter): Promise<void> => {
   activeAdapter = adapter;
   groups = await adapter.loadGroups();
+  onGroupsLoadedCallback?.(groups);
 };
 
 export const persistGroups = (

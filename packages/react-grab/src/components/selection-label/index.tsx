@@ -698,6 +698,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                       setPickerOpen(false);
                     }}
                     onClose={() => setPickerOpen(false)}
+                    onAddGroup={props.onAddGroup}
                   />
                 </Show>
               </div>

@@ -169,7 +169,7 @@ import {
   getActiveAdapter,
 } from "../utils/comment-storage.js";
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
-import { initGroupStorage } from "../features/selection-groups/store/group-storage.js";
+import { initGroupStorage, registerGroupsLoadedCallback } from "../features/selection-groups/store/group-storage.js";
 import { createHttpAdapter } from "../features/sync/index.js";
 import type { SyncConfig } from "../features/sync/types.js";
 import { copyContent, copyGroupedContent, type ReactGrabGroup } from "../utils/copy-content.js";
@@ -3803,6 +3803,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       setCommentItems,
       persistCommentItems,
     });
+
+    // When initSync loads groups from the server, flush them into the signal.
+    registerGroupsLoadedCallback((loaded) => selectionGroups.setGroups(loaded));
 
     const computedLabelInstancesWithStatus = createMemo(() =>
       computedLabelInstances().map((instance) => {

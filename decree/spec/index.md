@@ -4,9 +4,10 @@
 
 | SPEC | Title | Status | Date |
 |-----|-----|-----|-----|
+| SPEC-006 | SPEC-006 ATT Status Visualization and Filtering | approved | 2026-04-06 |
 | SPEC-001 | SPEC-001 Sidebar Shell and Groups List | implemented | 2026-04-05 |
 | SPEC-002 | SPEC-002 Group Detail View | implemented | 2026-04-05 |
 | SPEC-003 | SPEC-003 JIRA integration — ticket creation and status tracking | implemented | 2026-04-05 |
 | SPEC-004 | SPEC-004 Selection Status Colors | implemented | 2026-04-06 |
-| SPEC-005 | SPEC-005 Full-Page Screenshot Element Highlighting | draft | 2026-04-06 |
-| SPEC-006 | SPEC-006 ATT Status Visualization and Filtering | draft | 2026-04-06 |
+| SPEC-005 | SPEC-005 Full-Page Screenshot Element Highlighting | implemented | 2026-04-06 |
+| SPEC-007 | SPEC-007 Group Dropdown Consistency — Unified New Group Action | draft | 2026-04-06 |

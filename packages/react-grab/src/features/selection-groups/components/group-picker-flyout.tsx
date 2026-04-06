@@ -11,6 +11,8 @@ interface GroupPickerFlyoutProps {
   excludeGroupId?: string;
   onSelect: (groupId: string) => void;
   onClose: () => void;
+  /** If provided, renders a "New group..." inline input at the bottom. */
+  onAddGroup?: (name: string) => void;
 }
 
 export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
@@ -83,6 +85,25 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
           }}
         </For>
       </div>
+      <Show when={props.onAddGroup}>
+        <div class="border-t border-[#D9D9D9] px-2 py-1.5">
+          <div class="flex items-center gap-1.5">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/25 shrink-0"><path d="M12 5v14m-7-7h14"/></svg>
+            <input
+              data-react-grab-ignore-events
+              type="text"
+              placeholder="New group..."
+              class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/25 text-black"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                  props.onAddGroup?.(e.currentTarget.value.trim());
+                  e.currentTarget.value = "";
+                }
+              }}
+            />
+          </div>
+        </div>
+      </Show>
     </div>
   );
 };
