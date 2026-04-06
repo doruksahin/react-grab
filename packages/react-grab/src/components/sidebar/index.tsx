@@ -27,7 +27,6 @@ import {
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { ShadowRootContext } from "../../features/sidebar/shadow-context.js";
 import type { GetJiraTicketStatus200 } from "../../generated/sync-api.js";
-import { createJiraStatusPoller } from "../../features/sidebar/jira-status-poller.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -189,12 +188,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
       props.onJiraResolved?.(groupId);
     }
   }
-
-  createJiraStatusPoller({
-    groups,
-    syncWorkspace: () => props.syncWorkspace,
-    onStatusUpdate: handleStatusUpdate,
-  });
 
   // Shadow root: resolved reactively from the container element so that
   // the context value is updated after the ref callback fires on mount.
