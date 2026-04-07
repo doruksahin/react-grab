@@ -582,3 +582,7 @@ pnpm --filter react-grab lint
 - Auto-assigning new selections to the currently-active sidebar group.
 - Drag-and-drop between ungrouped section and groups.
 - Server-side schema updates beyond the serialize/deserialize `null` handling decided in Task 2.
+- **Pre-existing baseline issues (do NOT fix in this refactor):**
+  - `GroupedEntry.group` is typed as `SelectionGroup` (`features/sidebar/derive-status.ts`), but `components/sidebar/group-card.tsx` reads `jiraStatus` / `jiraAssignee` / `jiraReporter` / `jiraLabels` — fields that only exist on `SelectionGroupWithJira` (`features/sidebar/jira-types.ts`). This produces ~11 TS2339 errors that were masked until 2026-04-08 by upstream `nodenext` extension errors (TS2835/TS2834) on the same file's imports. Needs a product decision on whether `GroupedEntry` should always carry `SelectionGroupWithJira` or `GroupCard` should receive Jira data via a separate prop. Out of scope: lives in the sidebar pipeline, which Blocker 3 already declared out of scope for this refactor.
+  - 11 pre-existing oxlint errors (mostly `no-unused-vars` in `features/sync/transforms.ts` and similar). Captured in `/tmp/baseline-lint.txt` for the duration of this refactor; delta-clean rule applies.
+  - Execution rule: every commit must produce a typecheck/lint output identical (as a set) to `/tmp/baseline-typecheck.txt` and `/tmp/baseline-lint.txt`. Unit tests (`pnpm --filter react-grab test:unit -- --run`) must be fully green with zero baseline tolerance.
