@@ -19,7 +19,7 @@ import { CommentsDropdown } from "./comments-dropdown.js";
 import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
-import { ShadowRootContext } from "../features/sidebar/shadow-context.js";
+import { ShadowRootContext } from "../utils/shadow-context.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);

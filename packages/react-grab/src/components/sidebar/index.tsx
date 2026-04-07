@@ -25,7 +25,7 @@ import {
   type GroupedEntry,
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
-import { ShadowRootContext } from "../../features/sidebar/shadow-context.js";
+import { ShadowRootContext } from "../../utils/shadow-context.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];

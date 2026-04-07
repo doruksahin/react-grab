@@ -2,7 +2,7 @@ import { Select as SelectPrimitive } from "@kobalte/core/select";
 import type { Component, ComponentProps, JSX } from "solid-js";
 import { splitProps } from "solid-js";
 import { cn } from "../../utils/cn.js";
-import { useShadowMount } from "../../features/sidebar/shadow-context.js";
+import { useShadowMount } from "../../utils/shadow-context.js";
 
 // Re-export root unchanged
 const Select = SelectPrimitive;
