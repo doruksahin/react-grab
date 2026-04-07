@@ -1,6 +1,7 @@
 import { type Component, Show } from "solid-js";
 import type { FilterState } from "../../features/sidebar/filter-state.js";
 import { ALL_ATT_STATUSES } from "../../features/sidebar/status-colors.js";
+import { Button } from "../ui/button.js";
 import {
   Select,
   SelectContent,
@@ -124,12 +125,9 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
       </Show>
 
       <Show when={hasActiveFilter()}>
-        <button
-          class="text-[10px] text-white/50 hover:text-white/80 cursor-pointer whitespace-nowrap"
-          onClick={handleClear}
-        >
+        <Button variant="ghost" size="sm" class="text-[10px] text-white/50 hover:text-white/80 h-auto py-0.5 px-1.5 whitespace-nowrap" onClick={handleClear}>
           ✕ Clear
-        </button>
+        </Button>
       </Show>
     </div>
   );

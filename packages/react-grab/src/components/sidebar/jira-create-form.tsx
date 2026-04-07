@@ -44,6 +44,9 @@ interface JiraCreateFormReadyProps extends JiraCreateFormProps {
   priorities: Array<{ id: string; name: string }>;
 }
 
+const triggerClass = "w-full text-[12px] bg-white/10 border-white/10 text-white";
+const textareaClass = "w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10 resize-none";
+
 const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
   const projectKey = props.jiraProjectKey;
   const [issueType, setIssueType] = createSignal(DEFAULT_ISSUE_TYPE);
@@ -111,7 +114,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
             <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
           )}
         >
-          <SelectTrigger class="w-full text-[12px] bg-white/10 border-white/10 text-white" style={{ "pointer-events": "auto" }}>
+          <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
             <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
           </SelectTrigger>
           <SelectContent />
@@ -129,7 +132,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
             <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
           )}
         >
-          <SelectTrigger class="w-full text-[12px] bg-white/10 border-white/10 text-white" style={{ "pointer-events": "auto" }}>
+          <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
             <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
           </SelectTrigger>
           <SelectContent />
@@ -140,7 +143,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
       <div class="mb-3">
         <label class="block text-[11px] text-white/50 mb-1">Summary *</label>
         <textarea
-          class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10 resize-none"
+          class={textareaClass}
           style={{ "pointer-events": "auto" }}
           rows={2}
           value={summary()}
@@ -156,7 +159,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
           <span class="text-white/30">(markdown — converted to ADF on submit)</span>
         </label>
         <textarea
-          class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10 font-mono resize-none"
+          class={`${textareaClass} font-mono`}
           style={{ "pointer-events": "auto" }}
           rows={6}
           value={description()}
