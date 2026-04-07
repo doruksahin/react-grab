@@ -4,5 +4,4 @@ export {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-  TooltipPortal,
 } from "./ui/tooltip.js";

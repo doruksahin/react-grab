@@ -27,7 +27,7 @@ import { createSafePolygonTracker } from "../utils/safe-polygon.js";
 import { cn } from "../utils/cn.js";
 import { IconTrash } from "./icons/icon-trash.jsx";
 import { IconCheck } from "./icons/icon-check.jsx";
-import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "./tooltip.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip.js";
 import { createMenuHighlight } from "../utils/create-menu-highlight.js";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { createAnchoredDropdown } from "../utils/create-anchored-dropdown.js";
@@ -240,9 +240,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                   >
                     <IconTrash size={DROPDOWN_ICON_SIZE_PX} />
                   </TooltipTrigger>
-                  <TooltipPortal>
-                    <TooltipContent>Clear all</TooltipContent>
-                  </TooltipPortal>
+                  <TooltipContent>Clear all</TooltipContent>
                 </Tooltip>
                 <Tooltip open={activeHeaderTooltip() === "copy"} placement="top">
                   <TooltipTrigger
@@ -287,9 +285,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                       />
                     </Show>
                   </TooltipTrigger>
-                  <TooltipPortal>
-                    <TooltipContent>Copy all</TooltipContent>
-                  </TooltipPortal>
+                  <TooltipContent>Copy all</TooltipContent>
                 </Tooltip>
               </div>
             </Show>

@@ -52,7 +52,7 @@ import {
   freezePseudoStates,
   unfreezePseudoStates,
 } from "../../utils/freeze-pseudo-states.js";
-import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "../tooltip.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip.js";
 import { Kbd } from "../kbd.jsx";
 import {
   getButtonSpacingClass,
@@ -1142,11 +1142,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 )}
               />
             </TooltipTrigger>
-            <TooltipPortal>
-              <TooltipContent>
-                Select element <Kbd>{formatShortcut("C")}</Kbd>
-              </TooltipContent>
-            </TooltipPortal>
+            <TooltipContent>
+              Select element <Kbd>{formatShortcut("C")}</Kbd>
+            </TooltipContent>
           </Tooltip>
         }
         commentsButton={
@@ -1202,9 +1200,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 </Show>
               </span>
             </TooltipTrigger>
-            <TooltipPortal>
-              <TooltipContent>{commentsTooltipLabel()}</TooltipContent>
-            </TooltipPortal>
+            <TooltipContent>{commentsTooltipLabel()}</TooltipContent>
           </Tooltip>
         }
         copyAllButton={
@@ -1237,9 +1233,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             >
               <IconCopy size={14} class="text-[#B3B3B3] transition-colors" />
             </TooltipTrigger>
-            <TooltipPortal>
-              <TooltipContent>Copy all</TooltipContent>
-            </TooltipPortal>
+            <TooltipContent>Copy all</TooltipContent>
           </Tooltip>
         }
         toggleButton={
@@ -1280,9 +1274,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 />
               </div>
             </TooltipTrigger>
-            <TooltipPortal>
-              <TooltipContent>{props.enabled ? "Disable" : "Enable"}</TooltipContent>
-            </TooltipPortal>
+            <TooltipContent>{props.enabled ? "Disable" : "Enable"}</TooltipContent>
           </Tooltip>
         }
       />

@@ -13,7 +13,6 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectPortal,
   SelectTrigger,
   SelectValue,
 } from "../ui/select.js";
@@ -115,9 +114,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
           <SelectTrigger class="w-full text-[12px] bg-white/10 border-white/10 text-white" style={{ "pointer-events": "auto" }}>
             <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
           </SelectTrigger>
-          <SelectPortal>
-            <SelectContent />
-          </SelectPortal>
+          <SelectContent />
         </Select>
       </div>
 
@@ -135,9 +132,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
           <SelectTrigger class="w-full text-[12px] bg-white/10 border-white/10 text-white" style={{ "pointer-events": "auto" }}>
             <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
           </SelectTrigger>
-          <SelectPortal>
-            <SelectContent />
-          </SelectPortal>
+          <SelectContent />
         </Select>
       </div>
 

@@ -34,16 +34,18 @@ const SelectValue = SelectPrimitive.Value;
 const SelectContent: Component<ComponentProps<typeof SelectPrimitive.Content>> = (props) => {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
-    <SelectPrimitive.Content
-      class={cn(
-        "relative z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 data-[closed]:zoom-out-95 data-[expanded]:zoom-in-95",
-        local.class,
-      )}
-      {...rest}
-    >
-      <SelectPrimitive.Listbox class="p-1" />
-      {local.children}
-    </SelectPrimitive.Content>
+    <SelectPortal>
+      <SelectPrimitive.Content
+        class={cn(
+          "relative z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 data-[closed]:zoom-out-95 data-[expanded]:zoom-in-95",
+          local.class,
+        )}
+        {...rest}
+      >
+        <SelectPrimitive.Listbox class="p-1" />
+        {local.children}
+      </SelectPrimitive.Content>
+    </SelectPortal>
   );
 };
 

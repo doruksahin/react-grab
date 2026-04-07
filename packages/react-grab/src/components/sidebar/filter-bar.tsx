@@ -5,7 +5,6 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectPortal,
   SelectTrigger,
   SelectValue,
 } from "../ui/select.js";
@@ -65,9 +64,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
             {(state) => state.selectedOption() || "All Statuses"}
           </SelectValue>
         </SelectTrigger>
-        <SelectPortal>
-          <SelectContent />
-        </SelectPortal>
+        <SelectContent />
       </Select>
 
       <Select
@@ -85,9 +82,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
             {(state) => state.selectedOption() || "All Assignees"}
           </SelectValue>
         </SelectTrigger>
-        <SelectPortal>
-          <SelectContent />
-        </SelectPortal>
+        <SelectContent />
       </Select>
 
       <Select
@@ -105,9 +100,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
             {(state) => state.selectedOption() || "All Reporters"}
           </SelectValue>
         </SelectTrigger>
-        <SelectPortal>
-          <SelectContent />
-        </SelectPortal>
+        <SelectContent />
       </Select>
 
       <Show when={props.labels.length > 0}>
@@ -126,9 +119,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
               {(state) => state.selectedOption() || "All Labels"}
             </SelectValue>
           </SelectTrigger>
-          <SelectPortal>
-            <SelectContent />
-          </SelectPortal>
+          <SelectContent />
         </Select>
       </Show>
 
