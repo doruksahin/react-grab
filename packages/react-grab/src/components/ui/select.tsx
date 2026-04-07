@@ -2,18 +2,13 @@ import { Select as SelectPrimitive } from "@kobalte/core/select";
 import type { Component, ComponentProps, JSX } from "solid-js";
 import { splitProps } from "solid-js";
 import { cn } from "../../utils/cn.js";
-import { useShadowRoot } from "../../features/sidebar/shadow-context.js";
+import { useShadowMount } from "../../features/sidebar/shadow-context.js";
 
 // Re-export root unchanged
 const Select = SelectPrimitive;
 
-// Portal — auto-mounts inside shadow DOM via context.
-// useShadowRoot() returns ShadowRoot | null — NOT a signal, do not invoke it.
-// Spread props BEFORE mount so context always wins over any caller-supplied mount.
-// Cast to HTMLElement if TypeScript rejects ShadowRoot for the mount prop type.
 const SelectPortal: Component<ComponentProps<typeof SelectPrimitive.Portal>> = (props) => {
-  const shadowRoot = useShadowRoot(); // ShadowRoot | null
-  return <SelectPrimitive.Portal {...props} mount={(shadowRoot ?? document.body) as HTMLElement} />;
+  return <SelectPrimitive.Portal {...props} mount={useShadowMount()} />;
 };
 
 const SelectTrigger: Component<ComponentProps<typeof SelectPrimitive.Trigger>> = (props) => {

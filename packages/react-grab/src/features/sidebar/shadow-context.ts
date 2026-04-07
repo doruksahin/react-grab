@@ -13,3 +13,14 @@ export const ShadowRootContext = createContext<ShadowRoot | null>(null);
 export function useShadowRoot(): ShadowRoot | null {
   return useContext(ShadowRootContext);
 }
+
+/**
+ * Returns the shadow root (or document.body as fallback) cast to HTMLElement,
+ * ready to pass as the `mount` prop to any Kobalte Portal component.
+ *
+ * Use this in every *Portal wrapper inside src/components/ui/ instead of
+ * copy-pasting the useShadowRoot() + cast pattern.
+ */
+export function useShadowMount(): HTMLElement {
+  return (useShadowRoot() ?? document.body) as HTMLElement;
+}

@@ -2,19 +2,14 @@ import { Dialog as DialogPrimitive } from "@kobalte/core/dialog";
 import type { Component, ComponentProps } from "solid-js";
 import { splitProps } from "solid-js";
 import { cn } from "../../utils/cn.js";
-import { useShadowRoot } from "../../features/sidebar/shadow-context.js";
+import { useShadowMount } from "../../features/sidebar/shadow-context.js";
 
 // Re-export root and trigger unchanged
 const Dialog = DialogPrimitive;
 const DialogTrigger = DialogPrimitive.Trigger;
 
-// Portal — auto-mounts inside shadow DOM via context.
-// useShadowRoot() returns ShadowRoot | null — NOT a signal. Do not call it as a function.
-// Spread props BEFORE mount so context always wins over any caller-supplied mount prop.
 const DialogPortal: Component<ComponentProps<typeof DialogPrimitive.Portal>> = (props) => {
-  const shadowRoot = useShadowRoot(); // ShadowRoot | null
-  // TypeScript may type `mount` as HTMLElement — cast if tsc rejects ShadowRoot directly.
-  return <DialogPrimitive.Portal {...props} mount={(shadowRoot ?? document.body) as HTMLElement} />;
+  return <DialogPrimitive.Portal {...props} mount={useShadowMount()} />;
 };
 
 const DialogOverlay: Component<ComponentProps<typeof DialogPrimitive.Overlay>> = (props) => {

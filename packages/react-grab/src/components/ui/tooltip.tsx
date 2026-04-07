@@ -2,18 +2,14 @@ import { Tooltip as TooltipPrimitive } from "@kobalte/core/tooltip";
 import type { Component, ComponentProps } from "solid-js";
 import { splitProps } from "solid-js";
 import { cn } from "../../utils/cn.js";
-import { useShadowRoot } from "../../features/sidebar/shadow-context.js";
+import { useShadowMount } from "../../features/sidebar/shadow-context.js";
 
 // Re-export root and trigger unchanged
 const Tooltip = TooltipPrimitive;
 const TooltipTrigger = TooltipPrimitive.Trigger;
 
-// Portal — auto-mounts inside shadow DOM via context.
-// useShadowRoot() returns ShadowRoot | null — NOT a signal, do not invoke it.
-// Spread props BEFORE mount so context always wins over any caller-supplied mount.
 const TooltipPortal: Component<ComponentProps<typeof TooltipPrimitive.Portal>> = (props) => {
-  const shadowRoot = useShadowRoot(); // ShadowRoot | null
-  return <TooltipPrimitive.Portal {...props} mount={(shadowRoot ?? document.body) as HTMLElement} />;
+  return <TooltipPrimitive.Portal {...props} mount={useShadowMount()} />;
 };
 
 const TooltipContent: Component<ComponentProps<typeof TooltipPrimitive.Content>> = (props) => {
