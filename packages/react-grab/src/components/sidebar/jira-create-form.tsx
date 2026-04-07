@@ -10,6 +10,14 @@ import {
 } from "solid-js";
 import { Button } from "../ui/button.js";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectPortal,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select.js";
+import {
   listJiraIssueTypes,
   listJiraPriorities,
   createJiraTicket,
@@ -93,39 +101,44 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
   return (
     <form data-react-grab-jira-form onSubmit={handleSubmit} style={{ "pointer-events": "auto" }}>
-      <h2 class="text-[16px] font-semibold text-white mb-4">
-        Create JIRA Ticket
-      </h2>
-
       {/* Issue type — pre-selected to "Task" */}
       <div class="mb-3">
         <label class="block text-[11px] text-white/50 mb-1">Work Type *</label>
-        <select
-          class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10"
-          style={{ "pointer-events": "auto" }}
+        <Select
           value={issueType()}
-          onChange={(e) => setIssueType(e.currentTarget.value)}
-          required
+          onChange={(value: string | null) => value && setIssueType(value)}
+          options={props.issueTypes.map((t) => t.name)}
+          itemComponent={(itemProps) => (
+            <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
+          )}
         >
-          <For each={props.issueTypes}>
-            {(t) => <option value={t.name}>{t.name}</option>}
-          </For>
-        </select>
+          <SelectTrigger class="w-full text-[12px] bg-white/10 border-white/10 text-white" style={{ "pointer-events": "auto" }}>
+            <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectContent />
+          </SelectPortal>
+        </Select>
       </div>
 
       {/* Priority — pre-selected to "Medium" */}
       <div class="mb-3">
         <label class="block text-[11px] text-white/50 mb-1">Priority</label>
-        <select
-          class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10"
-          style={{ "pointer-events": "auto" }}
+        <Select
           value={priority()}
-          onChange={(e) => setPriority(e.currentTarget.value)}
+          onChange={(value: string | null) => value && setPriority(value)}
+          options={props.priorities.map((p) => p.name)}
+          itemComponent={(itemProps) => (
+            <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
+          )}
         >
-          <For each={props.priorities}>
-            {(p) => <option value={p.name}>{p.name}</option>}
-          </For>
-        </select>
+          <SelectTrigger class="w-full text-[12px] bg-white/10 border-white/10 text-white" style={{ "pointer-events": "auto" }}>
+            <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectContent />
+          </SelectPortal>
+        </Select>
       </div>
 
       {/* Summary */}
