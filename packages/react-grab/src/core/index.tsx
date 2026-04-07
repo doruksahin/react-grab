@@ -946,7 +946,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       );
 
       const updatedCommentItems = addCommentItem({
-        groupId: selectionGroups.activeGroupId(),
+        groupId: null,
         content,
         elementName: elementName ?? "element",
         tagName: tagName ?? "div",
@@ -3793,7 +3793,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             createdAt: 0,
             element: previewElement,
             mouseX: bounds.x + bounds.width / 2,
-            groupId: item.groupId,
+            groupId: item.groupId ?? undefined,
           });
         }
 

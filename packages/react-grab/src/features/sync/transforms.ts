@@ -5,12 +5,30 @@ const REVEALED_COMMENTS_KEY = "react-grab-revealed-comments";
 const REVEALED_GROUPS_KEY = "react-grab-revealed-groups";
 
 /**
- * Strip `revealed` from comments before sending to server.
+ * Wire-format translation for the optional-group-membership refactor.
+ *
+ * Client `CommentItem.groupId` is `string | null` (`null` = ungrouped).
+ * Server schema (`features/sync/schemas.ts`) is `z.string()` — required,
+ * non-null. Decision: client-side override + translate at this boundary.
+ *   - On write: `null` becomes `""`.
+ *   - On read:  `""` (and any falsy value) becomes `null`.
+ * Real group IDs pass through unchanged.
+ */
+const groupIdToWire = (id: string | null): string => (id === null ? "" : id);
+const groupIdFromWire = (id: string | null): string | null =>
+  id === "" || id === null ? null : id;
+
+/**
+ * Strip `revealed` from comments and translate `groupId` to the wire format
+ * before sending to server.
  */
 export const stripRevealedFromComments = (
   items: CommentItem[],
 ): Omit<CommentItem, "revealed">[] =>
-  items.map(({ revealed, ...rest }) => rest);
+  items.map(({ revealed, ...rest }) => ({
+    ...rest,
+    groupId: groupIdToWire(rest.groupId),
+  })) as Omit<CommentItem, "revealed">[];
 
 /**
  * Strip `revealed` from groups before sending to server.
@@ -59,6 +77,7 @@ export const mergeRevealedIntoComments = (
   }
   return serverItems.map((item) => ({
     ...item,
+    groupId: groupIdFromWire(item.groupId),
     revealed: revealedMap[item.id] ?? false,
   }));
 };

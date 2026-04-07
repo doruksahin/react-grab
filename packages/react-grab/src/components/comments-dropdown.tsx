@@ -431,7 +431,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                         <Show when={openMoveId() === item.id}>
                           <GroupPickerFlyout
                             groups={props.groups ?? []}
-                            excludeGroupId={item.groupId}
+                            excludeGroupId={item.groupId ?? undefined}
                             onSelect={(groupId) => {
                               props.onMoveItem?.(item.id, groupId);
                               setOpenMoveId(null);

@@ -4,7 +4,6 @@ import type {
   SelectionGroupsDeps,
   SelectionGroup,
 } from "./types.js";
-import { DEFAULT_GROUP_ID, createDefaultGroup } from "./types.js";
 import {
   loadGroups,
   addGroup as addGroupToStorage,
@@ -12,20 +11,16 @@ import {
   removeGroup as removeGroupFromStorage,
   persistGroups as persistGroupsToStorage,
 } from "./store/index.js";
-import { removeCommentsByGroup } from "./business/group-operations.js";
+import {
+  assignSelection,
+  unassignSelectionsInGroup,
+} from "./business/selection-assignment.js";
 
 export function createSelectionGroups(
   deps: SelectionGroupsDeps,
 ): SelectionGroupsAPI {
-  const [rawGroups, setRawGroups] = createSignal(loadGroups());
-  const groups = (): SelectionGroup[] => {
-    const raw = rawGroups();
-    return raw.some((g) => g.id === DEFAULT_GROUP_ID)
-      ? raw
-      : [createDefaultGroup(), ...raw];
-  };
-  const setGroups = setRawGroups;
-  const [activeGroupId, setActiveGroupId] = createSignal<string>(DEFAULT_GROUP_ID);
+  const [groups, setGroups] = createSignal(loadGroups());
+  const [activeGroupId, setActiveGroupId] = createSignal<string | null>(null);
 
   const persistGroups = (nextGroups: SelectionGroup[]) => {
     const persisted = persistGroupsToStorage(nextGroups);
@@ -44,8 +39,8 @@ export function createSelectionGroups(
   };
 
   const handleDeleteGroup = (groupId: string) => {
-    // Cascade: remove all comments in this group first
-    const remainingComments = removeCommentsByGroup(
+    // Demote selections in this group to ungrouped (do NOT delete them).
+    const remainingComments = unassignSelectionsInGroup(
       deps.commentItems(),
       groupId,
     );
@@ -53,14 +48,12 @@ export function createSelectionGroups(
     deps.setCommentItems(remainingComments);
 
     const updated = removeGroupFromStorage(groupId);
-    if (activeGroupId() === groupId) setActiveGroupId(DEFAULT_GROUP_ID);
+    if (activeGroupId() === groupId) setActiveGroupId(null);
     setGroups(updated);
   };
 
-  const handleMoveItem = (itemId: string, groupId: string) => {
-    const updated = deps.commentItems().map((i) =>
-      i.id === itemId ? { ...i, groupId } : i,
-    );
+  const handleMoveItem = (itemId: string, groupId: string | null) => {
+    const updated = assignSelection(deps.commentItems(), itemId, groupId);
     deps.persistCommentItems(updated);
     deps.setCommentItems(updated);
   };
@@ -78,7 +71,6 @@ export function createSelectionGroups(
   };
 }
 
-export { DEFAULT_GROUP_ID, DEFAULT_GROUP_NAME } from "./types.js";
 export type {
   SelectionGroup,
   SelectionGroupsAPI,

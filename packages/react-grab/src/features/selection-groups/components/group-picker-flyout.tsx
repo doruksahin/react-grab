@@ -6,10 +6,10 @@ import { registerOverlayDismiss } from "../../../utils/register-overlay-dismiss.
 interface GroupPickerFlyoutProps {
   groups: SelectionGroup[];
   /** If set, renders a checkmark on this group (label picker context). */
-  activeGroupId?: string;
+  activeGroupId?: string | null;
   /** If set, this group is hidden from the list (move context). */
   excludeGroupId?: string;
-  onSelect: (groupId: string) => void;
+  onSelect: (groupId: string | null) => void;
   onClose: () => void;
   /** If provided, renders a "New group..." inline input at the bottom. */
   onAddGroup?: (name: string) => void;
