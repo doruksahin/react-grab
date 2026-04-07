@@ -768,10 +768,10 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                         <For each={props.jiraComments}>
                           {(c) => (
                             <div class="text-[11px] leading-tight text-popover-foreground">
-                              <span class="font-medium">{c.author}: </span>
-                              <span class="text-muted-foreground wrap-break-word">
+                              <div class="font-medium">{c.author}</div>
+                              <div class="text-muted-foreground whitespace-pre-wrap wrap-break-word">
                                 {c.body}
-                              </span>
+                              </div>
                             </div>
                           )}
                         </For>

@@ -504,6 +504,9 @@ importers:
       '@hono/zod-openapi':
         specifier: ^1.2.4
         version: 1.2.4(hono@4.11.7)(zod@4.3.6)
+      adf-to-markdown:
+        specifier: ^1.0.1
+        version: 1.0.1
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@4.20260331.1)(@opentelemetry/api@1.9.0)
@@ -4786,6 +4789,9 @@ packages:
     resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  adf-to-markdown@1.0.1:
+    resolution: {integrity: sha512-a+6aJnwBoTLXbU91HCj8jOeuc6Dh4eI8y3Qz/xD66MRnrf0DF8hAf8fZ3OJGhaHq9CI3em12XFwhChZ1nNXMxA==}
 
   adm-zip@0.5.16:
     resolution: {integrity: sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ==}
@@ -13702,6 +13708,8 @@ snapshots:
   acorn@8.15.0: {}
 
   acorn@8.16.0: {}
+
+  adf-to-markdown@1.0.1: {}
 
   adm-zip@0.5.16: {}
 

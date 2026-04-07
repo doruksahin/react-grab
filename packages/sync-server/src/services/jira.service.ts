@@ -1,5 +1,6 @@
 import { Version3Client } from "jira.js";
 import { markdownToAdf } from "marklassian";
+import { convertADFToMarkdown, type ADFDocument } from "adf-to-markdown";
 import type { SyncRepository, ScreenshotStore } from "../repositories/types.js";
 
 const APP_NAME = "UI Ticket Manager";
@@ -21,20 +22,6 @@ interface CreateTicketParams {
 interface CreateTicketResult {
   jiraTicketId: string;
   jiraUrl: string;
-}
-
-type AdfNode = { type: string; text?: string; content?: AdfNode[] };
-
-export function adfToPlainText(node: AdfNode | null | undefined): string {
-  if (!node) return "";
-  if (node.type === "text" && typeof node.text === "string") return node.text;
-  if (!node.content) return "";
-  const sep = node.type === "paragraph" || node.type === "doc" ? "\n" : "";
-  return node.content
-    .map((child) => adfToPlainText(child))
-    .filter(Boolean)
-    .join(sep)
-    .trim();
 }
 
 export class JiraService {
@@ -185,7 +172,7 @@ export class JiraService {
       ((issue.fields as { comment?: { comments?: Array<{
         id: string;
         author?: { displayName?: string; avatarUrls?: Record<string, string> };
-        body: AdfNode | string;
+        body: ADFDocument | string;
         created: string;
       }> } }).comment?.comments) ?? [];
 
@@ -193,7 +180,10 @@ export class JiraService {
       id: c.id,
       author: c.author?.displayName ?? "Unknown",
       authorAvatar: c.author?.avatarUrls?.["48x48"] ?? null,
-      body: typeof c.body === "string" ? c.body : adfToPlainText(c.body),
+      body:
+        typeof c.body === "string"
+          ? c.body
+          : convertADFToMarkdown(c.body).trim(),
       createdAt: c.created,
     }));
 
