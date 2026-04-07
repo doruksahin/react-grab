@@ -8,13 +8,21 @@ import {
   Show,
   Switch,
 } from "solid-js";
+import { Button } from "../ui/button.js";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select.js";
 import {
   listJiraIssueTypes,
   listJiraPriorities,
   createJiraTicket,
 } from "../../generated/sync-api.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
-import type { CommentItem } from "../../types.js";
+import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import { defaultSummary, defaultDescription } from "../../features/sidebar/jira-defaults.js";
 
 const DEFAULT_ISSUE_TYPE = "Task";
@@ -27,7 +35,7 @@ interface JiraCreateFormProps {
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
   jiraProjectKey: string;
-  onSuccess: (groupId: string, ticketId: string, ticketUrl: string) => void;
+  onSuccess: TicketCreatedCallback;
   onClose: () => void;
 }
 
@@ -35,6 +43,9 @@ interface JiraCreateFormReadyProps extends JiraCreateFormProps {
   issueTypes: Array<{ id: string; name: string }>;
   priorities: Array<{ id: string; name: string }>;
 }
+
+const triggerClass = "w-full text-[12px] bg-muted border-border text-foreground";
+const textareaClass = "w-full bg-muted text-foreground text-[12px] rounded px-2 py-1.5 border border-border resize-none";
 
 const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
   const projectKey = props.jiraProjectKey;
@@ -92,46 +103,47 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
   return (
     <form data-react-grab-jira-form onSubmit={handleSubmit} style={{ "pointer-events": "auto" }}>
-      <h2 class="text-[16px] font-semibold text-white mb-4">
-        Create JIRA Ticket
-      </h2>
-
       {/* Issue type — pre-selected to "Task" */}
       <div class="mb-3">
-        <label class="block text-[11px] text-white/50 mb-1">Work Type *</label>
-        <select
-          class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10"
-          style={{ "pointer-events": "auto" }}
+        <label class="block text-[11px] text-muted-foreground mb-1">Work Type *</label>
+        <Select
           value={issueType()}
-          onChange={(e) => setIssueType(e.currentTarget.value)}
-          required
+          onChange={(value: string | null) => value && setIssueType(value)}
+          options={props.issueTypes.map((t) => t.name)}
+          itemComponent={(itemProps) => (
+            <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
+          )}
         >
-          <For each={props.issueTypes}>
-            {(t) => <option value={t.name}>{t.name}</option>}
-          </For>
-        </select>
+          <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
+            <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
+          </SelectTrigger>
+          <SelectContent />
+        </Select>
       </div>
 
       {/* Priority — pre-selected to "Medium" */}
       <div class="mb-3">
-        <label class="block text-[11px] text-white/50 mb-1">Priority</label>
-        <select
-          class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10"
-          style={{ "pointer-events": "auto" }}
+        <label class="block text-[11px] text-muted-foreground mb-1">Priority</label>
+        <Select
           value={priority()}
-          onChange={(e) => setPriority(e.currentTarget.value)}
+          onChange={(value: string | null) => value && setPriority(value)}
+          options={props.priorities.map((p) => p.name)}
+          itemComponent={(itemProps) => (
+            <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
+          )}
         >
-          <For each={props.priorities}>
-            {(p) => <option value={p.name}>{p.name}</option>}
-          </For>
-        </select>
+          <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
+            <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
+          </SelectTrigger>
+          <SelectContent />
+        </Select>
       </div>
 
       {/* Summary */}
       <div class="mb-3">
-        <label class="block text-[11px] text-white/50 mb-1">Summary *</label>
+        <label class="block text-[11px] text-muted-foreground mb-1">Summary *</label>
         <textarea
-          class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10 resize-none"
+          class={textareaClass}
           style={{ "pointer-events": "auto" }}
           rows={2}
           value={summary()}
@@ -142,12 +154,12 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
       {/* Description */}
       <div class="mb-3">
-        <label class="block text-[11px] text-white/50 mb-1">
+        <label class="block text-[11px] text-muted-foreground mb-1">
           Description{" "}
-          <span class="text-white/30">(markdown — converted to ADF on submit)</span>
+          <span class="text-muted-foreground">(markdown — converted to ADF on submit)</span>
         </label>
         <textarea
-          class="w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10 font-mono resize-none"
+          class={`${textareaClass} font-mono`}
           style={{ "pointer-events": "auto" }}
           rows={6}
           value={description()}
@@ -157,16 +169,16 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
       {/* Attachments (informational only — server attaches screenshots) */}
       <div class="mb-4">
-        <p class="text-[11px] text-white/50 mb-1">Attachments</p>
+        <p class="text-[11px] text-muted-foreground mb-1">Attachments</p>
         <Show
           when={screenshotList().length > 0}
           fallback={
-            <p class="text-[10px] text-white/30 italic">No screenshots</p>
+            <p class="text-[10px] text-muted-foreground italic">No screenshots</p>
           }
         >
           <For each={screenshotList()}>
             {(name) => (
-              <div class="text-[10px] text-white/40 font-mono">{name}</div>
+              <div class="text-[10px] text-muted-foreground font-mono">{name}</div>
             )}
           </For>
         </Show>
@@ -181,22 +193,23 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
       {/* Actions */}
       <div class="flex gap-2 justify-end" style={{ "pointer-events": "auto" }}>
-        <button
+        <Button
           type="button"
-          class="px-3 py-1.5 text-[12px] text-white/60 hover:text-white rounded hover:bg-white/10 transition-colors"
+          variant="ghost"
+          size="sm"
           style={{ "pointer-events": "auto" }}
           onClick={props.onClose}
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
+          size="sm"
           disabled={submitting() || !issueType()}
-          class="px-3 py-1.5 text-[12px] bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
           style={{ "pointer-events": "auto" }}
         >
           {submitting() ? "Creating…" : "Create Ticket"}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -235,7 +248,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
   return (
     <Switch>
       <Match when={issueTypes.loading || priorities.loading}>
-        <div class="text-white/40 text-[12px]">Loading JIRA data…</div>
+        <div class="text-muted-foreground text-[12px]">Loading JIRA data…</div>
       </Match>
       <Match when={validation()?.ok === false}>
         <div class="p-3 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300">

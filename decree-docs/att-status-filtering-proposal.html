@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATT Status Visualization & Filtering — Full Proposal</title>
+<style>
+  :root {
+    --pink: #b21c8e;
+    --slate: #94a3b8;
+    --blue: #3b82f6;
+    --purple: #a78bfa;
+    --amber: #f59e0b;
+    --emerald: #10b981;
+    --cyan: #06b6d4;
+    --violet: #8b5cf6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --gray: #6b7280;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e5e5e5; height: 100vh; display: flex; overflow: hidden; }
+
+  /* ── Host page mock ── */
+  .host-page {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+    position: relative;
+  }
+  .host-page h1 { font-size: 22px; color: #fff; margin-bottom: 6px; }
+  .host-page p { font-size: 13px; color: #666; margin-bottom: 24px; }
+  .host-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .host-card {
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 20px;
+    height: 140px;
+    position: relative;
+  }
+  .host-card h3 { font-size: 14px; color: #fff; margin-bottom: 4px; }
+  .host-card p { font-size: 11px; color: #888; margin-bottom: 0; }
+
+  /* Selection overlays on host page */
+  .sel-overlay {
+    position: absolute;
+    border: 2px solid;
+    border-radius: 4px;
+    pointer-events: none;
+    transition: opacity 0.3s, border-color 0.3s, box-shadow 0.3s;
+  }
+  .sel-overlay.hidden { opacity: 0; }
+  .sel-overlay.glow {
+    box-shadow: 0 0 12px var(--glow-color);
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 390px;
+    height: 100vh;
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+  }
+  .sb-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .sb-header h2 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .sb-header .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .sb-header-actions { display: flex; gap: 4px; }
+  .sb-btn {
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    border: none; background: transparent; color: rgba(255,255,255,0.4);
+    border-radius: 6px; cursor: pointer; font-size: 14px;
+  }
+  .sb-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .sb-btn.active { background: rgba(178,28,142,0.15); color: var(--pink); }
+
+  /* Stats */
+  .stats { display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .stat { flex: 1; text-align: center; padding: 8px 4px; }
+  .stat .num { font-size: 16px; font-weight: 700; color: #fff; }
+  .stat .lbl { font-size: 9px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex; gap: 6px; padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    align-items: center;
+  }
+  .filter-select {
+    flex: 1; background: rgba(255,255,255,0.08); color: #e5e5e5;
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+    padding: 4px 6px; font-size: 10px; cursor: pointer;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 6px center;
+    padding-right: 18px;
+  }
+  .filter-select:focus { outline: 1px solid var(--pink); }
+  .filter-clear {
+    background: none; border: none; color: rgba(255,255,255,0.3);
+    font-size: 14px; cursor: pointer; padding: 2px 4px; border-radius: 4px;
+    display: none;
+  }
+  .filter-clear.visible { display: block; }
+  .filter-clear:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+  /* Filter chips */
+  .filter-chips {
+    display: none; gap: 4px; padding: 6px 12px; flex-wrap: wrap;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .filter-chips.visible { display: flex; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 500;
+    background: rgba(255,255,255,0.08); color: #e5e5e5;
+  }
+  .chip .chip-x {
+    cursor: pointer; color: rgba(255,255,255,0.4); font-size: 12px;
+    margin-left: 2px;
+  }
+  .chip .chip-x:hover { color: #fff; }
+  .chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* Group list */
+  .group-list { flex: 1; overflow-y: auto; padding: 6px 8px; }
+  .group-card {
+    background: #232323; border-radius: 8px; padding: 10px 12px;
+    margin-bottom: 4px; border-left: 3px solid transparent;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .group-card:hover { background: #2a2a2a; }
+  .group-card.hidden { display: none; }
+  .gc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .gc-name { font-weight: 600; font-size: 12px; }
+  .badge {
+    font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .badge .dot-sm { width: 5px; height: 5px; border-radius: 50%; }
+  .gc-meta { font-size: 10px; color: rgba(255,255,255,0.35); display: flex; gap: 8px; align-items: center; }
+  .gc-assignee { display: flex; align-items: center; gap: 3px; }
+
+  /* Info overlay */
+  .info-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(4px); z-index: 20;
+    display: none; flex-direction: column; padding: 14px;
+  }
+  .info-overlay.visible { display: flex; }
+  .info-panel {
+    background: #1e1e2e; border-radius: 12px; padding: 14px;
+    border: 1px solid rgba(255,255,255,0.1); flex: 1; overflow-y: auto;
+  }
+  .info-panel h3 { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 10px; }
+  .info-section-title {
+    font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.3);
+    text-transform: uppercase; letter-spacing: 0.5px; margin: 10px 0 6px;
+    padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .info-section-title:first-of-type { border-top: none; margin-top: 2px; }
+  .info-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  .info-swatch {
+    width: 20px; height: 20px; border-radius: 5px; border: 2px solid;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .info-swatch-inner { width: 6px; height: 6px; border-radius: 50%; }
+  .info-label { font-size: 11px; font-weight: 500; color: #fff; flex: 1; }
+  .info-desc { font-size: 9px; color: rgba(255,255,255,0.35); text-align: right; }
+  .info-flow {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 3px;
+    padding: 8px; background: rgba(255,255,255,0.03); border-radius: 6px; margin-top: 6px;
+  }
+  .flow-chip {
+    display: flex; align-items: center; gap: 3px;
+    padding: 2px 6px; border-radius: 3px; font-size: 8px; font-weight: 600;
+  }
+  .flow-arrow { color: rgba(255,255,255,0.15); font-size: 9px; }
+  .close-info {
+    margin-top: 8px; width: 100%; padding: 8px; border: none; border-radius: 8px;
+    background: rgba(255,255,255,0.1); color: #fff; font-size: 11px; cursor: pointer;
+  }
+  .close-info:hover { background: rgba(255,255,255,0.15); }
+
+  /* Step nav */
+  .step-nav {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-60%);
+    display: flex; gap: 6px; z-index: 30;
+    background: #1a1a1a; padding: 6px; border-radius: 10px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  .step-btn {
+    padding: 6px 14px; border-radius: 6px; border: none;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+  }
+  .step-btn.active { background: var(--pink); color: #fff; }
+  .step-btn:not(.active) { background: #333; color: #aaa; }
+  .step-btn:not(.active):hover { background: #444; color: #fff; }
+
+  .step-label {
+    position: fixed; bottom: 52px; left: 50%; transform: translateX(-60%);
+    background: rgba(26,26,26,0.95); border: 1px solid #333;
+    padding: 6px 14px; border-radius: 8px; font-size: 11px; color: #999;
+    z-index: 30; text-align: center; max-width: 500px;
+  }
+  .step-label strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- Host page with selection overlays -->
+<div class="host-page">
+  <h1>AdCreative Dashboard</h1>
+  <p>Selection overlays change color based on JIRA status. Filtering hides non-matching selections from the page.</p>
+  <div class="host-grid">
+    <div class="host-card" id="hc1">
+      <h3>Creative Suite</h3><p>Hero section component</p>
+      <div class="sel-overlay" id="ov1" data-group="g1" style="inset: 8px; border-color: var(--blue); --glow-color: var(--blue);"></div>
+    </div>
+    <div class="host-card" id="hc2">
+      <h3>Photoshoot</h3><p>Feature card title</p>
+      <div class="sel-overlay" id="ov2" data-group="g2" style="inset: 8px; border-color: var(--purple); --glow-color: var(--purple);"></div>
+    </div>
+    <div class="host-card" id="hc3">
+      <h3>UGC Creator</h3><p>Preview section</p>
+      <div class="sel-overlay" id="ov3" data-group="g3" style="inset: 8px; border-color: var(--amber); --glow-color: var(--amber);"></div>
+    </div>
+    <div class="host-card" id="hc4">
+      <h3>Ad Generator</h3><p>Submit button</p>
+      <div class="sel-overlay" id="ov4" data-group="g4" style="inset: 8px; border-color: var(--pink); --glow-color: var(--pink);"></div>
+    </div>
+    <div class="host-card" id="hc5">
+      <h3>Analytics</h3><p>Chart component</p>
+      <div class="sel-overlay" id="ov5" data-group="g5" style="inset: 8px; border-color: var(--green); --glow-color: var(--green);"></div>
+    </div>
+    <div class="host-card" id="hc6">
+      <h3>Settings</h3><p>Nav links</p>
+      <div class="sel-overlay" id="ov6" data-group="g6" style="inset: 8px; border-color: var(--red); --glow-color: var(--red);"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar" style="position: relative;">
+  <div class="sb-header">
+    <h2><span class="dot"></span> react-grab</h2>
+    <div class="sb-header-actions">
+      <button class="sb-btn" id="infoBtn" onclick="toggleInfo()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      </button>
+      <button class="sb-btn">&times;</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="num" id="statGroups">6</div><div class="lbl">Groups</div></div>
+    <div class="stat"><div class="num">14</div><div class="lbl">Items</div></div>
+    <div class="stat"><div class="num" id="statNoTask">1</div><div class="lbl">No Task</div></div>
+    <div class="stat"><div class="num" id="statTicketed">5</div><div class="lbl">Ticketed</div></div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+      <option value="">All Statuses</option>
+      <option value="No Task">No Task</option>
+      <option value="To Do">To Do</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Code Review">Code Review</option>
+      <option value="Test">Test</option>
+      <option value="Test Passed">Test Passed</option>
+      <option value="UAT">UAT</option>
+      <option value="In Preprod">In Preprod</option>
+      <option value="In Production">In Production</option>
+      <option value="Won't Do">Won't Do</option>
+      <option value="Done">Done</option>
+    </select>
+    <select class="filter-select" id="filterAssignee" onchange="applyFilters()">
+      <option value="">All Assignees</option>
+      <option value="Alice">Alice</option>
+      <option value="Bob">Bob</option>
+      <option value="Charlie">Charlie</option>
+    </select>
+    <select class="filter-select" id="filterReporter" onchange="applyFilters()">
+      <option value="">All Reporters</option>
+      <option value="Doruk">Doruk</option>
+      <option value="PM Lead">PM Lead</option>
+    </select>
+    <button class="filter-clear" id="clearBtn" onclick="clearFilters()">✕</button>
+  </div>
+
+  <!-- Filter chips -->
+  <div class="filter-chips" id="filterChips"></div>
+
+  <!-- Group list -->
+  <div class="group-list" id="groupList">
+    <!-- Groups are rendered by JS -->
+  </div>
+
+  <!-- Info overlay -->
+  <div class="info-overlay" id="infoOverlay">
+    <div class="info-panel">
+      <h3>Status Guide — ATT Board</h3>
+
+      <div class="info-section-title">Not Ticketed</div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:var(--pink);background:rgba(178,28,142,0.15)"><div class="info-swatch-inner" style="background:var(--pink)"></div></div>
+        <span class="info-label">No Task</span><span class="info-desc">No JIRA ticket created</span>
+      </div>
+
+      <div class="info-section-title">Ticketed — JIRA Status</div>
+      <div class="info-row"><div class="info-swatch" style="border-color:var(--slate);background:rgba(148,163,184,0.15)"><div class="info-swatch-inner" style="background:var(--slate)"></div></div><span class="info-label">To Do</span><span class="info-desc">Not started</span></div>
+      <div class="info-row"><div class="info-swatch" style="border-color:var(--blue);background:rgba(59,130,246,0.15)"><div class="info-swatch-inner" style="background:var(--blue)"></div></div><span class="info-label">In Progress</span><span class="info-desc">Being worked on</span></div>
+      <div class="info-row"><div class="info-swatch" style="border-color:var(--purple);background:rgba(167,139,250,0.15)"><div class="info-swatch-inner" style="background:var(--purple)"></div></div><span class="info-label">Code Review</span><span class="info-desc">PR awaiting review</span></div>
+      <div class="info-row"><div class="info-swatch" style="border-color:var(--amber);background:rgba(245,158,11,0.15)"><div class="info-swatch-inner" style="background:var(--amber)"></div></div><span class="info-label">Test</span><span class="info-desc">In QA testing</span></div>
+      <div class="info-row"><div class="info-swatch" style="border-color:var(--emerald);background:rgba(16,185,129,0.15)"><div class="info-swatch-inner" style="background:var(--emerald)"></div></div><span class="info-label">Test Passed</span><span class="info-desc">QA approved</span></div>
+      <div class="info-row"><div class="info-swatch" style="border-color:var(--cyan);background:rgba(6,182,212,0.15)"><div class="info-swatch-inner" style="background:var(--cyan)"></div></div><span class="info-label">UAT</span><span class="info-desc">User acceptance</span></div>
+      <div class="info-row"><div class="info-swatch" style="border-color:var(--violet);background:rgba(139,92,246,0.15)"><div class="info-swatch-inner" style="background:var(--violet)"></div></div><span class="info-label">In Preprod</span><span class="info-desc">Deployed to staging</span></div>
+      <div class="info-row"><div class="info-swatch" style="border-color:var(--green);background:rgba(34,197,94,0.15)"><div class="info-swatch-inner" style="background:var(--green)"></div></div><span class="info-label">In Production</span><span class="info-desc">Live</span></div>
+
+      <div class="info-section-title">Terminal</div>
+      <div class="info-row"><div class="info-swatch" style="border-color:var(--green);background:rgba(34,197,94,0.15)"><div class="info-swatch-inner" style="background:var(--green)"></div></div><span class="info-label">Done</span><span class="info-desc">Completed</span></div>
+      <div class="info-row"><div class="info-swatch" style="border-color:var(--red);background:rgba(239,68,68,0.15)"><div class="info-swatch-inner" style="background:var(--red)"></div></div><span class="info-label">Won't Do</span><span class="info-desc">Rejected</span></div>
+
+      <div class="info-section-title">Typical Flow</div>
+      <div class="info-flow">
+        <span class="flow-chip" style="background:rgba(178,28,142,0.15);color:var(--pink)"><span class="dot-sm" style="background:var(--pink)"></span>No Task</span>
+        <span class="flow-arrow">&rarr;</span>
+        <span class="flow-chip" style="background:rgba(148,163,184,0.15);color:var(--slate)"><span class="dot-sm" style="background:var(--slate)"></span>To Do</span>
+        <span class="flow-arrow">&rarr;</span>
+        <span class="flow-chip" style="background:rgba(59,130,246,0.15);color:var(--blue)"><span class="dot-sm" style="background:var(--blue)"></span>In Progress</span>
+        <span class="flow-arrow">&rarr;</span>
+        <span class="flow-chip" style="background:rgba(167,139,250,0.15);color:var(--purple)"><span class="dot-sm" style="background:var(--purple)"></span>Code Review</span>
+        <span class="flow-arrow">&rarr;</span>
+        <span class="flow-chip" style="background:rgba(245,158,11,0.15);color:var(--amber)"><span class="dot-sm" style="background:var(--amber)"></span>Test</span>
+        <span class="flow-arrow">&rarr;</span>
+        <span class="flow-chip" style="background:rgba(16,185,129,0.15);color:var(--emerald)"><span class="dot-sm" style="background:var(--emerald)"></span>Passed</span>
+        <span class="flow-arrow">&rarr;</span>
+        <span class="flow-chip" style="background:rgba(6,182,212,0.15);color:var(--cyan)"><span class="dot-sm" style="background:var(--cyan)"></span>UAT</span>
+        <span class="flow-arrow">&rarr;</span>
+        <span class="flow-chip" style="background:rgba(139,92,246,0.15);color:var(--violet)"><span class="dot-sm" style="background:var(--violet)"></span>Preprod</span>
+        <span class="flow-arrow">&rarr;</span>
+        <span class="flow-chip" style="background:rgba(34,197,94,0.15);color:var(--green)"><span class="dot-sm" style="background:var(--green)"></span>Prod</span>
+        <span class="flow-arrow">&rarr;</span>
+        <span class="flow-chip" style="background:rgba(34,197,94,0.15);color:var(--green)"><span class="dot-sm" style="background:var(--green)"></span>Done</span>
+      </div>
+    </div>
+    <button class="close-info" onclick="toggleInfo()">Got it</button>
+  </div>
+</div>
+
+<!-- Step nav -->
+<div class="step-label" id="stepLabel"><strong>1/4:</strong> All groups visible — each has a unique color matching its JIRA board column</div>
+<div class="step-nav">
+  <button class="step-btn active" onclick="setStep(0)">All</button>
+  <button class="step-btn" onclick="setStep(1)">Filter: In Progress</button>
+  <button class="step-btn" onclick="setStep(2)">Filter: Alice</button>
+  <button class="step-btn" onclick="setStep(3)">Combined</button>
+</div>
+
+<script>
+const STATUS_COLORS = {
+  "No Task":       { hex: "#b21c8e", bg: "rgba(178,28,142,0.12)" },
+  "To Do":         { hex: "#94a3b8", bg: "rgba(148,163,184,0.12)" },
+  "In Progress":   { hex: "#3b82f6", bg: "rgba(59,130,246,0.12)" },
+  "Code Review":   { hex: "#a78bfa", bg: "rgba(167,139,250,0.12)" },
+  "Test":          { hex: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+  "Test Passed":   { hex: "#10b981", bg: "rgba(16,185,129,0.12)" },
+  "In Production": { hex: "#22c55e", bg: "rgba(34,197,94,0.12)" },
+  "Won't Do":      { hex: "#ef4444", bg: "rgba(239,68,68,0.12)" },
+};
+
+const GROUPS = [
+  { id: "g1", name: "Header Redesign",    status: "In Progress",   ticket: "ATT-2746", assignee: "Alice",   reporter: "Doruk",   sels: 3 },
+  { id: "g2", name: "Button Contrast",    status: "Code Review",   ticket: "ATT-2749", assignee: "Bob",     reporter: "Doruk",   sels: 2 },
+  { id: "g3", name: "Mobile Overflow",    status: "Test",          ticket: "ATT-2750", assignee: "Charlie", reporter: "PM Lead", sels: 1 },
+  { id: "g4", name: "Card Alignment",     status: "No Task",       ticket: null,        assignee: null,      reporter: null,      sels: 2 },
+  { id: "g5", name: "Chart Labels",       status: "In Production", ticket: "ATT-2740", assignee: "Alice",   reporter: "Doruk",   sels: 3 },
+  { id: "g6", name: "Old Banner",         status: "Won't Do",      ticket: "ATT-2739", assignee: "Bob",     reporter: "PM Lead", sels: 1 },
+];
+
+function renderGroups() {
+  const list = document.getElementById('groupList');
+  list.innerHTML = GROUPS.map(g => {
+    const c = STATUS_COLORS[g.status] || { hex: "#6b7280", bg: "rgba(107,114,128,0.12)" };
+    return `
+      <div class="group-card" id="gc-${g.id}" data-group="${g.id}" data-status="${g.status}" data-assignee="${g.assignee || ''}" data-reporter="${g.reporter || ''}" style="border-left-color: ${c.hex}">
+        <div class="gc-top">
+          <span class="gc-name">${g.name}</span>
+          <span class="badge" style="background:${c.bg};color:${c.hex}">
+            <span class="dot-sm" style="background:${c.hex}"></span>
+            ${g.status}
+          </span>
+        </div>
+        <div class="gc-meta">
+          <span>${g.sels} selections</span>
+          ${g.ticket ? `<span style="color:${c.hex}">${g.ticket}</span>` : ''}
+          ${g.assignee ? `<span class="gc-assignee"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>${g.assignee}</span>` : ''}
+          ${g.reporter ? `<span class="gc-assignee" style="color:rgba(255,255,255,0.25)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>${g.reporter}</span>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function applyFilters() {
+  const status = document.getElementById('filterStatus').value;
+  const assignee = document.getElementById('filterAssignee').value;
+  const reporter = document.getElementById('filterReporter').value;
+  const hasFilter = status || assignee || reporter;
+
+  document.getElementById('clearBtn').classList.toggle('visible', hasFilter);
+
+  // Chips
+  const chipsEl = document.getElementById('filterChips');
+  let chips = '';
+  if (status) {
+    const c = STATUS_COLORS[status] || { hex: "#6b7280" };
+    chips += `<span class="chip"><span class="chip-dot" style="background:${c.hex}"></span>${status}<span class="chip-x" onclick="document.getElementById('filterStatus').value='';applyFilters()">✕</span></span>`;
+  }
+  if (assignee) chips += `<span class="chip">👤 ${assignee}<span class="chip-x" onclick="document.getElementById('filterAssignee').value='';applyFilters()">✕</span></span>`;
+  if (reporter) chips += `<span class="chip">📝 ${reporter}<span class="chip-x" onclick="document.getElementById('filterReporter').value='';applyFilters()">✕</span></span>`;
+  chipsEl.innerHTML = chips;
+  chipsEl.classList.toggle('visible', hasFilter);
+
+  // Filter groups
+  let visibleCount = 0;
+  document.querySelectorAll('.group-card').forEach(card => {
+    const s = card.dataset.status;
+    const a = card.dataset.assignee;
+    const r = card.dataset.reporter;
+    const match = (!status || s === status) && (!assignee || a === assignee) && (!reporter || r === reporter);
+    card.classList.toggle('hidden', !match);
+    if (match) visibleCount++;
+  });
+
+  // Show/hide canvas overlays
+  document.querySelectorAll('.sel-overlay').forEach(ov => {
+    const gid = ov.dataset.group;
+    const card = document.getElementById(`gc-${gid}`);
+    ov.classList.toggle('hidden', card?.classList.contains('hidden'));
+  });
+
+  document.getElementById('statGroups').textContent = visibleCount;
+}
+
+function clearFilters() {
+  document.getElementById('filterStatus').value = '';
+  document.getElementById('filterAssignee').value = '';
+  document.getElementById('filterReporter').value = '';
+  applyFilters();
+}
+
+function setStep(idx) {
+  document.querySelectorAll('.step-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  const labels = [
+    '<strong>1/4:</strong> All groups visible — each has a unique color matching its JIRA board column. Canvas overlays match.',
+    '<strong>2/4:</strong> Status filter: "In Progress" — only the blue group remains. Other canvas overlays disappear.',
+    '<strong>3/4:</strong> Assignee filter: "Alice" — shows Alice\'s groups across any status. Canvas matches.',
+    '<strong>4/4:</strong> Combined: "In Progress" + "Alice" — AND filter. Only one group matches both conditions.',
+  ];
+  document.getElementById('stepLabel').innerHTML = labels[idx];
+
+  clearFilters();
+  if (idx === 1) { document.getElementById('filterStatus').value = 'In Progress'; applyFilters(); }
+  if (idx === 2) { document.getElementById('filterAssignee').value = 'Alice'; applyFilters(); }
+  if (idx === 3) {
+    document.getElementById('filterStatus').value = 'In Progress';
+    document.getElementById('filterAssignee').value = 'Alice';
+    applyFilters();
+  }
+}
+
+function toggleInfo() {
+  document.getElementById('infoOverlay').classList.toggle('visible');
+  document.getElementById('infoBtn').classList.toggle('active');
+}
+
+renderGroups();
+</script>
+
+</body>
+</html>

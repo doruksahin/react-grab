@@ -18,7 +18,6 @@ import {
   LABEL_GAP_PX,
   SELECTION_LABEL_OFFSCREEN_PX,
   TEXTAREA_MAX_HEIGHT_PX,
-  Z_INDEX_LABEL,
 } from "../../constants.js";
 import { autoResizeTextarea } from "../../utils/auto-resize-textarea.js";
 import { getArrowSize } from "../../utils/get-arrow-size.js";
@@ -39,6 +38,11 @@ import { DiscardPrompt } from "./discard-prompt.js";
 import { ErrorView } from "./error-view.js";
 import { CompletionView } from "./completion-view.js";
 import { ArrowNavigationMenu } from "./arrow-navigation-menu.js";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible.jsx";
 
 interface LabelPosition {
   left: number;
@@ -399,13 +403,13 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         data-react-grab-ignore-events
         data-react-grab-selection-label
         class={cn(
-          "fixed font-sans text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out",
+          "fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out",
         )}
         style={{
           top: `${positionComputation().position.top}px`,
           left: `${positionComputation().position.left}px`,
           transform: `translateX(calc(-50% + ${positionComputation().position.edgeOffsetX}px))`,
-          "z-index": `${Z_INDEX_LABEL}`,
+          "z-index": "var(--z-overlay)",
           "pointer-events": shouldEnablePointerEvents() ? "auto" : "none",
           opacity: props.status === "fading" || isInternalFading() ? 0 : 1,
         }}
@@ -446,7 +450,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           ref={panelRef}
           class={cn(
             "relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]",
-            "bg-white",
+            "bg-popover",
             isShaking() && "animate-shake",
           )}
           style={{
@@ -467,8 +471,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               }}
             >
               <div class="contain-layout shrink-0 flex items-center gap-1 py-1.5 px-2 w-full h-fit">
-                <IconLoader size={13} class="text-[#71717a] shrink-0" />
-                <span class="shimmer-text text-[13px] leading-4 font-sans font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap">
+                <IconLoader size={13} class="text-muted-foreground shrink-0" />
+                <span class="shimmer-text text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap">
                   {props.statusText ?? "Grabbing…"}
                 </span>
               </div>
@@ -478,7 +482,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     <textarea
                       ref={inputRef}
                       data-react-grab-ignore-events
-                      class="text-black text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 opacity-50 wrap-break-word overflow-y-auto"
+                      class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 opacity-50 wrap-break-word overflow-y-auto"
                       style={{
                         "field-sizing": "content",
                         "min-height": "16px",
@@ -494,14 +498,14 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                       <button
                         data-react-grab-ignore-events
                         data-react-grab-abort
-                        class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-black cursor-pointer ml-1 interactive-scale"
+                        class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale"
                         onPointerDown={(event) => event.stopPropagation()}
                         onClick={(event) => {
                           event.stopPropagation();
                           props.onAbort?.();
                         }}
                       >
-                        <div class="size-1.5 bg-white rounded-[1px]" />
+                        <div class="size-1.5 bg-popover rounded-[1px]" />
                       </button>
                     </Show>
                   </div>
@@ -586,7 +590,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                           data-react-grab-action-cycle-item={item.label.toLowerCase()}
                           class="contain-layout flex items-center justify-between w-full px-2 py-1 transition-colors"
                           classList={{
-                            "bg-black/5":
+                            "bg-accent":
                               itemIndex() ===
                               (props.actionCycleState?.activeIndex ?? 0),
                             "rounded-b-[6px]":
@@ -594,11 +598,11 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                               (props.actionCycleState?.items ?? []).length - 1,
                           }}
                         >
-                          <span class="text-[13px] leading-4 font-sans font-medium text-black">
+                          <span class="text-[13px] leading-4 font-medium text-popover-foreground">
                             {item.label}
                           </span>
                           <Show when={item.shortcut}>
-                            <span class="text-[11px] font-sans text-black/50 ml-4">
+                            <span class="text-[11px] text-muted-foreground ml-4">
                               {formatShortcut(item.shortcut!)}
                             </span>
                           </Show>
@@ -608,6 +612,38 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   </div>
                 </BottomSection>
               </Show>
+              {/* POC: comments collapsible */}
+              <BottomSection>
+                <Collapsible defaultOpen>
+                  <CollapsibleTrigger
+                    data-react-grab-ignore-events
+                    class="flex items-center justify-between w-[calc(100%+16px)] -mx-2 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent cursor-pointer"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopImmediatePropagation()}
+                  >
+                    <span>Comments (3)</span>
+                    <span class="text-[10px]">▾</span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1 gap-1">
+                      <For
+                        each={[
+                          { author: "alice", body: "Looks good to me" },
+                          { author: "bob", body: "Needs spacing fix" },
+                          { author: "carol", body: "Ship it" },
+                        ]}
+                      >
+                        {(c) => (
+                          <div class="text-[11px] leading-tight text-popover-foreground">
+                            <span class="font-medium">{c.author}: </span>
+                            <span class="text-muted-foreground">{c.body}</span>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </BottomSection>
             </div>
           </Show>
 
@@ -630,7 +666,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               <div class="relative px-2 pb-1">
                 <button
                   data-react-grab-ignore-events
-                  class="flex items-center gap-1 cursor-pointer hover:bg-black/[0.04] rounded-sm px-0.5 -mx-0.5 transition-colors"
+                  class="flex items-center gap-1 cursor-pointer hover:bg-accent rounded-sm px-0.5 -mx-0.5 transition-colors"
                   onClick={(e) => {
                     e.stopImmediatePropagation();
                     setPickerOpen((v) => !v);
@@ -645,12 +681,12 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    class="text-black/25 shrink-0"
+                    class="text-muted-foreground shrink-0"
                   >
                     <rect x="2" y="7" width="20" height="14" rx="2" />
                     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
                   </svg>
-                  <span class="text-[11px] font-medium text-black/40 leading-none">
+                  <span class="text-[11px] font-medium text-muted-foreground leading-none">
                     {props.groups?.find((g) => g.id === props.activeGroupId)
                       ?.name ?? "Default"}
                   </span>
@@ -663,7 +699,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     stroke-width="2.5"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    class="text-black/25"
+                    class="text-muted-foreground"
                     style={{
                       transform: pickerOpen() ? "rotate(180deg)" : "",
                       transition: "transform 100ms",
@@ -702,8 +738,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 </Show>
                 <Show when={props.replyToPrompt}>
                   <div class="flex items-center gap-1 w-full mb-1 overflow-hidden">
-                    <IconReply size={10} class="text-black/30 shrink-0" />
-                    <span class="text-black/40 text-[11px] leading-3 font-medium truncate italic">
+                    <IconReply size={10} class="text-muted-foreground shrink-0" />
+                    <span class="text-muted-foreground text-[11px] leading-3 font-medium truncate italic">
                       {props.replyToPrompt}
                     </span>
                   </div>
@@ -724,7 +760,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     }}
                     data-react-grab-ignore-events
                     data-react-grab-input
-                    class="text-black text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
+                    class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
                     style={{
                       "field-sizing": "content",
                       "min-height": "16px",
@@ -741,10 +777,10 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   <Show when={props.onSubmit}>
                     <button
                       data-react-grab-submit
-                      class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-black cursor-pointer ml-1 interactive-scale"
+                      class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale"
                       onClick={() => props.onSubmit?.()}
                     >
-                      <IconSubmit size={10} class="text-white" />
+                      <IconSubmit size={10} class="text-popover" />
                     </button>
                   </Show>
                 </div>

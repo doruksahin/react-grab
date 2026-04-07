@@ -41,7 +41,6 @@ import {
   SAFE_POLYGON_BUFFER_PX,
   SELECTION_HINT_COUNT,
   SELECTION_HINT_CYCLE_INTERVAL_MS,
-  Z_INDEX_HOST,
 } from "../../constants.js";
 import { freezeUpdates } from "../../utils/freeze-updates.js";
 import {
@@ -52,7 +51,7 @@ import {
   freezePseudoStates,
   unfreezePseudoStates,
 } from "../../utils/freeze-pseudo-states.js";
-import { Tooltip } from "../tooltip.jsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip.js";
 import { Kbd } from "../kbd.jsx";
 import {
   getButtonSpacingClass,
@@ -238,7 +237,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
   const commentsIconClass = () =>
     cn(
       "transition-colors",
-      props.isCommentsPinned ? "text-black/50" : "text-[#B3B3B3]",
+      props.isCommentsPinned ? "text-muted-foreground" : "text-muted-foreground",
     );
 
   const isVertical = () => snapEdge() === "left" || snapEdge() === "right";
@@ -1038,7 +1037,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       data-react-grab-ignore-events
       data-react-grab-toolbar
       class={cn(
-        "fixed left-0 top-0 font-sans text-[13px] antialiased select-none",
+        "fixed left-0 top-0 text-[13px] antialiased select-none",
         getCursorClass(),
         getTransitionClass(),
         isVisible()
@@ -1046,7 +1045,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           : "opacity-0 pointer-events-none",
       )}
       style={{
-        "z-index": String(Z_INDEX_HOST),
+        "z-index": "var(--z-toolbar)",
+        isolation: "isolate",
         transform: `translate(${currentPosition().x}px, ${
           currentPosition().y
         }px)`,
@@ -1108,8 +1108,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           }
         }}
         selectButton={
-          <>
-            <button
+          <Tooltip open={isSelectTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+            <TooltipTrigger
+              as="button"
               data-react-grab-ignore-events
               data-react-grab-toolbar-toggle
               aria-label={
@@ -1121,11 +1122,11 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 buttonSpacingClass(),
                 hitboxConstraintClass(),
               )}
-              onClick={(event) => {
+              onClick={(event: MouseEvent) => {
                 setIsSelectTooltipVisible(false);
-                handleToggle(event);
+                handleToggle(event as MouseEvent & { currentTarget: HTMLButtonElement });
               }}
-              on:contextmenu={(event: MouseEvent) => {
+              onContextMenu={(event: MouseEvent) => {
                 event.preventDefault();
                 event.stopPropagation();
                 setIsSelectTooltipVisible(false);
@@ -1137,21 +1138,19 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 size={14}
                 class={cn(
                   "transition-colors",
-                  props.isActive ? "text-black" : "text-black/70",
+                  props.isActive ? "text-popover-foreground" : "text-muted-foreground",
                 )}
               />
-            </button>
-            <Tooltip
-              visible={isSelectTooltipVisible() && isTooltipAllowed()}
-              position={tooltipPosition()}
-            >
+            </TooltipTrigger>
+            <TooltipContent>
               Select element <Kbd>{formatShortcut("C")}</Kbd>
-            </Tooltip>
-          </>
+            </TooltipContent>
+          </Tooltip>
         }
         commentsButton={
-          <>
-            <button
+          <Tooltip open={isCommentsTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+            <TooltipTrigger
+              as="button"
               data-react-grab-ignore-events
               data-react-grab-toolbar-comments
               aria-label={`Open comments${
@@ -1166,9 +1165,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 buttonSpacingClass(),
                 hitboxConstraintClass(),
               )}
-              onClick={(event) => {
+              onClick={(event: MouseEvent) => {
                 setIsCommentsTooltipVisible(false);
-                handleComments(event);
+                handleComments(event as MouseEvent & { currentTarget: HTMLButtonElement });
               }}
               {...createFreezeHandlers(
                 (visible) => {
@@ -1200,18 +1199,14 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                   </span>
                 </Show>
               </span>
-            </button>
-            <Tooltip
-              visible={isCommentsTooltipVisible() && isTooltipAllowed()}
-              position={tooltipPosition()}
-            >
-              {commentsTooltipLabel()}
-            </Tooltip>
-          </>
+            </TooltipTrigger>
+            <TooltipContent>{commentsTooltipLabel()}</TooltipContent>
+          </Tooltip>
         }
         copyAllButton={
-          <>
-            <button
+          <Tooltip open={isCopyAllTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+            <TooltipTrigger
+              as="button"
               data-react-grab-ignore-events
               data-react-grab-toolbar-copy-all
               aria-label="Copy all comments"
@@ -1220,9 +1215,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 buttonSpacingClass(),
                 hitboxConstraintClass(),
               )}
-              onClick={(event) => {
+              onClick={(event: MouseEvent) => {
                 setIsCopyAllTooltipVisible(false);
-                handleCopyAll(event);
+                handleCopyAll(event as MouseEvent & { currentTarget: HTMLButtonElement });
               }}
               {...createFreezeHandlers(setIsCopyAllTooltipVisible, {
                 onHoverChange: (isHovered) => props.onCopyAllHover?.(isHovered),
@@ -1236,19 +1231,15 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                     : null,
               })}
             >
-              <IconCopy size={14} class="text-[#B3B3B3] transition-colors" />
-            </button>
-            <Tooltip
-              visible={isCopyAllTooltipVisible() && isTooltipAllowed()}
-              position={tooltipPosition()}
-            >
-              Copy all
-            </Tooltip>
-          </>
+              <IconCopy size={14} class="text-muted-foreground transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent>Copy all</TooltipContent>
+          </Tooltip>
         }
         toggleButton={
-          <>
-            <button
+          <Tooltip open={isToggleTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+            <TooltipTrigger
+              as="button"
               data-react-grab-ignore-events
               data-react-grab-toolbar-enabled
               aria-label={
@@ -1259,9 +1250,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 "contain-layout flex items-center justify-center cursor-pointer interactive-scale outline-none",
                 isVertical() ? "my-0.5" : "mx-0.5",
               )}
-              onClick={(event) => {
+              onClick={(event: MouseEvent) => {
                 setIsToggleTooltipVisible(false);
-                handleToggleEnabled(event);
+                handleToggleEnabled(event as MouseEvent & { currentTarget: HTMLButtonElement });
               }}
               onMouseEnter={() => setIsToggleTooltipVisible(true)}
               onMouseLeave={() => setIsToggleTooltipVisible(false)}
@@ -1270,26 +1261,21 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 class={cn(
                   "relative rounded-full transition-colors",
                   isVertical() ? "w-3.5 h-2.5" : "w-5 h-3",
-                  props.enabled ? "bg-black" : "bg-black/25",
+                  props.enabled ? "bg-popover-foreground" : "bg-muted-foreground",
                 )}
               >
                 <div
                   class={cn(
-                    "absolute top-0.5 rounded-full bg-white transition-transform",
+                    "absolute top-0.5 rounded-full bg-popover transition-transform",
                     isVertical() ? "w-1.5 h-1.5" : "w-2 h-2",
                     !props.enabled && "left-0.5",
                     props.enabled && (isVertical() ? "left-1.5" : "left-2.5"),
                   )}
                 />
               </div>
-            </button>
-            <Tooltip
-              visible={isToggleTooltipVisible() && isTooltipAllowed()}
-              position={tooltipPosition()}
-            >
-              {props.enabled ? "Disable" : "Enable"}
-            </Tooltip>
-          </>
+            </TooltipTrigger>
+            <TooltipContent>{props.enabled ? "Disable" : "Enable"}</TooltipContent>
+          </Tooltip>
         }
       />
       <Show when={props.isActive && !hasLearnedSelectionHints()}>
@@ -1297,11 +1283,11 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           class={cn(
             TOOLTIP_BASE_CLASS,
             "flex items-center gap-1 animate-tooltip-fade-in [animation-fill-mode:backwards]",
-            "bg-white",
+            "bg-popover",
             shakeTooltipPositionClass(),
           )}
           style={{
-            "z-index": String(Z_INDEX_HOST),
+            "z-index": "var(--z-tooltip)",
             [isVertical() ? "top" : "left"]:
               `calc(50% - ${TOOLBAR_HINT_CENTER_OFFSET_PX}px)`,
           }}
@@ -1348,11 +1334,11 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           class={cn(
             TOOLTIP_BASE_CLASS,
             "animate-tooltip-fade-in",
-            "bg-white",
+            "bg-popover",
             shakeTooltipPositionClass(),
           )}
           style={{
-            "z-index": String(Z_INDEX_HOST),
+            "z-index": "var(--z-tooltip)",
             [isVertical() ? "top" : "left"]:
               `calc(50% - ${TOOLBAR_HINT_CENTER_OFFSET_PX}px)`,
           }}

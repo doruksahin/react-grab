@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selection Status Colors Proposal</title>
+<style>
+  :root {
+    --pink: #b21c8e;
+    --yellow: #eab308;
+    --green: #22c55e;
+    --blue: #3b82f6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #111; color: #e5e5e5; height: 100vh; overflow: hidden; }
+
+  /* Fake host page */
+  .host {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 40px;
+    height: 100vh;
+  }
+  .card {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .card h2 { font-size: 20px; color: #fff; }
+  .card p { font-size: 14px; color: #999; line-height: 1.5; }
+  .card .btn { display: inline-block; color: var(--pink); font-size: 14px; font-weight: 600; }
+  .card img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #2a2a3e, #1a1a2e);
+  }
+
+  /* Selection overlay boxes */
+  .selection-box {
+    position: absolute;
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 4px;
+    pointer-events: none;
+    transition: border-color 0.4s, box-shadow 0.4s;
+  }
+  .selection-box.open {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 1px rgba(178, 28, 142, 0.2), inset 0 0 0 1px rgba(178, 28, 142, 0.1);
+  }
+  .selection-box.ticketed {
+    border-color: var(--yellow);
+    box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.2), inset 0 0 0 1px rgba(234, 179, 8, 0.1);
+  }
+  .selection-box.resolved {
+    border-color: var(--green);
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2), inset 0 0 0 1px rgba(34, 197, 94, 0.1);
+  }
+
+  /* Selection label (the white popup) */
+  .sel-label {
+    position: absolute;
+    font-size: 13px;
+    filter: drop-shadow(0px 1px 2px #51515140);
+    user-select: none;
+    z-index: 100;
+  }
+  .sel-label .arrow {
+    position: absolute;
+    width: 0; height: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid white;
+    top: 0;
+  }
+  .sel-label .body {
+    background: white;
+    border-radius: 10px;
+    padding: 0;
+    min-width: 160px;
+    max-width: 280px;
+    position: relative;
+  }
+  .sel-label .tag-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 8px 4px;
+  }
+  .sel-label .tag-name {
+    font-weight: 500;
+    color: #000;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sel-label .tag-dim { color: rgba(0,0,0,0.5); }
+  .sel-label .group-row {
+    padding: 0 8px 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: rgba(0,0,0,0.4);
+  }
+  .sel-label .comment-row {
+    padding: 6px 8px;
+    border-top: 0.5px solid #d9d9d9;
+    font-size: 13px;
+    font-weight: 500;
+    color: #000;
+  }
+
+  /* NEW: Status indicator on top-right of label */
+  .status-indicator {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .status-indicator:hover {
+    transform: scale(1.15);
+  }
+  .status-indicator.open {
+    display: none;
+  }
+  .status-indicator.ticketed {
+    background: var(--yellow);
+  }
+  .status-indicator.resolved {
+    background: var(--green);
+  }
+  .status-indicator svg {
+    width: 12px;
+    height: 12px;
+    color: white;
+  }
+  .status-indicator.ticketed svg { color: #000; }
+
+  /* Tooltip on status indicator */
+  .status-indicator .tip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    color: #e5e5e5;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+  .status-indicator:hover .tip { opacity: 1; }
+
+  /* Step controls */
+  .controls {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 200;
+    background: #1a1a1a;
+    padding: 6px;
+    border-radius: 10px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  .ctrl-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ctrl-btn.active { background: var(--pink); color: #fff; }
+  .ctrl-btn:not(.active) { background: #333; color: #aaa; }
+  .ctrl-btn:not(.active):hover { background: #444; color: #fff; }
+
+  .step-desc {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(26,26,26,0.95);
+    border: 1px solid #333;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #aaa;
+    z-index: 200;
+    text-align: center;
+    max-width: 400px;
+  }
+  .step-desc strong { color: #fff; }
+
+  /* Legend */
+  .legend {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: rgba(26,26,26,0.95);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px 16px;
+    z-index: 200;
+    font-size: 11px;
+  }
+  .legend-title { font-weight: 600; color: #fff; margin-bottom: 8px; font-size: 12px; }
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    border: 2px solid;
+  }
+  .legend-dot.open { border-color: var(--pink); }
+  .legend-dot.ticketed { border-color: var(--yellow); }
+  .legend-dot.resolved { border-color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="host">
+  <!-- Card 1 -->
+  <div class="card" id="card1">
+    <h2>Your [Industry] Creative Suite</h2>
+    <p>From product visuals to social stories, your brand's entire creative process is now connected in one intelligent space.</p>
+    <span class="btn">Start Full Suite</span>
+
+    <!-- Selection box -->
+    <div class="selection-box open" id="box1" style="top: 60px; left: 16px; right: 16px; bottom: 80px;"></div>
+
+    <!-- Selection label -->
+    <div class="sel-label" id="label1" style="bottom: 68px; left: 20px;">
+      <div class="arrow"></div>
+      <div class="body">
+        <div class="status-indicator open" id="status1">
+          <span class="tip">Open — no ticket</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/></svg>
+        </div>
+        <div class="tag-row">
+          <span class="tag-name">CardDescription<span class="tag-dim">.div</span></span>
+        </div>
+        <div class="group-row">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Default
+        </div>
+        <div class="comment-row">Text overflows on mobile</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2 -->
+  <div class="card" id="card2">
+    <h2>Photoshoot & Videoshoot</h2>
+    <p>Your refined, high-quality brand images — instantly.</p>
+    <span class="btn">Create</span>
+
+    <div class="selection-box open" id="box2" style="top: 12px; left: 12px; right: 12px; height: 50px;"></div>
+
+    <div class="sel-label" id="label2" style="top: 68px; right: 8px;">
+      <div class="arrow"></div>
+      <div class="body">
+        <div class="status-indicator open" id="status2">
+          <span class="tip">Open — no ticket</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/></svg>
+        </div>
+        <div class="tag-row">
+          <span class="tag-name">FeatureCardTitle<span class="tag-dim">.h3</span></span>
+        </div>
+        <div class="group-row">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Default
+        </div>
+        <div class="comment-row">dsghfdg</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3 -->
+  <div class="card" id="card3">
+    <h2>UGC & Voice Creator</h2>
+    <p>Let AI craft authentic human-style videos for your brand.</p>
+    <span class="btn">Generate UGC</span>
+
+    <div class="selection-box open" id="box3" style="top: 100px; left: 16px; width: 60%; height: 40px;"></div>
+
+    <div class="sel-label" id="label3" style="top: 148px; left: 40px;">
+      <div class="arrow"></div>
+      <div class="body">
+        <div class="status-indicator open" id="status3">
+          <span class="tip">Open — no ticket</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/></svg>
+        </div>
+        <div class="tag-row">
+          <span class="tag-name">Preview<span class="tag-dim">.div</span></span>
+        </div>
+        <div class="group-row">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          test-group
+        </div>
+        <div class="comment-row">asdsada</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4 -->
+  <div class="card" id="card4">
+    <h2>Ad Creative Generator</h2>
+    <p>Turn visuals into high-performing ads, instantly.</p>
+    <span class="btn">Generate Ads</span>
+
+    <div class="selection-box open" id="box4" style="bottom: 50px; right: 16px; width: 50%; height: 35px;"></div>
+
+    <div class="sel-label" id="label4" style="bottom: 30px; right: 30px;">
+      <div class="arrow"></div>
+      <div class="body">
+        <div class="status-indicator open" id="status4">
+          <span class="tip">Open — no ticket</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/></svg>
+        </div>
+        <div class="tag-row">
+          <span class="tag-name">SubmitButton<span class="tag-dim">.button</span></span>
+        </div>
+        <div class="group-row">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Default
+        </div>
+        <div class="comment-row">Button color contrast is too low</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-title">Selection Status</div>
+  <div class="legend-row"><div class="legend-dot open"></div> Open — no ticket</div>
+  <div class="legend-row"><div class="legend-dot ticketed"></div> Ticketed — JIRA assigned</div>
+  <div class="legend-row"><div class="legend-dot resolved"></div> Resolved — done</div>
+</div>
+
+<!-- Step description -->
+<div class="step-desc" id="stepDesc">
+  <strong>Current:</strong> All selections are pink (open). Click a status to simulate JIRA transitions.
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <button class="ctrl-btn active" onclick="setAll('open')">All Open</button>
+  <button class="ctrl-btn" onclick="ticketSome()">Ticket Default Group</button>
+  <button class="ctrl-btn" onclick="resolveSome()">Resolve Default Group</button>
+  <button class="ctrl-btn" onclick="mixedState()">Mixed State</button>
+</div>
+
+<script>
+  const items = [
+    { box: 'box1', label: 'label1', status: 'status1', group: 'Default' },
+    { box: 'box2', label: 'label2', status: 'status2', group: 'Default' },
+    { box: 'box3', label: 'label3', status: 'status3', group: 'test-group' },
+    { box: 'box4', label: 'label4', status: 'status4', group: 'Default' },
+  ];
+
+  const icons = {
+    open: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/></svg>',
+    ticketed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>',
+    resolved: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>',
+  };
+
+  const tips = {
+    open: 'Open — no ticket',
+    ticketed: 'Ticketed — ATT-2746',
+    resolved: 'Resolved — done',
+  };
+
+  function setState(idx, state) {
+    const item = items[idx];
+    const box = document.getElementById(item.box);
+    const si = document.getElementById(item.status);
+
+    box.className = 'selection-box ' + state;
+    si.className = 'status-indicator ' + state;
+    si.innerHTML = `<span class="tip">${tips[state]}</span>${icons[state]}`;
+  }
+
+  function setAll(state) {
+    items.forEach((_, i) => setState(i, state));
+    setActive(0);
+    document.getElementById('stepDesc').innerHTML = '<strong>All ' + state + ':</strong> Every selection shows ' + state + ' color — border + status icon match.';
+  }
+
+  function ticketSome() {
+    items.forEach((item, i) => {
+      setState(i, item.group === 'Default' ? 'ticketed' : 'open');
+    });
+    setActive(1);
+    document.getElementById('stepDesc').innerHTML = '<strong>Default group ticketed:</strong> Selections in "Default" group turn yellow (JIRA assigned). "test-group" stays pink (open).';
+  }
+
+  function resolveSome() {
+    items.forEach((item, i) => {
+      setState(i, item.group === 'Default' ? 'resolved' : 'open');
+    });
+    setActive(2);
+    document.getElementById('stepDesc').innerHTML = '<strong>Default group resolved:</strong> Selections in "Default" group turn green (done). "test-group" stays pink (open).';
+  }
+
+  function mixedState() {
+    setState(0, 'ticketed');
+    setState(1, 'resolved');
+    setState(2, 'open');
+    setState(3, 'ticketed');
+    setActive(3);
+    document.getElementById('stepDesc').innerHTML = '<strong>Mixed:</strong> Each selection reflects its group\'s JIRA status independently. Colors at a glance show what needs attention.';
+  }
+
+  function setActive(idx) {
+    document.querySelectorAll('.ctrl-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  }
+</script>
+
+</body>
+</html>

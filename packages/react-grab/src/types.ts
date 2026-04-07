@@ -439,6 +439,9 @@ export interface OverlayBounds {
 /** JIRA status name (e.g. "In Progress") or undefined for no ticket */
 export type GroupStatus = string | undefined;
 
+
+export type TicketCreatedCallback = (groupId: string, ticketId: string, ticketUrl: string) => void;
+
 export type SelectionLabelStatus =
   | "idle"
   | "copying"
@@ -597,7 +600,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
   jiraProjectKey?: string;
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
-  onTicketCreated?: (groupId: string, ticketId: string, ticketUrl: string) => void;
+  onTicketCreated?: TicketCreatedCallback;
 }
 
 export interface GrabbedBox {
@@ -627,7 +630,6 @@ export interface ArrowProps {
   position: ArrowPosition;
   leftPercent: number;
   leftOffsetPx: number;
-  color?: string;
   labelWidth?: number;
 }
 

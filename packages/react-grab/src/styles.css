@@ -1,4 +1,19 @@
 @import "tailwindcss" source(".");
+@import "tw-animate-css";
+
+/*
+ * Tailwind `dark:` variant.
+ *
+ * shadcn-solid's idiom: a custom Tailwind variant that activates whenever
+ * an ancestor carries `data-kb-theme="dark"`. We pin it to our shadow host
+ * specifically (`:host([data-kb-theme="dark"])`) so it can never accidentally
+ * match an inner element with the same attribute.
+ *
+ * Today no `dark:` utilities are used in the codebase, but keeping the
+ * variant registered means future Tailwind classes like `dark:bg-card`
+ * work without ceremony.
+ */
+@custom-variant dark (&:is(:host([data-kb-theme="dark"]) *));
 
 @theme {
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
@@ -22,9 +37,166 @@
   --transition-slow: 200ms;
 }
 
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
 :host {
   all: initial;
   direction: ltr;
+  font-family: var(--font-sans);
+  /*
+   * Semantic z-index scale (shadow-root-internal).
+   * The host already wins INT_MAX vs the page; nothing inside needs more
+   * than ~60. 10-step gaps so new layers can be inserted without renumbering.
+   */
+  --z-base: 0;
+  --z-overlay: 10;     /* selection canvas, hover labels, comments */
+  --z-toolbar: 20;     /* floating toolbar + its menus */
+  --z-sidebar: 30;     /* dashboard sidebar */
+  --z-dropdown: 40;    /* select / popper / context menu / combobox */
+  --z-dialog: 50;      /* modal dialogs */
+  --z-tooltip: 60;     /* always on top */
+  /*
+   * shadcn-solid design tokens — LIGHT is the default, matching shadcn-solid's
+   * upstream convention. Dark mode is activated by mountRoot()'s syncColorScheme
+   * bridge, which writes data-kb-theme="dark" on this host element when the
+   * host page is in dark mode. See the :host([data-kb-theme="dark"]) block below.
+   */
+  --radius: 0.375rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+}
+
+/*
+ * SHADOW HOST POINTER-EVENTS OPT-IN FOR KOBALTE PORTALS
+ *
+ * The shadow host is created with `pointer-events: none` (see mount-root.ts)
+ * so that clicks on transparent regions pass through to the underlying page —
+ * essential for a parasitic dev-tool overlay. CSS `pointer-events` is
+ * inherited, so EVERY descendant of the host inherits `none` by default.
+ *
+ * Most components opt back in via their own wrapper (e.g. the sidebar sets
+ * `pointer-events: auto` inline on its container div). But Kobalte primitives
+ * that use a Portal (Select, Tooltip, Popover, DropdownMenu, ContextMenu,
+ * HoverCard, Combobox, Dialog) mount their content directly under the shadow
+ * root via `useShadowMount()`, bypassing every opt-in wrapper. Their content
+ * is a direct child of the shadow root and inherits `pointer-events: none`
+ * from the host — so clicks on dropdown items, tooltip targets, dialog
+ * buttons, and menu items are silently swallowed.
+ *
+ * The symptom is subtle: the trigger opens, the popup appears, hover styles
+ * fire (CSS :hover doesn't require pointer-events to register paint changes),
+ * but click events never reach the handler. It looks like a broken event
+ * listener, not a CSS inheritance issue.
+ *
+ * The fix: opt back in at the portal wrapper level, once, for every Kobalte
+ * primitive. Two selectors cover the entire surface:
+ *
+ *   [data-popper-positioner]
+ *     Set by Kobalte's <PopperPositioner> on every popper-positioned primitive
+ *     — Select, Tooltip, Popover, DropdownMenu, ContextMenu, HoverCard,
+ *     Combobox, Menu, MenuBar, NavigationMenu. The popper positioner is the
+ *     outermost element of the portalled content for all of these.
+ *     Source: @kobalte/core/dist/chunk/2CTBMVJ4.jsx:115
+ *
+ *   [role="dialog"]
+ *     Set by Kobalte's <DialogContent> for modal Dialog and AlertDialog.
+ *     (DialogOverlay already sets pointer-events: auto inline at chunk
+ *     KRZCLZJ6.js:202, so it doesn't need a rule here — only the content does.)
+ *     Source: @kobalte/core/dist/chunk/KRZCLZJ6.js:136
+ *
+ * If you add a new portal-using primitive (e.g. Sheet, Drawer, Toast) and
+ * clicks don't register inside it, inspect the rendered DOM in DevTools to
+ * find what attribute Kobalte adds to the outermost portal child, then
+ * extend this rule. The pattern is always the same: shadow host is `none`,
+ * portal content needs to opt back in.
+ */
+[data-popper-positioner],
+[role="dialog"] {
+  pointer-events: auto;
+}
+
+/*
+ * Override Kobalte's hard-coded inline `z-index: 50` on every PopperPositioner
+ * so portalled popovers (Select, DropdownMenu, ContextMenu, HoverCard, Combobox,
+ * Menu, NavigationMenu) sit at our `--z-dropdown` tier — above the sidebar.
+ * `!important` is required because the value is inline.
+ */
+[data-popper-positioner] {
+  z-index: var(--z-dropdown) !important;
+}
+
+[role="dialog"] {
+  z-index: var(--z-dialog);
+}
+
+/*
+ * shadcn-solid design tokens — dark mode.
+ *
+ * Single source of truth: mountRoot()'s syncColorScheme bridge writes
+ * data-kb-theme="dark" on the shadow host whenever the host page is in
+ * dark mode. Custom properties declared here on `:host` inherit through
+ * the shadow boundary into every descendant of the shadow root —
+ * including Kobalte portals (Select, Tooltip, Popover, Dialog) that
+ * mount at the shadow root level. One attribute, whole UI flips.
+ */
+:host([data-kb-theme="dark"]) {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
 }
 
 @keyframes shake {

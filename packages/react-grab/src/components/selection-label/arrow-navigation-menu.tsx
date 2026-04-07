@@ -59,7 +59,7 @@ export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
       >
         <div
           ref={highlightRef}
-          class="pointer-events-none absolute bg-black/5 opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
+          class="pointer-events-none absolute bg-accent opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
         />
         <For each={props.items}>
           {(item, itemIndex) => (
@@ -91,13 +91,13 @@ export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
               <span
                 class="text-[13px] leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 transition-colors"
                 classList={{
-                  "text-black": itemIndex() === props.activeIndex,
-                  "text-black/30": itemIndex() !== props.activeIndex,
+                  "text-popover-foreground": itemIndex() === props.activeIndex,
+                  "text-muted-foreground": itemIndex() !== props.activeIndex,
                 }}
               >
                 <Show when={item.componentName}>
                   {item.componentName}
-                  <span class="text-black/40">.</span>
+                  <span class="text-muted-foreground">.</span>
                 </Show>
                 {item.tagName}
               </span>

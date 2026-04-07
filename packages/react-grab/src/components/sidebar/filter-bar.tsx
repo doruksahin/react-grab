@@ -1,6 +1,14 @@
-import { type Component, Show, For } from "solid-js";
+import { type Component, Show } from "solid-js";
 import type { FilterState } from "../../features/sidebar/filter-state.js";
 import { ALL_ATT_STATUSES } from "../../features/sidebar/status-colors.js";
+import { Button } from "../ui/button.js";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select.js";
 
 interface FilterBarProps {
   filter: FilterState;
@@ -11,24 +19,20 @@ interface FilterBarProps {
 }
 
 export const FilterBar: Component<FilterBarProps> = (props) => {
-  const handleStatusChange = (e: Event) => {
-    const value = (e.target as HTMLSelectElement).value;
-    const statuses = value === "" ? new Set<string>() : new Set([value]);
+  const handleStatusChange = (value: string | null) => {
+    const statuses = value ? new Set([value]) : new Set<string>();
     props.onFilterChange({ ...props.filter, statuses });
   };
 
-  const handleAssigneeChange = (e: Event) => {
-    const value = (e.target as HTMLSelectElement).value;
+  const handleAssigneeChange = (value: string | null) => {
     props.onFilterChange({ ...props.filter, assignee: value || null });
   };
 
-  const handleReporterChange = (e: Event) => {
-    const value = (e.target as HTMLSelectElement).value;
+  const handleReporterChange = (value: string | null) => {
     props.onFilterChange({ ...props.filter, reporter: value || null });
   };
 
-  const handleLabelChange = (e: Event) => {
-    const value = (e.target as HTMLSelectElement).value;
+  const handleLabelChange = (value: string | null) => {
     props.onFilterChange({ ...props.filter, label: value || null });
   };
 
@@ -42,38 +46,88 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
     props.onFilterChange({ statuses: new Set(), assignee: null, reporter: null, label: null });
   };
 
-  const selectClass = "bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[11px] text-white/80 cursor-pointer min-w-0 flex-1";
+  const triggerClass = "flex-1 min-w-0 text-[11px] h-7 bg-muted border-border text-foreground";
 
   return (
-    <div class="flex gap-1.5 px-4 py-2 border-b border-white/10 items-center flex-wrap">
-      <select class={selectClass} onChange={handleStatusChange} value={[...props.filter.statuses][0] ?? ""}>
-        <option value="">All Statuses</option>
-        <option value="No Task">No Task</option>
-        {ALL_ATT_STATUSES.map((s) => (
-          <option value={s}>{s}</option>
-        ))}
-      </select>
-      <select class={selectClass} onChange={handleAssigneeChange} value={props.filter.assignee ?? ""}>
-        <option value="">All Assignees</option>
-        <For each={props.assignees}>{(a) => <option value={a}>{a}</option>}</For>
-      </select>
-      <select class={selectClass} onChange={handleReporterChange} value={props.filter.reporter ?? ""}>
-        <option value="">All Reporters</option>
-        <For each={props.reporters}>{(r) => <option value={r}>{r}</option>}</For>
-      </select>
+    <div class="flex gap-1.5 px-4 py-2 border-b border-border items-center flex-wrap">
+      <Select
+        value={[...props.filter.statuses][0] ?? ""}
+        onChange={handleStatusChange}
+        options={["", "No Task", ...ALL_ATT_STATUSES]}
+        itemComponent={(itemProps) => (
+          <SelectItem item={itemProps.item}>
+            {itemProps.item.rawValue === "" ? "All Statuses" : itemProps.item.rawValue}
+          </SelectItem>
+        )}
+      >
+        <SelectTrigger class={triggerClass}>
+          <SelectValue<string>>
+            {(state) => state.selectedOption() || "All Statuses"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent />
+      </Select>
+
+      <Select
+        value={props.filter.assignee ?? ""}
+        onChange={handleAssigneeChange}
+        options={["", ...props.assignees]}
+        itemComponent={(itemProps) => (
+          <SelectItem item={itemProps.item}>
+            {itemProps.item.rawValue === "" ? "All Assignees" : itemProps.item.rawValue}
+          </SelectItem>
+        )}
+      >
+        <SelectTrigger class={triggerClass}>
+          <SelectValue<string>>
+            {(state) => state.selectedOption() || "All Assignees"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent />
+      </Select>
+
+      <Select
+        value={props.filter.reporter ?? ""}
+        onChange={handleReporterChange}
+        options={["", ...props.reporters]}
+        itemComponent={(itemProps) => (
+          <SelectItem item={itemProps.item}>
+            {itemProps.item.rawValue === "" ? "All Reporters" : itemProps.item.rawValue}
+          </SelectItem>
+        )}
+      >
+        <SelectTrigger class={triggerClass}>
+          <SelectValue<string>>
+            {(state) => state.selectedOption() || "All Reporters"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent />
+      </Select>
+
       <Show when={props.labels.length > 0}>
-        <select class={selectClass} onChange={handleLabelChange} value={props.filter.label ?? ""}>
-          <option value="">All Labels</option>
-          <For each={props.labels}>{(l) => <option value={l}>{l}</option>}</For>
-        </select>
-      </Show>
-      <Show when={hasActiveFilter()}>
-        <button
-          class="text-[10px] text-white/50 hover:text-white/80 cursor-pointer whitespace-nowrap"
-          onClick={handleClear}
+        <Select
+          value={props.filter.label ?? ""}
+          onChange={handleLabelChange}
+          options={["", ...props.labels]}
+          itemComponent={(itemProps) => (
+            <SelectItem item={itemProps.item}>
+              {itemProps.item.rawValue === "" ? "All Labels" : itemProps.item.rawValue}
+            </SelectItem>
+          )}
         >
+          <SelectTrigger class={triggerClass}>
+            <SelectValue<string>>
+              {(state) => state.selectedOption() || "All Labels"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent />
+        </Select>
+      </Show>
+
+      <Show when={hasActiveFilter()}>
+        <Button variant="ghost" size="sm" class="text-[10px] text-muted-foreground hover:text-foreground h-auto py-0.5 px-1.5 whitespace-nowrap" onClick={handleClear}>
           ✕ Clear
-        </button>
+        </Button>
       </Show>
     </div>
   );

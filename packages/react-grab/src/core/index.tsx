@@ -3321,7 +3321,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     });
 
     const resolvedCssText = typeof cssText === "string" ? cssText : "";
-    const rendererRoot = mountRoot(resolvedCssText);
+    const { root: rendererRoot, shadowRoot } = mountRoot(resolvedCssText);
 
     const isThemeEnabled = createMemo(() => pluginRegistry.store.theme.enabled);
     const isSelectionBoxThemeEnabled = createMemo(

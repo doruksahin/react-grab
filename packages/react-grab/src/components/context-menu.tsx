@@ -18,7 +18,6 @@ import {
   ARROW_HEIGHT_PX,
   DROPDOWN_OFFSCREEN_POSITION,
   LABEL_GAP_PX,
-  Z_INDEX_LABEL,
 } from "../constants.js";
 import { cn } from "../utils/cn.js";
 import { Arrow } from "./selection-label/arrow.js";
@@ -231,11 +230,11 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-context-menu
-        class="fixed font-sans text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none"
+        class="fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none"
         style={{
           top: `${computedPosition().top}px`,
           left: `${computedPosition().left}px`,
-          "z-index": `${Z_INDEX_LABEL}`,
+          "z-index": "var(--z-dropdown)",
           "pointer-events": "auto",
         }}
         onPointerDown={suppressMenuEvent}
@@ -252,7 +251,7 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
         <div
           class={cn(
             "contain-layout flex flex-col justify-center items-start rounded-[10px] antialiased w-fit h-fit min-w-[100px] [font-synthesis:none] [corner-shape:superellipse(1.25)]",
-            "bg-white",
+            "bg-popover",
           )}
         >
           <div class="contain-layout shrink-0 flex items-center gap-1 pt-1.5 pb-1 w-fit h-fit px-2">
@@ -280,7 +279,7 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
             >
               <div
                 ref={highlightRef}
-                class="pointer-events-none absolute bg-black/5 opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
+                class="pointer-events-none absolute bg-accent opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
               />
               <For each={menuItems()}>
                 {(item) => (
@@ -298,12 +297,12 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
                     onPointerLeave={clearHighlight}
                     onClick={(event) => handleAction(item, event)}
                   >
-                    <span class="text-[13px] leading-4 font-sans font-medium text-black">
+                    <span class="text-[13px] leading-4 font-medium text-popover-foreground">
                       {item.label}
                     </span>
                     <Show when={item.shortcut}>
                       {(shortcut) => (
-                        <span class="text-[11px] font-sans text-black/50 ml-4">
+                        <span class="text-[11px] text-muted-foreground ml-4">
                           {formatShortcut(shortcut())}
                         </span>
                       )}

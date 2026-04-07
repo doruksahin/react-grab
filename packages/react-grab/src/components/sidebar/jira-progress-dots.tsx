@@ -32,12 +32,12 @@ export const JiraProgressDots: Component<JiraProgressDotsProps> = (props) => {
               class={`w-2 h-2 rounded-full transition-colors ${
                 i() <= active()
                   ? "bg-blue-400"
-                  : "bg-white/20"
+                  : "bg-accent"
               }`}
               title={stage}
             />
             <Show when={i() < STAGES.length - 1}>
-              <div class={`flex-1 h-px ${i() < active() ? "bg-blue-400/50" : "bg-white/10"}`} />
+              <div class={`flex-1 h-px ${i() < active() ? "bg-blue-400/50" : "bg-border"}`} />
             </Show>
           </>
         )}

@@ -21,7 +21,7 @@ export const StatsBar: Component<StatsBarProps> = (props) => {
   };
 
   return (
-    <div data-react-grab-stats-bar class="flex border-b border-white/10">
+    <div data-react-grab-stats-bar class="flex border-b border-border">
       <StatCell value={stats().groups} label="Groups" />
       <StatCell value={stats().selections} label="Items" />
       <StatCell value={stats().ticketed} label="Ticketed" />
@@ -31,7 +31,7 @@ export const StatsBar: Component<StatsBarProps> = (props) => {
 
 const StatCell: Component<{ value: number; label: string }> = (props) => (
   <div class="flex-1 text-center py-2.5 px-1">
-    <div class="text-lg font-bold text-white">{props.value}</div>
-    <div class="text-[10px] text-white/40 uppercase tracking-wider">{props.label}</div>
+    <div class="text-lg font-bold text-foreground">{props.value}</div>
+    <div class="text-[10px] text-muted-foreground uppercase tracking-wider">{props.label}</div>
   </div>
 );

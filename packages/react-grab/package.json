@@ -104,10 +104,13 @@
     "@medv/finder": "^4.0.2",
     "@react-grab/cli": "workspace:*",
     "bippy": "^0.5.32",
+    "cva": "1.0.0-beta.4",
     "element-source": "^0.0.3",
     "modern-screenshot": "^4.6.8",
     "solid-focus-trap": "^0.1.9",
     "solid-js": "^1.9.10",
+    "tailwind-merge": "^3.5.0",
+    "tw-animate-css": "^1.4.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

@@ -1,7 +1,7 @@
 import { Show, onMount, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 import type { DropdownAnchor } from "../types.js";
-import { DROPDOWN_EDGE_TRANSFORM_ORIGIN, Z_INDEX_LABEL } from "../constants.js";
+import { DROPDOWN_EDGE_TRANSFORM_ORIGIN } from "../constants.js";
 import { cn } from "../utils/cn.js";
 import { DiscardPrompt } from "./selection-label/discard-prompt.js";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
@@ -45,11 +45,11 @@ export const ClearCommentsPrompt: Component<ClearCommentsPromptProps> = (
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-clear-comments-prompt
-        class="fixed font-sans text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
+        class="fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
         style={{
           top: `${dropdown.displayPosition().top}px`,
           left: `${dropdown.displayPosition().left}px`,
-          "z-index": `${Z_INDEX_LABEL}`,
+          "z-index": "var(--z-dialog)",
           "pointer-events": dropdown.isAnimatedIn() ? "auto" : "none",
           "transform-origin":
             DROPDOWN_EDGE_TRANSFORM_ORIGIN[dropdown.lastAnchorEdge()],
@@ -64,7 +64,7 @@ export const ClearCommentsPrompt: Component<ClearCommentsPromptProps> = (
         <div
           class={cn(
             "contain-layout flex flex-col rounded-[10px] antialiased w-fit h-fit [font-synthesis:none] [corner-shape:superellipse(1.25)]",
-            "bg-white",
+            "bg-popover",
           )}
         >
           <DiscardPrompt

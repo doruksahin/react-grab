@@ -6,7 +6,6 @@ import {
   FADE_DURATION_MS,
   FROZEN_GLOW_COLOR,
   FROZEN_GLOW_EDGE_PX,
-  Z_INDEX_OVERLAY_CANVAS,
 } from "../constants.js";
 import { openFile } from "../utils/open-file.js";
 import { isElementConnected } from "../utils/is-element-connected.js";
@@ -87,7 +86,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           bottom: 0,
           left: 0,
           "pointer-events": "none",
-          "z-index": Z_INDEX_OVERLAY_CANVAS,
+          "z-index": "var(--z-overlay)",
           opacity: props.isFrozen ? 1 : 0,
           transition: `opacity ${FADE_DURATION_MS}ms ease-out`,
           "will-change": "opacity",
@@ -300,26 +299,26 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       />
 
       <CommentsDropdown
-        position={props.commentsDropdownPosition ?? null}
-        items={props.commentItems ?? []}
-        disconnectedItemIds={props.commentsDisconnectedItemIds}
-        groups={props.groups}
-        onSelectItem={props.onCommentItemSelect}
-        onItemHover={props.onCommentItemHover}
-        onCopyAll={props.onCommentsCopyAll}
-        onCopyAllHover={props.onCommentsCopyAllHover}
-        onClearAll={props.onCommentsClear}
-        onDismiss={props.onCommentsDismiss}
-        onDropdownHover={props.onCommentsDropdownHover}
-        onToggleItemRevealed={props.onToggleCommentItemRevealed}
-        onAddGroup={props.onAddGroup}
-        onRenameGroup={props.onRenameGroup}
-        onDeleteGroup={props.onDeleteGroup}
-        onToggleGroupRevealed={props.onToggleGroupRevealed}
-        onCopyGroup={props.onCopyGroup}
-        copyableCount={props.copyableCount}
-        onMoveItem={props.onMoveItem}
-      />
+          position={props.commentsDropdownPosition ?? null}
+          items={props.commentItems ?? []}
+          disconnectedItemIds={props.commentsDisconnectedItemIds}
+          groups={props.groups}
+          onSelectItem={props.onCommentItemSelect}
+          onItemHover={props.onCommentItemHover}
+          onCopyAll={props.onCommentsCopyAll}
+          onCopyAllHover={props.onCommentsCopyAllHover}
+          onClearAll={props.onCommentsClear}
+          onDismiss={props.onCommentsDismiss}
+          onDropdownHover={props.onCommentsDropdownHover}
+          onToggleItemRevealed={props.onToggleCommentItemRevealed}
+          onAddGroup={props.onAddGroup}
+          onRenameGroup={props.onRenameGroup}
+          onDeleteGroup={props.onDeleteGroup}
+          onToggleGroupRevealed={props.onToggleGroupRevealed}
+          onCopyGroup={props.onCopyGroup}
+          copyableCount={props.copyableCount}
+          onMoveItem={props.onMoveItem}
+        />
 
       <Show when={sidebarOpen()}>
         <Sidebar
