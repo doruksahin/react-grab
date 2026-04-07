@@ -1,6 +1,10 @@
-// packages/react-grab/src/components/sidebar/jira-create-dialog.tsx
-import { type Component, Show } from "solid-js";
-import { Portal } from "solid-js/web";
+import { type Component } from "solid-js";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog.js";
 import { JiraCreateForm } from "./jira-create-form.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import type { CommentItem } from "../../types.js";
@@ -12,54 +16,36 @@ interface JiraCreateDialogProps {
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
   jiraProjectKey: string;
-  /** Shadow root for Portal mounting. Passed as a prop to avoid context timing
-   *  issues where useShadowRoot() may return null before the ref is set. */
+  /** @deprecated Portal now auto-mounts via ShadowRootContext — no longer needed. */
   shadowRoot?: ShadowRoot | null;
   onTicketCreated: (groupId: string, ticketId: string, ticketUrl: string) => void;
   onClose: () => void;
 }
 
 export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
-  const mountTarget = () => props.shadowRoot ?? document.body;
-
   return (
-    <Show when={props.open}>
-      <Portal mount={mountTarget()}>
-        {/* Backdrop */}
-        <div
-          class="fixed inset-0 bg-black/60"
-          style={{
-            "z-index": "2147483647",
-            "pointer-events": "auto",
-          }}
-          onClick={props.onClose}
+    <Dialog open={props.open} onOpenChange={(open) => !open && props.onClose()} modal>
+      {/* data-kb-theme="dark" is forwarded to the portal wrapper div inside DialogContent,
+          which wraps BOTH the overlay and the content panel — so dark tokens apply to both. */}
+      <DialogContent
+        data-react-grab-jira-dialog
+        data-kb-theme="dark"
+        class="w-[480px] max-h-[80vh] overflow-y-auto bg-[#1a1a1a] border-white/10"
+        style={{ "z-index": "2147483647" }}
+      >
+        <DialogHeader>
+          <DialogTitle class="text-white">Create JIRA Ticket</DialogTitle>
+        </DialogHeader>
+        <JiraCreateForm
+          workspaceId={props.workspaceId}
+          groupId={props.groupId}
+          group={props.group}
+          commentItems={props.commentItems}
+          jiraProjectKey={props.jiraProjectKey}
+          onSuccess={props.onTicketCreated}
+          onClose={props.onClose}
         />
-        {/* Dialog panel */}
-        <div
-          class="fixed inset-0 flex items-center justify-center"
-          style={{ "z-index": "2147483647", "pointer-events": "none" }}
-        >
-          <div
-            data-react-grab-jira-dialog
-            class="bg-[#1a1a1a] rounded-xl w-[480px] max-h-[80vh] overflow-y-auto p-6 border border-white/10"
-            style={{ "pointer-events": "auto" }}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Create JIRA Ticket"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <JiraCreateForm
-              workspaceId={props.workspaceId}
-              groupId={props.groupId}
-              group={props.group}
-              commentItems={props.commentItems}
-              jiraProjectKey={props.jiraProjectKey}
-              onSuccess={props.onTicketCreated}
-              onClose={props.onClose}
-            />
-          </div>
-        </div>
-      </Portal>
-    </Show>
+      </DialogContent>
+    </Dialog>
   );
 };
