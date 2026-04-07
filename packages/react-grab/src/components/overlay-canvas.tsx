@@ -13,7 +13,6 @@ import {
   LERP_CONVERGENCE_THRESHOLD_PX,
   FADE_OUT_BUFFER_MS,
   MIN_DEVICE_PIXEL_RATIO,
-  Z_INDEX_OVERLAY_CANVAS,
   OVERLAY_BORDER_COLOR_DRAG,
   OVERLAY_FILL_COLOR_DRAG,
   OPACITY_CONVERGENCE_THRESHOLD,
@@ -893,7 +892,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
         top: "0",
         left: "0",
         "pointer-events": "none",
-        "z-index": String(Z_INDEX_OVERLAY_CANVAS),
+        "z-index": "var(--z-overlay)",
       }}
     />
   );

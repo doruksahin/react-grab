@@ -41,7 +41,6 @@ import {
   SAFE_POLYGON_BUFFER_PX,
   SELECTION_HINT_COUNT,
   SELECTION_HINT_CYCLE_INTERVAL_MS,
-  Z_INDEX_HOST,
 } from "../../constants.js";
 import { freezeUpdates } from "../../utils/freeze-updates.js";
 import {
@@ -1046,7 +1045,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           : "opacity-0 pointer-events-none",
       )}
       style={{
-        "z-index": String(Z_INDEX_HOST),
+        "z-index": "var(--z-toolbar)",
+        isolation: "isolate",
         transform: `translate(${currentPosition().x}px, ${
           currentPosition().y
         }px)`,
@@ -1287,7 +1287,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             shakeTooltipPositionClass(),
           )}
           style={{
-            "z-index": String(Z_INDEX_HOST),
+            "z-index": "var(--z-tooltip)",
             [isVertical() ? "top" : "left"]:
               `calc(50% - ${TOOLBAR_HINT_CENTER_OFFSET_PX}px)`,
           }}
@@ -1338,7 +1338,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             shakeTooltipPositionClass(),
           )}
           style={{
-            "z-index": String(Z_INDEX_HOST),
+            "z-index": "var(--z-tooltip)",
             [isVertical() ? "top" : "left"]:
               `calc(50% - ${TOOLBAR_HINT_CENTER_OFFSET_PX}px)`,
           }}

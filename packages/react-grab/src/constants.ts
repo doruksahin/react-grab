@@ -39,10 +39,11 @@ export const BOUNDS_RECALC_INTERVAL_MS = 100;
 export const AUTO_SCROLL_EDGE_THRESHOLD_PX = 25;
 export const AUTO_SCROLL_SPEED_PX = 10;
 
+// The shadow host competes with arbitrary page content; only this single
+// boundary needs INT_MAX. Everything *inside* the shadow root uses the
+// semantic var scale defined on `:host` in styles.css (--z-overlay,
+// --z-toolbar, --z-sidebar, --z-dropdown, --z-dialog, --z-tooltip).
 export const Z_INDEX_HOST = 2147483647;
-export const Z_INDEX_LABEL = 2147483647;
-export const Z_INDEX_OVERLAY_CANVAS = 2147483645;
-export const Z_INDEX_SIDEBAR = 2147483646;
 
 export const DRAG_LERP_FACTOR = 0.7;
 export const LERP_CONVERGENCE_THRESHOLD_PX = 0.5;

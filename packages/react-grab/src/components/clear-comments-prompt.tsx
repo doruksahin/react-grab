@@ -1,7 +1,7 @@
 import { Show, onMount, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 import type { DropdownAnchor } from "../types.js";
-import { DROPDOWN_EDGE_TRANSFORM_ORIGIN, Z_INDEX_LABEL } from "../constants.js";
+import { DROPDOWN_EDGE_TRANSFORM_ORIGIN } from "../constants.js";
 import { cn } from "../utils/cn.js";
 import { DiscardPrompt } from "./selection-label/discard-prompt.js";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
@@ -49,7 +49,7 @@ export const ClearCommentsPrompt: Component<ClearCommentsPromptProps> = (
         style={{
           top: `${dropdown.displayPosition().top}px`,
           left: `${dropdown.displayPosition().left}px`,
-          "z-index": `${Z_INDEX_LABEL}`,
+          "z-index": "var(--z-dialog)",
           "pointer-events": dropdown.isAnimatedIn() ? "auto" : "none",
           "transform-origin":
             DROPDOWN_EDGE_TRANSFORM_ORIGIN[dropdown.lastAnchorEdge()],

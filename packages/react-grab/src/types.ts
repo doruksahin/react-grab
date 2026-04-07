@@ -490,13 +490,6 @@ export interface CommentItem extends ServerCommentItem {
 }
 
 export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
-  /**
-   * The ShadowRoot that hosts all react-grab UI. Passed from mountRoot()
-   * through core/index.tsx. ReactGrabRenderer provides this to its entire
-   * component tree via ShadowRootContext so portal components can mount
-   * inside the shadow DOM rather than on document.body.
-   */
-  shadowRoot: ShadowRoot;
   selectionVisible?: boolean;
   selectionBounds?: OverlayBounds;
   selectionBoundsMultiple?: OverlayBounds[];

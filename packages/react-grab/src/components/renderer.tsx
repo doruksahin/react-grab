@@ -6,7 +6,6 @@ import {
   FADE_DURATION_MS,
   FROZEN_GLOW_COLOR,
   FROZEN_GLOW_EDGE_PX,
-  Z_INDEX_OVERLAY_CANVAS,
 } from "../constants.js";
 import { openFile } from "../utils/open-file.js";
 import { isElementConnected } from "../utils/is-element-connected.js";
@@ -19,7 +18,6 @@ import { CommentsDropdown } from "./comments-dropdown.js";
 import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
-import { ShadowRootContext } from "../utils/shadow-context.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
@@ -63,7 +61,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   };
 
   return (
-    <ShadowRootContext.Provider value={props.shadowRoot}>
+    <>
       <OverlayCanvas
         selectionVisible={props.selectionVisible}
         selectionBounds={props.selectionBounds}
@@ -88,7 +86,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           bottom: 0,
           left: 0,
           "pointer-events": "none",
-          "z-index": Z_INDEX_OVERLAY_CANVAS,
+          "z-index": "var(--z-overlay)",
           opacity: props.isFrozen ? 1 : 0,
           transition: `opacity ${FADE_DURATION_MS}ms ease-out`,
           "will-change": "opacity",
@@ -341,6 +339,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           }}
         />
       </Show>
-    </ShadowRootContext.Provider>
+    </>
   );
 };

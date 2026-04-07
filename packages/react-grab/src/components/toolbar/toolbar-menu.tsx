@@ -4,7 +4,6 @@ import type { ContextMenuAction, DropdownAnchor } from "../../types.js";
 import {
   DROPDOWN_EDGE_TRANSFORM_ORIGIN,
   TOOLBAR_MENU_MIN_WIDTH_PX,
-  Z_INDEX_LABEL,
 } from "../../constants.js";
 import { cn } from "../../utils/cn.js";
 import { formatShortcut } from "../../utils/format-shortcut.js";
@@ -64,7 +63,7 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
         style={{
           top: `${dropdown.displayPosition().top}px`,
           left: `${dropdown.displayPosition().left}px`,
-          "z-index": `${Z_INDEX_LABEL}`,
+          "z-index": "var(--z-dropdown)",
           "pointer-events": dropdown.isAnimatedIn() ? "auto" : "none",
           "transform-origin":
             DROPDOWN_EDGE_TRANSFORM_ORIGIN[dropdown.lastAnchorEdge()],

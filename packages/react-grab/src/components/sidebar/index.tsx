@@ -10,7 +10,6 @@ import {
 import createFocusTrap from "solid-focus-trap";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import type { SyncStatus } from "../../features/sync/types.js";
-import { Z_INDEX_LABEL } from "../../constants.js";
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
 import { StatsBar } from "./stats-bar.js";
@@ -127,7 +126,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
       data-react-grab-sidebar
         data-react-grab-ignore-events
         class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-[var(--grab-dark-surface)] text-[#e5e5e5] animate-slide-in-left"
-        style={{ "z-index": String(Z_INDEX_LABEL), "pointer-events": "auto" }}
+        style={{ "z-index": "var(--z-sidebar)", "pointer-events": "auto", isolation: "isolate" }}
         role="dialog"
         aria-modal="true"
         aria-label="React Grab Dashboard"

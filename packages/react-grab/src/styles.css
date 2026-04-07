@@ -59,6 +59,18 @@
 :host {
   all: initial;
   direction: ltr;
+  /*
+   * Semantic z-index scale (shadow-root-internal).
+   * The host already wins INT_MAX vs the page; nothing inside needs more
+   * than ~60. 10-step gaps so new layers can be inserted without renumbering.
+   */
+  --z-base: 0;
+  --z-overlay: 10;     /* selection canvas, hover labels, comments */
+  --z-toolbar: 20;     /* floating toolbar + its menus */
+  --z-sidebar: 30;     /* dashboard sidebar */
+  --z-dropdown: 40;    /* select / popper / context menu / combobox */
+  --z-dialog: 50;      /* modal dialogs */
+  --z-tooltip: 60;     /* always on top */
   /* shadcn-solid design tokens — light mode (sidebar) */
   --radius: 0.375rem;
   --background: oklch(1 0 0);
@@ -81,6 +93,69 @@
   --ring: oklch(0.708 0 0);
   /* grab-specific tokens */
   --grab-dark-surface: #1a1a1a;
+}
+
+/*
+ * SHADOW HOST POINTER-EVENTS OPT-IN FOR KOBALTE PORTALS
+ *
+ * The shadow host is created with `pointer-events: none` (see mount-root.ts)
+ * so that clicks on transparent regions pass through to the underlying page —
+ * essential for a parasitic dev-tool overlay. CSS `pointer-events` is
+ * inherited, so EVERY descendant of the host inherits `none` by default.
+ *
+ * Most components opt back in via their own wrapper (e.g. the sidebar sets
+ * `pointer-events: auto` inline on its container div). But Kobalte primitives
+ * that use a Portal (Select, Tooltip, Popover, DropdownMenu, ContextMenu,
+ * HoverCard, Combobox, Dialog) mount their content directly under the shadow
+ * root via `useShadowMount()`, bypassing every opt-in wrapper. Their content
+ * is a direct child of the shadow root and inherits `pointer-events: none`
+ * from the host — so clicks on dropdown items, tooltip targets, dialog
+ * buttons, and menu items are silently swallowed.
+ *
+ * The symptom is subtle: the trigger opens, the popup appears, hover styles
+ * fire (CSS :hover doesn't require pointer-events to register paint changes),
+ * but click events never reach the handler. It looks like a broken event
+ * listener, not a CSS inheritance issue.
+ *
+ * The fix: opt back in at the portal wrapper level, once, for every Kobalte
+ * primitive. Two selectors cover the entire surface:
+ *
+ *   [data-popper-positioner]
+ *     Set by Kobalte's <PopperPositioner> on every popper-positioned primitive
+ *     — Select, Tooltip, Popover, DropdownMenu, ContextMenu, HoverCard,
+ *     Combobox, Menu, MenuBar, NavigationMenu. The popper positioner is the
+ *     outermost element of the portalled content for all of these.
+ *     Source: @kobalte/core/dist/chunk/2CTBMVJ4.jsx:115
+ *
+ *   [role="dialog"]
+ *     Set by Kobalte's <DialogContent> for modal Dialog and AlertDialog.
+ *     (DialogOverlay already sets pointer-events: auto inline at chunk
+ *     KRZCLZJ6.js:202, so it doesn't need a rule here — only the content does.)
+ *     Source: @kobalte/core/dist/chunk/KRZCLZJ6.js:136
+ *
+ * If you add a new portal-using primitive (e.g. Sheet, Drawer, Toast) and
+ * clicks don't register inside it, inspect the rendered DOM in DevTools to
+ * find what attribute Kobalte adds to the outermost portal child, then
+ * extend this rule. The pattern is always the same: shadow host is `none`,
+ * portal content needs to opt back in.
+ */
+[data-popper-positioner],
+[role="dialog"] {
+  pointer-events: auto;
+}
+
+/*
+ * Override Kobalte's hard-coded inline `z-index: 50` on every PopperPositioner
+ * so portalled popovers (Select, DropdownMenu, ContextMenu, HoverCard, Combobox,
+ * Menu, NavigationMenu) sit at our `--z-dropdown` tier — above the sidebar.
+ * `!important` is required because the value is inline.
+ */
+[data-popper-positioner] {
+  z-index: var(--z-dropdown) !important;
+}
+
+[role="dialog"] {
+  z-index: var(--z-dialog);
 }
 
 /* shadcn-solid design tokens — dark mode (dialog) */

@@ -2,7 +2,9 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Thread the `ShadowRoot` as an explicit prop from its creation point in `mountRoot()` down to a single `ShadowRootContext.Provider` in `ReactGrabRenderer`, eliminating every `getRootNode()` recovery hack, the dual-provider pattern, and the silent `document.body` fallback.
+**Goal:** Thread the `ShadowRoot` as an explicit prop from its creation point in `mountRoot()` down to a single `ShadowRootContext.Provider` in `ReactGrabRenderer`, eliminating every `getRootNode()`-based `ShadowRootContext` recovery, the dual-provider pattern, and the silent `document.body` fallback.
+
+**Out of scope:** `comments-dropdown.tsx:81` and `toolbar/index.tsx:126` also call `getRootNode()`, but for a different purpose — they query for sibling DOM elements (`[data-react-grab-toolbar]`) within the shadow root for safe-polygon hover tracking, not for portal mounting. Those usages are query-scope helpers, not provider recovery, and are intentionally left untouched.
 
 **Architecture:** The layer that creates a resource is its canonical owner and must hand it to consumers explicitly — never let consumers recover it from the DOM. `mountRoot()` creates the `ShadowRoot` and returns it. `ReactGrabRenderer` receives it as a prop and provides it once at the root of the entire component tree. All portal components consume it via `useShadowMount()`. No component traverses the DOM to find the shadow root.
 
@@ -39,7 +41,7 @@ Expected: **PASS**. If it fails before we start, stop and investigate.
 
 ## Task 1: Relocate `shadow-context.ts` to `utils/` — correct colocation
 
-**Why:** `features/sidebar/shadow-context.ts` is imported by `renderer.tsx`, `toolbar/index.tsx`, `comments-dropdown.tsx`, `ui/dialog.tsx`, `ui/select.tsx`, `ui/tooltip.tsx`. It is not sidebar-specific. A file that is used everywhere belongs in `utils/`, not inside a feature module.
+**Why:** `features/sidebar/shadow-context.ts` is imported by `components/renderer.tsx`, `components/sidebar/index.tsx`, `components/ui/dialog.tsx`, `components/ui/select.tsx`, and `components/ui/tooltip.tsx` (verified via `grep -rn "shadow-context"`). It is consumed by every UI portal wrapper and the renderer itself — it is not sidebar-specific. Cross-cutting infrastructure belongs in `utils/`, not inside a feature module.
 
 **Files:**
 - Create: `packages/react-grab/src/utils/shadow-context.ts`
@@ -51,17 +53,22 @@ Expected: **PASS**. If it fails before we start, stop and investigate.
 - Modify: `packages/react-grab/src/features/sidebar/index.ts` (remove re-export of shadow context — it was never sidebar's to own)
 - Delete: `packages/react-grab/src/features/sidebar/shadow-context.ts`
 
-**Step 1: Create `utils/shadow-context.ts` with identical content**
+**Step 1: Create `utils/shadow-context.ts`**
+
+> **Note (2026-04-07):** Dev assertion and `document.body` fallback dropped — the single-provider architecture in Task 5 guarantees the context is always set. Validating against an impossible scenario violates the project's standing preference against defensive code for impossible cases.
 
 ```ts
 // packages/react-grab/src/utils/shadow-context.ts
 import { createContext, useContext } from "solid-js";
 
 /**
- * Provides the ShadowRoot to all components that need to mount
- * overlays (Dialog, Select, Tooltip) inside the shadow DOM.
+ * Provides the ShadowRoot to all components that need to mount overlays
+ * (Dialog, Select, Tooltip) inside the shadow DOM.
  *
- * Set once by ReactGrabRenderer via the shadowRoot prop passed from mountRoot().
+ * Set once by ReactGrabRenderer via the shadowRoot prop passed from
+ * mountRoot(). All consumers of useShadowMount() are unconditionally
+ * descendants of that provider — there is no fallback because there
+ * is no scenario in which the context can be missing.
  */
 export const ShadowRootContext = createContext<ShadowRoot | null>(null);
 
@@ -70,22 +77,12 @@ export function useShadowRoot(): ShadowRoot | null {
 }
 
 /**
- * Returns the shadow root cast to HTMLElement, ready to pass as the
- * `mount` prop to any Kobalte Portal component.
- *
- * Throws in development if called outside a ShadowRootContext.Provider
- * (signals a missing provider, not a CSS glitch).
- * Falls back to document.body in production to avoid a hard crash.
+ * Returns the ShadowRoot cast to HTMLElement, ready to pass as the
+ * `mount` prop to any Kobalte Portal component. Kobalte's mount prop
+ * accepts any Node at runtime; the cast satisfies its type signature.
  */
 export function useShadowMount(): HTMLElement {
-  const root = useShadowRoot();
-  if (import.meta.env.DEV && !root) {
-    throw new Error(
-      "[react-grab] useShadowMount() was called outside a ShadowRootContext.Provider. " +
-        "All portal components must be descendants of ReactGrabRenderer.",
-    );
-  }
-  return (root ?? document.body) as HTMLElement;
+  return useShadowRoot() as unknown as HTMLElement;
 }
 ```
 
@@ -330,6 +327,8 @@ required to pass the ShadowRoot explicitly to ReactGrabRenderer."
 
 **Why:** `core/index.tsx` is the boundary between the creation layer (`mountRoot`) and the provision layer (`ReactGrabRenderer`). It already has the shadow root — it just wasn't returning it before. Now it destructures it and passes it as a prop.
 
+**Closure capture note:** `mountRoot()` is called synchronously at line ~3324, but `<ReactGrabRenderer>` is rendered inside a dynamic `import("../components/renderer.js").then(...)` callback at line ~4338. The destructured `shadowRoot` will be captured by closure into the `.then()` callback — this is the same pattern `rendererRoot` already uses (referenced inside the same `.then()` at line ~4326 and line ~4503), so no additional plumbing is needed. Verified: there is no existing `shadowRoot` identifier in `core/index.tsx`, so no naming collision.
+
 **Files:**
 - Modify: `packages/react-grab/src/core/index.tsx`
 
@@ -526,6 +525,8 @@ createFocusTrap({ element: () => containerRef, enabled: () => true });
 ```
 (`containerRef` was a signal accessor before, so it was already `() => value` when called. Now it's a plain `let`, so we wrap it in a getter explicitly.)
 
+**Type compatibility note:** `createFocusTrap`'s `element` prop is typed as `MaybeAccessor<HTMLElement | null>` (verified in `solid-focus-trap/dist/index.d.ts`). The current code passes a `() => HTMLDivElement | undefined` accessor and TypeScript accepts it (`HTMLDivElement` extends `HTMLElement`; `undefined` is permitted by structural inference). Wrapping the new plain `let` in `() => containerRef` produces the same accessor shape — no type widening or new errors.
+
 **Step 4: Remove the `shadowRoot` derivation (lines ~129–137)**
 
 Find and delete:
@@ -600,6 +601,8 @@ imperative operations like focus management."
 
 ## Task 7: Final verification — e2e + typecheck
 
+> **Baseline note (updated 2026-04-07):** The `"dialog opens inside shadow root"` e2e test fails on the branch this plan started from — a pre-existing bug unrelated to portal placement (`isJiraDialogVisible` times out, meaning the dialog never opens, likely a click-handler or mock issue from the Kobalte→shadcn migration). The verification gates below are adjusted accordingly.
+
 **Step 1: Full typecheck**
 
 ```bash
@@ -607,22 +610,23 @@ pnpm --filter react-grab typecheck
 ```
 Expected: 0 errors in any file touched by this plan.
 
-**Step 2: Run the portal e2e test**
+**Step 2: Record the e2e failure baseline (run after Task 6)**
 
 ```bash
 cd packages/react-grab
-pnpm test:e2e --grep "dialog opens inside shadow root"
+pnpm test:e2e 2>&1 | tee /tmp/e2e-baseline.txt
 ```
-Expected: **PASS** — dialog is mounted inside the shadow root, not on `document.body`.
+Save the list of failing tests. This is the pre-plan-changes baseline.
 
-**Step 3: Run the full e2e suite**
+**Step 3: Run the full e2e suite again (after Task 7 Step 1)**
 
 ```bash
-pnpm test:e2e
+cd packages/react-grab
+pnpm test:e2e 2>&1 | tee /tmp/e2e-after.txt
 ```
-Expected: all tests pass (or same failures as before this plan — no regressions).
+**Gate:** The set of failing tests must be identical to Step 2. No new failures. If the JIRA dialog test starts passing, that is a bonus; if it still fails, that is acceptable. Any new failure is a regression and must be investigated before proceeding.
 
-**Step 4: Manual smoke test (if e2e passes)**
+**Step 4: Manual smoke test (primary signal)**
 
 Open the app in a browser. Open DevTools → Elements. Find the shadow host (`[data-react-grab]`). Expand the shadow root. Verify:
 - Tooltips appear inside `#shadow-root`, not on `document.body`

@@ -4338,7 +4338,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           disposeRenderer = render(() => {
             return (
               <ReactGrabRenderer
-                shadowRoot={shadowRoot}
                 selectionVisible={selectionVisible()}
                 selectionBounds={selectionBounds()}
                 selectionBoundsMultiple={selectionBoundsMultiple()}

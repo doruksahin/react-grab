@@ -1,19 +1,20 @@
 // packages/react-grab/src/utils/shadow-context.ts
-import { createContext, useContext } from "solid-js";
+//
+// The shadow root is a singleton created exactly once by mountRoot(). It is
+// not reactive and never changes for the lifetime of the page, so we store
+// it on a module-scoped variable instead of threading it through Solid
+// context. This sidesteps owner-chain pitfalls where useContext() snapshots
+// happen inside Kobalte-internal computations created before our Provider
+// could attach a value, which silently falls through to `document.body`
+// for any portalled overlay (Dialog, Select, Tooltip).
+//
+// mountRoot() calls setShadowMount() synchronously after attachShadow();
+// every later useShadowMount() call returns the same node.
 
-/**
- * Provides the ShadowRoot to all components that need to mount overlays
- * (Dialog, Select, Tooltip) inside the shadow DOM.
- *
- * Set once by ReactGrabRenderer via the shadowRoot prop passed from
- * mountRoot(). All consumers of useShadowMount() are unconditionally
- * descendants of that provider — there is no fallback because there
- * is no scenario in which the context can be missing.
- */
-export const ShadowRootContext = createContext<ShadowRoot | null>(null);
+let shadowMount: HTMLElement | null = null;
 
-export function useShadowRoot(): ShadowRoot | null {
-  return useContext(ShadowRootContext);
+export function setShadowMount(sr: ShadowRoot): void {
+  shadowMount = sr as unknown as HTMLElement;
 }
 
 /**
@@ -22,5 +23,5 @@ export function useShadowRoot(): ShadowRoot | null {
  * accepts any Node at runtime; the cast satisfies its type signature.
  */
 export function useShadowMount(): HTMLElement {
-  return useShadowRoot() as unknown as HTMLElement;
+  return shadowMount!;
 }
