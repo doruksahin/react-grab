@@ -44,8 +44,8 @@ interface JiraCreateFormReadyProps extends JiraCreateFormProps {
   priorities: Array<{ id: string; name: string }>;
 }
 
-const triggerClass = "w-full text-[12px] bg-white/10 border-white/10 text-white";
-const textareaClass = "w-full bg-white/10 text-white text-[12px] rounded px-2 py-1.5 border border-white/10 resize-none";
+const triggerClass = "w-full text-[12px] bg-muted border-border text-foreground";
+const textareaClass = "w-full bg-muted text-foreground text-[12px] rounded px-2 py-1.5 border border-border resize-none";
 
 const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
   const projectKey = props.jiraProjectKey;
@@ -105,7 +105,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
     <form data-react-grab-jira-form onSubmit={handleSubmit} style={{ "pointer-events": "auto" }}>
       {/* Issue type — pre-selected to "Task" */}
       <div class="mb-3">
-        <label class="block text-[11px] text-white/50 mb-1">Work Type *</label>
+        <label class="block text-[11px] text-muted-foreground mb-1">Work Type *</label>
         <Select
           value={issueType()}
           onChange={(value: string | null) => value && setIssueType(value)}
@@ -123,7 +123,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
       {/* Priority — pre-selected to "Medium" */}
       <div class="mb-3">
-        <label class="block text-[11px] text-white/50 mb-1">Priority</label>
+        <label class="block text-[11px] text-muted-foreground mb-1">Priority</label>
         <Select
           value={priority()}
           onChange={(value: string | null) => value && setPriority(value)}
@@ -141,7 +141,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
       {/* Summary */}
       <div class="mb-3">
-        <label class="block text-[11px] text-white/50 mb-1">Summary *</label>
+        <label class="block text-[11px] text-muted-foreground mb-1">Summary *</label>
         <textarea
           class={textareaClass}
           style={{ "pointer-events": "auto" }}
@@ -154,9 +154,9 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
       {/* Description */}
       <div class="mb-3">
-        <label class="block text-[11px] text-white/50 mb-1">
+        <label class="block text-[11px] text-muted-foreground mb-1">
           Description{" "}
-          <span class="text-white/30">(markdown — converted to ADF on submit)</span>
+          <span class="text-muted-foreground">(markdown — converted to ADF on submit)</span>
         </label>
         <textarea
           class={`${textareaClass} font-mono`}
@@ -169,16 +169,16 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
       {/* Attachments (informational only — server attaches screenshots) */}
       <div class="mb-4">
-        <p class="text-[11px] text-white/50 mb-1">Attachments</p>
+        <p class="text-[11px] text-muted-foreground mb-1">Attachments</p>
         <Show
           when={screenshotList().length > 0}
           fallback={
-            <p class="text-[10px] text-white/30 italic">No screenshots</p>
+            <p class="text-[10px] text-muted-foreground italic">No screenshots</p>
           }
         >
           <For each={screenshotList()}>
             {(name) => (
-              <div class="text-[10px] text-white/40 font-mono">{name}</div>
+              <div class="text-[10px] text-muted-foreground font-mono">{name}</div>
             )}
           </For>
         </Show>
@@ -248,7 +248,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
   return (
     <Switch>
       <Match when={issueTypes.loading || priorities.loading}>
-        <div class="text-white/40 text-[12px]">Loading JIRA data…</div>
+        <div class="text-muted-foreground text-[12px]">Loading JIRA data…</div>
       </Match>
       <Match when={validation()?.ok === false}>
         <div class="p-3 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300">

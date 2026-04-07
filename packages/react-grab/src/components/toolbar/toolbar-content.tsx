@@ -120,7 +120,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
         size={14}
         class={cn(
           "transition-colors",
-          props.isActive ? "text-black" : "text-black/70",
+          props.isActive ? "text-popover-foreground" : "text-muted-foreground",
         )}
       />
     </button>
@@ -141,7 +141,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
         size={14}
         class={cn(
           "transition-colors",
-          props.isCommentsPinned ? "text-black/50" : "text-[#B3B3B3]",
+          props.isCommentsPinned ? "text-muted-foreground" : "text-muted-foreground",
         )}
       />
     </button>
@@ -158,7 +158,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
         hitboxConstraintClass(),
       )}
     >
-      <IconCopy size={14} class="text-[#B3B3B3] transition-colors" />
+      <IconCopy size={14} class="text-muted-foreground transition-colors" />
     </button>
   );
 
@@ -176,9 +176,9 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
       onClick={() => props.onToggleSelectionsRevealed?.()}
     >
       {props.selectionsRevealed ? (
-        <IconEyeFilled size={14} class="text-black transition-colors" />
+        <IconEyeFilled size={14} class="text-popover-foreground transition-colors" />
       ) : (
-        <IconEyeOff size={14} class="text-[#B3B3B3] transition-colors" />
+        <IconEyeOff size={14} class="text-muted-foreground transition-colors" />
       )}
     </button>
   );
@@ -198,12 +198,12 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
         class={cn(
           "relative rounded-full transition-colors",
           isVertical() ? "w-3.5 h-2.5" : "w-5 h-3",
-          props.enabled ? "bg-black" : "bg-black/25",
+          props.enabled ? "bg-popover-foreground" : "bg-muted-foreground",
         )}
       >
         <div
           class={cn(
-            "absolute top-0.5 rounded-full bg-white transition-transform",
+            "absolute top-0.5 rounded-full bg-popover transition-transform",
             isVertical() ? "w-1.5 h-1.5" : "w-2 h-2",
             !props.enabled && "left-0.5",
             props.enabled && (isVertical() ? "left-1.5" : "left-2.5"),
@@ -224,7 +224,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
       <IconChevron
         size={14}
         class={cn(
-          "text-[#B3B3B3] transition-transform duration-150",
+          "text-muted-foreground transition-transform duration-150",
           chevronRotation(),
         )}
       />
@@ -236,7 +236,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
       class={cn(
         "flex items-center justify-center rounded-[10px] antialiased relative overflow-visible [font-synthesis:none] filter-[drop-shadow(0px_1px_2px_#51515140)] [corner-shape:superellipse(1.25)]",
         isVertical() && "flex-col",
-        "bg-white",
+        "bg-popover",
         !props.isCollapsed &&
           (isVertical() ? "px-1.5 gap-1.5 py-2" : "py-1.5 gap-1.5 px-2"),
         collapsedEdgeClasses(),
@@ -348,7 +348,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
                     size={14}
                     class={cn(
                       "transition-colors",
-                      props.sidebarOpen ? "text-black" : "text-[#B3B3B3]",
+                      props.sidebarOpen ? "text-popover-foreground" : "text-muted-foreground",
                     )}
                   />
                 </button>

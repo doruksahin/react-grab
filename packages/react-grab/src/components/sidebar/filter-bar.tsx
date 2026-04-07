@@ -46,10 +46,10 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
     props.onFilterChange({ statuses: new Set(), assignee: null, reporter: null, label: null });
   };
 
-  const triggerClass = "flex-1 min-w-0 text-[11px] h-7 bg-white/5 border-white/10 text-white/80";
+  const triggerClass = "flex-1 min-w-0 text-[11px] h-7 bg-muted border-border text-foreground";
 
   return (
-    <div class="flex gap-1.5 px-4 py-2 border-b border-white/10 items-center flex-wrap">
+    <div class="flex gap-1.5 px-4 py-2 border-b border-border items-center flex-wrap">
       <Select
         value={[...props.filter.statuses][0] ?? ""}
         onChange={handleStatusChange}
@@ -125,7 +125,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
       </Show>
 
       <Show when={hasActiveFilter()}>
-        <Button variant="ghost" size="sm" class="text-[10px] text-white/50 hover:text-white/80 h-auto py-0.5 px-1.5 whitespace-nowrap" onClick={handleClear}>
+        <Button variant="ghost" size="sm" class="text-[10px] text-muted-foreground hover:text-foreground h-auto py-0.5 px-1.5 whitespace-nowrap" onClick={handleClear}>
           ✕ Clear
         </Button>
       </Show>

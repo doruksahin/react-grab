@@ -49,39 +49,39 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
   return (
     <div
       data-react-grab-selection-card
-      class="bg-[#232323] rounded-lg p-3 mb-1.5 border border-white/5"
+      class="bg-muted rounded-lg p-3 mb-1.5 border border-border"
       style={{ "pointer-events": "auto" }}
     >
       {/* Row 1: component name + tag badge + timestamp */}
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5 min-w-0">
-          <span class="text-[13px] font-semibold text-white truncate">
+          <span class="text-[13px] font-semibold text-foreground truncate">
             {props.item.componentName || props.item.elementName}
           </span>
-          <span class="px-1.5 py-0.5 rounded bg-white/10 text-white/50 text-[10px] font-mono shrink-0">
+          <span class="px-1.5 py-0.5 rounded bg-accent text-muted-foreground text-[10px] font-mono shrink-0">
             {props.item.tagName}
           </span>
         </div>
-        <span class="text-[10px] text-white/30 shrink-0 ml-2">
+        <span class="text-[10px] text-muted-foreground shrink-0 ml-2">
           {relativeTime(props.item.timestamp)}
         </span>
       </div>
 
       {/* Row 2: comment text */}
       <Show when={props.item.commentText}>
-        <p class="text-[11px] text-white/70 mb-1.5">{props.item.commentText}</p>
+        <p class="text-[11px] text-foreground mb-1.5">{props.item.commentText}</p>
       </Show>
 
       {/* Row 3: source file path (omit when extraction returns null — A-014) */}
       <Show when={filePath()}>
         {(fp) => (
           <div
-            class="text-[10px] text-white/40 font-mono truncate mb-1.5"
+            class="text-[10px] text-muted-foreground font-mono truncate mb-1.5"
             title={fp().path}
           >
             {fp().path}
             <Show when={fp().line !== null}>
-              <span class="text-white/30">:{fp().line}</span>
+              <span class="text-muted-foreground">:{fp().line}</span>
             </Show>
           </div>
         )}
@@ -99,7 +99,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       {/* Row 5: CSS selector */}
       <Show when={props.item.elementSelectors?.length}>
         <div
-          class="text-[10px] text-white/40 font-mono truncate mt-1.5"
+          class="text-[10px] text-muted-foreground font-mono truncate mt-1.5"
           title={props.item.elementSelectors?.[0]}
         >
           {props.item.elementSelectors?.[0]}
@@ -108,10 +108,10 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
 
       {/* Row 6: collapsible raw HTML — collapsed by default */}
       <details class="mt-1.5">
-        <summary class="text-[10px] text-white/30 cursor-pointer select-none hover:text-white/50">
+        <summary class="text-[10px] text-muted-foreground cursor-pointer select-none hover:text-foreground">
           Raw HTML
         </summary>
-        <pre class="mt-1 text-[9px] text-white/40 bg-white/5 rounded p-2 overflow-x-auto max-h-[200px] overflow-y-auto whitespace-pre-wrap break-all">
+        <pre class="mt-1 text-[9px] text-muted-foreground bg-muted rounded p-2 overflow-x-auto max-h-[200px] overflow-y-auto whitespace-pre-wrap break-all">
           {props.item.content}
         </pre>
       </details>

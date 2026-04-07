@@ -251,7 +251,7 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
         <div
           class={cn(
             "contain-layout flex flex-col justify-center items-start rounded-[10px] antialiased w-fit h-fit min-w-[100px] [font-synthesis:none] [corner-shape:superellipse(1.25)]",
-            "bg-white",
+            "bg-popover",
           )}
         >
           <div class="contain-layout shrink-0 flex items-center gap-1 pt-1.5 pb-1 w-fit h-fit px-2">
@@ -279,7 +279,7 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
             >
               <div
                 ref={highlightRef}
-                class="pointer-events-none absolute bg-black/5 opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
+                class="pointer-events-none absolute bg-accent opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
               />
               <For each={menuItems()}>
                 {(item) => (
@@ -297,12 +297,12 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
                     onPointerLeave={clearHighlight}
                     onClick={(event) => handleAction(item, event)}
                   >
-                    <span class="text-[13px] leading-4 font-medium text-black">
+                    <span class="text-[13px] leading-4 font-medium text-popover-foreground">
                       {item.label}
                     </span>
                     <Show when={item.shortcut}>
                       {(shortcut) => (
-                        <span class="text-[11px] text-black/50 ml-4">
+                        <span class="text-[11px] text-muted-foreground ml-4">
                           {formatShortcut(shortcut())}
                         </span>
                       )}

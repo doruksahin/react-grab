@@ -45,10 +45,10 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
       <div class="flex flex-wrap gap-1.5 px-4 py-1.5">
         <For each={chips()}>
           {(chip) => (
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-[10px] text-white/70">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent text-[10px] text-foreground">
               {chip.label}
               <button
-                class="text-white/40 hover:text-white/80 cursor-pointer"
+                class="text-muted-foreground hover:text-foreground cursor-pointer"
                 onClick={chip.onDismiss}
               >
                 ✕

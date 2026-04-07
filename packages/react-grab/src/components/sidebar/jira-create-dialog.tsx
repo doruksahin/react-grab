@@ -25,11 +25,11 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
     <Dialog open={props.open} onOpenChange={(open) => !open && props.onClose()} modal>
       <DialogContent
         data-react-grab-jira-dialog
-        class="w-[480px] max-h-[80vh] overflow-y-auto bg-[var(--grab-dark-surface)] border-white/10"
+        class="w-[480px] max-h-[80vh] overflow-y-auto bg-card border-border"
         style={{ "z-index": "var(--z-dialog)" }}
       >
         <DialogHeader>
-          <DialogTitle class="text-white">Create JIRA Ticket</DialogTitle>
+          <DialogTitle class="text-foreground">Create JIRA Ticket</DialogTitle>
         </DialogHeader>
         <JiraCreateForm
           workspaceId={props.workspaceId}

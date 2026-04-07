@@ -125,7 +125,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
       ref={(el) => { containerRef = el; }}
       data-react-grab-sidebar
         data-react-grab-ignore-events
-        class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-[var(--grab-dark-surface)] text-[#e5e5e5] animate-slide-in-left"
+        class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-card text-card-foreground animate-slide-in-left"
         style={{ "z-index": "var(--z-sidebar)", "pointer-events": "auto", isolation: "isolate" }}
         role="dialog"
         aria-modal="true"

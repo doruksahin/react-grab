@@ -237,7 +237,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
   const commentsIconClass = () =>
     cn(
       "transition-colors",
-      props.isCommentsPinned ? "text-black/50" : "text-[#B3B3B3]",
+      props.isCommentsPinned ? "text-muted-foreground" : "text-muted-foreground",
     );
 
   const isVertical = () => snapEdge() === "left" || snapEdge() === "right";
@@ -1138,7 +1138,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 size={14}
                 class={cn(
                   "transition-colors",
-                  props.isActive ? "text-black" : "text-black/70",
+                  props.isActive ? "text-popover-foreground" : "text-muted-foreground",
                 )}
               />
             </TooltipTrigger>
@@ -1231,7 +1231,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                     : null,
               })}
             >
-              <IconCopy size={14} class="text-[#B3B3B3] transition-colors" />
+              <IconCopy size={14} class="text-muted-foreground transition-colors" />
             </TooltipTrigger>
             <TooltipContent>Copy all</TooltipContent>
           </Tooltip>
@@ -1261,12 +1261,12 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 class={cn(
                   "relative rounded-full transition-colors",
                   isVertical() ? "w-3.5 h-2.5" : "w-5 h-3",
-                  props.enabled ? "bg-black" : "bg-black/25",
+                  props.enabled ? "bg-popover-foreground" : "bg-muted-foreground",
                 )}
               >
                 <div
                   class={cn(
-                    "absolute top-0.5 rounded-full bg-white transition-transform",
+                    "absolute top-0.5 rounded-full bg-popover transition-transform",
                     isVertical() ? "w-1.5 h-1.5" : "w-2 h-2",
                     !props.enabled && "left-0.5",
                     props.enabled && (isVertical() ? "left-1.5" : "left-2.5"),
@@ -1283,7 +1283,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           class={cn(
             TOOLTIP_BASE_CLASS,
             "flex items-center gap-1 animate-tooltip-fade-in [animation-fill-mode:backwards]",
-            "bg-white",
+            "bg-popover",
             shakeTooltipPositionClass(),
           )}
           style={{
@@ -1334,7 +1334,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           class={cn(
             TOOLTIP_BASE_CLASS,
             "animate-tooltip-fade-in",
-            "bg-white",
+            "bg-popover",
             shakeTooltipPositionClass(),
           )}
           style={{

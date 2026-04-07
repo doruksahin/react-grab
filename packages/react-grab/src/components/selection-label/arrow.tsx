@@ -3,7 +3,9 @@ import type { ArrowProps } from "../../types.js";
 import { getArrowSize } from "../../utils/get-arrow-size.js";
 
 export const Arrow: Component<ArrowProps> = (props) => {
-  const arrowColor = () => props.color ?? "white";
+  // The arrow is the visual continuation of a `bg-popover` panel, so it
+  // reads from the same shadcn token and flips automatically with the theme.
+  const arrowColor = "var(--popover)";
   const isBottom = () => props.position === "bottom";
   const arrowSize = () => getArrowSize(props.labelWidth ?? 0);
 
@@ -21,11 +23,11 @@ export const Arrow: Component<ArrowProps> = (props) => {
         "border-left": `${arrowSize()}px solid transparent`,
         "border-right": `${arrowSize()}px solid transparent`,
         "border-bottom": isBottom()
-          ? `${arrowSize()}px solid ${arrowColor()}`
+          ? `${arrowSize()}px solid ${arrowColor}`
           : undefined,
         "border-top": isBottom()
           ? undefined
-          : `${arrowSize()}px solid ${arrowColor()}`,
+          : `${arrowSize()}px solid ${arrowColor}`,
       }}
     />
   );

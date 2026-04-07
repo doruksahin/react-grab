@@ -37,7 +37,7 @@ export const JiraMeta: Component<JiraMetaProps> = (props) => (
         )}
       </Show>
       <Show when={props.jiraAssignee}>
-        <span class="flex items-center gap-1 text-[10px] text-black/40 truncate">
+        <span class="flex items-center gap-1 text-[10px] text-muted-foreground truncate">
           <UserAvatar
             avatarUrl={props.jiraAssigneeAvatar}
             displayName={props.jiraAssignee}
@@ -47,7 +47,7 @@ export const JiraMeta: Component<JiraMetaProps> = (props) => (
         </span>
       </Show>
       <Show when={props.jiraReporter}>
-        <span class="flex items-center gap-1 text-[10px] text-black/30 truncate">
+        <span class="flex items-center gap-1 text-[10px] text-muted-foreground truncate">
           <UserAvatar
             avatarUrl={props.jiraReporterAvatar}
             displayName={props.jiraReporter}
@@ -61,7 +61,7 @@ export const JiraMeta: Component<JiraMetaProps> = (props) => (
       <div class="flex flex-wrap gap-1">
         <For each={props.labels}>
           {(lbl) => (
-            <span class="text-[8px] px-1 py-0.5 rounded-full bg-black/10 text-black/40">
+            <span class="text-[8px] px-1 py-0.5 rounded-full bg-accent text-muted-foreground">
               {lbl}
             </span>
           )}

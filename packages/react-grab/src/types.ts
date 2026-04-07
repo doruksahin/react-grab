@@ -630,7 +630,6 @@ export interface ArrowProps {
   position: ArrowPosition;
   leftPercent: number;
   leftOffsetPx: number;
-  color?: string;
   labelWidth?: number;
 }
 
