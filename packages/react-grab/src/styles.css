@@ -59,6 +59,7 @@
 :host {
   all: initial;
   direction: ltr;
+  font-family: var(--font-sans);
   /*
    * Semantic z-index scale (shadow-root-internal).
    * The host already wins INT_MAX vs the page; nothing inside needs more
