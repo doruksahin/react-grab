@@ -220,7 +220,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               syncServerUrl={props.syncServerUrl}
               syncWorkspace={props.syncWorkspace}
               jiraProjectKey={props.jiraProjectKey}
-              shadowRoot={shadowRoot()}
               onBack={() => setActiveDetailGroupId(null)}
               onTicketCreated={props.onTicketCreated}
             />

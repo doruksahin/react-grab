@@ -16,8 +16,6 @@ interface JiraCreateDialogProps {
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
   jiraProjectKey: string;
-  /** @deprecated Portal now auto-mounts via ShadowRootContext — no longer needed. */
-  shadowRoot?: ShadowRoot | null;
   onTicketCreated: (groupId: string, ticketId: string, ticketUrl: string) => void;
   onClose: () => void;
 }
