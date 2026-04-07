@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status Legend Proposal — Full ATT Board States</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #111; color: #e5e5e5; height: 100vh; display: flex; justify-content: center; align-items: center; gap: 24px; }
+
+  .sidebar-mock {
+    width: 390px;
+    height: 92vh;
+    background: #1a1a1a;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    position: relative;
+  }
+
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .header h2 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .header .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+  .header-actions { display: flex; gap: 4px; }
+  .header-btn {
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    border: none; background: transparent; color: rgba(255,255,255,0.4);
+    border-radius: 6px; cursor: pointer; font-size: 14px;
+  }
+  .header-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .header-btn.info-active { background: rgba(178,28,142,0.15); color: #b21c8e; }
+
+  .group-list { flex: 1; overflow-y: auto; padding: 8px; }
+
+  .group-card {
+    background: #232323; border-radius: 8px; padding: 12px;
+    margin-bottom: 6px; border-left: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .gc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .gc-name { font-weight: 600; font-size: 13px; }
+  .gc-meta { font-size: 11px; color: rgba(255,255,255,0.4); display: flex; gap: 8px; align-items: center; }
+
+  .badge {
+    font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .badge .dot-sm { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* Status colors */
+  .status-open .dot-sm { background: #b21c8e; }
+  .status-open { background: rgba(178,28,142,0.12); color: #b21c8e; }
+  .border-open { border-left-color: #b21c8e; }
+
+  .status-todo .dot-sm { background: #94a3b8; }
+  .status-todo { background: rgba(148,163,184,0.12); color: #94a3b8; }
+  .border-todo { border-left-color: #94a3b8; }
+
+  .status-progress .dot-sm { background: #3b82f6; }
+  .status-progress { background: rgba(59,130,246,0.12); color: #3b82f6; }
+  .border-progress { border-left-color: #3b82f6; }
+
+  .status-review .dot-sm { background: #a78bfa; }
+  .status-review { background: rgba(167,139,250,0.12); color: #a78bfa; }
+  .border-review { border-left-color: #a78bfa; }
+
+  .status-test .dot-sm { background: #f59e0b; }
+  .status-test { background: rgba(245,158,11,0.12); color: #f59e0b; }
+  .border-test { border-left-color: #f59e0b; }
+
+  .status-passed .dot-sm { background: #10b981; }
+  .status-passed { background: rgba(16,185,129,0.12); color: #10b981; }
+  .border-passed { border-left-color: #10b981; }
+
+  .status-uat .dot-sm { background: #06b6d4; }
+  .status-uat { background: rgba(6,182,212,0.12); color: #06b6d4; }
+  .border-uat { border-left-color: #06b6d4; }
+
+  .status-preprod .dot-sm { background: #8b5cf6; }
+  .status-preprod { background: rgba(139,92,246,0.12); color: #8b5cf6; }
+  .border-preprod { border-left-color: #8b5cf6; }
+
+  .status-prod .dot-sm { background: #22c55e; }
+  .status-prod { background: rgba(34,197,94,0.12); color: #22c55e; }
+  .border-prod { border-left-color: #22c55e; }
+
+  .status-wontdo .dot-sm { background: #ef4444; }
+  .status-wontdo { background: rgba(239,68,68,0.12); color: #ef4444; }
+  .border-wontdo { border-left-color: #ef4444; }
+
+  .status-done .dot-sm { background: #22c55e; }
+  .status-done { background: rgba(34,197,94,0.12); color: #22c55e; }
+  .border-done { border-left-color: #22c55e; }
+
+  /* Info overlay */
+  .info-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+    z-index: 10; display: none; flex-direction: column; padding: 16px;
+    animation: fadeIn 0.2s ease-out;
+  }
+  .info-overlay.visible { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .info-panel {
+    background: #1e1e2e; border-radius: 12px; padding: 16px;
+    border: 1px solid rgba(255,255,255,0.1); flex: 1; overflow-y: auto;
+  }
+  .info-panel h3 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 12px; }
+
+  .info-group-title {
+    font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.3);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin: 14px 0 8px; padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .info-group-title:first-of-type { border-top: none; margin-top: 4px; }
+
+  .info-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0;
+  }
+  .info-swatch {
+    width: 24px; height: 24px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; border: 2px solid;
+  }
+  .info-swatch-inner { width: 8px; height: 8px; border-radius: 50%; }
+
+  .info-label { font-size: 12px; font-weight: 500; color: #fff; flex: 1; }
+  .info-desc { font-size: 10px; color: rgba(255,255,255,0.4); max-width: 180px; text-align: right; }
+
+  .info-flow-section { margin-top: 16px; }
+  .info-flow {
+    display: flex; align-items: center; flex-wrap: wrap;
+    gap: 4px; padding: 10px;
+    background: rgba(255,255,255,0.03); border-radius: 8px;
+  }
+  .flow-chip {
+    display: flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 600;
+  }
+  .flow-arrow { color: rgba(255,255,255,0.15); font-size: 10px; }
+
+  .close-info {
+    margin-top: 10px; width: 100%; padding: 10px;
+    border: none; border-radius: 8px; background: rgba(255,255,255,0.1);
+    color: #fff; font-size: 12px; font-weight: 500; cursor: pointer;
+  }
+  .close-info:hover { background: rgba(255,255,255,0.15); }
+
+  .section-label {
+    font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 10px 8px 4px; font-weight: 600;
+  }
+
+  .demo-hint {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(26,26,26,0.95); border: 1px solid #333;
+    padding: 8px 16px; border-radius: 8px; font-size: 12px; color: #999;
+  }
+  .demo-hint strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="sidebar-mock">
+  <div class="header">
+    <h2><span class="dot"></span> react-grab</h2>
+    <div class="header-actions">
+      <button class="header-btn" id="infoBtn" onclick="toggleInfo()" title="Status guide">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      </button>
+      <button class="header-btn" title="Close">&times;</button>
+    </div>
+  </div>
+
+  <div class="section-label">Not Ticketed</div>
+
+  <div class="group-list" style="flex: none;">
+    <div class="group-card border-open">
+      <div class="gc-top">
+        <span class="gc-name">Card Grid Alignment</span>
+        <span class="badge status-open"><span class="dot-sm"></span> No Task</span>
+      </div>
+      <div class="gc-meta"><span>2 selections</span><span>5h ago</span></div>
+    </div>
+  </div>
+
+  <div class="section-label">Ticketed</div>
+
+  <div class="group-list">
+    <div class="group-card border-todo">
+      <div class="gc-top">
+        <span class="gc-name">Nav Spacing</span>
+        <span class="badge status-todo"><span class="dot-sm"></span> To Do</span>
+      </div>
+      <div class="gc-meta"><span>1 selection</span><span style="color:#94a3b8">ATT-2751</span></div>
+    </div>
+
+    <div class="group-card border-progress">
+      <div class="gc-top">
+        <span class="gc-name">Header Redesign</span>
+        <span class="badge status-progress"><span class="dot-sm"></span> In Progress</span>
+      </div>
+      <div class="gc-meta"><span>3 selections</span><span style="color:#3b82f6">ATT-2746</span></div>
+    </div>
+
+    <div class="group-card border-review">
+      <div class="gc-top">
+        <span class="gc-name">Button Contrast</span>
+        <span class="badge status-review"><span class="dot-sm"></span> Code Review</span>
+      </div>
+      <div class="gc-meta"><span>2 selections</span><span style="color:#a78bfa">ATT-2749</span></div>
+    </div>
+
+    <div class="group-card border-test">
+      <div class="gc-top">
+        <span class="gc-name">Mobile Overflow</span>
+        <span class="badge status-test"><span class="dot-sm"></span> Test</span>
+      </div>
+      <div class="gc-meta"><span>1 selection</span><span style="color:#f59e0b">ATT-2750</span></div>
+    </div>
+
+    <div class="group-card border-passed">
+      <div class="gc-top">
+        <span class="gc-name">Search Placeholder</span>
+        <span class="badge status-passed"><span class="dot-sm"></span> Test Passed</span>
+      </div>
+      <div class="gc-meta"><span>2 selections</span><span style="color:#10b981">ATT-2747</span></div>
+    </div>
+
+    <div class="group-card border-uat">
+      <div class="gc-top">
+        <span class="gc-name">Footer Links</span>
+        <span class="badge status-uat"><span class="dot-sm"></span> UAT</span>
+      </div>
+      <div class="gc-meta"><span>3 selections</span><span style="color:#06b6d4">ATT-2738</span></div>
+    </div>
+
+    <div class="group-card border-preprod">
+      <div class="gc-top">
+        <span class="gc-name">Logo Retina</span>
+        <span class="badge status-preprod"><span class="dot-sm"></span> In Preprod</span>
+      </div>
+      <div class="gc-meta"><span>1 selection</span><span style="color:#8b5cf6">ATT-2742</span></div>
+    </div>
+
+    <div class="group-card border-prod">
+      <div class="gc-top">
+        <span class="gc-name">Hero Image</span>
+        <span class="badge status-prod"><span class="dot-sm"></span> In Production</span>
+      </div>
+      <div class="gc-meta"><span>1 selection</span><span style="color:#22c55e">ATT-2740</span></div>
+    </div>
+
+    <div class="group-card border-wontdo">
+      <div class="gc-top">
+        <span class="gc-name">Old Banner</span>
+        <span class="badge status-wontdo"><span class="dot-sm"></span> Won't Do</span>
+      </div>
+      <div class="gc-meta"><span>1 selection</span><span style="color:#ef4444">ATT-2739</span></div>
+    </div>
+
+    <div class="group-card border-done">
+      <div class="gc-top">
+        <span class="gc-name">CTA Color</span>
+        <span class="badge status-done"><span class="dot-sm"></span> Done</span>
+      </div>
+      <div class="gc-meta"><span>2 selections</span><span style="color:#22c55e">ATT-2735</span></div>
+    </div>
+  </div>
+
+  <!-- Info Overlay -->
+  <div class="info-overlay" id="infoOverlay">
+    <div class="info-panel">
+      <h3>Status Guide — ATT Board</h3>
+
+      <div class="info-group-title">Not Ticketed</div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#b21c8e; background:rgba(178,28,142,0.15)"><div class="info-swatch-inner" style="background:#b21c8e"></div></div>
+        <span class="info-label">Open</span>
+        <span class="info-desc">No JIRA ticket created</span>
+      </div>
+
+      <div class="info-group-title">Ticketed — JIRA Status</div>
+
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#94a3b8; background:rgba(148,163,184,0.15)"><div class="info-swatch-inner" style="background:#94a3b8"></div></div>
+        <span class="info-label">To Do</span>
+        <span class="info-desc">Ticket created, not started</span>
+      </div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#3b82f6; background:rgba(59,130,246,0.15)"><div class="info-swatch-inner" style="background:#3b82f6"></div></div>
+        <span class="info-label">In Progress</span>
+        <span class="info-desc">Being worked on</span>
+      </div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#a78bfa; background:rgba(167,139,250,0.15)"><div class="info-swatch-inner" style="background:#a78bfa"></div></div>
+        <span class="info-label">Code Review</span>
+        <span class="info-desc">PR submitted, awaiting review</span>
+      </div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#f59e0b; background:rgba(245,158,11,0.15)"><div class="info-swatch-inner" style="background:#f59e0b"></div></div>
+        <span class="info-label">Test</span>
+        <span class="info-desc">In QA testing</span>
+      </div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#10b981; background:rgba(16,185,129,0.15)"><div class="info-swatch-inner" style="background:#10b981"></div></div>
+        <span class="info-label">Test Passed</span>
+        <span class="info-desc">QA approved</span>
+      </div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#06b6d4; background:rgba(6,182,212,0.15)"><div class="info-swatch-inner" style="background:#06b6d4"></div></div>
+        <span class="info-label">UAT</span>
+        <span class="info-desc">User acceptance testing</span>
+      </div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#8b5cf6; background:rgba(139,92,246,0.15)"><div class="info-swatch-inner" style="background:#8b5cf6"></div></div>
+        <span class="info-label">In Preprod</span>
+        <span class="info-desc">Deployed to staging</span>
+      </div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#22c55e; background:rgba(34,197,94,0.15)"><div class="info-swatch-inner" style="background:#22c55e"></div></div>
+        <span class="info-label">In Production</span>
+        <span class="info-desc">Live and shipped</span>
+      </div>
+
+      <div class="info-group-title">Terminal</div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#22c55e; background:rgba(34,197,94,0.15)"><div class="info-swatch-inner" style="background:#22c55e"></div></div>
+        <span class="info-label">Done</span>
+        <span class="info-desc">Completed and closed</span>
+      </div>
+      <div class="info-row">
+        <div class="info-swatch" style="border-color:#ef4444; background:rgba(239,68,68,0.15)"><div class="info-swatch-inner" style="background:#ef4444"></div></div>
+        <span class="info-label">Won't Do</span>
+        <span class="info-desc">Rejected or deprioritized</span>
+      </div>
+
+      <div class="info-flow-section">
+        <div class="info-group-title">Typical Flow</div>
+        <div class="info-flow">
+          <span class="flow-chip status-open"><span class="dot-sm"></span>Open</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-chip status-todo"><span class="dot-sm"></span>To Do</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-chip status-progress"><span class="dot-sm"></span>In Progress</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-chip status-review"><span class="dot-sm"></span>Code Review</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-chip status-test"><span class="dot-sm"></span>Test</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-chip status-passed"><span class="dot-sm"></span>Test Passed</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-chip status-uat"><span class="dot-sm"></span>UAT</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-chip status-preprod"><span class="dot-sm"></span>Preprod</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-chip status-prod"><span class="dot-sm"></span>Prod</span>
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-chip status-done"><span class="dot-sm"></span>Done</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="close-info" onclick="toggleInfo()">Got it</button>
+  </div>
+</div>
+
+<div class="demo-hint">
+  <strong>Click (i)</strong> for the status guide. Each group card shows its JIRA board status with a unique color.
+</div>
+
+<script>
+  function toggleInfo() {
+    document.getElementById('infoOverlay').classList.toggle('visible');
+    document.getElementById('infoBtn').classList.toggle('info-active');
+  }
+</script>
+
+</body>
+</html>
