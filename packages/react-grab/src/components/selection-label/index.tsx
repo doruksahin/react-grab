@@ -558,7 +558,17 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               }
             }}
           >
-            <div class="overflow-hidden flex items-center gap-[5px]">
+            <div
+              class={cn(
+                "flex items-center gap-[5px]",
+                // Collapse animation needs overflow-hidden to clip the slide,
+                // but in prompt mode the ActiveGroupPicker flyout is rendered
+                // here and absolutely-positioned — clipping it would hide the
+                // dropdown. The label is force-expanded in prompt mode anyway,
+                // so the animation is dormant and overflow-visible is safe.
+                props.isPromptMode ? "overflow-visible" : "overflow-hidden",
+              )}
+            >
               <SelectionStatusBadge
                 groupStatus={props.groupStatus}
                 jiraTicketId={props.jiraTicketId}
