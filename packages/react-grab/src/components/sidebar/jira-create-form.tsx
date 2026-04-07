@@ -8,6 +8,7 @@ import {
   Show,
   Switch,
 } from "solid-js";
+import { Button } from "../ui/button.js";
 import {
   listJiraIssueTypes,
   listJiraPriorities,
@@ -181,22 +182,23 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
       {/* Actions */}
       <div class="flex gap-2 justify-end" style={{ "pointer-events": "auto" }}>
-        <button
+        <Button
           type="button"
-          class="px-3 py-1.5 text-[12px] text-white/60 hover:text-white rounded hover:bg-white/10 transition-colors"
+          variant="ghost"
+          size="sm"
           style={{ "pointer-events": "auto" }}
           onClick={props.onClose}
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
+          size="sm"
           disabled={submitting() || !issueType()}
-          class="px-3 py-1.5 text-[12px] bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
           style={{ "pointer-events": "auto" }}
         >
           {submitting() ? "Creating…" : "Create Ticket"}
-        </button>
+        </Button>
       </div>
     </form>
   );
