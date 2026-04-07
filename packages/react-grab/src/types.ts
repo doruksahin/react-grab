@@ -478,6 +478,13 @@ export interface SelectionLabelInstance {
   jiraAssigneeAvatar?: string | null;
   jiraReporterAvatar?: string | null;
   jiraLabels?: string[];
+  jiraComments?: ReadonlyArray<{
+    id: string;
+    author: string;
+    authorAvatar: string | null;
+    body: string;
+    createdAt: string;
+  }>;
 }
 
 /**
@@ -732,4 +739,12 @@ export interface SelectionLabelProps
   jiraAssigneeAvatar?: string | null;
   jiraReporterAvatar?: string | null;
   jiraLabels?: string[];
+  /** Plain-text Jira comments for the selection's group. Empty/undefined hides the comments section. */
+  jiraComments?: ReadonlyArray<{
+    id: string;
+    author: string;
+    authorAvatar: string | null;
+    body: string;
+    createdAt: string;
+  }>;
 }

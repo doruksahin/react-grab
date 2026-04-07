@@ -3829,6 +3829,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           jiraAssigneeAvatar: group?.jiraAssigneeAvatar,
           jiraReporterAvatar: group?.jiraReporterAvatar,
           jiraLabels: group?.jiraLabels,
+          jiraComments: group?.jiraComments,
         };
       }),
     );
