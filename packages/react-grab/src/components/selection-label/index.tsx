@@ -612,6 +612,38 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   </div>
                 </BottomSection>
               </Show>
+              {/* POC: comments collapsible */}
+              <BottomSection>
+                <Collapsible defaultOpen>
+                  <CollapsibleTrigger
+                    data-react-grab-ignore-events
+                    class="flex items-center justify-between w-[calc(100%+16px)] -mx-2 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent cursor-pointer"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopImmediatePropagation()}
+                  >
+                    <span>Comments (3)</span>
+                    <span class="text-[10px]">▾</span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1 gap-1">
+                      <For
+                        each={[
+                          { author: "alice", body: "Looks good to me" },
+                          { author: "bob", body: "Needs spacing fix" },
+                          { author: "carol", body: "Ship it" },
+                        ]}
+                      >
+                        {(c) => (
+                          <div class="text-[11px] leading-tight text-popover-foreground">
+                            <span class="font-medium">{c.author}: </span>
+                            <span class="text-muted-foreground">{c.body}</span>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </BottomSection>
             </div>
           </Show>
 
