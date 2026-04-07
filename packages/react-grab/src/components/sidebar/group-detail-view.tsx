@@ -4,7 +4,7 @@ import {
   createSignal,
   Show,
 } from "solid-js";
-import type { CommentItem } from "../../types.js";
+import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import { DetailHeader } from "./detail-header.js";
 import { SelectionList } from "./selection-list.js";
 import { JiraCreateButton } from "./jira-create-button.js";
@@ -20,7 +20,7 @@ interface GroupDetailViewProps {
   syncWorkspace?: string;
   jiraProjectKey?: string;
   onBack: () => void;
-  onTicketCreated?: (groupId: string, ticketId: string, ticketUrl: string) => void;
+  onTicketCreated?: TicketCreatedCallback;
 }
 
 export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {

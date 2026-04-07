@@ -8,7 +8,7 @@ import {
   untrack,
 } from "solid-js";
 import createFocusTrap from "solid-focus-trap";
-import type { CommentItem } from "../../types.js";
+import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import type { SyncStatus } from "../../features/sync/types.js";
 import { Z_INDEX_LABEL } from "../../constants.js";
 import { SidebarHeader } from "./sidebar-header.js";
@@ -37,7 +37,7 @@ export interface SidebarProps {
   onClose: () => void;
   onActiveDetailGroupChange: (groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
-  onTicketCreated?: (groupId: string, ticketId: string, ticketUrl: string) => void;
+  onTicketCreated?: TicketCreatedCallback;
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
 }
 

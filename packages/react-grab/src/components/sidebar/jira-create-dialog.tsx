@@ -7,7 +7,7 @@ import {
 } from "../ui/dialog.js";
 import { JiraCreateForm } from "./jira-create-form.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
-import type { CommentItem } from "../../types.js";
+import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import { Z_INDEX_HOST } from "../../constants.js";
 
 interface JiraCreateDialogProps {
@@ -17,7 +17,7 @@ interface JiraCreateDialogProps {
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
   jiraProjectKey: string;
-  onTicketCreated: (groupId: string, ticketId: string, ticketUrl: string) => void;
+  onTicketCreated: TicketCreatedCallback;
   onClose: () => void;
 }
 

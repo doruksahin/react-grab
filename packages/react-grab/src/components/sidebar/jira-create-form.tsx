@@ -22,7 +22,7 @@ import {
   createJiraTicket,
 } from "../../generated/sync-api.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
-import type { CommentItem } from "../../types.js";
+import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import { defaultSummary, defaultDescription } from "../../features/sidebar/jira-defaults.js";
 
 const DEFAULT_ISSUE_TYPE = "Task";
@@ -35,7 +35,7 @@ interface JiraCreateFormProps {
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
   jiraProjectKey: string;
-  onSuccess: (groupId: string, ticketId: string, ticketUrl: string) => void;
+  onSuccess: TicketCreatedCallback;
   onClose: () => void;
 }
 
