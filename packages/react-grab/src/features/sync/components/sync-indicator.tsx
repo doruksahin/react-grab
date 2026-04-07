@@ -32,7 +32,7 @@ export const SyncIndicator: Component<SyncIndicatorProps> = (props) => {
       data-react-grab-ignore-events
     >
       <div class={cn("w-[6px] h-[6px] rounded-full transition-colors", dotClass())} />
-      <div class="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 bg-[#1a1a1a] text-[#e5e5e5] text-[11px] px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover/sync:opacity-100 transition-opacity border border-[#333]">
+      <div class="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 bg-[var(--grab-dark-surface)] text-[#e5e5e5] text-[11px] px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover/sync:opacity-100 transition-opacity border border-[#333]">
         <span class={cn("inline-block w-[6px] h-[6px] rounded-full mr-1.5 align-middle", dotClass())} />
         {label()}
       </div>

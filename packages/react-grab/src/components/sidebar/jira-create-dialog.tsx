@@ -29,7 +29,7 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
       <DialogContent
         data-react-grab-jira-dialog
         data-kb-theme="dark"
-        class="w-[480px] max-h-[80vh] overflow-y-auto bg-[#1a1a1a] border-white/10"
+        class="w-[480px] max-h-[80vh] overflow-y-auto bg-[var(--grab-dark-surface)] border-white/10"
         style={{ "z-index": String(Z_INDEX_HOST) }}
       >
         <DialogHeader>

@@ -79,6 +79,8 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
+  /* grab-specific tokens */
+  --grab-dark-surface: #1a1a1a;
 }
 
 /* shadcn-solid design tokens — dark mode (dialog) */
