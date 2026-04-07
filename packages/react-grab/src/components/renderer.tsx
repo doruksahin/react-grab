@@ -1,4 +1,4 @@
-import { Show, Index, createSignal, createEffect, createRenderEffect, onCleanup, on } from "solid-js";
+import { Show, Index, createSignal, createEffect, createRenderEffect, onCleanup, on, createMemo } from "solid-js";
 import type { Component } from "solid-js";
 import type { AgentSession, ReactGrabRendererProps } from "../types.js";
 import {
@@ -19,11 +19,22 @@ import { CommentsDropdown } from "./comments-dropdown.js";
 import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
+import { ShadowRootContext } from "../features/sidebar/shadow-context.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<string | null>(null);
   let dashboardBtnRef: HTMLButtonElement | undefined;
+
+  // Shadow root for CommentsDropdown's tooltip portals. Derived from a ref on
+  // the always-mounted frozen-glow div, which lives inside the shadow root.
+  const [rendererEl, setRendererEl] = createSignal<HTMLDivElement | null>(null);
+  const rendererShadowRoot = createMemo(() => {
+    const el = rendererEl();
+    if (!el) return null;
+    const root = el.getRootNode();
+    return root instanceof ShadowRoot ? root : null;
+  });
 
   // Performance instrumentation: bracket sidebar render time.
   // createRenderEffect fires before DOM mutations (marks the start of the render).
@@ -80,6 +91,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       />
 
       <div
+        ref={setRendererEl}
         style={{
           position: "fixed",
           top: 0,
@@ -299,27 +311,29 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onCancel={props.onClearCommentsCancel ?? (() => {})}
       />
 
-      <CommentsDropdown
-        position={props.commentsDropdownPosition ?? null}
-        items={props.commentItems ?? []}
-        disconnectedItemIds={props.commentsDisconnectedItemIds}
-        groups={props.groups}
-        onSelectItem={props.onCommentItemSelect}
-        onItemHover={props.onCommentItemHover}
-        onCopyAll={props.onCommentsCopyAll}
-        onCopyAllHover={props.onCommentsCopyAllHover}
-        onClearAll={props.onCommentsClear}
-        onDismiss={props.onCommentsDismiss}
-        onDropdownHover={props.onCommentsDropdownHover}
-        onToggleItemRevealed={props.onToggleCommentItemRevealed}
-        onAddGroup={props.onAddGroup}
-        onRenameGroup={props.onRenameGroup}
-        onDeleteGroup={props.onDeleteGroup}
-        onToggleGroupRevealed={props.onToggleGroupRevealed}
-        onCopyGroup={props.onCopyGroup}
-        copyableCount={props.copyableCount}
-        onMoveItem={props.onMoveItem}
-      />
+      <ShadowRootContext.Provider value={rendererShadowRoot()}>
+        <CommentsDropdown
+          position={props.commentsDropdownPosition ?? null}
+          items={props.commentItems ?? []}
+          disconnectedItemIds={props.commentsDisconnectedItemIds}
+          groups={props.groups}
+          onSelectItem={props.onCommentItemSelect}
+          onItemHover={props.onCommentItemHover}
+          onCopyAll={props.onCommentsCopyAll}
+          onCopyAllHover={props.onCommentsCopyAllHover}
+          onClearAll={props.onCommentsClear}
+          onDismiss={props.onCommentsDismiss}
+          onDropdownHover={props.onCommentsDropdownHover}
+          onToggleItemRevealed={props.onToggleCommentItemRevealed}
+          onAddGroup={props.onAddGroup}
+          onRenameGroup={props.onRenameGroup}
+          onDeleteGroup={props.onDeleteGroup}
+          onToggleGroupRevealed={props.onToggleGroupRevealed}
+          onCopyGroup={props.onCopyGroup}
+          copyableCount={props.copyableCount}
+          onMoveItem={props.onMoveItem}
+        />
+      </ShadowRootContext.Provider>
 
       <Show when={sidebarOpen()}>
         <Sidebar
