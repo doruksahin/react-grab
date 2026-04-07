@@ -8,6 +8,7 @@ import {
 import { JiraCreateForm } from "./jira-create-form.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import type { CommentItem } from "../../types.js";
+import { Z_INDEX_HOST } from "../../constants.js";
 
 interface JiraCreateDialogProps {
   open: boolean;
@@ -29,7 +30,7 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
         data-react-grab-jira-dialog
         data-kb-theme="dark"
         class="w-[480px] max-h-[80vh] overflow-y-auto bg-[#1a1a1a] border-white/10"
-        style={{ "z-index": "2147483647" }}
+        style={{ "z-index": String(Z_INDEX_HOST) }}
       >
         <DialogHeader>
           <DialogTitle class="text-white">Create JIRA Ticket</DialogTitle>
