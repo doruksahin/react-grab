@@ -80,8 +80,43 @@ export class JiraService {
    * The public REST v3 API flattens replies into top-level comments with no
    * parent reference, so there is no alternative if we want thread fidelity.
    */
+  /**
+   * Streams a Jira attachment binary from the REST content endpoint using the
+   * service's stored basic-auth credentials. Returns the upstream Response so
+   * the caller can forward body + headers.
+   */
+  async fetchAttachmentContent(attachmentId: string): Promise<Response> {
+    return fetch(
+      `${this.config.baseUrl}/rest/api/3/attachment/content/${encodeURIComponent(attachmentId)}`,
+      {
+        headers: { Authorization: this.authHeader },
+        redirect: "follow",
+      },
+    );
+  }
+
+  private rewriteMediaUrls(
+    markdown: string,
+    filenameToAttachmentId: Map<string, string>,
+  ): string {
+    // adf-to-markdown emits `![alt](media://{fileId})` for Jira media nodes.
+    // Jira's public REST attachment API is keyed by attachmentId, not the
+    // Media API fileId in the ADF body — but `alt` matches `attachment.filename`
+    // when an image is uploaded into a comment (Jira auto-attaches to the issue).
+    // Resolve via filename match, rewrite to our sync-server proxy path.
+    return markdown.replace(
+      /!\[([^\]]*)\]\(media:\/\/([^)]+)\)/g,
+      (match, alt: string, _fileId: string) => {
+        const attachmentId = filenameToAttachmentId.get(alt);
+        if (!attachmentId) return match; // leave as-is if we can't resolve
+        return `![${alt}](/jira-attachment/${attachmentId})`;
+      },
+    );
+  }
+
   private async fetchThreadedComments(
     ticketId: string,
+    filenameToAttachmentId: Map<string, string>,
   ): Promise<ThreadedComment[]> {
     const cloudId = await this.getCloudId();
     const query = `query JiraComments($cloudId: ID!, $key: String!) {
@@ -137,9 +172,10 @@ export class JiraService {
 
     const flat: ThreadedComment[] = [];
     const pushNode = (node: JiraCommentNode, parentId: string | null) => {
-      const body = node.richText?.adfValue?.json
+      const rawMarkdown = node.richText?.adfValue?.json
         ? convertADFToMarkdown(node.richText.adfValue.json).trim()
         : "";
+      const body = this.rewriteMediaUrls(rawMarkdown, filenameToAttachmentId);
       flat.push({
         id: node.commentId,
         parentId: parentId ?? node.threadParentId ?? null,
@@ -278,13 +314,26 @@ export class JiraService {
   }
 
   async getIssueStatus(ticketId: string) {
-    const [issue, comments] = await Promise.all([
-      this.client.issues.getIssue({
-        issueIdOrKey: ticketId,
-        fields: ["status", "assignee", "reporter", "labels"],
-      }),
-      this.fetchThreadedComments(ticketId),
-    ]);
+    const issue = await this.client.issues.getIssue({
+      issueIdOrKey: ticketId,
+      fields: ["status", "assignee", "reporter", "labels", "attachment"],
+    });
+
+    // Map filename → attachment id so fetchThreadedComments can rewrite
+    // `media://{fileId}` markdown links to our proxy path.
+    const attachments =
+      (issue.fields.attachment as
+        | Array<{ id?: string; filename?: string }>
+        | undefined) ?? [];
+    const filenameToAttachmentId = new Map<string, string>();
+    for (const a of attachments) {
+      if (a.id && a.filename) filenameToAttachmentId.set(a.filename, a.id);
+    }
+
+    const comments = await this.fetchThreadedComments(
+      ticketId,
+      filenameToAttachmentId,
+    );
 
     return {
       status: issue.fields.status?.name ?? "Unknown",

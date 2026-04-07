@@ -23,6 +23,7 @@ import { autoResizeTextarea } from "../../utils/auto-resize-textarea.js";
 import { getArrowSize } from "../../utils/get-arrow-size.js";
 import { isKeyboardEventTriggeredByInput } from "../../utils/is-keyboard-event-triggered-by-input.js";
 import { cn } from "../../utils/cn.js";
+import { getApiBaseUrl } from "../../generated/custom-fetch.js";
 import { getTagDisplay } from "../../utils/get-tag-display.js";
 import { formatShortcut } from "../../utils/format-shortcut.js";
 import { IconReply } from "../icons/icon-reply.jsx";
@@ -58,6 +59,57 @@ const DEFAULT_OFFSCREEN_POSITION: LabelPosition = {
   arrowLeftPercent: ARROW_CENTER_PERCENT,
   arrowLeftOffset: 0,
   edgeOffsetX: 0,
+};
+
+// Splits a comment body (markdown) into alternating text/image segments so we
+// can render inline <img> tags for Jira inline images. The server rewrites the
+// lib-default `media://{fileId}` URLs into sync-server-relative
+// `/jira-attachment/{id}` paths — we prepend the API base here.
+type CommentSegment =
+  | { kind: "text"; text: string }
+  | { kind: "image"; alt: string; url: string };
+
+const IMG_RE = /!\[([^\]]*)\]\(([^)]+)\)/g;
+
+const parseCommentBody = (body: string): CommentSegment[] => {
+  const segments: CommentSegment[] = [];
+  let lastIndex = 0;
+  const base = getApiBaseUrl();
+  for (const match of body.matchAll(IMG_RE)) {
+    const [full, alt, rawUrl] = match;
+    const index = match.index ?? 0;
+    if (index > lastIndex) {
+      segments.push({ kind: "text", text: body.slice(lastIndex, index) });
+    }
+    const resolved = rawUrl.startsWith("/") ? `${base}${rawUrl}` : rawUrl;
+    segments.push({ kind: "image", alt, url: resolved });
+    lastIndex = index + full.length;
+  }
+  if (lastIndex < body.length) {
+    segments.push({ kind: "text", text: body.slice(lastIndex) });
+  }
+  return segments;
+};
+
+const CommentBody: Component<{ body: string }> = (props) => {
+  return (
+    <div class="text-muted-foreground whitespace-pre-wrap wrap-break-word">
+      <For each={parseCommentBody(props.body)}>
+        {(seg) =>
+          seg.kind === "text" ? (
+            <span>{seg.text}</span>
+          ) : (
+            <img
+              src={seg.url}
+              alt={seg.alt}
+              class="max-w-full h-auto my-1 rounded"
+              loading="lazy"
+            />
+          )
+        }
+      </For>
+    </div>
+  );
 };
 
 interface PositionResult {
@@ -774,9 +826,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                             <div class="flex flex-col gap-1">
                               <div class="text-[11px] leading-tight text-popover-foreground">
                                 <div class="font-medium">{root.author}</div>
-                                <div class="text-muted-foreground whitespace-pre-wrap wrap-break-word">
-                                  {root.body}
-                                </div>
+                                <CommentBody body={root.body} />
                               </div>
                               <For
                                 each={(props.jiraComments ?? []).filter(
@@ -789,9 +839,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                                       <div class="font-medium">
                                         {reply.author}
                                       </div>
-                                      <div class="text-muted-foreground whitespace-pre-wrap wrap-break-word">
-                                        {reply.body}
-                                      </div>
+                                      <CommentBody body={reply.body} />
                                     </div>
                                   </div>
                                 )}

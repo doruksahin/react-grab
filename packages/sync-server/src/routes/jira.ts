@@ -170,3 +170,19 @@ export const jiraRoutes = createRouter()
       return c.json({ error: message }, 500);
     }
   });
+
+// Proxy for Jira attachment binaries so the react-grab client can render
+// inline comment images without exposing the Jira API token to the browser.
+// Referenced from rewritten markdown URLs emitted by JiraService.rewriteMediaUrls.
+jiraRoutes.get("/jira-attachment/:attachmentId", async (c) => {
+  const attachmentId = c.req.param("attachmentId");
+  const upstream = await c.var.jira.fetchAttachmentContent(attachmentId);
+  if (!upstream.ok || !upstream.body) {
+    return c.json({ error: "attachment fetch failed" }, 502);
+  }
+  const headers = new Headers();
+  const contentType = upstream.headers.get("content-type");
+  if (contentType) headers.set("content-type", contentType);
+  headers.set("cache-control", "public, max-age=3600");
+  return new Response(upstream.body, { status: 200, headers });
+});
