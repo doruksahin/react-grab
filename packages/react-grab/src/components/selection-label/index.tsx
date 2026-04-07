@@ -764,14 +764,38 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                       <span class="text-[10px]">▾</span>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1 gap-1 max-h-[160px] overflow-y-auto">
-                        <For each={props.jiraComments}>
-                          {(c) => (
-                            <div class="text-[11px] leading-tight text-popover-foreground">
-                              <div class="font-medium">{c.author}</div>
-                              <div class="text-muted-foreground whitespace-pre-wrap wrap-break-word">
-                                {c.body}
+                      <div class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1 gap-2 max-h-[200px] overflow-y-auto">
+                        <For
+                          each={(props.jiraComments ?? []).filter(
+                            (c) => !c.parentId,
+                          )}
+                        >
+                          {(root) => (
+                            <div class="flex flex-col gap-1">
+                              <div class="text-[11px] leading-tight text-popover-foreground">
+                                <div class="font-medium">{root.author}</div>
+                                <div class="text-muted-foreground whitespace-pre-wrap wrap-break-word">
+                                  {root.body}
+                                </div>
                               </div>
+                              <For
+                                each={(props.jiraComments ?? []).filter(
+                                  (c) => c.parentId === root.id,
+                                )}
+                              >
+                                {(reply) => (
+                                  <div class="flex gap-1 pl-2 border-l border-muted-foreground/20">
+                                    <div class="text-[11px] leading-tight text-popover-foreground flex-1 min-w-0">
+                                      <div class="font-medium">
+                                        {reply.author}
+                                      </div>
+                                      <div class="text-muted-foreground whitespace-pre-wrap wrap-break-word">
+                                        {reply.body}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </For>
                             </div>
                           )}
                         </For>

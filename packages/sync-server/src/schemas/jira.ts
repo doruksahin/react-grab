@@ -30,6 +30,11 @@ export const JiraPriority = z.object({
 
 export const JiraComment = z.object({
   id: z.string().openapi({ example: "10001" }),
+  parentId: z.string().nullable().openapi({
+    description:
+      "Parent comment id if this comment is a reply in a thread, null for root comments.",
+    example: "10000",
+  }),
   author: z.string().openapi({ example: "Alice Cooper" }),
   authorAvatar: z.string().nullable().openapi({ example: "https://x/avatar.png" }),
   body: z.string().openapi({

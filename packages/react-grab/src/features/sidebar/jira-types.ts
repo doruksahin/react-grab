@@ -24,9 +24,10 @@ export type SelectionGroupWithJira = SelectionGroup & {
   jiraReporterAvatar?: string | null;
   /** JIRA labels array, e.g. ["UI Ticket Manager", "frontend"] */
   jiraLabels?: string[];
-  /** Plain-text Jira comments fetched alongside status. Empty array if none. */
+  /** Jira comments fetched alongside status. Flat list with parentId for threading. */
   jiraComments?: Array<{
     id: string;
+    parentId: string | null;
     author: string;
     authorAvatar: string | null;
     body: string;

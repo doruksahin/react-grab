@@ -24,9 +24,28 @@ interface CreateTicketResult {
   jiraUrl: string;
 }
 
+interface JiraCommentNode {
+  commentId: string;
+  threadParentId: string | null;
+  created: string;
+  author: { name?: string | null; picture?: string | null } | null;
+  richText: { adfValue: { json: ADFDocument } } | null;
+  childComments?: { edges: Array<{ node: JiraCommentNode }> } | null;
+}
+
+interface ThreadedComment {
+  id: string;
+  parentId: string | null;
+  author: string;
+  authorAvatar: string | null;
+  body: string;
+  createdAt: string;
+}
+
 export class JiraService {
   private client: Version3Client;
   private config: JiraConfig;
+  private cloudIdPromise: Promise<string> | null = null;
 
   constructor(config: JiraConfig) {
     this.config = config;
@@ -39,6 +58,102 @@ export class JiraService {
         },
       },
     });
+  }
+
+  private get authHeader(): string {
+    return `Basic ${btoa(`${this.config.email}:${this.config.apiToken}`)}`;
+  }
+
+  private getCloudId(): Promise<string> {
+    if (!this.cloudIdPromise) {
+      this.cloudIdPromise = fetch(`${this.config.baseUrl}/_edge/tenant_info`)
+        .then((r) => r.json() as Promise<{ cloudId: string }>)
+        .then((j) => j.cloudId);
+    }
+    return this.cloudIdPromise;
+  }
+
+  /**
+   * Fetches Jira comments via the undocumented Atlassian GraphQL gateway so
+   * we can retrieve real threading (`threadParentId`, `childComments`).
+   *
+   * The public REST v3 API flattens replies into top-level comments with no
+   * parent reference, so there is no alternative if we want thread fidelity.
+   */
+  private async fetchThreadedComments(
+    ticketId: string,
+  ): Promise<ThreadedComment[]> {
+    const cloudId = await this.getCloudId();
+    const query = `query JiraComments($cloudId: ID!, $key: String!) {
+      jira {
+        issueByKey(cloudId: $cloudId, key: $key) {
+          comments(first: 100, rootCommentsOnly: true) {
+            edges {
+              node {
+                ...CommentFields
+                childComments(first: 100) {
+                  edges { node { ...CommentFields } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    fragment CommentFields on JiraPlatformComment {
+      commentId
+      threadParentId
+      created
+      author { name picture }
+      richText { adfValue { json } }
+    }`;
+    const response = await fetch(
+      "https://appier.atlassian.net/gateway/api/graphql",
+      {
+        method: "POST",
+        headers: {
+          Authorization: this.authHeader,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          operationName: "JiraComments",
+          query,
+          variables: { cloudId, key: ticketId },
+        }),
+      },
+    );
+    if (!response.ok) return [];
+    const payload = (await response.json()) as {
+      data?: {
+        jira?: {
+          issueByKey?: {
+            comments?: { edges: Array<{ node: JiraCommentNode }> };
+          };
+        };
+      };
+    };
+    const rootEdges =
+      payload.data?.jira?.issueByKey?.comments?.edges ?? [];
+
+    const flat: ThreadedComment[] = [];
+    const pushNode = (node: JiraCommentNode, parentId: string | null) => {
+      const body = node.richText?.adfValue?.json
+        ? convertADFToMarkdown(node.richText.adfValue.json).trim()
+        : "";
+      flat.push({
+        id: node.commentId,
+        parentId: parentId ?? node.threadParentId ?? null,
+        author: node.author?.name ?? "Unknown",
+        authorAvatar: node.author?.picture ?? null,
+        body,
+        createdAt: node.created,
+      });
+      for (const child of node.childComments?.edges ?? []) {
+        pushNode(child.node, node.commentId);
+      }
+    };
+    for (const edge of rootEdges) pushNode(edge.node, null);
+    return flat;
   }
 
   async createTicketFromGroup(
@@ -163,29 +278,13 @@ export class JiraService {
   }
 
   async getIssueStatus(ticketId: string) {
-    const issue = await this.client.issues.getIssue({
-      issueIdOrKey: ticketId,
-      fields: ["status", "assignee", "reporter", "labels", "comment"],
-    });
-
-    const rawComments =
-      ((issue.fields as { comment?: { comments?: Array<{
-        id: string;
-        author?: { displayName?: string; avatarUrls?: Record<string, string> };
-        body: ADFDocument | string;
-        created: string;
-      }> } }).comment?.comments) ?? [];
-
-    const comments = rawComments.map((c) => ({
-      id: c.id,
-      author: c.author?.displayName ?? "Unknown",
-      authorAvatar: c.author?.avatarUrls?.["48x48"] ?? null,
-      body:
-        typeof c.body === "string"
-          ? c.body
-          : convertADFToMarkdown(c.body).trim(),
-      createdAt: c.created,
-    }));
+    const [issue, comments] = await Promise.all([
+      this.client.issues.getIssue({
+        issueIdOrKey: ticketId,
+        fields: ["status", "assignee", "reporter", "labels"],
+      }),
+      this.fetchThreadedComments(ticketId),
+    ]);
 
     return {
       status: issue.fields.status?.name ?? "Unknown",

@@ -196,10 +196,15 @@ export type CreateJiraTicket400 = {
 
 export type GetJiraTicketStatus200CommentsItem = {
   id: string;
+  /**
+     * Parent comment id if this comment is a reply in a thread, null for root comments.
+     * @nullable
+     */
+  parentId: string | null;
   author: string;
   /** @nullable */
   authorAvatar: string | null;
-  /** Plain-text rendering of the Jira ADF comment body */
+  /** Markdown rendering of the Jira ADF comment body */
   body: string;
   createdAt: string;
 };

@@ -480,6 +480,7 @@ export interface SelectionLabelInstance {
   jiraLabels?: string[];
   jiraComments?: ReadonlyArray<{
     id: string;
+    parentId: string | null;
     author: string;
     authorAvatar: string | null;
     body: string;
@@ -742,6 +743,7 @@ export interface SelectionLabelProps
   /** Plain-text Jira comments for the selection's group. Empty/undefined hides the comments section. */
   jiraComments?: ReadonlyArray<{
     id: string;
+    parentId: string | null;
     author: string;
     authorAvatar: string | null;
     body: string;
