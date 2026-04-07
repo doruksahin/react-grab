@@ -2,7 +2,13 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Make a selection's group membership optional by modeling `groupId` as `string | null`, removing the synthetic "default" group, and rendering ungrouped selections alongside user groups in `data-react-grab-group-list`.
+**Goal:** Make a selection's group membership optional by modeling `groupId` as `string | null` on the client, removing the synthetic "default" group, and rendering ungrouped selections alongside user groups in the comments dropdown.
+
+**Decisions locked in (do not re-litigate):**
+- **Type override:** the generated `ServerCommentItem.groupId: string` is left untouched. The client `CommentItem` overrides it via `Omit<ServerCommentItem, "groupId"> & { groupId: string | null }`. Wire-format translation (`null ↔ ""`) lives in `features/sync/transforms.ts` (or `adapter.ts`) with a comment recording the choice.
+- **Test runner:** unit tests run via `pnpm --filter react-grab test:unit -- --run`. The vitest scaffold lands in a separate prep commit before Task 1.
+- **Render surface:** the Ungrouped section is added to `components/comments-dropdown.tsx` (where `GroupCollapsible` lives). `components/sidebar/group-list.tsx` is left alone — its `GroupCard` pipeline is a different abstraction and out of scope.
+- **Jira callbacks:** `TicketCreatedCallback` and `onJiraResolved` keep `groupId: string`. Ungrouped selections cannot file tickets — guard at call sites (`if (groupId !== null)`) and hide/disable the action when `isUngrouped(selection)`.
 
 **Architecture:** Selection owns membership (`groupId: string | null`). `null` = intentionally ungrouped. No sentinel group. One predicate module (`business/membership.ts`) owns the rule. One writer module (`business/selection-assignment.ts`) owns mutations to `selection.groupId`. `group-list.tsx` composes an `<UngroupedSection/>` above `groups.map(<GroupCollapsible/>)` inside the same container.
 
@@ -47,7 +53,7 @@ Before Task 1, read these files end-to-end so you understand the current shape:
 Run tests once to get a clean baseline:
 
 ```bash
-pnpm --filter react-grab test -- --run
+pnpm --filter react-grab test:unit -- --run
 ```
 
 Expected: all green. If not, stop and surface the failure before continuing.
@@ -170,9 +176,29 @@ export const unassignSelectionsInGroup = (
   items.map((i) => (i.groupId === groupId ? { ...i, groupId: null } : i));
 ```
 
-**Sub-task 2b — widen `CommentItem.groupId`.**
+**Sub-task 2b — override `CommentItem.groupId` via `Omit`.**
 
-In `packages/react-grab/src/types.ts`, change `groupId?: string` to `groupId: string | null` on `CommentItem`. This removes optionality AND swaps `undefined` for explicit `null`.
+In `packages/react-grab/src/types.ts`, replace:
+
+```ts
+export interface CommentItem extends ServerCommentItem {
+  previewBounds?: OverlayBounds[];
+}
+```
+
+with:
+
+```ts
+export interface CommentItem extends Omit<ServerCommentItem, "groupId"> {
+  /** Client-side override: server type is `string` (required). We treat
+   *  `null` as "intentionally ungrouped". Translation to/from the wire
+   *  format (`null` ↔ `""`) happens in features/sync/transforms.ts. */
+  groupId: string | null;
+  previewBounds?: OverlayBounds[];
+}
+```
+
+Do NOT touch `generated/` or `features/sync/schemas.ts`.
 
 **Sub-task 2c — drop the `DEFAULT_GROUP_*` symbols.**
 
@@ -247,8 +273,8 @@ The "Ungrouped" row itself is added in Task 5 — this sub-task is signature-onl
 Walk the typecheck output. Typical sites:
 - `comments-dropdown.tsx`, `selection-label/index.tsx`, `overlay-canvas.tsx`, `renderer.tsx` — any read of `item.groupId` expecting `string`.
 - The pre-flight `activeGroupId` consumer list — narrow or widen each site.
-- Jira callback sites from pre-flight sweep #2 — add `if (groupId !== null)` guards. Ungrouped selections do not trigger Jira resolution.
-- `sync/adapter.ts`, `sync/transforms.ts` — implement the wire-format decision (Option A or B) from pre-flight sweep #3. Leave a comment at the serialization site recording the choice.
+- Jira callback sites from pre-flight sweep #2 — `TicketCreatedCallback` and `onJiraResolved` keep `groupId: string`. At every site that *invokes* these callbacks, add `if (groupId !== null)` (or `if (selection.groupId !== null)`) guard. Hide/disable the action's UI affordance when `isUngrouped(selection)`.
+- `features/sync/transforms.ts` (or `adapter.ts`) — implement the client-side wire translation: on **write**, map `groupId === null` to `""`; on **read**, map `groupId === ""` (and any falsy/missing value) to `null`. Leave a comment at the serialization site recording the decision.
 
 Fix each error by routing through `isUngrouped` / `belongsTo` where the intent is a predicate, or by narrowing (`if (item.groupId) { ... }`) where the code genuinely needs a string.
 
@@ -256,7 +282,7 @@ Fix each error by routing through `isUngrouped` / `belongsTo` where the intent i
 
 ```bash
 pnpm --filter react-grab typecheck    # expect clean
-pnpm --filter react-grab test -- --run # expect green
+pnpm --filter react-grab test:unit -- --run # expect green
 pnpm --filter react-grab lint          # expect clean
 ```
 
@@ -271,7 +297,7 @@ git commit -m "refactor(selection-groups): remove default-group sentinel, groupI
 - New business/selection-assignment.ts owns all writes to selection.groupId
 - handleDeleteGroup now demotes selections to null (does not delete)
 - Hydration migrates legacy 'default' / undefined groupId to null
-- Sync wire format: [Option A or B — record decision here]"
+- Sync wire format: client-side override; null ↔ \"\" at sync transform boundary"
 ```
 
 ---
@@ -386,43 +412,25 @@ git commit -m "feat(picker): add Ungrouped option"
 
 ---
 
-## Task 6: Compose `group-list.tsx`
+## Task 6: Compose ungrouped section into `comments-dropdown.tsx`
 
 **Files:**
-- Modify: `packages/react-grab/src/components/sidebar/group-list.tsx`
+- Modify: `packages/react-grab/src/components/comments-dropdown.tsx`
 
-**Step 1:** Inside the existing `data-react-grab-group-list` container, render:
+**Step 1:** Inside the scroll container that holds the `<For each={filteredGroupedItems()}>{GroupCollapsible}` block (around line 313–317), prepend a `<Show when={ungroupedItems().length > 0}><UngroupedSection .../></Show>`. Compute `ungroupedItems = () => props.items.filter(isUngrouped)` near `groupedItems`. Import `isUngrouped` from `features/selection-groups/business/membership.js`.
 
-```tsx
-<div data-react-grab-group-list>
-  <UngroupedSection
-    selections={props.selections.filter(isUngrouped)}
-    {...rowHandlers}
-  />
-  <For each={props.groups}>
-    {(group) => (
-      <GroupCollapsible
-        group={group}
-        selections={props.selections.filter((s) => belongsTo(s, group.id))}
-        {...rowHandlers}
-      />
-    )}
-  </For>
-</div>
-```
+**Step 2:** Add a `data-react-grab-group-list` attribute to the scroll container (the `div` with `ref={highlightContainerRef}` if it's the right surface, otherwise the parent). This is the hook Task 8's integration test queries against.
 
-Import `isUngrouped` and `belongsTo` from `features/selection-groups/business/membership.js`.
-
-**Step 2:** Conditionally hide the ungrouped section when `ungroupedSelections.length === 0`.
-
-**Step 3:** Typecheck + visual smoke test.
+**Step 3:** `pnpm --filter react-grab typecheck` + visual smoke test.
 
 **Step 4: Commit**
 
 ```bash
-git add packages/react-grab/src/components/sidebar/group-list.tsx
-git commit -m "feat(sidebar): render ungrouped section in group list"
+git add packages/react-grab/src/components/comments-dropdown.tsx
+git commit -m "feat(comments-dropdown): render ungrouped section above group list"
 ```
+
+**Note:** `components/sidebar/group-list.tsx` is intentionally untouched. Its `GroupCard` pipeline is a different abstraction and out of scope.
 
 ---
 
@@ -446,10 +454,10 @@ git commit -m "refactor(group-collapsible): drop default-group special casing"
 
 ---
 
-## Task 8: `group-list` integration test
+## Task 8: comments-dropdown integration test
 
 **Files:**
-- Create: `packages/react-grab/src/components/sidebar/group-list.test.tsx`
+- Create: `packages/react-grab/src/components/comments-dropdown.test.tsx` (or, if rendering the full dropdown is too heavy, create a thin wrapper around the grouped-list section and test that).
 
 **Step 1: Write the test**
 
@@ -546,7 +554,7 @@ pnpm --filter react-grab typecheck
 **Step 2: Tests**
 
 ```bash
-pnpm --filter react-grab test -- --run
+pnpm --filter react-grab test:unit -- --run
 ```
 
 **Step 3: Lint**
