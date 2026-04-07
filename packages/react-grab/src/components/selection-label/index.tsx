@@ -612,33 +612,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   </div>
                 </BottomSection>
               </Show>
-              <Show when={(props.jiraComments?.length ?? 0) > 0}>
-                <BottomSection>
-                  <Collapsible>
-                    <CollapsibleTrigger
-                      data-react-grab-ignore-events
-                      class="flex items-center justify-between w-[calc(100%+16px)] -mx-2 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent cursor-pointer"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopImmediatePropagation()}
-                    >
-                      <span>Comments ({props.jiraComments!.length})</span>
-                      <span class="text-[10px]">▾</span>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1 gap-1 max-h-[160px] overflow-y-auto">
-                        <For each={props.jiraComments}>
-                          {(c) => (
-                            <div class="text-[11px] leading-tight text-popover-foreground">
-                              <span class="font-medium">{c.author}: </span>
-                              <span class="text-muted-foreground wrap-break-word">{c.body}</span>
-                            </div>
-                          )}
-                        </For>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </BottomSection>
-              </Show>
             </div>
           </Show>
 
@@ -779,6 +752,33 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     </button>
                   </Show>
                 </div>
+                <Show when={(props.jiraComments?.length ?? 0) > 0}>
+                  <Collapsible>
+                    <CollapsibleTrigger
+                      data-react-grab-ignore-events
+                      class="flex items-center justify-between w-[calc(100%+16px)] -mx-2 mt-1 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent cursor-pointer"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopImmediatePropagation()}
+                    >
+                      <span>Comments ({props.jiraComments!.length})</span>
+                      <span class="text-[10px]">▾</span>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1 gap-1 max-h-[160px] overflow-y-auto">
+                        <For each={props.jiraComments}>
+                          {(c) => (
+                            <div class="text-[11px] leading-tight text-popover-foreground">
+                              <span class="font-medium">{c.author}: </span>
+                              <span class="text-muted-foreground wrap-break-word">
+                                {c.body}
+                              </span>
+                            </div>
+                          )}
+                        </For>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </Show>
               </BottomSection>
             </div>
           </Show>
