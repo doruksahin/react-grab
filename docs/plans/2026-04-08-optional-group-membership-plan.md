@@ -14,6 +14,12 @@
 
 ---
 
+## Commit discipline
+
+**Every commit must typecheck and pass tests.** No red commits. The type-widening in this refactor touches many call sites that cannot compile independently, so Task 2 bundles them into a single atomic "remove the default-group sentinel" commit. This is a deliberate trade of granularity for a green `git bisect` history.
+
+---
+
 ## Pre-flight
 
 Before Task 1, read these files end-to-end so you understand the current shape:
@@ -25,8 +31,18 @@ Before Task 1, read these files end-to-end so you understand the current shape:
 - `packages/react-grab/src/features/selection-groups/components/group-collapsible.tsx`
 - `packages/react-grab/src/features/selection-groups/components/group-picker-flyout.tsx`
 - `packages/react-grab/src/components/sidebar/group-list.tsx`
-- `packages/react-grab/src/types.ts` (look for `CommentItem` — it carries `groupId`)
-- `packages/react-grab/src/core/index.tsx` (find where selections are created — this is where the default must become `null`)
+- `packages/react-grab/src/types.ts` (note: `CommentItem.groupId` is currently `groupId?: string` = `string | undefined`, NOT `string`)
+- `packages/react-grab/src/core/index.tsx` (find where selections are created)
+- `packages/react-grab/src/utils/comment-storage.ts` (hydration path — currently coerces missing `groupId` to `"default"` at lines ~37-40; this is the main offender)
+
+**Pre-flight sweeps — record results before Task 1:**
+
+1. `grep -rn "activeGroupId" packages/react-grab/src` — list every consumer. Any site passing `activeGroupId()` into a `string`-typed slot will need narrowing in Task 2. Keep the list.
+2. `grep -rn "onJiraResolved\|TicketCreatedCallback" packages/react-grab/src` — these callbacks take `groupId: string`. **Decision:** Jira resolution is a group-scoped operation. Ungrouped selections cannot trigger it. Every call site must guard with `if (groupId !== null)` before invoking. Record sites that violate this.
+3. `grep -rn "groupId" packages/react-grab/src/sync` — identify every serialization boundary. **Decision required up front** (pick one and record in Task 2's sweep notes):
+   - Option A: server accepts `null` directly → pass through.
+   - Option B: server rejects `null` → omit the field on write, treat absent-on-read as `null`.
+4. `grep -rn "DEFAULT_GROUP_ID\|DEFAULT_GROUP_NAME\|createDefaultGroup\|isDefaultGroup\|removeCommentsByGroup" packages/react-grab/src` — complete call-site inventory for the symbols being deleted.
 
 Run tests once to get a clean baseline:
 
@@ -39,6 +55,8 @@ Expected: all green. If not, stop and surface the failure before continuing.
 ---
 
 ## Task 1: Add `isUngrouped` / `belongsTo` predicates (TDD)
+
+Standalone green commit. Predicates compile against the current `string | undefined` type as well as the future `string | null` type, so they can safely land first.
 
 **Files:**
 - Create: `packages/react-grab/src/features/selection-groups/business/membership.ts`
@@ -66,11 +84,7 @@ describe("membership", () => {
 });
 ```
 
-**Step 2: Run test — expect FAIL** (module does not exist)
-
-```bash
-pnpm --filter react-grab test -- --run membership.test
-```
+**Step 2: Run — expect FAIL** (module does not exist).
 
 **Step 3: Implement**
 
@@ -87,7 +101,7 @@ export const belongsTo = (
 ): boolean => item.groupId === groupId;
 ```
 
-**Step 4: Run test — expect PASS**
+**Step 4: Run — expect PASS. Typecheck.**
 
 **Step 5: Commit**
 
@@ -99,39 +113,17 @@ git commit -m "feat(selection-groups): add membership predicates"
 
 ---
 
-## Task 2: Widen `CommentItem.groupId` to `string | null`
+## Task 2: Atomic "remove the default-group sentinel" commit
 
-**Files:**
-- Modify: `packages/react-grab/src/types.ts` (change `groupId: string` → `groupId: string | null` on `CommentItem`)
+This is the biggest task by far and must be done as one green commit. Every file change below lands together; do NOT commit partial progress. Work on a feature branch. Run `pnpm --filter react-grab typecheck` repeatedly as you go — you are not done until it is clean.
 
-**Step 1: Read current `types.ts`** and locate `CommentItem`.
+**Sub-task 2a — write the selection-assignment writer (TDD, staged into the same commit).**
 
-**Step 2: Change the field type.** Leave everything else untouched.
-
-**Step 3: Typecheck**
-
-```bash
-pnpm --filter react-grab typecheck
-```
-
-Expected: compilation errors in every place that assumes `groupId` is a string. **Write down the list** — those sites are the rest of this plan.
-
-**Step 4: Commit (even if red)**
-
-```bash
-git add packages/react-grab/src/types.ts
-git commit -m "refactor(types): CommentItem.groupId is string | null"
-```
-
----
-
-## Task 3: Add `selection-assignment.ts` as the sole writer (TDD)
-
-**Files:**
+Files:
 - Create: `packages/react-grab/src/features/selection-groups/business/selection-assignment.ts`
 - Create: `packages/react-grab/src/features/selection-groups/business/selection-assignment.test.ts`
 
-**Step 1: Failing test**
+Test:
 
 ```ts
 import { describe, it, expect } from "vitest";
@@ -159,9 +151,7 @@ describe("selection-assignment", () => {
 });
 ```
 
-**Step 2: Run — expect FAIL**
-
-**Step 3: Implement**
+Implementation:
 
 ```ts
 import type { CommentItem } from "../../../types.js";
@@ -180,150 +170,172 @@ export const unassignSelectionsInGroup = (
   items.map((i) => (i.groupId === groupId ? { ...i, groupId: null } : i));
 ```
 
-**Step 4: Run — expect PASS**
+**Sub-task 2b — widen `CommentItem.groupId`.**
 
-**Step 5: Commit**
+In `packages/react-grab/src/types.ts`, change `groupId?: string` to `groupId: string | null` on `CommentItem`. This removes optionality AND swaps `undefined` for explicit `null`.
 
-```bash
-git add packages/react-grab/src/features/selection-groups/business/selection-assignment.ts \
-        packages/react-grab/src/features/selection-groups/business/selection-assignment.test.ts
-git commit -m "feat(selection-groups): add selection-assignment writer"
-```
+**Sub-task 2c — drop the `DEFAULT_GROUP_*` symbols.**
 
----
+In `packages/react-grab/src/features/selection-groups/types.ts`:
+- Delete `DEFAULT_GROUP_ID`, `DEFAULT_GROUP_NAME`, `createDefaultGroup`.
+- In `SelectionGroupsAPI`: change `handleMoveItem` signature to `(itemId: string, groupId: string | null) => void`, change `activeGroupId` to `Accessor<string | null>`, `setActiveGroupId` to `Setter<string | null>`.
+- In `SelectionGroupsViewProps`: change `onMoveItem` to `(itemId: string, groupId: string | null) => void`, change `onActiveGroupChange` to `(groupId: string | null) => void`.
 
-## Task 4: Remove `DEFAULT_GROUP_ID` from `types.ts`
+In `packages/react-grab/src/features/selection-groups/index.ts`:
+- Delete the `DEFAULT_GROUP_ID` / `createDefaultGroup` import.
+- Delete the `groups()` derivation that injected a synthetic Default. `groups` is now just `rawGroups`.
+- Change `activeGroupId` initial value from `DEFAULT_GROUP_ID` to `null`; signal type is `string | null`.
+- Replace `handleDeleteGroup`'s cascade with `unassignSelectionsInGroup` from `business/selection-assignment.ts`. Selections are demoted, not deleted. If `activeGroupId() === groupId`, set it to `null`.
+- Replace `handleMoveItem` body with `assignSelection`.
+- Delete the `export { DEFAULT_GROUP_ID, DEFAULT_GROUP_NAME }` re-export line.
 
-**Files:**
-- Modify: `packages/react-grab/src/features/selection-groups/types.ts`
+**Sub-task 2d — clean up `business/group-operations.ts`.**
 
-**Step 1:** Delete `DEFAULT_GROUP_ID`, `DEFAULT_GROUP_NAME`, `createDefaultGroup`. Keep `SelectionGroup`, `SelectionGroupsDeps`, `SelectionGroupsAPI`, `SelectionGroupsViewProps`.
+- Delete `isDefaultGroup`. Delete the `DEFAULT_GROUP_ID` import.
+- Delete `removeCommentsByGroup` (its only caller was replaced in 2c).
+- Leave `getCommentsByGroup`, `countByGroup`, `groupComments`, `fuzzyMatchGroup` untouched — they compare `=== groupId` where `groupId: string`, which is correct.
 
-**Step 2:** In `SelectionGroupsAPI`, change `handleMoveItem` signature:
+**Sub-task 2e — `store/group-storage.ts`: drop default, add migration helper.**
 
-```ts
-handleMoveItem: (itemId: string, groupId: string | null) => void;
-```
-
-Also widen `onMoveItem` in `SelectionGroupsViewProps` to `(itemId: string, groupId: string | null) => void`.
-
-**Step 3:** Delete the re-exports at the bottom of `features/selection-groups/index.ts` for `DEFAULT_GROUP_ID` / `DEFAULT_GROUP_NAME`.
-
-**Step 4: Typecheck — expect many errors.** Record the list.
-
-**Step 5: Commit**
-
-```bash
-git add packages/react-grab/src/features/selection-groups/types.ts \
-        packages/react-grab/src/features/selection-groups/index.ts
-git commit -m "refactor(selection-groups): remove DEFAULT_GROUP_ID sentinel"
-```
-
----
-
-## Task 5: Rewrite `features/selection-groups/index.ts` orchestrator
-
-**Files:**
-- Modify: `packages/react-grab/src/features/selection-groups/index.ts`
-
-**Step 1:** Remove the `groups()` derivation that injected a synthetic Default. `groups` is now just `rawGroups`.
-
-**Step 2:** Change `activeGroupId` initial value from `DEFAULT_GROUP_ID` to `null`. Update its signal type to `string | null`.
-
-**Step 3:** In `handleDeleteGroup`, replace the "remove comments by group" cascade with `unassignSelectionsInGroup` from `business/selection-assignment.ts`. Selections are demoted, not deleted. If `activeGroupId() === groupId`, set it to `null`.
-
-**Step 4:** Replace `handleMoveItem` body with `assignSelection` from `selection-assignment.ts`. Accept `groupId: string | null`.
-
-**Step 5:** Update `SelectionGroupsAPI` return — `activeGroupId` is now `Accessor<string | null>`, `setActiveGroupId` is `Setter<string | null>`. Update `types.ts` accordingly (do in this task).
-
-**Step 6: Typecheck — expect the error list to shrink.**
-
-**Step 7: Commit**
-
-```bash
-git add packages/react-grab/src/features/selection-groups/index.ts \
-        packages/react-grab/src/features/selection-groups/types.ts
-git commit -m "refactor(selection-groups): orchestrator uses nullable groupId"
-```
-
----
-
-## Task 6: Clean up `business/group-operations.ts`
-
-**Files:**
-- Modify: `packages/react-grab/src/features/selection-groups/business/group-operations.ts`
-
-**Step 1:** Delete `isDefaultGroup`. Delete the `DEFAULT_GROUP_ID` import.
-
-**Step 2:** Leave `getCommentsByGroup`, `countByGroup`, `groupComments`, `fuzzyMatchGroup` untouched — they already use `=== groupId` which is fine for a `string` `groupId`. They should never receive `null` because they're only called for user groups; if in doubt, replace their inline checks with `belongsTo` from `membership.ts` (DRY).
-
-**Step 3:** `removeCommentsByGroup` is no longer called (Task 5 replaced its caller). Delete it.
-
-**Step 4: Typecheck.**
-
-**Step 5: Commit**
-
-```bash
-git add packages/react-grab/src/features/selection-groups/business/group-operations.ts
-git commit -m "refactor(selection-groups): drop default-group helpers"
-```
-
----
-
-## Task 7: `store/group-storage.ts` — drop default, add migration
-
-**Files:**
-- Modify: `packages/react-grab/src/features/selection-groups/store/group-storage.ts`
-
-**Step 1:** Remove any early-returns like `if (groupId === DEFAULT_GROUP_ID) return groups;` on rename/delete — groups are now all equal citizens.
-
-**Step 2:** In the load path (wherever `loadGroups` reads localStorage), filter out any persisted entry with `id === "default"` before returning. Idempotent, one-shot.
-
-**Step 3:** Remove the `DEFAULT_GROUP_ID` import.
-
-**Step 4:** Add a sibling migration helper for selections (called from wherever `CommentItem[]` is hydrated — identify this in `core/index.tsx` or `utils/comment-storage.ts` during Task 8):
+- Remove early-returns like `if (groupId === DEFAULT_GROUP_ID) return groups;` from rename/remove paths.
+- In `loadGroups`, filter out any persisted entry with `id === "default"` before returning (one-shot idempotent migration for pre-existing localStorage data).
+- Remove the `DEFAULT_GROUP_ID` import.
+- Add a sibling migration helper for selections:
 
 ```ts
-// in store/group-storage.ts or a new store/migrate-selections.ts
 export const migrateLegacyDefaultGroup = <T extends { groupId: string | null }>(
   items: T[],
-): T[] => items.map((i) => ((i.groupId as unknown) === "default" ? { ...i, groupId: null } : i));
+): T[] =>
+  items.map((i) => {
+    const raw = (i as { groupId?: unknown }).groupId;
+    // Legacy data may have: "default" (sentinel), undefined, or missing entirely.
+    // Normalize all three to null. Real group IDs pass through.
+    if (raw === "default" || raw === undefined || raw === null) {
+      return { ...i, groupId: null };
+    }
+    return i;
+  });
 ```
 
-**Step 5: Commit**
+**Sub-task 2f — `utils/comment-storage.ts`: replace the `"default"` coercion.**
+
+In `loadFromLocalStorage` (around lines 35-45), the current code coerces missing `groupId` to `"default"`:
+
+```ts
+groupId:
+  typeof commentItem.groupId === "string"
+    ? commentItem.groupId
+    : "default",
+```
+
+Remove this per-field normalization. Pipe the parsed array through `migrateLegacyDefaultGroup(...)` before returning. The migrator handles `"default"`, `undefined`, and missing fields uniformly.
+
+**Sub-task 2g — `core/index.tsx`: new selections default to `null`.**
+
+Find the code that constructs a new `CommentItem` when the user makes a selection. Change the `groupId` initializer from `activeGroupId()` / `"default"` to `null`.
+
+**Sub-task 2h — `group-picker-flyout.tsx`: widen signature (no UI change yet).**
+
+- `onSelect: (groupId: string) => void` → `onSelect: (groupId: string | null) => void`
+- `activeGroupId?: string` → `activeGroupId?: string | null`
+- Update every caller of `GroupPickerFlyout` to accept the nullable value. Most forward directly into `handleMoveItem`, which is now `string | null`.
+
+The "Ungrouped" row itself is added in Task 5 — this sub-task is signature-only so the atomic commit stays focused on type propagation.
+
+**Sub-task 2i — propagate `string | null` through remaining call sites.**
+
+Walk the typecheck output. Typical sites:
+- `comments-dropdown.tsx`, `selection-label/index.tsx`, `overlay-canvas.tsx`, `renderer.tsx` — any read of `item.groupId` expecting `string`.
+- The pre-flight `activeGroupId` consumer list — narrow or widen each site.
+- Jira callback sites from pre-flight sweep #2 — add `if (groupId !== null)` guards. Ungrouped selections do not trigger Jira resolution.
+- `sync/adapter.ts`, `sync/transforms.ts` — implement the wire-format decision (Option A or B) from pre-flight sweep #3. Leave a comment at the serialization site recording the choice.
+
+Fix each error by routing through `isUngrouped` / `belongsTo` where the intent is a predicate, or by narrowing (`if (item.groupId) { ... }`) where the code genuinely needs a string.
+
+**Sub-task 2j — verify and commit.**
 
 ```bash
-git add packages/react-grab/src/features/selection-groups/store/
-git commit -m "refactor(selection-groups): drop default group from storage + migration helper"
+pnpm --filter react-grab typecheck    # expect clean
+pnpm --filter react-grab test -- --run # expect green
+pnpm --filter react-grab lint          # expect clean
+```
+
+Then one commit:
+
+```bash
+git add -A
+git commit -m "refactor(selection-groups): remove default-group sentinel, groupId is nullable
+
+- CommentItem.groupId widened from string? to string | null
+- Deleted DEFAULT_GROUP_ID, DEFAULT_GROUP_NAME, createDefaultGroup, isDefaultGroup, removeCommentsByGroup
+- New business/selection-assignment.ts owns all writes to selection.groupId
+- handleDeleteGroup now demotes selections to null (does not delete)
+- Hydration migrates legacy 'default' / undefined groupId to null
+- Sync wire format: [Option A or B — record decision here]"
 ```
 
 ---
 
-## Task 8: Hydration migration + new-selection default
+## Task 3: Orchestrator test — delete-group demotes instead of deleting
+
+This proves the most important behavioral change in the refactor. It belongs as its own commit so the test name is visible in history.
 
 **Files:**
-- Modify: `packages/react-grab/src/utils/comment-storage.ts` (or wherever `CommentItem[]` is loaded)
-- Modify: `packages/react-grab/src/core/index.tsx` (where new selections are constructed)
+- Create or extend: `packages/react-grab/src/features/selection-groups/index.test.ts`
 
-**Step 1:** In the selection hydration path, call `migrateLegacyDefaultGroup(...)` on the loaded array before the signal is seeded.
+**Step 1: Write the test**
 
-**Step 2:** In `core/index.tsx` find the code that creates a new `CommentItem` when the user makes a selection. Change the `groupId` initializer from `activeGroupId()` / `"default"` to `null`.
+```ts
+import { describe, it, expect } from "vitest";
+import { createRoot, createSignal } from "solid-js";
+import { createSelectionGroups } from "./index.js";
 
-**Step 3: Manual smoke test**
-- Launch the dev harness (`pnpm --filter react-grab dev` or the demo app).
-- In DevTools, seed `localStorage` with a legacy item: `{"id":"x","groupId":"default", ...}`.
-- Reload. Confirm via DevTools it rehydrates with `groupId: null`.
+describe("createSelectionGroups.handleDeleteGroup", () => {
+  it("demotes selections in the deleted group to groupId: null (does NOT delete them)", () => {
+    createRoot((dispose) => {
+      const [items, setItems] = createSignal([
+        { id: "a", groupId: "g1" },
+        { id: "b", groupId: "g1" },
+        { id: "c", groupId: "g2" },
+      ] as any);
+      const api = createSelectionGroups({
+        commentItems: items,
+        setCommentItems: setItems,
+        persistCommentItems: () => {},
+      } as any);
+      // Seed group "g1" via the orchestrator's public add-group path or pre-seed localStorage.
+      // ...
+      api.handleDeleteGroup("g1");
+      const next = items();
+      expect(next.map((i) => i.id)).toEqual(["a", "b", "c"]); // nothing deleted
+      expect(next.find((i) => i.id === "a")!.groupId).toBeNull();
+      expect(next.find((i) => i.id === "b")!.groupId).toBeNull();
+      expect(next.find((i) => i.id === "c")!.groupId).toBe("g2");
+      dispose();
+    });
+  });
 
-**Step 4: Commit**
+  it("resets activeGroupId to null when the active group is deleted", () => {
+    // api.setActiveGroupId("g1"); api.handleDeleteGroup("g1");
+    // expect(api.activeGroupId()).toBeNull();
+  });
+});
+```
+
+Fill in the seeding path based on the actual `SelectionGroupsDeps` shape.
+
+**Step 2: Run — expect PASS** (Task 2 already implemented the behavior).
+
+**Step 3: Commit**
 
 ```bash
-git add packages/react-grab/src/utils/comment-storage.ts packages/react-grab/src/core/index.tsx
-git commit -m "feat(core): new selections default to ungrouped + migrate legacy default"
+git add packages/react-grab/src/features/selection-groups/index.test.ts
+git commit -m "test(selection-groups): delete-group demotes selections to ungrouped"
 ```
 
 ---
 
-## Task 9: Create `UngroupedSection` component
+## Task 4: Create `UngroupedSection` component
 
 **Files:**
 - Create: `packages/react-grab/src/features/selection-groups/components/ungrouped-section.tsx`
@@ -337,11 +349,11 @@ interface UngroupedSectionProps {
 }
 ```
 
-It renders a titled section ("Ungrouped") with the selection rows. Reuse the same row component `group-collapsible.tsx` uses for its items — do NOT duplicate row markup. If the row is inlined inside `group-collapsible.tsx`, extract it into `components/selection-row.tsx` first (DRY) in this task.
+It renders a titled section ("Ungrouped") with the selection rows. Reuse the same row component `group-collapsible.tsx` uses — do NOT duplicate row markup. If the row is inlined inside `group-collapsible.tsx`, extract it into `components/selection-row.tsx` first (DRY) in this task.
 
 **Step 2:** Add `data-react-grab-ungrouped-section` on the wrapper for tests/queries.
 
-**Step 3:** Manual compile check — `pnpm --filter react-grab typecheck`.
+**Step 3:** `pnpm --filter react-grab typecheck`.
 
 **Step 4: Commit**
 
@@ -352,7 +364,29 @@ git commit -m "feat(selection-groups): add UngroupedSection component"
 
 ---
 
-## Task 10: Compose `group-list.tsx`
+## Task 5: Group picker flyout — add "Ungrouped" row
+
+The signature was already widened in Task 2. This task is the UI addition only.
+
+**Files:**
+- Modify: `packages/react-grab/src/features/selection-groups/components/group-picker-flyout.tsx`
+
+**Step 1:** Add a top-row item labeled "Ungrouped". On click: `props.onSelect(null)`.
+
+**Step 2:** Mark the currently-selected state: the "Ungrouped" row shows the checkmark when `props.activeGroupId == null` (covers both `null` and `undefined`). Existing group rows continue to check `activeGroupId === group.id`.
+
+**Step 3:** Smoke test: open the picker on a grouped item → choose Ungrouped → item leaves the group card.
+
+**Step 4: Commit**
+
+```bash
+git add packages/react-grab/src/features/selection-groups/components/group-picker-flyout.tsx
+git commit -m "feat(picker): add Ungrouped option"
+```
+
+---
+
+## Task 6: Compose `group-list.tsx`
 
 **Files:**
 - Modify: `packages/react-grab/src/components/sidebar/group-list.tsx`
@@ -379,9 +413,9 @@ git commit -m "feat(selection-groups): add UngroupedSection component"
 
 Import `isUngrouped` and `belongsTo` from `features/selection-groups/business/membership.js`.
 
-**Step 2:** Conditionally hide the ungrouped section when `ungroupedSelections.length === 0` — YAGNI says show nothing rather than an empty header. (If the design calls for an always-visible header, skip this.)
+**Step 2:** Conditionally hide the ungrouped section when `ungroupedSelections.length === 0`.
 
-**Step 3:** Typecheck + visual smoke test in the dev harness.
+**Step 3:** Typecheck + visual smoke test.
 
 **Step 4: Commit**
 
@@ -392,36 +426,18 @@ git commit -m "feat(sidebar): render ungrouped section in group list"
 
 ---
 
-## Task 11: Group picker flyout — add "Ungrouped" option
+## Task 7: `group-collapsible.tsx` — drop any `isDefaultGroup` remnants
 
-**Files:**
-- Modify: `packages/react-grab/src/features/selection-groups/components/group-picker-flyout.tsx`
-
-**Step 1:** Add a top-row item labeled "Ungrouped". On click: `onMoveItem(itemId, null)`.
-
-**Step 2:** Mark the currently selected state: the "Ungrouped" row is active when `isUngrouped(currentItem)`.
-
-**Step 3:** Smoke test: open the picker on a grouped item → choose Ungrouped → verify the item leaves the group card and appears in the ungrouped section.
-
-**Step 4: Commit**
-
-```bash
-git add packages/react-grab/src/features/selection-groups/components/group-picker-flyout.tsx
-git commit -m "feat(picker): add Ungrouped option"
-```
-
----
-
-## Task 12: `group-collapsible.tsx` — drop `isDefaultGroup` usage
+If Task 2 caught every usage, this task is a no-op. Otherwise:
 
 **Files:**
 - Modify: `packages/react-grab/src/features/selection-groups/components/group-collapsible.tsx`
 
-**Step 1:** Remove the `isDefaultGroup` import and any `<Show when={!isDefaultGroup(...)}>` wrappers around rename/delete controls — all groups are now user groups, so all controls are always visible.
+**Step 1:** Remove any `<Show when={!isDefaultGroup(...)}>` wrappers around rename/delete controls — all groups are user groups now.
 
-**Step 2: Typecheck + smoke test.**
+**Step 2:** Typecheck + smoke test.
 
-**Step 3: Commit**
+**Step 3: Commit** (skip if no changes)
 
 ```bash
 git add packages/react-grab/src/features/selection-groups/components/group-collapsible.tsx
@@ -430,34 +446,15 @@ git commit -m "refactor(group-collapsible): drop default-group special casing"
 
 ---
 
-## Task 13: Sweep remaining type errors
-
-**Step 1:** `pnpm --filter react-grab typecheck`. Walk every remaining error. Typical sites:
-- `comments-dropdown.tsx`, `selection-label/index.tsx`, `overlay-canvas.tsx`, `renderer.tsx`, `sync/adapter.ts`, `sync/transforms.ts` — anywhere that reads `item.groupId` expecting a string.
-
-**Step 2:** Fix by routing through `isUngrouped` / `belongsTo` where the intent is a predicate, or by narrowing (`if (item.groupId) { ... }`) where the code genuinely needs a string.
-
-**Sync layer note:** if the sync adapter serializes `groupId` to the server, confirm the server contract accepts `null`. If not, map `null` → omit-field on write and absent-field → `null` on read. Record this decision as a comment at the serialization site.
-
-**Step 3:** `pnpm --filter react-grab test -- --run` — all tests green.
-
-**Step 4: Commit** as one sweep or logically grouped:
-
-```bash
-git commit -m "refactor: propagate nullable groupId through call sites"
-```
-
----
-
-## Task 14: `group-list` integration test
+## Task 8: `group-list` integration test
 
 **Files:**
-- Create: `packages/react-grab/src/components/sidebar/group-list.test.tsx` (if a test already exists, extend it)
+- Create: `packages/react-grab/src/components/sidebar/group-list.test.tsx`
 
-**Step 1: Failing test**
+**Step 1: Write the test**
 
 ```tsx
-import { render, screen } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
 import { GroupList } from "./group-list.jsx";
 
@@ -469,25 +466,21 @@ describe("group-list", () => {
     ] as any;
     const groups = [{ id: "g1", name: "Alpha", createdAt: 0, revealed: false }];
 
-    render(() => (
+    const { container } = render(() => (
       <GroupList selections={selections} groups={groups} /* required handlers as noops */ />
     ));
 
-    const container = screen.getByTestId
-      ? screen.getByTestId("react-grab-group-list")
-      : document.querySelector("[data-react-grab-group-list]")!;
-    expect(container).toBeTruthy();
-    expect(container.querySelector("[data-react-grab-ungrouped-section]")).toBeTruthy();
-    expect(container.textContent).toContain("Alpha");
+    const list = container.querySelector("[data-react-grab-group-list]");
+    expect(list).toBeTruthy();
+    expect(list!.querySelector("[data-react-grab-ungrouped-section]")).toBeTruthy();
+    expect(list!.textContent).toContain("Alpha");
   });
 });
 ```
 
-**Step 2:** Run — expect FAIL if any wiring is wrong, then fix.
+**Step 2:** Run — fix any wiring issues — expect PASS.
 
-**Step 3:** Run — expect PASS.
-
-**Step 4: Commit**
+**Step 3: Commit**
 
 ```bash
 git add packages/react-grab/src/components/sidebar/group-list.test.tsx
@@ -496,28 +489,32 @@ git commit -m "test(group-list): ungrouped section renders inside container"
 
 ---
 
-## Task 15: Migration test
+## Task 9: Migration test
 
 **Files:**
 - Create: `packages/react-grab/src/features/selection-groups/store/migrate.test.ts`
 
-**Step 1: Failing test**
+**Step 1: Write the test**
 
 ```ts
 import { describe, it, expect } from "vitest";
-import { migrateLegacyDefaultGroup } from "./group-storage.js"; // or wherever it lives
+import { migrateLegacyDefaultGroup } from "./group-storage.js";
 
 describe("migrateLegacyDefaultGroup", () => {
-  it("maps legacy 'default' groupId to null", () => {
+  it("maps legacy 'default' / undefined / missing groupId to null", () => {
     const items = [
       { id: "a", groupId: "default" },
       { id: "b", groupId: "g1" },
       { id: "c", groupId: null },
+      { id: "d", groupId: undefined },
+      { id: "e" }, // field entirely missing
     ] as any[];
     const out = migrateLegacyDefaultGroup(items);
     expect(out[0].groupId).toBeNull();
     expect(out[1].groupId).toBe("g1");
     expect(out[2].groupId).toBeNull();
+    expect(out[3].groupId).toBeNull();
+    expect(out[4].groupId).toBeNull();
   });
   it("is idempotent", () => {
     const once = migrateLegacyDefaultGroup([{ id: "a", groupId: "default" }] as any);
@@ -527,7 +524,7 @@ describe("migrateLegacyDefaultGroup", () => {
 });
 ```
 
-**Step 2:** Run — expect PASS (migrator already exists from Task 7).
+**Step 2:** Run — expect PASS.
 
 **Step 3: Commit**
 
@@ -538,7 +535,7 @@ git commit -m "test(selection-groups): migrate legacy default groupId"
 
 ---
 
-## Task 16: Full verification
+## Task 10: Full verification
 
 **Step 1: Typecheck**
 
@@ -546,15 +543,11 @@ git commit -m "test(selection-groups): migrate legacy default groupId"
 pnpm --filter react-grab typecheck
 ```
 
-Expected: clean.
-
 **Step 2: Tests**
 
 ```bash
 pnpm --filter react-grab test -- --run
 ```
-
-Expected: all green.
 
 **Step 3: Lint**
 
@@ -562,24 +555,17 @@ Expected: all green.
 pnpm --filter react-grab lint
 ```
 
-Expected: clean.
-
 **Step 4: Manual smoke script** (run in dev harness, tick each):
 - [ ] Fresh load, no selections → sidebar shows no ungrouped section, no groups.
-- [ ] Make one selection → it appears under "Ungrouped".
-- [ ] Create a group "Alpha" → empty "Alpha" card appears under ungrouped section.
-- [ ] Move the selection into "Alpha" via picker → it leaves ungrouped, appears in Alpha.
-- [ ] Move it back via picker → "Ungrouped" option at top of flyout → appears in ungrouped section.
-- [ ] Delete "Alpha" while it contains an item → the item is demoted to ungrouped (not deleted).
+- [ ] Make one selection → appears under "Ungrouped".
+- [ ] Create a group "Alpha" → empty "Alpha" card appears.
+- [ ] Move the selection into "Alpha" via picker → leaves ungrouped, appears in Alpha.
+- [ ] Move it back via picker → "Ungrouped" row at top → appears in ungrouped section.
+- [ ] Delete "Alpha" while it contains an item → item is demoted to ungrouped (not deleted).
 - [ ] Reload → state persists; no "Default" group ever appears.
-- [ ] Seed `localStorage` with a legacy `{groupId: "default"}` item → reload → item is under Ungrouped; no "default" group entry in persisted groups.
-
-**Step 5: Final commit (if needed) and push**
-
-```bash
-git status
-# If everything is committed, you're done.
-```
+- [ ] Seed `localStorage` with a legacy `{groupId: "default"}` item → reload → item is under Ungrouped.
+- [ ] Seed `localStorage` with a legacy item missing `groupId` entirely → reload → item is under Ungrouped.
+- [ ] `git bisect` sanity: `git log --oneline` and confirm every commit message corresponds to a green build.
 
 ---
 
@@ -587,4 +573,4 @@ git status
 
 - Auto-assigning new selections to the currently-active sidebar group.
 - Drag-and-drop between ungrouped section and groups.
-- Server-side schema updates for the sync layer beyond the serialize/deserialize null handling noted in Task 13.
+- Server-side schema updates beyond the serialize/deserialize `null` handling decided in Task 2.
