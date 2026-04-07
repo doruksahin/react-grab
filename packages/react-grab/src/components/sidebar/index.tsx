@@ -25,7 +25,6 @@ import {
   type GroupedEntry,
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
-import { ShadowRootContext } from "../../utils/shadow-context.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -45,15 +44,11 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // Instance-scoped (not module-scoped) — safe for multiple Sidebar instances
   let lastFocusedCard: HTMLElement | undefined;
   let detailViewRef: HTMLDivElement | undefined;
-  // containerRef is a signal so that shadowRoot() can reactively re-derive
-  // after the ref callback fires (refs run after initial render).
-  const [containerRef, setContainerRef] = createSignal<
-    HTMLDivElement | undefined
-  >(undefined);
+  let containerRef: HTMLDivElement | undefined;
 
   // Trap focus inside the sidebar for the duration it is mounted.
   // solid-focus-trap restores focus to the previously focused element on cleanup.
-  createFocusTrap({ element: containerRef, enabled: () => true });
+  createFocusTrap({ element: () => containerRef ?? null, enabled: () => true });
 
   const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
@@ -126,21 +121,10 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     props.onFilterVisibilityChange?.(visibleIds, allIds);
   });
 
-  // Shadow root: resolved reactively from the container element so that
-  // the context value is updated after the ref callback fires on mount.
-  const shadowRoot = () => {
-    const el = containerRef();
-    return (el?.getRootNode() as ShadowRoot | Document | null) instanceof
-      ShadowRoot
-      ? (el!.getRootNode() as ShadowRoot)
-      : null;
-  };
-
   return (
-    <ShadowRootContext.Provider value={shadowRoot()}>
-      <div
-        ref={(el) => setContainerRef(el)}
-        data-react-grab-sidebar
+    <div
+      ref={(el) => { containerRef = el; }}
+      data-react-grab-sidebar
         data-react-grab-ignore-events
         class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-[var(--grab-dark-surface)] text-[#e5e5e5] animate-slide-in-left"
         style={{ "z-index": String(Z_INDEX_LABEL), "pointer-events": "auto" }}
@@ -225,7 +209,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             />
           </Show>
         </Show>
-      </div>
-    </ShadowRootContext.Provider>
+    </div>
   );
 };
