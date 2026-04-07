@@ -132,8 +132,17 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
   const [isInternalFading, setIsInternalFading] = createSignal(false);
   const [isShaking, setIsShaking] = createSignal(false);
   const [pickerOpen, setPickerOpen] = createSignal(false);
+  const [isLabelCollapsed, setIsLabelCollapsed] = createSignal(false);
+
   createEffect(() => {
     if (!props.isPromptMode) setPickerOpen(false);
+  });
+
+  // Auto-expand when entering states that need user attention
+  createEffect(() => {
+    if (props.isPromptMode || props.status === "copying" || props.status === "error") {
+      setIsLabelCollapsed(false);
+    }
   });
 
   const canInteract = () =>
@@ -236,6 +245,9 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
 
   const elementIdentity = () =>
     `${props.tagName ?? ""}:${props.componentName ?? ""}`;
+
+  // Reset collapse state on new element selection
+  createEffect(on(elementIdentity, () => setIsLabelCollapsed(false), { defer: true }));
 
   const positionComputation = createMemo(
     (previousResult: PositionResult): PositionResult => {
@@ -501,7 +513,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         <div
           ref={panelRef}
           class={cn(
-            "relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]",
+            "relative contain-layout flex items-center rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]",
             "bg-popover",
             isShaking() && "animate-shake",
           )}
@@ -510,11 +522,26 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           }}
           onAnimationEnd={() => setIsShaking(false)}
         >
-          <SelectionStatusBadge
-            groupStatus={props.groupStatus}
-            jiraTicketId={props.jiraTicketId}
-            jiraUrl={props.jiraUrl}
-          />
+          <button
+            class="shrink-0 flex items-center justify-center w-7 h-[30px] cursor-pointer text-muted-foreground hover:text-foreground text-[13px] tracking-[2px]"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopImmediatePropagation();
+              setIsLabelCollapsed((v) => !v);
+            }}
+          >
+            ···
+          </button>
+          <div
+            class="grid transition-[grid-template-columns] duration-200"
+            style={{ "grid-template-columns": isLabelCollapsed() ? "0fr" : "1fr" }}
+          >
+            <div class="overflow-hidden flex items-center gap-[5px]">
+              <SelectionStatusBadge
+                groupStatus={props.groupStatus}
+                jiraTicketId={props.jiraTicketId}
+                jiraUrl={props.jiraUrl}
+              />
           <Show when={props.status === "copying" && !props.isPendingAbort}>
             <div
               class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit max-w-[280px]"
@@ -872,6 +899,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               onRetry={props.onRetry}
             />
           </Show>
+            </div>
+          </div>
         </div>
       </div>
     </Show>
