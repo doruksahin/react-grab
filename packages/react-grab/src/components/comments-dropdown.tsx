@@ -27,7 +27,7 @@ import { createSafePolygonTracker } from "../utils/safe-polygon.js";
 import { cn } from "../utils/cn.js";
 import { IconTrash } from "./icons/icon-trash.jsx";
 import { IconCheck } from "./icons/icon-check.jsx";
-import { Tooltip } from "./tooltip.jsx";
+import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "./tooltip.js";
 import { createMenuHighlight } from "../utils/create-menu-highlight.js";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { createAnchoredDropdown } from "../utils/create-anchored-dropdown.js";
@@ -224,12 +224,13 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             <span class="text-[11px] font-medium text-black/40">Comments</span>
             <Show when={props.items.length > 0}>
               <div class="flex items-center gap-[5px]">
-                <div class="relative">
-                  <button
+                <Tooltip open={activeHeaderTooltip() === "clear"} placement="top">
+                  <TooltipTrigger
+                    as="button"
                     data-react-grab-ignore-events
                     data-react-grab-comments-clear
                     class="contain-layout shrink-0 flex items-center justify-center px-[3px] py-px rounded-sm bg-[#FEF2F2] cursor-pointer transition-all hover:bg-[#FEE2E2] press-scale h-[17px] text-[#B91C1C]"
-                    onClick={(event) => {
+                    onClick={(event: MouseEvent) => {
                       event.stopPropagation();
                       setActiveHeaderTooltip(null);
                       props.onClearAll?.();
@@ -238,20 +239,18 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                     onMouseLeave={() => setActiveHeaderTooltip(null)}
                   >
                     <IconTrash size={DROPDOWN_ICON_SIZE_PX} />
-                  </button>
-                  <Tooltip
-                    visible={activeHeaderTooltip() === "clear"}
-                    position="top"
-                  >
-                    Clear all
-                  </Tooltip>
-                </div>
-                <div class="relative">
-                  <button
+                  </TooltipTrigger>
+                  <TooltipPortal>
+                    <TooltipContent>Clear all</TooltipContent>
+                  </TooltipPortal>
+                </Tooltip>
+                <Tooltip open={activeHeaderTooltip() === "copy"} placement="top">
+                  <TooltipTrigger
+                    as="button"
                     data-react-grab-ignore-events
                     data-react-grab-comments-copy-all
                     class="contain-layout shrink-0 flex items-center justify-center px-[3px] py-px rounded-sm bg-white [border-width:0.5px] border-solid border-[#B3B3B3] cursor-pointer transition-all hover:bg-[#F5F5F5] press-scale h-[17px]"
-                    onClick={(event) => {
+                    onClick={(event: MouseEvent) => {
                       event.stopPropagation();
                       setActiveHeaderTooltip(null);
                       props.onCopyAll?.();
@@ -287,14 +286,11 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                         class="text-black"
                       />
                     </Show>
-                  </button>
-                  <Tooltip
-                    visible={activeHeaderTooltip() === "copy"}
-                    position="top"
-                  >
-                    Copy all
-                  </Tooltip>
-                </div>
+                  </TooltipTrigger>
+                  <TooltipPortal>
+                    <TooltipContent>Copy all</TooltipContent>
+                  </TooltipPortal>
+                </Tooltip>
               </div>
             </Show>
           </div>

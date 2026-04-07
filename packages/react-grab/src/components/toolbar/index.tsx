@@ -52,7 +52,7 @@ import {
   freezePseudoStates,
   unfreezePseudoStates,
 } from "../../utils/freeze-pseudo-states.js";
-import { Tooltip } from "../tooltip.jsx";
+import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "../tooltip.js";
 import { Kbd } from "../kbd.jsx";
 import {
   getButtonSpacingClass,
@@ -1108,8 +1108,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           }
         }}
         selectButton={
-          <>
-            <button
+          <Tooltip open={isSelectTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+            <TooltipTrigger
+              as="button"
               data-react-grab-ignore-events
               data-react-grab-toolbar-toggle
               aria-label={
@@ -1121,11 +1122,11 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 buttonSpacingClass(),
                 hitboxConstraintClass(),
               )}
-              onClick={(event) => {
+              onClick={(event: MouseEvent) => {
                 setIsSelectTooltipVisible(false);
-                handleToggle(event);
+                handleToggle(event as MouseEvent & { currentTarget: HTMLButtonElement });
               }}
-              on:contextmenu={(event: MouseEvent) => {
+              onContextMenu={(event: MouseEvent) => {
                 event.preventDefault();
                 event.stopPropagation();
                 setIsSelectTooltipVisible(false);
@@ -1140,18 +1141,18 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                   props.isActive ? "text-black" : "text-black/70",
                 )}
               />
-            </button>
-            <Tooltip
-              visible={isSelectTooltipVisible() && isTooltipAllowed()}
-              position={tooltipPosition()}
-            >
-              Select element <Kbd>{formatShortcut("C")}</Kbd>
-            </Tooltip>
-          </>
+            </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipContent>
+                Select element <Kbd>{formatShortcut("C")}</Kbd>
+              </TooltipContent>
+            </TooltipPortal>
+          </Tooltip>
         }
         commentsButton={
-          <>
-            <button
+          <Tooltip open={isCommentsTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+            <TooltipTrigger
+              as="button"
               data-react-grab-ignore-events
               data-react-grab-toolbar-comments
               aria-label={`Open comments${
@@ -1166,9 +1167,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 buttonSpacingClass(),
                 hitboxConstraintClass(),
               )}
-              onClick={(event) => {
+              onClick={(event: MouseEvent) => {
                 setIsCommentsTooltipVisible(false);
-                handleComments(event);
+                handleComments(event as MouseEvent & { currentTarget: HTMLButtonElement });
               }}
               {...createFreezeHandlers(
                 (visible) => {
@@ -1200,18 +1201,16 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                   </span>
                 </Show>
               </span>
-            </button>
-            <Tooltip
-              visible={isCommentsTooltipVisible() && isTooltipAllowed()}
-              position={tooltipPosition()}
-            >
-              {commentsTooltipLabel()}
-            </Tooltip>
-          </>
+            </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipContent>{commentsTooltipLabel()}</TooltipContent>
+            </TooltipPortal>
+          </Tooltip>
         }
         copyAllButton={
-          <>
-            <button
+          <Tooltip open={isCopyAllTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+            <TooltipTrigger
+              as="button"
               data-react-grab-ignore-events
               data-react-grab-toolbar-copy-all
               aria-label="Copy all comments"
@@ -1220,9 +1219,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 buttonSpacingClass(),
                 hitboxConstraintClass(),
               )}
-              onClick={(event) => {
+              onClick={(event: MouseEvent) => {
                 setIsCopyAllTooltipVisible(false);
-                handleCopyAll(event);
+                handleCopyAll(event as MouseEvent & { currentTarget: HTMLButtonElement });
               }}
               {...createFreezeHandlers(setIsCopyAllTooltipVisible, {
                 onHoverChange: (isHovered) => props.onCopyAllHover?.(isHovered),
@@ -1237,18 +1236,16 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               })}
             >
               <IconCopy size={14} class="text-[#B3B3B3] transition-colors" />
-            </button>
-            <Tooltip
-              visible={isCopyAllTooltipVisible() && isTooltipAllowed()}
-              position={tooltipPosition()}
-            >
-              Copy all
-            </Tooltip>
-          </>
+            </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipContent>Copy all</TooltipContent>
+            </TooltipPortal>
+          </Tooltip>
         }
         toggleButton={
-          <>
-            <button
+          <Tooltip open={isToggleTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+            <TooltipTrigger
+              as="button"
               data-react-grab-ignore-events
               data-react-grab-toolbar-enabled
               aria-label={
@@ -1259,9 +1256,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 "contain-layout flex items-center justify-center cursor-pointer interactive-scale outline-none",
                 isVertical() ? "my-0.5" : "mx-0.5",
               )}
-              onClick={(event) => {
+              onClick={(event: MouseEvent) => {
                 setIsToggleTooltipVisible(false);
-                handleToggleEnabled(event);
+                handleToggleEnabled(event as MouseEvent & { currentTarget: HTMLButtonElement });
               }}
               onMouseEnter={() => setIsToggleTooltipVisible(true)}
               onMouseLeave={() => setIsToggleTooltipVisible(false)}
@@ -1282,14 +1279,11 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                   )}
                 />
               </div>
-            </button>
-            <Tooltip
-              visible={isToggleTooltipVisible() && isTooltipAllowed()}
-              position={tooltipPosition()}
-            >
-              {props.enabled ? "Disable" : "Enable"}
-            </Tooltip>
-          </>
+            </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipContent>{props.enabled ? "Disable" : "Enable"}</TooltipContent>
+            </TooltipPortal>
+          </Tooltip>
         }
       />
       <Show when={props.isActive && !hasLearnedSelectionHints()}>
