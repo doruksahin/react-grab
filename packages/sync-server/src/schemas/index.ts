@@ -8,5 +8,6 @@ export {
   JiraIssueType,
   JiraPriority,
   JiraTicketStatus,
+  JiraComment,
   GroupIdParam,
 } from "./jira.js";

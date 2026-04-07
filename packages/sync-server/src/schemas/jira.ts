@@ -28,6 +28,17 @@ export const JiraPriority = z.object({
   name: z.string(),
 });
 
+export const JiraComment = z.object({
+  id: z.string().openapi({ example: "10001" }),
+  author: z.string().openapi({ example: "Alice Cooper" }),
+  authorAvatar: z.string().nullable().openapi({ example: "https://x/avatar.png" }),
+  body: z.string().openapi({
+    description: "Plain-text rendering of the Jira ADF comment body",
+    example: "Looks good to me",
+  }),
+  createdAt: z.string().openapi({ example: "2026-04-07T10:00:00.000Z" }),
+});
+
 export const JiraTicketStatus = z.object({
   status: z.string(),
   statusCategory: z.string(),
@@ -37,6 +48,7 @@ export const JiraTicketStatus = z.object({
   reporterAvatar: z.string().nullable(),
   jiraUrl: z.string(),
   labels: z.array(z.string()),
+  comments: z.array(JiraComment),
 });
 
 export const GroupIdParam = z.object({
