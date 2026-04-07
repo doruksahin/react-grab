@@ -1,4 +1,4 @@
-import { cva } from "cva";
+import { cva, type VariantProps } from "cva";
 import type { Component, ComponentProps } from "solid-js";
 import { splitProps } from "solid-js";
 import { cn } from "../../utils/cn.js";
@@ -30,10 +30,7 @@ const buttonVariants = cva({
   },
 });
 
-interface ButtonProps extends Omit<ComponentProps<"button">, "size"> {
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-  size?: "default" | "sm" | "lg" | "icon";
-}
+interface ButtonProps extends Omit<ComponentProps<"button">, "size">, VariantProps<typeof buttonVariants> {}
 
 const Button: Component<ButtonProps> = (props) => {
   const [local, rest] = splitProps(props, ["class", "variant", "size"]);
