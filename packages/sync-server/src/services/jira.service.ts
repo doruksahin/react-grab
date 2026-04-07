@@ -23,6 +23,20 @@ interface CreateTicketResult {
   jiraUrl: string;
 }
 
+type AdfNode = { type: string; text?: string; content?: AdfNode[] };
+
+export function adfToPlainText(node: AdfNode | null | undefined): string {
+  if (!node) return "";
+  if (node.type === "text" && typeof node.text === "string") return node.text;
+  if (!node.content) return "";
+  const sep = node.type === "paragraph" || node.type === "doc" ? "\n" : "";
+  return node.content
+    .map((child) => adfToPlainText(child))
+    .filter(Boolean)
+    .join(sep)
+    .trim();
+}
+
 export class JiraService {
   private client: Version3Client;
   private config: JiraConfig;
@@ -164,8 +178,25 @@ export class JiraService {
   async getIssueStatus(ticketId: string) {
     const issue = await this.client.issues.getIssue({
       issueIdOrKey: ticketId,
-      fields: ["status", "assignee", "reporter", "labels"],
+      fields: ["status", "assignee", "reporter", "labels", "comment"],
     });
+
+    const rawComments =
+      ((issue.fields as { comment?: { comments?: Array<{
+        id: string;
+        author?: { displayName?: string; avatarUrls?: Record<string, string> };
+        body: AdfNode | string;
+        created: string;
+      }> } }).comment?.comments) ?? [];
+
+    const comments = rawComments.map((c) => ({
+      id: c.id,
+      author: c.author?.displayName ?? "Unknown",
+      authorAvatar: c.author?.avatarUrls?.["48x48"] ?? null,
+      body: typeof c.body === "string" ? c.body : adfToPlainText(c.body),
+      createdAt: c.created,
+    }));
+
     return {
       status: issue.fields.status?.name ?? "Unknown",
       statusCategory: issue.fields.status?.statusCategory?.name ?? "Unknown",
@@ -175,6 +206,7 @@ export class JiraService {
       reporterAvatar: issue.fields.reporter?.avatarUrls?.['48x48'] ?? null,
       jiraUrl: `${this.config.baseUrl}/browse/${ticketId}`,
       labels: (issue.fields.labels as string[] | undefined) ?? [],
+      comments,
     };
   }
 
