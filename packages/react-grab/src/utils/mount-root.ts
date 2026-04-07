@@ -1,3 +1,4 @@
+// packages/react-grab/src/utils/mount-root.ts
 import { MOUNT_ROOT_RECHECK_DELAY_MS, Z_INDEX_HOST } from "../constants.js";
 
 const ATTRIBUTE_NAME = "data-react-grab";
@@ -6,11 +7,23 @@ const FONT_LINK_ID = "react-grab-fonts";
 const FONT_LINK_URL =
   "https://fonts.googleapis.com/css2?family=Geist:wght@500&display=swap";
 
+/**
+ * The result of mounting the react-grab shadow DOM host.
+ *
+ * Both values are returned by mountRoot() so that the creation layer
+ * owns the ShadowRoot and can pass it explicitly to ReactGrabRenderer.
+ * Nothing downstream should call getRootNode() to recover the shadow root.
+ */
+export interface ShadowMountResult {
+  /** The inner div that Solid.js renders into via render(). */
+  root: HTMLDivElement;
+  /** The ShadowRoot that isolates all react-grab UI from the host page. */
+  shadowRoot: ShadowRoot;
+}
+
 const loadFonts = () => {
   if (document.getElementById(FONT_LINK_ID)) return;
-
   if (!document.head) return;
-
   const link = document.createElement("link");
   link.id = FONT_LINK_ID;
   link.rel = "stylesheet";
@@ -18,7 +31,7 @@ const loadFonts = () => {
   document.head.appendChild(link);
 };
 
-export const mountRoot = (cssText?: string) => {
+export const mountRoot = (cssText?: string): ShadowMountResult => {
   loadFonts();
 
   const mountedHost = document.querySelector(`[${ATTRIBUTE_NAME}]`);
@@ -27,12 +40,11 @@ export const mountRoot = (cssText?: string) => {
       `[${ATTRIBUTE_NAME}]`,
     );
     if (mountedRoot instanceof HTMLDivElement && mountedHost.shadowRoot) {
-      return mountedRoot;
+      return { root: mountedRoot, shadowRoot: mountedHost.shadowRoot };
     }
   }
 
   const host = document.createElement("div");
-
   host.setAttribute(ATTRIBUTE_NAME, "true");
   host.style.zIndex = String(Z_INDEX_HOST);
   host.style.position = "fixed";
@@ -47,9 +59,7 @@ export const mountRoot = (cssText?: string) => {
   }
 
   const root = document.createElement("div");
-
   root.setAttribute(ATTRIBUTE_NAME, "true");
-
   shadowRoot.appendChild(root);
 
   const doc = document.body ?? document.documentElement;
@@ -66,5 +76,5 @@ export const mountRoot = (cssText?: string) => {
     doc.appendChild(host);
   }, MOUNT_ROOT_RECHECK_DELAY_MS);
 
-  return root;
+  return { root, shadowRoot };
 };
