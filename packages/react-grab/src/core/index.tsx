@@ -3829,6 +3829,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           jiraAssigneeAvatar: group?.jiraAssigneeAvatar,
           jiraReporterAvatar: group?.jiraReporterAvatar,
           jiraLabels: group?.jiraLabels,
+          jiraComments: group?.jiraComments,
         };
       }),
     );
@@ -3872,6 +3873,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 jiraAssigneeAvatar: status.assigneeAvatar,
                 jiraReporterAvatar: status.reporterAvatar,
                 jiraLabels: status.labels,
+                jiraComments: status.comments,
                 jiraResolved: resolved,
                 jiraUrl: status.jiraUrl,
               }

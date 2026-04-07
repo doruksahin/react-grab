@@ -16,5 +16,10 @@ export default defineConfig({
         },
       },
     },
+    // nodenext moduleResolution requires explicit .js suffix on relative
+    // imports; orval emits extensionless imports, so patch the one offender.
+    hooks: {
+      afterAllFilesWrite: "node scripts/patch-orval-imports.mjs",
+    },
   },
 });

@@ -194,6 +194,21 @@ export type CreateJiraTicket400 = {
   error: string;
 };
 
+export type GetJiraTicketStatus200CommentsItem = {
+  id: string;
+  /**
+     * Parent comment id if this comment is a reply in a thread, null for root comments.
+     * @nullable
+     */
+  parentId: string | null;
+  author: string;
+  /** @nullable */
+  authorAvatar: string | null;
+  /** Markdown rendering of the Jira ADF comment body */
+  body: string;
+  createdAt: string;
+};
+
 export type GetJiraTicketStatus200 = {
   status: string;
   statusCategory: string;
@@ -207,6 +222,7 @@ export type GetJiraTicketStatus200 = {
   reporterAvatar: string | null;
   jiraUrl: string;
   labels: string[];
+  comments: GetJiraTicketStatus200CommentsItem[];
 };
 
 export type GetJiraTicketStatus404 = {

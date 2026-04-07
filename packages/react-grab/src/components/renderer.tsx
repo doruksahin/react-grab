@@ -214,6 +214,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
             jiraReporterAvatar={instance().jiraReporterAvatar}
             jiraLabels={instance().jiraLabels}
+            jiraComments={instance().jiraComments}
             groups={props.groups}
             activeGroupId={props.activeGroupId}
             onActiveGroupChange={props.onActiveGroupChange}
