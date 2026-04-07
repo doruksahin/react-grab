@@ -98,7 +98,9 @@ const ActiveGroupPickerRoot: ParentComponent<ActiveGroupPickerRootProps> = (
 
   return (
     <ActiveGroupPickerContext.Provider value={value}>
-      <div class="relative px-2 pb-1">{props.children}</div>
+      <div data-react-grab-active-group-picker class="relative px-2 pb-1">
+        {props.children}
+      </div>
     </ActiveGroupPickerContext.Provider>
   );
 };
