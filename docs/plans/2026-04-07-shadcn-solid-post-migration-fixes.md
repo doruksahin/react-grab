@@ -150,11 +150,11 @@ All other buttons in migrated files use the `Button` component.
 | H-2 | High | z-index magic number in dialog | Trivial | ✅ done |
 | H-3 | High | SelectContent/TooltipContent don't absorb portals | Medium | ✅ done |
 | H-4 | High | ButtonProps duplicates cva variant unions | Trivial | ✅ done |
-| I-1 | Important | ShadowRootContext value non-reactive | Small |
-| M-1 | Medium | JiraCreateDialogProps ≈ JiraCreateFormProps | Small |
-| M-2 | Medium | TicketCreatedCallback duplicated 4× | Small |
-| M-3 | Medium | `bg-[#1a1a1a]` hardcoded in 3 files | Small |
-| L-1 | Low | Animation class string duplicated | Trivial |
-| L-2 | Low | SelectTrigger class repeated in same file | Trivial |
-| L-3 | Low | Textarea class repeated in same file | Trivial |
-| L-4 | Low | FilterBar Clear button not migrated to Button | Trivial |
+| I-1 | Important | ShadowRootContext value non-reactive | Small | ✅ no-fix (already reactive via signal) |
+| M-1 | Medium | JiraCreateDialogProps ≈ JiraCreateFormProps | Small | ✅ done (via TicketCreatedCallback) |
+| M-2 | Medium | TicketCreatedCallback duplicated 4× | Small | ✅ done |
+| M-3 | Medium | `bg-[#1a1a1a]` hardcoded in 3 files | Small | ✅ done |
+| L-1 | Low | Animation class string duplicated | Trivial | skipped (no shared file; scope creep) |
+| L-2 | Low | SelectTrigger class repeated in same file | Trivial | ✅ done |
+| L-3 | Low | Textarea class repeated in same file | Trivial | ✅ done |
+| L-4 | Low | FilterBar Clear button not migrated to Button | Trivial | ✅ done |
