@@ -1,6 +1,7 @@
 // packages/react-grab/src/utils/mount-root.ts
 import { MOUNT_ROOT_RECHECK_DELAY_MS, Z_INDEX_HOST } from "../constants.js";
 import { setShadowMount } from "./shadow-context.js";
+import { syncColorScheme } from "./sync-color-scheme.js";
 
 const ATTRIBUTE_NAME = "data-react-grab";
 
@@ -32,6 +33,7 @@ const loadFonts = () => {
   document.head.appendChild(link);
 };
 
+
 export const mountRoot = (cssText?: string): ShadowMountResult => {
   loadFonts();
 
@@ -42,6 +44,7 @@ export const mountRoot = (cssText?: string): ShadowMountResult => {
     );
     if (mountedRoot instanceof HTMLDivElement && mountedHost.shadowRoot) {
       setShadowMount(mountedHost.shadowRoot);
+      syncColorScheme(mountedHost);
       return { root: mountedRoot, shadowRoot: mountedHost.shadowRoot };
     }
   }
@@ -70,6 +73,10 @@ export const mountRoot = (cssText?: string): ShadowMountResult => {
   const root = document.createElement("div");
   root.setAttribute(ATTRIBUTE_NAME, "true");
   shadowRoot.appendChild(root);
+  // Sync on the host (not the inner root) so :host([data-kb-theme="light"])
+  // can inherit tokens through the shadow boundary into BOTH the renderer
+  // tree and any Kobalte portals that mount at the shadow root level.
+  syncColorScheme(host);
 
   const doc = document.body ?? document.documentElement;
   // HACK: wait for hydration (in case something blows away the DOM)

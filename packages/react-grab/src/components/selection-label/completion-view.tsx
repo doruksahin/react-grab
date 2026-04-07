@@ -171,7 +171,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
     >
       <Show when={!didCopy() && (props.onDismiss || props.onUndo)}>
         <div class="contain-layout shrink-0 flex items-center justify-between gap-2 pt-1.5 pb-1 px-2 w-full h-fit">
-          <span class="text-black text-[13px] leading-4 font-sans font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+          <span class="text-black text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
             {displayStatusText()}
           </span>
           <div class="contain-layout shrink-0 flex items-center gap-2 h-fit">
@@ -184,7 +184,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
                 class="contain-layout shrink-0 flex items-center justify-center px-[3px] py-px rounded-sm bg-[#FEF2F2] cursor-pointer transition-all hover:bg-[#FEE2E2] press-scale h-[17px]"
                 onClick={() => props.onUndo?.()}
               >
-                <span class="text-[#B91C1C] text-[13px] leading-3.5 font-sans font-medium">
+                <span class="text-[#B91C1C] text-[13px] leading-3.5 font-medium">
                   Undo
                 </span>
               </button>
@@ -196,7 +196,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
                 onClick={handleAccept}
                 disabled={didCopy()}
               >
-                <span class="text-black text-[13px] leading-3.5 font-sans font-medium">
+                <span class="text-black text-[13px] leading-3.5 font-medium">
                   {props.dismissButtonText ?? "Keep"}
                 </span>
                 <Show when={!didCopy()}>
@@ -213,7 +213,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
             size={14}
             class="text-black/85 shrink-0 animate-success-pop"
           />
-          <span class="text-black text-[13px] leading-4 font-sans font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+          <span class="text-black text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
             {displayStatusText()}
           </span>
           <Show when={props.onShowContextMenu && !props.supportsFollowUp}>

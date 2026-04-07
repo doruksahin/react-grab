@@ -2,12 +2,18 @@
 @import "tw-animate-css";
 
 /*
- * SHADOW DOM NOTE: This dark variant only matches [data-kb-theme="dark"] attributes
- * on elements INSIDE the shadow tree. It cannot see host-page dark mode attributes
- * (e.g. <html class="dark"> or <body data-theme="dark">) because shadow DOM CSS
- * selectors do not pierce outward. Dark mode is opt-in per-element inside the shadow.
+ * Tailwind `dark:` variant.
+ *
+ * shadcn-solid's idiom: a custom Tailwind variant that activates whenever
+ * an ancestor carries `data-kb-theme="dark"`. We pin it to our shadow host
+ * specifically (`:host([data-kb-theme="dark"])`) so it can never accidentally
+ * match an inner element with the same attribute.
+ *
+ * Today no `dark:` utilities are used in the codebase, but keeping the
+ * variant registered means future Tailwind classes like `dark:bg-card`
+ * work without ceremony.
  */
-@custom-variant dark (&:is([data-kb-theme="dark"] *));
+@custom-variant dark (&:is(:host([data-kb-theme="dark"]) *));
 
 @theme {
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
@@ -72,7 +78,12 @@
   --z-dropdown: 40;    /* select / popper / context menu / combobox */
   --z-dialog: 50;      /* modal dialogs */
   --z-tooltip: 60;     /* always on top */
-  /* shadcn-solid design tokens — light mode (sidebar) */
+  /*
+   * shadcn-solid design tokens — LIGHT is the default, matching shadcn-solid's
+   * upstream convention. Dark mode is activated by mountRoot()'s syncColorScheme
+   * bridge, which writes data-kb-theme="dark" on this host element when the
+   * host page is in dark mode. See the :host([data-kb-theme="dark"]) block below.
+   */
   --radius: 0.375rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -159,8 +170,17 @@
   z-index: var(--z-dialog);
 }
 
-/* shadcn-solid design tokens — dark mode (dialog) */
-[data-kb-theme="dark"] {
+/*
+ * shadcn-solid design tokens — dark mode.
+ *
+ * Single source of truth: mountRoot()'s syncColorScheme bridge writes
+ * data-kb-theme="dark" on the shadow host whenever the host page is in
+ * dark mode. Custom properties declared here on `:host` inherit through
+ * the shadow boundary into every descendant of the shadow root —
+ * including Kobalte portals (Select, Tooltip, Popover, Dialog) that
+ * mount at the shadow root level. One attribute, whole UI flips.
+ */
+:host([data-kb-theme="dark"]) {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

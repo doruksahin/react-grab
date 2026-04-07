@@ -398,7 +398,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         data-react-grab-ignore-events
         data-react-grab-selection-label
         class={cn(
-          "fixed font-sans text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out",
+          "fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out",
         )}
         style={{
           top: `${positionComputation().position.top}px`,
@@ -467,7 +467,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
             >
               <div class="contain-layout shrink-0 flex items-center gap-1 py-1.5 px-2 w-full h-fit">
                 <IconLoader size={13} class="text-[#71717a] shrink-0" />
-                <span class="shimmer-text text-[13px] leading-4 font-sans font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap">
+                <span class="shimmer-text text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap">
                   {props.statusText ?? "Grabbing…"}
                 </span>
               </div>
@@ -593,11 +593,11 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                               (props.actionCycleState?.items ?? []).length - 1,
                           }}
                         >
-                          <span class="text-[13px] leading-4 font-sans font-medium text-black">
+                          <span class="text-[13px] leading-4 font-medium text-black">
                             {item.label}
                           </span>
                           <Show when={item.shortcut}>
-                            <span class="text-[11px] font-sans text-black/50 ml-4">
+                            <span class="text-[11px] text-black/50 ml-4">
                               {formatShortcut(item.shortcut!)}
                             </span>
                           </Show>

@@ -23,11 +23,8 @@ interface JiraCreateDialogProps {
 export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
   return (
     <Dialog open={props.open} onOpenChange={(open) => !open && props.onClose()} modal>
-      {/* data-kb-theme="dark" is forwarded to the portal wrapper div inside DialogContent,
-          which wraps BOTH the overlay and the content panel — so dark tokens apply to both. */}
       <DialogContent
         data-react-grab-jira-dialog
-        data-kb-theme="dark"
         class="w-[480px] max-h-[80vh] overflow-y-auto bg-[var(--grab-dark-surface)] border-white/10"
         style={{ "z-index": "var(--z-dialog)" }}
       >

@@ -1037,7 +1037,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       data-react-grab-ignore-events
       data-react-grab-toolbar
       class={cn(
-        "fixed left-0 top-0 font-sans text-[13px] antialiased select-none",
+        "fixed left-0 top-0 text-[13px] antialiased select-none",
         getCursorClass(),
         getTransitionClass(),
         isVisible()

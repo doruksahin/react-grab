@@ -59,7 +59,7 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-toolbar-menu
-        class="fixed font-sans text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
+        class="fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
         style={{
           top: `${dropdown.displayPosition().top}px`,
           left: `${dropdown.displayPosition().left}px`,
@@ -105,7 +105,7 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
                   >
                     <span
                       class={cn(
-                        "text-[13px] leading-4 font-sans font-medium",
+                        "text-[13px] leading-4 font-medium",
                         isDefault() ? "text-black" : "text-black/60",
                       )}
                     >
@@ -113,7 +113,7 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
                     </span>
                     <Show when={action.shortcut}>
                       {(shortcutKey) => (
-                        <span class="text-[11px] font-sans text-black/50 ml-4">
+                        <span class="text-[11px] text-black/50 ml-4">
                           {formatShortcut(shortcutKey())}
                         </span>
                       )}

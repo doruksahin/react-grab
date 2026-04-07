@@ -176,7 +176,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-comments-dropdown
-        class="fixed font-sans text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
+        class="fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
         style={{
           top: `${dropdown.displayPosition().top}px`,
           left: `${dropdown.displayPosition().left}px`,
@@ -271,7 +271,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                     <Show
                       when={isCopyAllConfirmed()}
                       fallback={
-                        <span class="text-black text-[13px] leading-3.5 font-sans font-medium">
+                        <span class="text-black text-[13px] leading-3.5 font-medium">
                           {props.copyableCount != null && props.copyableCount < (props.items?.length ?? 0)
                             ? `Copy (${props.copyableCount})`
                             : "Copy"}
@@ -366,11 +366,11 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                         onBlur={clearHighlight}
                       >
                         <span class="flex flex-col min-w-0 flex-1">
-                          <span class="text-[12px] leading-4 font-sans font-medium text-black truncate">
+                          <span class="text-[12px] leading-4 font-medium text-black truncate">
                             {getCommentItemDisplayName(item)}
                           </span>
                           <Show when={item.commentText}>
-                            <span class="text-[11px] leading-3 font-sans text-black/40 truncate mt-0.5">
+                            <span class="text-[11px] leading-3 text-black/40 truncate mt-0.5">
                               {item.commentText}
                             </span>
                           </Show>
@@ -400,7 +400,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                               </svg>
                             </button>
                           </Show>
-                          <span class="text-[10px] font-sans text-black/25 flex items-center justify-end">
+                          <span class="text-[10px] text-black/25 flex items-center justify-end">
                             {formatRelativeTime(item.timestamp)}
                           </span>
                           <button

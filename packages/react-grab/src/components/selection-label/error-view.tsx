@@ -55,7 +55,7 @@ export const ErrorView: Component<ErrorViewProps> = (props) => {
         classList={{ "pt-1.5 pb-1": hasActions(), "py-1.5": !hasActions() }}
       >
         <span
-          class="text-[#B91C1C] text-[13px] leading-4 font-sans font-medium overflow-hidden line-clamp-5"
+          class="text-[#B91C1C] text-[13px] leading-4 font-medium overflow-hidden line-clamp-5"
           title={props.error}
         >
           {props.error}
@@ -69,7 +69,7 @@ export const ErrorView: Component<ErrorViewProps> = (props) => {
               class="contain-layout shrink-0 flex items-center justify-center gap-1 px-[3px] py-px rounded-sm bg-white [border-width:0.5px] border-solid border-[#B3B3B3] cursor-pointer transition-all hover:bg-[#F5F5F5] press-scale h-[17px]"
               onClick={props.onRetry}
             >
-              <span class="text-black text-[13px] leading-3.5 font-sans font-medium">
+              <span class="text-black text-[13px] leading-3.5 font-medium">
                 Retry
               </span>
               <IconRetry size={10} class="text-black/50" />
@@ -79,7 +79,7 @@ export const ErrorView: Component<ErrorViewProps> = (props) => {
               class="contain-layout shrink-0 flex items-center justify-center gap-1 px-[3px] py-px rounded-sm bg-white [border-width:0.5px] border-solid border-[#B3B3B3] cursor-pointer transition-all hover:bg-[#F5F5F5] press-scale h-[17px]"
               onClick={props.onAcknowledge}
             >
-              <span class="text-black text-[13px] leading-3.5 font-sans font-medium">
+              <span class="text-black text-[13px] leading-3.5 font-medium">
                 Ok
               </span>
             </button>
