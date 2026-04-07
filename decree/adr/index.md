@@ -9,3 +9,4 @@
 | ADR-0004 | ADR-0004 Markdown to ADF conversion for JIRA ticket description | accepted | 2026-04-05 |  |
 | ADR-0005 | ADR-0005 Dialog and popover rendering inside Shadow DOM | accepted | 2026-04-05 |  |
 | ADR-0006 | ADR-0006 ATT Board Status Mapping and JIRA Metadata Polling | accepted | 2026-04-06 |  |
+| ADR-0007 | ADR-0007 Atlassian internal GraphQL gateway for threaded Jira comments | accepted | 2026-04-08 |  |
