@@ -468,6 +468,21 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       commentItem: CommentItem,
     ): Element | undefined => getConnectedCommentElements(commentItem)[0];
 
+    /**
+     * Returns the id of the CommentItem backing the currently focused
+     * (frozen) selection element, if any. Used to route "active group"
+     * changes from the selection-label picker through handleMoveItem so
+     * the change is persisted to the server — not just a change to the
+     * global "next new selection" default group.
+     */
+    const findFocusedCommentItemId = (): string | undefined => {
+      const focusedEl = store.frozenElements[0];
+      if (!focusedEl) return undefined;
+      return commentItems().find((item) =>
+        getConnectedCommentElements(item).includes(focusedEl),
+      )?.id;
+    };
+
     const commentsDisconnectedItemIds = createMemo(
       () => {
         void commentsDropdownPosition();
@@ -4536,7 +4551,14 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onAddGroup={selectionGroups.handleAddGroup}
                 onRenameGroup={selectionGroups.handleRenameGroup}
                 onDeleteGroup={selectionGroups.handleDeleteGroup}
-                onActiveGroupChange={selectionGroups.setActiveGroupId}
+                onActiveGroupChange={(groupId) => {
+                  selectionGroups.setActiveGroupId(groupId);
+                  // If the active selection backs a saved CommentItem,
+                  // persist the group change via handleMoveItem (server),
+                  // not just the "next new selection" default.
+                  const itemId = findFocusedCommentItemId();
+                  if (itemId) selectionGroups.handleMoveItem(itemId, groupId);
+                }}
                 onMoveItem={selectionGroups.handleMoveItem}
                 onRemoveItem={(itemId) => {
                   selectionGroups.handleRemoveItem(itemId);

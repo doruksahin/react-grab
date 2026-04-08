@@ -1,6 +1,7 @@
 // packages/react-grab/src/features/sidebar/jira-defaults.ts
 import type { SelectionGroupWithJira } from "./jira-types.js";
 import type { CommentItem } from "../../types.js";
+import { isSynthetic } from "../selection-groups/business/synthetic-group.js";
 
 const APP_NAME = "ui-ticket-manager";
 
@@ -21,8 +22,7 @@ export function defaultDescription(
   items: CommentItem[],
 ): string {
   const lines: string[] = [
-    `Group: **${group.name}**`,
-    "",
+    ...(isSynthetic(group) ? [] : [`Group: **${group.name}**`, ""]),
     "## Selections",
     ...items.map(
       (item, i) =>

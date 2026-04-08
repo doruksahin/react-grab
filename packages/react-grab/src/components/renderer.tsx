@@ -17,6 +17,7 @@ import { ToolbarMenu } from "./toolbar/toolbar-menu.js";
 import { CommentsDropdown } from "./comments-dropdown.js";
 import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
+import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
 
@@ -253,6 +254,15 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
               if (!itemId || !props.onRemoveItem) return undefined;
               return () => props.onRemoveItem?.(itemId);
             })()}
+            onCreateTicket={(() => {
+              const itemId = instance().itemId;
+              if (!itemId || !props.onCreateTicketForLooseItem) return undefined;
+              const item = (props.commentItems ?? []).find(
+                (ci) => ci.id === itemId,
+              );
+              if (!item) return undefined;
+              return () => props.onCreateTicketForLooseItem?.(item);
+            })()}
           />
         )}
       </Index>
@@ -337,6 +347,29 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           copyableCount={props.copyableCount}
           onMoveItem={props.onMoveItem}
         />
+
+      {/* Loose-selection JIRA dialog — mounted at renderer level so it can
+          be opened from the SelectionLabel "+ Create ticket" button even
+          when the sidebar is closed. The sidebar also mounts a copy for
+          its own LooseSelectionList flow; we only mount here when sidebar
+          is closed to avoid two dialogs at once. */}
+      <Show when={!sidebarOpen() && props.looseTicketDialog}>
+        {(state) => (
+          <JiraCreateDialog
+            workspaceId={props.syncWorkspace ?? ""}
+            syncServerUrl={props.syncServerUrl}
+            groupId={state().syntheticGroup.id}
+            group={state().syntheticGroup}
+            commentItems={[state().item]}
+            jiraProjectKey={props.jiraProjectKey ?? ""}
+            onTicketCreated={(groupId, ticketId, ticketUrl) => {
+              props.onTicketCreated?.(groupId, ticketId, ticketUrl);
+              props.onLooseTicketDialogClose?.();
+            }}
+            onClose={() => props.onLooseTicketDialogClose?.()}
+          />
+        )}
+      </Show>
 
       <Show when={sidebarOpen()}>
         <Sidebar

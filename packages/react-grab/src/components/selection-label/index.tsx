@@ -29,6 +29,7 @@ import { formatShortcut } from '../../utils/format-shortcut.js';
 import { IconReply } from '../icons/icon-reply.jsx';
 import { IconSubmit } from '../icons/icon-submit.jsx';
 import { RemoveSelectionButton } from '../remove-selection-button.jsx';
+import { CreateTicketButton } from './create-ticket-button.jsx';
 import { SelectionStatusBadge } from './status-badge.js';
 import { ActiveGroupPicker } from '../../features/selection-groups/components/active-group-picker.jsx';
 import { IconLoader } from '../icons/icon-loader.jsx';
@@ -525,6 +526,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
             </div>
           </Show>
 
+
           <Show when={props.status === 'copying' && !props.isPendingAbort}>
             <div
               class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit max-w-[280px]"
@@ -682,7 +684,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               canInteract() && props.isPromptMode && !props.isPendingDismiss
             }
           >
-            <div class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit min-w-[150px] max-w-[280px]">
+            <div class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit min-w-[150px] max-w-[280px] gap-1 pb-2">
               <div class="contain-layout shrink-0 flex items-center gap-1 pt-1.5 pb-1 w-fit h-fit px-2 max-w-full">
                 <TagBadge
                   tagName={tagDisplayResult().tagName}
@@ -702,6 +704,15 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 <ActiveGroupPicker.Trigger />
                 <ActiveGroupPicker.Content />
               </ActiveGroupPicker>
+              <Show
+                when={
+                  canInteract() &&
+                  props.onCreateTicket &&
+                  !props.jiraTicketId
+                }
+              >
+                <CreateTicketButton onClick={() => props.onCreateTicket?.()} />
+              </Show>
               <BottomSection>
                 <Show when={props.jiraTicketId}>
                   {(ticketId) => (

@@ -746,6 +746,10 @@ export interface SelectionLabelProps
   /** Per-instance remove handler. When present and the selection is
    *  not ticket-locked, the label renders a small red × button. */
   onRemoveItem?: () => void;
+  /** Per-instance "create JIRA ticket" handler. When present and the
+   *  selection has no ticket yet, the label renders a "+ Create ticket"
+   *  button that opens the JiraCreateDialog. */
+  onCreateTicket?: () => void;
   hideArrow?: boolean;
   groupStatus?: GroupStatus;
   jiraTicketId?: string;
