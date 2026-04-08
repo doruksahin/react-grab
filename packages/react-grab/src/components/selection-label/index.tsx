@@ -124,7 +124,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
   let panelRef: HTMLDivElement | undefined;
   let inputRef: HTMLTextAreaElement | undefined;
   let isTagCurrentlyHovered = false;
-  let isCollapseAnimating = false;
 
   const [measuredWidth, setMeasuredWidth] = createSignal(0);
   const [measuredHeight, setMeasuredHeight] = createSignal(0);
@@ -132,20 +131,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
   const [viewportVersion, setViewportVersion] = createSignal(0);
   const [isInternalFading, setIsInternalFading] = createSignal(false);
   const [isShaking, setIsShaking] = createSignal(false);
-  const [isLabelCollapsed, setIsLabelCollapsed] = createSignal(false);
-
-  // Auto-expand when entering states that need user attention
-  createEffect(
-    on(
-      () => props.isPromptMode || props.status === "copying" || props.status === "error",
-      (shouldExpand, prevShouldExpand) => {
-        console.log("[collapse-toggle] auto-expand source changed:", prevShouldExpand, "→", shouldExpand, "| isPromptMode:", props.isPromptMode, "status:", props.status);
-        if (shouldExpand) {
-          setIsLabelCollapsed(false);
-        }
-      },
-    ),
-  );
 
   const canInteract = () =>
     props.status !== "copying" &&
@@ -210,18 +195,10 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
       for (const entry of entries) {
         const rect = entry.target.getBoundingClientRect();
         if (entry.target === containerRef && !isTagCurrentlyHovered) {
-          if (isCollapseAnimating) {
-            console.log("[collapse-toggle] ResizeObserver FROZEN (container) → skipping w:", rect.width, "h:", rect.height);
-          } else {
-            setMeasuredWidth(rect.width);
-            setMeasuredHeight(rect.height);
-          }
+          setMeasuredWidth(rect.width);
+          setMeasuredHeight(rect.height);
         } else if (entry.target === panelRef) {
-          if (isCollapseAnimating) {
-            console.log("[collapse-toggle] ResizeObserver FROZEN (panel) → skipping w:", rect.width);
-          } else {
-            setPanelWidth(rect.width);
-          }
+          setPanelWidth(rect.width);
         }
       }
     });
@@ -257,8 +234,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
     `${props.tagName ?? ""}:${props.componentName ?? ""}`;
 
   // Reset collapse state on new element selection
-  createEffect(on(elementIdentity, () => setIsLabelCollapsed(false), { defer: true }));
-
   const positionComputation = createMemo(
     (previousResult: PositionResult): PositionResult => {
       viewportVersion();
@@ -523,7 +498,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         <div
           ref={panelRef}
           class={cn(
-            "relative contain-layout flex items-center rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]",
+            "relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]",
             "bg-popover",
             isShaking() && "animate-shake",
           )}
@@ -532,55 +507,11 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           }}
           onAnimationEnd={() => setIsShaking(false)}
         >
-          <Show when={!props.isPromptMode}>
-            <button
-              class="pointer-events-auto shrink-0 flex items-center justify-center w-7 h-[30px] cursor-pointer text-muted-foreground hover:text-foreground text-[13px] tracking-[2px]"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopImmediatePropagation();
-                const next = !isLabelCollapsed();
-                console.log("[collapse-toggle] click → collapsing:", next, "| pointerEvents:", shouldEnablePointerEvents());
-                isCollapseAnimating = true;
-                setIsLabelCollapsed(next);
-              }}
-            >
-              ···
-            </button>
-          </Show>
-          <div
-            class="grid transition-[grid-template-columns] duration-200"
-            style={{ "grid-template-columns": isLabelCollapsed() ? "0fr" : "1fr" }}
-            onTransitionEnd={(e) => {
-              console.log("[collapse-toggle] transitionend:", e.propertyName, "| target === currentTarget:", e.target === e.currentTarget, "| collapsed:", isLabelCollapsed());
-              if (e.propertyName !== "grid-template-columns") return;
-              isCollapseAnimating = false;
-              if (containerRef && !isTagCurrentlyHovered) {
-                const rect = containerRef.getBoundingClientRect();
-                console.log("[collapse-toggle] measurements updated → w:", rect.width, "h:", rect.height);
-                setMeasuredWidth(rect.width);
-                setMeasuredHeight(rect.height);
-              }
-              if (panelRef) {
-                setPanelWidth(panelRef.getBoundingClientRect().width);
-              }
-            }}
-          >
-            <div
-              class={cn(
-                "flex items-center gap-[5px]",
-                // Collapse animation needs overflow-hidden to clip the slide,
-                // but in prompt mode the ActiveGroupPicker flyout is rendered
-                // here and absolutely-positioned — clipping it would hide the
-                // dropdown. The label is force-expanded in prompt mode anyway,
-                // so the animation is dormant and overflow-visible is safe.
-                props.isPromptMode ? "overflow-visible" : "overflow-hidden",
-              )}
-            >
-              <SelectionStatusBadge
-                groupStatus={props.groupStatus}
-                jiraTicketId={props.jiraTicketId}
-                jiraUrl={props.jiraUrl}
-              />
+          <SelectionStatusBadge
+            groupStatus={props.groupStatus}
+            jiraTicketId={props.jiraTicketId}
+            jiraUrl={props.jiraUrl}
+          />
           <Show when={props.status === "copying" && !props.isPendingAbort}>
             <div
               class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit max-w-[280px]"
@@ -889,8 +820,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               onRetry={props.onRetry}
             />
           </Show>
-            </div>
-          </div>
         </div>
       </div>
     </Show>
