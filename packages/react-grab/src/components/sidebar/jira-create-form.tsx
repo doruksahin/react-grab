@@ -107,7 +107,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
       <div class="mb-3">
         <label class="block text-[11px] text-muted-foreground mb-1">Work Type *</label>
         <Select
-          value={issueType()}
+          defaultValue={DEFAULT_ISSUE_TYPE}
           onChange={(value: string | null) => value && setIssueType(value)}
           options={props.issueTypes.map((t) => t.name)}
           itemComponent={(itemProps) => (
@@ -125,7 +125,7 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
       <div class="mb-3">
         <label class="block text-[11px] text-muted-foreground mb-1">Priority</label>
         <Select
-          value={priority()}
+          defaultValue={DEFAULT_PRIORITY}
           onChange={(value: string | null) => value && setPriority(value)}
           options={props.priorities.map((p) => p.name)}
           itemComponent={(itemProps) => (
