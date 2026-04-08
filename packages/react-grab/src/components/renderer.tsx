@@ -1,4 +1,4 @@
-import { Show, Index, createSignal, createEffect, createRenderEffect, onCleanup, on } from "solid-js";
+import { Show, Index, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
 import type { Component } from "solid-js";
 import type { AgentSession, ReactGrabRendererProps } from "../types.js";
 import {
@@ -18,11 +18,19 @@ import { CommentsDropdown } from "./comments-dropdown.js";
 import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
+import { isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<string | null>(null);
   let dashboardBtnRef: HTMLButtonElement | undefined;
+
+  // Picker surfaces (SelectionLabel, CommentsDropdown) must never show synthetic
+  // groups. Sidebar receives the full list so LooseSelectionList can look up
+  // synthetic groups by id when rendering ticketed loose cards.
+  const userFacingGroups = createMemo(() =>
+    (props.groups ?? []).filter((g) => !isSynthetic(g)),
+  );
 
   // Performance instrumentation: bracket sidebar render time.
   // createRenderEffect fires before DOM mutations (marks the start of the render).
@@ -182,7 +190,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             }
           }}
           isContextMenuOpen={props.contextMenuPosition !== null}
-          groups={props.groups}
+          groups={userFacingGroups()}
           activeGroupId={props.activeGroupId}
           onActiveGroupChange={props.onActiveGroupChange}
           onAddGroup={props.onAddGroup}
@@ -215,7 +223,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             jiraReporterAvatar={instance().jiraReporterAvatar}
             jiraLabels={instance().jiraLabels}
             jiraComments={instance().jiraComments}
-            groups={props.groups}
+            groups={userFacingGroups()}
             activeGroupId={props.activeGroupId}
             onActiveGroupChange={props.onActiveGroupChange}
             onAddGroup={props.onAddGroup}
@@ -303,7 +311,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           position={props.commentsDropdownPosition ?? null}
           items={props.commentItems ?? []}
           disconnectedItemIds={props.commentsDisconnectedItemIds}
-          groups={props.groups}
+          groups={userFacingGroups()}
           onSelectItem={props.onCommentItemSelect}
           onItemHover={props.onCommentItemHover}
           onCopyAll={props.onCommentsCopyAll}
