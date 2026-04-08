@@ -11,6 +11,13 @@ export interface SelectionGroup extends ServerSelectionGroup {
   /** True when JIRA polling confirms statusCategory === "done". Persisted so it
    *  survives page refresh without waiting for the next poll cycle. */
   jiraResolved?: boolean;
+  /** True if this group was auto-created when a loose selection earned a
+   *  ticket. Synthetic groups are filtered out of every user-facing surface
+   *  (GroupList, picker, stats, filters); their single item renders as a
+   *  loose card via `isPresentedAsLoose`. The flag is permanent — synthetic
+   *  groups never become "real" by accumulating items, because we filter
+   *  them out of the picker. */
+  synthetic?: boolean;
 }
 
 /**
