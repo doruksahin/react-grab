@@ -28,6 +28,7 @@ import { getTagDisplay } from '../../utils/get-tag-display.js';
 import { formatShortcut } from '../../utils/format-shortcut.js';
 import { IconReply } from '../icons/icon-reply.jsx';
 import { IconSubmit } from '../icons/icon-submit.jsx';
+import { RemoveSelectionButton } from '../remove-selection-button.jsx';
 import { SelectionStatusBadge } from './status-badge.js';
 import { ActiveGroupPicker } from '../../features/selection-groups/components/active-group-picker.jsx';
 import { IconLoader } from '../icons/icon-loader.jsx';
@@ -602,34 +603,10 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     group has a JIRA ticket. Ticketed selections are frozen
                     — no move, no remove. */}
                 <Show when={props.onRemoveItem && !props.jiraTicketId}>
-                  <button
-                    data-react-grab-ignore-events
-                    data-react-grab-remove
-                    type="button"
-                    aria-label="Remove selection"
-                    title="Remove selection"
-                    class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-red-500 text-white cursor-pointer interactive-scale"
-                    onPointerDown={(event) => event.stopPropagation()}
-                    onClick={(event) => {
-                      event.stopImmediatePropagation();
-                      props.onRemoveItem?.();
-                    }}
-                  >
-                    <svg
-                      width="8"
-                      height="8"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="3"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M6 6 18 18" />
-                      <path d="M18 6 6 18" />
-                    </svg>
-                  </button>
+                  <RemoveSelectionButton
+                    variant="overlay"
+                    onRemove={() => props.onRemoveItem?.()}
+                  />
                 </Show>
               </div>
               <Show when={props.arrowNavigationState?.isVisible}>
@@ -712,34 +689,10 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 {/* Ticket-lock: × hidden when the selection's group is
                     ticketed. Ticketed selections are frozen. */}
                 <Show when={props.onRemoveItem && !props.jiraTicketId}>
-                  <button
-                    data-react-grab-ignore-events
-                    data-react-grab-remove
-                    type="button"
-                    aria-label="Remove selection"
-                    title="Remove selection"
-                    class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-red-500 text-white cursor-pointer interactive-scale"
-                    onPointerDown={(event) => event.stopPropagation()}
-                    onClick={(event) => {
-                      event.stopImmediatePropagation();
-                      props.onRemoveItem?.();
-                    }}
-                  >
-                    <svg
-                      width="8"
-                      height="8"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="3"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M6 6 18 18" />
-                      <path d="M18 6 6 18" />
-                    </svg>
-                  </button>
+                  <RemoveSelectionButton
+                    variant="overlay"
+                    onRemove={() => props.onRemoveItem?.()}
+                  />
                 </Show>
               </div>
               <ActiveGroupPicker

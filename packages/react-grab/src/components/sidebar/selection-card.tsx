@@ -7,6 +7,7 @@ import {
   screenshotUrl,
 } from "../../features/sidebar";
 import { ScreenshotPair } from "./screenshot-pair";
+import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 
 export interface SelectionCardProps {
   item: CommentItem;
@@ -72,31 +73,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
           {/* Ticket-lock gates visibility at the caller — if the prop is
               set, the selection is removable. */}
           <Show when={props.onRemoveItem}>
-            <button
-              type="button"
-              aria-label="Remove selection"
-              title="Remove selection"
-              class="flex items-center justify-center size-4 rounded-full bg-red-500 text-white cursor-pointer"
-              onClick={(event) => {
-                event.stopPropagation();
-                props.onRemoveItem?.();
-              }}
-            >
-              <svg
-                width="8"
-                height="8"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M6 6 18 18" />
-                <path d="M18 6 6 18" />
-              </svg>
-            </button>
+            <RemoveSelectionButton onRemove={() => props.onRemoveItem?.()} />
           </Show>
         </div>
       </div>

@@ -18,6 +18,7 @@ import { Button } from "../../../components/ui/button.jsx";
 import { cn } from "../../../utils/cn.js";
 import { GroupPickerFlyout } from "./group-picker-flyout.jsx";
 import { useActiveGroupPickerState } from "../hooks/use-active-group-picker-state.js";
+import { IconLock } from "../../../components/icons/icon-lock.jsx";
 
 /**
  * Compound component for the active-group picker rendered inside the
@@ -139,24 +140,6 @@ const ChevronDownIcon: Component<{ rotated: boolean }> = (props) => (
   </svg>
 );
 
-const LockIcon: Component = () => (
-  <svg
-    width="9"
-    height="9"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class="text-muted-foreground shrink-0"
-    aria-hidden="true"
-  >
-    <rect x="3" y="11" width="18" height="11" rx="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
-);
-
 const FolderIcon: Component = () => (
   <svg
     width="9"
@@ -174,53 +157,80 @@ const FolderIcon: Component = () => (
   </svg>
 );
 
+/**
+ * Static trigger shown when ticket-lock freezes the selection. Non-
+ * interactive by design — there is no chevron, no hover state, no
+ * click handler. The lock icon + group name visually communicate
+ * "frozen, see the ticket".
+ */
+const LockedTrigger: Component<{ label: string; ticketId?: string; class?: string }> = (
+  props,
+) => (
+  <div
+    data-react-grab-ignore-events
+    data-react-grab-active-group-picker-locked
+    class={cn(
+      "flex items-center gap-1 px-0.5 -mx-0.5 py-0 text-[11px] font-medium leading-none text-muted-foreground",
+      props.class,
+    )}
+    title={`Locked — ${props.ticketId ?? "ticketed"}`}
+  >
+    <IconLock size={9} class="text-muted-foreground shrink-0" />
+    <span>{props.label}</span>
+  </div>
+);
+
+/**
+ * Interactive trigger shown when the selection is free to reassign.
+ * Folder icon, group name, chevron that rotates with open state.
+ */
+const InteractiveTrigger: Component<
+  Omit<ComponentProps<typeof Button>, "onClick" | "type"> & { label: string }
+> = (props) => {
+  const ctx = useActiveGroupPicker();
+  const [local, rest] = splitProps(props, ["class", "label"]);
+  return (
+    <Button
+      data-react-grab-ignore-events
+      type="button"
+      variant="ghost"
+      class={cn(
+        "h-auto gap-1 px-0.5 -mx-0.5 py-0 text-[11px] font-medium leading-none text-muted-foreground rounded-sm shadow-none",
+        local.class,
+      )}
+      aria-haspopup="listbox"
+      aria-expanded={ctx.isOpen()}
+      onClick={(e) => {
+        e.stopImmediatePropagation();
+        ctx.toggle();
+      }}
+      {...rest}
+    >
+      <FolderIcon />
+      <span>{local.label}</span>
+      <ChevronDownIcon rotated={ctx.isOpen()} />
+    </Button>
+  );
+};
+
 const ActiveGroupPickerTrigger: Component<
   Omit<ComponentProps<typeof Button>, "onClick" | "type">
 > = (props) => {
   const ctx = useActiveGroupPicker();
-  const [local, rest] = splitProps(props, ["class"]);
   const label = () => ctx.activeGroup()?.name ?? "Ungrouped";
 
-  // Locked: static, non-interactive. The selection lives in a ticketed
-  // group — reassignment is forbidden by ticket-lock.
   return (
     <Show
       when={!ctx.isLocked()}
       fallback={
-        <div
-          data-react-grab-ignore-events
-          data-react-grab-active-group-picker-locked
-          class={cn(
-            "flex items-center gap-1 px-0.5 -mx-0.5 py-0 text-[11px] font-medium leading-none text-muted-foreground",
-            local.class,
-          )}
-          title={`Locked — ${ctx.activeGroup()?.jiraTicketId ?? "ticketed"}`}
-        >
-          <LockIcon />
-          <span>{label()}</span>
-        </div>
+        <LockedTrigger
+          label={label()}
+          ticketId={ctx.activeGroup()?.jiraTicketId}
+          class={props.class}
+        />
       }
     >
-      <Button
-        data-react-grab-ignore-events
-        type="button"
-        variant="ghost"
-        class={cn(
-          "h-auto gap-1 px-0.5 -mx-0.5 py-0 text-[11px] font-medium leading-none text-muted-foreground rounded-sm shadow-none",
-          local.class,
-        )}
-        aria-haspopup="listbox"
-        aria-expanded={ctx.isOpen()}
-        onClick={(e) => {
-          e.stopImmediatePropagation();
-          ctx.toggle();
-        }}
-        {...rest}
-      >
-        <FolderIcon />
-        <span>{label()}</span>
-        <ChevronDownIcon rotated={ctx.isOpen()} />
-      </Button>
+      <InteractiveTrigger label={label()} {...props} />
     </Show>
   );
 };

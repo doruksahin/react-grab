@@ -4,6 +4,7 @@ import type { CommentItem } from "../../types.js";
 import type { StatusColorConfig } from "../../features/sidebar/status-colors.js";
 import { SelectionCard } from "./selection-card.jsx";
 import { Button } from "../ui/button.jsx";
+import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 
 interface LooseSelectionCardProps {
   item: CommentItem;
@@ -68,31 +69,9 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (props) =>
             </span>
             {/* Ticket-lock: × only when the loose item has no ticket. */}
             <Show when={!hasTicket() && props.onRemoveItem}>
-              <button
-                type="button"
-                aria-label="Remove selection"
-                title="Remove selection"
-                class="flex items-center justify-center size-4 rounded-full bg-red-500 text-white cursor-pointer"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  props.onRemoveItem?.(props.item.id);
-                }}
-              >
-                <svg
-                  width="8"
-                  height="8"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M6 6 18 18" />
-                  <path d="M18 6 6 18" />
-                </svg>
-              </button>
+              <RemoveSelectionButton
+                onRemove={() => props.onRemoveItem?.(props.item.id)}
+              />
             </Show>
           </div>
         </div>
