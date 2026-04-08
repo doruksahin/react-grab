@@ -1,7 +1,7 @@
 // packages/react-grab/src/components/sidebar/label-select.tsx
 import { type Component, createMemo, createSignal, For, Show } from "solid-js";
 import { createFilter } from "@kobalte/core";
-import { Combobox, ComboboxInput, ComboboxItem } from "../ui/combobox.js";
+import { Combobox, ComboboxInput } from "../ui/combobox.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
 
 interface LabelSelectProps {
@@ -12,7 +12,12 @@ interface LabelSelectProps {
 
 const filter = createFilter({ sensitivity: "base" });
 
+// Stable empty array — passed as controlled `value` so Kobalte never accumulates
+// internally; we own all selection state via `selected` signal.
+const EMPTY: string[] = [];
+
 export const LabelSelect: Component<LabelSelectProps> = (props) => {
+  const [selected, setSelected] = createSignal<string[]>(props.value ?? []);
   const [inputValue, setInputValue] = createSignal("");
 
   const filteredOptions = createMemo(() => {
@@ -21,31 +26,61 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
     return props.allLabels.filter((opt) => filter.contains(opt, query));
   });
 
+  function update(next: string[]) {
+    setSelected(next);
+    props.onChange(next);
+  }
+
+  function toggle(val: string) {
+    update(
+      selected().includes(val)
+        ? selected().filter((x) => x !== val)
+        : [...selected(), val],
+    );
+  }
+
+  function addCustom() {
+    const val = inputValue().trim();
+    if (!val || selected().includes(val)) { setInputValue(""); return; }
+    update([...selected(), val]);
+    setInputValue("");
+  }
+
   return (
     <Combobox<string>
       multiple
-      defaultValue={props.value ?? []}
+      value={EMPTY}
+      inputValue={inputValue()}
+      onInputChange={setInputValue}
       onChange={(values: string[]) => {
-        props.onChange(values);
+        // Kobalte always fires with [toggledItem] since it sees value=[] each time
+        if (values[0]) toggle(values[0]);
       }}
       options={filteredOptions()}
-      onInputChange={setInputValue}
       closeOnSelection={false}
       selectionBehavior="toggle"
       sameWidth
       itemComponent={(itemProps) => (
-        <ComboboxItem item={itemProps.item}>
-          {itemProps.item.rawValue}
-        </ComboboxItem>
+        <Combobox.Item
+          item={itemProps.item}
+          class="relative flex w-full cursor-default select-none items-center justify-between rounded-sm py-1.5 px-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
+        >
+          <Combobox.ItemLabel class="text-[12px]">{itemProps.item.rawValue}</Combobox.ItemLabel>
+          <Show when={selected().includes(itemProps.item.rawValue)}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m5 12l5 5L20 7" />
+            </svg>
+          </Show>
+        </Combobox.Item>
       )}
     >
       <Combobox.Control<string> aria-label="Labels">
-        {(state) => (
+        {(_state) => (
           <div
             class="flex flex-wrap gap-1 min-h-[36px] w-full px-2 py-1 rounded-md border border-border bg-muted text-[12px] text-foreground items-center"
             style={{ "pointer-events": "auto" }}
           >
-            <For each={state.selectedOptions()}>
+            <For each={selected()}>
               {(lbl) => (
                 <span class="bg-accent text-accent-foreground text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                   {lbl}
@@ -54,7 +89,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
                     class="leading-none hover:opacity-70"
                     onMouseDown={(e) => {
                       e.preventDefault();
-                      state.remove(lbl);
+                      toggle(lbl);
                     }}
                   >
                     ×
@@ -65,8 +100,13 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
             <ComboboxInput
               class="flex-1 min-w-[80px] text-[12px]"
               style={{ "pointer-events": "auto" }}
-              placeholder={state.selectedOptions().length === 0 ? "Search labels…" : ""}
-              onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+              placeholder={selected().length === 0 ? "Search or type a label…" : ""}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addCustom();
+                }
+              }}
             />
             <Combobox.Trigger
               class="ml-1 opacity-50 hover:opacity-100 shrink-0"
@@ -87,7 +127,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
             when={filteredOptions().length > 0}
             fallback={
               <div class="px-3 py-2 text-[11px] text-muted-foreground italic">
-                No labels found
+                No labels found — press Enter to add
               </div>
             }
           >
