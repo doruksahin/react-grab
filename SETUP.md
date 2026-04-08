@@ -1,0 +1,193 @@
+# React Grab — Local Setup (AdCreative)
+
+This is the AdCreative fork of [react-grab](https://github.com/aidenybai/react-grab). It ships two pieces we care about:
+
+1. **`react-grab`** — the in-page overlay library consumed by `AdCreative-Frontend-V2`.
+2. **`@react-grab/sync-server`** — a Cloudflare Worker (Hono + D1 + R2) that persists selections, screenshots, and JIRA integration state.
+
+Both run locally against `AdCreative-Frontend-V2` at `/Users/doruk/Desktop/ADCREATIVE/AdCreative-Frontend-V2`.
+
+---
+
+## 1. Prerequisites
+
+- Node.js `>= 22.18` (AdCreative requirement; react-grab itself only needs `>= 18`)
+- pnpm `>= 9` (repo is pinned to `pnpm@10.24.0` via `packageManager`)
+- The `AdCreative-Frontend-V2` repo cloned as a **sibling** of this repo:
+  ```
+  ADCREATIVE/
+  ├── react-grab/                 ← this repo
+  └── AdCreative-Frontend-V2/
+  ```
+  The sibling layout matters — AdCreative's `pnpm-lock.yaml` resolves
+  `react-grab` to `link:../react-grab/packages/react-grab`.
+
+---
+
+## 2. Install & start the dev servers
+
+From this repo's root:
+
+```bash
+pnpm install
+```
+
+You need **two processes** running in parallel. Open two terminals (or use tmux):
+
+### Terminal A — `react-grab` library (watch build)
+
+```bash
+pnpm dev
+```
+
+This runs `turbo dev --filter=react-grab --filter=@react-grab/cli`, which:
+- watches `packages/react-grab/src` and rebuilds `dist/` via `tsup`
+- rebuilds the Tailwind stylesheet on change
+
+Because AdCreative symlinks `react-grab` into its `node_modules`, any change
+here is picked up by Vite HMR on the AdCreative side — no reinstall needed.
+
+### Terminal B — `@react-grab/sync-server` (Cloudflare Worker)
+
+```bash
+pnpm sync:dev
+```
+
+This runs `wrangler dev` in `packages/sync-server`. By default it serves on
+**`http://localhost:8787`** with a local D1 database and local R2 bucket (see
+`packages/sync-server/wrangler.toml`).
+
+First-run only — apply migrations to the local D1:
+
+```bash
+pnpm --filter @react-grab/sync-server db:migrate:local
+```
+
+> The Worker reads JIRA credentials from `packages/sync-server/.dev.vars`
+> (gitignored). If you need JIRA create-issue to work locally, drop your
+> `JIRA_EMAIL` / `JIRA_API_TOKEN` in there. Without it the rest of the server
+> still runs.
+
+---
+
+## 3. How AdCreative is wired to this repo
+
+You don't need to do anything — it's already connected. For reference:
+
+**Package link.** `AdCreative-Frontend-V2/package.json` declares
+`"react-grab": "^0.1.29"`, but `pnpm-lock.yaml` resolves it to
+`link:../react-grab/packages/react-grab`. Running `pnpm install` in
+`AdCreative-Frontend-V2` preserves this symlink as long as this repo exists at
+the sibling path above.
+
+**Runtime init.** `AdCreative-Frontend-V2/src/app/main.tsx` dynamically imports
+`react-grab/core` in dev only and calls `initSync({ ... })` with the sync
+server URL and workspace pulled from env vars:
+
+```ts
+if (import.meta.env.DEV) {
+  const syncServerUrl = import.meta.env.VITE_REACT_GRAB_SYNC_URL ?? ''
+  const syncWorkspace = import.meta.env.VITE_REACT_GRAB_SYNC_WORKSPACE ?? ''
+
+  import('react-grab/core').then(({ initSync }) =>
+    initSync({
+      enabled: Boolean(syncServerUrl && syncWorkspace),
+      serverUrl: syncServerUrl,
+      workspace: syncWorkspace,
+      jiraProjectKey: 'ATT',
+      options: { screenshot: { enabled: true } },
+    }).then(() => import('react-grab')),
+  )
+}
+```
+
+**Env vars.** `AdCreative-Frontend-V2/.env` (and `.env.local`) already contain:
+
+```dotenv
+VITE_REACT_GRAB_SYNC_URL=http://localhost:8787
+VITE_REACT_GRAB_SYNC_WORKSPACE=my-workspace
+```
+
+Change `VITE_REACT_GRAB_SYNC_WORKSPACE` to separate your data from teammates
+sharing the same deployed sync server.
+
+---
+
+## 4. Running the full stack
+
+```bash
+# in react-grab/
+pnpm dev           # terminal A — library watch
+pnpm sync:dev      # terminal B — sync-server on :8787
+
+# in AdCreative-Frontend-V2/
+pnpm dev           # terminal C — app (Vite)
+```
+
+Open the AdCreative app in your browser. Hover any element and press **⌘C**
+(Mac) / **Ctrl+C** (Win/Linux) to grab it. Selections should appear in the
+sidebar and persist to the local sync server.
+
+Sanity check the sync server is reachable:
+
+```bash
+curl http://localhost:8787/health   # or visit /swagger for the OpenAPI UI
+```
+
+---
+
+## 5. Troubleshooting
+
+- **Selections don't persist / sidebar empty.** Confirm Terminal B is running
+  and `VITE_REACT_GRAB_SYNC_URL` in AdCreative matches its port.
+- **`react-grab` changes not reflected.** Make sure Terminal A (`pnpm dev`) is
+  running and that `AdCreative-Frontend-V2/node_modules/react-grab` still
+  points to `../../react-grab/packages/react-grab` (`ls -la` to check). If not,
+  re-run `pnpm install` in AdCreative.
+- **D1 errors on first run.** You forgot `db:migrate:local` — see Terminal B
+  section.
+- **JIRA create fails.** Add credentials to `packages/sync-server/.dev.vars`.
+
+---
+
+## 6. TODO — Production
+
+- [ ] Publish the AdCreative fork of `react-grab` to our internal registry (or
+      pin a git SHA) so AdCreative stops relying on the sibling symlink.
+- [ ] Deploy `@react-grab/sync-server` to Cloudflare Workers (`wrangler deploy`),
+      provision prod D1 + R2, wire JIRA secrets via `wrangler secret put`.
+- [ ] Decide prod `VITE_REACT_GRAB_SYNC_URL` and workspace-per-env strategy.
+- [ ] Gate react-grab loading in AdCreative prod builds (currently `import.meta.env.DEV` only — confirm this is what we want).
+- [ ] CI: run `pnpm check:codegen`, `pnpm typecheck`, `pnpm test` on PRs.
+
+---
+
+## 7. Tech stack & deployment
+
+### `react-grab` (the overlay library)
+
+| Area | Choice |
+|---|---|
+| UI framework | **Solid.js** (not React — mounted into React apps via a portal) |
+| Styling | **Tailwind CSS v4** + `tw-animate-css`, compiled to a static `dist/styles.css` |
+| Primitives | `@kobalte/core`, `@floating-ui/dom`, `solid-focus-trap` |
+| Editor | `@tiptap/core` + `tiptap-markdown` + `tiptap-extension-jira` |
+| Element/DOM | `@medv/finder`, `element-source`, `modern-screenshot`, `bippy` |
+| Validation | `zod` |
+| Build | **tsup** (ESM + CJS + IIFE `dist/index.global.js`), `@tailwindcss/cli` |
+| API client | **Orval** generating a typed client from the sync-server OpenAPI spec (`pnpm codegen`) |
+| Tests | **Playwright** (e2e) + **Vitest** (unit) |
+| Lint/format | **oxlint** + **oxfmt** |
+| **Deployment** | Published to **npm** as `react-grab` (also loadable from unpkg as `dist/index.global.js`). AdCreative currently consumes it via a local symlink; prod path TBD (see TODO). |
+
+### `@react-grab/sync-server`
+
+| Area | Choice |
+|---|---|
+| Runtime | **Cloudflare Workers** (`wrangler`, `nodejs_compat`) |
+| HTTP framework | **Hono** + `@hono/zod-openapi` + `@hono/swagger-ui` |
+| Database | **Cloudflare D1** via **drizzle-orm** + `drizzle-kit` migrations (`drizzle/`) |
+| Object storage | **Cloudflare R2** (`react-grab-screenshots` bucket) for screenshots |
+| Validation / SSOT | **Zod** schemas — exported to `openapi.json` and consumed by react-grab's Orval client |
+| JIRA integration | `jira.js` + `adf-to-markdown` / `marklassian` for ADF ⇄ Markdown |
+| **Deployment** | **Cloudflare Workers** (`wrangler deploy`). Local dev uses `wrangler dev` with local D1/R2 emulation. Prod deploy TBD (see TODO). |
