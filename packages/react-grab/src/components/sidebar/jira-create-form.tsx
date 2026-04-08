@@ -4,9 +4,7 @@ import {
   createResource,
   createSignal,
   For,
-  Match,
   Show,
-  Switch,
 } from "solid-js";
 import { Button } from "../ui/button.js";
 import { JiraEditor } from "./jira-editor.js";
@@ -43,17 +41,62 @@ interface JiraCreateFormProps {
   onClose: () => void;
 }
 
-interface JiraCreateFormReadyProps extends JiraCreateFormProps {
-  issueTypes: Array<{ id: string; name: string }>;
-  priorities: Array<{ id: string; name: string }>;
-}
-
 const noScrollRoot = () => null;
 
 const triggerClass = "w-full text-[12px] bg-muted border-border text-foreground";
 const textareaClass = "w-full bg-muted text-foreground text-[12px] rounded px-2 py-1.5 border border-border resize-none";
 
-const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
+export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
+  const [issueTypes] = createResource(() =>
+    listJiraIssueTypes({ projectKey: props.jiraProjectKey }).then((r) => {
+      if (r.status !== 200) throw new Error("Failed to load issue types");
+      return r.data;
+    }),
+  );
+  const [priorities] = createResource(() =>
+    listJiraPriorities().then((r) => {
+      if (r.status !== 200) throw new Error("Failed to load priorities");
+      return r.data;
+    }),
+  );
+
+  const configError = () => {
+    const types = issueTypes();
+    const prios = priorities();
+    if (!types || !prios) return null;
+    const errors: string[] = [];
+    if (!types.find((t) => t.name === DEFAULT_ISSUE_TYPE))
+      errors.push(`Issue type "${DEFAULT_ISSUE_TYPE}" not found in ${props.jiraProjectKey}`);
+    if (!prios.find((p) => p.name === DEFAULT_PRIORITY))
+      errors.push(`Priority "${DEFAULT_PRIORITY}" not found in JIRA`);
+    return errors.length > 0 ? errors : null;
+  };
+
+  return (
+    <Show
+      when={!configError()}
+      fallback={
+        <div class="p-3 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300">
+          <p class="font-semibold mb-1">Configuration error</p>
+          <For each={configError()!}>{(err) => <p>{err}</p>}</For>
+        </div>
+      }
+    >
+      <JiraCreateFormInner
+        {...props}
+        issueTypes={issueTypes}
+        priorities={priorities}
+      />
+    </Show>
+  );
+};
+
+interface JiraCreateFormInnerProps extends JiraCreateFormProps {
+  issueTypes: () => Array<{ id: string; name: string }> | undefined;
+  priorities: () => Array<{ id: string; name: string }> | undefined;
+}
+
+const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
   const projectKey = props.jiraProjectKey;
   const [issueType, setIssueType] = createSignal(DEFAULT_ISSUE_TYPE);
   const [priority, setPriority] = createSignal(DEFAULT_PRIORITY);
@@ -109,37 +152,59 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
       {/* Issue type — pre-selected to "Task" */}
       <div class="mb-3">
         <label class="block text-[11px] text-muted-foreground mb-1">Work Type *</label>
-        <Select
-          defaultValue={DEFAULT_ISSUE_TYPE}
-          onChange={(value: string | null) => value && setIssueType(value)}
-          options={props.issueTypes.map((t) => t.name)}
-          itemComponent={(itemProps) => (
-            <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
-          )}
+        <Show
+          when={props.issueTypes()}
+          fallback={
+            <div class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}>
+              Loading…
+            </div>
+          }
         >
-          <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
-            <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
-          </SelectTrigger>
-          <SelectContent />
-        </Select>
+          {(types) => (
+            <Select
+              defaultValue={DEFAULT_ISSUE_TYPE}
+              onChange={(value: string | null) => value && setIssueType(value)}
+              options={types().map((t) => t.name)}
+              itemComponent={(itemProps) => (
+                <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
+              )}
+            >
+              <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
+                <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
+              </SelectTrigger>
+              <SelectContent />
+            </Select>
+          )}
+        </Show>
       </div>
 
       {/* Priority — pre-selected to "Medium" */}
       <div class="mb-3">
         <label class="block text-[11px] text-muted-foreground mb-1">Priority</label>
-        <Select
-          defaultValue={DEFAULT_PRIORITY}
-          onChange={(value: string | null) => value && setPriority(value)}
-          options={props.priorities.map((p) => p.name)}
-          itemComponent={(itemProps) => (
-            <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
-          )}
+        <Show
+          when={props.priorities()}
+          fallback={
+            <div class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}>
+              Loading…
+            </div>
+          }
         >
-          <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
-            <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
-          </SelectTrigger>
-          <SelectContent />
-        </Select>
+          {(prios) => (
+            <Select
+              defaultValue={DEFAULT_PRIORITY}
+              onChange={(value: string | null) => value && setPriority(value)}
+              options={prios().map((p) => p.name)}
+              itemComponent={(itemProps) => (
+                <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
+              )}
+            >
+              <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
+                <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
+              </SelectTrigger>
+              <SelectContent />
+            </Select>
+          )}
+        </Show>
       </div>
 
       {/* Summary */}
@@ -224,56 +289,3 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
   );
 };
 
-export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
-  const projectKey = props.jiraProjectKey;
-
-  const [issueTypes] = createResource(() =>
-    listJiraIssueTypes({ projectKey }).then((r) => {
-      if (r.status !== 200) throw new Error("Failed to load issue types");
-      return r.data;
-    }),
-  );
-  const [priorities] = createResource(() =>
-    listJiraPriorities().then((r) => {
-      if (r.status !== 200) throw new Error("Failed to load priorities");
-      return r.data;
-    }),
-  );
-
-  const validation = () => {
-    const types = issueTypes();
-    const prios = priorities();
-    if (!types || !prios) return null; // still loading
-
-    const errors: string[] = [];
-    if (!types.find((t) => t.name === DEFAULT_ISSUE_TYPE))
-      errors.push(`Issue type "${DEFAULT_ISSUE_TYPE}" not found in ${projectKey}`);
-    if (!prios.find((p) => p.name === DEFAULT_PRIORITY))
-      errors.push(`Priority "${DEFAULT_PRIORITY}" not found in JIRA`);
-
-    return errors.length > 0 ? { ok: false as const, errors } : { ok: true as const };
-  };
-
-  return (
-    <Switch>
-      <Match when={issueTypes.loading || priorities.loading}>
-        <div class="text-muted-foreground text-[12px]">Loading JIRA data…</div>
-      </Match>
-      <Match when={validation()?.ok === false}>
-        <div class="p-3 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300">
-          <p class="font-semibold mb-1">Configuration error</p>
-          <For each={(validation() as { ok: false; errors: string[] }).errors}>
-            {(err) => <p>{err}</p>}
-          </For>
-        </div>
-      </Match>
-      <Match when={validation()?.ok}>
-        <JiraCreateFormReady
-          {...props}
-          issueTypes={issueTypes()!}
-          priorities={priorities()!}
-        />
-      </Match>
-    </Switch>
-  );
-};
