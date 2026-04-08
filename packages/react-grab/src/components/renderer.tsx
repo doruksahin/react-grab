@@ -191,7 +191,12 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             }
           }}
           isContextMenuOpen={props.contextMenuPosition !== null}
-          groups={userFacingGroups()}
+          // NOTE: full groups list (including synthetic) is required so
+          // the picker's business predicates can look up the active
+          // group for ticket-lock detection. `assignableGroupsFor`
+          // filters synthetic + ticketed groups out of the dropdown
+          // internally, so no synthetic group leaks into the UI.
+          groups={props.groups ?? []}
           activeGroupId={props.activeGroupId}
           onActiveGroupChange={props.onActiveGroupChange}
           onAddGroup={props.onAddGroup}
@@ -224,7 +229,10 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             jiraReporterAvatar={instance().jiraReporterAvatar}
             jiraLabels={instance().jiraLabels}
             jiraComments={instance().jiraComments}
-            groups={userFacingGroups()}
+            // Full groups list — see note above. The picker needs
+            // synthetic groups visible at the business layer so
+            // ticket-lock on a loose-ticketed item resolves correctly.
+            groups={props.groups ?? []}
             activeGroupId={instance().groupId}
             onActiveGroupChange={(groupId) => {
               const itemId = instance().itemId;
