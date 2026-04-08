@@ -19,6 +19,7 @@ const EMPTY: string[] = [];
 export const LabelSelect: Component<LabelSelectProps> = (props) => {
   const [selected, setSelected] = createSignal<string[]>(props.value ?? []);
   const [inputValue, setInputValue] = createSignal("");
+  let inputRef: HTMLInputElement | undefined;
 
   const filteredOptions = createMemo(() => {
     const query = inputValue();
@@ -41,9 +42,10 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
 
   function addCustom() {
     const val = inputValue().trim();
-    if (!val || selected().includes(val)) { setInputValue(""); return; }
-    update([...selected(), val]);
     setInputValue("");
+    if (inputRef) inputRef.value = "";
+    if (!val || selected().includes(val)) return;
+    update([...selected(), val]);
   }
 
   return (
@@ -98,6 +100,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
               )}
             </For>
             <ComboboxInput
+              ref={inputRef}
               class="flex-1 min-w-[80px] text-[12px]"
               style={{ "pointer-events": "auto" }}
               placeholder={selected().length === 0 ? "Search or type a label…" : ""}
