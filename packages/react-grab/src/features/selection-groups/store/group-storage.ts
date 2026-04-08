@@ -1,5 +1,4 @@
 import type { SelectionGroup } from "../types.js";
-import { DEFAULT_GROUP_ID } from "../types.js";
 import { generateId } from "../../../utils/generate-id.js";
 import { logRecoverableError } from "../../../utils/log-recoverable-error.js";
 import type { StorageAdapter } from "../../sync/types.js";
@@ -13,11 +12,14 @@ const loadFromLocalStorage = (): SelectionGroup[] => {
     const serialized = localStorage.getItem(GROUPS_KEY);
     if (!serialized) return [];
     const parsed = JSON.parse(serialized) as SelectionGroup[];
-    return parsed.map((group) => ({
-      ...group,
-      revealed:
-        typeof group.revealed === "boolean" ? group.revealed : false,
-    }));
+    // Filter out the legacy "default" sentinel group on read.
+    return parsed
+      .filter((group) => group.id !== "default")
+      .map((group) => ({
+        ...group,
+        revealed:
+          typeof group.revealed === "boolean" ? group.revealed : false,
+      }));
   } catch (error) {
     logRecoverableError("Failed to load groups from localStorage", error);
     return [];
@@ -76,14 +78,26 @@ export const addGroup = (name: string): SelectionGroup[] =>
 export const renameGroup = (
   groupId: string,
   name: string,
-): SelectionGroup[] => {
-  if (groupId === DEFAULT_GROUP_ID) return groups;
-  return persistGroups(
+): SelectionGroup[] =>
+  persistGroups(
     groups.map((g) => (g.id === groupId ? { ...g, name } : g)),
   );
-};
 
-export const removeGroup = (groupId: string): SelectionGroup[] => {
-  if (groupId === DEFAULT_GROUP_ID) return groups;
-  return persistGroups(groups.filter((g) => g.id !== groupId));
-};
+export const removeGroup = (groupId: string): SelectionGroup[] =>
+  persistGroups(groups.filter((g) => g.id !== groupId));
+
+/**
+ * Idempotent migration helper for legacy persisted selections whose
+ * `groupId` was the synthetic `"default"` sentinel, `undefined`, or
+ * missing entirely. Maps all three to `null`. Real group IDs pass through.
+ */
+export const migrateLegacyDefaultGroup = <T extends { groupId: string | null }>(
+  items: T[],
+): T[] =>
+  items.map((i) => {
+    const raw = (i as { groupId?: unknown }).groupId;
+    if (raw === "default" || raw === undefined || raw === null) {
+      return { ...i, groupId: null };
+    }
+    return i;
+  });

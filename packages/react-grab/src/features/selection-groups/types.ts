@@ -2,9 +2,6 @@ import type { Accessor, Setter } from "solid-js";
 import type { ServerSelectionGroup } from "../../generated/types.js";
 import type { CommentItem } from "../../types.js";
 
-export const DEFAULT_GROUP_ID = "default" as const;
-export const DEFAULT_GROUP_NAME = "Default" as const;
-
 /**
  * Application-level group type. Extends the server type with UI-only fields.
  * Extends the server type with UI-layer fields that are persisted locally
@@ -14,14 +11,14 @@ export interface SelectionGroup extends ServerSelectionGroup {
   /** True when JIRA polling confirms statusCategory === "done". Persisted so it
    *  survives page refresh without waiting for the next poll cycle. */
   jiraResolved?: boolean;
+  /** True if this group was auto-created when a loose selection earned a
+   *  ticket. Synthetic groups are filtered out of every user-facing surface
+   *  (GroupList, picker, stats, filters); their single item renders as a
+   *  loose card via `isPresentedAsLoose`. The flag is permanent — synthetic
+   *  groups never become "real" by accumulating items, because we filter
+   *  them out of the picker. */
+  synthetic?: boolean;
 }
-
-export const createDefaultGroup = (): SelectionGroup => ({
-  id: DEFAULT_GROUP_ID,
-  name: DEFAULT_GROUP_NAME,
-  createdAt: 0,
-  revealed: false,
-});
 
 /**
  * Dependencies injected from core/index.tsx into the selection groups module.
@@ -39,12 +36,12 @@ export interface SelectionGroupsAPI {
   groups: Accessor<SelectionGroup[]>;
   setGroups: Setter<SelectionGroup[]>;
   persistGroups: (groups: SelectionGroup[]) => SelectionGroup[];
-  activeGroupId: Accessor<string>;
-  setActiveGroupId: Setter<string>;
+  activeGroupId: Accessor<string | null>;
+  setActiveGroupId: Setter<string | null>;
   handleAddGroup: (name: string) => void;
   handleRenameGroup: (groupId: string, name: string) => void;
   handleDeleteGroup: (groupId: string) => void;
-  handleMoveItem: (itemId: string, groupId: string) => void;
+  handleMoveItem: (itemId: string, groupId: string | null) => void;
 }
 
 /**
@@ -53,12 +50,12 @@ export interface SelectionGroupsAPI {
  */
 export interface SelectionGroupsViewProps {
   groups?: SelectionGroup[];
-  activeGroupId?: string;
-  onActiveGroupChange?: (groupId: string) => void;
+  activeGroupId?: string | null;
+  onActiveGroupChange?: (groupId: string | null) => void;
   onAddGroup?: (name: string) => void;
   onRenameGroup?: (groupId: string, name: string) => void;
   onDeleteGroup?: (groupId: string) => void;
   onToggleGroupRevealed?: (groupId: string) => void;
-  onMoveItem?: (itemId: string, groupId: string) => void;
+  onMoveItem?: (itemId: string, groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
 }

@@ -2,7 +2,6 @@ import { createSignal, For, Show } from "solid-js";
 import type { Component, JSX } from "solid-js";
 import type { CommentItem } from "../../../types.js";
 import type { SelectionGroup } from "../types.js";
-import { isDefaultGroup } from "../business/group-operations.js";
 import { cn } from "../../../utils/cn.js";
 
 interface GroupCollapsibleProps {
@@ -73,35 +72,33 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
           </Show>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
-          {/* Hover actions for non-default groups */}
-          <Show when={!isDefaultGroup(props.group.id)}>
-            <div class="flex items-center gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
-              <button
-                data-react-grab-ignore-events
-                class="text-black/30 hover:text-black/60 cursor-pointer p-0.5"
-                on:click={(e) => {
-                  e.stopPropagation();
-                  setIsRenaming(true);
-                  requestAnimationFrame(() => {
-                    renameInputRef?.focus();
-                    renameInputRef?.select();
-                  });
-                }}
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
-              </button>
-              <button
-                data-react-grab-ignore-events
-                class="text-[#B91C1C]/50 hover:text-[#B91C1C] cursor-pointer p-0.5"
-                on:click={(e) => {
-                  e.stopPropagation();
-                  props.onDelete(props.group.id);
-                }}
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-              </button>
-            </div>
-          </Show>
+          {/* Hover actions — all groups are user groups now */}
+          <div class="flex items-center gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+            <button
+              data-react-grab-ignore-events
+              class="text-black/30 hover:text-black/60 cursor-pointer p-0.5"
+              on:click={(e) => {
+                e.stopPropagation();
+                setIsRenaming(true);
+                requestAnimationFrame(() => {
+                  renameInputRef?.focus();
+                  renameInputRef?.select();
+                });
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
+            </button>
+            <button
+              data-react-grab-ignore-events
+              class="text-[#B91C1C]/50 hover:text-[#B91C1C] cursor-pointer p-0.5"
+              on:click={(e) => {
+                e.stopPropagation();
+                props.onDelete(props.group.id);
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>
+          </div>
           {/* Copy button — always visible for all groups */}
           <button
             data-react-grab-ignore-events

@@ -1,5 +1,6 @@
 import type { ServerCommentItem } from "./generated/types.js";
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
+import type { SelectionGroupWithJira } from "./features/sidebar/jira-types.js";
 import type { SyncConfig, SyncStatus } from "./features/sync/types.js";
 
 export interface Position {
@@ -492,8 +493,13 @@ export interface SelectionLabelInstance {
  * CommentItem extends the server-defined shape with UI-only fields.
  * Server fields come from Orval (SSOT: sync-server Zod schemas).
  * UI-only fields are added here.
+ *
+ * `groupId` is overridden to `string | null` (server type is `string`).
+ * `null` = intentionally ungrouped. The wire-format translation
+ * (`null` ↔ `""`) lives in features/sync/transforms.ts.
  */
-export interface CommentItem extends ServerCommentItem {
+export interface CommentItem extends Omit<ServerCommentItem, "groupId"> {
+  groupId: string | null;
   previewBounds?: OverlayBounds[];
 }
 
@@ -609,6 +615,9 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   jiraProjectKey?: string;
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
   onTicketCreated?: TicketCreatedCallback;
+  onCreateTicketForLooseItem?: (item: CommentItem) => void;
+  looseTicketDialog?: { item: CommentItem; syntheticGroup: SelectionGroupWithJira } | null;
+  onLooseTicketDialogClose?: () => void;
 }
 
 export interface GrabbedBox {

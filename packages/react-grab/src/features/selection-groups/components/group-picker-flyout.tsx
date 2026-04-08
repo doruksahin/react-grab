@@ -6,10 +6,10 @@ import { registerOverlayDismiss } from "../../../utils/register-overlay-dismiss.
 interface GroupPickerFlyoutProps {
   groups: SelectionGroup[];
   /** If set, renders a checkmark on this group (label picker context). */
-  activeGroupId?: string;
+  activeGroupId?: string | null;
   /** If set, this group is hidden from the list (move context). */
   excludeGroupId?: string;
-  onSelect: (groupId: string) => void;
+  onSelect: (groupId: string | null) => void;
   onClose: () => void;
   /** If provided, renders a "New group..." inline input at the bottom. */
   onAddGroup?: (name: string) => void;
@@ -41,6 +41,43 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
         <span class="text-[11px] font-medium text-black/40">{header()}</span>
       </div>
       <div class="border-t border-[#D9D9D9] py-1">
+        {/* Ungrouped row — selecting it sets groupId to null */}
+        <button
+          data-react-grab-ignore-events
+          class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer text-left"
+          onClick={(e) => {
+            e.stopPropagation();
+            props.onSelect(null);
+          }}
+        >
+          <Show
+            when={props.activeGroupId == null}
+            fallback={<span class="w-[10px] shrink-0" />}
+          >
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="text-black/50 shrink-0"
+            >
+              <path d="m5 12 5 5L20 7" />
+            </svg>
+          </Show>
+          <span
+            class={
+              props.activeGroupId == null
+                ? "text-[12px] font-medium text-black"
+                : "text-[12px] text-black/70"
+            }
+          >
+            Ungrouped
+          </span>
+        </button>
         <For each={visibleGroups()}>
           {(group) => {
             const isActive = () => group.id === props.activeGroupId;

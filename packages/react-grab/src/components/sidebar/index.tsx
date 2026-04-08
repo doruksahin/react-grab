@@ -24,6 +24,9 @@ import {
   type GroupedEntry,
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import { isSynthetic } from "../../features/selection-groups/business/synthetic-group.js";
+import { LooseSelectionList } from "./loose-selection-list.jsx";
+import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -37,6 +40,10 @@ export interface SidebarProps {
   onJiraResolved?: (groupId: string) => void;
   onTicketCreated?: TicketCreatedCallback;
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
+  onCreateTicketForLooseItem?: (item: CommentItem) => void;
+  /** When set, opens the Jira create dialog for this loose item + its synthetic group. */
+  looseTicketDialog?: { item: CommentItem; syntheticGroup: SelectionGroupWithJira } | null;
+  onLooseTicketDialogClose?: () => void;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -48,6 +55,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // Trap focus inside the sidebar for the duration it is mounted.
   // solid-focus-trap restores focus to the previously focused element on cleanup.
   createFocusTrap({ element: () => containerRef ?? null, enabled: () => true });
+
+  // Synthetic groups are invisible in every user-facing surface (GroupList,
+  // filter chips, stats bar, empty-state guard). The full props.groups list
+  // is preserved so LooseSelectionList can look up synthetic groups by id.
+  const userFacingGroups = createMemo(() =>
+    props.groups.filter((g) => !isSynthetic(g)),
+  );
 
   const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
@@ -91,25 +105,25 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   });
 
   const groupedItems = createMemo(() =>
-    groupComments(props.groups, props.commentItems),
+    groupComments(userFacingGroups(), props.commentItems),
   );
 
   const filteredGroups = createMemo(() => {
     const filter = filterState();
     if (!isFilterActive(filter)) return groupedItems();
-    const filtered = applyFilters(props.groups, filter);
+    const filtered = applyFilters(userFacingGroups(), filter);
     return groupedItems().filter((entry: GroupedEntry) =>
       filtered.some((g) => g.id === entry.group.id),
     );
   });
 
-  // NOTE: props.groups is read via untrack() to prevent a reactive loop:
+  // NOTE: userFacingGroups is read via untrack() to prevent a reactive loop:
   // filter effect → setGroupsRevealed → persistGroups → props.groups changes
-  // → filter effect re-runs (if tracking props.groups) → LOOP
+  // → userFacingGroups changes → filter effect re-runs (if tracking it) → LOOP
   // Only filterState() is tracked — this effect re-runs only when the user changes filters.
   createEffect(() => {
     const filter = filterState();
-    const allGroups = untrack(() => props.groups);
+    const allGroups = untrack(() => userFacingGroups());
     const allIds = allGroups.map((g) => g.id);
     if (!isFilterActive(filter)) {
       props.onFilterVisibilityChange?.(new Set(allIds), allIds);
@@ -155,9 +169,9 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 <StatsBar groupedItems={groupedItems()} />
                 <FilterBar
                   filter={filterState()}
-                  assignees={getDistinctAssignees(props.groups)}
-                  reporters={getDistinctReporters(props.groups)}
-                  labels={getDistinctLabels(props.groups)}
+                  assignees={getDistinctAssignees(userFacingGroups())}
+                  reporters={getDistinctReporters(userFacingGroups())}
+                  labels={getDistinctLabels(userFacingGroups())}
                   onFilterChange={setFilterState}
                 />
                 <FilterChips
@@ -166,7 +180,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 />
 
                 <Show
-                  when={props.groups.length > 0}
+                  when={userFacingGroups().length > 0}
                   fallback={
                     <EmptyState
                       message="No selections yet."
@@ -174,6 +188,15 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     />
                   }
                 >
+                  <LooseSelectionList
+                    allGroups={props.groups}
+                    commentItems={props.commentItems}
+                    syncServerUrl={props.syncServerUrl}
+                    syncWorkspace={props.syncWorkspace}
+                    scrollRoot={() => containerRef ?? null}
+                    onCreateTicket={(item) => props.onCreateTicketForLooseItem?.(item)}
+                  />
+
                   <Show
                     when={filteredGroups().length > 0}
                     fallback={
@@ -207,6 +230,24 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               onTicketCreated={props.onTicketCreated}
             />
           </Show>
+        </Show>
+
+        <Show when={props.looseTicketDialog}>
+          {(state) => (
+            <JiraCreateDialog
+              open={true}
+              workspaceId={props.syncWorkspace ?? ""}
+              groupId={state().syntheticGroup.id}
+              group={state().syntheticGroup}
+              commentItems={[state().item]}
+              jiraProjectKey={props.jiraProjectKey ?? ""}
+              onTicketCreated={(groupId, ticketId, ticketUrl) => {
+                props.onTicketCreated?.(groupId, ticketId, ticketUrl);
+                props.onLooseTicketDialogClose?.();
+              }}
+              onClose={() => props.onLooseTicketDialogClose?.()}
+            />
+          )}
         </Show>
     </div>
   );

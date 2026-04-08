@@ -29,7 +29,12 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
         }
         if (config.syncRevealedState) {
           const raw = await response.json();
-          return z.array(CommentItemSchema).parse(raw) as CommentItem[];
+          const parsed = z.array(CommentItemSchema).parse(raw);
+          // Wire-format translation: server "" → client null. See transforms.ts.
+          return parsed.map((item) => ({
+            ...item,
+            groupId: item.groupId === "" ? null : item.groupId,
+          })) as CommentItem[];
         }
         const raw = await response.json();
         const serverItems = z.array(CommentItemSchema).parse(raw);
@@ -40,8 +45,10 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
     },
 
     persistComments: async (items: CommentItem[]): Promise<CommentItem[]> => {
+      // Wire-format translation: client null → server "" (see transforms.ts).
+      // stripRevealedFromComments already handles this on the non-sync path.
       const payload = config.syncRevealedState
-        ? items
+        ? items.map((i) => ({ ...i, groupId: i.groupId === null ? "" : i.groupId }))
         : stripRevealedFromComments(items);
       if (!config.syncRevealedState) {
         saveLocalRevealedStates(items, []);

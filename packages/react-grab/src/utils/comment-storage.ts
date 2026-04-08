@@ -6,6 +6,7 @@ import type { CommentItem } from "../types.js";
 import { generateId } from "./generate-id.js";
 import { logRecoverableError } from "./log-recoverable-error.js";
 import type { StorageAdapter } from "../features/sync/types.js";
+import { migrateLegacyDefaultGroup } from "../features/selection-groups/store/group-storage.js";
 
 let activeAdapter: StorageAdapter | null = null;
 
@@ -32,17 +33,14 @@ const loadFromLocalStorage = (): CommentItem[] => {
     const serialized = localStorage.getItem(COMMENT_ITEMS_KEY);
     if (!serialized) return [];
     const parsed = JSON.parse(serialized) as CommentItem[];
-    return parsed.map((commentItem) => ({
+    const normalized = parsed.map((commentItem) => ({
       ...commentItem,
-      groupId:
-        typeof commentItem.groupId === "string"
-          ? commentItem.groupId
-          : "default",
       elementsCount: Math.max(1, commentItem.elementsCount ?? 1),
       previewBounds: commentItem.previewBounds ?? [],
       elementSelectors: commentItem.elementSelectors ?? [],
       revealed: typeof commentItem.revealed === "boolean" ? commentItem.revealed : false,
     }));
+    return migrateLegacyDefaultGroup(normalized);
   } catch (error) {
     logRecoverableError("Failed to load comments from localStorage", error);
     return [];

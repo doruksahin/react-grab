@@ -1,6 +1,5 @@
 import type { CommentItem } from "../../../types.js";
 import type { SelectionGroup } from "../types.js";
-import { DEFAULT_GROUP_ID } from "../types.js";
 
 export const getCommentsByGroup = (
   comments: CommentItem[],
@@ -13,11 +12,6 @@ export const countByGroup = (
 ): number =>
   comments.reduce((n, c) => (c.groupId === groupId ? n + 1 : n), 0);
 
-export const removeCommentsByGroup = (
-  comments: CommentItem[],
-  groupId: string,
-): CommentItem[] => comments.filter((c) => c.groupId !== groupId);
-
 export const groupComments = (
   groups: SelectionGroup[],
   comments: CommentItem[],
@@ -26,9 +20,6 @@ export const groupComments = (
     group,
     items: comments.filter((c) => c.groupId === group.id),
   }));
-
-export const isDefaultGroup = (groupId: string): boolean =>
-  groupId === DEFAULT_GROUP_ID;
 
 /**
  * Fuzzy match: checks if all characters in `query` appear in `text` in order.

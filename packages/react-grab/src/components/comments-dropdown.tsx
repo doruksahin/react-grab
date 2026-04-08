@@ -12,7 +12,9 @@ import type { CommentItem, DropdownAnchor } from "../types.js";
 import type { SelectionGroupsViewProps } from "../features/selection-groups/types.js";
 import { GroupCollapsible } from "../features/selection-groups/components/group-collapsible.jsx";
 import { GroupPickerFlyout } from "../features/selection-groups/components/group-picker-flyout.jsx";
+import { UngroupedSection } from "../features/selection-groups/components/ungrouped-section.jsx";
 import { groupComments, fuzzyMatchGroup } from "../features/selection-groups/business/group-operations.js";
+import { isUngrouped } from "../features/selection-groups/business/membership.js";
 import {
   DROPDOWN_EDGE_TRANSFORM_ORIGIN,
   DROPDOWN_ICON_SIZE_PX,
@@ -110,6 +112,127 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
 
   const groupedItems = () =>
     groupComments(props.groups ?? [], props.items);
+
+  const ungroupedItems = () => props.items.filter(isUngrouped);
+
+  // Shared row renderer used by both UngroupedSection and GroupCollapsible.
+  const renderRow = (item: CommentItem) => (
+    <div
+      data-react-grab-ignore-events
+      data-react-grab-comment-item
+      class="group relative z-1 contain-layout flex items-start justify-between w-full px-2 py-1 cursor-pointer text-left gap-2"
+      classList={{
+        "opacity-40 hover:opacity-100": Boolean(
+          props.disconnectedItemIds?.has(item.id),
+        ),
+      }}
+      tabindex="0"
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        props.onSelectItem?.(item);
+      }}
+      onKeyDown={(event) => {
+        if (
+          event.code === "Space" &&
+          event.currentTarget === event.target
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          props.onSelectItem?.(item);
+        }
+      }}
+      onMouseEnter={(event) => {
+        if (!props.disconnectedItemIds?.has(item.id)) {
+          props.onItemHover?.(item.id);
+        }
+        setHoveredItemId(item.id);
+        updateHighlight(event.currentTarget);
+      }}
+      onMouseLeave={() => {
+        props.onItemHover?.(null);
+        setHoveredItemId(null);
+        clearHighlight();
+      }}
+      onFocus={(event) => updateHighlight(event.currentTarget)}
+      onBlur={clearHighlight}
+    >
+      <span class="flex flex-col min-w-0 flex-1">
+        <span class="text-[12px] leading-4 font-medium text-popover-foreground truncate">
+          {getCommentItemDisplayName(item)}
+        </span>
+        <Show when={item.commentText}>
+          <span class="text-[11px] leading-3 text-muted-foreground truncate mt-0.5">
+            {item.commentText}
+          </span>
+        </Show>
+      </span>
+      <div class="flex items-center gap-1 shrink-0">
+        <Show when={hoveredItemId() === item.id || openMoveId() === item.id}>
+          <button
+            data-react-grab-ignore-events
+            class="flex items-center justify-center rounded p-0.5 text-muted-foreground hover:text-popover-foreground hover:bg-accent cursor-pointer transition-colors"
+            title="Move to group"
+            on:click={(e) => {
+              e.stopPropagation();
+              setOpenMoveId((id) => (id === item.id ? null : item.id));
+            }}
+          >
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+            </svg>
+          </button>
+        </Show>
+        <span class="text-[10px] text-muted-foreground flex items-center justify-end">
+          {formatRelativeTime(item.timestamp)}
+        </span>
+        <button
+          data-react-grab-ignore-events
+          class="flex items-center justify-center w-[18px] h-[18px] rounded hover:bg-accent transition-colors"
+          on:click={(event) => {
+            event.stopPropagation();
+            props.onToggleItemRevealed?.(item.id);
+          }}
+          on:pointerdown={(event) => event.stopPropagation()}
+          aria-label={item.revealed ? "Hide this selection" : "Reveal this selection"}
+        >
+          {item.revealed ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500">
+              <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+              <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground group-hover:text-popover-foreground transition-colors">
+              <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
+              <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
+              <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
+              <path d="m2 2 20 20"/>
+            </svg>
+          )}
+        </button>
+      </div>
+      <Show when={openMoveId() === item.id}>
+        <GroupPickerFlyout
+          groups={props.groups ?? []}
+          excludeGroupId={item.groupId ?? undefined}
+          onSelect={(groupId) => {
+            props.onMoveItem?.(item.id, groupId);
+            setOpenMoveId(null);
+          }}
+          onClose={() => setOpenMoveId(null)}
+        />
+      </Show>
+    </div>
+  );
 
   const filteredGroupedItems = () => {
     const query = searchQuery();
@@ -308,139 +431,31 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
           <div class="min-h-0 [border-top-width:0.5px] border-t-solid border-t-border px-2 py-1.5">
             <div
               ref={highlightContainerRef}
+              data-react-grab-group-list
               class="relative flex flex-col max-h-[240px] overflow-y-auto -mx-2 -my-1.5 [scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:rgba(0,0,0,0.15)_transparent]"
             >
               <div
                 ref={highlightRef}
                 class="pointer-events-none absolute bg-accent opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
               />
+              <Show when={ungroupedItems().length > 0}>
+                <UngroupedSection
+                  items={ungroupedItems()}
+                  isFirst={true}
+                  renderItem={renderRow}
+                />
+              </Show>
               <For each={filteredGroupedItems()}>
                 {(entry, index) => (
                   <GroupCollapsible
                     group={entry.group}
                     items={entry.items}
-                    isFirst={index() === 0}
+                    isFirst={index() === 0 && ungroupedItems().length === 0}
                     onRename={(groupId, name) => props.onRenameGroup?.(groupId, name)}
                     onDelete={(groupId) => props.onDeleteGroup?.(groupId)}
                     onToggleRevealed={(groupId) => props.onToggleGroupRevealed?.(groupId)}
                     onCopy={(groupId) => props.onCopyGroup?.(groupId)}
-                    renderItem={(item) => (
-                      <div
-                        data-react-grab-ignore-events
-                        data-react-grab-comment-item
-                        class="group relative z-1 contain-layout flex items-start justify-between w-full px-2 py-1 cursor-pointer text-left gap-2"
-                        classList={{
-                          "opacity-40 hover:opacity-100": Boolean(
-                            props.disconnectedItemIds?.has(item.id),
-                          ),
-                        }}
-                        tabindex="0"
-                        onPointerDown={(event) => event.stopPropagation()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          props.onSelectItem?.(item);
-                        }}
-                        onKeyDown={(event) => {
-                          if (
-                            event.code === "Space" &&
-                            event.currentTarget === event.target
-                          ) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            props.onSelectItem?.(item);
-                          }
-                        }}
-                        onMouseEnter={(event) => {
-                          if (!props.disconnectedItemIds?.has(item.id)) {
-                            props.onItemHover?.(item.id);
-                          }
-                          setHoveredItemId(item.id);
-                          updateHighlight(event.currentTarget);
-                        }}
-                        onMouseLeave={() => {
-                          props.onItemHover?.(null);
-                          setHoveredItemId(null);
-                          clearHighlight();
-                        }}
-                        onFocus={(event) => updateHighlight(event.currentTarget)}
-                        onBlur={clearHighlight}
-                      >
-                        <span class="flex flex-col min-w-0 flex-1">
-                          <span class="text-[12px] leading-4 font-medium text-popover-foreground truncate">
-                            {getCommentItemDisplayName(item)}
-                          </span>
-                          <Show when={item.commentText}>
-                            <span class="text-[11px] leading-3 text-muted-foreground truncate mt-0.5">
-                              {item.commentText}
-                            </span>
-                          </Show>
-                        </span>
-                        <div class="flex items-center gap-1 shrink-0">
-                          <Show when={hoveredItemId() === item.id || openMoveId() === item.id}>
-                            <button
-                              data-react-grab-ignore-events
-                              class="flex items-center justify-center rounded p-0.5 text-muted-foreground hover:text-popover-foreground hover:bg-accent cursor-pointer transition-colors"
-                              title="Move to group"
-                              on:click={(e) => {
-                                e.stopPropagation();
-                                setOpenMoveId((id) => (id === item.id ? null : item.id));
-                              }}
-                            >
-                              <svg
-                                width="10"
-                                height="10"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                              >
-                                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-                              </svg>
-                            </button>
-                          </Show>
-                          <span class="text-[10px] text-muted-foreground flex items-center justify-end">
-                            {formatRelativeTime(item.timestamp)}
-                          </span>
-                          <button
-                            data-react-grab-ignore-events
-                            class="flex items-center justify-center w-[18px] h-[18px] rounded hover:bg-accent transition-colors"
-                            on:click={(event) => {
-                              event.stopPropagation();
-                              props.onToggleItemRevealed?.(item.id);
-                            }}
-                            on:pointerdown={(event) => event.stopPropagation()}
-                            aria-label={item.revealed ? "Hide this selection" : "Reveal this selection"}
-                          >
-                            {item.revealed ? (
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500">
-                                <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
-                                <circle cx="12" cy="12" r="3" fill="currentColor"/>
-                              </svg>
-                            ) : (
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground group-hover:text-popover-foreground transition-colors">
-                                <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
-                                <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
-                                <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
-                                <path d="m2 2 20 20"/>
-                              </svg>
-                            )}
-                          </button>
-                        </div>
-                        <Show when={openMoveId() === item.id}>
-                          <GroupPickerFlyout
-                            groups={props.groups ?? []}
-                            excludeGroupId={item.groupId}
-                            onSelect={(groupId) => {
-                              props.onMoveItem?.(item.id, groupId);
-                              setOpenMoveId(null);
-                            }}
-                            onClose={() => setOpenMoveId(null)}
-                          />
-                        </Show>
-                      </div>
-                    )}
+                    renderItem={renderRow}
                   />
                 )}
               </For>
