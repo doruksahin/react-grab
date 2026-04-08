@@ -27,7 +27,7 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
         <div class="absolute inset-0 bg-black/60" />
         <div
           data-react-grab-jira-dialog
-          class="bg-card rounded-xl w-[480px] max-h-[80vh] overflow-y-auto p-6 border border-border"
+          class="bg-card rounded-xl w-[480px] border border-border overflow-hidden"
           style={{ "pointer-events": "auto" }}
           role="dialog"
           aria-modal="true"

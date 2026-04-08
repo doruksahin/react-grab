@@ -1,4 +1,5 @@
 // packages/react-grab/src/components/sidebar/jira-create-form.tsx
+// packages/react-grab/src/components/sidebar/jira-create-form.tsx
 import {
   type Component,
   createResource,
@@ -7,6 +8,7 @@ import {
   Show,
 } from "solid-js";
 import { Button } from "../ui/button.js";
+import { DialogLayout, DialogHeader } from "./dialog-layout.js";
 import { JiraEditor } from "./jira-editor.js";
 import { ScreenshotPair } from "./screenshot-pair.js";
 import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
@@ -161,166 +163,172 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
 
   return (
     <form data-react-grab-jira-form onSubmit={handleSubmit} style={{ "pointer-events": "auto" }}>
-      {/* Issue type — pre-selected to "Task" */}
-      <div class="mb-3">
-        <label class="block text-[11px] text-muted-foreground mb-1">Work Type *</label>
-        <Show
-          when={props.issueTypes()}
-          fallback={
-            <div class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}>
-              Loading…
-            </div>
-          }
-        >
-          {(types) => (
-            <Select
-              defaultValue={DEFAULT_ISSUE_TYPE}
-              onChange={(value: string | null) => value && setIssueType(value)}
-              options={types().map((t) => t.name)}
-              itemComponent={(itemProps) => (
-                <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
-              )}
+      <DialogLayout
+        header={
+          <DialogHeader title="Create JIRA Ticket" onClose={props.onClose} />
+        }
+        footer={
+          <div class="flex gap-2 justify-end" style={{ "pointer-events": "auto" }}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              style={{ "pointer-events": "auto" }}
+              onClick={props.onClose}
             >
-              <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
-                <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
-              </SelectTrigger>
-              <SelectContent />
-            </Select>
-          )}
-        </Show>
-      </div>
-
-      {/* Priority — pre-selected to "Medium" */}
-      <div class="mb-3">
-        <label class="block text-[11px] text-muted-foreground mb-1">Priority</label>
-        <Show
-          when={props.priorities()}
-          fallback={
-            <div class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}>
-              Loading…
-            </div>
-          }
-        >
-          {(prios) => (
-            <Select
-              defaultValue={DEFAULT_PRIORITY}
-              onChange={(value: string | null) => value && setPriority(value)}
-              options={prios().map((p) => p.name)}
-              itemComponent={(itemProps) => (
-                <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
-              )}
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={
+                submitting() ||
+                !issueType() ||
+                !props.issueTypes() ||
+                !props.priorities()
+              }
+              style={{ "pointer-events": "auto" }}
             >
-              <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
-                <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
-              </SelectTrigger>
-              <SelectContent />
-            </Select>
-          )}
-        </Show>
-      </div>
-
-      {/* Labels — optional multi-select with search */}
-      <div class="mb-3">
-        <label class="block text-[11px] text-muted-foreground mb-1">Labels</label>
-        <Show
-          when={props.labels() !== undefined}
-          fallback={
-            <div class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}>
-              Loading…
-            </div>
-          }
-        >
-          <LabelSelect
-            allLabels={props.labels() ?? []}
-            value={selectedLabels()}
-            onChange={setSelectedLabels}
-          />
-        </Show>
-      </div>
-
-      {/* Summary */}
-      <div class="mb-3">
-        <label class="block text-[11px] text-muted-foreground mb-1">Summary *</label>
-        <textarea
-          class={textareaClass}
-          style={{ "pointer-events": "auto" }}
-          rows={2}
-          value={summary()}
-          onInput={(e) => setSummary(e.currentTarget.value)}
-          required
-        />
-      </div>
-
-      {/* Description */}
-      <div class="mb-3">
-        <label class="block text-[11px] text-muted-foreground mb-1">Description</label>
-        <JiraEditor
-          initialValue={description()}
-          onChange={setDescription}
-        />
-      </div>
-
-      {/* Attachments — screenshot previews */}
-      <div class="mb-4">
-        <p class="text-[11px] text-muted-foreground mb-1">Screenshots</p>
-        <Show
-          when={itemsWithScreenshots().length > 0}
-          fallback={
-            <p class="text-[10px] text-muted-foreground italic">No screenshots</p>
-          }
-        >
-          <For each={itemsWithScreenshots()}>
-            {(item) => (
-              <ScreenshotPair
-                elementSrc={
-                  item.screenshotElement && props.syncServerUrl
-                    ? screenshotUrl(props.syncServerUrl, props.workspaceId, item.id, "element")
-                    : undefined
-                }
-                fullPageSrc={
-                  item.screenshotFullPage && props.syncServerUrl
-                    ? screenshotUrl(props.syncServerUrl, props.workspaceId, item.id, "full")
-                    : undefined
-                }
-                scrollRoot={noScrollRoot}
-              />
+              {submitting() ? "Creating…" : "Create Ticket"}
+            </Button>
+          </div>
+        }
+      >
+        {/* Issue type — pre-selected to "Task" */}
+        <div class="mb-3">
+          <label class="block text-[11px] text-muted-foreground mb-1">Work Type *</label>
+          <Show
+            when={props.issueTypes()}
+            fallback={
+              <div class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}>
+                Loading…
+              </div>
+            }
+          >
+            {(types) => (
+              <Select
+                defaultValue={DEFAULT_ISSUE_TYPE}
+                onChange={(value: string | null) => value && setIssueType(value)}
+                options={types().map((t) => t.name)}
+                itemComponent={(itemProps) => (
+                  <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
+                )}
+              >
+                <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
+                  <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
+                </SelectTrigger>
+                <SelectContent />
+              </Select>
             )}
-          </For>
-        </Show>
-      </div>
-
-      {/* Error */}
-      <Show when={error()}>
-        <div class="mb-3 p-2 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300">
-          {error()}
+          </Show>
         </div>
-      </Show>
 
-      {/* Actions */}
-      <div class="flex gap-2 justify-end" style={{ "pointer-events": "auto" }}>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          style={{ "pointer-events": "auto" }}
-          onClick={props.onClose}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          size="sm"
-          disabled={
-            submitting() ||
-            !issueType() ||
-            !props.issueTypes() ||
-            !props.priorities()
-          }
-          style={{ "pointer-events": "auto" }}
-        >
-          {submitting() ? "Creating…" : "Create Ticket"}
-        </Button>
-      </div>
+        {/* Priority — pre-selected to "Medium" */}
+        <div class="mb-3">
+          <label class="block text-[11px] text-muted-foreground mb-1">Priority</label>
+          <Show
+            when={props.priorities()}
+            fallback={
+              <div class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}>
+                Loading…
+              </div>
+            }
+          >
+            {(prios) => (
+              <Select
+                defaultValue={DEFAULT_PRIORITY}
+                onChange={(value: string | null) => value && setPriority(value)}
+                options={prios().map((p) => p.name)}
+                itemComponent={(itemProps) => (
+                  <SelectItem item={itemProps.item}>{itemProps.item.rawValue}</SelectItem>
+                )}
+              >
+                <SelectTrigger class={triggerClass} style={{ "pointer-events": "auto" }}>
+                  <SelectValue<string>>{(state) => state.selectedOption()}</SelectValue>
+                </SelectTrigger>
+                <SelectContent />
+              </Select>
+            )}
+          </Show>
+        </div>
+
+        {/* Labels — optional multi-select with search */}
+        <div class="mb-3">
+          <label class="block text-[11px] text-muted-foreground mb-1">Labels</label>
+          <Show
+            when={props.labels() !== undefined}
+            fallback={
+              <div class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}>
+                Loading…
+              </div>
+            }
+          >
+            <LabelSelect
+              allLabels={props.labels() ?? []}
+              value={selectedLabels()}
+              onChange={setSelectedLabels}
+            />
+          </Show>
+        </div>
+
+        {/* Summary */}
+        <div class="mb-3">
+          <label class="block text-[11px] text-muted-foreground mb-1">Summary *</label>
+          <textarea
+            class={textareaClass}
+            style={{ "pointer-events": "auto" }}
+            rows={2}
+            value={summary()}
+            onInput={(e) => setSummary(e.currentTarget.value)}
+            required
+          />
+        </div>
+
+        {/* Description */}
+        <div class="mb-3">
+          <label class="block text-[11px] text-muted-foreground mb-1">Description</label>
+          <JiraEditor
+            initialValue={description()}
+            onChange={setDescription}
+          />
+        </div>
+
+        {/* Attachments — screenshot previews */}
+        <div class="mb-4">
+          <p class="text-[11px] text-muted-foreground mb-1">Screenshots</p>
+          <Show
+            when={itemsWithScreenshots().length > 0}
+            fallback={
+              <p class="text-[10px] text-muted-foreground italic">No screenshots</p>
+            }
+          >
+            <For each={itemsWithScreenshots()}>
+              {(item) => (
+                <ScreenshotPair
+                  elementSrc={
+                    item.screenshotElement && props.syncServerUrl
+                      ? screenshotUrl(props.syncServerUrl, props.workspaceId, item.id, "element")
+                      : undefined
+                  }
+                  fullPageSrc={
+                    item.screenshotFullPage && props.syncServerUrl
+                      ? screenshotUrl(props.syncServerUrl, props.workspaceId, item.id, "full")
+                      : undefined
+                  }
+                  scrollRoot={noScrollRoot}
+                />
+              )}
+            </For>
+          </Show>
+        </div>
+
+        {/* Error */}
+        <Show when={error()}>
+          <div class="mb-3 p-2 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300">
+            {error()}
+          </div>
+        </Show>
+      </DialogLayout>
     </form>
   );
 };
