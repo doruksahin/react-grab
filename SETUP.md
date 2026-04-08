@@ -11,26 +11,39 @@ Both run locally against `AdCreative-Frontend-V2` at `/Users/doruk/Desktop/ADCRE
 
 ## 1. Prerequisites
 
-- Node.js `>= 22.18` (AdCreative requirement; react-grab itself only needs `>= 18`)
-- pnpm `>= 9` (repo is pinned to `pnpm@10.24.0` via `packageManager`)
-- The `AdCreative-Frontend-V2` repo cloned as a **sibling** of this repo:
+- Node.js `>= 22.18` (AdCreative requirement; react-grab itself only needs `>= 18`).
+  If you use `nvm`: `nvm install 22 && nvm use 22`.
+- pnpm `>= 9` (repo is pinned to `pnpm@10.24.0` via `packageManager`). Install with
+  `corepack enable && corepack prepare pnpm@10.24.0 --activate`.
+- Both repos cloned as **siblings** under the same parent directory:
+  ```bash
+  mkdir -p ~/ADCREATIVE && cd ~/ADCREATIVE
+  git clone <react-grab-fork-url> react-grab
+  git clone <adcreative-frontend-v2-url> AdCreative-Frontend-V2
+  ```
+  Resulting layout:
   ```
   ADCREATIVE/
   ├── react-grab/                 ← this repo
   └── AdCreative-Frontend-V2/
   ```
   The sibling layout matters — AdCreative's `pnpm-lock.yaml` resolves
-  `react-grab` to `link:../react-grab/packages/react-grab`.
+  `react-grab` to `link:../react-grab/packages/react-grab`. Any other layout
+  breaks the symlink.
 
 ---
 
 ## 2. Install & start the dev servers
 
-From this repo's root:
+From **each** repo's root, install dependencies:
 
 ```bash
-pnpm install
+cd ~/ADCREATIVE/react-grab && pnpm install
+cd ~/ADCREATIVE/AdCreative-Frontend-V2 && pnpm install
 ```
+
+Installing in AdCreative is what materializes the `node_modules/react-grab`
+symlink pointing back to this repo.
 
 You need **two processes** running in parallel. Open two terminals (or use tmux):
 
@@ -64,9 +77,20 @@ pnpm --filter @react-grab/sync-server db:migrate:local
 ```
 
 > The Worker reads JIRA credentials from `packages/sync-server/.dev.vars`
-> (gitignored). If you need JIRA create-issue to work locally, drop your
-> `JIRA_EMAIL` / `JIRA_API_TOKEN` in there. Without it the rest of the server
-> still runs.
+> (gitignored). If you need JIRA create-issue to work locally, create the file
+> with:
+>
+> ```dotenv
+> JIRA_EMAIL=you@adcreative.ai
+> JIRA_API_TOKEN=<token>
+> ```
+>
+> Generate a token at <https://id.atlassian.com/manage-profile/security/api-tokens>.
+> Without it the rest of the server still runs — you just can't create issues.
+
+If port `8787` is already in use, pass `--port` to wrangler:
+`pnpm --filter @react-grab/sync-server exec wrangler dev --port 8788` (and
+update `VITE_REACT_GRAB_SYNC_URL` in AdCreative to match).
 
 ---
 
@@ -101,15 +125,17 @@ if (import.meta.env.DEV) {
 }
 ```
 
-**Env vars.** `AdCreative-Frontend-V2/.env` (and `.env.local`) already contain:
+**Env vars.** `AdCreative-Frontend-V2/.env` is **gitignored**, so on a fresh
+clone you need to create it yourself. Add:
 
 ```dotenv
+# AdCreative-Frontend-V2/.env.local
 VITE_REACT_GRAB_SYNC_URL=http://localhost:8787
-VITE_REACT_GRAB_SYNC_WORKSPACE=my-workspace
+VITE_REACT_GRAB_SYNC_WORKSPACE=<your-name>-workspace
 ```
 
-Change `VITE_REACT_GRAB_SYNC_WORKSPACE` to separate your data from teammates
-sharing the same deployed sync server.
+Pick a unique `VITE_REACT_GRAB_SYNC_WORKSPACE` value to separate your data
+from teammates sharing the same deployed sync server.
 
 ---
 
@@ -124,14 +150,17 @@ pnpm sync:dev      # terminal B — sync-server on :8787
 pnpm dev           # terminal C — app (Vite)
 ```
 
-Open the AdCreative app in your browser. Hover any element and press **⌘C**
-(Mac) / **Ctrl+C** (Win/Linux) to grab it. Selections should appear in the
-sidebar and persist to the local sync server.
+Open the AdCreative app in your browser. Hover any element and press the
+configured activation key (default **⌘C** on Mac / **Ctrl+C** on Win/Linux —
+the overlay intercepts the combo only while hovering a grab target, so normal
+copy still works elsewhere). Selections should appear in the sidebar and
+persist to the local sync server.
 
 Sanity check the sync server is reachable:
 
 ```bash
-curl http://localhost:8787/health   # or visit /swagger for the OpenAPI UI
+curl http://localhost:8787/health   # returns { ok: true }
+# or open http://localhost:8787/swagger in a browser for the OpenAPI UI
 ```
 
 ---
@@ -147,6 +176,10 @@ curl http://localhost:8787/health   # or visit /swagger for the OpenAPI UI
 - **D1 errors on first run.** You forgot `db:migrate:local` — see Terminal B
   section.
 - **JIRA create fails.** Add credentials to `packages/sync-server/.dev.vars`.
+- **`pnpm dev` errors about missing filter / turbo.** Run `pnpm install` at
+  the repo root first.
+- **Port 8787 or the AdCreative Vite port already in use.** Start wrangler on
+  a different port (see §2) and update `VITE_REACT_GRAB_SYNC_URL` to match.
 
 ---
 
