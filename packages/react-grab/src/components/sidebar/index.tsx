@@ -52,6 +52,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   let lastFocusedCard: HTMLElement | undefined;
   let detailViewRef: HTMLDivElement | undefined;
   let containerRef: HTMLDivElement | undefined;
+  let listScrollRef: HTMLDivElement | undefined;
 
   // Trap focus inside the sidebar for the duration it is mounted.
   // solid-focus-trap restores focus to the previously focused element on cleanup.
@@ -199,32 +200,37 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     />
                   }
                 >
-                  <LooseSelectionList
-                    allGroups={props.groups}
-                    commentItems={props.commentItems}
-                    syncServerUrl={props.syncServerUrl}
-                    syncWorkspace={props.syncWorkspace}
-                    scrollRoot={() => containerRef ?? null}
-                    onCreateTicket={(item) => props.onCreateTicketForLooseItem?.(item)}
-                    onRemoveItem={props.onRemoveItem}
-                  />
-
-                  <Show
-                    when={filteredGroups().length > 0}
-                    fallback={
-                      <EmptyState
-                        message={"No groups match the active filters."}
-                      />
-                    }
+                  <div
+                    ref={(el) => { listScrollRef = el; }}
+                    class="flex-1 overflow-y-auto"
                   >
-                    <GroupList
-                      groupedItems={filteredGroups()}
-                      onGroupClick={(id: string, cardEl: HTMLElement) => {
-                        lastFocusedCard = cardEl;
-                        setActiveDetailGroupId(id);
-                      }}
+                    <LooseSelectionList
+                      allGroups={props.groups}
+                      commentItems={props.commentItems}
+                      syncServerUrl={props.syncServerUrl}
+                      syncWorkspace={props.syncWorkspace}
+                      scrollRoot={() => listScrollRef ?? null}
+                      onCreateTicket={(item) => props.onCreateTicketForLooseItem?.(item)}
+                      onRemoveItem={props.onRemoveItem}
                     />
-                  </Show>
+
+                    <Show
+                      when={filteredGroups().length > 0}
+                      fallback={
+                        <EmptyState
+                          message={"No groups match the active filters."}
+                        />
+                      }
+                    >
+                      <GroupList
+                        groupedItems={filteredGroups()}
+                        onGroupClick={(id: string, cardEl: HTMLElement) => {
+                          lastFocusedCard = cardEl;
+                          setActiveDetailGroupId(id);
+                        }}
+                      />
+                    </Show>
+                  </div>
                 </Show>
               </>
             }

@@ -9,7 +9,7 @@ interface GroupListProps {
 
 export const GroupList: Component<GroupListProps> = (props) => {
   return (
-    <div data-react-grab-group-list class="flex-1 overflow-y-auto p-2">
+    <div data-react-grab-group-list class="p-2">
       <For each={props.groupedItems}>
         {(entry) => (
           <GroupCard
