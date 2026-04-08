@@ -66,6 +66,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
               class="flex-1 min-w-[80px] text-[12px]"
               style={{ "pointer-events": "auto" }}
               placeholder={state.selectedOptions().length === 0 ? "Search labels…" : ""}
+              onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
             />
             <Combobox.Trigger
               class="ml-1 opacity-50 hover:opacity-100 shrink-0"
