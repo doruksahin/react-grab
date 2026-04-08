@@ -3,7 +3,6 @@ import { markdownToAdf } from "marklassian";
 import { convertADFToMarkdown, type ADFDocument } from "adf-to-markdown";
 import type { SyncRepository, ScreenshotStore } from "../repositories/types.js";
 
-const APP_NAME = "ui-ticket-manager";
 
 interface JiraConfig {
   baseUrl: string;
@@ -210,11 +209,11 @@ export class JiraService {
       };
     }
 
-    // 1. Load comments for this group
+    // 1. Load comments for this group (used for screenshot attachments below)
     const comments = await repo.listComments(workspaceId);
     const groupComments = comments.filter((c) => c.groupId === groupId);
 
-    const descriptionText = this.buildDescription(params.description, groupComments);
+    const descriptionText = markdownToAdf(params.description);
 
     // 3. Create the issue
     const issue = await this.client.issues.createIssue({
@@ -364,35 +363,4 @@ export class JiraService {
     };
   }
 
-  private buildDescription(
-    userDescription: string,
-    comments: Array<{
-      id: string;
-      componentName?: string;
-      elementName: string;
-      tagName: string;
-      commentText?: string;
-      elementSelectors?: string[];
-    }>,
-  ): object {
-    const markdown = [
-      userDescription,
-      "---",
-      "## Selections",
-      ...comments.map((c, i) =>
-        [
-          `### ${i + 1}. ${c.componentName ?? c.elementName} <${c.tagName}>`,
-          c.commentText ?? "",
-          c.elementSelectors?.[0]
-            ? `Selector: \`${c.elementSelectors[0]}\``
-            : "",
-        ]
-          .filter(Boolean)
-          .join("\n"),
-      ),
-      `_Created by ${APP_NAME}_`,
-    ].join("\n\n");
-
-    return markdownToAdf(markdown);
-  }
 }
