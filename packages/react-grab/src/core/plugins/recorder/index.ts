@@ -34,6 +34,7 @@ const infoAction: ContextMenuAction = {
 export const recorderPlugin: Plugin = {
   name: "recorder",
   setup: (api) => {
+    activeController?.stop();
     activeController = createCaptureController(api);
     return {
       actions: [infoAction],
