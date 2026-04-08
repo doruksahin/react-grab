@@ -15,6 +15,7 @@ import {
   assignSelection,
   unassignSelectionsInGroup,
 } from "./business/selection-assignment.js";
+import { isSynthetic } from "./business/synthetic-group.js";
 
 export function createSelectionGroups(
   deps: SelectionGroupsDeps,
@@ -53,9 +54,24 @@ export function createSelectionGroups(
   };
 
   const handleMoveItem = (itemId: string, groupId: string | null) => {
-    const updated = assignSelection(deps.commentItems(), itemId, groupId);
+    const before = deps.commentItems();
+    const movedFromGroupId = before.find((i) => i.id === itemId)?.groupId ?? null;
+
+    const updated = assignSelection(before, itemId, groupId);
     deps.persistCommentItems(updated);
     deps.setCommentItems(updated);
+
+    // GC: if we just moved the last item out of a synthetic group, delete it.
+    if (movedFromGroupId !== null && movedFromGroupId !== groupId) {
+      const sourceGroup = groups().find((g) => g.id === movedFromGroupId);
+      const stillHasItems = updated.some((i) => i.groupId === movedFromGroupId);
+      if (sourceGroup && isSynthetic(sourceGroup) && !stillHasItems) {
+        const remaining = groups().filter((g) => g.id !== movedFromGroupId);
+        persistGroupsToStorage(remaining);
+        if (activeGroupId() === movedFromGroupId) setActiveGroupId(null);
+        setGroups(remaining);
+      }
+    }
   };
 
   return {

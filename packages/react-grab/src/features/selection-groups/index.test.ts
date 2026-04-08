@@ -58,3 +58,46 @@ describe("createSelectionGroups.handleDeleteGroup", () => {
     });
   });
 });
+
+describe("createSelectionGroups synthetic-group GC", () => {
+  it("deletes a synthetic group when its sole item is moved out", () => {
+    createRoot((dispose) => {
+      const synth = { id: "synth-1", name: "X", createdAt: 0, revealed: false, synthetic: true };
+      const real = { id: "real-1", name: "Real", createdAt: 0, revealed: false };
+      const initialItems = [
+        { id: "a", groupId: "synth-1" },
+      ] as unknown as CommentItem[];
+      const [items, setItems] = createSignal<CommentItem[]>(initialItems);
+      const api = createSelectionGroups({
+        commentItems: items,
+        setCommentItems: setItems,
+        persistCommentItems: (next) => next,
+      });
+      api.setGroups([synth, real]);
+
+      api.handleMoveItem("a", "real-1");
+
+      expect(api.groups().find((g) => g.id === "synth-1")).toBeUndefined();
+      expect(api.groups().find((g) => g.id === "real-1")).toBeDefined();
+      dispose();
+    });
+  });
+
+  it("does NOT delete a real group when emptied", () => {
+    createRoot((dispose) => {
+      const real = { id: "real-1", name: "Real", createdAt: 0, revealed: false };
+      const [items, setItems] = createSignal<CommentItem[]>(
+        [{ id: "a", groupId: "real-1" }] as unknown as CommentItem[],
+      );
+      const api = createSelectionGroups({
+        commentItems: items,
+        setCommentItems: setItems,
+        persistCommentItems: (next) => next,
+      });
+      api.setGroups([real]);
+      api.handleMoveItem("a", null);
+      expect(api.groups().find((g) => g.id === "real-1")).toBeDefined();
+      dispose();
+    });
+  });
+});
