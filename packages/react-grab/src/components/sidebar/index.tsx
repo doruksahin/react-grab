@@ -26,6 +26,7 @@ import {
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { isSynthetic } from "../../features/selection-groups/business/synthetic-group.js";
 import { LooseSelectionList } from "./loose-selection-list.jsx";
+import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -40,6 +41,9 @@ export interface SidebarProps {
   onTicketCreated?: TicketCreatedCallback;
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
+  /** When set, opens the Jira create dialog for this loose item + its synthetic group. */
+  looseTicketDialog?: { item: CommentItem; syntheticGroup: SelectionGroupWithJira } | null;
+  onLooseTicketDialogClose?: () => void;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -226,6 +230,24 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               onTicketCreated={props.onTicketCreated}
             />
           </Show>
+        </Show>
+
+        <Show when={props.looseTicketDialog}>
+          {(state) => (
+            <JiraCreateDialog
+              open={true}
+              workspaceId={props.syncWorkspace ?? ""}
+              groupId={state().syntheticGroup.id}
+              group={state().syntheticGroup}
+              commentItems={[state().item]}
+              jiraProjectKey={props.jiraProjectKey ?? ""}
+              onTicketCreated={(groupId, ticketId, ticketUrl) => {
+                props.onTicketCreated?.(groupId, ticketId, ticketUrl);
+                props.onLooseTicketDialogClose?.();
+              }}
+              onClose={() => props.onLooseTicketDialogClose?.()}
+            />
+          )}
         </Show>
     </div>
   );
