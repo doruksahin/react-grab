@@ -510,6 +510,21 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           }}
           onAnimationEnd={() => setIsShaking(false)}
         >
+          <Show
+            when={
+              canInteract() &&
+              props.onRemoveItem &&
+              !props.jiraTicketId
+            }
+          >
+            <div class="absolute -top-2 -right-2 z-10">
+              <RemoveSelectionButton
+                variant="overlay"
+                onRemove={() => props.onRemoveItem?.()}
+              />
+            </div>
+          </Show>
+
           <Show when={props.status === 'copying' && !props.isPendingAbort}>
             <div
               class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit max-w-[280px]"
@@ -599,15 +614,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                       : Boolean(props.isContextMenuOpen)
                   }
                 />
-                {/* Ticket-lock: the × button is hidden when the selection's
-                    group has a JIRA ticket. Ticketed selections are frozen
-                    — no move, no remove. */}
-                <Show when={props.onRemoveItem && !props.jiraTicketId}>
-                  <RemoveSelectionButton
-                    variant="overlay"
-                    onRemove={() => props.onRemoveItem?.()}
-                  />
-                </Show>
               </div>
               <Show when={props.arrowNavigationState?.isVisible}>
                 <ArrowNavigationMenu
@@ -686,14 +692,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   onHoverChange={handleTagHoverChange}
                   forceShowIcon
                 />
-                {/* Ticket-lock: × hidden when the selection's group is
-                    ticketed. Ticketed selections are frozen. */}
-                <Show when={props.onRemoveItem && !props.jiraTicketId}>
-                  <RemoveSelectionButton
-                    variant="overlay"
-                    onRemove={() => props.onRemoveItem?.()}
-                  />
-                </Show>
               </div>
               <ActiveGroupPicker
                 groups={props.groups}

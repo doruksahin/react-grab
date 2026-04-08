@@ -1,10 +1,10 @@
 // packages/react-grab/src/components/sidebar/loose-selection-card.tsx
-import { type Component, Show } from "solid-js";
-import type { CommentItem } from "../../types.js";
-import type { StatusColorConfig } from "../../features/sidebar/status-colors.js";
-import { SelectionCard } from "./selection-card.jsx";
-import { Button } from "../ui/button.jsx";
-import { RemoveSelectionButton } from "../remove-selection-button.jsx";
+import { type Component, Show } from 'solid-js';
+import type { CommentItem } from '../../types.js';
+import type { StatusColorConfig } from '../../features/sidebar/status-colors.js';
+import { SelectionCard } from './selection-card.jsx';
+import { Button } from '../ui/button.jsx';
+import { RemoveSelectionButton } from '../remove-selection-button.jsx';
 
 interface LooseSelectionCardProps {
   item: CommentItem;
@@ -37,26 +37,29 @@ interface LooseSelectionCardProps {
  * — those live one level up in `loose-selection-list.tsx` /
  * `core/index.tsx`. The Create-ticket button just calls `onCreateTicket`.
  */
-export const LooseSelectionCard: Component<LooseSelectionCardProps> = (props) => {
+export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
+  props
+) => {
   const hasTicket = () => Boolean(props.jiraTicketId);
 
   return (
     <div
       data-react-grab-loose-selection-card
       class="mb-1.5"
-      style={{ "pointer-events": "auto" }}
+      style={{ 'pointer-events': 'auto' }}
     >
-      <div class="bg-muted rounded-lg border border-border p-3 cursor-default">
-        {/* Row 1: header — component name + tag, status pill on right */}
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <span class="text-[13px] font-semibold text-foreground truncate">
-              {props.item.componentName || props.item.elementName}
-            </span>
-            <span class="px-1.5 py-0.5 rounded bg-accent text-muted-foreground text-[10px] font-mono shrink-0">
-              {props.item.tagName}
-            </span>
+      <div class="relative bg-muted rounded-lg border border-border p-3 cursor-default">
+        {/* Absolute close button — top right */}
+        <Show when={!hasTicket() && props.onRemoveItem}>
+          <div class="absolute -top-2 -right-2 z-10">
+            <RemoveSelectionButton
+              onRemove={() => props.onRemoveItem?.(props.item.id)}
+            />
           </div>
+        </Show>
+
+        {/* Row 1: header — status pill on right */}
+        <div class="flex items-center justify-between mb-1.5">
           <div class="flex items-center gap-1.5 shrink-0 ml-2">
             <span
               class="text-[10px] font-semibold rounded-full px-2 py-0.5"
@@ -67,12 +70,6 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (props) =>
             >
               {props.statusLabel}
             </span>
-            {/* Ticket-lock: × only when the loose item has no ticket. */}
-            <Show when={!hasTicket() && props.onRemoveItem}>
-              <RemoveSelectionButton
-                onRemove={() => props.onRemoveItem?.(props.item.id)}
-              />
-            </Show>
           </div>
         </div>
 
