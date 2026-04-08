@@ -26,9 +26,24 @@ const loadFromLocalStorage = (): SelectionGroup[] => {
   }
 };
 
-let groups: SelectionGroup[] = loadFromLocalStorage();
+// Start empty. localStorage is loaded lazily via `initLocalGroupStorage`,
+// called by the host only when no sync adapter will be used. This keeps
+// stale localStorage data from leaking into a synced session.
+let groups: SelectionGroup[] = [];
 
 let onGroupsLoadedCallback: ((groups: SelectionGroup[]) => void) | null = null;
+
+/**
+ * Load groups from localStorage into the in-memory cache. Only call
+ * this when there's no sync adapter — when `initGroupStorage` will
+ * run, the remote groups are the source of truth and localStorage
+ * must be ignored.
+ */
+export const initLocalGroupStorage = (): void => {
+  if (activeAdapter) return;
+  groups = loadFromLocalStorage();
+  onGroupsLoadedCallback?.(groups);
+};
 
 export const registerGroupsLoadedCallback = (
   cb: (groups: SelectionGroup[]) => void,

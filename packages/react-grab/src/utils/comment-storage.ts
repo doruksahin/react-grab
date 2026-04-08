@@ -86,8 +86,22 @@ export const persistCommentItems = (nextItems: CommentItem[]): CommentItem[] => 
 };
 
 migrateFromLegacyStorage();
-let commentItems: CommentItem[] = loadFromLocalStorage();
+// Start empty. localStorage is loaded lazily via `initLocalCommentStorage`,
+// called by the host only when no sync adapter will be used. This keeps
+// stale localStorage data from leaking into a synced session.
+let commentItems: CommentItem[] = [];
 let didConfirmClear = readSessionFlag(CLEAR_CONFIRMED_KEY);
+
+/**
+ * Load comments from localStorage into the in-memory cache. Only call
+ * this when there's no sync adapter — when `initCommentStorage` will
+ * run, the remote comments are the source of truth and localStorage
+ * must be ignored.
+ */
+export const initLocalCommentStorage = (): void => {
+  if (activeAdapter) return;
+  commentItems = loadFromLocalStorage();
+};
 
 export const initCommentStorage = async (adapter: StorageAdapter): Promise<void> => {
   activeAdapter = adapter;

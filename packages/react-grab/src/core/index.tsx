@@ -168,10 +168,11 @@ import {
   confirmClear,
   persistCommentItems,
   initCommentStorage,
+  initLocalCommentStorage,
   getActiveAdapter,
 } from "../utils/comment-storage.js";
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
-import { initGroupStorage, registerGroupsLoadedCallback } from "../features/selection-groups/store/group-storage.js";
+import { initGroupStorage, initLocalGroupStorage, registerGroupsLoadedCallback } from "../features/selection-groups/store/group-storage.js";
 import { createHttpAdapter } from "../features/sync/index.js";
 import type { SyncConfig } from "../features/sync/types.js";
 import { copyContent, copyGroupedContent, type ReactGrabGroup } from "../utils/copy-content.js";
@@ -237,6 +238,9 @@ export const initSync = async (config: SyncConfig): Promise<void> => {
   }
 
   if (!config.enabled) {
+    // Local-only mode — load the cached copies from localStorage now.
+    initLocalCommentStorage();
+    initLocalGroupStorage();
     syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "local" };
     return;
   }
@@ -249,8 +253,9 @@ export const initSync = async (config: SyncConfig): Promise<void> => {
     ]);
     syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "synced" };
   } catch (error) {
-    // Server unreachable — fall back to localStorage (already loaded at module init)
-    // Fire the error callback so it's not silent
+    // Server unreachable — fall back to localStorage.
+    initLocalCommentStorage();
+    initLocalGroupStorage();
     const err = error instanceof Error ? error : new Error(String(error));
     config.onSyncError(err);
     syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "error" };
