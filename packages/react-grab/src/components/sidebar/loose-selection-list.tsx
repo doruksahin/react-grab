@@ -43,16 +43,19 @@ export const LooseSelectionList: Component<LooseSelectionListProps> = (props) =>
       <div data-react-grab-loose-selection-list class="px-2 pt-2">
         <For each={looseItems()}>
           {(item) => {
-            const group = backingGroupFor(item);
-            const statusLabel = group ? getStatusLabel(group) : "No Task";
-            const statusColor = getStatusColor(group?.jiraStatus);
+            // Accessors — NOT plain consts. `<For>` runs this body
+            // once per item, so anything stored in a const is frozen
+            // at render time and never reacts to allGroups updates.
+            // Wrapping in accessors lets Solid's JSX compiler track
+            // the reads through the LooseSelectionCard prop getters.
+            const group = () => backingGroupFor(item);
             return (
               <LooseSelectionCard
                 item={item}
-                statusLabel={statusLabel}
-                statusColor={statusColor}
-                jiraTicketId={group?.jiraTicketId}
-                jiraUrl={group?.jiraUrl}
+                statusLabel={group() ? getStatusLabel(group()!) : "No Task"}
+                statusColor={getStatusColor(group()?.jiraStatus)}
+                jiraTicketId={group()?.jiraTicketId}
+                jiraUrl={group()?.jiraUrl}
                 onCreateTicket={props.onCreateTicket}
                 onRemoveItem={props.onRemoveItem}
                 syncServerUrl={props.syncServerUrl}

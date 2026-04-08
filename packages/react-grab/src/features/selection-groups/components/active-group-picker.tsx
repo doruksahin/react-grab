@@ -18,6 +18,7 @@ import { Button } from "../../../components/ui/button.jsx";
 import { cn } from "../../../utils/cn.js";
 import { GroupPickerFlyout } from "./group-picker-flyout.jsx";
 import { useActiveGroupPickerState } from "../hooks/use-active-group-picker-state.js";
+import { isSynthetic } from "../business/synthetic-group.js";
 import { IconLock } from "../../../components/icons/icon-lock.jsx";
 
 /**
@@ -217,7 +218,14 @@ const ActiveGroupPickerTrigger: Component<
   Omit<ComponentProps<typeof Button>, "onClick" | "type">
 > = (props) => {
   const ctx = useActiveGroupPicker();
-  const label = () => ctx.activeGroup()?.name ?? "Ungrouped";
+  // Synthetic groups are backing stores for loose-ticketed items —
+  // invisible to the user everywhere else in the app. The picker's
+  // display label must honor the same rule: a synthetic active group
+  // is presented as "Ungrouped", not as the synthetic group's name.
+  const label = () => {
+    const g = ctx.activeGroup();
+    return g && !isSynthetic(g) ? g.name : "Ungrouped";
+  };
 
   return (
     <Show
