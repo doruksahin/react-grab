@@ -247,6 +247,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           {(state) => (
             <JiraCreateDialog
               workspaceId={props.syncWorkspace ?? ""}
+              syncServerUrl={props.syncServerUrl}
               groupId={state().group.id}
               group={state().group}
               commentItems={state().items}
@@ -264,6 +265,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           {(state) => (
             <JiraCreateDialog
               workspaceId={props.syncWorkspace ?? ""}
+              syncServerUrl={props.syncServerUrl}
               groupId={state().syntheticGroup.id}
               group={state().syntheticGroup}
               commentItems={[state().item]}

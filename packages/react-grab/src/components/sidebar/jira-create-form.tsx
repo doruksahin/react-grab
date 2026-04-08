@@ -10,6 +10,8 @@ import {
 } from "solid-js";
 import { Button } from "../ui/button.js";
 import { JiraEditor } from "./jira-editor.js";
+import { ScreenshotPair } from "./screenshot-pair.js";
+import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
 import {
   Select,
   SelectContent,
@@ -32,6 +34,7 @@ const DEFAULT_PRIORITY = "Medium";
 interface JiraCreateFormProps {
   /** Workspace ID — the `id` param in Orval-generated createJiraTicket(id, groupId, body) */
   workspaceId: string;
+  syncServerUrl?: string;
   groupId: string;
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
@@ -44,6 +47,8 @@ interface JiraCreateFormReadyProps extends JiraCreateFormProps {
   issueTypes: Array<{ id: string; name: string }>;
   priorities: Array<{ id: string; name: string }>;
 }
+
+const noScrollRoot = () => null;
 
 const triggerClass = "w-full text-[12px] bg-muted border-border text-foreground";
 const textareaClass = "w-full bg-muted text-foreground text-[12px] rounded px-2 py-1.5 border border-border resize-none";
@@ -59,13 +64,10 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
-  const screenshotList = () =>
-    props.commentItems.flatMap((item) => {
-      const names: string[] = [];
-      if (item.screenshotElement) names.push(`${item.id}-element.png`);
-      if (item.screenshotFullPage) names.push(`${item.id}-full.png`);
-      return names;
-    });
+  const itemsWithScreenshots = () =>
+    props.commentItems.filter(
+      (item) => item.screenshotElement || item.screenshotFullPage,
+    );
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
@@ -162,18 +164,30 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
         />
       </div>
 
-      {/* Attachments (informational only — server attaches screenshots) */}
+      {/* Attachments — screenshot previews */}
       <div class="mb-4">
-        <p class="text-[11px] text-muted-foreground mb-1">Attachments</p>
+        <p class="text-[11px] text-muted-foreground mb-1">Screenshots</p>
         <Show
-          when={screenshotList().length > 0}
+          when={itemsWithScreenshots().length > 0}
           fallback={
             <p class="text-[10px] text-muted-foreground italic">No screenshots</p>
           }
         >
-          <For each={screenshotList()}>
-            {(name) => (
-              <div class="text-[10px] text-muted-foreground font-mono">{name}</div>
+          <For each={itemsWithScreenshots()}>
+            {(item) => (
+              <ScreenshotPair
+                elementSrc={
+                  item.screenshotElement && props.syncServerUrl
+                    ? screenshotUrl(props.syncServerUrl, props.workspaceId, item.id, "element")
+                    : undefined
+                }
+                fullPageSrc={
+                  item.screenshotFullPage && props.syncServerUrl
+                    ? screenshotUrl(props.syncServerUrl, props.workspaceId, item.id, "full")
+                    : undefined
+                }
+                scrollRoot={noScrollRoot}
+              />
             )}
           </For>
         </Show>

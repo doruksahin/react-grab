@@ -7,6 +7,7 @@ import { useShadowMount } from "../../utils/shadow-context.js";
 
 interface JiraCreateDialogProps {
   workspaceId: string;
+  syncServerUrl?: string;
   groupId: string;
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
@@ -35,6 +36,7 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
         >
           <JiraCreateForm
             workspaceId={props.workspaceId}
+            syncServerUrl={props.syncServerUrl}
             groupId={props.groupId}
             group={props.group}
             commentItems={props.commentItems}
