@@ -5,6 +5,7 @@ import type { StatusColorConfig } from '../../features/sidebar/status-colors.js'
 import { SelectionCard } from './selection-card.jsx';
 import { Button } from '../ui/button.jsx';
 import { RemoveSelectionButton } from '../remove-selection-button.jsx';
+import { LooseSelectionCardHeader } from './loose-selection-card-header.jsx';
 
 interface LooseSelectionCardProps {
   item: CommentItem;
@@ -58,49 +59,47 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
           </div>
         </Show>
 
-        {/* Row 1: header — status pill on right */}
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-1.5 shrink-0 ml-2">
-            <span
-              class="text-[10px] font-semibold rounded-full px-2 py-0.5"
-              style={{
-                color: props.statusColor.text,
-                background: props.statusColor.bg,
-              }}
+        <LooseSelectionCardHeader
+          left={
+            <Show
+              when={hasTicket()}
+              fallback={
+                <Button
+                  variant="outline"
+                  class="h-6 px-2 text-[10px] border-dashed"
+                  onClick={() => props.onCreateTicket(props.item)}
+                >
+                  + Create ticket
+                </Button>
+              }
             >
-              {props.statusLabel}
-            </span>
-          </div>
-        </div>
-
-        {/* Row 2: meta — timestamp + ticket link (or Create-ticket button) */}
-        <div class="flex items-center gap-2 mb-1.5">
-          <span class="text-[10px] text-muted-foreground">
-            {new Date(props.item.timestamp).toLocaleString()}
-          </span>
-          <Show
-            when={hasTicket()}
-            fallback={
-              <Button
-                variant="outline"
-                class="ml-auto h-6 px-2 text-[10px] border-dashed"
-                onClick={() => props.onCreateTicket(props.item)}
+              <a
+                href={props.jiraUrl}
+                target="_blank"
+                rel="noreferrer"
+                class="text-[10px] font-medium text-blue-400 hover:underline"
               >
-                + Create ticket
-              </Button>
-            }
-          >
-            <span class="text-muted-foreground">·</span>
-            <a
-              href={props.jiraUrl}
-              target="_blank"
-              rel="noreferrer"
-              class="text-[10px] font-medium text-blue-400 hover:underline"
-            >
-              {props.jiraTicketId}
-            </a>
-          </Show>
-        </div>
+                {props.jiraTicketId}
+              </a>
+            </Show>
+          }
+          right={
+            <>
+              <span
+                class="text-[10px] font-semibold rounded-full px-2 py-0.5"
+                style={{
+                  color: props.statusColor.text,
+                  background: props.statusColor.bg,
+                }}
+              >
+                {props.statusLabel}
+              </span>
+              <span class="text-[10px] text-muted-foreground">
+                {new Date(props.item.timestamp).toLocaleString()}
+              </span>
+            </>
+          }
+        />
 
         {/* Inner SelectionCard — reuses its screenshot, file-path, raw-HTML rendering. */}
         <div class="mt-2">
