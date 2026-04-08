@@ -246,7 +246,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         <Show when={groupTicketDialog()}>
           {(state) => (
             <JiraCreateDialog
-              open={true}
               workspaceId={props.syncWorkspace ?? ""}
               groupId={state().group.id}
               group={state().group}
@@ -264,7 +263,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         <Show when={props.looseTicketDialog}>
           {(state) => (
             <JiraCreateDialog
-              open={true}
               workspaceId={props.syncWorkspace ?? ""}
               groupId={state().syntheticGroup.id}
               group={state().syntheticGroup}
