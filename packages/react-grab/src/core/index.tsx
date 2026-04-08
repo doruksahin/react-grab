@@ -3846,16 +3846,34 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     };
     // --- end loose-selection ticketing orchestrator ---
 
-    const computedLabelInstancesWithStatus = createMemo(() =>
-      computedLabelInstances().map((instance) => {
-        if (!instance.groupId) return instance;
+    const computedLabelInstancesWithStatus = createMemo(() => {
+      // Resolve each label instance's live groupId from the backing
+      // CommentItem rather than the instance's frozen snapshot. This
+      // makes the selection-label's group picker reactive to moves:
+      // when handleMoveItem writes commentItems, the memo re-runs,
+      // the new groupId flows into the picker's activeGroupId, and
+      // the jira-field merge below uses the correct (new) group.
+      const items = commentItems();
+      return computedLabelInstances().map((instance) => {
+        const liveItem = instance.itemId
+          ? items.find((item) => item.id === instance.itemId)
+          : undefined;
+        const effectiveGroupId = liveItem
+          ? (liveItem.groupId ?? undefined)
+          : instance.groupId;
+        const withLiveGroup =
+          effectiveGroupId === instance.groupId
+            ? instance
+            : { ...instance, groupId: effectiveGroupId };
+
+        if (!effectiveGroupId) return withLiveGroup;
         const group = selectionGroups
           .groups()
-          .find((g) => g.id === instance.groupId) as
+          .find((g) => g.id === effectiveGroupId) as
           | SelectionGroupWithJira
           | undefined;
         return {
-          ...instance,
+          ...withLiveGroup,
           groupStatus: group?.jiraStatus,
           jiraTicketId: group?.jiraTicketId,
           jiraUrl: group?.jiraUrl,
@@ -3867,8 +3885,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           jiraLabels: group?.jiraLabels,
           jiraComments: group?.jiraComments,
         };
-      }),
-    );
+      });
+    });
 
     const visibility = createSelectionVisibility({
       commentItems,

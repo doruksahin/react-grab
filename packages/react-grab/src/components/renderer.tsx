@@ -225,9 +225,11 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             jiraComments={instance().jiraComments}
             groups={userFacingGroups()}
             activeGroupId={instance().groupId}
-            onActiveGroupChange={(groupId) =>
-              props.onMoveItem?.(instance().id, groupId ?? null)
-            }
+            onActiveGroupChange={(groupId) => {
+              const itemId = instance().itemId;
+              if (!itemId) return;
+              props.onMoveItem?.(itemId, groupId ?? null);
+            }}
             onAddGroup={props.onAddGroup}
             onShowContextMenu={(() => {
               const currentInstance = instance();
