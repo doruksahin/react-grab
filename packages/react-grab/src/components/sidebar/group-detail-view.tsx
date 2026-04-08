@@ -6,6 +6,7 @@ import { SelectionList } from "./selection-list.js";
 import { JiraCreateButton } from "./jira-create-button.js";
 import { getStatusLabel } from "../../features/sidebar/status-colors.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import { isTicketed } from "../../features/selection-groups/business/ticket-lock.js";
 
 interface GroupDetailViewProps {
   ref?: (el: HTMLDivElement) => void;
@@ -22,6 +23,7 @@ interface GroupDetailViewProps {
     group: SelectionGroupWithJira,
     items: CommentItem[],
   ) => void;
+  onRemoveItem?: (itemId: string) => void;
 }
 
 export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
@@ -46,6 +48,10 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
         items={groupItems()}
         syncServerUrl={props.syncServerUrl}
         syncWorkspace={props.syncWorkspace}
+        onRemoveItem={
+          // Ticket-lock: ticketed groups freeze their members.
+          isTicketed(props.group) ? undefined : props.onRemoveItem
+        }
       />
 
       {/* JIRA section — bottom of detail view */}

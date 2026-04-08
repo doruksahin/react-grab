@@ -41,6 +41,7 @@ export interface SidebarProps {
   onTicketCreated?: TicketCreatedCallback;
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
+  onRemoveItem?: (itemId: string) => void;
   /** When set, opens the Jira create dialog for this loose item + its synthetic group. */
   looseTicketDialog?: { item: CommentItem; syntheticGroup: SelectionGroupWithJira } | null;
   onLooseTicketDialogClose?: () => void;
@@ -205,6 +206,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     syncWorkspace={props.syncWorkspace}
                     scrollRoot={() => containerRef ?? null}
                     onCreateTicket={(item) => props.onCreateTicketForLooseItem?.(item)}
+                    onRemoveItem={props.onRemoveItem}
                   />
 
                   <Show
@@ -239,6 +241,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               onCreateTicket={(group, items) =>
                 setGroupTicketDialog({ group, items })
               }
+              onRemoveItem={props.onRemoveItem}
             />
           </Show>
         </Show>

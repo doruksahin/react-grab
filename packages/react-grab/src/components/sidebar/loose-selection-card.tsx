@@ -17,6 +17,9 @@ interface LooseSelectionCardProps {
   jiraUrl?: string;
   /** Click handler for the "Create ticket" button — fires only when no ticket. */
   onCreateTicket: (item: CommentItem) => void;
+  /** Remove handler. Passed by the parent only when the selection is
+   *  not ticket-locked (i.e. no backing synthetic ticket). */
+  onRemoveItem?: (itemId: string) => void;
   syncServerUrl?: string;
   syncWorkspace?: string;
   scrollRoot: () => Element | null;
@@ -53,15 +56,45 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (props) =>
               {props.item.tagName}
             </span>
           </div>
-          <span
-            class="text-[10px] font-semibold rounded-full px-2 py-0.5 shrink-0 ml-2"
-            style={{
-              color: props.statusColor.text,
-              background: props.statusColor.bg,
-            }}
-          >
-            {props.statusLabel}
-          </span>
+          <div class="flex items-center gap-1.5 shrink-0 ml-2">
+            <span
+              class="text-[10px] font-semibold rounded-full px-2 py-0.5"
+              style={{
+                color: props.statusColor.text,
+                background: props.statusColor.bg,
+              }}
+            >
+              {props.statusLabel}
+            </span>
+            {/* Ticket-lock: × only when the loose item has no ticket. */}
+            <Show when={!hasTicket() && props.onRemoveItem}>
+              <button
+                type="button"
+                aria-label="Remove selection"
+                title="Remove selection"
+                class="flex items-center justify-center size-4 rounded-full bg-red-500 text-white cursor-pointer"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  props.onRemoveItem?.(props.item.id);
+                }}
+              >
+                <svg
+                  width="8"
+                  height="8"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6 6 18 18" />
+                  <path d="M18 6 6 18" />
+                </svg>
+              </button>
+            </Show>
+          </div>
         </div>
 
         {/* Row 2: meta — timestamp + ticket link (or Create-ticket button) */}

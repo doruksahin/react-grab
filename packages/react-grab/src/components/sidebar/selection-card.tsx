@@ -13,6 +13,9 @@ export interface SelectionCardProps {
   syncServerUrl?: string;
   syncWorkspace?: string;
   scrollRoot: () => Element | null;
+  /** Pre-curried remove handler. When undefined, the × button is not
+   *  rendered — the caller gates this on the ticket-lock rule. */
+  onRemoveItem?: () => void;
 }
 
 export const SelectionCard: Component<SelectionCardProps> = (props) => {
@@ -52,7 +55,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       class="bg-muted rounded-lg p-3 mb-1.5 border border-border"
       style={{ "pointer-events": "auto" }}
     >
-      {/* Row 1: component name + tag badge + timestamp */}
+      {/* Row 1: component name + tag badge + timestamp + remove */}
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5 min-w-0">
           <span class="text-[13px] font-semibold text-foreground truncate">
@@ -62,9 +65,40 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
             {props.item.tagName}
           </span>
         </div>
-        <span class="text-[10px] text-muted-foreground shrink-0 ml-2">
-          {relativeTime(props.item.timestamp)}
-        </span>
+        <div class="flex items-center gap-1.5 shrink-0 ml-2">
+          <span class="text-[10px] text-muted-foreground">
+            {relativeTime(props.item.timestamp)}
+          </span>
+          {/* Ticket-lock gates visibility at the caller — if the prop is
+              set, the selection is removable. */}
+          <Show when={props.onRemoveItem}>
+            <button
+              type="button"
+              aria-label="Remove selection"
+              title="Remove selection"
+              class="flex items-center justify-center size-4 rounded-full bg-red-500 text-white cursor-pointer"
+              onClick={(event) => {
+                event.stopPropagation();
+                props.onRemoveItem?.();
+              }}
+            >
+              <svg
+                width="8"
+                height="8"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M6 6 18 18" />
+                <path d="M18 6 6 18" />
+              </svg>
+            </button>
+          </Show>
+        </div>
       </div>
 
       {/* Row 2: comment text */}

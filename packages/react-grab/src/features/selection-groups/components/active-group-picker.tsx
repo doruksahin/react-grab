@@ -17,6 +17,7 @@ import type { SelectionGroup } from "../types.js";
 import { Button } from "../../../components/ui/button.jsx";
 import { cn } from "../../../utils/cn.js";
 import { GroupPickerFlyout } from "./group-picker-flyout.jsx";
+import { useActiveGroupPickerState } from "../hooks/use-active-group-picker-state.js";
 
 /**
  * Compound component for the active-group picker rendered inside the
@@ -34,9 +35,15 @@ import { GroupPickerFlyout } from "./group-picker-flyout.jsx";
  */
 
 interface ActiveGroupPickerContextValue {
-  groups: Accessor<SelectionGroup[]>;
+  /** Groups the flyout is allowed to offer as targets. Already filtered
+   *  by the ticket-lock rule (no ticketed groups, no synthetic groups). */
+  assignableGroups: Accessor<SelectionGroup[]>;
   activeGroupId: Accessor<string | null | undefined>;
   activeGroup: Accessor<SelectionGroup | undefined>;
+  /** True when the current selection lives in a ticketed group and
+   *  cannot be reassigned. The trigger renders as static text + lock
+   *  icon; toggle/selectGroup become no-ops. */
+  isLocked: Accessor<boolean>;
   isOpen: Accessor<boolean>;
   setOpen: Setter<boolean>;
   toggle: () => void;
@@ -76,17 +83,27 @@ const ActiveGroupPickerRoot: ParentComponent<ActiveGroupPickerRootProps> = (
     groups().find((g) => g.id === props.activeGroupId),
   );
 
-  const toggle = () => setOpen((v) => !v);
+  const { isLocked, assignableGroups } = useActiveGroupPickerState({
+    groups,
+    activeGroupId,
+  });
+
+  const toggle = () => {
+    if (isLocked()) return;
+    setOpen((v) => !v);
+  };
 
   const selectGroup = (groupId: string | null) => {
+    if (isLocked()) return;
     props.onActiveGroupChange?.(groupId);
     setOpen(false);
   };
 
   const value: ActiveGroupPickerContextValue = {
-    groups,
+    assignableGroups,
     activeGroupId,
     activeGroup,
+    isLocked,
     isOpen,
     setOpen,
     toggle,
@@ -122,6 +139,24 @@ const ChevronDownIcon: Component<{ rotated: boolean }> = (props) => (
   </svg>
 );
 
+const LockIcon: Component = () => (
+  <svg
+    width="9"
+    height="9"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class="text-muted-foreground shrink-0"
+    aria-hidden="true"
+  >
+    <rect x="3" y="11" width="18" height="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
 const FolderIcon: Component = () => (
   <svg
     width="9"
@@ -146,27 +181,47 @@ const ActiveGroupPickerTrigger: Component<
   const [local, rest] = splitProps(props, ["class"]);
   const label = () => ctx.activeGroup()?.name ?? "Ungrouped";
 
+  // Locked: static, non-interactive. The selection lives in a ticketed
+  // group — reassignment is forbidden by ticket-lock.
   return (
-    <Button
-      data-react-grab-ignore-events
-      type="button"
-      variant="ghost"
-      class={cn(
-        "h-auto gap-1 px-0.5 -mx-0.5 py-0 text-[11px] font-medium leading-none text-muted-foreground rounded-sm shadow-none",
-        local.class,
-      )}
-      aria-haspopup="listbox"
-      aria-expanded={ctx.isOpen()}
-      onClick={(e) => {
-        e.stopImmediatePropagation();
-        ctx.toggle();
-      }}
-      {...rest}
+    <Show
+      when={!ctx.isLocked()}
+      fallback={
+        <div
+          data-react-grab-ignore-events
+          data-react-grab-active-group-picker-locked
+          class={cn(
+            "flex items-center gap-1 px-0.5 -mx-0.5 py-0 text-[11px] font-medium leading-none text-muted-foreground",
+            local.class,
+          )}
+          title={`Locked — ${ctx.activeGroup()?.jiraTicketId ?? "ticketed"}`}
+        >
+          <LockIcon />
+          <span>{label()}</span>
+        </div>
+      }
     >
-      <FolderIcon />
-      <span>{label()}</span>
-      <ChevronDownIcon rotated={ctx.isOpen()} />
-    </Button>
+      <Button
+        data-react-grab-ignore-events
+        type="button"
+        variant="ghost"
+        class={cn(
+          "h-auto gap-1 px-0.5 -mx-0.5 py-0 text-[11px] font-medium leading-none text-muted-foreground rounded-sm shadow-none",
+          local.class,
+        )}
+        aria-haspopup="listbox"
+        aria-expanded={ctx.isOpen()}
+        onClick={(e) => {
+          e.stopImmediatePropagation();
+          ctx.toggle();
+        }}
+        {...rest}
+      >
+        <FolderIcon />
+        <span>{label()}</span>
+        <ChevronDownIcon rotated={ctx.isOpen()} />
+      </Button>
+    </Show>
   );
 };
 
@@ -175,7 +230,7 @@ const ActiveGroupPickerContent: Component = () => {
   return (
     <Show when={ctx.isOpen()}>
       <GroupPickerFlyout
-        groups={ctx.groups()}
+        groups={ctx.assignableGroups()}
         activeGroupId={ctx.activeGroupId() ?? null}
         onSelect={ctx.selectGroup}
         onClose={() => ctx.setOpen(false)}

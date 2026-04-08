@@ -948,7 +948,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       );
 
       const updatedCommentItems = addCommentItem({
-        groupId: null,
+        // Respect the picker's active group, if any. Falls back to
+        // ungrouped when the user hasn't picked one.
+        groupId: selectionGroups.activeGroupId(),
         content,
         elementName: elementName ?? "element",
         tagName: tagName ?? "div",
@@ -3785,6 +3787,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           labelId = `${idPrefix}-label-${item.id}`;
           actions.addLabelInstance({
             id: labelId,
+            itemId: item.id,
             bounds,
             tagName: item.tagName,
             componentName: item.componentName,
@@ -4517,6 +4520,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onDeleteGroup={selectionGroups.handleDeleteGroup}
                 onActiveGroupChange={selectionGroups.setActiveGroupId}
                 onMoveItem={selectionGroups.handleMoveItem}
+                onRemoveItem={(itemId) => {
+                  selectionGroups.handleRemoveItem(itemId);
+                }}
                 onToggleGroupRevealed={visibility.handleToggleGroup}
                 onFilterVisibilityChange={visibility.setGroupsRevealed}
                 onJiraResolved={(groupId) => {

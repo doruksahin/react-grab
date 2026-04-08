@@ -46,3 +46,23 @@ export const createSyntheticGroupForItem = (
  */
 export const isSynthetic = (group: SelectionGroup): boolean =>
   group.synthetic === true;
+
+/**
+ * GC pass: drop any synthetic groups that no longer have items pointing
+ * at them. Real groups survive emptiness by design — only synthetic
+ * backing stores are garbage-collected.
+ *
+ * Pure function. The caller is responsible for persisting the result.
+ * Every selection mutation that can empty a group (move, remove) should
+ * run through this before setting the new groups state.
+ */
+export const gcEmptySyntheticGroups = (
+  groups: SelectionGroup[],
+  items: { groupId: string | null }[],
+): SelectionGroup[] => {
+  const occupied = new Set<string>();
+  for (const item of items) {
+    if (item.groupId !== null) occupied.add(item.groupId);
+  }
+  return groups.filter((g) => !isSynthetic(g) || occupied.has(g.id));
+};

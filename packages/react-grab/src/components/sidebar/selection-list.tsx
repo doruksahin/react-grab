@@ -7,6 +7,9 @@ interface SelectionListProps {
   items: CommentItem[];
   syncServerUrl?: string;
   syncWorkspace?: string;
+  /** Remove handler. Undefined disables the × button for every card —
+   *  GroupDetailView passes undefined when the group is ticketed. */
+  onRemoveItem?: (itemId: string) => void;
 }
 
 export const SelectionList: Component<SelectionListProps> = (props) => {
@@ -35,6 +38,11 @@ export const SelectionList: Component<SelectionListProps> = (props) => {
               syncServerUrl={props.syncServerUrl}
               syncWorkspace={props.syncWorkspace}
               scrollRoot={() => scrollContainerRef ?? null}
+              onRemoveItem={
+                props.onRemoveItem
+                  ? () => props.onRemoveItem?.(item.id)
+                  : undefined
+              }
             />
           )}
         </For>

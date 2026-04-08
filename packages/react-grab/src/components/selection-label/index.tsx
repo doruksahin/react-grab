@@ -7,9 +7,9 @@ import {
   on,
   onMount,
   onCleanup,
-} from "solid-js";
-import type { Component } from "solid-js";
-import type { ArrowPosition, SelectionLabelProps } from "../../types.js";
+} from 'solid-js';
+import type { Component } from 'solid-js';
+import type { ArrowPosition, SelectionLabelProps } from '../../types.js';
 import {
   IME_COMPOSING_KEY_CODE,
   VIEWPORT_MARGIN_PX,
@@ -18,32 +18,32 @@ import {
   LABEL_GAP_PX,
   SELECTION_LABEL_OFFSCREEN_PX,
   TEXTAREA_MAX_HEIGHT_PX,
-} from "../../constants.js";
-import { autoResizeTextarea } from "../../utils/auto-resize-textarea.js";
-import { getArrowSize } from "../../utils/get-arrow-size.js";
-import { isKeyboardEventTriggeredByInput } from "../../utils/is-keyboard-event-triggered-by-input.js";
-import { cn } from "../../utils/cn.js";
-import { getApiBaseUrl } from "../../generated/custom-fetch.js";
-import { getTagDisplay } from "../../utils/get-tag-display.js";
-import { formatShortcut } from "../../utils/format-shortcut.js";
-import { IconReply } from "../icons/icon-reply.jsx";
-import { IconSubmit } from "../icons/icon-submit.jsx";
-import { SelectionStatusBadge } from "./status-badge.js";
-import { ActiveGroupPicker } from "../../features/selection-groups/components/active-group-picker.jsx";
-import { IconLoader } from "../icons/icon-loader.jsx";
-import { Arrow } from "./arrow.js";
-import { TagBadge } from "./tag-badge.js";
-import { BottomSection } from "./bottom-section.js";
-import { JiraMeta } from "./jira-meta.js";
-import { DiscardPrompt } from "./discard-prompt.js";
-import { ErrorView } from "./error-view.js";
-import { CompletionView } from "./completion-view.js";
-import { ArrowNavigationMenu } from "./arrow-navigation-menu.js";
+} from '../../constants.js';
+import { autoResizeTextarea } from '../../utils/auto-resize-textarea.js';
+import { getArrowSize } from '../../utils/get-arrow-size.js';
+import { isKeyboardEventTriggeredByInput } from '../../utils/is-keyboard-event-triggered-by-input.js';
+import { cn } from '../../utils/cn.js';
+import { getApiBaseUrl } from '../../generated/custom-fetch.js';
+import { getTagDisplay } from '../../utils/get-tag-display.js';
+import { formatShortcut } from '../../utils/format-shortcut.js';
+import { IconReply } from '../icons/icon-reply.jsx';
+import { IconSubmit } from '../icons/icon-submit.jsx';
+import { SelectionStatusBadge } from './status-badge.js';
+import { ActiveGroupPicker } from '../../features/selection-groups/components/active-group-picker.jsx';
+import { IconLoader } from '../icons/icon-loader.jsx';
+import { Arrow } from './arrow.js';
+import { TagBadge } from './tag-badge.js';
+import { BottomSection } from './bottom-section.js';
+import { JiraMeta } from './jira-meta.js';
+import { DiscardPrompt } from './discard-prompt.js';
+import { ErrorView } from './error-view.js';
+import { CompletionView } from './completion-view.js';
+import { ArrowNavigationMenu } from './arrow-navigation-menu.js';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "../ui/collapsible.jsx";
+} from '../ui/collapsible.jsx';
 
 interface LabelPosition {
   left: number;
@@ -66,8 +66,8 @@ const DEFAULT_OFFSCREEN_POSITION: LabelPosition = {
 // lib-default `media://{fileId}` URLs into sync-server-relative
 // `/jira-attachment/{id}` paths — we prepend the API base here.
 type CommentSegment =
-  | { kind: "text"; text: string }
-  | { kind: "image"; alt: string; url: string };
+  | { kind: 'text'; text: string }
+  | { kind: 'image'; alt: string; url: string };
 
 const IMG_RE = /!\[([^\]]*)\]\(([^)]+)\)/g;
 
@@ -79,14 +79,14 @@ const parseCommentBody = (body: string): CommentSegment[] => {
     const [full, alt, rawUrl] = match;
     const index = match.index ?? 0;
     if (index > lastIndex) {
-      segments.push({ kind: "text", text: body.slice(lastIndex, index) });
+      segments.push({ kind: 'text', text: body.slice(lastIndex, index) });
     }
-    const resolved = rawUrl.startsWith("/") ? `${base}${rawUrl}` : rawUrl;
-    segments.push({ kind: "image", alt, url: resolved });
+    const resolved = rawUrl.startsWith('/') ? `${base}${rawUrl}` : rawUrl;
+    segments.push({ kind: 'image', alt, url: resolved });
     lastIndex = index + full.length;
   }
   if (lastIndex < body.length) {
-    segments.push({ kind: "text", text: body.slice(lastIndex) });
+    segments.push({ kind: 'text', text: body.slice(lastIndex) });
   }
   return segments;
 };
@@ -96,7 +96,7 @@ const CommentBody: Component<{ body: string }> = (props) => {
     <div class="text-muted-foreground whitespace-pre-wrap wrap-break-word">
       <For each={parseCommentBody(props.body)}>
         {(seg) =>
-          seg.kind === "text" ? (
+          seg.kind === 'text' ? (
             <span>{seg.text}</span>
           ) : (
             <img
@@ -133,28 +133,30 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
   const [isShaking, setIsShaking] = createSignal(false);
 
   const canInteract = () =>
-    props.status !== "copying" &&
-    props.status !== "copied" &&
-    props.status !== "fading" &&
-    props.status !== "error";
+    props.status !== 'copying' &&
+    props.status !== 'copied' &&
+    props.status !== 'fading' &&
+    props.status !== 'error';
 
   const isCompletedStatus = () =>
-    props.status === "copied" || props.status === "fading";
+    props.status === 'copied' || props.status === 'fading';
 
   const shouldEnablePointerEvents = (): boolean => {
     if (props.isPromptMode) return true;
     if (isCompletedStatus() && (props.onDismiss || props.onShowContextMenu)) {
       return true;
     }
-    if (props.status === "copying" && props.onAbort) return true;
+    if (props.status === 'copying' && props.onAbort) return true;
     if (
-      props.status === "error" &&
+      props.status === 'error' &&
       (props.onAcknowledgeError || props.onRetry)
     ) {
       return true;
     }
     if (props.arrowNavigationState?.isVisible) return true;
     if (props.inspectNavigationState?.isVisible) return true;
+    // The × remove button needs clicks to land.
+    if (props.onRemoveItem && !props.jiraTicketId) return true;
     return false;
   };
 
@@ -172,11 +174,11 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
     if (isKeyboardEventTriggeredByInput(event)) return;
 
     const isEnterToExpand =
-      event.code === "Enter" && !props.isPromptMode && canInteract();
+      event.code === 'Enter' && !props.isPromptMode && canInteract();
     const isCtrlCToAbort =
-      event.code === "KeyC" &&
+      event.code === 'KeyC' &&
       event.ctrlKey &&
-      props.status === "copying" &&
+      props.status === 'copying' &&
       props.onAbort;
 
     if (isEnterToExpand) {
@@ -212,26 +214,26 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
       setPanelWidth(panelRef.getBoundingClientRect().width);
       resizeObserver.observe(panelRef);
     }
-    window.addEventListener("scroll", handleViewportChange, true);
-    window.addEventListener("resize", handleViewportChange);
-    window.visualViewport?.addEventListener("resize", handleViewportChange);
-    window.visualViewport?.addEventListener("scroll", handleViewportChange);
-    window.addEventListener("keydown", handleGlobalKeyDown, { capture: true });
+    window.addEventListener('scroll', handleViewportChange, true);
+    window.addEventListener('resize', handleViewportChange);
+    window.visualViewport?.addEventListener('resize', handleViewportChange);
+    window.visualViewport?.addEventListener('scroll', handleViewportChange);
+    window.addEventListener('keydown', handleGlobalKeyDown, { capture: true });
   });
 
   onCleanup(() => {
     resizeObserver?.disconnect();
-    window.removeEventListener("scroll", handleViewportChange, true);
-    window.removeEventListener("resize", handleViewportChange);
-    window.visualViewport?.removeEventListener("resize", handleViewportChange);
-    window.visualViewport?.removeEventListener("scroll", handleViewportChange);
-    window.removeEventListener("keydown", handleGlobalKeyDown, {
+    window.removeEventListener('scroll', handleViewportChange, true);
+    window.removeEventListener('resize', handleViewportChange);
+    window.visualViewport?.removeEventListener('resize', handleViewportChange);
+    window.visualViewport?.removeEventListener('scroll', handleViewportChange);
+    window.removeEventListener('keydown', handleGlobalKeyDown, {
       capture: true,
     });
   });
 
   const elementIdentity = () =>
-    `${props.tagName ?? ""}:${props.componentName ?? ""}`;
+    `${props.tagName ?? ''}:${props.componentName ?? ''}`;
 
   // Reset collapse state on new element selection
   const positionComputation = createMemo(
@@ -334,15 +336,15 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
       const arrowMinPx = Math.min(ARROW_LABEL_MARGIN_PX, labelHalfWidth);
       const arrowMaxPx = Math.max(
         labelWidth - ARROW_LABEL_MARGIN_PX,
-        labelHalfWidth,
+        labelHalfWidth
       );
       const clampedArrowCenterPx = Math.max(
         arrowMinPx,
-        Math.min(arrowMaxPx, arrowCenterPx),
+        Math.min(arrowMaxPx, arrowCenterPx)
       );
       const arrowLeftOffset = clampedArrowCenterPx - labelHalfWidth;
 
-      const computedArrowPosition: ArrowPosition = fitsBelow ? "bottom" : "top";
+      const computedArrowPosition: ArrowPosition = fitsBelow ? 'bottom' : 'top';
 
       return {
         position: {
@@ -361,20 +363,20 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
       position: DEFAULT_OFFSCREEN_POSITION,
       computedArrowPosition: null,
       hadValidBounds: false,
-      elementIdentity: "",
-    } satisfies PositionResult,
+      elementIdentity: '',
+    } satisfies PositionResult
   );
 
   const arrowPosition = () =>
-    positionComputation().computedArrowPosition ?? "bottom";
+    positionComputation().computedArrowPosition ?? 'bottom';
   const hadValidBounds = () => positionComputation().hadValidBounds;
 
   createEffect(
     on(
       () => props.selectionLabelShakeCount,
       () => setIsShaking(true),
-      { defer: true },
-    ),
+      { defer: true }
+    )
   );
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -384,8 +386,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
 
     event.stopImmediatePropagation();
 
-    const isEnterWithoutShift = event.code === "Enter" && !event.shiftKey;
-    const isEscape = event.code === "Escape";
+    const isEnterWithoutShift = event.code === 'Enter' && !event.shiftKey;
+    const isEscape = event.code === 'Escape';
 
     if (isEnterWithoutShift) {
       event.preventDefault();
@@ -438,7 +440,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
   };
 
   const shouldPersistDuringFade = () =>
-    hadValidBounds() && (isCompletedStatus() || props.status === "error");
+    hadValidBounds() && (isCompletedStatus() || props.status === 'error');
 
   return (
     <Show
@@ -452,15 +454,15 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         data-react-grab-ignore-events
         data-react-grab-selection-label
         class={cn(
-          "fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out",
+          'fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out'
         )}
         style={{
           top: `${positionComputation().position.top}px`,
           left: `${positionComputation().position.left}px`,
           transform: `translateX(calc(-50% + ${positionComputation().position.edgeOffsetX}px))`,
-          "z-index": "var(--z-overlay)",
-          "pointer-events": shouldEnablePointerEvents() ? "auto" : "none",
-          opacity: props.status === "fading" || isInternalFading() ? 0 : 1,
+          'z-index': 'var(--z-overlay)',
+          'pointer-events': shouldEnablePointerEvents() ? 'auto' : 'none',
+          opacity: props.status === 'fading' || isInternalFading() ? 0 : 1,
         }}
         onPointerDown={handleContainerPointerDown}
         onClick={(event) => {
@@ -481,7 +483,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         <Show when={isCompletedStatus() && !props.error}>
           <CompletionView
             statusText={
-              props.hasAgent ? (props.statusText ?? "Completed") : "Copied"
+              props.hasAgent ? (props.statusText ?? 'Completed') : 'Copied'
             }
             supportsUndo={props.supportsUndo}
             supportsFollowUp={props.supportsFollowUp}
@@ -498,31 +500,26 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         <div
           ref={panelRef}
           class={cn(
-            "relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]",
-            "bg-popover",
-            isShaking() && "animate-shake",
+            'relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]',
+            'bg-popover',
+            isShaking() && 'animate-shake'
           )}
           style={{
-            display: isCompletedStatus() && !props.error ? "none" : undefined,
+            display: isCompletedStatus() && !props.error ? 'none' : undefined,
           }}
           onAnimationEnd={() => setIsShaking(false)}
         >
-          <SelectionStatusBadge
-            groupStatus={props.groupStatus}
-            jiraTicketId={props.jiraTicketId}
-            jiraUrl={props.jiraUrl}
-          />
-          <Show when={props.status === "copying" && !props.isPendingAbort}>
+          <Show when={props.status === 'copying' && !props.isPendingAbort}>
             <div
               class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit max-w-[280px]"
               classList={{
-                "min-w-[150px]": Boolean(props.hasAgent && props.inputValue),
+                'min-w-[150px]': Boolean(props.hasAgent && props.inputValue),
               }}
             >
               <div class="contain-layout shrink-0 flex items-center gap-1 py-1.5 px-2 w-full h-fit">
                 <IconLoader size={13} class="text-muted-foreground shrink-0" />
                 <span class="shimmer-text text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap">
-                  {props.statusText ?? "Grabbing…"}
+                  {props.statusText ?? 'Grabbing…'}
                 </span>
               </div>
               <Show when={props.hasAgent && props.inputValue}>
@@ -533,12 +530,12 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                       data-react-grab-ignore-events
                       class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 opacity-50 wrap-break-word overflow-y-auto"
                       style={{
-                        "field-sizing": "content",
-                        "min-height": "16px",
-                        "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px`,
-                        "scrollbar-width": "none",
+                        'field-sizing': 'content',
+                        'min-height': '16px',
+                        'max-height': `${TEXTAREA_MAX_HEIGHT_PX}px`,
+                        'scrollbar-width': 'none',
                       }}
-                      value={props.inputValue ?? ""}
+                      value={props.inputValue ?? ''}
                       placeholder="Add context"
                       rows={1}
                       disabled
@@ -563,7 +560,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
             </div>
           </Show>
 
-          <Show when={props.status === "copying" && props.isPendingAbort}>
+          <Show when={props.status === 'copying' && props.isPendingAbort}>
             <DiscardPrompt
               onConfirm={props.onConfirmAbort}
               onCancel={props.onCancelAbort}
@@ -574,17 +571,17 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
             <div
               class="contain-layout shrink-0 flex flex-col items-start w-fit h-fit"
               classList={{
-                "min-w-[100px]":
+                'min-w-[100px]':
                   isArrowNavigationVisible() || isInspectNavigationVisible(),
               }}
             >
               <div
                 class="contain-layout shrink-0 flex items-center gap-1 w-fit h-fit px-2"
                 classList={{
-                  "py-1.5":
+                  'py-1.5':
                     !isArrowNavigationVisible() &&
                     !isInspectNavigationVisible(),
-                  "pt-1.5 pb-1":
+                  'pt-1.5 pb-1':
                     isArrowNavigationVisible() || isInspectNavigationVisible(),
                 }}
               >
@@ -601,6 +598,39 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                       : Boolean(props.isContextMenuOpen)
                   }
                 />
+                {/* Ticket-lock: the × button is hidden when the selection's
+                    group has a JIRA ticket. Ticketed selections are frozen
+                    — no move, no remove. */}
+                <Show when={props.onRemoveItem && !props.jiraTicketId}>
+                  <button
+                    data-react-grab-ignore-events
+                    data-react-grab-remove
+                    type="button"
+                    aria-label="Remove selection"
+                    title="Remove selection"
+                    class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-red-500 text-white cursor-pointer interactive-scale"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={(event) => {
+                      event.stopImmediatePropagation();
+                      props.onRemoveItem?.();
+                    }}
+                  >
+                    <svg
+                      width="8"
+                      height="8"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M6 6 18 18" />
+                      <path d="M18 6 6 18" />
+                    </svg>
+                  </button>
+                </Show>
               </div>
               <Show when={props.arrowNavigationState?.isVisible}>
                 <ArrowNavigationMenu
@@ -639,10 +669,10 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                           data-react-grab-action-cycle-item={item.label.toLowerCase()}
                           class="contain-layout flex items-center justify-between w-full px-2 py-1 transition-colors"
                           classList={{
-                            "bg-accent":
+                            'bg-accent':
                               itemIndex() ===
                               (props.actionCycleState?.activeIndex ?? 0),
-                            "rounded-b-[6px]":
+                            'rounded-b-[6px]':
                               itemIndex() ===
                               (props.actionCycleState?.items ?? []).length - 1,
                           }}
@@ -679,6 +709,38 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   onHoverChange={handleTagHoverChange}
                   forceShowIcon
                 />
+                {/* Ticket-lock: × hidden when the selection's group is
+                    ticketed. Ticketed selections are frozen. */}
+                <Show when={props.onRemoveItem && !props.jiraTicketId}>
+                  <button
+                    data-react-grab-ignore-events
+                    data-react-grab-remove
+                    type="button"
+                    aria-label="Remove selection"
+                    title="Remove selection"
+                    class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-red-500 text-white cursor-pointer interactive-scale"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={(event) => {
+                      event.stopImmediatePropagation();
+                      props.onRemoveItem?.();
+                    }}
+                  >
+                    <svg
+                      width="8"
+                      height="8"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M6 6 18 18" />
+                      <path d="M18 6 6 18" />
+                    </svg>
+                  </button>
+                </Show>
               </div>
               <ActiveGroupPicker
                 groups={props.groups}
@@ -706,7 +768,10 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 </Show>
                 <Show when={props.replyToPrompt}>
                   <div class="flex items-center gap-1 w-full mb-1 overflow-hidden">
-                    <IconReply size={10} class="text-muted-foreground shrink-0" />
+                    <IconReply
+                      size={10}
+                      class="text-muted-foreground shrink-0"
+                    />
                     <span class="text-muted-foreground text-[11px] leading-3 font-medium truncate italic">
                       {props.replyToPrompt}
                     </span>
@@ -714,7 +779,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 </Show>
                 <div
                   class="shrink-0 flex justify-between items-end w-full min-h-4"
-                  style={{ "padding-left": props.replyToPrompt ? "14px" : "0" }}
+                  style={{ 'padding-left': props.replyToPrompt ? '14px' : '0' }}
                 >
                   <textarea
                     ref={(element) => {
@@ -730,12 +795,12 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     data-react-grab-input
                     class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
                     style={{
-                      "field-sizing": "content",
-                      "min-height": "16px",
-                      "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px`,
-                      "scrollbar-width": "none",
+                      'field-sizing': 'content',
+                      'min-height': '16px',
+                      'max-height': `${TEXTAREA_MAX_HEIGHT_PX}px`,
+                      'scrollbar-width': 'none',
                     }}
-                    value={props.inputValue ?? ""}
+                    value={props.inputValue ?? ''}
                     onInput={handleInput}
                     onKeyDown={handleKeyDown}
                     placeholder="Add context"
@@ -767,7 +832,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                       <div class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1 gap-2 max-h-[200px] overflow-y-auto">
                         <For
                           each={(props.jiraComments ?? []).filter(
-                            (c) => !c.parentId,
+                            (c) => !c.parentId
                           )}
                         >
                           {(root) => (
@@ -778,7 +843,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                               </div>
                               <For
                                 each={(props.jiraComments ?? []).filter(
-                                  (c) => c.parentId === root.id,
+                                  (c) => c.parentId === root.id
                                 )}
                               >
                                 {(reply) => (

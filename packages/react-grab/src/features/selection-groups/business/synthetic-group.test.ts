@@ -3,6 +3,7 @@ import {
   createSyntheticGroupForItem,
   isSynthetic,
   inferSyntheticGroupName,
+  gcEmptySyntheticGroups,
 } from "./synthetic-group.js";
 import type { CommentItem } from "../../../types.js";
 import type { SelectionGroup } from "../types.js";
@@ -59,6 +60,48 @@ describe("synthetic-group", () => {
     it("is false for groups with synthetic === false", () => {
       const g = { id: "g1", name: "x", createdAt: 0, revealed: false, synthetic: false } as SelectionGroup;
       expect(isSynthetic(g)).toBe(false);
+    });
+  });
+
+  describe("gcEmptySyntheticGroups", () => {
+    const real = { id: "r1", name: "R", createdAt: 0, revealed: false } as SelectionGroup;
+    const synthA = { id: "s1", name: "A", createdAt: 0, revealed: false, synthetic: true } as SelectionGroup;
+    const synthB = { id: "s2", name: "B", createdAt: 0, revealed: false, synthetic: true } as SelectionGroup;
+
+    it("keeps real groups even when empty", () => {
+      const result = gcEmptySyntheticGroups([real], []);
+      expect(result).toEqual([real]);
+    });
+    it("removes synthetic groups with no items", () => {
+      const result = gcEmptySyntheticGroups([real, synthA], []);
+      expect(result).toEqual([real]);
+    });
+    it("keeps synthetic groups that still have items", () => {
+      const result = gcEmptySyntheticGroups(
+        [real, synthA],
+        [{ groupId: "s1" }],
+      );
+      expect(result).toEqual([real, synthA]);
+    });
+    it("removes only the empty synthetic groups when multiple exist", () => {
+      const result = gcEmptySyntheticGroups(
+        [real, synthA, synthB],
+        [{ groupId: "s1" }],
+      );
+      expect(result).toEqual([real, synthA]);
+    });
+    it("ignores ungrouped items when computing occupancy", () => {
+      const result = gcEmptySyntheticGroups(
+        [synthA],
+        [{ groupId: null }, { groupId: null }],
+      );
+      expect(result).toEqual([]);
+    });
+    it("is a pure function — does not mutate input", () => {
+      const groups = [real, synthA];
+      const snapshot = [...groups];
+      gcEmptySyntheticGroups(groups, []);
+      expect(groups).toEqual(snapshot);
     });
   });
 });

@@ -224,8 +224,10 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             jiraLabels={instance().jiraLabels}
             jiraComments={instance().jiraComments}
             groups={userFacingGroups()}
-            activeGroupId={props.activeGroupId}
-            onActiveGroupChange={props.onActiveGroupChange}
+            activeGroupId={instance().groupId}
+            onActiveGroupChange={(groupId) =>
+              props.onMoveItem?.(instance().id, groupId ?? null)
+            }
             onAddGroup={props.onAddGroup}
             onShowContextMenu={(() => {
               const currentInstance = instance();
@@ -244,6 +246,11 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             onHoverChange={(isHovered) =>
               props.onLabelInstanceHoverChange?.(instance().id, isHovered)
             }
+            onRemoveItem={(() => {
+              const itemId = instance().itemId;
+              if (!itemId || !props.onRemoveItem) return undefined;
+              return () => props.onRemoveItem?.(itemId);
+            })()}
           />
         )}
       </Index>
@@ -342,6 +349,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onTicketCreated={props.onTicketCreated}
           onFilterVisibilityChange={props.onFilterVisibilityChange}
           onCreateTicketForLooseItem={props.onCreateTicketForLooseItem}
+          onRemoveItem={props.onRemoveItem}
           looseTicketDialog={props.looseTicketDialog}
           onLooseTicketDialogClose={props.onLooseTicketDialogClose}
           onClose={() => {
