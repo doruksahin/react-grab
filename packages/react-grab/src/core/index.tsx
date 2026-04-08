@@ -143,7 +143,7 @@ import { copyHtmlPlugin } from "./plugins/copy-html.js";
 import { copyStylesPlugin } from "./plugins/copy-styles.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
-import { createSyntheticGroupForItem } from "../features/selection-groups/business/synthetic-group.js";
+import { createSyntheticGroupForItem, isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
 import { assignSelection } from "../features/selection-groups/business/selection-assignment.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { createJiraStatusPoller } from "../features/sidebar/jira-status-poller.js";
@@ -3842,6 +3842,25 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     } | null>(null);
 
     const handleCreateTicketForLooseItem = (item: CommentItem) => {
+      // If the item is already in a real (non-synthetic) group, opening
+      // a ticket for it must NOT migrate it into a synthetic group —
+      // that would strip it out of every user-facing surface (synthetic
+      // groups are hidden) and make it look like the selection became
+      // ungrouped. Instead, open the dialog against the existing real
+      // group so the ticket attaches to it directly.
+      const existingGroup = selectionGroups
+        .groups()
+        .find((g) => g.id === item.groupId);
+      if (existingGroup && !isSynthetic(existingGroup)) {
+        setLooseTicketDialog({
+          item,
+          syntheticGroup: existingGroup as SelectionGroupWithJira,
+        });
+        return;
+      }
+
+      // Loose path: no real group (or only a stale synthetic one) —
+      // create a fresh synthetic group and migrate the item into it.
       // 1. Build the synthetic group (pure — no side effects).
       const syntheticGroup = createSyntheticGroupForItem(item);
 
