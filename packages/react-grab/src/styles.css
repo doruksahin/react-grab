@@ -168,6 +168,25 @@
   z-index: var(--z-dialog);
 }
 
+/* Tiptap / ProseMirror editor prose styles */
+.jira-editor-content .ProseMirror {
+  outline: none;
+  min-height: 140px;
+}
+.jira-editor-content .ProseMirror p { margin: 0 0 0.5em; }
+.jira-editor-content .ProseMirror p:last-child { margin-bottom: 0; }
+.jira-editor-content .ProseMirror h1 { font-size: 1.25em; font-weight: 600; margin: 0.75em 0 0.25em; }
+.jira-editor-content .ProseMirror h2 { font-size: 1.1em; font-weight: 600; margin: 0.75em 0 0.25em; }
+.jira-editor-content .ProseMirror h3 { font-size: 1em; font-weight: 600; margin: 0.75em 0 0.25em; }
+.jira-editor-content .ProseMirror ul { list-style: disc; padding-left: 1.25em; margin: 0.25em 0; }
+.jira-editor-content .ProseMirror ol { list-style: decimal; padding-left: 1.25em; margin: 0.25em 0; }
+.jira-editor-content .ProseMirror li { margin: 0.1em 0; }
+.jira-editor-content .ProseMirror blockquote { border-left: 3px solid rgba(255,255,255,0.2); margin: 0.5em 0; padding-left: 0.75em; color: rgba(255,255,255,0.6); }
+.jira-editor-content .ProseMirror code { background: rgba(255,255,255,0.1); border-radius: 3px; padding: 0.1em 0.3em; font-family: monospace; font-size: 0.9em; }
+.jira-editor-content .ProseMirror pre { background: rgba(255,255,255,0.08); border-radius: 6px; padding: 0.75em 1em; margin: 0.5em 0; overflow-x: auto; }
+.jira-editor-content .ProseMirror pre code { background: none; padding: 0; }
+.jira-editor-content .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: rgba(255,255,255,0.3); pointer-events: none; float: left; height: 0; }
+
 /*
  * shadcn-solid design tokens — dark mode.
  *

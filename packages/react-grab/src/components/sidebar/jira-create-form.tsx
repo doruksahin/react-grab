@@ -9,6 +9,7 @@ import {
   Switch,
 } from "solid-js";
 import { Button } from "../ui/button.js";
+import { JiraEditor } from "./jira-editor.js";
 import {
   Select,
   SelectContent,
@@ -154,16 +155,10 @@ const JiraCreateFormReady: Component<JiraCreateFormReadyProps> = (props) => {
 
       {/* Description */}
       <div class="mb-3">
-        <label class="block text-[11px] text-muted-foreground mb-1">
-          Description{" "}
-          <span class="text-muted-foreground">(markdown — converted to ADF on submit)</span>
-        </label>
-        <textarea
-          class={`${textareaClass} font-mono`}
-          style={{ "pointer-events": "auto" }}
-          rows={6}
-          value={description()}
-          onInput={(e) => setDescription(e.currentTarget.value)}
+        <label class="block text-[11px] text-muted-foreground mb-1">Description</label>
+        <JiraEditor
+          initialValue={description()}
+          onChange={setDescription}
         />
       </div>
 
