@@ -1,5 +1,6 @@
 import type { ServerCommentItem } from "./generated/types.js";
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
+import type { SelectionGroupWithJira } from "./features/sidebar/jira-types.js";
 import type { SyncConfig, SyncStatus } from "./features/sync/types.js";
 
 export interface Position {
@@ -614,6 +615,9 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   jiraProjectKey?: string;
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
   onTicketCreated?: TicketCreatedCallback;
+  onCreateTicketForLooseItem?: (item: CommentItem) => void;
+  looseTicketDialog?: { item: CommentItem; syntheticGroup: SelectionGroupWithJira } | null;
+  onLooseTicketDialogClose?: () => void;
 }
 
 export interface GrabbedBox {

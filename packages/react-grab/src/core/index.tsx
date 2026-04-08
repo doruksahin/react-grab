@@ -143,6 +143,8 @@ import { copyHtmlPlugin } from "./plugins/copy-html.js";
 import { copyStylesPlugin } from "./plugins/copy-styles.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
+import { createSyntheticGroupForItem } from "../features/selection-groups/business/synthetic-group.js";
+import { assignSelection } from "../features/selection-groups/business/selection-assignment.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { createJiraStatusPoller } from "../features/sidebar/jira-status-poller.js";
 import {
@@ -3810,6 +3812,37 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     // When initSync loads groups from the server, flush them into the signal.
     registerGroupsLoadedCallback((loaded) => selectionGroups.setGroups(loaded));
 
+    // --- Loose-selection ticketing orchestrator ---
+    const [looseTicketDialog, setLooseTicketDialog] = createSignal<{
+      item: CommentItem;
+      syntheticGroup: SelectionGroupWithJira;
+    } | null>(null);
+
+    const handleCreateTicketForLooseItem = (item: CommentItem) => {
+      // 1. Build the synthetic group (pure — no side effects).
+      const syntheticGroup = createSyntheticGroupForItem(item);
+
+      // 2. Persist the new group alongside existing ones.
+      selectionGroups.persistGroups([
+        ...selectionGroups.groups(),
+        syntheticGroup,
+      ]);
+
+      // 3. Move the item into the synthetic group via the existing writer.
+      const updatedItems = assignSelection(commentItems(), item.id, syntheticGroup.id);
+      persistCommentItems(updatedItems);
+      setCommentItems(updatedItems);
+
+      // 4. Open the dialog. The synthetic group has no Jira fields yet — the
+      //    dialog only needs group.name (for the default summary) and group.id
+      //    (for the API call), both present on the bare SelectionGroup.
+      setLooseTicketDialog({
+        item,
+        syntheticGroup: syntheticGroup as unknown as SelectionGroupWithJira,
+      });
+    };
+    // --- end loose-selection ticketing orchestrator ---
+
     const computedLabelInstancesWithStatus = createMemo(() =>
       computedLabelInstances().map((instance) => {
         if (!instance.groupId) return instance;
@@ -4500,6 +4533,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                   );
                   selectionGroups.persistGroups(updated);
                 }}
+                onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
+                looseTicketDialog={looseTicketDialog()}
+                onLooseTicketDialogClose={() => setLooseTicketDialog(null)}
               />
             );
           }, rendererRoot);

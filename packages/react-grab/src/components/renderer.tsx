@@ -341,6 +341,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onJiraResolved={props.onJiraResolved}
           onTicketCreated={props.onTicketCreated}
           onFilterVisibilityChange={props.onFilterVisibilityChange}
+          onCreateTicketForLooseItem={props.onCreateTicketForLooseItem}
+          looseTicketDialog={props.looseTicketDialog}
+          onLooseTicketDialogClose={props.onLooseTicketDialogClose}
           onClose={() => {
             setSidebarOpen(false);
             setActiveDetailGroupId(null);
