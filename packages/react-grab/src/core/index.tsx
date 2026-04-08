@@ -3835,55 +3835,52 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     // When initSync loads groups from the server, flush them into the signal.
     registerGroupsLoadedCallback((loaded) => selectionGroups.setGroups(loaded));
 
-    // --- Loose-selection ticketing orchestrator ---
+    // --- Per-item ticketing orchestrator ---
+    // State shape is { group, items } regardless of whether `group` is
+    // a real user-facing group or a synthetic 1-item group — the dialog
+    // only needs group.name + group.id + the items to list in the
+    // description. One shape, one mount, no casts.
     const [looseTicketDialog, setLooseTicketDialog] = createSignal<{
-      item: CommentItem;
-      syntheticGroup: SelectionGroupWithJira;
+      group: SelectionGroupWithJira;
+      items: CommentItem[];
     } | null>(null);
 
     const handleCreateTicketForLooseItem = (item: CommentItem) => {
-      // If the item is already in a real (non-synthetic) group, opening
-      // a ticket for it must NOT migrate it into a synthetic group —
-      // that would strip it out of every user-facing surface (synthetic
-      // groups are hidden) and make it look like the selection became
-      // ungrouped. Instead, open the dialog against the existing real
-      // group so the ticket attaches to it directly.
+      // If the item is already in a real (non-synthetic) group, open
+      // the dialog against that group directly — no migration, no
+      // synthetic group. The dialog lists every item in the group so
+      // the description reflects the full group context.
       const existingGroup = selectionGroups
         .groups()
         .find((g) => g.id === item.groupId);
       if (existingGroup && !isSynthetic(existingGroup)) {
+        const groupItems = commentItems().filter(
+          (ci) => ci.groupId === existingGroup.id,
+        );
         setLooseTicketDialog({
-          item,
-          syntheticGroup: existingGroup as SelectionGroupWithJira,
+          group: existingGroup as SelectionGroupWithJira,
+          items: groupItems,
         });
         return;
       }
 
-      // Loose path: no real group (or only a stale synthetic one) —
-      // create a fresh synthetic group and migrate the item into it.
-      // 1. Build the synthetic group (pure — no side effects).
+      // Loose path: no real group — create a synthetic group and
+      // migrate the item into it so the ticket has a group to attach to.
       const syntheticGroup = createSyntheticGroupForItem(item);
-
-      // 2. Persist the new group alongside existing ones.
       selectionGroups.persistGroups([
         ...selectionGroups.groups(),
         syntheticGroup,
       ]);
-
-      // 3. Move the item into the synthetic group via the existing writer.
       const updatedItems = assignSelection(commentItems(), item.id, syntheticGroup.id);
       persistCommentItems(updatedItems);
       setCommentItems(updatedItems);
 
-      // 4. Open the dialog. The synthetic group has no Jira fields yet — the
-      //    dialog only needs group.name (for the default summary) and group.id
-      //    (for the API call), both present on the bare SelectionGroup.
       setLooseTicketDialog({
-        item,
-        syntheticGroup: syntheticGroup as unknown as SelectionGroupWithJira,
+        group: syntheticGroup as unknown as SelectionGroupWithJira,
+        items: [item],
       });
     };
-    // --- end loose-selection ticketing orchestrator ---
+    // --- end per-item ticketing orchestrator ---
 
     const computedLabelInstancesWithStatus = createMemo(() => {
       // Resolve each label instance's live groupId from the backing

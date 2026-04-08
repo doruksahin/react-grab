@@ -43,7 +43,7 @@ export interface SidebarProps {
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   onRemoveItem?: (itemId: string) => void;
   /** When set, opens the Jira create dialog for this loose item + its synthetic group. */
-  looseTicketDialog?: { item: CommentItem; syntheticGroup: SelectionGroupWithJira } | null;
+  looseTicketDialog?: { group: SelectionGroupWithJira; items: CommentItem[] } | null;
   onLooseTicketDialogClose?: () => void;
 }
 
@@ -270,23 +270,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           )}
         </Show>
 
-        <Show when={props.looseTicketDialog}>
-          {(state) => (
-            <JiraCreateDialog
-              workspaceId={props.syncWorkspace ?? ""}
-              syncServerUrl={props.syncServerUrl}
-              groupId={state().syntheticGroup.id}
-              group={state().syntheticGroup}
-              commentItems={[state().item]}
-              jiraProjectKey={props.jiraProjectKey ?? ""}
-              onTicketCreated={(groupId, ticketId, ticketUrl) => {
-                props.onTicketCreated?.(groupId, ticketId, ticketUrl);
-                props.onLooseTicketDialogClose?.();
-              }}
-              onClose={() => props.onLooseTicketDialogClose?.()}
-            />
-          )}
-        </Show>
     </div>
   );
 };

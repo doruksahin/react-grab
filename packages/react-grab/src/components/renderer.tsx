@@ -348,19 +348,18 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onMoveItem={props.onMoveItem}
         />
 
-      {/* Loose-selection JIRA dialog — mounted at renderer level so it can
-          be opened from the SelectionLabel "+ Create ticket" button even
-          when the sidebar is closed. The sidebar also mounts a copy for
-          its own LooseSelectionList flow; we only mount here when sidebar
-          is closed to avoid two dialogs at once. */}
-      <Show when={!sidebarOpen() && props.looseTicketDialog}>
+      {/* Single JIRA create-ticket dialog mount. Driven by the core's
+          per-item orchestrator state — shared between the sidebar's
+          LooseSelectionList flow and the SelectionLabel "+ Create ticket"
+          button, so the dialog works whether the sidebar is open or not. */}
+      <Show when={props.looseTicketDialog}>
         {(state) => (
           <JiraCreateDialog
             workspaceId={props.syncWorkspace ?? ""}
             syncServerUrl={props.syncServerUrl}
-            groupId={state().syntheticGroup.id}
-            group={state().syntheticGroup}
-            commentItems={[state().item]}
+            groupId={state().group.id}
+            group={state().group}
+            commentItems={state().items}
             jiraProjectKey={props.jiraProjectKey ?? ""}
             onTicketCreated={(groupId, ticketId, ticketUrl) => {
               props.onTicketCreated?.(groupId, ticketId, ticketUrl);

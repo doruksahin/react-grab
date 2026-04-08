@@ -620,7 +620,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
   onTicketCreated?: TicketCreatedCallback;
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
-  looseTicketDialog?: { item: CommentItem; syntheticGroup: SelectionGroupWithJira } | null;
+  looseTicketDialog?: { group: SelectionGroupWithJira; items: CommentItem[] } | null;
   onLooseTicketDialogClose?: () => void;
 }
 
