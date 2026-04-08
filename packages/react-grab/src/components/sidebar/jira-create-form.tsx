@@ -171,7 +171,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           <div class="flex gap-2 justify-end" style={{ "pointer-events": "auto" }}>
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               size="sm"
               style={{ "pointer-events": "auto" }}
               onClick={props.onClose}
