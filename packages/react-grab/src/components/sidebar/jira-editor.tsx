@@ -19,7 +19,10 @@ const ToolbarButton: Component<{
     type="button"
     title={props.title}
     disabled={props.disabled}
-    onClick={props.onClick}
+    onMouseDown={(e) => {
+      e.preventDefault(); // keep editor focus + selection intact
+      if (!props.disabled) props.onClick();
+    }}
     class={[
       "px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors",
       props.active
@@ -73,28 +76,28 @@ export const JiraEditor: Component<JiraEditorProps> = (props) => {
         <ToolbarButton
           title="Bold"
           active={active("bold")}
-          onClick={() => run(() => editor!.chain().focus().toggleBold().run())}
+          onClick={() => run(() => editor!.chain().toggleBold().run())}
         >
           <b>B</b>
         </ToolbarButton>
         <ToolbarButton
           title="Italic"
           active={active("italic")}
-          onClick={() => run(() => editor!.chain().focus().toggleItalic().run())}
+          onClick={() => run(() => editor!.chain().toggleItalic().run())}
         >
           <i>I</i>
         </ToolbarButton>
         <ToolbarButton
           title="Strike"
           active={active("strike")}
-          onClick={() => run(() => editor!.chain().focus().toggleStrike().run())}
+          onClick={() => run(() => editor!.chain().toggleStrike().run())}
         >
           <s>S</s>
         </ToolbarButton>
         <ToolbarButton
           title="Inline code"
           active={active("code")}
-          onClick={() => run(() => editor!.chain().focus().toggleCode().run())}
+          onClick={() => run(() => editor!.chain().toggleCode().run())}
         >
           {"<>"}
         </ToolbarButton>
@@ -104,21 +107,21 @@ export const JiraEditor: Component<JiraEditorProps> = (props) => {
         <ToolbarButton
           title="Heading 1"
           active={active("heading", { level: 1 })}
-          onClick={() => run(() => editor!.chain().focus().toggleHeading({ level: 1 }).run())}
+          onClick={() => run(() => editor!.chain().toggleHeading({ level: 1 }).run())}
         >
           H1
         </ToolbarButton>
         <ToolbarButton
           title="Heading 2"
           active={active("heading", { level: 2 })}
-          onClick={() => run(() => editor!.chain().focus().toggleHeading({ level: 2 }).run())}
+          onClick={() => run(() => editor!.chain().toggleHeading({ level: 2 }).run())}
         >
           H2
         </ToolbarButton>
         <ToolbarButton
           title="Heading 3"
           active={active("heading", { level: 3 })}
-          onClick={() => run(() => editor!.chain().focus().toggleHeading({ level: 3 }).run())}
+          onClick={() => run(() => editor!.chain().toggleHeading({ level: 3 }).run())}
         >
           H3
         </ToolbarButton>
@@ -128,28 +131,28 @@ export const JiraEditor: Component<JiraEditorProps> = (props) => {
         <ToolbarButton
           title="Bullet list"
           active={active("bulletList")}
-          onClick={() => run(() => editor!.chain().focus().toggleBulletList().run())}
+          onClick={() => run(() => editor!.chain().toggleBulletList().run())}
         >
           •—
         </ToolbarButton>
         <ToolbarButton
           title="Ordered list"
           active={active("orderedList")}
-          onClick={() => run(() => editor!.chain().focus().toggleOrderedList().run())}
+          onClick={() => run(() => editor!.chain().toggleOrderedList().run())}
         >
           1.
         </ToolbarButton>
         <ToolbarButton
           title="Blockquote"
           active={active("blockquote")}
-          onClick={() => run(() => editor!.chain().focus().toggleBlockquote().run())}
+          onClick={() => run(() => editor!.chain().toggleBlockquote().run())}
         >
           "
         </ToolbarButton>
         <ToolbarButton
           title="Code block"
           active={active("codeBlock")}
-          onClick={() => run(() => editor!.chain().focus().toggleCodeBlock().run())}
+          onClick={() => run(() => editor!.chain().toggleCodeBlock().run())}
         >
           {"{ }"}
         </ToolbarButton>
@@ -159,14 +162,14 @@ export const JiraEditor: Component<JiraEditorProps> = (props) => {
         <ToolbarButton
           title="Undo"
           disabled={!editor?.can().undo()}
-          onClick={() => run(() => editor!.chain().focus().undo().run())}
+          onClick={() => run(() => editor!.chain().undo().run())}
         >
           ↩
         </ToolbarButton>
         <ToolbarButton
           title="Redo"
           disabled={!editor?.can().redo()}
-          onClick={() => run(() => editor!.chain().focus().redo().run())}
+          onClick={() => run(() => editor!.chain().redo().run())}
         >
           ↪
         </ToolbarButton>
