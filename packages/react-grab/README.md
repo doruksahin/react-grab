@@ -193,6 +193,71 @@ actions: [
 
 See [`packages/react-grab/src/types.ts`](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts) for the full `Plugin`, `PluginHooks`, and `PluginConfig` interfaces.
 
+## Recording user interactions
+
+Opt-in plugin that captures clicks and form changes into Chrome DevTools Recorder JSON or numbered plain-text steps.
+
+### Wiring (script tag / IIFE)
+
+```html
+<script src="./dist/index.global.js"></script>
+<button id="rec-toggle">Toggle recording</button>
+<button id="rec-copy">Copy as steps</button>
+<script>
+  const mod = globalThis.__REACT_GRAB_MODULE__;
+  mod.registerPlugin(mod.recorderPlugin);
+  document.getElementById('rec-toggle').addEventListener('click',
+    () => mod.recorderPlugin.controls.toggle());
+  document.getElementById('rec-copy').addEventListener('click',
+    () => mod.recorderPlugin.controls.copyText()
+      .then(() => alert('copied'))
+      .catch((err) => alert('error: ' + err.message)));
+</script>
+```
+
+### Wiring (ESM)
+
+The `react-grab` package auto-initializes on import, so you do **not** call `init()` yourself. Use the top-level `registerPlugin` helper from the package.
+
+```ts
+import { registerPlugin, recorderPlugin } from "react-grab";
+
+registerPlugin(recorderPlugin);
+
+// Wire to your own UI:
+recorderPlugin.controls.toggle();          // start/stop capture
+await recorderPlugin.controls.copyJson();  // → Chrome DevTools Recorder JSON
+await recorderPlugin.controls.copyText();  // → numbered steps for agents
+```
+
+> **Do NOT** write `const api = init(); api.registerPlugin(recorderPlugin)`. The package has already auto-initialized by the time your import lands; a second `init()` call returns a noop API whose `registerPlugin` is a silent no-op. The plugin would never actually register.
+
+### Public controls
+
+| Method | Purpose |
+|---|---|
+| `start()` | Begin capturing pointerdown + change events |
+| `stop()` | Stop capturing |
+| `toggle()` | Flip capture state |
+| `copyJson()` | Write Chrome DevTools Recorder JSON to clipboard. **Returns a Promise that rejects with `Error("Recorder plugin is not registered")` if you call it before registering the plugin.** Wire your error path. |
+| `copyText()` | Write numbered plain-text steps to clipboard. Same rejection contract. |
+| `clear()` | Empty the buffer (does not stop capture) |
+| `isCapturing()` | Returns the current capture state as a boolean |
+
+### Privacy
+
+The recorder reuses the existing `data-react-grab-ignore` attribute (`USER_IGNORE_ATTRIBUTE`). Any element under an ancestor with `data-react-grab-ignore` is excluded from recordings. `<input type="password">` values are masked to `••••` regardless of attributes.
+
+```html
+<section data-react-grab-ignore>
+  <!-- nothing inside this section appears in recordings -->
+</section>
+```
+
+### Bundle note
+
+The recorder is included in the IIFE script-tag bundle (`dist/index.global.js`) unconditionally. ESM consumers receive it through the root export until a subpath export `react-grab/plugins/recorder` is added in a future release.
+
 ## Resources & Contributing Back
 
 Want to try it out? Check out [our demo](https://react-grab.com).
