@@ -2,6 +2,8 @@
 import type { SelectionGroupWithJira } from "./jira-types.js";
 import type { CommentItem } from "../../types.js";
 
+const APP_NAME = "ui-ticket-manager";
+
 /**
  * Generates the default JIRA ticket summary from the group name.
  */
@@ -28,7 +30,7 @@ export function defaultDescription(
         (item.commentText ? ` — ${item.commentText}` : ""),
     ),
     "",
-    "_Created by react-grab_",
+    `_Created by ${APP_NAME}_`,
   ];
   return lines.join("\n");
 }

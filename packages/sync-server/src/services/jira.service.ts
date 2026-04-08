@@ -3,7 +3,7 @@ import { markdownToAdf } from "marklassian";
 import { convertADFToMarkdown, type ADFDocument } from "adf-to-markdown";
 import type { SyncRepository, ScreenshotStore } from "../repositories/types.js";
 
-const APP_NAME = "UI Ticket Manager";
+const APP_NAME = "ui-ticket-manager";
 
 interface JiraConfig {
   baseUrl: string;

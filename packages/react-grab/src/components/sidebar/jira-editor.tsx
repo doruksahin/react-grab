@@ -26,8 +26,8 @@ const ToolbarButton: Component<{
     class={[
       "px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors",
       props.active
-        ? "bg-white/20 text-white"
-        : "text-white/60 hover:text-white hover:bg-white/10",
+        ? "bg-accent text-accent-foreground"
+        : "text-muted-foreground hover:text-foreground hover:bg-accent",
       props.disabled ? "opacity-30 cursor-not-allowed" : "",
     ].join(" ")}
     style={{ "pointer-events": "auto" }}
@@ -68,11 +68,11 @@ export const JiraEditor: Component<JiraEditorProps> = (props) => {
 
   return (
     <div
-      class="flex flex-col rounded border border-white/10 bg-black/20 overflow-hidden"
+      class="flex flex-col rounded border border-border bg-muted/40 overflow-hidden"
       style={{ "pointer-events": "auto" }}
     >
       {/* Toolbar */}
-      <div class="flex flex-wrap gap-0.5 px-2 py-1.5 border-b border-white/10 bg-white/5">
+      <div class="flex flex-wrap gap-0.5 px-2 py-1.5 border-b border-border bg-muted/50">
         <ToolbarButton
           title="Bold"
           active={active("bold")}
@@ -102,7 +102,7 @@ export const JiraEditor: Component<JiraEditorProps> = (props) => {
           {"<>"}
         </ToolbarButton>
 
-        <span class="w-px bg-white/10 mx-1 self-stretch" />
+        <span class="w-px bg-border mx-1 self-stretch" />
 
         <ToolbarButton
           title="Heading 1"
@@ -126,7 +126,7 @@ export const JiraEditor: Component<JiraEditorProps> = (props) => {
           H3
         </ToolbarButton>
 
-        <span class="w-px bg-white/10 mx-1 self-stretch" />
+        <span class="w-px bg-border mx-1 self-stretch" />
 
         <ToolbarButton
           title="Bullet list"
@@ -157,7 +157,7 @@ export const JiraEditor: Component<JiraEditorProps> = (props) => {
           {"{ }"}
         </ToolbarButton>
 
-        <span class="w-px bg-white/10 mx-1 self-stretch" />
+        <span class="w-px bg-border mx-1 self-stretch" />
 
         <ToolbarButton
           title="Undo"
@@ -178,7 +178,7 @@ export const JiraEditor: Component<JiraEditorProps> = (props) => {
       {/* Editor content area */}
       <div
         ref={editorEl}
-        class="jira-editor-content px-3 py-2 min-h-[140px] text-[12px] text-white/90 outline-none"
+        class="jira-editor-content px-3 py-2 min-h-[140px] text-[12px] text-foreground outline-none"
         style={{ "pointer-events": "auto" }}
       />
     </div>
