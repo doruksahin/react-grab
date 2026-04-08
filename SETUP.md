@@ -96,17 +96,53 @@ update `VITE_REACT_GRAB_SYNC_URL` in AdCreative to match).
 
 ## 3. How AdCreative is wired to this repo
 
-You don't need to do anything — it's already connected. For reference:
+On the current `AdCreative-Frontend-V2` branch you don't need to do anything —
+it's already connected. Sections 3.1 – 3.3 document the pieces that make it
+work so you can reproduce the wiring on a fresh clone, a new branch, or
+another Vite + React repo.
 
-**Package link.** `AdCreative-Frontend-V2/package.json` declares
-`"react-grab": "^0.1.29"`, but `pnpm-lock.yaml` resolves it to
-`link:../react-grab/packages/react-grab`. Running `pnpm install` in
-`AdCreative-Frontend-V2` preserves this symlink as long as this repo exists at
-the sibling path above.
+### 3.1 Add `react-grab` as a dependency
 
-**Runtime init.** `AdCreative-Frontend-V2/src/app/main.tsx` dynamically imports
-`react-grab/core` in dev only and calls `initSync({ ... })` with the sync
-server URL and workspace pulled from env vars:
+`AdCreative-Frontend-V2/package.json` declares:
+
+```json
+"dependencies": {
+  "react-grab": "^0.1.29"
+}
+```
+
+The published version string doesn't matter in dev — what actually resolves
+the package is the entry in `AdCreative-Frontend-V2/pnpm-lock.yaml`:
+
+```yaml
+react-grab:
+  specifier: ^0.1.29
+  version: link:../react-grab/packages/react-grab
+```
+
+This `link:` resolution is what points `node_modules/react-grab` back at this
+repo. As long as the committed `pnpm-lock.yaml` has that line, `pnpm install`
+preserves the symlink. If you ever need to recreate it from scratch (new repo,
+blown-away lockfile), force the local link explicitly:
+
+```bash
+cd AdCreative-Frontend-V2
+pnpm add link:../react-grab/packages/react-grab
+```
+
+Then verify:
+
+```bash
+ls -la node_modules/react-grab
+# → node_modules/react-grab -> ../../react-grab/packages/react-grab
+```
+
+### 3.2 Initialize react-grab in `src/app/main.tsx`
+
+Add this block at the **top** of `AdCreative-Frontend-V2/src/app/main.tsx`
+(before `import 'reflect-metadata'` and the rest of the bootstrap). It
+dynamically imports `react-grab/core` in dev only and calls `initSync({ ... })`
+with values from env vars:
 
 ```ts
 if (import.meta.env.DEV) {
@@ -118,15 +154,29 @@ if (import.meta.env.DEV) {
       enabled: Boolean(syncServerUrl && syncWorkspace),
       serverUrl: syncServerUrl,
       workspace: syncWorkspace,
+      syncRevealedState: false,
       jiraProjectKey: 'ATT',
-      options: { screenshot: { enabled: true } },
+      onSyncError: (error) => console.error('[react-grab sync]', error),
+      options: {
+        screenshot: { enabled: true },
+      },
     }).then(() => import('react-grab')),
   )
 }
 ```
 
-**Env vars.** `AdCreative-Frontend-V2/.env` is **gitignored**, so on a fresh
-clone you need to create it yourself. Add:
+Notes:
+- The `import.meta.env.DEV` guard ensures react-grab is completely absent from
+  production bundles.
+- `enabled: Boolean(...)` means if either env var is missing, the overlay
+  still loads but sync is disabled (no server calls, no sidebar persistence).
+- `jiraProjectKey: 'ATT'` is AdCreative's JIRA project — change if your team
+  uses a different key.
+
+### 3.3 Create `.env.local` with the sync server config
+
+`AdCreative-Frontend-V2/.env.local` is **gitignored**, so every developer
+creates their own. Add:
 
 ```dotenv
 # AdCreative-Frontend-V2/.env.local
@@ -134,8 +184,14 @@ VITE_REACT_GRAB_SYNC_URL=http://localhost:8787
 VITE_REACT_GRAB_SYNC_WORKSPACE=<your-name>-workspace
 ```
 
-Pick a unique `VITE_REACT_GRAB_SYNC_WORKSPACE` value to separate your data
-from teammates sharing the same deployed sync server.
+- `VITE_REACT_GRAB_SYNC_URL` must match the port your local `pnpm sync:dev` is
+  serving on (default `8787`).
+- Pick a unique `VITE_REACT_GRAB_SYNC_WORKSPACE` per developer to keep your
+  selections separate from teammates sharing the same sync server (even
+  locally this keeps test data tidy).
+
+Restart Vite (`pnpm dev` in AdCreative) after creating or editing
+`.env.local` — Vite only reads env files at startup.
 
 ---
 
