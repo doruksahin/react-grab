@@ -44,20 +44,27 @@ export class D1SyncRepository implements SyncRepository {
     workspaceId: string,
     items: Group[],
   ): Promise<void> {
-    if (items.length === 0) return;
-    const rows = items.map((item) => ({ ...item, workspaceId }));
-    await this.db
-      .insert(schema.groups)
-      .values(rows)
-      .onConflictDoUpdate({
-        target: [schema.groups.id, schema.groups.workspaceId],
-        set: {
-          name: sql`excluded.name`,
-          createdAt: sql`excluded.created_at`,
-          revealed: sql`excluded.revealed`,
-          // status and jiraTicketId deliberately NOT updated — preserve existing JIRA values
-        },
-      });
+    // Full-replace semantics to match the OpenAPI "Replace all groups"
+    // contract. This is what makes synthetic-group GC work: when the
+    // client drops an empty synthetic group from its list and PUTs,
+    // the row is removed from D1. Upsert-only can't express deletion.
+    //
+    // status and jiraTicketId are sent by the client (it owns the
+    // authoritative state after onTicketCreated fires), so a wipe +
+    // reinsert preserves them.
+    const deleteStmt = this.db
+      .delete(schema.groups)
+      .where(eq(schema.groups.workspaceId, workspaceId));
+    if (items.length === 0) {
+      await deleteStmt;
+      return;
+    }
+    await this.db.batch([
+      deleteStmt,
+      ...items.map((item) =>
+        this.db.insert(schema.groups).values({ ...item, workspaceId }),
+      ),
+    ]);
   }
 
   async updateGroupJira(workspaceId: string, groupId: string, jiraTicketId: string): Promise<void> {
@@ -106,5 +113,6 @@ function rowToGroup(
     revealed: rest.revealed ?? undefined,
     status: rest.status ?? undefined,
     jiraTicketId: rest.jiraTicketId ?? undefined,
+    synthetic: rest.synthetic ?? undefined,
   };
 }

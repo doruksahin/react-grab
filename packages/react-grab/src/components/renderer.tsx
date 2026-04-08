@@ -19,7 +19,7 @@ import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
-import { isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
+import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
@@ -30,7 +30,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   // groups. Sidebar receives the full list so LooseSelectionList can look up
   // synthetic groups by id when rendering ticketed loose cards.
   const userFacingGroups = createMemo(() =>
-    (props.groups ?? []).filter((g) => !isSynthetic(g)),
+    filterUserFacingGroups(props.groups ?? []),
   );
 
   // Performance instrumentation: bracket sidebar render time.

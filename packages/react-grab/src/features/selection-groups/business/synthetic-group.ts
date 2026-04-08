@@ -48,6 +48,20 @@ export const isSynthetic = (group: SelectionGroup): boolean =>
   group.synthetic === true;
 
 /**
+ * Single source of truth for "which groups should user-facing surfaces
+ * (label picker, group list, comments dropdown, stats, filters) show?".
+ * Synthetic groups are always invisible — their single item renders as
+ * a loose card via `isPresentedAsLoose`.
+ *
+ * Every consumer that renders a group list or a group picker should
+ * call this rather than reimplementing the filter. Prevents drift when
+ * the "user-facing" rule evolves (e.g. adding archived groups later).
+ */
+export const filterUserFacingGroups = <T extends SelectionGroup>(
+  groups: T[],
+): T[] => groups.filter((g) => !isSynthetic(g));
+
+/**
  * GC pass: drop any synthetic groups that no longer have items pointing
  * at them. Real groups survive emptiness by design — only synthetic
  * backing stores are garbage-collected.

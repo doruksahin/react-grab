@@ -11,6 +11,7 @@ export const SelectionGroup = z.object({
   revealed: z.boolean().optional(),
   status: GroupStatus.optional(),
   jiraTicketId: z.string().optional(),
+  synthetic: z.boolean().optional(),
 });
 
 export const SelectionGroupArray = z.array(SelectionGroup);

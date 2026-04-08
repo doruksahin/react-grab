@@ -24,7 +24,7 @@ import {
   type GroupedEntry,
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
-import { isSynthetic } from "../../features/selection-groups/business/synthetic-group.js";
+import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
 import { LooseSelectionList } from "./loose-selection-list.jsx";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 
@@ -62,7 +62,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // filter chips, stats bar, empty-state guard). The full props.groups list
   // is preserved so LooseSelectionList can look up synthetic groups by id.
   const userFacingGroups = createMemo(() =>
-    props.groups.filter((g) => !isSynthetic(g)),
+    filterUserFacingGroups(props.groups),
   );
 
   const [showLegend, setShowLegend] = createSignal(false);
@@ -192,7 +192,10 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 />
 
                 <Show
-                  when={userFacingGroups().length > 0}
+                  when={
+                    userFacingGroups().length > 0 ||
+                    props.commentItems.length > 0
+                  }
                   fallback={
                     <EmptyState
                       message="No selections yet."
@@ -214,20 +217,26 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                       onRemoveItem={props.onRemoveItem}
                     />
 
-                    <Show
-                      when={filteredGroups().length > 0}
-                      fallback={
-                        <EmptyState
-                          message={"No groups match the active filters."}
-                        />
-                      }
-                    >
+                    <Show when={filteredGroups().length > 0}>
                       <GroupList
                         groupedItems={filteredGroups()}
                         onGroupClick={(id: string, cardEl: HTMLElement) => {
                           lastFocusedCard = cardEl;
                           setActiveDetailGroupId(id);
                         }}
+                      />
+                    </Show>
+
+                    {/* "No groups match" only makes sense when groups
+                        actually exist but are fully filtered out. */}
+                    <Show
+                      when={
+                        userFacingGroups().length > 0 &&
+                        filteredGroups().length === 0
+                      }
+                    >
+                      <EmptyState
+                        message={"No groups match the active filters."}
                       />
                     </Show>
                   </div>
