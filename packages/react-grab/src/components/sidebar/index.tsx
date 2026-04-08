@@ -25,6 +25,7 @@ import {
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { isSynthetic } from "../../features/selection-groups/business/synthetic-group.js";
+import { LooseSelectionList } from "./loose-selection-list.jsx";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -38,6 +39,7 @@ export interface SidebarProps {
   onJiraResolved?: (groupId: string) => void;
   onTicketCreated?: TicketCreatedCallback;
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
+  onCreateTicketForLooseItem?: (item: CommentItem) => void;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -182,6 +184,15 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     />
                   }
                 >
+                  <LooseSelectionList
+                    allGroups={props.groups}
+                    commentItems={props.commentItems}
+                    syncServerUrl={props.syncServerUrl}
+                    syncWorkspace={props.syncWorkspace}
+                    scrollRoot={() => containerRef ?? null}
+                    onCreateTicket={(item) => props.onCreateTicketForLooseItem?.(item)}
+                  />
+
                   <Show
                     when={filteredGroups().length > 0}
                     fallback={
