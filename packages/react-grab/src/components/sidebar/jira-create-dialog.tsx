@@ -20,7 +20,7 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
     <Portal mount={useShadowMount()}>
       <div
         class="fixed inset-0 flex items-center justify-center"
-        style={{ "z-index": "2147483647", "pointer-events": "auto" }}
+        style={{ "z-index": "var(--z-dialog)", "pointer-events": "auto" }}
         onClick={props.onClose}
       >
         <div class="absolute inset-0 bg-black/60" />

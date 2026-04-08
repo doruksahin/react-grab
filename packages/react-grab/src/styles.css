@@ -75,8 +75,8 @@
   --z-overlay: 10;     /* selection canvas, hover labels, comments */
   --z-toolbar: 20;     /* floating toolbar + its menus */
   --z-sidebar: 30;     /* dashboard sidebar */
-  --z-dropdown: 40;    /* select / popper / context menu / combobox */
-  --z-dialog: 50;      /* modal dialogs */
+  --z-dialog: 40;      /* modal dialogs */
+  --z-dropdown: 50;    /* select / popper / context menu / combobox — above dialog so dropdowns inside dialogs render on top */
   --z-tooltip: 60;     /* always on top */
   /*
    * shadcn-solid design tokens — LIGHT is the default, matching shadcn-solid's
