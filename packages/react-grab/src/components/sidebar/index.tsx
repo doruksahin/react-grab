@@ -69,6 +69,16 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     string | null
   >(null);
 
+  // Local dialog state for the GROUP "Create JIRA Ticket" flow. Mirrors the
+  // mount-on-demand pattern of `looseTicketDialog` (controlled by core) — both
+  // dialogs are mounted via <Show> only when their state is set, so Kobalte's
+  // click-outside handler is installed *after* the click that opened it has
+  // finished propagating. Eliminates the same-tick close that was breaking the
+  // group flow before.
+  const [groupTicketDialog, setGroupTicketDialog] = createSignal<
+    { group: SelectionGroupWithJira; items: CommentItem[] } | null
+  >(null);
+
   const activeGroup = createMemo(
     () => props.groups.find((g) => g.id === activeDetailGroupId()) ?? null,
   );
@@ -225,11 +235,30 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               commentItems={props.commentItems}
               syncServerUrl={props.syncServerUrl}
               syncWorkspace={props.syncWorkspace}
-              jiraProjectKey={props.jiraProjectKey}
               onBack={() => setActiveDetailGroupId(null)}
-              onTicketCreated={props.onTicketCreated}
+              onCreateTicket={(group, items) =>
+                setGroupTicketDialog({ group, items })
+              }
             />
           </Show>
+        </Show>
+
+        <Show when={groupTicketDialog()}>
+          {(state) => (
+            <JiraCreateDialog
+              open={true}
+              workspaceId={props.syncWorkspace ?? ""}
+              groupId={state().group.id}
+              group={state().group}
+              commentItems={state().items}
+              jiraProjectKey={props.jiraProjectKey ?? ""}
+              onTicketCreated={(groupId, ticketId, ticketUrl) => {
+                props.onTicketCreated?.(groupId, ticketId, ticketUrl);
+                setGroupTicketDialog(null);
+              }}
+              onClose={() => setGroupTicketDialog(null)}
+            />
+          )}
         </Show>
 
         <Show when={props.looseTicketDialog}>
