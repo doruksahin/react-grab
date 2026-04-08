@@ -7,12 +7,16 @@ import {
   screenshotUrl,
 } from "../../features/sidebar";
 import { ScreenshotPair } from "./screenshot-pair";
+import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 
 export interface SelectionCardProps {
   item: CommentItem;
   syncServerUrl?: string;
   syncWorkspace?: string;
   scrollRoot: () => Element | null;
+  /** Pre-curried remove handler. When undefined, the × button is not
+   *  rendered — the caller gates this on the ticket-lock rule. */
+  onRemoveItem?: () => void;
 }
 
 export const SelectionCard: Component<SelectionCardProps> = (props) => {
@@ -52,7 +56,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       class="bg-muted rounded-lg p-3 mb-1.5 border border-border"
       style={{ "pointer-events": "auto" }}
     >
-      {/* Row 1: component name + tag badge + timestamp */}
+      {/* Row 1: component name + tag badge + timestamp + remove */}
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5 min-w-0">
           <span class="text-[13px] font-semibold text-foreground truncate">
@@ -62,9 +66,16 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
             {props.item.tagName}
           </span>
         </div>
-        <span class="text-[10px] text-muted-foreground shrink-0 ml-2">
-          {relativeTime(props.item.timestamp)}
-        </span>
+        <div class="flex items-center gap-1.5 shrink-0 ml-2">
+          <span class="text-[10px] text-muted-foreground">
+            {relativeTime(props.item.timestamp)}
+          </span>
+          {/* Ticket-lock gates visibility at the caller — if the prop is
+              set, the selection is removable. */}
+          <Show when={props.onRemoveItem}>
+            <RemoveSelectionButton onRemove={() => props.onRemoveItem?.()} />
+          </Show>
+        </div>
       </div>
 
       {/* Row 2: comment text */}

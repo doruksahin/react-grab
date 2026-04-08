@@ -4,6 +4,7 @@ import type {
   SelectionGroupsDeps,
   SelectionGroup,
 } from "./types.js";
+import type { CommentItem } from "../../types.js";
 import {
   loadGroups,
   addGroup as addGroupToStorage,
@@ -15,7 +16,8 @@ import {
   assignSelection,
   unassignSelectionsInGroup,
 } from "./business/selection-assignment.js";
-import { isSynthetic } from "./business/synthetic-group.js";
+import { gcEmptySyntheticGroups } from "./business/synthetic-group.js";
+import { canRemoveSelection } from "./business/ticket-lock.js";
 
 export function createSelectionGroups(
   deps: SelectionGroupsDeps,
@@ -53,25 +55,51 @@ export function createSelectionGroups(
     setGroups(updated);
   };
 
-  const handleMoveItem = (itemId: string, groupId: string | null) => {
-    const before = deps.commentItems();
-    const movedFromGroupId = before.find((i) => i.id === itemId)?.groupId ?? null;
+  /**
+   * Collapse any synthetic groups that lost their last item as a result of
+   * a mutation. Real groups survive emptiness — only synthetic backing
+   * stores are GCed. Also clears activeGroupId if it pointed at a dropped
+   * group.
+   */
+  const reconcileSyntheticGroups = (nextItems: CommentItem[]) => {
+    const current = groups();
+    const next = gcEmptySyntheticGroups(current, nextItems);
+    if (next.length === current.length) return;
+    persistGroupsToStorage(next);
+    const activeId = activeGroupId();
+    if (activeId && !next.some((g) => g.id === activeId)) {
+      setActiveGroupId(null);
+    }
+    setGroups(next);
+  };
 
-    const updated = assignSelection(before, itemId, groupId);
+  const handleMoveItem = (itemId: string, groupId: string | null) => {
+    const updated = assignSelection(deps.commentItems(), itemId, groupId);
     deps.persistCommentItems(updated);
     deps.setCommentItems(updated);
+    reconcileSyntheticGroups(updated);
+  };
 
-    // GC: if we just moved the last item out of a synthetic group, delete it.
-    if (movedFromGroupId !== null && movedFromGroupId !== groupId) {
-      const sourceGroup = groups().find((g) => g.id === movedFromGroupId);
-      const stillHasItems = updated.some((i) => i.groupId === movedFromGroupId);
-      if (sourceGroup && isSynthetic(sourceGroup) && !stillHasItems) {
-        const remaining = groups().filter((g) => g.id !== movedFromGroupId);
-        persistGroupsToStorage(remaining);
-        if (activeGroupId() === movedFromGroupId) setActiveGroupId(null);
-        setGroups(remaining);
-      }
-    }
+  /**
+   * Remove a selection permanently. Gated by ticket-lock: selections in
+   * ticketed groups (real or synthetic) cannot be removed — the JIRA
+   * issue would be orphaned. Returns true iff removal actually happened.
+   *
+   * When a synthetic group loses its last item as a result, the
+   * synthetic group itself is garbage-collected. Real groups survive
+   * empty.
+   */
+  const handleRemoveItem = (itemId: string): boolean => {
+    const before = deps.commentItems();
+    const item = before.find((i) => i.id === itemId);
+    if (!item) return false;
+    if (!canRemoveSelection(item, groups())) return false;
+
+    const updated = before.filter((i) => i.id !== itemId);
+    deps.persistCommentItems(updated);
+    deps.setCommentItems(updated);
+    reconcileSyntheticGroups(updated);
+    return true;
   };
 
   return {
@@ -84,6 +112,7 @@ export function createSelectionGroups(
     handleRenameGroup,
     handleDeleteGroup,
     handleMoveItem,
+    handleRemoveItem,
   };
 }
 

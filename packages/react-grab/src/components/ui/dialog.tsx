@@ -1,82 +1,125 @@
-import { Dialog as DialogPrimitive } from "@kobalte/core/dialog";
-import type { Component, ComponentProps } from "solid-js";
-import { splitProps } from "solid-js";
+import { type Component, type ComponentProps, createContext, useContext, createSignal, type Accessor, Show } from "solid-js";
 import { cn } from "../../utils/cn.js";
-import { useShadowMount } from "../../utils/shadow-context.js";
 
-// Re-export root and trigger unchanged
-const Dialog = DialogPrimitive;
-const DialogTrigger = DialogPrimitive.Trigger;
+interface DialogContextValue {
+  open: Accessor<boolean>;
+  setOpen: (open: boolean) => void;
+}
 
-const DialogPortal: Component<ComponentProps<typeof DialogPrimitive.Portal>> = (props) => {
-  return <DialogPrimitive.Portal {...props} mount={useShadowMount()} />;
+const DialogContext = createContext<DialogContextValue>();
+
+interface DialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  modal?: boolean;
+  children?: any;
+}
+
+const Dialog: Component<DialogProps> = (props) => {
+  const [internalOpen, setInternalOpen] = createSignal(props.open ?? false);
+  const open = () => props.open ?? internalOpen();
+  const setOpen = (value: boolean) => {
+    setInternalOpen(value);
+    props.onOpenChange?.(value);
+  };
+  return (
+    <DialogContext.Provider value={{ open, setOpen }}>
+      {props.children}
+    </DialogContext.Provider>
+  );
 };
 
-const DialogOverlay: Component<ComponentProps<typeof DialogPrimitive.Overlay>> = (props) => {
-  const [local, rest] = splitProps(props, ["class"]);
+const DialogTrigger: Component<ComponentProps<"button">> = (props) => {
+  const ctx = useContext(DialogContext);
+  return <button {...props} onClick={() => ctx?.setOpen(true)} />;
+};
+
+const DialogPortal: Component<{ children?: any }> = (props) => {
+  return <>{props.children}</>;
+};
+
+const DialogOverlay: Component<ComponentProps<"div">> = (props) => {
+  const [local, rest] = (() => {
+    const { class: cls, ...r } = props as any;
+    return [{ class: cls }, r];
+  })();
   return (
-    <DialogPrimitive.Overlay
-      class={cn(
-        "fixed inset-0 z-50 bg-black/80 data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0",
-        local.class,
-      )}
+    <div
+      class={cn("fixed inset-0 bg-black/80", local.class)}
       {...rest}
     />
   );
 };
 
-const DialogContent: Component<ComponentProps<typeof DialogPrimitive.Content>> = (props) => {
-  const [local, rest] = splitProps(props, ["class", "children"]);
+const DialogContent: Component<ComponentProps<"div">> = (props) => {
+  const ctx = useContext(DialogContext);
+  const [local, rest] = (() => {
+    const { class: cls, children, ...r } = props as any;
+    return [{ class: cls, children }, r];
+  })();
   return (
-    <DialogPortal>
-      <DialogOverlay />
-      <DialogPrimitive.Content
-        class={cn(
-          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 data-[closed]:zoom-out-95 data-[expanded]:zoom-in-95 data-[closed]:slide-out-to-left-1/2 data-[closed]:slide-out-to-top-[48%] data-[expanded]:slide-in-from-left-1/2 data-[expanded]:slide-in-from-top-[48%] sm:rounded-lg",
-          local.class,
-        )}
-        {...rest}
-      >
-        {local.children}
-        <DialogPrimitive.CloseButton class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </DialogPrimitive.CloseButton>
-      </DialogPrimitive.Content>
-    </DialogPortal>
+    <Show when={ctx?.open()}>
+      <DialogPortal>
+        <DialogOverlay onClick={() => ctx?.setOpen(false)} />
+        <div
+          class={cn(
+            "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg sm:rounded-lg",
+            local.class,
+          )}
+          role="dialog"
+          aria-modal="true"
+          {...rest}
+        >
+          {local.children}
+          <button
+            class="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100"
+            onClick={() => ctx?.setOpen(false)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+      </DialogPortal>
+    </Show>
   );
 };
 
 const DialogHeader: Component<ComponentProps<"div">> = (props) => {
-  const [local, rest] = splitProps(props, ["class"]);
+  const [local, rest] = (() => {
+    const { class: cls, ...r } = props as any;
+    return [{ class: cls }, r];
+  })();
   return (
     <div class={cn("flex flex-col space-y-1.5 text-center sm:text-left", local.class)} {...rest} />
   );
 };
 
 const DialogFooter: Component<ComponentProps<"div">> = (props) => {
-  const [local, rest] = splitProps(props, ["class"]);
+  const [local, rest] = (() => {
+    const { class: cls, ...r } = props as any;
+    return [{ class: cls }, r];
+  })();
   return (
     <div class={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", local.class)} {...rest} />
   );
 };
 
-const DialogTitle: Component<ComponentProps<typeof DialogPrimitive.Title>> = (props) => {
-  const [local, rest] = splitProps(props, ["class"]);
+const DialogTitle: Component<ComponentProps<"h2">> = (props) => {
+  const [local, rest] = (() => {
+    const { class: cls, ...r } = props as any;
+    return [{ class: cls }, r];
+  })();
   return (
-    <DialogPrimitive.Title
-      class={cn("text-lg font-semibold leading-none tracking-tight", local.class)}
-      {...rest}
-    />
+    <h2 class={cn("text-lg font-semibold leading-none tracking-tight", local.class)} {...rest} />
   );
 };
 
-const DialogDescription: Component<ComponentProps<typeof DialogPrimitive.Description>> = (props) => {
-  const [local, rest] = splitProps(props, ["class"]);
+const DialogDescription: Component<ComponentProps<"p">> = (props) => {
+  const [local, rest] = (() => {
+    const { class: cls, ...r } = props as any;
+    return [{ class: cls }, r];
+  })();
   return (
-    <DialogPrimitive.Description
-      class={cn("text-sm text-muted-foreground", local.class)}
-      {...rest}
-    />
+    <p class={cn("text-sm text-muted-foreground", local.class)} {...rest} />
   );
 };
 

@@ -26,6 +26,11 @@ export const SelectionGroupSchema = z.object({
   createdAt: z.number(),
   status: z.enum(["open", "ticketed", "resolved"]).optional(),
   jiraTicketId: z.string().optional(),
+  /** Auto-created backing group for a loose selection that earned a
+   *  ticket. Must round-trip through sync — without it, the flag is
+   *  stripped on reload and the group is no longer recognized as
+   *  synthetic (breaks the isPresentedAsLoose + GC invariants). */
+  synthetic: z.boolean().optional(),
 });
 
 export const UploadResultSchema = z.object({

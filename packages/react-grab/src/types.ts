@@ -452,6 +452,10 @@ export type SelectionLabelStatus =
 
 export interface SelectionLabelInstance {
   id: string;
+  /** The backing CommentItem id, when this label represents a persisted
+   *  selection. Used by the renderer to route per-instance mutations
+   *  (remove, move) back to the selection-groups API. */
+  itemId?: string;
   bounds: OverlayBounds;
   boundsMultiple?: OverlayBounds[];
   tagName: string;
@@ -739,6 +743,9 @@ export interface SelectionLabelProps
   isContextMenuOpen?: boolean;
   onShowContextMenu?: () => void;
   onHoverChange?: (isHovered: boolean) => void;
+  /** Per-instance remove handler. When present and the selection is
+   *  not ticket-locked, the label renders a small red × button. */
+  onRemoveItem?: () => void;
   hideArrow?: boolean;
   groupStatus?: GroupStatus;
   jiraTicketId?: string;

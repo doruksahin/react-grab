@@ -4,6 +4,7 @@ import type { CommentItem } from "../../types.js";
 import type { StatusColorConfig } from "../../features/sidebar/status-colors.js";
 import { SelectionCard } from "./selection-card.jsx";
 import { Button } from "../ui/button.jsx";
+import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 
 interface LooseSelectionCardProps {
   item: CommentItem;
@@ -17,6 +18,9 @@ interface LooseSelectionCardProps {
   jiraUrl?: string;
   /** Click handler for the "Create ticket" button — fires only when no ticket. */
   onCreateTicket: (item: CommentItem) => void;
+  /** Remove handler. Passed by the parent only when the selection is
+   *  not ticket-locked (i.e. no backing synthetic ticket). */
+  onRemoveItem?: (itemId: string) => void;
   syncServerUrl?: string;
   syncWorkspace?: string;
   scrollRoot: () => Element | null;
@@ -53,15 +57,23 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (props) =>
               {props.item.tagName}
             </span>
           </div>
-          <span
-            class="text-[10px] font-semibold rounded-full px-2 py-0.5 shrink-0 ml-2"
-            style={{
-              color: props.statusColor.text,
-              background: props.statusColor.bg,
-            }}
-          >
-            {props.statusLabel}
-          </span>
+          <div class="flex items-center gap-1.5 shrink-0 ml-2">
+            <span
+              class="text-[10px] font-semibold rounded-full px-2 py-0.5"
+              style={{
+                color: props.statusColor.text,
+                background: props.statusColor.bg,
+              }}
+            >
+              {props.statusLabel}
+            </span>
+            {/* Ticket-lock: × only when the loose item has no ticket. */}
+            <Show when={!hasTicket() && props.onRemoveItem}>
+              <RemoveSelectionButton
+                onRemove={() => props.onRemoveItem?.(props.item.id)}
+              />
+            </Show>
+          </div>
         </div>
 
         {/* Row 2: meta — timestamp + ticket link (or Create-ticket button) */}

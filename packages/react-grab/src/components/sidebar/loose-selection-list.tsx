@@ -15,6 +15,7 @@ interface LooseSelectionListProps {
   syncWorkspace?: string;
   scrollRoot: () => Element | null;
   onCreateTicket: (item: CommentItem) => void;
+  onRemoveItem?: (itemId: string) => void;
 }
 
 /**
@@ -53,6 +54,7 @@ export const LooseSelectionList: Component<LooseSelectionListProps> = (props) =>
                 jiraTicketId={group?.jiraTicketId}
                 jiraUrl={group?.jiraUrl}
                 onCreateTicket={props.onCreateTicket}
+                onRemoveItem={props.onRemoveItem}
                 syncServerUrl={props.syncServerUrl}
                 syncWorkspace={props.syncWorkspace}
                 scrollRoot={props.scrollRoot}

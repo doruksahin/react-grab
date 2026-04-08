@@ -53,6 +53,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
       <Select
         value={[...props.filter.statuses][0] ?? ""}
         onChange={handleStatusChange}
+        placeholder="All Statuses"
         options={["", "No Task", ...ALL_ATT_STATUSES]}
         itemComponent={(itemProps) => (
           <SelectItem item={itemProps.item}>
@@ -61,9 +62,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
         )}
       >
         <SelectTrigger class={triggerClass}>
-          <SelectValue<string>>
-            {(state) => state.selectedOption() || "All Statuses"}
-          </SelectValue>
+          <SelectValue<string> />
         </SelectTrigger>
         <SelectContent />
       </Select>
@@ -71,6 +70,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
       <Select
         value={props.filter.assignee ?? ""}
         onChange={handleAssigneeChange}
+        placeholder="All Assignees"
         options={["", ...props.assignees]}
         itemComponent={(itemProps) => (
           <SelectItem item={itemProps.item}>
@@ -79,9 +79,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
         )}
       >
         <SelectTrigger class={triggerClass}>
-          <SelectValue<string>>
-            {(state) => state.selectedOption() || "All Assignees"}
-          </SelectValue>
+          <SelectValue<string> />
         </SelectTrigger>
         <SelectContent />
       </Select>
@@ -89,6 +87,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
       <Select
         value={props.filter.reporter ?? ""}
         onChange={handleReporterChange}
+        placeholder="All Reporters"
         options={["", ...props.reporters]}
         itemComponent={(itemProps) => (
           <SelectItem item={itemProps.item}>
@@ -97,9 +96,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
         )}
       >
         <SelectTrigger class={triggerClass}>
-          <SelectValue<string>>
-            {(state) => state.selectedOption() || "All Reporters"}
-          </SelectValue>
+          <SelectValue<string> />
         </SelectTrigger>
         <SelectContent />
       </Select>
@@ -108,6 +105,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
         <Select
           value={props.filter.label ?? ""}
           onChange={handleLabelChange}
+          placeholder="All Labels"
           options={["", ...props.labels]}
           itemComponent={(itemProps) => (
             <SelectItem item={itemProps.item}>
@@ -116,9 +114,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
           )}
         >
           <SelectTrigger class={triggerClass}>
-            <SelectValue<string>>
-              {(state) => state.selectedOption() || "All Labels"}
-            </SelectValue>
+            <SelectValue<string> />
           </SelectTrigger>
           <SelectContent />
         </Select>

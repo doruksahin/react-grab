@@ -17,6 +17,8 @@ import type { SelectionGroup } from "../types.js";
 import { Button } from "../../../components/ui/button.jsx";
 import { cn } from "../../../utils/cn.js";
 import { GroupPickerFlyout } from "./group-picker-flyout.jsx";
+import { useActiveGroupPickerState } from "../hooks/use-active-group-picker-state.js";
+import { IconLock } from "../../../components/icons/icon-lock.jsx";
 
 /**
  * Compound component for the active-group picker rendered inside the
@@ -34,9 +36,15 @@ import { GroupPickerFlyout } from "./group-picker-flyout.jsx";
  */
 
 interface ActiveGroupPickerContextValue {
-  groups: Accessor<SelectionGroup[]>;
+  /** Groups the flyout is allowed to offer as targets. Already filtered
+   *  by the ticket-lock rule (no ticketed groups, no synthetic groups). */
+  assignableGroups: Accessor<SelectionGroup[]>;
   activeGroupId: Accessor<string | null | undefined>;
   activeGroup: Accessor<SelectionGroup | undefined>;
+  /** True when the current selection lives in a ticketed group and
+   *  cannot be reassigned. The trigger renders as static text + lock
+   *  icon; toggle/selectGroup become no-ops. */
+  isLocked: Accessor<boolean>;
   isOpen: Accessor<boolean>;
   setOpen: Setter<boolean>;
   toggle: () => void;
@@ -76,17 +84,27 @@ const ActiveGroupPickerRoot: ParentComponent<ActiveGroupPickerRootProps> = (
     groups().find((g) => g.id === props.activeGroupId),
   );
 
-  const toggle = () => setOpen((v) => !v);
+  const { isLocked, assignableGroups } = useActiveGroupPickerState({
+    groups,
+    activeGroupId,
+  });
+
+  const toggle = () => {
+    if (isLocked()) return;
+    setOpen((v) => !v);
+  };
 
   const selectGroup = (groupId: string | null) => {
+    if (isLocked()) return;
     props.onActiveGroupChange?.(groupId);
     setOpen(false);
   };
 
   const value: ActiveGroupPickerContextValue = {
-    groups,
+    assignableGroups,
     activeGroupId,
     activeGroup,
+    isLocked,
     isOpen,
     setOpen,
     toggle,
@@ -139,13 +157,38 @@ const FolderIcon: Component = () => (
   </svg>
 );
 
-const ActiveGroupPickerTrigger: Component<
-  Omit<ComponentProps<typeof Button>, "onClick" | "type">
+/**
+ * Static trigger shown when ticket-lock freezes the selection. Non-
+ * interactive by design — there is no chevron, no hover state, no
+ * click handler. The lock icon + group name visually communicate
+ * "frozen, see the ticket".
+ */
+const LockedTrigger: Component<{ label: string; ticketId?: string; class?: string }> = (
+  props,
+) => (
+  <div
+    data-react-grab-ignore-events
+    data-react-grab-active-group-picker-locked
+    class={cn(
+      "flex items-center gap-1 px-0.5 -mx-0.5 py-0 text-[11px] font-medium leading-none text-muted-foreground",
+      props.class,
+    )}
+    title={`Locked — ${props.ticketId ?? "ticketed"}`}
+  >
+    <IconLock size={9} class="text-muted-foreground shrink-0" />
+    <span>{props.label}</span>
+  </div>
+);
+
+/**
+ * Interactive trigger shown when the selection is free to reassign.
+ * Folder icon, group name, chevron that rotates with open state.
+ */
+const InteractiveTrigger: Component<
+  Omit<ComponentProps<typeof Button>, "onClick" | "type"> & { label: string }
 > = (props) => {
   const ctx = useActiveGroupPicker();
-  const [local, rest] = splitProps(props, ["class"]);
-  const label = () => ctx.activeGroup()?.name ?? "Ungrouped";
-
+  const [local, rest] = splitProps(props, ["class", "label"]);
   return (
     <Button
       data-react-grab-ignore-events
@@ -164,9 +207,31 @@ const ActiveGroupPickerTrigger: Component<
       {...rest}
     >
       <FolderIcon />
-      <span>{label()}</span>
+      <span>{local.label}</span>
       <ChevronDownIcon rotated={ctx.isOpen()} />
     </Button>
+  );
+};
+
+const ActiveGroupPickerTrigger: Component<
+  Omit<ComponentProps<typeof Button>, "onClick" | "type">
+> = (props) => {
+  const ctx = useActiveGroupPicker();
+  const label = () => ctx.activeGroup()?.name ?? "Ungrouped";
+
+  return (
+    <Show
+      when={!ctx.isLocked()}
+      fallback={
+        <LockedTrigger
+          label={label()}
+          ticketId={ctx.activeGroup()?.jiraTicketId}
+          class={props.class}
+        />
+      }
+    >
+      <InteractiveTrigger label={label()} {...props} />
+    </Show>
   );
 };
 
@@ -175,7 +240,7 @@ const ActiveGroupPickerContent: Component = () => {
   return (
     <Show when={ctx.isOpen()}>
       <GroupPickerFlyout
-        groups={ctx.groups()}
+        groups={ctx.assignableGroups()}
         activeGroupId={ctx.activeGroupId() ?? null}
         onSelect={ctx.selectGroup}
         onClose={() => ctx.setOpen(false)}
