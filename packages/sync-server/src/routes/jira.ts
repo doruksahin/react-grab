@@ -114,6 +114,29 @@ const listPriorities = createRoute({
   },
 });
 
+const listLabels = createRoute({
+  method: "get",
+  path: "/jira/labels",
+  tags: ["jira"],
+  summary: "List JIRA labels used in a project",
+  operationId: "listJiraLabels",
+  request: {
+    query: z.object({
+      projectKey: z.string().openapi({ description: "Project key (e.g. ATT)", example: "ATT" }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "List of label strings",
+      content: { "application/json": { schema: z.array(z.string()) } },
+    },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: ErrorResponse } },
+    },
+  },
+});
+
 export const jiraRoutes = createRouter()
   .openapi(createTicket, async (c) => {
     const { id: workspaceId, groupId } = c.req.valid("param");
@@ -167,6 +190,16 @@ export const jiraRoutes = createRouter()
       return c.json(priorities, 200);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to list JIRA priorities";
+      return c.json({ error: message }, 500);
+    }
+  })
+  .openapi(listLabels, async (c) => {
+    const { projectKey } = c.req.valid("query");
+    try {
+      const labels = await c.var.jira.getLabels(projectKey);
+      return c.json(labels, 200);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to list JIRA labels";
       return c.json({ error: message }, 500);
     }
   });

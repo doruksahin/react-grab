@@ -17,6 +17,7 @@ interface CreateTicketParams {
   priority: string;
   summary: string;
   description: string;
+  labels?: string[];
 }
 
 interface CreateTicketResult {
@@ -224,7 +225,7 @@ export class JiraService {
         description: descriptionText as any,
         issuetype: { name: params.issueType },
         priority: { name: params.priority },
-        labels: [APP_NAME],
+        labels: params.labels ?? [],
       },
     });
 
@@ -311,6 +312,21 @@ export class JiraService {
     return priorities
       .filter((p) => p.id && p.name)
       .map((p) => ({ id: p.id!, name: p.name! }));
+  }
+
+  async getLabels(projectKey: string) {
+    const result = await this.client.issueSearch.searchForIssuesUsingJqlEnhancedSearch({
+      jql: `project = ${projectKey} AND labels is not EMPTY`,
+      fields: ["labels"],
+      maxResults: 100,
+    });
+    const labelSet = new Set<string>();
+    for (const issue of result.issues ?? []) {
+      for (const lbl of (issue.fields?.labels as string[] | undefined) ?? []) {
+        labelSet.add(lbl);
+      }
+    }
+    return [...labelSet].sort();
   }
 
   async getIssueStatus(ticketId: string) {

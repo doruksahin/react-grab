@@ -183,6 +183,7 @@ export type CreateJiraTicketBody = {
   priority: string;
   summary: string;
   description: string;
+  labels?: string[];
 };
 
 export type CreateJiraTicket200 = {
@@ -780,5 +781,41 @@ export const listJiraPriorities = async ( options?: RequestInit): Promise<listJi
     method: 'GET'
 
 
+  }
+);}
+
+
+
+/**
+ * @summary List JIRA labels
+ */
+export type listJiraLabelsResponse200 = {
+  data: string[]
+  status: 200
+}
+
+export type listJiraLabelsResponse500 = {
+  data: { error: string }
+  status: 500
+}
+
+export type listJiraLabelsResponseSuccess = (listJiraLabelsResponse200) & {
+  headers: Headers;
+};
+export type listJiraLabelsResponseError = (listJiraLabelsResponse500) & {
+  headers: Headers;
+};
+
+export type listJiraLabelsResponse = (listJiraLabelsResponseSuccess | listJiraLabelsResponseError)
+
+export const getListJiraLabelsUrl = (params: { projectKey: string }) => {
+  return `/jira/labels?projectKey=${encodeURIComponent(params.projectKey)}`
+}
+
+export const listJiraLabels = async (params: { projectKey: string }, options?: RequestInit): Promise<listJiraLabelsResponse> => {
+  return customFetch<listJiraLabelsResponse>(getListJiraLabelsUrl(params),
+  {
+    ...options,
+    method: 'GET'
   }
 );}

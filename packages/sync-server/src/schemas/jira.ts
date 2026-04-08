@@ -6,6 +6,7 @@ export const CreateJiraTicketRequest = z.object({
   priority: z.string().openapi({ example: "Medium" }),
   summary: z.string().openapi({ example: "CardDescription text overflow on mobile" }),
   description: z.string().openapi({ example: "The tagline text overflows on mobile viewports." }),
+  labels: z.array(z.string()).optional().openapi({ example: ["ui-ticket-manager"] }),
 });
 
 export const CreateJiraTicketResponse = z.object({

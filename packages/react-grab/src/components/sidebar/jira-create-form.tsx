@@ -17,9 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select.js";
+import { LabelSelect } from "./label-select.js";
 import {
   listJiraIssueTypes,
   listJiraPriorities,
+  listJiraLabels,
   createJiraTicket,
 } from "../../generated/sync-api.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
@@ -59,6 +61,12 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
       return r.data;
     }),
   );
+  const [labels] = createResource(() =>
+    listJiraLabels({ projectKey: props.jiraProjectKey }).then((r) => {
+      if (r.status !== 200) return [] as string[];
+      return r.data;
+    }),
+  );
 
   const configError = () => {
     const types = issueTypes();
@@ -86,6 +94,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
         {...props}
         issueTypes={issueTypes}
         priorities={priorities}
+        labels={labels}
       />
     </Show>
   );
@@ -94,6 +103,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
 interface JiraCreateFormInnerProps extends JiraCreateFormProps {
   issueTypes: () => Array<{ id: string; name: string }> | undefined;
   priorities: () => Array<{ id: string; name: string }> | undefined;
+  labels: () => string[] | undefined;
 }
 
 const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
@@ -104,6 +114,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
   const [description, setDescription] = createSignal(
     defaultDescription(props.group, props.commentItems),
   );
+  const [selectedLabels, setSelectedLabels] = createSignal<string[]>([]);
   const [submitting, setSubmitting] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
@@ -127,6 +138,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           priority: priority(),
           summary: summary(),
           description: description(),
+          labels: selectedLabels().length > 0 ? selectedLabels() : undefined,
         },
       );
       if (result.status === 200) {
@@ -207,6 +219,25 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
         </Show>
       </div>
 
+      {/* Labels — optional multi-select with search */}
+      <div class="mb-3">
+        <label class="block text-[11px] text-muted-foreground mb-1">Labels</label>
+        <Show
+          when={props.labels() !== undefined}
+          fallback={
+            <div class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}>
+              Loading…
+            </div>
+          }
+        >
+          <LabelSelect
+            allLabels={props.labels() ?? []}
+            value={selectedLabels()}
+            onChange={setSelectedLabels}
+          />
+        </Show>
+      </div>
+
       {/* Summary */}
       <div class="mb-3">
         <label class="block text-[11px] text-muted-foreground mb-1">Summary *</label>
@@ -279,7 +310,12 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
         <Button
           type="submit"
           size="sm"
-          disabled={submitting() || !issueType()}
+          disabled={
+            submitting() ||
+            !issueType() ||
+            !props.issueTypes() ||
+            !props.priorities()
+          }
           style={{ "pointer-events": "auto" }}
         >
           {submitting() ? "Creating…" : "Create Ticket"}
@@ -288,4 +324,3 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
     </form>
   );
 };
-
