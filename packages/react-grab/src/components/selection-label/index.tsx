@@ -135,12 +135,17 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
   const [isLabelCollapsed, setIsLabelCollapsed] = createSignal(false);
 
   // Auto-expand when entering states that need user attention
-  createEffect(() => {
-    if (props.isPromptMode || props.status === "copying" || props.status === "error") {
-      console.log("[collapse-toggle] auto-expand triggered → isPromptMode:", props.isPromptMode, "status:", props.status);
-      setIsLabelCollapsed(false);
-    }
-  });
+  createEffect(
+    on(
+      () => props.isPromptMode || props.status === "copying" || props.status === "error",
+      (shouldExpand, prevShouldExpand) => {
+        console.log("[collapse-toggle] auto-expand source changed:", prevShouldExpand, "→", shouldExpand, "| isPromptMode:", props.isPromptMode, "status:", props.status);
+        if (shouldExpand) {
+          setIsLabelCollapsed(false);
+        }
+      },
+    ),
+  );
 
   const canInteract = () =>
     props.status !== "copying" &&
@@ -527,19 +532,21 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           }}
           onAnimationEnd={() => setIsShaking(false)}
         >
-          <button
-            class="pointer-events-auto shrink-0 flex items-center justify-center w-7 h-[30px] cursor-pointer text-muted-foreground hover:text-foreground text-[13px] tracking-[2px]"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopImmediatePropagation();
-              const next = !isLabelCollapsed();
-              console.log("[collapse-toggle] click → collapsing:", next, "| pointerEvents:", shouldEnablePointerEvents());
-              isCollapseAnimating = true;
-              setIsLabelCollapsed(next);
-            }}
-          >
-            ···
-          </button>
+          <Show when={!props.isPromptMode}>
+            <button
+              class="pointer-events-auto shrink-0 flex items-center justify-center w-7 h-[30px] cursor-pointer text-muted-foreground hover:text-foreground text-[13px] tracking-[2px]"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopImmediatePropagation();
+                const next = !isLabelCollapsed();
+                console.log("[collapse-toggle] click → collapsing:", next, "| pointerEvents:", shouldEnablePointerEvents());
+                isCollapseAnimating = true;
+                setIsLabelCollapsed(next);
+              }}
+            >
+              ···
+            </button>
+          </Show>
           <div
             class="grid transition-[grid-template-columns] duration-200"
             style={{ "grid-template-columns": isLabelCollapsed() ? "0fr" : "1fr" }}
