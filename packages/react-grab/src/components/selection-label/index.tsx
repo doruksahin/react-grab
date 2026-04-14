@@ -692,6 +692,9 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           >
             <div class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit min-w-[150px] max-w-[280px] gap-1 pb-2">
               <div class="contain-layout shrink-0 flex items-center gap-1 pt-1.5 pb-1 w-fit h-fit px-2 max-w-full">
+                <Show when={props.jiraFlagged}>
+                  <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
+                </Show>
                 <TagBadge
                   tagName={tagDisplayResult().tagName}
                   componentName={tagDisplayResult().componentName}
