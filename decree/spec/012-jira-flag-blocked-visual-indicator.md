@@ -203,12 +203,12 @@ This matches the existing pattern where active-group already overrides status co
 - [ ] Unflag the ticket: overlay returns to its status color
 
 #### MV-5: Selection Card (sidebar — group detail) ([POC reference](../../docs/plans/poc/flag-card-icon.html))
-- [ ] Open a group with a flagged ticket → selection card has red left-border accent (3px)
+- [ ] Open a group with a flagged ticket → selection card has red border (2px, unified with selection label)
 - [ ] Red flag icon appears next to the component name
 - [ ] Unflag → wait → left-border and flag icon disappear
 
 #### MV-6: Loose Selection Card (sidebar — loose list) ([POC reference](../../docs/plans/poc/flag-card-icon.html))
-- [ ] Loose selection with a flagged backing ticket → red left-border accent (3px)
+- [ ] Loose selection with a flagged backing ticket → red border (2px, unified with selection label)
 - [ ] Red flag icon appears next to the ticket ID
 - [ ] Status pill color is red (`#dc2626`), not the workflow status color
 
@@ -289,34 +289,34 @@ This matches the existing pattern where active-group already overrides status co
 - [x] Flag icon color is `#dc2626` matching `FLAGGED_COLOR`
 
 ### Flag Date
-- [ ] Sync-server `getIssueStatus` fetches changelog and extracts latest flag event timestamp
-- [ ] `JiraTicketStatus` schema includes `flaggedAt: z.string().nullable().optional()`
-- [ ] `SelectionGroupWithJira` type includes `jiraFlaggedAt?: string`
-- [ ] `SelectionLabelInstance` type includes `jiraFlaggedAt?: string`
-- [ ] Status poller propagates `flaggedAt` to groups
-- [ ] Label instance builder propagates `jiraFlaggedAt` from group to instance
-- [ ] Relative time shown next to flag icon on selection label (e.g. "3h ago")
-- [ ] Relative time shown next to flag icon on selection card
-- [ ] Relative time shown next to flag icon on loose-selection card
-- [ ] Edge case: if flagged at creation (no changelog entry), falls back to issue `created` timestamp
+- [x] Sync-server `getIssueStatus` fetches changelog and extracts latest flag event timestamp
+- [x] `JiraTicketStatus` schema includes `flaggedAt: z.string().nullable().optional()`
+- [x] `SelectionGroupWithJira` type includes `jiraFlaggedAt?: string | null`
+- [x] `SelectionLabelInstance` type includes `jiraFlaggedAt?: string | null`
+- [x] Status poller propagates `flaggedAt` to groups
+- [x] Label instance builder propagates `jiraFlaggedAt` from group to instance
+- [x] Relative time shown next to flag icon on selection label (e.g. "3h ago")
+- [x] Relative time shown next to flag icon on selection card
+- [x] Relative time shown next to flag icon on loose-selection card
+- [x] Edge case: if flagged at creation (no changelog entry), falls back to issue `created` timestamp
 
 ### Flag Author
-- [ ] Sync-server extracts `author.displayName` from flag changelog entry
-- [ ] Sync-server extracts `author.avatarUrls['48x48']` from flag changelog entry
-- [ ] `JiraTicketStatus` schema includes `flaggedBy: z.string().nullable().optional()`
-- [ ] `JiraTicketStatus` schema includes `flaggedByAvatar: z.string().nullable().optional()`
-- [ ] `SelectionGroupWithJira` type includes `jiraFlaggedBy?: string | null`
-- [ ] `SelectionGroupWithJira` type includes `jiraFlaggedByAvatar?: string | null`
-- [ ] `SelectionLabelInstance` type includes `jiraFlaggedBy?: string | null`
-- [ ] `SelectionLabelInstance` type includes `jiraFlaggedByAvatar?: string | null`
+- [x] Sync-server extracts `author.displayName` from flag changelog entry
+- [x] Sync-server extracts `author.avatarUrls['48x48']` from flag changelog entry
+- [x] `JiraTicketStatus` schema includes `flaggedBy: z.string().nullable().optional()`
+- [x] `JiraTicketStatus` schema includes `flaggedByAvatar: z.string().nullable().optional()`
+- [x] `SelectionGroupWithJira` type includes `jiraFlaggedBy?: string | null`
+- [x] `SelectionGroupWithJira` type includes `jiraFlaggedByAvatar?: string | null`
+- [x] `SelectionLabelInstance` type includes `jiraFlaggedBy?: string | null`
+- [x] `SelectionLabelInstance` type includes `jiraFlaggedByAvatar?: string | null`
 
 ### Flag Tooltip ([POC reference](../../docs/plans/poc/flag-tooltip.html))
-- [ ] Hovering the flag icon + relative time shows a Kobalte Tooltip
-- [ ] Tooltip header: flag icon + "Flagged / Blocked" in red
-- [ ] Tooltip shows flagger avatar (24px circle) + display name + "Flagged by" label
-- [ ] Tooltip shows exact date to the minute (e.g. "Apr 14, 2026 at 17:32") + "Flagged at" label
-- [ ] Tooltip renders in shadow DOM via portal (existing `useShadowMount()` pattern)
-- [ ] Tooltip appears on selection label, selection card, and loose-selection card
+- [x] Hovering the flag icon + relative time shows a Kobalte Tooltip
+- [x] Tooltip header: flag icon + "Flagged / Blocked" in red
+- [x] Tooltip shows flagger avatar (14px, `UserAvatar` component) + display name
+- [x] Tooltip shows exact date to the minute (e.g. "Apr 14, 2026 at 17:32")
+- [x] Tooltip renders in shadow DOM via portal (existing `useShadowMount()` pattern)
+- [x] Tooltip appears on selection label, selection card, and loose-selection card
 
 ### Status Legend
 - [x] Status Legend panel shows "Flagged / Blocked" entry with red indicator
@@ -334,7 +334,7 @@ This matches the existing pattern where active-group already overrides status co
 - [x] [`docs/plans/poc/flag-canvas-overlay.html`](../../docs/plans/poc/flag-canvas-overlay.html) — canvas overlay red override + precedence
 - [x] [`docs/plans/poc/flag-status-legend.html`](../../docs/plans/poc/flag-status-legend.html) — status legend with flagged entry
 - [x] [`docs/plans/poc/flag-card-icon.html`](../../docs/plans/poc/flag-card-icon.html) — flag icon on selection cards and loose cards
-- [ ] [`docs/plans/poc/flag-tooltip.html`](../../docs/plans/poc/flag-tooltip.html) — hover tooltip with flagger info and exact date
+- [x] [`docs/plans/poc/flag-tooltip.html`](../../docs/plans/poc/flag-tooltip.html) — hover tooltip with flagger info and exact date
 
 ## Related Documents
 
