@@ -1,5 +1,6 @@
 import { type Component, For } from "solid-js";
 import { getStatusColor } from "../../features/sidebar/status-colors.js";
+import { FLAGGED_COLOR } from "../../features/sidebar/resolve-display-color.js";
 
 interface StatusLegendProps {
   onClose: () => void;
@@ -34,6 +35,24 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
         </button>
       </div>
       <div class="px-4 py-3 space-y-2">
+        {/* Flagged — cross-cutting override, shown above workflow statuses */}
+        <div class="flex items-start gap-2.5 bg-[rgba(220,38,38,0.06)] rounded-md p-1.5 -mx-1.5 border-l-[3px] border-l-[#dc2626]">
+          <div
+            class="w-3 h-3 rounded-sm mt-0.5 shrink-0"
+            style={{ background: FLAGGED_COLOR.hex }}
+          />
+          <div>
+            <div class="text-[11px] font-medium text-foreground">Flagged / Blocked</div>
+            <div class="text-[10px] text-muted-foreground">
+              Ticket has an impediment — overrides status color on canvas and label border
+            </div>
+          </div>
+        </div>
+        <div class="relative border-t border-border my-2">
+          <span class="absolute -top-[8px] left-1/2 -translate-x-1/2 bg-card/95 px-2 text-[9px] font-bold text-[#dc2626] tracking-wider">
+            OVERRIDES
+          </span>
+        </div>
         <For each={FLOW}>
           {(status) => {
             const color = status === "No Task"
