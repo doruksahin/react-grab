@@ -179,58 +179,58 @@ This matches the existing pattern where active-group already overrides status co
 > **Prerequisites:** sync-server running, extension loaded, at least one selection group with a linked JIRA ticket, access to JIRA board to flag/unflag.
 
 #### MV-1: Data Flow — flag arrives from JIRA
-- [ ] Flag a ticket in JIRA (board view → right-click → "Add flag")
-- [ ] Wait one polling cycle (~30s)
-- [ ] DevTools → Network → filter `jira-status` → response includes `"flagged": true`
+- [x] Flag a ticket in JIRA (board view → right-click → "Add flag")
+- [x] Wait one polling cycle (~30s)
+- [x] DevTools → Network → filter `jira-status` → response includes `"flagged": true`
 
 #### MV-2: Selection Label — red border + flag icon ([POC reference](../../docs/plans/poc/flag-selection-label.html))
-- [ ] Flagged ticket's selection label has 2px red border (`#dc2626`)
-- [ ] Red flag icon (JIRA pennant) appears next to the tag badge
-- [ ] Status badge (top-right) retains its original status color — badge is NOT red
-- [ ] Unflag in JIRA → wait one poll → red border and flag icon disappear
+- [x] Flagged ticket's selection label has 2px red border (`#dc2626`)
+- [x] Red flag icon (JIRA pennant) appears next to the tag badge
+- [x] Status badge (top-right) retains its original status color — badge is NOT red
+- [x] Unflag in JIRA → wait one poll → red border and flag icon disappear
 
 #### MV-3: Canvas Overlay — red fill + border ([POC reference](../../docs/plans/poc/flag-canvas-overlay.html))
-- [ ] Flagged ticket's overlay border is red, not the normal status color
-- [ ] Overlay has a subtle red tint (8% opacity fill)
-- [ ] Click a different group → flagged group shows red overlay (not status color)
-- [ ] Click the flagged group to make it active → lightblue glow overrides red
+- [x] Flagged ticket's overlay border is red, not the normal status color
+- [x] Overlay has a subtle red tint (8% opacity fill)
+- [x] Click a different group → flagged group shows red overlay (not status color)
+- [x] Click the flagged group to make it active → lightblue glow overrides red
 
 #### MV-4: Override Precedence ([POC reference](../../docs/plans/poc/flag-canvas-overlay.html))
-- [ ] Flagged + "In Progress": overlay is red, NOT blue
-- [ ] Flagged + "Code Review": overlay is red, NOT violet
-- [ ] Flagged + active group: overlay is lightblue glow, NOT red
-- [ ] Deselect the flagged group: overlay goes back to red
-- [ ] Unflag the ticket: overlay returns to its status color
+- [x] Flagged + "In Progress": overlay is red, NOT blue
+- [x] Flagged + "Code Review": overlay is red, NOT violet
+- [x] Flagged + active group: overlay is lightblue glow, NOT red
+- [x] Deselect the flagged group: overlay goes back to red
+- [x] Unflag the ticket: overlay returns to its status color
 
 #### MV-5: Selection Card (sidebar — group detail) ([POC reference](../../docs/plans/poc/flag-card-icon.html))
-- [ ] Open a group with a flagged ticket → selection card has red border (2px, unified with selection label)
-- [ ] Red flag icon appears next to the component name
-- [ ] Unflag → wait → left-border and flag icon disappear
+- [x] Open a group with a flagged ticket → selection card has red border (2px, unified with selection label)
+- [x] Red flag icon appears next to the component name
+- [x] Unflag → wait → left-border and flag icon disappear
 
 #### MV-6: Loose Selection Card (sidebar — loose list) ([POC reference](../../docs/plans/poc/flag-card-icon.html))
-- [ ] Loose selection with a flagged backing ticket → red border (2px, unified with selection label)
-- [ ] Red flag icon appears next to the ticket ID
-- [ ] Status pill color is red (`#dc2626`), not the workflow status color
+- [x] Loose selection with a flagged backing ticket → red border (2px, unified with selection label)
+- [x] Red flag icon appears next to the ticket ID
+- [x] Status pill color is red (`#dc2626`), not the workflow status color
 
 #### MV-7: Status Legend ([POC reference](../../docs/plans/poc/flag-status-legend.html))
-- [ ] Click info button in sidebar header → "Flagged / Blocked" row at the TOP, above "No Task"
-- [ ] Red dot (`#dc2626`) next to it
-- [ ] "OVERRIDES" separator between flagged row and workflow statuses
-- [ ] "Won't Do" further down has a different red (`#ef4444`) — visually distinguishable
+- [x] Click info button in sidebar header → "Flagged / Blocked" row at the TOP, above "No Task"
+- [x] Red dot (`#dc2626`) next to it
+- [x] "OVERRIDES" separator between flagged row and workflow statuses
+- [x] "Won't Do" further down has a different red (`#ef4444`) — visually distinguishable
 
 #### MV-8: Flag Tooltip ([POC reference](../../docs/plans/poc/flag-tooltip.html))
-- [ ] Hover the flag icon on a selection card → tooltip appears with header, avatar, name, exact date
-- [ ] Hover the flag icon on a selection label → same tooltip content
-- [ ] Hover the flag icon on a loose-selection card → same tooltip content
-- [ ] Tooltip shows correct flagger name (matches JIRA changelog author)
-- [ ] Tooltip shows exact date to the minute (not relative time)
-- [ ] Moving mouse away dismisses tooltip
+- [x] Hover the flag icon on a selection card → tooltip appears with header, avatar, name, exact date
+- [x] Hover the flag icon on a selection label → same tooltip content
+- [x] Hover the flag icon on a loose-selection card → same tooltip content
+- [x] Tooltip shows correct flagger name (matches JIRA changelog author)
+- [x] Tooltip shows exact date to the minute (not relative time)
+- [x] Moving mouse away dismisses tooltip
 
 #### MV-9: Edge Cases
-- [ ] Unflagged ticket: no red anywhere — normal status colors
-- [ ] Ticket with no JIRA link: no red, shows default pink
-- [ ] "Won't Do" + flagged: red border on label, red overlay — distinct from unflagged "Won't Do"
-- [ ] Multiple flagged tickets on page: each independently shows red
+- [x] Unflagged ticket: no red anywhere — normal status colors
+- [x] Ticket with no JIRA link: no red, shows default pink
+- [x] "Won't Do" + flagged: red border on label, red overlay — distinct from unflagged "Won't Do"
+- [x] Multiple flagged tickets on page: each independently shows red
 
 ## Acceptance Criteria
 
