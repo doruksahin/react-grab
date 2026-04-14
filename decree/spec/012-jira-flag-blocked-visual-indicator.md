@@ -174,11 +174,52 @@ This matches the existing pattern where active-group already overrides status co
 - Test that canvas overlay uses `FLAGGED_BORDER_COLOR` when `jiraFlagged` is true
 - Test that active-group highlight still overrides flagged red
 
-### Manual Verification
-- Flag an issue in JIRA → verify red border appears on label within one polling cycle
-- Unflag the issue → verify red border disappears within one polling cycle
-- Flag an issue that is also in the active group → verify lightblue glow takes precedence
-- Flag an issue with "Won't Do" status → verify flag red border is visually distinguishable
+### Manual Verification Checklist
+
+> **Prerequisites:** sync-server running, extension loaded, at least one selection group with a linked JIRA ticket, access to JIRA board to flag/unflag.
+
+#### MV-1: Data Flow — flag arrives from JIRA
+- [ ] Flag a ticket in JIRA (board view → right-click → "Add flag")
+- [ ] Wait one polling cycle (~30s)
+- [ ] DevTools → Network → filter `jira-status` → response includes `"flagged": true`
+
+#### MV-2: Selection Label — red border ([POC reference](../../docs/plans/poc/flag-selection-label.html))
+- [ ] Flagged ticket's selection label has 2px red border (`#dc2626`)
+- [ ] Status badge (top-right) retains its original status color — badge is NOT red
+- [ ] Unflag in JIRA → wait one poll → red border disappears
+
+#### MV-3: Canvas Overlay — red fill + border ([POC reference](../../docs/plans/poc/flag-canvas-overlay.html))
+- [ ] Flagged ticket's overlay border is red, not the normal status color
+- [ ] Overlay has a subtle red tint (8% opacity fill)
+- [ ] Click a different group → flagged group shows red overlay (not status color)
+- [ ] Click the flagged group to make it active → lightblue glow overrides red
+
+#### MV-4: Override Precedence ([POC reference](../../docs/plans/poc/flag-canvas-overlay.html))
+- [ ] Flagged + "In Progress": overlay is red, NOT blue
+- [ ] Flagged + "Code Review": overlay is red, NOT violet
+- [ ] Flagged + active group: overlay is lightblue glow, NOT red
+- [ ] Deselect the flagged group: overlay goes back to red
+- [ ] Unflag the ticket: overlay returns to its status color
+
+#### MV-5: Selection Card (sidebar — group detail)
+- [ ] Open a group with a flagged ticket → selection card has red left-border accent (3px)
+- [ ] Unflag → wait → left-border disappears
+
+#### MV-6: Loose Selection Card (sidebar — loose list)
+- [ ] Loose selection with a flagged backing ticket → red left-border accent (3px)
+- [ ] Status pill color is red (`#dc2626`), not the workflow status color
+
+#### MV-7: Status Legend ([POC reference](../../docs/plans/poc/flag-status-legend.html))
+- [ ] Click info button in sidebar header → "Flagged / Blocked" row at the TOP, above "No Task"
+- [ ] Red dot (`#dc2626`) next to it
+- [ ] "OVERRIDES" separator between flagged row and workflow statuses
+- [ ] "Won't Do" further down has a different red (`#ef4444`) — visually distinguishable
+
+#### MV-8: Edge Cases
+- [ ] Unflagged ticket: no red anywhere — normal status colors
+- [ ] Ticket with no JIRA link: no red, shows default pink
+- [ ] "Won't Do" + flagged: red border on label, red overlay — distinct from unflagged "Won't Do"
+- [ ] Multiple flagged tickets on page: each independently shows red
 
 ## Acceptance Criteria
 
