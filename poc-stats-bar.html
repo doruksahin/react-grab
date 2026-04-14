@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Production Sidebar Candidate</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; }
+
+  h2 { font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 16px; }
+
+  .row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 32px; }
+
+  .panel { width: 440px; background: #262626; border: 1px solid #333; border-radius: 12px; overflow: hidden; flex-shrink: 0; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .panel-label { font-size: 11px; color: #888; padding: 8px 12px; background: #1f1f1f; border-bottom: 1px solid #333; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* 1. Unified Header (Dual-Metric Layout) */
+  .header-main { padding: 14px 16px 12px; background: #1f1f1f; border-bottom: 1px solid #333; }
+  .title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .title-row .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; margin-right: 8px; }
+  .title-row .title { font-size: 13px; font-weight: 700; color: #e5e5e5; flex: 1; }
+  .title-row .close-btn { font-size: 16px; color: #666; cursor: pointer; }
+
+  .metric-line { display: grid; grid-template-columns: 75px 50px 70px 75px 1fr; align-items: center; gap: 6px; margin-top: 10px; }
+  .metric-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+  .metric-val { font-size: 10px; color: #888; white-space: nowrap; }
+  .metric-val b { color: #e5e5e5; font-size: 11px; }
+  .metric-val .linked { color: #22c55e; }
+  .metric-val .flagged-count { color: #f87171; }
+  
+  .progress-container { height: 4px; background: #333; border-radius: 2px; overflow: hidden; position: relative; }
+  .progress-fill { height: 100%; background: #22c55e; transition: width 0.3s ease; }
+  .progress-fill.selections { background: #a78bfa; }
+
+  /* 2. Quick Search Result (Sticky Match Count) */
+  .match-banner { padding: 6px 16px; background: #1a1a1a; font-size: 10px; font-weight: 700; color: #a78bfa; display: flex; justify-content: flex-end; border-bottom: 1px solid #333; }
+
+  /* 3. Primary Navigation (Tabs - Full Width Segmented) */
+  .nav-tabs { padding: 0 16px 12px; background: #1f1f1f; display: flex; border-bottom: 1px solid #333; }
+  .nav-tab { flex: 1; padding: 8px 12px; font-size: 11px; font-weight: 600; color: #888; background: #2a2a2a; text-align: center; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #333; }
+  .nav-tab:first-child { border-radius: 8px 0 0 8px; border-right: none; }
+  .nav-tab:last-child { border-radius: 0 8px 8px 0; }
+  .nav-tab.active { background: #383838; color: #e5e5e5; border-color: #444; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+  .nav-tab .count { background: rgba(0,0,0,0.2); padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; color: #888; }
+  .nav-tab.active .count { color: #a78bfa; background: rgba(167, 139, 250, 0.1); }
+
+  /* 4. Search & Filter Area */
+  .filter-area { padding: 12px 16px; background: #1f1f1f; border-bottom: 1px solid #333; display: flex; flex-direction: column; gap: 10px; }
+  .search-box { position: relative; width: 100%; }
+  .search-input { width: 100%; background: #2a2a2a; border: 1px solid #333; border-radius: 8px; padding: 8px 32px 8px 12px; font-size: 12px; color: #e5e5e5; outline: none; transition: border-color 0.2s; }
+  .search-input:focus { border-color: #a78bfa; }
+
+  /* 6. Multi-Selection & Card Styling */
+  .content-list { height: 560px; overflow-y: auto; padding-bottom: 60px; }
+  .selection-card { position: relative; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid #333; padding: 16px; display: flex; align-items: flex-start; gap: 12px; }
+  .selection-card:hover { background: rgba(255,255,255,0.02); }
+  .selection-card.selected { background: rgba(167, 139, 250, 0.03); border-left: 3px solid #a78bfa; padding-left: 13px; }
+  .selection-card.flagged { background: rgba(248, 113, 113, 0.04); border-left: 3px solid #f87171; padding-left: 13px; }
+  
+  .checkbox { width: 14px; height: 14px; border: 1px solid #444; border-radius: 3px; margin-top: 2px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #1a1a1a; transition: all 0.2s; }
+  .selected .checkbox { background: #a78bfa; border-color: #a78bfa; }
+  .selected .checkbox::after { content: '✓'; color: white; font-size: 9px; font-weight: 900; }
+
+  /* Metadata Styling */
+  .card-main-content { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+  
+  /* Dual Screenshot Layout */
+  .screenshot-stack { display: flex; gap: 8px; flex-shrink: 0; }
+  .screenshot-thumb { width: 68px; height: 46px; background: #111; border-radius: 6px; border: 1px solid #333; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  .screenshot-thumb::after { content: '📷'; font-size: 12px; opacity: 0.15; }
+  
+  .card-dates { display: flex; flex-direction: column; gap: 4px; font-size: 9px; color: #555; }
+  .card-dates span { display: flex; align-items: center; }
+  .card-dates b { color: #888; font-weight: 700; text-transform: uppercase; font-size: 8px; width: 54px; flex-shrink: 0; }
+  
+  .card-comment-block { font-size: 11px; font-weight: 600; color: #ddd; background: #1e1e1e; padding: 12px; border-radius: 8px; border: 1px solid #333; border-left: 3px solid #444; margin: 0 0 12px; line-height: 1.5; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
+  .flagged .card-comment-block { border-left-color: #f87171; background: rgba(248, 113, 113, 0.03); }
+
+  .version-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #f59e0b; background: rgba(245, 158, 11, 0.1); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.2); }
+
+  /* 8. Compact Mode Toggle (Figma Style) */
+  .dev-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; padding: 2px 4px; border-radius: 4px; transition: background 0.2s; }
+  .dev-toggle:hover { background: rgba(255,255,255,0.05); }
+  .toggle-track { width: 24px; height: 14px; background: #333; border-radius: 999px; position: relative; transition: all 0.2s; border: 1px solid #444; }
+  .toggle-thumb { width: 10px; height: 10px; background: #888; border-radius: 50%; position: absolute; top: 1px; left: 1px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+  .panel.dev-mode .toggle-track { background: rgba(14, 165, 233, 0.2); border-color: rgba(14, 165, 233, 0.5); }
+  .panel.dev-mode .toggle-thumb { left: 11px; background: #0ea5e9; box-shadow: 0 0 8px rgba(14, 165, 233, 0.6); }
+  .dev-label { font-size: 9px; font-weight: 800; color: #666; letter-spacing: 0.5px; }
+  .panel.dev-mode .dev-label { color: #0ea5e9; }
+  
+  .dev-only { display: none; }
+  .panel.dev-mode .dev-only { display: block; }
+  
+  .dev-inspect-trigger { font-size: 9px; font-weight: 800; color: #0ea5e9; margin-top: 4px; display: flex; align-items: center; gap: 4px; opacity: 0.7; cursor: pointer; }
+  .dev-inspect-trigger:hover { opacity: 1; }
+
+  .dev-info-content { margin-top: 10px; display: none; }
+  .dev-info-active .dev-info-content { display: block; }
+
+  .code-snippet { background: #111; border: 1px solid #333; border-radius: 6px; padding: 10px; margin-top: 6px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #9ca3af; line-height: 1.5; border-left: 2px solid #0ea5e9; }
+  .code-snippet b { color: #0ea5e9; font-weight: 700; text-transform: lowercase; opacity: 0.8; }
+
+  .card-body { flex: 1; min-width: 0; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .card-badge { font-size: 10px; font-weight: 700; color: #22c55e; flex-shrink: 0; margin-left: 8px; }
+  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .card-tag { background: #333; color: #888; padding: 1px 7px; border-radius: 4px; font-size: 9px; font-weight: 600; }
+
+  /* 7. Bulk Action Bar */
+  .bulk-bar { position: absolute; bottom: 0; left: 0; right: 0; background: #a78bfa; color: white; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.3); border-top-left-radius: 16px; border-top-right-radius: 16px; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════ -->
+<h2>Ultimate Production Sidebar — Multi-Screenshot Optimized (J/15)</h2>
+<div class="row">
+
+  <!-- SCENARIO: Selections Active -->
+  <div class="panel">
+    <div class="panel-label">Production Candidate — Selections Context</div>
+    
+    <div class="header-main">
+      <div class="title-row">
+        <div class="dot"></div>
+        <div class="title">UI Ticket Manager</div>
+        <div class="dev-toggle" onclick="toggleMode(this)">
+          <span class="dev-label">DEV</span>
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+        </div>
+        <div class="close-btn" style="margin-left: 12px;">×</div>
+      </div>
+      
+      <div class="metric-line">
+        <div class="metric-label">Groups</div>
+        <div class="metric-val">Total <b>2</b></div>
+        <div class="metric-val">Linked <b class="linked">1</b></div>
+        <div class="metric-val">Flagged <b class="flagged-count">0</b></div>
+        <div class="progress-container"><div class="progress-fill" style="width: 50%"></div></div>
+      </div>
+      
+      <div class="metric-line">
+        <div class="metric-label">Selections</div>
+        <div class="metric-val">Total <b>4</b></div>
+        <div class="metric-val">Ticketed <b class="linked">3</b></div>
+        <div class="metric-val">Flagged <b class="flagged-count">1</b></div>
+        <div class="progress-container"><div class="progress-fill selections" style="width: 75%"></div></div>
+      </div>
+    </div>
+
+    <div class="nav-tabs" style="margin-top: 12px;">
+      <div class="nav-tab">Groups <span class="count">2</span></div>
+      <div class="nav-tab active">Selections <span class="count">4</span></div>
+    </div>
+
+    <div class="content-list">
+      <!-- Card 1: Blocked -->
+      <div class="selection-card flagged selected">
+        <div class="checkbox"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <div class="card-comment-block">
+              <span class="icon-flag-mini" style="color:#f87171">🚩</span>
+              Missing the new brand assets for the hero variant. Blocking the sprint 14 deployment.
+            </div>
+            <span class="card-badge" style="color:#f87171">BLOCKED</span>
+          </div>
+          
+          <div class="card-main-content">
+            <div class="screenshot-stack">
+              <div class="screenshot-thumb"></div>
+              <div class="screenshot-thumb"></div>
+            </div>
+            <div style="flex:1">
+              <div class="card-dates">
+                <span><b>Created:</b> Apr 12, 2026</span>
+                <span><b>Due:</b> Apr 15, 2026</span>
+              </div>
+              <div class="card-tags"><span class="card-tag">layout</span><span class="card-tag" style="color:#f87171">impediment</span></div>
+            </div>
+          </div>
+
+          <div class="dev-only">
+            <div class="dev-inspect-trigger" onclick="toggleDevInfo(this, event)"><span>INSIGHTS</span> <span>▼</span></div>
+            <div class="dev-info-content">
+               <div class="code-snippet">
+                 <b>tag:</b> div<br>
+                 <b>node:</b> HeaderContainer<br>
+                 <b>class:</b> .header-wrap<br>
+                 <b>props:</b> { sticky: true, variant: "hero" }<br>
+                 <b>active:</b> 12m ago
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Loose -->
+      <div class="selection-card selected">
+        <div class="checkbox"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <div class="card-comment-block">
+              Review logo alignment on mobile headers. Version mismatch suspected between Figma and implementation.
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+              <span class="card-badge" style="color:#666">LOOSE</span>
+              <span class="version-tag">v2.1.0</span>
+            </div>
+          </div>
+          
+          <div class="card-main-content">
+            <div class="screenshot-stack">
+              <div class="screenshot-thumb"></div>
+              <div class="screenshot-thumb"></div>
+            </div>
+            <div style="flex:1">
+              <div class="card-dates"><span><b>Created:</b> Apr 14, 09:12</span></div>
+              <div class="card-tags"><span class="card-tag">asset</span><span class="card-tag">svg</span></div>
+            </div>
+          </div>
+
+          <div class="dev-only">
+            <div class="dev-inspect-trigger" onclick="toggleDevInfo(this, event)"><span>INSIGHTS</span> <span>▼</span></div>
+            <div class="dev-info-content">
+              <div class="code-snippet">
+                <b>tag:</b> img<br>
+                <b>node:</b> LogoImage<br>
+                <b>src:</b> /assets/logo.svg<br>
+                <b>dimensions:</b> 120x40<br>
+                <b>active:</b> 15m ago
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Ticketed -->
+      <div class="selection-card">
+        <div class="checkbox"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <div class="card-comment-block">
+              Footer layout refinement for accessibility. ARIA labels missing on social media icons.
+            </div>
+            <span class="card-badge" style="color:#22c55e">TICKETED</span>
+          </div>
+          
+          <div class="card-main-content">
+            <div class="screenshot-stack">
+              <div class="screenshot-thumb"></div>
+              <div class="screenshot-thumb"></div>
+            </div>
+            <div style="flex:1">
+              <div class="card-dates">
+                <span><b>Created:</b> Apr 10, 2026</span>
+                <span><b>Due:</b> Apr 20, 2026</span>
+              </div>
+              <div class="card-tags"><span class="card-tag">layout</span><span class="card-tag">a11y</span></div>
+            </div>
+          </div>
+          
+          <div class="dev-only">
+            <div class="dev-inspect-trigger" onclick="toggleDevInfo(this, event)"><span>INSIGHTS</span> <span>▼</span></div>
+            <div class="dev-info-content">
+              <div class="code-snippet">
+                <b>tag:</b> footer<br>
+                <b>node:</b> FooterSection<br>
+                <b>file:</b> components/Footer.tsx<br>
+                <b>active:</b> 6h ago
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENARIO: Groups Tab (Unchanged) -->
+  <div class="panel">
+    <div class="panel-label">Production Candidate — Groups Context</div>
+    <div class="header-main">
+      <div class="title-row">
+        <div class="dot"></div>
+        <div class="title">UI Ticket Manager</div>
+        <div class="dev-toggle" onclick="toggleMode(this)">
+          <span class="dev-label">DEV</span>
+          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+        </div>
+        <div class="close-btn" style="margin-left: 12px;">×</div>
+      </div>
+      <div class="metric-line">
+        <div class="metric-label">Groups</div>
+        <div class="metric-val">Total <b>2</b></div>
+        <div class="metric-val">Linked <b class="linked">1</b></div>
+        <div class="metric-val">Flagged <b class="flagged-count">0</b></div>
+        <div class="progress-container"><div class="progress-fill" style="width: 50%"></div></div>
+      </div>
+    </div>
+
+    <div class="nav-tabs" style="margin-top: 12px;">
+      <div class="nav-tab active">Groups <span class="count">2</span></div>
+      <div class="nav-tab">Selections <span class="count">4</span></div>
+    </div>
+
+    <div class="content-list">
+      <div class="selection-card" style="border-left: 3px solid #a78bfa; padding-left: 13px;">
+        <div class="card-body">
+          <div class="card-top">
+            <span class="card-title">group1</span>
+            <span class="card-badge" style="color:#22c55e">TICKETED</span>
+          </div>
+          <div class="card-meta" style="font-size: 10px; color: #666; margin-top: 4px;">1 selection · ATT-2870 · 6h ago</div>
+          <div class="card-tags"><span class="card-tag">sprint-12</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function toggleMode(el) {
+    const panel = el.closest('.panel');
+    panel.classList.toggle('dev-mode');
+  }
+
+  function toggleDevInfo(el, event) {
+    event.stopPropagation();
+    const card = el.closest('.selection-card');
+    card.classList.toggle('dev-info-active');
+    const chevron = el.querySelectorAll('span')[1];
+    chevron.style.transform = card.classList.contains('dev-info-active') ? 'rotate(180deg)' : 'rotate(0deg)';
+    chevron.style.display = 'inline-block';
+    chevron.style.transition = 'transform 0.2s';
+  }
+</script>
+
+</body>
+</html>
