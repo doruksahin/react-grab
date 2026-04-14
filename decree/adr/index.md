@@ -12,3 +12,4 @@
 | ADR-0007 | ADR-0007 Atlassian internal GraphQL gateway for threaded Jira comments | accepted | 2026-04-08 |  |
 | ADR-0008 | ADR-0008 Synthetic single-item groups for loose-selection ticketing | accepted | 2026-04-08 |  |
 | ADR-0009 | ADR-0009 Flag data source and blocked visual strategy | accepted | 2026-04-14 |  |
+| ADR-0010 | ADR-0010 TipTap WYSIWYG editor for JIRA comment authoring | proposed | 2026-04-15 |  |
