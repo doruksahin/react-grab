@@ -1,6 +1,7 @@
-import { Show, Index, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
+import { Show, Index, splitProps, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
 import type { Component } from "solid-js";
 import type { AgentSession, ReactGrabRendererProps } from "../types.js";
+import { JIRA_DISPLAY_KEYS } from "../types.js";
 import {
   DEFAULT_ACTION_ID,
   FADE_DURATION_MS,
@@ -204,7 +205,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       </Show>
 
       <Index each={props.labelInstances ?? []}>
-        {(instance) => (
+        {(instance) => {
+          const [jiraFields] = splitProps(instance(), [...JIRA_DISPLAY_KEYS]);
+          return (
           <SelectionLabel
             tagName={instance().tagName}
             componentName={instance().componentName}
@@ -219,16 +222,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             inputValue={instance().inputValue}
             error={instance().errorMessage}
             hideArrow={instance().hideArrow}
-            groupStatus={instance().groupStatus}
-            jiraTicketId={instance().jiraTicketId}
-            jiraUrl={instance().jiraUrl}
-            jiraStatusCategory={instance().jiraStatusCategory}
-            jiraAssignee={instance().jiraAssignee}
-            jiraReporter={instance().jiraReporter}
-            jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
-            jiraReporterAvatar={instance().jiraReporterAvatar}
-            jiraLabels={instance().jiraLabels}
-            jiraComments={instance().jiraComments}
+            {...jiraFields}
             // Full groups list — see note above. The picker needs
             // synthetic groups visible at the business layer so
             // ticket-lock on a loose-ticketed item resolves correctly.
@@ -272,7 +266,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
               return () => props.onCreateTicketForLooseItem?.(item);
             })()}
           />
-        )}
+        );}}
       </Index>
 
       <Show when={props.toolbarVisible !== false}>

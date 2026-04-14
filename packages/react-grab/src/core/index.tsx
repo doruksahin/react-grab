@@ -3920,6 +3920,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           jiraReporterAvatar: group?.jiraReporterAvatar,
           jiraLabels: group?.jiraLabels,
           jiraComments: group?.jiraComments,
+          jiraFlagged: group?.jiraFlagged,
+          jiraFlaggedAt: group?.jiraFlaggedAt,
+          jiraFlaggedBy: group?.jiraFlaggedBy,
+          jiraFlaggedByAvatar: group?.jiraFlaggedByAvatar,
         };
       });
     });
@@ -3966,6 +3970,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 jiraComments: status.comments,
                 jiraResolved: resolved,
                 jiraUrl: status.jiraUrl,
+                jiraFlagged: status.flagged ?? false,
+                jiraFlaggedAt: status.flaggedAt ?? null,
+                jiraFlaggedBy: status.flaggedBy ?? null,
+                jiraFlaggedByAvatar: status.flaggedByAvatar ?? null,
               }
             : g,
         );

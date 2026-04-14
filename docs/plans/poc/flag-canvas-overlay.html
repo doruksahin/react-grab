@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC: Flagged Canvas Overlay — Red Border + Fill</title>
+  <style>
+    :root {
+      --flag-red: #dc2626;
+      --in-progress: #3b82f6;
+      --code-review: #a78bfa;
+      --active-group: rgba(56, 189, 248, 0.9);
+      --pink: rgba(210, 57, 192, 0.5);
+      --fill-alpha: 0.08;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    h1 { font-size: 18px; color: #333; margin: 0 0 8px; }
+    h2 { font-size: 14px; color: #666; margin: 0 0 24px; font-weight: 400; }
+    .row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .example { text-align: center; }
+    .example-label { font-size: 11px; color: #888; margin-top: 12px; max-width: 180px; }
+
+    /* ── Fake page element (simulated target) ────────── */
+    .page-element {
+      width: 180px;
+      height: 100px;
+      background: white;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #999;
+      position: relative;
+    }
+
+    /* ── Canvas overlay simulation ────────────────────── */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    /* Normal: In Progress (blue) */
+    .overlay.status-blue {
+      border: 2px solid var(--in-progress);
+      background: rgba(59, 130, 246, var(--fill-alpha));
+    }
+
+    /* Normal: Code Review (violet) */
+    .overlay.status-violet {
+      border: 2px solid var(--code-review);
+      background: rgba(167, 139, 250, var(--fill-alpha));
+    }
+
+    /* Flagged: Red override */
+    .overlay.flagged {
+      border: 2px solid var(--flag-red);
+      background: rgba(220, 38, 38, var(--fill-alpha));
+    }
+
+    /* Active group: Lightblue glow (highest priority) */
+    .overlay.active-group {
+      border: 2px solid var(--active-group);
+      background: rgba(56, 189, 248, 0.12);
+      box-shadow:
+        0 0 20px rgba(56, 189, 248, 0.35),
+        0 0 6px rgba(56, 189, 248, 0.7);
+    }
+
+    /* ── Precedence Diagram ──────────────────────────── */
+    .precedence {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+    }
+    .precedence-item {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      color: white;
+    }
+    .precedence .arrow { color: #999; font-size: 18px; }
+    .p-active { background: rgba(56, 189, 248, 0.9); }
+    .p-flagged { background: #dc2626; }
+    .p-status { background: #3b82f6; }
+    .p-default { background: #b21c8e; }
+
+    .note {
+      background: #e8f4fd;
+      border: 1px solid #bee3f8;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #2c5282;
+      max-width: 500px;
+    }
+  </style>
+</head>
+<body>
+
+  <div>
+    <h1>Canvas Overlay — Override Precedence</h1>
+    <h2>SPEC-012 — Flagged red overrides status color; active-group glow overrides everything</h2>
+
+    <div class="row">
+      <!-- Normal: In Progress -->
+      <div class="example">
+        <div class="page-element">
+          &lt;div.hero&gt;
+          <div class="overlay status-blue"></div>
+        </div>
+        <div class="example-label">Normal — In Progress (blue)</div>
+      </div>
+
+      <!-- Flagged: was In Progress, now red -->
+      <div class="example">
+        <div class="page-element">
+          &lt;div.hero&gt;
+          <div class="overlay flagged"></div>
+        </div>
+        <div class="example-label"><strong>Flagged</strong> — In Progress but blocked (red overrides blue)</div>
+      </div>
+
+      <!-- Flagged: was Code Review, now red -->
+      <div class="example">
+        <div class="page-element">
+          &lt;button.cta&gt;
+          <div class="overlay flagged"></div>
+        </div>
+        <div class="example-label"><strong>Flagged</strong> — Code Review but blocked (red overrides violet)</div>
+      </div>
+
+      <!-- Active group + flagged: glow wins -->
+      <div class="example">
+        <div class="page-element">
+          &lt;div.hero&gt;
+          <div class="overlay active-group"></div>
+        </div>
+        <div class="example-label">Active Group + Flagged — glow wins (deselect to see red)</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h1>Override Precedence Chain</h1>
+    <div class="precedence">
+      <div class="precedence-item p-active">1. Active Group</div>
+      <div class="arrow">›</div>
+      <div class="precedence-item p-flagged">2. Flagged</div>
+      <div class="arrow">›</div>
+      <div class="precedence-item p-status">3. ATT Status</div>
+      <div class="arrow">›</div>
+      <div class="precedence-item p-default">4. Default</div>
+    </div>
+    <br>
+    <div class="note">
+      <strong>Business Rule (ADR-0009):</strong> The flagged state inserts at priority 2 —
+      below active-group selection (interactive feedback) but above workflow status
+      (informational). A flagged ticket's canvas overlay turns red (#dc2626 border,
+      8% red fill) regardless of its JIRA status.
+    </div>
+  </div>
+
+</body>
+</html>

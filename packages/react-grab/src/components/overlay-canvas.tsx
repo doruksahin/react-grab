@@ -35,7 +35,7 @@ import {
 } from "../utils/native-raf.js";
 import { supportsDisplayP3 } from "../utils/supports-display-p3.js";
 import { activeGroupOverlayColor, hexToRgba } from "../utils/overlay-color.js";
-import { getStatusColor } from "../features/sidebar/status-colors.js";
+import { resolveDisplayColor } from "../features/sidebar/resolve-display-color.js";
 
 /**
  * Returns the horizontal shake offset (in px) for a decaying sine oscillation.
@@ -692,12 +692,13 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
           const isActiveGroup =
             currentActiveGroupId != null &&
             instance.groupId === currentActiveGroupId;
+          const resolvedColor = resolveDisplayColor(instance.groupStatus, instance.jiraFlagged);
           const instanceBorderColor = isActiveGroup
             ? ACTIVE_GROUP_BORDER_COLOR
-            : getStatusColor(instance.groupStatus).hex;
+            : resolvedColor.hex;
           const instanceFillColor = isActiveGroup
             ? ACTIVE_GROUP_FILL_COLOR
-            : hexToRgba(getStatusColor(instance.groupStatus).hex, STATUS_OVERLAY_FILL_ALPHA);
+            : hexToRgba(resolvedColor.hex, STATUS_OVERLAY_FILL_ALPHA);
           const instanceShadowPasses = isActiveGroup
             ? ACTIVE_GROUP_SHADOW_PASSES
             : undefined;

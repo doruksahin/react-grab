@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC: Status Legend with Flagged Entry</title>
+  <style>
+    :root {
+      --bg-card: #ffffff;
+      --border: #e5e5e5;
+      --foreground: #171717;
+      --muted-foreground: #737373;
+      --flag-red: #dc2626;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      padding: 40px;
+      display: flex;
+      gap: 48px;
+    }
+
+    h1 { font-size: 14px; color: #333; margin: 0 0 16px; }
+
+    /* ── Sidebar frame ───────────────────────────────── */
+    .sidebar-frame {
+      width: 320px;
+      height: 520px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Status Legend Overlay ────────────────────────── */
+    .status-legend {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .legend-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .legend-header span {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--foreground);
+    }
+    .legend-header button {
+      font-size: 11px;
+      color: var(--muted-foreground);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .legend-body { padding: 12px 16px; }
+
+    .legend-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .legend-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--foreground);
+    }
+    .legend-desc {
+      font-size: 10px;
+      color: var(--muted-foreground);
+    }
+
+    /* ── Flagged row highlight ────────────────────────── */
+    .legend-row.flagged-row {
+      background: rgba(220, 38, 38, 0.06);
+      border-radius: 6px;
+      padding: 6px 8px;
+      margin-left: -8px;
+      margin-right: -8px;
+      border-left: 3px solid var(--flag-red);
+    }
+
+    .legend-separator {
+      border-top: 1px solid var(--border);
+      margin: 12px 0;
+      position: relative;
+    }
+    .legend-separator::after {
+      content: 'OVERRIDES';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 0 8px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--flag-red);
+      letter-spacing: 0.5px;
+    }
+
+    .legend-footer {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--muted-foreground);
+      line-height: 1.5;
+    }
+
+    /* ── Side-by-side labels ─────────────────────────── */
+    .description { max-width: 360px; font-size: 13px; color: #555; line-height: 1.6; }
+    .callout {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #856404;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Status Legend Panel -->
+  <div>
+    <h1>Status Legend — with Flagged Entry</h1>
+    <div class="sidebar-frame">
+      <div class="status-legend">
+        <div class="legend-header">
+          <span>Status Legend</span>
+          <button>Got it</button>
+        </div>
+        <div class="legend-body">
+
+          <!-- FLAGGED — shown first, with visual separator -->
+          <div class="legend-row flagged-row">
+            <div class="legend-dot" style="background: #dc2626;"></div>
+            <div>
+              <div class="legend-name">Flagged / Blocked</div>
+              <div class="legend-desc">Ticket has an impediment — overrides status color on canvas and label border</div>
+            </div>
+          </div>
+
+          <div class="legend-separator"></div>
+
+          <!-- Standard workflow statuses -->
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #b21c8e;"></div>
+            <div>
+              <div class="legend-name">No Task</div>
+              <div class="legend-desc">Selection group not yet linked to a JIRA ticket</div>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #94a3b8;"></div>
+            <div>
+              <div class="legend-name">To Do</div>
+              <div class="legend-desc">Ticket created, not yet started</div>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #3b82f6;"></div>
+            <div>
+              <div class="legend-name">In Progress</div>
+              <div class="legend-desc">Developer actively working on it</div>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #a78bfa;"></div>
+            <div>
+              <div class="legend-name">Code Review</div>
+              <div class="legend-desc">Pull request submitted for review</div>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #f59e0b;"></div>
+            <div>
+              <div class="legend-name">Test</div>
+              <div class="legend-desc">QA testing in progress</div>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #10b981;"></div>
+            <div>
+              <div class="legend-name">Test Passed</div>
+              <div class="legend-desc">QA approved, ready for UAT</div>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #06b6d4;"></div>
+            <div>
+              <div class="legend-name">UAT</div>
+              <div class="legend-desc">User acceptance testing</div>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #8b5cf6;"></div>
+            <div>
+              <div class="legend-name">In Preprod</div>
+              <div class="legend-desc">Deployed to pre-production environment</div>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #22c55e;"></div>
+            <div>
+              <div class="legend-name">In Production</div>
+              <div class="legend-desc">Live in production</div>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #ef4444;"></div>
+            <div>
+              <div class="legend-name">Won't Do</div>
+              <div class="legend-desc">Ticket closed without implementation</div>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <div class="legend-dot" style="background: #22c55e;"></div>
+            <div>
+              <div class="legend-name">Done</div>
+              <div class="legend-desc">Completed and verified</div>
+            </div>
+          </div>
+
+          <div class="legend-footer">
+            Lifecycle: No Task → To Do → In Progress → Code Review → Test → Test Passed → UAT → In Preprod → In Production → Done
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div>
+    <h1>Design Decisions</h1>
+    <div class="description">
+      <p><strong>Position:</strong> Flagged appears at the top, before workflow statuses,
+        with an "OVERRIDES" separator to visually communicate the business rule.</p>
+
+      <p><strong>Visual treatment:</strong> The flagged row has a subtle red background tint
+        and a 3px left border to distinguish it from workflow statuses.</p>
+
+      <p><strong>Color distinction:</strong> Flagged red (#dc2626, red-600) vs Won't Do red
+        (#ef4444, red-500). Different shades — and different visual channels
+        (border vs badge fill) — prevent confusion.</p>
+    </div>
+
+    <div class="callout">
+      <strong>Business Rule:</strong> Flagged is not a workflow status — it's a cross-cutting
+      concern. A ticket can be "In Progress" AND "Flagged" simultaneously. That's why it
+      sits above the workflow list with an explicit "OVERRIDES" label.
+    </div>
+  </div>
+
+</body>
+</html>

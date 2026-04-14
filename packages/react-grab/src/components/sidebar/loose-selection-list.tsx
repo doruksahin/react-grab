@@ -3,7 +3,8 @@ import { type Component, For, Show, createMemo } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { isPresentedAsLoose } from "../../features/selection-groups/business/membership.js";
-import { getStatusColor, getStatusLabel } from "../../features/sidebar/status-colors.js";
+import { getStatusLabel } from "../../features/sidebar/status-colors.js";
+import { resolveDisplayColor } from "../../features/sidebar/resolve-display-color.js";
 import { LooseSelectionCard } from "./loose-selection-card.jsx";
 
 interface LooseSelectionListProps {
@@ -53,9 +54,13 @@ export const LooseSelectionList: Component<LooseSelectionListProps> = (props) =>
               <LooseSelectionCard
                 item={item}
                 statusLabel={group() ? getStatusLabel(group()!) : "No Task"}
-                statusColor={getStatusColor(group()?.jiraStatus)}
+                statusColor={resolveDisplayColor(group()?.jiraStatus, group()?.jiraFlagged)}
                 jiraTicketId={group()?.jiraTicketId}
                 jiraUrl={group()?.jiraUrl}
+                jiraFlagged={group()?.jiraFlagged}
+                jiraFlaggedAt={group()?.jiraFlaggedAt}
+                jiraFlaggedBy={group()?.jiraFlaggedBy}
+                jiraFlaggedByAvatar={group()?.jiraFlaggedByAvatar}
                 onCreateTicket={props.onCreateTicket}
                 onRemoveItem={props.onRemoveItem}
                 syncServerUrl={props.syncServerUrl}

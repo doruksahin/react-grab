@@ -5,7 +5,10 @@ import type { StatusColorConfig } from '../../features/sidebar/status-colors.js'
 import { SelectionCard } from './selection-card.jsx';
 import { Button } from '../ui/button.jsx';
 import { RemoveSelectionButton } from '../remove-selection-button.jsx';
+import { FlagIndicator } from '../flag-indicator.js';
+import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-color.js';
 import { LooseSelectionCardHeader } from './loose-selection-card-header.jsx';
+import { cn } from '../../utils/cn.js';
 
 interface LooseSelectionCardProps {
   item: CommentItem;
@@ -25,6 +28,10 @@ interface LooseSelectionCardProps {
   syncServerUrl?: string;
   syncWorkspace?: string;
   scrollRoot: () => Element | null;
+  jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
 }
 
 /**
@@ -49,7 +56,10 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
       class="mb-1.5"
       style={{ 'pointer-events': 'auto' }}
     >
-      <div class="relative bg-muted rounded-lg border border-border p-3 cursor-default">
+      <div class={cn(
+        "relative bg-muted rounded-lg border border-border p-3 cursor-default",
+        props.jiraFlagged && FLAGGED_BORDER_CLASS
+      )}>
         {/* Absolute close button — top right */}
         <Show when={!hasTicket() && props.onRemoveItem}>
           <div class="absolute -top-2 -right-2 z-10">
@@ -73,14 +83,23 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
                 </Button>
               }
             >
-              <a
-                href={props.jiraUrl}
-                target="_blank"
-                rel="noreferrer"
-                class="text-[10px] font-medium text-blue-400 hover:underline"
-              >
-                {props.jiraTicketId}
-              </a>
+              <div class="flex items-center gap-1">
+                <Show when={props.jiraFlagged}>
+                  <FlagIndicator
+                    flaggedAt={props.jiraFlaggedAt}
+                    flaggedBy={props.jiraFlaggedBy}
+                    flaggedByAvatar={props.jiraFlaggedByAvatar}
+                  />
+                </Show>
+                <a
+                  href={props.jiraUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  class="text-[10px] font-medium text-blue-400 hover:underline"
+                >
+                  {props.jiraTicketId}
+                </a>
+              </div>
             </Show>
           }
           right={
@@ -108,6 +127,10 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             syncServerUrl={props.syncServerUrl}
             syncWorkspace={props.syncWorkspace}
             scrollRoot={props.scrollRoot}
+            jiraFlagged={props.jiraFlagged}
+            jiraFlaggedAt={props.jiraFlaggedAt}
+            jiraFlaggedBy={props.jiraFlaggedBy}
+            jiraFlaggedByAvatar={props.jiraFlaggedByAvatar}
           />
         </div>
       </div>

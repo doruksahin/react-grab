@@ -126,6 +126,7 @@ export type ListGroups200Item = {
   /** Lifecycle status of a group */
   status?: ListGroups200ItemStatus;
   jiraTicketId?: string;
+  synthetic?: boolean;
 };
 
 /**
@@ -148,6 +149,7 @@ export type PersistGroupsBodyItem = {
   /** Lifecycle status of a group */
   status?: PersistGroupsBodyItemStatus;
   jiraTicketId?: string;
+  synthetic?: boolean;
 };
 
 export type PersistGroups200Status = typeof PersistGroups200Status[keyof typeof PersistGroups200Status];
@@ -224,6 +226,13 @@ export type GetJiraTicketStatus200 = {
   jiraUrl: string;
   labels: string[];
   comments: GetJiraTicketStatus200CommentsItem[];
+  flagged?: boolean;
+  /** @nullable */
+  flaggedAt?: string | null;
+  /** @nullable */
+  flaggedBy?: string | null;
+  /** @nullable */
+  flaggedByAvatar?: string | null;
 };
 
 export type GetJiraTicketStatus404 = {
@@ -261,6 +270,17 @@ export type ListJiraPriorities200Item = {
 };
 
 export type ListJiraPriorities500 = {
+  error: string;
+};
+
+export type ListJiraLabelsParams = {
+/**
+ * Project key (e.g. ATT)
+ */
+projectKey: string;
+};
+
+export type ListJiraLabels500 = {
   error: string;
 };
 
@@ -787,7 +807,7 @@ export const listJiraPriorities = async ( options?: RequestInit): Promise<listJi
 
 
 /**
- * @summary List JIRA labels
+ * @summary List JIRA labels used in a project
  */
 export type listJiraLabelsResponse200 = {
   data: string[]
@@ -795,7 +815,7 @@ export type listJiraLabelsResponse200 = {
 }
 
 export type listJiraLabelsResponse500 = {
-  data: { error: string }
+  data: ListJiraLabels500
   status: 500
 }
 
@@ -808,14 +828,28 @@ export type listJiraLabelsResponseError = (listJiraLabelsResponse500) & {
 
 export type listJiraLabelsResponse = (listJiraLabelsResponseSuccess | listJiraLabelsResponseError)
 
-export const getListJiraLabelsUrl = (params: { projectKey: string }) => {
-  return `/jira/labels?projectKey=${encodeURIComponent(params.projectKey)}`
+export const getListJiraLabelsUrl = (params: ListJiraLabelsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/jira/labels?${stringifiedParams}` : `/jira/labels`
 }
 
-export const listJiraLabels = async (params: { projectKey: string }, options?: RequestInit): Promise<listJiraLabelsResponse> => {
+export const listJiraLabels = async (params: ListJiraLabelsParams, options?: RequestInit): Promise<listJiraLabelsResponse> => {
+
   return customFetch<listJiraLabelsResponse>(getListJiraLabelsUrl(params),
   {
     ...options,
     method: 'GET'
+
+
   }
 );}

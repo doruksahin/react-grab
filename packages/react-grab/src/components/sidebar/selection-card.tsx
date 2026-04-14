@@ -8,6 +8,9 @@ import {
 } from "../../features/sidebar";
 import { ScreenshotPair } from "./screenshot-pair";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
+import { FlagIndicator } from "../flag-indicator.js";
+import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";
+import { cn } from "../../utils/cn.js";
 
 export interface SelectionCardProps {
   item: CommentItem;
@@ -17,6 +20,10 @@ export interface SelectionCardProps {
   /** Pre-curried remove handler. When undefined, the × button is not
    *  rendered — the caller gates this on the ticket-lock rule. */
   onRemoveItem?: () => void;
+  jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
 }
 
 export const SelectionCard: Component<SelectionCardProps> = (props) => {
@@ -53,12 +60,22 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
   return (
     <div
       data-react-grab-selection-card
-      class="bg-muted rounded-lg p-3 mb-1.5 border border-border"
+      class={cn(
+        "bg-muted rounded-lg p-3 mb-1.5 border border-border",
+        props.jiraFlagged && FLAGGED_BORDER_CLASS
+      )}
       style={{ "pointer-events": "auto" }}
     >
-      {/* Row 1: component name + tag badge + timestamp + remove */}
+      {/* Row 1: component name + flag icon + tag badge + timestamp + remove */}
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5 min-w-0">
+          <Show when={props.jiraFlagged}>
+            <FlagIndicator
+              flaggedAt={props.jiraFlaggedAt}
+              flaggedBy={props.jiraFlaggedBy}
+              flaggedByAvatar={props.jiraFlaggedByAvatar}
+            />
+          </Show>
           <span class="text-[13px] font-semibold text-foreground truncate">
             {props.item.componentName || props.item.elementName}
           </span>

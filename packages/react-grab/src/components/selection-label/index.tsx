@@ -33,6 +33,8 @@ import { CreateTicketButton } from './create-ticket-button.jsx';
 import { SelectionStatusBadge } from './status-badge.js';
 import { ActiveGroupPicker } from '../../features/selection-groups/components/active-group-picker.jsx';
 import { IconLoader } from '../icons/icon-loader.jsx';
+import { FlagIndicator } from '../flag-indicator.js';
+import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-color.js';
 import { Arrow } from './arrow.js';
 import { TagBadge } from './tag-badge.js';
 import { BottomSection } from './bottom-section.js';
@@ -504,6 +506,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           class={cn(
             'relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]',
             'bg-popover',
+            props.jiraFlagged && FLAGGED_BORDER_CLASS,
             isShaking() && 'animate-shake'
           )}
           style={{
@@ -603,6 +606,13 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     isArrowNavigationVisible() || isInspectNavigationVisible(),
                 }}
               >
+                <Show when={props.jiraFlagged}>
+                  <FlagIndicator
+                    flaggedAt={props.jiraFlaggedAt}
+                    flaggedBy={props.jiraFlaggedBy}
+                    flaggedByAvatar={props.jiraFlaggedByAvatar}
+                  />
+                </Show>
                 <TagBadge
                   tagName={tagDisplayResult().tagName}
                   componentName={tagDisplayResult().componentName}
@@ -686,6 +696,13 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           >
             <div class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit min-w-[150px] max-w-[280px] gap-1 pb-2">
               <div class="contain-layout shrink-0 flex items-center gap-1 pt-1.5 pb-1 w-fit h-fit px-2 max-w-full">
+                <Show when={props.jiraFlagged}>
+                  <FlagIndicator
+                    flaggedAt={props.jiraFlaggedAt}
+                    flaggedBy={props.jiraFlaggedBy}
+                    flaggedByAvatar={props.jiraFlaggedByAvatar}
+                  />
+                </Show>
                 <TagBadge
                   tagName={tagDisplayResult().tagName}
                   componentName={tagDisplayResult().componentName}
