@@ -8,6 +8,7 @@ import {
 } from "../../features/sidebar";
 import { ScreenshotPair } from "./screenshot-pair";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
+import { IconFlag } from "../icons/icon-flag.js";
 import { cn } from "../../utils/cn.js";
 
 export interface SelectionCardProps {
@@ -61,9 +62,12 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       )}
       style={{ "pointer-events": "auto" }}
     >
-      {/* Row 1: component name + tag badge + timestamp + remove */}
+      {/* Row 1: component name + flag icon + tag badge + timestamp + remove */}
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5 min-w-0">
+          <Show when={props.jiraFlagged}>
+            <IconFlag size={14} class="text-[#dc2626] shrink-0" />
+          </Show>
           <span class="text-[13px] font-semibold text-foreground truncate">
             {props.item.componentName || props.item.elementName}
           </span>

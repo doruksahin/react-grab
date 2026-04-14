@@ -5,6 +5,7 @@ import type { StatusColorConfig } from '../../features/sidebar/status-colors.js'
 import { SelectionCard } from './selection-card.jsx';
 import { Button } from '../ui/button.jsx';
 import { RemoveSelectionButton } from '../remove-selection-button.jsx';
+import { IconFlag } from '../icons/icon-flag.js';
 import { LooseSelectionCardHeader } from './loose-selection-card-header.jsx';
 import { cn } from '../../utils/cn.js';
 
@@ -78,14 +79,19 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
                 </Button>
               }
             >
-              <a
-                href={props.jiraUrl}
-                target="_blank"
-                rel="noreferrer"
-                class="text-[10px] font-medium text-blue-400 hover:underline"
-              >
-                {props.jiraTicketId}
-              </a>
+              <div class="flex items-center gap-1">
+                <Show when={props.jiraFlagged}>
+                  <IconFlag size={12} class="text-[#dc2626] shrink-0" />
+                </Show>
+                <a
+                  href={props.jiraUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  class="text-[10px] font-medium text-blue-400 hover:underline"
+                >
+                  {props.jiraTicketId}
+                </a>
+              </div>
             </Show>
           }
           right={

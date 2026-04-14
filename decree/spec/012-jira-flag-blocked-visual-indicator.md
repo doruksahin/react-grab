@@ -262,9 +262,12 @@ This matches the existing pattern where active-group already overrides status co
 ### Sidebar Cards
 - [x] `SelectionCard` accepts optional `jiraFlagged` prop
 - [x] `data-react-grab-selection-card` shows red left-border accent (`border-l-[3px] border-l-[#dc2626]`) when flagged
+- [x] `data-react-grab-selection-card` shows red flag icon (`IconFlag`) next to component name when flagged
 - [x] `data-react-grab-loose-selection-card` inner container shows red left-border accent when flagged
+- [x] `data-react-grab-loose-selection-card` shows red flag icon next to ticket ID when flagged
 - [x] `LooseSelectionCard` status pill uses `resolveDisplayColor` instead of `getStatusColor`
 - [x] `loose-selection-list.tsx` passes `jiraFlagged` from backing group to `LooseSelectionCard`
+- [x] `IconFlag` component exists at `components/icons/icon-flag.tsx` (filled Lucide flag, matches JIRA flag visual)
 
 ### Status Legend
 - [x] Status Legend panel shows "Flagged / Blocked" entry with red indicator
