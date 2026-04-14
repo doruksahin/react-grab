@@ -52,6 +52,7 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
           // Ticket-lock: ticketed groups freeze their members.
           isTicketed(props.group) ? undefined : props.onRemoveItem
         }
+        jiraFlagged={props.group.jiraFlagged}
       />
 
       {/* JIRA section — bottom of detail view */}

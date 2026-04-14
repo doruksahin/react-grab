@@ -10,6 +10,7 @@ interface SelectionListProps {
   /** Remove handler. Undefined disables the × button for every card —
    *  GroupDetailView passes undefined when the group is ticketed. */
   onRemoveItem?: (itemId: string) => void;
+  jiraFlagged?: boolean;
 }
 
 export const SelectionList: Component<SelectionListProps> = (props) => {
@@ -43,6 +44,7 @@ export const SelectionList: Component<SelectionListProps> = (props) => {
                   ? () => props.onRemoveItem?.(item.id)
                   : undefined
               }
+              jiraFlagged={props.jiraFlagged}
             />
           )}
         </For>

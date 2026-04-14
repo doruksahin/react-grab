@@ -6,6 +6,7 @@ import { SelectionCard } from './selection-card.jsx';
 import { Button } from '../ui/button.jsx';
 import { RemoveSelectionButton } from '../remove-selection-button.jsx';
 import { LooseSelectionCardHeader } from './loose-selection-card-header.jsx';
+import { cn } from '../../utils/cn.js';
 
 interface LooseSelectionCardProps {
   item: CommentItem;
@@ -25,6 +26,7 @@ interface LooseSelectionCardProps {
   syncServerUrl?: string;
   syncWorkspace?: string;
   scrollRoot: () => Element | null;
+  jiraFlagged?: boolean;
 }
 
 /**
@@ -49,7 +51,10 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
       class="mb-1.5"
       style={{ 'pointer-events': 'auto' }}
     >
-      <div class="relative bg-muted rounded-lg border border-border p-3 cursor-default">
+      <div class={cn(
+        "relative bg-muted rounded-lg border border-border p-3 cursor-default",
+        props.jiraFlagged && "border-l-[3px] border-l-[#dc2626]"
+      )}>
         {/* Absolute close button — top right */}
         <Show when={!hasTicket() && props.onRemoveItem}>
           <div class="absolute -top-2 -right-2 z-10">
@@ -108,6 +113,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             syncServerUrl={props.syncServerUrl}
             syncWorkspace={props.syncWorkspace}
             scrollRoot={props.scrollRoot}
+            jiraFlagged={props.jiraFlagged}
           />
         </div>
       </div>

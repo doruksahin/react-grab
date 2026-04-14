@@ -8,6 +8,7 @@ import {
 } from "../../features/sidebar";
 import { ScreenshotPair } from "./screenshot-pair";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
+import { cn } from "../../utils/cn.js";
 
 export interface SelectionCardProps {
   item: CommentItem;
@@ -17,6 +18,7 @@ export interface SelectionCardProps {
   /** Pre-curried remove handler. When undefined, the × button is not
    *  rendered — the caller gates this on the ticket-lock rule. */
   onRemoveItem?: () => void;
+  jiraFlagged?: boolean;
 }
 
 export const SelectionCard: Component<SelectionCardProps> = (props) => {
@@ -53,7 +55,10 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
   return (
     <div
       data-react-grab-selection-card
-      class="bg-muted rounded-lg p-3 mb-1.5 border border-border"
+      class={cn(
+        "bg-muted rounded-lg p-3 mb-1.5 border border-border",
+        props.jiraFlagged && "border-l-[3px] border-l-[#dc2626]"
+      )}
       style={{ "pointer-events": "auto" }}
     >
       {/* Row 1: component name + tag badge + timestamp + remove */}
