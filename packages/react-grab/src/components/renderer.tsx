@@ -1,6 +1,7 @@
 import { Show, Index, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
 import type { Component } from "solid-js";
-import type { AgentSession, ReactGrabRendererProps, SelectionLabelInstance } from "../types.js";
+import type { AgentSession, ReactGrabRendererProps, SelectionLabelInstance, JiraDisplayFields } from "../types.js";
+import { JIRA_DISPLAY_KEYS } from "../types.js";
 import {
   DEFAULT_ACTION_ID,
   FADE_DURATION_MS,
@@ -9,17 +10,16 @@ import {
 } from "../constants.js";
 import { openFile } from "../utils/open-file.js";
 import { isElementConnected } from "../utils/is-element-connected.js";
-/** Pick all jira* and groupStatus fields from a label instance.
- *  Uses runtime key filtering — new jira fields on SelectionLabelInstance
- *  are forwarded automatically with zero maintenance. */
-function pickJiraFields(inst: SelectionLabelInstance): Partial<SelectionLabelInstance> {
+/** Pick JIRA display fields from a label instance.
+ *  Keys come from JIRA_DISPLAY_KEYS (SSOT in types.ts) —
+ *  adding a field to JiraDisplayFields + the const array
+ *  automatically forwards it here. Compile error if they diverge. */
+function pickJiraFields(inst: SelectionLabelInstance): JiraDisplayFields {
   const result: Record<string, unknown> = {};
-  for (const key in inst) {
-    if (key === "groupStatus" || key.startsWith("jira")) {
-      result[key] = (inst as Record<string, unknown>)[key];
-    }
+  for (const key of JIRA_DISPLAY_KEYS) {
+    result[key] = inst[key];
   }
-  return result;
+  return result as JiraDisplayFields;
 }
 
 import { OverlayCanvas } from "./overlay-canvas.js";

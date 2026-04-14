@@ -450,7 +450,57 @@ export type SelectionLabelStatus =
   | "fading"
   | "error";
 
-export interface SelectionLabelInstance {
+/**
+ * SSOT: Shared JIRA display fields.
+ * Used by SelectionLabelInstance, SelectionLabelProps, overlay-canvas,
+ * and the renderer's pickJiraFields. Define a new JIRA field here once
+ * — it flows through the entire stack automatically.
+ */
+export interface JiraDisplayFields {
+  groupStatus?: GroupStatus;
+  jiraTicketId?: string;
+  jiraUrl?: string;
+  jiraStatusCategory?: string;
+  jiraAssignee?: string | null;
+  jiraReporter?: string | null;
+  jiraAssigneeAvatar?: string | null;
+  jiraReporterAvatar?: string | null;
+  jiraLabels?: string[];
+  jiraComments?: ReadonlyArray<{
+    id: string;
+    parentId: string | null;
+    author: string;
+    authorAvatar: string | null;
+    body: string;
+    createdAt: string;
+  }>;
+  jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
+}
+
+/** Keys of JiraDisplayFields — used by renderer to pick fields
+ *  programmatically. `satisfies` ensures this stays in sync with
+ *  the interface at compile time. */
+export const JIRA_DISPLAY_KEYS = [
+  "groupStatus",
+  "jiraTicketId",
+  "jiraUrl",
+  "jiraStatusCategory",
+  "jiraAssignee",
+  "jiraReporter",
+  "jiraAssigneeAvatar",
+  "jiraReporterAvatar",
+  "jiraLabels",
+  "jiraComments",
+  "jiraFlagged",
+  "jiraFlaggedAt",
+  "jiraFlaggedBy",
+  "jiraFlaggedByAvatar",
+] as const satisfies readonly (keyof JiraDisplayFields)[];
+
+export interface SelectionLabelInstance extends JiraDisplayFields {
   id: string;
   /** The backing CommentItem id, when this label represents a persisted
    *  selection. Used by the renderer to route per-instance mutations
@@ -474,27 +524,6 @@ export interface SelectionLabelInstance {
   errorMessage?: string;
   hideArrow?: boolean;
   groupId?: string;
-  groupStatus?: GroupStatus;
-  jiraTicketId?: string;
-  jiraUrl?: string;
-  jiraStatusCategory?: string;
-  jiraAssignee?: string | null;
-  jiraReporter?: string | null;
-  jiraAssigneeAvatar?: string | null;
-  jiraReporterAvatar?: string | null;
-  jiraLabels?: string[];
-  jiraComments?: ReadonlyArray<{
-    id: string;
-    parentId: string | null;
-    author: string;
-    authorAvatar: string | null;
-    body: string;
-    createdAt: string;
-  }>;
-  jiraFlagged?: boolean;
-  jiraFlaggedAt?: string | null;
-  jiraFlaggedBy?: string | null;
-  jiraFlaggedByAvatar?: string | null;
 }
 
 /**
@@ -703,7 +732,8 @@ export interface SelectionLabelProps
   extends Pick<
     SelectionGroupsViewProps,
     "groups" | "activeGroupId" | "onActiveGroupChange" | "onAddGroup"
-  > {
+  >,
+    JiraDisplayFields {
   tagName?: string;
   componentName?: string;
   elementsCount?: number;
@@ -755,26 +785,4 @@ export interface SelectionLabelProps
    *  button that opens the JiraCreateDialog. */
   onCreateTicket?: () => void;
   hideArrow?: boolean;
-  groupStatus?: GroupStatus;
-  jiraTicketId?: string;
-  jiraUrl?: string;
-  jiraStatusCategory?: string;
-  jiraAssignee?: string | null;
-  jiraReporter?: string | null;
-  jiraAssigneeAvatar?: string | null;
-  jiraReporterAvatar?: string | null;
-  jiraLabels?: string[];
-  /** Plain-text Jira comments for the selection's group. Empty/undefined hides the comments section. */
-  jiraComments?: ReadonlyArray<{
-    id: string;
-    parentId: string | null;
-    author: string;
-    authorAvatar: string | null;
-    body: string;
-    createdAt: string;
-  }>;
-  jiraFlagged?: boolean;
-  jiraFlaggedAt?: string | null;
-  jiraFlaggedBy?: string | null;
-  jiraFlaggedByAvatar?: string | null;
 }
