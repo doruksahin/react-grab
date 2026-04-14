@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoC: JIRA Comment Section (Read + Write)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; }
+
+  h2 { font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 16px; }
+
+  .row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 32px; }
+
+  .panel { width: 460px; background: #262626; border: 1px solid #333; border-radius: 12px; overflow: hidden; flex-shrink: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .panel-label { font-size: 11px; color: #888; padding: 8px 12px; background: #1f1f1f; border-bottom: 1px solid #333; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Comment section */
+  .comment-section { padding: 12px 16px; }
+  .comment-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 6px 0; }
+  .comment-header .title { font-size: 12px; font-weight: 600; color: #999; }
+  .comment-header .count { font-size: 11px; color: #666; margin-left: 6px; }
+  .comment-header .chevron { font-size: 10px; color: #666; transition: transform 0.2s; }
+  .comment-header .chevron.open { transform: rotate(180deg); }
+
+  .comment-list { display: flex; flex-direction: column; gap: 16px; max-height: 500px; overflow-y: auto; padding: 8px 0; }
+  .comment-list::-webkit-scrollbar { width: 4px; }
+  .comment-list::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+
+  /* Individual comment */
+  .comment { display: flex; gap: 10px; }
+  .comment .avatar { width: 32px; height: 32px; border-radius: 50%; background: #444; flex-shrink: 0; overflow: hidden; }
+  .comment .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .comment .content { flex: 1; min-width: 0; }
+  .comment .meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+  .comment .author { font-size: 12px; font-weight: 600; color: #e5e5e5; }
+  .comment .time { font-size: 11px; color: #666; }
+  .comment .body { font-size: 12px; color: #bbb; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .comment .body .mention { background: rgba(88, 101, 242, 0.2); color: #7b8cf8; padding: 1px 4px; border-radius: 3px; font-weight: 500; }
+  .comment .body img { max-width: 200px; border-radius: 6px; margin-top: 6px; display: block; border: 1px solid #333; }
+
+  /* Comment actions */
+  .comment-actions { display: flex; gap: 2px; margin-top: 6px; opacity: 0; transition: opacity 0.15s; }
+  .comment:hover .comment-actions { opacity: 1; }
+  .comment-actions button { background: none; border: 1px solid transparent; color: #666; cursor: pointer; padding: 3px 6px; border-radius: 4px; font-size: 12px; display: flex; align-items: center; gap: 3px; transition: all 0.15s; }
+  .comment-actions button:hover { background: #333; border-color: #444; color: #bbb; }
+  .comment-actions button svg { width: 14px; height: 14px; }
+
+  /* Threaded replies */
+  .replies { margin-top: 10px; padding-left: 14px; border-left: 2px solid #333; display: flex; flex-direction: column; gap: 12px; }
+  .replies .comment .avatar { width: 24px; height: 24px; }
+
+  /* Composer */
+  .composer { padding: 12px 16px; border-top: 1px solid #333; }
+  .composer-hint { font-size: 11px; color: #555; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .composer-hint kbd { background: #333; border: 1px solid #444; border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: inherit; color: #888; }
+  .composer-box { display: flex; gap: 8px; align-items: flex-start; }
+  .composer-box .avatar { width: 28px; height: 28px; border-radius: 50%; background: #5865f2; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
+  .composer-input-wrap { flex: 1; position: relative; }
+  .composer-input { width: 100%; min-height: 36px; max-height: 120px; padding: 8px 10px; background: #1f1f1f; border: 1px solid #333; border-radius: 8px; color: #e5e5e5; font-size: 12px; font-family: inherit; line-height: 1.4; resize: none; outline: none; transition: border-color 0.15s; }
+  .composer-input:focus { border-color: #5865f2; }
+  .composer-input::placeholder { color: #555; }
+  .composer-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+  .composer-footer .left { display: flex; gap: 4px; }
+  .composer-footer button.icon-btn { background: none; border: none; color: #555; cursor: pointer; padding: 4px; border-radius: 4px; transition: all 0.15s; }
+  .composer-footer button.icon-btn:hover { background: #333; color: #bbb; }
+  .composer-footer button.icon-btn svg { width: 16px; height: 16px; }
+  .composer-submit { background: #5865f2; color: #fff; border: none; padding: 5px 14px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .composer-submit:hover { background: #4752c4; }
+  .composer-submit:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+  /* Reply context bar */
+  .reply-context { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #1f1f1f; border: 1px solid #333; border-bottom: none; border-radius: 8px 8px 0 0; font-size: 11px; color: #888; }
+  .reply-context .reply-to { color: #7b8cf8; font-weight: 600; }
+  .reply-context .cancel-reply { background: none; border: none; color: #666; cursor: pointer; margin-left: auto; font-size: 14px; padding: 0 4px; }
+  .reply-context .cancel-reply:hover { color: #bbb; }
+  .reply-context + .composer-input { border-radius: 0 0 8px 8px; }
+
+  /* Sending state */
+  .comment.sending { opacity: 0.5; }
+  .comment.sending .body::after { content: " (sending...)"; color: #666; font-style: italic; }
+
+  /* Error toast */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #dc2626; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.4); transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 100; }
+  .toast.visible { transform: translateY(0); opacity: 1; }
+
+  /* Section labels */
+  .section-title { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px 4px; font-weight: 700; }
+
+  /* Ticket info header */
+  .ticket-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #333; background: #1f1f1f; }
+  .ticket-key { font-size: 12px; font-weight: 700; color: #7b8cf8; text-decoration: none; }
+  .ticket-key:hover { text-decoration: underline; }
+  .ticket-summary { font-size: 12px; color: #bbb; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .status-badge.in-progress { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+  .status-badge.done { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+  .status-badge.todo { background: rgba(156, 163, 175, 0.15); color: #9ca3af; }
+
+  /* Mention picker dropdown */
+  .mention-picker { position: absolute; bottom: 100%; left: 0; right: 0; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; box-shadow: 0 -4px 16px rgba(0,0,0,0.4); max-height: 200px; overflow-y: auto; z-index: 50; display: none; margin-bottom: 4px; }
+  .mention-picker.visible { display: block; }
+  .mention-picker-header { padding: 8px 10px; font-size: 10px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #333; }
+  .mention-picker-list { padding: 4px; }
+  .mention-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: background 0.1s; }
+  .mention-item:hover, .mention-item.active { background: #383838; }
+  .mention-item .avatar { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+  .mention-item .name { font-size: 12px; color: #e5e5e5; font-weight: 500; }
+  .mention-item .role { font-size: 11px; color: #666; margin-left: auto; }
+  .mention-picker-empty { padding: 12px 10px; font-size: 11px; color: #666; text-align: center; }
+
+  /* Comparison panels */
+  .comparison { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+</style>
+</head>
+<body>
+
+<h2>PoC: JIRA Comment Section &mdash; Read + Write</h2>
+<p style="font-size: 12px; color: #555; margin-bottom: 24px;">
+  Clone of JIRA's threaded comment UI. Comments are fetched from the sync-server and posted via the new <code>addJiraComment</code> endpoint.
+  This PoC shows the UI patterns; wire to real API by setting <code>API_BASE</code> in the script.
+</p>
+
+<div class="comparison">
+
+  <!-- Panel 1: Current (read-only) -->
+  <div>
+    <div class="panel-label" style="margin-bottom: 8px;">CURRENT &mdash; Read-Only (selection-label)</div>
+    <div class="panel" id="panel-readonly">
+      <div class="ticket-header">
+        <a class="ticket-key" href="#">ATT-1776</a>
+        <span class="ticket-summary">CardDescription text overflow on mobile</span>
+        <span class="status-badge in-progress">In Progress</span>
+      </div>
+      <div class="comment-section">
+        <div class="comment-header" onclick="toggleComments(this)">
+          <span><span class="title">Comments</span><span class="count" id="readonly-count">(3)</span></span>
+          <span class="chevron open">&#x25BE;</span>
+        </div>
+        <div class="comment-list" id="readonly-comments">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 2: New (read + write) -->
+  <div>
+    <div class="panel-label" style="margin-bottom: 8px;">NEW &mdash; Read + Write (PoC)</div>
+    <div class="panel" id="panel-rw">
+      <div class="ticket-header">
+        <a class="ticket-key" href="#">ATT-1776</a>
+        <span class="ticket-summary">CardDescription text overflow on mobile</span>
+        <span class="status-badge in-progress">In Progress</span>
+      </div>
+      <div class="comment-section">
+        <div class="comment-header" onclick="toggleComments(this)">
+          <span><span class="title">Comments</span><span class="count" id="rw-count">(3)</span></span>
+          <span class="chevron open">&#x25BE;</span>
+        </div>
+        <div class="comment-list" id="rw-comments">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      <div class="composer" id="composer">
+        <div class="composer-hint">
+          Pro tip: press <kbd>M</kbd> to comment
+        </div>
+        <!-- Reply context bar (hidden by default) -->
+        <div class="reply-context" id="reply-context" style="display:none;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17l-5-5 5-5"/><path d="M4 12h16"/></svg>
+          Replying to <span class="reply-to" id="reply-to-name"></span>
+          <button class="cancel-reply" onclick="cancelReply()">&times;</button>
+        </div>
+        <div class="composer-box">
+          <div class="avatar">Y</div>
+          <div class="composer-input-wrap">
+            <!-- Mention picker dropdown -->
+            <div class="mention-picker" id="mention-picker">
+              <div class="mention-picker-header">People</div>
+              <div class="mention-picker-list" id="mention-list"></div>
+            </div>
+            <textarea
+              class="composer-input"
+              id="comment-input"
+              placeholder="Add a comment..."
+              rows="1"
+              oninput="handleInput(this); autoResize(this); updateSubmitState()"
+              onkeydown="handleKeyDown(event)"
+            ></textarea>
+            <div class="composer-footer">
+              <div class="left">
+                <button class="icon-btn" title="Attach image">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                </button>
+                <button class="icon-btn" title="Mention someone" onclick="openMentionPicker()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.92 7.94"/></svg>
+                </button>
+                <button class="icon-btn" title="Add emoji">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                </button>
+              </div>
+              <button class="composer-submit" id="submit-btn" disabled onclick="submitComment()">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- API call log -->
+<div style="margin-top: 32px;">
+  <div class="panel-label" style="margin-bottom: 8px;">API Call Log</div>
+  <div class="panel" style="width: 100%; max-width: 940px;">
+    <div style="padding: 12px 16px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; color: #888; max-height: 200px; overflow-y: auto;" id="api-log">
+      <div style="color: #555;">Waiting for actions...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Config ───────────────────────────────────────────────────
+// Point to your sync-server for real API calls:
+// const API_BASE = 'http://localhost:8787';
+// const WORKSPACE_ID = 'my-workspace';
+// const GROUP_ID = 'my-group';
+const API_BASE = null; // null = mock mode
+
+// ─── Mock Data ────────────────────────────────────────────────
+const MOCK_COMMENTS = [
+  {
+    id: '10001',
+    parentId: null,
+    author: 'Salih Doruk Sahin',
+    authorAvatar: null,
+    body: 'test 4',
+    createdAt: '2026-04-14T12:00:00.000Z',
+  },
+  {
+    id: '10002',
+    parentId: null,
+    author: 'Salih Doruk Sahin',
+    authorAvatar: null,
+    body: 'test2',
+    createdAt: '2026-04-14T12:01:00.000Z',
+  },
+  {
+    id: '10003',
+    parentId: '10002',
+    author: 'Salih Doruk Sahin',
+    authorAvatar: null,
+    body: '@Salih Doruk Sahin test3',
+    createdAt: '2026-04-14T12:02:00.000Z',
+  },
+];
+
+let comments = [...MOCK_COMMENTS];
+let replyTo = null; // { id, author }
+let nextId = 20000;
+
+// ─── Rendering ────────────────────────────────────────────────
+function timeAgo(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function avatarHTML(author, avatar, size) {
+  if (avatar) {
+    return `<div class="avatar" style="width:${size}px;height:${size}px;"><img src="${avatar}" alt="${author}"></div>`;
+  }
+  const initials = author.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const colors = ['#5865f2', '#ed4245', '#57f287', '#fee75c', '#eb459e', '#3ba55d'];
+  const color = colors[author.length % colors.length];
+  return `<div class="avatar" style="width:${size}px;height:${size}px;background:${color};display:flex;align-items:center;justify-content:center;font-size:${Math.floor(size*0.38)}px;font-weight:700;color:#fff;">${initials}</div>`;
+}
+
+function renderBody(body) {
+  // Highlight @mentions
+  return body.replace(/@([\w\s]+?)(?=\s|$)/g, '<span class="mention">@$1</span>');
+}
+
+function actionButtons(commentId, author) {
+  return `
+    <div class="comment-actions">
+      <button onclick="startReply('${commentId}', '${author.replace(/'/g, "\\'")}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17l-5-5 5-5"/><path d="M4 12h16"/></svg>
+      </button>
+      <button title="Like">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-6 0v4H5a2 2 0 00-2 2v7a2 2 0 002 2h14l-5-13z"/></svg>
+      </button>
+      <button title="Add reaction">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button title="Edit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+      <button title="More">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </button>
+    </div>
+  `;
+}
+
+function renderComment(c, isReply) {
+  const size = isReply ? 24 : 32;
+  const sending = c.sending ? ' sending' : '';
+  return `
+    <div class="comment${sending}" data-id="${c.id}">
+      ${avatarHTML(c.author, c.authorAvatar, size)}
+      <div class="content">
+        <div class="meta">
+          <span class="author">${c.author}</span>
+          <span class="time">${timeAgo(c.createdAt)}</span>
+        </div>
+        <div class="body">${renderBody(c.body)}</div>
+        ${!c.sending ? actionButtons(c.id, c.author) : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderComments(targetId, showActions) {
+  const container = document.getElementById(targetId);
+  const roots = comments.filter(c => !c.parentId);
+  const countEl = document.getElementById(targetId === 'rw-comments' ? 'rw-count' : 'readonly-count');
+  countEl.textContent = `(${comments.length})`;
+
+  container.innerHTML = roots.map(root => {
+    const replies = comments.filter(c => c.parentId === root.id);
+    return `
+      <div>
+        ${renderComment(root, false)}
+        ${replies.length ? `<div class="replies">${replies.map(r => renderComment(r, true)).join('')}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAll() {
+  renderComments('readonly-comments', false);
+  renderComments('rw-comments', true);
+}
+
+// ─── Interactions ─────────────────────────────────────────────
+function toggleComments(header) {
+  const list = header.nextElementSibling;
+  const chevron = header.querySelector('.chevron');
+  if (list.style.display === 'none') {
+    list.style.display = '';
+    chevron.classList.add('open');
+  } else {
+    list.style.display = 'none';
+    chevron.classList.remove('open');
+  }
+}
+
+function startReply(commentId, author) {
+  replyTo = { id: commentId, author };
+  document.getElementById('reply-context').style.display = 'flex';
+  document.getElementById('reply-to-name').textContent = author;
+  const input = document.getElementById('comment-input');
+  input.placeholder = `Reply to ${author}...`;
+  input.focus();
+  // Scroll composer into view
+  document.getElementById('composer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelReply() {
+  replyTo = null;
+  document.getElementById('reply-context').style.display = 'none';
+  document.getElementById('comment-input').placeholder = 'Add a comment...';
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function updateSubmitState() {
+  const btn = document.getElementById('submit-btn');
+  const input = document.getElementById('comment-input');
+  btn.disabled = !input.value.trim();
+}
+
+function handleKeyDown(e) {
+  // Mention picker navigation
+  if (mentionState.active) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      mentionState.selectedIndex = Math.min(mentionState.selectedIndex + 1, mentionState.filtered.length - 1);
+      renderMentionList();
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      mentionState.selectedIndex = Math.max(mentionState.selectedIndex - 1, 0);
+      renderMentionList();
+      return;
+    }
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      const selected = mentionState.filtered[mentionState.selectedIndex];
+      if (selected) insertMention(selected);
+      return;
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeMentionPicker();
+      return;
+    }
+  }
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault();
+    submitComment();
+  }
+}
+
+// ─── API ──────────────────────────────────────────────────────
+function logApi(method, url, payload, response) {
+  const log = document.getElementById('api-log');
+  const ts = new Date().toLocaleTimeString();
+  const payloadStr = payload ? ` body=${JSON.stringify(payload)}` : '';
+  const statusColor = response.ok ? '#4ade80' : '#f87171';
+  const line = document.createElement('div');
+  line.style.marginBottom = '4px';
+  line.innerHTML = `
+    <span style="color:#555;">${ts}</span>
+    <span style="color:#7b8cf8;">${method}</span>
+    <span style="color:#bbb;">${url}</span>${payloadStr}
+    <span style="color:${statusColor};">&rarr; ${response.status}</span>
+  `;
+  if (log.querySelector('div[style*="color: #555"]')) log.innerHTML = '';
+  log.prepend(line);
+}
+
+async function submitComment() {
+  const input = document.getElementById('comment-input');
+  const body = input.value.trim();
+  if (!body) return;
+
+  const parentId = replyTo?.id || null;
+
+  // Optimistic update
+  const tempId = `temp-${nextId++}`;
+  const optimistic = {
+    id: tempId,
+    parentId,
+    author: 'You',
+    authorAvatar: null,
+    body,
+    createdAt: new Date().toISOString(),
+    sending: true,
+  };
+  comments.push(optimistic);
+  renderAll();
+
+  // Clear input
+  input.value = '';
+  input.style.height = 'auto';
+  updateSubmitState();
+  cancelReply();
+
+  if (API_BASE) {
+    // Real API call
+    const url = `${API_BASE}/workspaces/${WORKSPACE_ID}/groups/${GROUP_ID}/jira-comment`;
+    const payload = { body, ...(parentId ? { parentId } : {}) };
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      logApi('POST', url, payload, { ok: res.ok, status: res.status });
+      if (res.ok) {
+        const data = await res.json();
+        // Replace temp with real
+        const idx = comments.findIndex(c => c.id === tempId);
+        if (idx !== -1) {
+          comments[idx].id = data.id;
+          comments[idx].createdAt = data.created;
+          delete comments[idx].sending;
+        }
+      } else {
+        // Remove optimistic on failure
+        comments = comments.filter(c => c.id !== tempId);
+        showToast('Failed to post comment');
+      }
+    } catch (err) {
+      comments = comments.filter(c => c.id !== tempId);
+      showToast('Network error: ' + err.message);
+      logApi('POST', url, payload, { ok: false, status: 'ERR' });
+    }
+  } else {
+    // Mock mode — simulate 500ms latency
+    logApi('POST', '/jira-comment', { body, parentId }, { ok: true, status: 200 });
+    await new Promise(r => setTimeout(r, 500));
+    const idx = comments.findIndex(c => c.id === tempId);
+    if (idx !== -1) {
+      comments[idx].id = `${nextId++}`;
+      delete comments[idx].sending;
+    }
+  }
+  renderAll();
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('visible');
+  setTimeout(() => toast.classList.remove('visible'), 3000);
+}
+
+// ─── Mention Picker ───────────────────────────────────────────
+const MOCK_USERS = [
+  { accountId: 'u1', displayName: 'Salih Doruk Sahin', avatarUrl: null },
+  { accountId: 'u2', displayName: 'Alice Cooper', avatarUrl: null },
+  { accountId: 'u3', displayName: 'Bob Martinez', avatarUrl: null },
+  { accountId: 'u4', displayName: 'Charlie Kim', avatarUrl: null },
+  { accountId: 'u5', displayName: 'Diana Petrova', avatarUrl: null },
+  { accountId: 'u6', displayName: 'Emre Yilmaz', avatarUrl: null },
+  { accountId: 'u7', displayName: 'Fatma Demir', avatarUrl: null },
+  { accountId: 'u8', displayName: 'George Chen', avatarUrl: null },
+];
+
+const mentionState = {
+  active: false,
+  triggerIndex: -1,    // cursor position where @ was typed
+  query: '',
+  filtered: [],
+  selectedIndex: 0,
+  triggeredByButton: false,
+};
+
+function handleInput(el) {
+  if (mentionState.triggeredByButton) return; // button-triggered, don't interfere
+  const val = el.value;
+  const cursor = el.selectionStart;
+
+  // Scan backwards from cursor to find an unmatched @
+  let atIdx = -1;
+  for (let i = cursor - 1; i >= 0; i--) {
+    if (val[i] === '@') { atIdx = i; break; }
+    if (val[i] === ' ' && i < cursor - 1) break; // space before query is ok
+    if (val[i] === '\n') break;
+  }
+
+  if (atIdx >= 0 && (atIdx === 0 || /\s/.test(val[atIdx - 1]))) {
+    const query = val.slice(atIdx + 1, cursor);
+    mentionState.active = true;
+    mentionState.triggerIndex = atIdx;
+    mentionState.query = query;
+    filterAndShowMentions(query);
+  } else if (mentionState.active) {
+    closeMentionPicker();
+  }
+}
+
+async function filterAndShowMentions(query) {
+  let users;
+  if (API_BASE) {
+    // Real API
+    const url = `${API_BASE}/jira/users?query=${encodeURIComponent(query)}`;
+    try {
+      const res = await fetch(url);
+      logApi('GET', url, null, { ok: res.ok, status: res.status });
+      users = res.ok ? await res.json() : MOCK_USERS;
+    } catch {
+      users = MOCK_USERS;
+    }
+  } else {
+    users = MOCK_USERS;
+    if (query) logApi('GET', `/jira/users?query=${query}`, null, { ok: true, status: 200 });
+  }
+
+  const q = query.toLowerCase();
+  mentionState.filtered = q
+    ? users.filter(u => u.displayName.toLowerCase().includes(q))
+    : users;
+  mentionState.selectedIndex = 0;
+
+  const picker = document.getElementById('mention-picker');
+  if (mentionState.filtered.length === 0) {
+    document.getElementById('mention-list').innerHTML =
+      '<div class="mention-picker-empty">No users found</div>';
+    picker.classList.add('visible');
+  } else {
+    renderMentionList();
+    picker.classList.add('visible');
+  }
+}
+
+function renderMentionList() {
+  const list = document.getElementById('mention-list');
+  list.innerHTML = mentionState.filtered.map((u, i) => {
+    const initials = u.displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const colors = ['#5865f2', '#ed4245', '#57f287', '#fee75c', '#eb459e', '#3ba55d'];
+    const color = colors[u.displayName.length % colors.length];
+    const active = i === mentionState.selectedIndex ? ' active' : '';
+    return `
+      <div class="mention-item${active}" data-index="${i}">
+        ${u.avatarUrl
+          ? `<div class="avatar" style="width:24px;height:24px;"><img src="${u.avatarUrl}" style="width:100%;height:100%;border-radius:50%;"></div>`
+          : `<div class="avatar" style="background:${color};">${initials}</div>`
+        }
+        <span class="name">${u.displayName}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Update active highlight without re-rendering
+  list.querySelectorAll('.mention-item').forEach((el) => {
+    el.addEventListener('mouseenter', () => {
+      const idx = parseInt(el.dataset.index);
+      list.querySelector('.mention-item.active')?.classList.remove('active');
+      el.classList.add('active');
+      mentionState.selectedIndex = idx;
+    });
+    el.addEventListener('mousedown', (e) => {
+      e.preventDefault(); // prevent blur on textarea
+      const idx = parseInt(el.dataset.index);
+      insertMention(mentionState.filtered[idx]);
+    });
+  });
+}
+
+function insertMention(user) {
+  const input = document.getElementById('comment-input');
+  const val = input.value;
+
+  if (mentionState.triggeredByButton) {
+    // Button mode: insert @Name at cursor
+    const cursor = input.selectionStart;
+    const before = val.slice(0, cursor);
+    const after = val.slice(cursor);
+    const mention = `@${user.displayName} `;
+    input.value = before + mention + after;
+    const newPos = cursor + mention.length;
+    input.selectionStart = input.selectionEnd = newPos;
+  } else {
+    // Inline mode: replace @query with @Name
+    const before = val.slice(0, mentionState.triggerIndex);
+    const cursor = input.selectionStart;
+    const after = val.slice(cursor);
+    const mention = `@${user.displayName} `;
+    input.value = before + mention + after;
+    const newPos = mentionState.triggerIndex + mention.length;
+    input.selectionStart = input.selectionEnd = newPos;
+  }
+
+  closeMentionPicker();
+  input.focus();
+  updateSubmitState();
+  autoResize(input);
+}
+
+function openMentionPicker() {
+  const input = document.getElementById('comment-input');
+  mentionState.active = true;
+  mentionState.triggeredByButton = true;
+  mentionState.triggerIndex = input.selectionStart;
+  filterAndShowMentions('');
+  input.focus();
+}
+
+function closeMentionPicker() {
+  mentionState.active = false;
+  mentionState.triggeredByButton = false;
+  mentionState.query = '';
+  mentionState.filtered = [];
+  mentionState.selectedIndex = 0;
+  document.getElementById('mention-picker').classList.remove('visible');
+}
+
+// Close picker on outside click
+document.addEventListener('click', (e) => {
+  if (!mentionState.active) return;
+  const picker = document.getElementById('mention-picker');
+  const input = document.getElementById('comment-input');
+  if (!picker.contains(e.target) && e.target !== input && !e.target.closest('[title="Mention someone"]')) {
+    closeMentionPicker();
+  }
+});
+
+// ─── Keyboard shortcut: M to focus composer ───────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'm' || e.key === 'M') {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+    e.preventDefault();
+    document.getElementById('comment-input').focus();
+  }
+});
+
+// ─── Init ─────────────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
