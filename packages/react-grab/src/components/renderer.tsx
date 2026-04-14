@@ -1,6 +1,6 @@
-import { Show, Index, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
+import { Show, Index, splitProps, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
 import type { Component } from "solid-js";
-import type { AgentSession, ReactGrabRendererProps, SelectionLabelInstance, JiraDisplayFields } from "../types.js";
+import type { AgentSession, ReactGrabRendererProps } from "../types.js";
 import { JIRA_DISPLAY_KEYS } from "../types.js";
 import {
   DEFAULT_ACTION_ID,
@@ -10,18 +10,6 @@ import {
 } from "../constants.js";
 import { openFile } from "../utils/open-file.js";
 import { isElementConnected } from "../utils/is-element-connected.js";
-/** Pick JIRA display fields from a label instance.
- *  Keys come from JIRA_DISPLAY_KEYS (SSOT in types.ts) —
- *  adding a field to JiraDisplayFields + the const array
- *  automatically forwards it here. Compile error if they diverge. */
-function pickJiraFields(inst: SelectionLabelInstance): JiraDisplayFields {
-  const result: Record<string, unknown> = {};
-  for (const key of JIRA_DISPLAY_KEYS) {
-    result[key] = inst[key];
-  }
-  return result as JiraDisplayFields;
-}
-
 import { OverlayCanvas } from "./overlay-canvas.js";
 import { SelectionLabel } from "./selection-label/index.js";
 import { Toolbar } from "./toolbar/index.js";
@@ -217,7 +205,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       </Show>
 
       <Index each={props.labelInstances ?? []}>
-        {(instance) => (
+        {(instance) => {
+          const [jiraFields] = splitProps(instance(), [...JIRA_DISPLAY_KEYS]);
+          return (
           <SelectionLabel
             tagName={instance().tagName}
             componentName={instance().componentName}
@@ -232,7 +222,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             inputValue={instance().inputValue}
             error={instance().errorMessage}
             hideArrow={instance().hideArrow}
-            {...pickJiraFields(instance())}
+            {...jiraFields}
             // Full groups list — see note above. The picker needs
             // synthetic groups visible at the business layer so
             // ticket-lock on a loose-ticketed item resolves correctly.
@@ -276,7 +266,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
               return () => props.onCreateTicketForLooseItem?.(item);
             })()}
           />
-        )}
+        );}}
       </Index>
 
       <Show when={props.toolbarVisible !== false}>
