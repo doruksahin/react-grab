@@ -61,6 +61,26 @@ export const JiraTicketStatus = z.object({
   flaggedByAvatar: z.string().nullable().optional().default(null),
 });
 
+export const AddJiraCommentRequest = z.object({
+  body: z.string().openapi({ description: "Comment text (Markdown)", example: "Looks good to me!" }),
+  parentId: z.string().optional().openapi({ description: "Parent comment ID for threaded replies", example: "10001" }),
+  mentions: z.array(z.object({
+    text: z.string().openapi({ example: "@Alice Cooper" }),
+    accountId: z.string().openapi({ example: "5b10ac8d82e05b22cc7d4ef5" }),
+  })).optional().openapi({ description: "Mention mappings for ADF injection" }),
+});
+
+export const AddJiraCommentResponse = z.object({
+  id: z.string().openapi({ example: "10042" }),
+  created: z.string().openapi({ example: "2026-04-14T10:00:00.000Z" }),
+});
+
+export const JiraUser = z.object({
+  accountId: z.string().openapi({ example: "5b10ac8d82e05b22cc7d4ef5" }),
+  displayName: z.string().openapi({ example: "Salih Doruk Sahin" }),
+  avatarUrl: z.string().nullable().openapi({ example: "https://x/avatar.png" }),
+});
+
 export const GroupIdParam = z.object({
   id: z.string().openapi({ description: "Workspace ID" }),
   groupId: z.string().openapi({ description: "Group ID" }),

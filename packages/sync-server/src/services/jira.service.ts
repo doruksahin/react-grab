@@ -423,4 +423,41 @@ export class JiraService {
     };
   }
 
+  /**
+   * Add a comment to a JIRA issue. Supports threaded replies via parentId.
+   * Body must be an ADF document — route handler converts markdown first.
+   */
+  async addComment(
+    ticketId: string,
+    body: object,
+    parentId?: string,
+  ): Promise<{ id: string; created: string }> {
+    const result = await this.client.issueComments.addComment({
+      issueIdOrKey: ticketId,
+      body,
+      ...(parentId ? { parentId } : {}),
+    } as Parameters<typeof this.client.issueComments.addComment>[0]);
+    return {
+      id: result.id ?? "",
+      created: result.created ?? new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Search for JIRA users that can be mentioned in comments.
+   * Uses the user picker endpoint which returns users with accountId needed for ADF mentions.
+   */
+  async searchUsers(query: string): Promise<Array<{ accountId: string; displayName: string; avatarUrl: string | null }>> {
+    const results = await this.client.userSearch.findUsersWithAllPermissions({
+      query,
+      permissions: "BROWSE",
+      maxResults: 10,
+    });
+    return (results ?? []).map((u) => ({
+      accountId: u.accountId ?? "",
+      displayName: u.displayName ?? "Unknown",
+      avatarUrl: u.avatarUrls?.["48x48"] ?? null,
+    }));
+  }
+
 }
