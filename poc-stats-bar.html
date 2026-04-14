@@ -107,6 +107,36 @@
   .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .card-tag { background: #333; color: #888; padding: 1px 7px; border-radius: 4px; font-size: 9px; font-weight: 600; }
 
+  /* Linear-inspired compact card layout */
+  .card-row-1 { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .card-row-2 { font-size: 12px; font-weight: 500; color: #e5e5e5; line-height: 1.4; margin-bottom: 6px; }
+  .card-row-3 { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .card-row-4 { margin-top: 8px; }
+
+
+  .priority { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; flex-shrink: 0; }
+  .priority svg { width: 12px; height: 12px; }
+  .priority.highest { color: #f87171; }
+  .priority.high { color: #f87171; }
+  .priority.medium { color: #f59e0b; }
+  .priority.low { color: #60a5fa; }
+  .priority.lowest { color: #60a5fa; }
+
+  .jira-key { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #888; font-weight: 500; }
+  .type-pill { font-size: 10px; color: #ccc; display: inline-flex; align-items: center; gap: 4px; }
+  .type-icon { font-size: 11px; }
+  .type-icon.task { color: #60a5fa; }
+  .type-icon.bug { color: #f87171; }
+  .label-chip { background: #333; color: #999; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 500; }
+
+  .flag-icon { color: #f87171; font-size: 12px; flex-shrink: 0; }
+  .assignee { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
+  .assignee .avatar-sm { width: 20px; height: 20px; border-radius: 50%; background: #444; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #e5e5e5; flex-shrink: 0; }
+  .assignee .name { font-size: 10px; color: #999; font-weight: 500; }
+
+  .screenshot-row { display: flex; gap: 6px; margin-top: 8px; }
+  .screenshot-row .screenshot-thumb { width: 52px; height: 34px; }
+
   /* 7. Bulk Action Bar */
   .bulk-bar { position: absolute; bottom: 0; left: 0; right: 0; background: #a78bfa; color: white; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.3); border-top-left-radius: 16px; border-top-right-radius: 16px; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 </style>
@@ -155,34 +185,38 @@
     </div>
 
     <div class="content-list">
-      <!-- Card 1: Blocked -->
+      <!-- Card 1: Blocked/flagged — ticketed -->
       <div class="selection-card flagged selected">
         <div class="checkbox"></div>
         <div class="card-body">
-          <div class="card-top">
-            <div class="card-comment-block">
-              <span class="icon-flag-mini" style="color:#f87171">🚩</span>
-              Missing the new brand assets for the hero variant. Blocking the sprint 14 deployment.
-            </div>
-            <span class="card-badge" style="color:#f87171">BLOCKED</span>
+          <!-- Row 1: summary -->
+          <div class="card-row-2">Missing brand assets for hero variant — blocking sprint 14</div>
+          <!-- Row 2: labels -->
+          <div class="card-row-3">
+            <span class="label-chip">layout</span>
+            <span class="label-chip">impediment</span>
           </div>
-          
-          <div class="card-main-content">
-            <div class="screenshot-stack">
+          <!-- Row 3: screenshots -->
+          <div class="card-row-4">
+            <div class="screenshot-row">
               <div class="screenshot-thumb"></div>
               <div class="screenshot-thumb"></div>
             </div>
-            <div style="flex:1">
-              <div class="card-dates">
-                <span><b>Created:</b> Apr 12, 2026</span>
-                <span><b>Due:</b> Apr 15, 2026</span>
-              </div>
-              <div class="card-tags"><span class="card-tag">layout</span><span class="card-tag" style="color:#f87171">impediment</span></div>
-            </div>
+          </div>
+          <!-- Row 4 (bottom): type icon · key · flag ··· priority · assignee -->
+          <div class="card-row-1" style="margin-top:8px; margin-bottom:0;">
+            <span class="type-icon bug" title="Bug">🐛</span>
+            <span class="jira-key">ATT-3041</span>
+            <span class="flag-icon">🚩</span>
+            <span class="assignee">
+              <span class="priority high" title="High"><svg viewBox="0 0 16 16"><path d="M8 3l5 8H3z" fill="currentColor"/></svg></span>
+              <span class="avatar-sm">SD</span><span class="name">Salih D.</span>
+            </span>
           </div>
 
+          <!-- DEV mode: collapsible -->
           <div class="dev-only">
-            <div class="dev-inspect-trigger" onclick="toggleDevInfo(this, event)"><span>INSIGHTS</span> <span>▼</span></div>
+            <div class="dev-inspect-trigger" onclick="toggleDevInfo(this, event)"><span>DEV INSIGHTS</span> <span>▼</span></div>
             <div class="dev-info-content">
                <div class="code-snippet">
                  <b>tag:</b> div<br>
@@ -196,33 +230,30 @@
         </div>
       </div>
 
-      <!-- Card 2: Loose -->
+      <!-- Card 2: Loose — no ticket yet -->
       <div class="selection-card selected">
         <div class="checkbox"></div>
         <div class="card-body">
-          <div class="card-top">
-            <div class="card-comment-block">
-              Review logo alignment on mobile headers. Version mismatch suspected between Figma and implementation.
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
-              <span class="card-badge" style="color:#666">LOOSE</span>
-              <span class="version-tag">v2.1.0</span>
+          <div class="card-row-2">Logo alignment mismatch on mobile headers</div>
+          <div class="card-row-3">
+            <span class="label-chip">asset</span>
+            <span class="label-chip">svg</span>
+          </div>
+          <div class="card-row-4">
+            <div class="screenshot-row">
+              <div class="screenshot-thumb"></div>
+              <div class="screenshot-thumb"></div>
             </div>
           </div>
-          
-          <div class="card-main-content">
-            <div class="screenshot-stack">
-              <div class="screenshot-thumb"></div>
-              <div class="screenshot-thumb"></div>
-            </div>
-            <div style="flex:1">
-              <div class="card-dates"><span><b>Created:</b> Apr 14, 09:12</span></div>
-              <div class="card-tags"><span class="card-tag">asset</span><span class="card-tag">svg</span></div>
-            </div>
+          <div class="card-row-1" style="margin-top:8px; margin-bottom:0;">
+            <span class="jira-key" style="color:#555; font-style:italic;">no ticket</span>
+            <span class="assignee">
+              <span class="priority medium" title="Medium"><svg viewBox="0 0 16 16"><rect x="2" y="7" width="12" height="2" rx="1" fill="currentColor"/></svg></span>
+            </span>
           </div>
 
           <div class="dev-only">
-            <div class="dev-inspect-trigger" onclick="toggleDevInfo(this, event)"><span>INSIGHTS</span> <span>▼</span></div>
+            <div class="dev-inspect-trigger" onclick="toggleDevInfo(this, event)"><span>DEV INSIGHTS</span> <span>▼</span></div>
             <div class="dev-info-content">
               <div class="code-snippet">
                 <b>tag:</b> img<br>
@@ -240,29 +271,27 @@
       <div class="selection-card">
         <div class="checkbox"></div>
         <div class="card-body">
-          <div class="card-top">
-            <div class="card-comment-block">
-              Footer layout refinement for accessibility. ARIA labels missing on social media icons.
-            </div>
-            <span class="card-badge" style="color:#22c55e">TICKETED</span>
+          <div class="card-row-2">Footer a11y — ARIA labels on social media icons</div>
+          <div class="card-row-3">
+            <span class="label-chip">layout</span>
+            <span class="label-chip">a11y</span>
           </div>
-          
-          <div class="card-main-content">
-            <div class="screenshot-stack">
-              <div class="screenshot-thumb"></div>
+          <div class="card-row-4">
+            <div class="screenshot-row">
               <div class="screenshot-thumb"></div>
             </div>
-            <div style="flex:1">
-              <div class="card-dates">
-                <span><b>Created:</b> Apr 10, 2026</span>
-                <span><b>Due:</b> Apr 20, 2026</span>
-              </div>
-              <div class="card-tags"><span class="card-tag">layout</span><span class="card-tag">a11y</span></div>
-            </div>
           </div>
-          
+          <div class="card-row-1" style="margin-top:8px; margin-bottom:0;">
+            <span class="type-icon task" title="Task">☑</span>
+            <span class="jira-key">ATT-2870</span>
+            <span class="assignee">
+              <span class="priority low" title="Low"><svg viewBox="0 0 16 16"><path d="M8 13l5-8H3z" fill="currentColor"/></svg></span>
+              <span class="avatar-sm">EK</span><span class="name">Emre K.</span>
+            </span>
+          </div>
+
           <div class="dev-only">
-            <div class="dev-inspect-trigger" onclick="toggleDevInfo(this, event)"><span>INSIGHTS</span> <span>▼</span></div>
+            <div class="dev-inspect-trigger" onclick="toggleDevInfo(this, event)"><span>DEV INSIGHTS</span> <span>▼</span></div>
             <div class="dev-info-content">
               <div class="code-snippet">
                 <b>tag:</b> footer<br>
