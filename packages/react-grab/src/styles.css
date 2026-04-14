@@ -194,6 +194,75 @@
 .jira-editor-content .ProseMirror pre code { background: none; padding: 0; }
 .jira-editor-content .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--editor-placeholder-color); pointer-events: none; float: left; height: 0; }
 
+/* Mention chip */
+.jira-editor-content .ProseMirror .mention {
+  background: rgba(88, 101, 242, 0.2);
+  color: hsl(var(--primary));
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Images in comment editor */
+.jira-editor-content .ProseMirror img {
+  max-width: 200px;
+  border-radius: 4px;
+  margin: 0.25em 0;
+  border: 1px solid hsl(var(--border));
+  display: block;
+}
+.jira-editor-content .ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Link styles */
+.jira-editor-content .ProseMirror a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+/* Underline */
+.jira-editor-content .ProseMirror u { text-decoration: underline; }
+
+/* Horizontal rule */
+.jira-editor-content .ProseMirror hr {
+  border: none;
+  border-top: 1px solid hsl(var(--border));
+  margin: 0.75em 0;
+}
+
+/* Mention picker popup (appended to body, outside shadow DOM) */
+.mention-picker-popup {
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px;
+  min-width: 200px;
+}
+.mention-picker-popup .mention-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.mention-picker-popup .mention-item:hover,
+.mention-picker-popup .mention-item.active {
+  background: hsl(var(--accent));
+}
+.mention-picker-popup .mention-item .name {
+  font-size: 12px;
+  color: hsl(var(--popover-foreground));
+}
+
 /*
  * shadcn-solid design tokens — dark mode.
  *
