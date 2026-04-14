@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC: Flag Tooltip — Who Flagged + When</title>
+  <style>
+    :root {
+      --flag-red: #dc2626;
+      --bg-muted: #1e1e1e;
+      --bg-popover: #2a2a2a;
+      --border: #333;
+      --foreground: #e5e5e5;
+      --muted-foreground: #999;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #121212;
+      color: var(--foreground);
+      padding: 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    h1 { font-size: 18px; color: #fff; margin: 0 0 8px; }
+    h2 { font-size: 14px; color: #999; margin: 0 0 32px; font-weight: 400; }
+
+    /* ── Selection card (simplified) ─────────────────── */
+    .card {
+      background: var(--bg-muted);
+      border-radius: 8px;
+      padding: 12px;
+      border: 2px solid var(--flag-red);
+      max-width: 380px;
+      position: relative;
+    }
+    .card-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .component-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--foreground);
+    }
+    .tag {
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #2a2a2a;
+      color: var(--muted-foreground);
+      font-size: 10px;
+      font-family: monospace;
+    }
+    .flag-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: default;
+      position: relative;
+    }
+    .flag-time {
+      font-size: 10px;
+      color: var(--flag-red);
+    }
+
+    /* ── Tooltip ──────────────────────────────────────── */
+    .tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 0;
+      background: var(--bg-popover);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      min-width: 220px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+      z-index: 100;
+    }
+    .flag-trigger:hover .tooltip {
+      opacity: 1;
+    }
+
+    .tooltip-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--flag-red);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tooltip-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .tooltip-row:last-child { margin-bottom: 0; }
+
+    .tooltip-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #444;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .tooltip-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .tooltip-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--foreground);
+    }
+
+    .tooltip-date {
+      font-size: 11px;
+      color: var(--muted-foreground);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tooltip-label {
+      font-size: 10px;
+      color: var(--muted-foreground);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Examples layout ──────────────────────────────── */
+    .examples { display: flex; gap: 48px; flex-wrap: wrap; align-items: flex-start; }
+    .example { padding-top: 100px; }
+    .example-label { font-size: 11px; color: #666; margin-top: 12px; }
+
+    /* ── Selection label (simplified) ─────────────────── */
+    .label {
+      background: #fff;
+      border-radius: 10px;
+      padding: 6px 12px;
+      border: 2px solid var(--flag-red);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      filter: drop-shadow(0 1px 2px rgba(81,81,81,0.25));
+      position: relative;
+    }
+    .label .component-name { color: #1e001f; }
+    .label .flag-time { color: var(--flag-red); }
+    .label .tag {
+      background: #fde7f7;
+      border: 1px solid #f7c5ec;
+      color: #1e001f;
+    }
+    .label .tooltip {
+      background: #fff;
+      border-color: #e5e5e5;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .label .tooltip-header { color: var(--flag-red); }
+    .label .tooltip-name { color: #333; }
+    .label .tooltip-date { color: #666; }
+    .label .tooltip-label { color: #888; }
+
+    /* ── Design notes ─────────────────────────────────── */
+    .note {
+      background: #1a1a2e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #a0aec0;
+      max-width: 500px;
+    }
+    .note strong { color: #e2e8f0; }
+  </style>
+</head>
+<body>
+
+  <div>
+    <h1>Flag Tooltip — Hover to see who flagged and exact date</h1>
+    <h2>SPEC-012 — Tooltip on flag icon shows flagger avatar, name, and precise timestamp</h2>
+
+    <div class="examples">
+
+      <!-- Selection Card tooltip -->
+      <div class="example">
+        <div class="card">
+          <div class="card-row">
+            <div class="flag-trigger">
+              <svg viewBox="-4 -4 24 24" fill="none" width="16" height="16" style="color: #dc2626;">
+                <path fill="currentColor" fill-rule="evenodd" d="M2 1.75A.75.75 0 0 1 2.75 1H14a.75.75 0 0 1 .6 1.2l-2.662 3.55L14.6 9.3a.75.75 0 0 1-.6 1.2H3.5V15H2z" clip-rule="evenodd"/>
+              </svg>
+              <span class="flag-time">3h ago</span>
+
+              <!-- Tooltip -->
+              <div class="tooltip">
+                <div class="tooltip-header">
+                  <svg viewBox="-4 -4 24 24" fill="none" width="14" height="14" style="color: #dc2626;">
+                    <path fill="currentColor" fill-rule="evenodd" d="M2 1.75A.75.75 0 0 1 2.75 1H14a.75.75 0 0 1 .6 1.2l-2.662 3.55L14.6 9.3a.75.75 0 0 1-.6 1.2H3.5V15H2z" clip-rule="evenodd"/>
+                  </svg>
+                  Flagged / Blocked
+                </div>
+                <div class="tooltip-row">
+                  <div class="tooltip-avatar">
+                    <img src="https://i.pravatar.cc/48?img=5" alt="avatar" />
+                  </div>
+                  <div>
+                    <div class="tooltip-name">Salih Doruk Sahin</div>
+                    <div class="tooltip-label">Flagged by</div>
+                  </div>
+                </div>
+                <div class="tooltip-row">
+                  <div style="width: 24px; flex-shrink: 0;"></div>
+                  <div>
+                    <div class="tooltip-date">Apr 14, 2026 at 17:32</div>
+                    <div class="tooltip-label">Flagged at</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <span class="component-name">CardContent</span>
+            <span class="tag">img</span>
+          </div>
+        </div>
+        <div class="example-label">Selection Card — hover the flag icon</div>
+      </div>
+
+      <!-- Selection Label tooltip -->
+      <div class="example">
+        <div class="label">
+          <div class="flag-trigger">
+            <svg viewBox="-4 -4 24 24" fill="none" width="16" height="16" style="color: #dc2626;">
+              <path fill="currentColor" fill-rule="evenodd" d="M2 1.75A.75.75 0 0 1 2.75 1H14a.75.75 0 0 1 .6 1.2l-2.662 3.55L14.6 9.3a.75.75 0 0 1-.6 1.2H3.5V15H2z" clip-rule="evenodd"/>
+            </svg>
+            <span class="flag-time">3h ago</span>
+
+            <div class="tooltip">
+              <div class="tooltip-header">
+                <svg viewBox="-4 -4 24 24" fill="none" width="14" height="14" style="color: #dc2626;">
+                  <path fill="currentColor" fill-rule="evenodd" d="M2 1.75A.75.75 0 0 1 2.75 1H14a.75.75 0 0 1 .6 1.2l-2.662 3.55L14.6 9.3a.75.75 0 0 1-.6 1.2H3.5V15H2z" clip-rule="evenodd"/>
+                </svg>
+                Flagged / Blocked
+              </div>
+              <div class="tooltip-row">
+                <div class="tooltip-avatar">
+                  <img src="https://i.pravatar.cc/48?img=5" alt="avatar" />
+                </div>
+                <div>
+                  <div class="tooltip-name" style="color: #333;">Salih Doruk Sahin</div>
+                  <div class="tooltip-label">Flagged by</div>
+                </div>
+              </div>
+              <div class="tooltip-row">
+                <div style="width: 24px; flex-shrink: 0;"></div>
+                <div>
+                  <div class="tooltip-date" style="color: #555;">Apr 14, 2026 at 17:32</div>
+                  <div class="tooltip-label">Flagged at</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <span class="tag">div.hero-section</span>
+          <span style="font-size: 11px; color: #555;">ATT-1234</span>
+        </div>
+        <div class="example-label">Selection Label — hover the flag icon</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div>
+    <h1>Tooltip Content</h1>
+    <div class="note">
+      <strong>Shows on hover over the flag icon + relative time:</strong><br><br>
+      1. <strong>Header:</strong> Flag icon + "Flagged / Blocked" label in red<br>
+      2. <strong>Who:</strong> Avatar (24px circle) + display name + "Flagged by" label<br>
+      3. <strong>When:</strong> Exact date down to the minute (e.g. "Apr 14, 2026 at 17:32") + "Flagged at" label<br><br>
+      <strong>Data source:</strong> JIRA changelog entry for <code>field: "Flagged"</code> →
+      <code>author.displayName</code>, <code>author.avatarUrls['48x48']</code>, <code>created</code> timestamp.<br><br>
+      <strong>Implementation:</strong> Existing Kobalte <code>Tooltip</code> component with shadow DOM
+      portal mounting. Wrap the flag icon + relative time in <code>TooltipTrigger</code>.
+    </div>
+  </div>
+
+</body>
+</html>
