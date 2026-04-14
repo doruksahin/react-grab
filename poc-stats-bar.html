@@ -147,6 +147,33 @@
   .screenshot-row { display: flex; gap: 6px; margin-top: 8px; }
   .screenshot-row .screenshot-thumb { width: 52px; height: 34px; }
 
+  /* Inline comment section (collapsible) */
+  .card-comments-toggle { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; color: #888; cursor: pointer; margin-top: 8px; padding: 4px 0; }
+  .card-comments-toggle:hover { color: #ccc; }
+  .card-comments-toggle svg { width: 12px; height: 12px; }
+  .card-comments-toggle .toggle-chevron { font-size: 8px; color: #555; transition: transform 0.2s; display: inline-block; }
+  .card-comments.open .card-comments-toggle .toggle-chevron { transform: rotate(180deg); }
+  .card-comments-body { display: none; padding: 8px 0 0; }
+  .card-comments.open .card-comments-body { display: block; }
+
+  .mini-comment { display: flex; gap: 8px; padding: 6px 0; }
+  .mini-comment + .mini-comment { border-top: 1px solid #2a2a2a; }
+  .mini-comment .mc-avatar { width: 22px; height: 22px; border-radius: 50%; background: #444; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #e5e5e5; }
+  .mini-comment .mc-content { flex: 1; min-width: 0; }
+  .mini-comment .mc-meta { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+  .mini-comment .mc-author { font-size: 10px; font-weight: 600; color: #ccc; }
+  .mini-comment .mc-time { font-size: 9px; color: #555; }
+  .mini-comment .mc-body { font-size: 11px; color: #999; line-height: 1.4; }
+  .mini-comment .mc-body .mention { background: rgba(88,101,242,0.15); color: #7b8cf8; padding: 0 3px; border-radius: 2px; font-weight: 500; }
+
+  .mini-replies { margin-left: 30px; border-left: 2px solid #333; padding-left: 8px; }
+
+  .mini-composer { display: flex; gap: 6px; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px solid #2a2a2a; }
+  .mini-composer .mc-avatar { width: 20px; height: 20px; font-size: 7px; }
+  .mini-composer input { flex: 1; background: #1f1f1f; border: 1px solid #333; border-radius: 6px; padding: 5px 8px; font-size: 10px; color: #e5e5e5; outline: none; }
+  .mini-composer input::placeholder { color: #555; }
+  .mini-composer input:focus { border-color: #5865f2; }
+
   /* Expandable group */
   .group-card { cursor: pointer; }
   .group-card .expand-icon { font-size: 10px; color: #555; transition: transform 0.2s; display: inline-block; }
@@ -262,7 +289,7 @@
               <div class="screenshot-thumb"></div>
             </div>
           </div>
-          <!-- Row 4 (bottom): type icon · key · flag ··· priority · assignee -->
+          <!-- Bottom row: type icon · key · flag ··· priority · assignee -->
           <div class="card-row-1" style="margin-top:8px; margin-bottom:0;">
             <span class="type-icon bug" title="Bug">🐛</span>
             <span class="jira-key">ATT-3041</span>
@@ -271,6 +298,36 @@
               <span class="priority high" title="High"><svg viewBox="0 0 16 16"><path d="M8 3l5 8H3z" fill="currentColor"/></svg></span>
               <span class="avatar-sm">SD</span><span class="name">Salih D.</span>
             </span>
+          </div>
+
+          <!-- Comments (collapsible) -->
+          <div class="card-comments" onclick="if(event.target.closest('.card-comments-toggle')){this.classList.toggle('open');event.stopPropagation();}">
+            <div class="card-comments-toggle">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v8H6l-3 3v-3H2z"/></svg>
+              Comments (2) <span class="toggle-chevron">▾</span>
+            </div>
+            <div class="card-comments-body" onclick="event.stopPropagation()">
+              <div class="mini-comment">
+                <div class="mc-avatar">SD</div>
+                <div class="mc-content">
+                  <div class="mc-meta"><span class="mc-author">Salih D.</span><span class="mc-time">2h ago</span></div>
+                  <div class="mc-body">Brand assets still not delivered. <span class="mention">@design-team</span> can you prioritize?</div>
+                </div>
+              </div>
+              <div class="mini-replies">
+                <div class="mini-comment">
+                  <div class="mc-avatar" style="background:#8b5cf6;">AY</div>
+                  <div class="mc-content">
+                    <div class="mc-meta"><span class="mc-author">Ayse Y.</span><span class="mc-time">45m ago</span></div>
+                    <div class="mc-body">Uploading to Figma now, should be ready in 30 min.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="mini-composer">
+                <div class="mc-avatar" style="background:#5865f2;">Y</div>
+                <input type="text" placeholder="Reply..." />
+              </div>
+            </div>
           </div>
 
           <!-- DEV mode: collapsible -->
@@ -350,6 +407,27 @@
               <span class="priority low" title="Low"><svg viewBox="0 0 16 16"><path d="M8 13l5-8H3z" fill="currentColor"/></svg></span>
               <span class="avatar-sm">EK</span><span class="name">Emre K.</span>
             </span>
+          </div>
+
+          <!-- Comments (collapsible) -->
+          <div class="card-comments" onclick="if(event.target.closest('.card-comments-toggle')){this.classList.toggle('open');event.stopPropagation();}">
+            <div class="card-comments-toggle">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v8H6l-3 3v-3H2z"/></svg>
+              Comments (1) <span class="toggle-chevron">▾</span>
+            </div>
+            <div class="card-comments-body" onclick="event.stopPropagation()">
+              <div class="mini-comment">
+                <div class="mc-avatar" style="background:#059669;">EK</div>
+                <div class="mc-content">
+                  <div class="mc-meta"><span class="mc-author">Emre K.</span><span class="mc-time">1d ago</span></div>
+                  <div class="mc-body">Added aria-label to all social icons. <span class="mention">@salih</span> ready for review.</div>
+                </div>
+              </div>
+              <div class="mini-composer">
+                <div class="mc-avatar" style="background:#5865f2;">Y</div>
+                <input type="text" placeholder="Reply..." />
+              </div>
+            </div>
           </div>
 
           <div class="dev-only">
