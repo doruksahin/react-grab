@@ -3966,6 +3966,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 jiraComments: status.comments,
                 jiraResolved: resolved,
                 jiraUrl: status.jiraUrl,
+                jiraFlagged: status.flagged ?? false,
               }
             : g,
         );
