@@ -1,5 +1,6 @@
 import { type Component, Show } from "solid-js";
 import { IconFlag } from "./icons/icon-flag.js";
+import { UserAvatar } from "./sidebar/UserAvatar.js";
 import { FLAGGED_ICON_SIZE } from "../features/sidebar/resolve-display-color.js";
 import { relativeTime } from "../features/sidebar/relative-time.js";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip.js";
@@ -53,41 +54,19 @@ export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
             </span>
           </div>
           <Show when={props.flaggedBy}>
-            <div class="flex items-center gap-2 mb-1.5">
-              <Show
-                when={props.flaggedByAvatar}
-                fallback={
-                  <div class="w-6 h-6 rounded-full bg-muted shrink-0" />
-                }
-              >
-                <img
-                  src={props.flaggedByAvatar!}
-                  alt=""
-                  class="w-6 h-6 rounded-full shrink-0"
-                />
-              </Show>
-              <div>
-                <div class="text-[12px] font-medium text-foreground">
-                  {props.flaggedBy}
-                </div>
-                <div class="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  Flagged by
-                </div>
-              </div>
-            </div>
+            <span class="flex items-center gap-1 text-[10px] text-muted-foreground truncate">
+              <UserAvatar
+                avatarUrl={props.flaggedByAvatar}
+                displayName={props.flaggedBy}
+                size={14}
+              />
+              {props.flaggedBy}
+            </span>
           </Show>
           <Show when={props.flaggedAt}>
-            <div class="flex items-center gap-2">
-              <div class="w-6 shrink-0" />
-              <div>
-                <div class="text-[11px] text-foreground tabular-nums">
-                  {formatExactDate(props.flaggedAt!)}
-                </div>
-                <div class="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  Flagged at
-                </div>
-              </div>
-            </div>
+            <span class="text-[10px] text-muted-foreground tabular-nums">
+              {formatExactDate(props.flaggedAt!)}
+            </span>
           </Show>
         </div>
       </TooltipContent>
