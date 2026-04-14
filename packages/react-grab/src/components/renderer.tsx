@@ -230,6 +230,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             jiraLabels={instance().jiraLabels}
             jiraComments={instance().jiraComments}
             jiraFlagged={instance().jiraFlagged}
+            jiraFlaggedAt={instance().jiraFlaggedAt}
+            jiraFlaggedBy={instance().jiraFlaggedBy}
+            jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
             // Full groups list — see note above. The picker needs
             // synthetic groups visible at the business layer so
             // ticket-lock on a loose-ticketed item resolves correctly.
