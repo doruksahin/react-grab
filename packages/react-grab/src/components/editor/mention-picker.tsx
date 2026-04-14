@@ -14,6 +14,7 @@ function getCached(query: string): JiraUserSuggestion[] | null {
 
 export function createMentionSuggestion(
   searchFn?: (query: string) => Promise<JiraUserSuggestion[]>,
+  getMountContainer?: () => Node,
 ): Omit<SuggestionOptions, "editor"> {
   return {
     items: async ({ query }) => {
@@ -76,7 +77,8 @@ export function createMentionSuggestion(
             popup.style.zIndex = "9999";
           }
 
-          document.body.appendChild(popup);
+          const mount = getMountContainer?.() ?? document.body;
+          mount.appendChild(popup);
         },
         onUpdate(props: SuggestionProps) {
           items = props.items as JiraUserSuggestion[];

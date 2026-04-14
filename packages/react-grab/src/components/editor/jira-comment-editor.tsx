@@ -35,7 +35,10 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         Image,
         Mention.configure({
           HTMLAttributes: { class: "mention" },
-          suggestion: createMentionSuggestion(props.onSearchUsers),
+          suggestion: createMentionSuggestion(
+            props.onSearchUsers,
+            () => editorEl.getRootNode(),
+          ),
           renderText: ({ node }) => `@${node.attrs.label ?? ""}`,
         }),
         Placeholder.configure({ placeholder: "Add a comment..." }),
