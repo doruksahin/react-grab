@@ -23,7 +23,7 @@ import { autoResizeTextarea } from '../../utils/auto-resize-textarea.js';
 import { getArrowSize } from '../../utils/get-arrow-size.js';
 import { isKeyboardEventTriggeredByInput } from '../../utils/is-keyboard-event-triggered-by-input.js';
 import { cn } from '../../utils/cn.js';
-import { getApiBaseUrl } from '../../generated/custom-fetch.js';
+// getApiBaseUrl moved into jira-comments-section.tsx
 import { getTagDisplay } from '../../utils/get-tag-display.js';
 import { formatShortcut } from '../../utils/format-shortcut.js';
 import { IconReply } from '../icons/icon-reply.jsx';
@@ -43,11 +43,8 @@ import { DiscardPrompt } from './discard-prompt.js';
 import { ErrorView } from './error-view.js';
 import { CompletionView } from './completion-view.js';
 import { ArrowNavigationMenu } from './arrow-navigation-menu.js';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '../ui/collapsible.jsx';
+import { JiraCommentsSection } from './jira-comments-section.js';
+// Collapsible moved into JiraCommentsSection
 
 interface LabelPosition {
   left: number;
@@ -65,56 +62,7 @@ const DEFAULT_OFFSCREEN_POSITION: LabelPosition = {
   edgeOffsetX: 0,
 };
 
-// Splits a comment body (markdown) into alternating text/image segments so we
-// can render inline <img> tags for Jira inline images. The server rewrites the
-// lib-default `media://{fileId}` URLs into sync-server-relative
-// `/jira-attachment/{id}` paths — we prepend the API base here.
-type CommentSegment =
-  | { kind: 'text'; text: string }
-  | { kind: 'image'; alt: string; url: string };
-
-const IMG_RE = /!\[([^\]]*)\]\(([^)]+)\)/g;
-
-const parseCommentBody = (body: string): CommentSegment[] => {
-  const segments: CommentSegment[] = [];
-  let lastIndex = 0;
-  const base = getApiBaseUrl();
-  for (const match of body.matchAll(IMG_RE)) {
-    const [full, alt, rawUrl] = match;
-    const index = match.index ?? 0;
-    if (index > lastIndex) {
-      segments.push({ kind: 'text', text: body.slice(lastIndex, index) });
-    }
-    const resolved = rawUrl.startsWith('/') ? `${base}${rawUrl}` : rawUrl;
-    segments.push({ kind: 'image', alt, url: resolved });
-    lastIndex = index + full.length;
-  }
-  if (lastIndex < body.length) {
-    segments.push({ kind: 'text', text: body.slice(lastIndex) });
-  }
-  return segments;
-};
-
-const CommentBody: Component<{ body: string }> = (props) => {
-  return (
-    <div class="text-muted-foreground whitespace-pre-wrap wrap-break-word">
-      <For each={parseCommentBody(props.body)}>
-        {(seg) =>
-          seg.kind === 'text' ? (
-            <span>{seg.text}</span>
-          ) : (
-            <img
-              src={seg.url}
-              alt={seg.alt}
-              class="max-w-full h-auto my-1 rounded"
-              loading="lazy"
-            />
-          )
-        }
-      </For>
-    </div>
-  );
-};
+// CommentBody moved to jira-comments-section.tsx
 
 interface PositionResult {
   position: LabelPosition;
@@ -796,52 +744,13 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     </button>
                   </Show>
                 </div>
-                <Show when={(props.jiraComments?.length ?? 0) > 0}>
-                  <Collapsible>
-                    <CollapsibleTrigger
-                      data-react-grab-ignore-events
-                      class="flex items-center justify-between w-[calc(100%+16px)] -mx-2 mt-1 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent cursor-pointer"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopImmediatePropagation()}
-                    >
-                      <span>Comments ({props.jiraComments!.length})</span>
-                      <span class="text-[10px]">▾</span>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1 gap-2 max-h-[200px] overflow-y-auto">
-                        <For
-                          each={(props.jiraComments ?? []).filter(
-                            (c) => !c.parentId
-                          )}
-                        >
-                          {(root) => (
-                            <div class="flex flex-col gap-1">
-                              <div class="text-[11px] leading-tight text-popover-foreground">
-                                <div class="font-medium">{root.author}</div>
-                                <CommentBody body={root.body} />
-                              </div>
-                              <For
-                                each={(props.jiraComments ?? []).filter(
-                                  (c) => c.parentId === root.id
-                                )}
-                              >
-                                {(reply) => (
-                                  <div class="flex gap-1 pl-2 border-l border-muted-foreground/20">
-                                    <div class="text-[11px] leading-tight text-popover-foreground flex-1 min-w-0">
-                                      <div class="font-medium">
-                                        {reply.author}
-                                      </div>
-                                      <CommentBody body={reply.body} />
-                                    </div>
-                                  </div>
-                                )}
-                              </For>
-                            </div>
-                          )}
-                        </For>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
+                <Show when={props.onSubmitJiraComment || (props.jiraComments?.length ?? 0) > 0}>
+                  <JiraCommentsSection
+                    comments={(props.jiraComments ?? []) as import("../../features/sidebar/use-jira-comments.js").JiraComment[]}
+                    onSubmitComment={props.onSubmitJiraComment ?? (async () => ({ id: "", created: "" }))}
+                    onSearchUsers={props.onSearchJiraUsers}
+                    onRefreshPoll={() => props.onRefreshJiraStatus?.()}
+                  />
                 </Show>
               </BottomSection>
             </div>
