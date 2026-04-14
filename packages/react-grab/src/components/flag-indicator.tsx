@@ -35,9 +35,9 @@ export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
         as="span"
         class="inline-flex items-center justify-center gap-1 shrink-0 cursor-help rounded px-1 py-0.5 transition-colors duration-fast hover:bg-flag-hover"
       >
-        <IconFlag size={FLAGGED_ICON_SIZE} class="text-flag" />
+        <IconFlag size={FLAGGED_ICON_SIZE} class="text-flag pointer-events-none" />
         <Show when={props.flaggedAt}>
-          <span class="text-[10px] text-flag leading-none underline decoration-dotted decoration-flag/40 underline-offset-2">
+          <span class="text-[10px] text-flag leading-none underline decoration-dotted decoration-flag/40 underline-offset-2 pointer-events-none">
             {relativeTime(new Date(props.flaggedAt!).getTime())}
           </span>
         </Show>
