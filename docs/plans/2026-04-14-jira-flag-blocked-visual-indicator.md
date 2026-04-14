@@ -8,7 +8,18 @@
 
 **Tech Stack:** TypeScript, Solid.js, jira.js (`AgileClient`), Canvas 2D, Tailwind v4, Zod, Hono (sync-server)
 
-**Decree:** PRD-007, ADR-0009, SPEC-012
+**Decree:**
+- [PRD-007](../../decree/prd/007-jira-flag-blocked-visual-indicator.md) — Requirements (R1-R17)
+- [ADR-0009](../../decree/adr/0009-flag-data-source-and-blocked-visual-strategy.md) — Agile API + red border strategy
+- [SPEC-012](../../decree/spec/012-jira-flag-blocked-visual-indicator.md) — Technical design (37 acceptance criteria)
+- [PRD-008](../../decree/prd/008-jira-flag-toggle-write-back.md) — Future: flag toggle write-back
+
+**HTML POCs** (open in browser to preview):
+- [Selection Label — red border](poc/flag-selection-label.html)
+- [Canvas Overlay — red override + precedence](poc/flag-canvas-overlay.html)
+- [Status Legend — flagged entry](poc/flag-status-legend.html)
+
+**Business Rule:** [`resolveDisplayColor()`](../../packages/react-grab/src/features/sidebar/resolve-display-color.ts) — single source of truth for color override
 
 ---
 

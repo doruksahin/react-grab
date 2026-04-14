@@ -85,3 +85,14 @@ Add a flag icon to the selection label without changing colors.
 - Follows the established precedent of active-group glow overriding status color — flagged state simply inserts into the override chain
 
 **Override precedence**: active-group glow > flagged red > ATT status color > default pink
+
+## Related Documents
+
+| Document | Relationship |
+|----------|-------------|
+| [PRD-007](../prd/007-jira-flag-blocked-visual-indicator.md) | Parent requirement |
+| [SPEC-012](../spec/012-jira-flag-blocked-visual-indicator.md) | Technical specification implementing this decision |
+| [Implementation Plan](../../docs/plans/2026-04-14-jira-flag-blocked-visual-indicator.md) | 12-task plan |
+| [Business Rule](../../packages/react-grab/src/features/sidebar/resolve-display-color.ts) | `resolveDisplayColor()` — implements the override chain |
+| [Canvas Overlay POC](../../docs/plans/poc/flag-canvas-overlay.html) | Visual reference for override precedence |
+| [Selection Label POC](../../docs/plans/poc/flag-selection-label.html) | Visual reference for red border treatment |

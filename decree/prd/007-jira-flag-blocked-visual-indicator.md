@@ -70,8 +70,24 @@ For our enterprise workflow, flagged/blocked status must be immediately visible 
 - HTML POC files colocated in `docs/plans/poc/`
 
 ### Out of Scope
-- Setting/removing the flag from within react-grab (read-only)
-- Flag indicator in the sidebar list view (future enhancement)
+- Setting/removing the flag from within react-grab (read-only) — see [PRD-008](008-jira-flag-toggle-write-back.md)
 - Flag-based filtering or sorting (covered by SPEC-006 ATT status filtering)
 - Custom flag colors or user-configurable blocked indicators
 - Notification or alert system for newly flagged items
+
+## Related Documents
+
+| Document | Relationship |
+|----------|-------------|
+| [ADR-0009](../adr/0009-flag-data-source-and-blocked-visual-strategy.md) | Architecture decision — Agile API + red border strategy |
+| [SPEC-012](../spec/012-jira-flag-blocked-visual-indicator.md) | Technical specification — 37 acceptance criteria |
+| [PRD-008](008-jira-flag-toggle-write-back.md) | Future follow-up — flag toggle write-back (depends on this PRD) |
+| [Implementation Plan](../../docs/plans/2026-04-14-jira-flag-blocked-visual-indicator.md) | 12-task implementation plan |
+| [Business Rule](../../packages/react-grab/src/features/sidebar/resolve-display-color.ts) | `resolveDisplayColor()` — single source of truth |
+
+### HTML POCs
+| POC | What it shows |
+|-----|---------------|
+| [Selection Label](../../docs/plans/poc/flag-selection-label.html) | Red border on label — normal vs flagged comparison |
+| [Canvas Overlay](../../docs/plans/poc/flag-canvas-overlay.html) | Red overlay + override precedence chain |
+| [Status Legend](../../docs/plans/poc/flag-status-legend.html) | Flagged entry with "OVERRIDES" separator |

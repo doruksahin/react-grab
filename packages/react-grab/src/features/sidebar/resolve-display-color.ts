@@ -28,7 +28,7 @@ import { type StatusColorConfig, getStatusColor } from "./status-colors.js";
 
 // ── Flagged Color ──────────────────────────────────────────────────────
 // Red-600: distinct from "Won't Do" red-500 (#ef4444).
-// Decided in ADR-0009.
+// Decided in ADR-0009: decree/adr/0009-flag-data-source-and-blocked-visual-strategy.md
 export const FLAGGED_COLOR: StatusColorConfig = {
   hex: "#dc2626",
   bg: "rgba(220,38,38,0.12)",

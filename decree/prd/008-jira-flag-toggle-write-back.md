@@ -69,3 +69,12 @@ The next step is to let users toggle the flag directly from react-grab — click
 1. **Interaction pattern for flagging**: What's the right UX to flag a non-flagged card? Options: (a) small flag icon button always visible, (b) flag option in a right-click context menu, (c) hover-reveal action. Needs design input.
 2. **Confirmation step**: Should unflagging require confirmation? Flagging is high-intent (you're declaring a blocker), but unflagging could be accidental.
 3. **Permission discovery**: Should we probe the user's JIRA permissions on load and hide/disable the toggle if they can't flag? Or attempt and handle the 403?
+
+## Related Documents
+
+| Document | Relationship |
+|----------|-------------|
+| [PRD-007](007-jira-flag-blocked-visual-indicator.md) | Prerequisite — read-only flag visibility (data model, polling, visuals) |
+| [ADR-0009](../adr/0009-flag-data-source-and-blocked-visual-strategy.md) | Data source decision — Agile API for flag field |
+| [SPEC-012](../spec/012-jira-flag-blocked-visual-indicator.md) | Technical spec for read-only flag indicators |
+| [Business Rule](../../packages/react-grab/src/features/sidebar/resolve-display-color.ts) | `resolveDisplayColor()` — reusable for toggle UI state |

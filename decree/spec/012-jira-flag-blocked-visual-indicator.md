@@ -235,6 +235,16 @@ This matches the existing pattern where active-group already overrides status co
 - [ ] Flag color is `#dc2626` (red-600), distinct from "Won't Do" `#ef4444`
 
 ### HTML POC
-- [ ] `docs/plans/poc/flag-selection-label.html` — selection label red border comparison
-- [ ] `docs/plans/poc/flag-canvas-overlay.html` — canvas overlay red override + precedence
-- [ ] `docs/plans/poc/flag-status-legend.html` — status legend with flagged entry
+- [ ] [`docs/plans/poc/flag-selection-label.html`](../../docs/plans/poc/flag-selection-label.html) — selection label red border comparison
+- [ ] [`docs/plans/poc/flag-canvas-overlay.html`](../../docs/plans/poc/flag-canvas-overlay.html) — canvas overlay red override + precedence
+- [ ] [`docs/plans/poc/flag-status-legend.html`](../../docs/plans/poc/flag-status-legend.html) — status legend with flagged entry
+
+## Related Documents
+
+| Document | Relationship |
+|----------|-------------|
+| [PRD-007](../prd/007-jira-flag-blocked-visual-indicator.md) | Parent requirement (R1-R17) |
+| [ADR-0009](../adr/0009-flag-data-source-and-blocked-visual-strategy.md) | Architecture decision — Agile API + red border |
+| [PRD-008](../prd/008-jira-flag-toggle-write-back.md) | Future follow-up — flag toggle write-back |
+| [Implementation Plan](../../docs/plans/2026-04-14-jira-flag-blocked-visual-indicator.md) | 12-task bite-sized plan |
+| [Business Rule](../../packages/react-grab/src/features/sidebar/resolve-display-color.ts) | `resolveDisplayColor()` — screaming architecture layer |
