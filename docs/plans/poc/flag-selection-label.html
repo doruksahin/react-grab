@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC: Flagged Selection Label — Red Border</title>
+  <style>
+    :root {
+      --grab-pink: #b21c8e;
+      --flag-red: #dc2626;
+      --in-progress-blue: #3b82f6;
+      --code-review-violet: #a78bfa;
+      --wont-do-red: #ef4444;
+      --bg-popover: #ffffff;
+      --shadow: drop-shadow(0px 1px 2px rgba(81, 81, 81, 0.25));
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 60px;
+    }
+
+    h1 { font-size: 18px; color: #333; margin: 0 0 8px; }
+    h2 { font-size: 14px; color: #666; margin: 0 0 24px; font-weight: 400; }
+    .row { display: flex; gap: 32px; flex-wrap: wrap; }
+    .example { text-align: center; }
+    .example-label { font-size: 11px; color: #888; margin-top: 12px; }
+
+    /* ── Selection Label Base ─────────────────────────── */
+    .selection-label {
+      position: relative;
+      filter: var(--shadow);
+      display: inline-flex;
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .selection-label-panel {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 10px;
+      background: var(--bg-popover);
+      width: fit-content;
+      height: fit-content;
+      padding: 6px 12px;
+      font-synthesis: none;
+    }
+
+    /* ── Flagged State: Red Border ────────────────────── */
+    .selection-label-panel.flagged {
+      border: 2px solid var(--flag-red);
+    }
+
+    /* ── Status Badge (top-right corner) ─────────────── */
+    .status-badge {
+      position: absolute;
+      top: -10px;
+      right: -8px;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .status-badge svg {
+      width: 12px;
+      height: 12px;
+      color: white;
+    }
+
+    /* ── Tag & Meta ──────────────────────────────────── */
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: #1e001f;
+      background: #fde7f7;
+      border: 1px solid #f7c5ec;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .meta {
+      font-size: 11px;
+      color: #555;
+      padding: 0 4px;
+    }
+
+    /* ── Comparison Section ───────────────────────────── */
+    .comparison {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .comparison .arrow {
+      font-size: 20px;
+      color: #999;
+    }
+    .business-rule {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #856404;
+      max-width: 400px;
+    }
+    .business-rule strong { color: #664d03; }
+  </style>
+</head>
+<body>
+
+  <div>
+    <h1>Selection Label — Flagged vs Normal</h1>
+    <h2>SPEC-012 / ADR-0009 — Red border (#dc2626) when JIRA ticket is flagged</h2>
+
+    <div class="row">
+      <!-- Normal: In Progress -->
+      <div class="example">
+        <div class="selection-label">
+          <div class="selection-label-panel">
+            <span class="tag">div.hero-section</span>
+            <span class="meta">ATT-1234</span>
+          </div>
+          <div class="status-badge" style="background: #3b82f6;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg>
+          </div>
+        </div>
+        <div class="example-label">Normal — In Progress</div>
+      </div>
+
+      <!-- Flagged: In Progress -->
+      <div class="example">
+        <div class="selection-label">
+          <div class="selection-label-panel flagged">
+            <span class="tag">div.hero-section</span>
+            <span class="meta">ATT-1234</span>
+          </div>
+          <div class="status-badge" style="background: #3b82f6;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg>
+          </div>
+        </div>
+        <div class="example-label"><strong>Flagged</strong> — In Progress + Blocked</div>
+      </div>
+
+      <!-- Flagged: Code Review -->
+      <div class="example">
+        <div class="selection-label">
+          <div class="selection-label-panel flagged">
+            <span class="tag">button.submit-cta</span>
+            <span class="meta">ATT-5678</span>
+          </div>
+          <div class="status-badge" style="background: #a78bfa;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg>
+          </div>
+        </div>
+        <div class="example-label"><strong>Flagged</strong> — Code Review + Blocked</div>
+      </div>
+
+      <!-- Normal: Won't Do (red badge — not same as flagged border) -->
+      <div class="example">
+        <div class="selection-label">
+          <div class="selection-label-panel">
+            <span class="tag">img.product-thumb</span>
+            <span class="meta">ATT-9012</span>
+          </div>
+          <div class="status-badge" style="background: #ef4444;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+          </div>
+        </div>
+        <div class="example-label">Normal — Won't Do (no flag)</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h1>Business Rule: Flagged Overrides Status</h1>
+    <div class="comparison">
+      <div class="business-rule">
+        <strong>RULE (ADR-0009):</strong> When a JIRA ticket is flagged, the red border (#dc2626) is
+        shown <em>regardless</em> of the current workflow status. The status badge retains its
+        original color — so you can see "In Progress" (blue badge) + "Blocked" (red border)
+        simultaneously. The border is the flag; the badge is the status.
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
