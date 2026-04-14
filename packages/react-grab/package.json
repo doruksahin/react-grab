@@ -115,6 +115,7 @@
     "@tiptap/extension-underline": "^3.22.3",
     "@tiptap/pm": "^3.22.3",
     "@tiptap/starter-kit": "^3.22.3",
+    "@tiptap/suggestion": "^3.22.3",
     "bippy": "^0.5.32",
     "cva": "1.0.0-beta.4",
     "element-source": "^0.0.3",
