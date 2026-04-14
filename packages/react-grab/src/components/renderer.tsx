@@ -1,6 +1,6 @@
 import { Show, Index, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
 import type { Component } from "solid-js";
-import type { AgentSession, ReactGrabRendererProps } from "../types.js";
+import type { AgentSession, ReactGrabRendererProps, SelectionLabelInstance } from "../types.js";
 import {
   DEFAULT_ACTION_ID,
   FADE_DURATION_MS,
@@ -9,6 +9,27 @@ import {
 } from "../constants.js";
 import { openFile } from "../utils/open-file.js";
 import { isElementConnected } from "../utils/is-element-connected.js";
+/** Pick all jira* fields from a label instance — avoids brittle
+ *  per-field pass-through that breaks when new jira fields are added. */
+function pickJiraFields(inst: SelectionLabelInstance) {
+  return {
+    groupStatus: inst.groupStatus,
+    jiraTicketId: inst.jiraTicketId,
+    jiraUrl: inst.jiraUrl,
+    jiraStatusCategory: inst.jiraStatusCategory,
+    jiraAssignee: inst.jiraAssignee,
+    jiraReporter: inst.jiraReporter,
+    jiraAssigneeAvatar: inst.jiraAssigneeAvatar,
+    jiraReporterAvatar: inst.jiraReporterAvatar,
+    jiraLabels: inst.jiraLabels,
+    jiraComments: inst.jiraComments,
+    jiraFlagged: inst.jiraFlagged,
+    jiraFlaggedAt: inst.jiraFlaggedAt,
+    jiraFlaggedBy: inst.jiraFlaggedBy,
+    jiraFlaggedByAvatar: inst.jiraFlaggedByAvatar,
+  } as const;
+}
+
 import { OverlayCanvas } from "./overlay-canvas.js";
 import { SelectionLabel } from "./selection-label/index.js";
 import { Toolbar } from "./toolbar/index.js";
@@ -219,20 +240,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             inputValue={instance().inputValue}
             error={instance().errorMessage}
             hideArrow={instance().hideArrow}
-            groupStatus={instance().groupStatus}
-            jiraTicketId={instance().jiraTicketId}
-            jiraUrl={instance().jiraUrl}
-            jiraStatusCategory={instance().jiraStatusCategory}
-            jiraAssignee={instance().jiraAssignee}
-            jiraReporter={instance().jiraReporter}
-            jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
-            jiraReporterAvatar={instance().jiraReporterAvatar}
-            jiraLabels={instance().jiraLabels}
-            jiraComments={instance().jiraComments}
-            jiraFlagged={instance().jiraFlagged}
-            jiraFlaggedAt={instance().jiraFlaggedAt}
-            jiraFlaggedBy={instance().jiraFlaggedBy}
-            jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
+            {...pickJiraFields(instance())}
             // Full groups list — see note above. The picker needs
             // synthetic groups visible at the business layer so
             // ticket-lock on a loose-ticketed item resolves correctly.
