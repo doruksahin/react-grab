@@ -504,6 +504,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           class={cn(
             'relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]',
             'bg-popover',
+            props.jiraFlagged && 'border-2 border-[#dc2626]',
             isShaking() && 'animate-shake'
           )}
           style={{
