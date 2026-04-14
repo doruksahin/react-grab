@@ -1,4 +1,4 @@
-import { Version3Client } from "jira.js";
+import { Version3Client, AgileClient } from "jira.js";
 import { markdownToAdf } from "marklassian";
 import { convertADFToMarkdown, type ADFDocument } from "adf-to-markdown";
 import type { SyncRepository, ScreenshotStore } from "../repositories/types.js";
@@ -44,6 +44,7 @@ interface ThreadedComment {
 
 export class JiraService {
   private client: Version3Client;
+  private agileClient: AgileClient;
   private config: JiraConfig;
   private cloudIdPromise: Promise<string> | null = null;
 
@@ -56,6 +57,12 @@ export class JiraService {
           email: config.email,
           apiToken: config.apiToken,
         },
+      },
+    });
+    this.agileClient = new AgileClient({
+      host: config.baseUrl,
+      authentication: {
+        basic: { email: config.email, apiToken: config.apiToken },
       },
     });
   }
@@ -350,6 +357,25 @@ export class JiraService {
       filenameToAttachmentId,
     );
 
+    let flagged = false;
+    try {
+      const response = await fetch(
+        `${this.config.baseUrl}/rest/agile/1.0/issue/${ticketId}?fields=flagged`,
+        {
+          headers: {
+            Authorization: this.authHeader,
+            Accept: "application/json",
+          },
+        },
+      );
+      if (response.ok) {
+        const data = (await response.json()) as { fields?: { flagged?: boolean } };
+        flagged = data.fields?.flagged === true;
+      }
+    } catch {
+      // Agile API may not be available — default to not flagged
+    }
+
     return {
       status: issue.fields.status?.name ?? "Unknown",
       statusCategory: issue.fields.status?.statusCategory?.name ?? "Unknown",
@@ -360,6 +386,7 @@ export class JiraService {
       jiraUrl: `${this.config.baseUrl}/browse/${ticketId}`,
       labels: (issue.fields.labels as string[] | undefined) ?? [],
       comments,
+      flagged,
     };
   }
 
