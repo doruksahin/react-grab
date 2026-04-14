@@ -6,9 +6,8 @@ interface IconFlagProps {
 }
 
 /**
- * Filled flag icon — matches JIRA's "flagged/impediment" indicator.
- * Based on Lucide's `flag` shape, rendered filled instead of stroked
- * to match the solid JIRA flag visual.
+ * Filled flag icon — exact JIRA "flagged/impediment" indicator.
+ * SVG path from Atlassian Design System (@atlaskit/icon).
  *
  * @see decree/adr/0009-flag-data-source-and-blocked-visual-strategy.md
  */
@@ -20,16 +19,16 @@ export const IconFlag: Component<IconFlagProps> = (props) => {
       xmlns="http://www.w3.org/2000/svg"
       width={size()}
       height={size()}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      stroke="currentColor"
-      stroke-width="1"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      viewBox="-4 -4 24 24"
+      fill="none"
       class={props.class}
     >
-      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-      <line x1="4" x2="4" y1="22" y2="15" stroke="currentColor" stroke-width="2" fill="none" />
+      <path
+        fill="currentColor"
+        fill-rule="evenodd"
+        d="M2 1.75A.75.75 0 0 1 2.75 1H14a.75.75 0 0 1 .6 1.2l-2.662 3.55L14.6 9.3a.75.75 0 0 1-.6 1.2H3.5V15H2z"
+        clip-rule="evenodd"
+      />
     </svg>
   );
 };
