@@ -231,7 +231,8 @@ export const jiraRoutes = createRouter()
       return c.json({ error: "No JIRA ticket linked to this group" }, 404);
     }
     try {
-      const adf = markdownToAdf(body);
+      const processedBody = await c.var.jira.uploadBase64Images(group.jiraTicketId, body);
+      const adf = markdownToAdf(processedBody);
       const enriched = mentions?.length ? injectMentions(adf, mentions) : adf;
       const result = await c.var.jira.addComment(group.jiraTicketId, enriched, parentId);
       return c.json(result, 200);
