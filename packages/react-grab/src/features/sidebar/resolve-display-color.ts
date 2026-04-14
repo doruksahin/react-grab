@@ -38,7 +38,7 @@ export const FLAGGED_COLOR: StatusColorConfig = {
 // ── Flagged Visual Constants ───────────────────────────────────────────
 // Shared by selection-label, selection-card, and loose-selection-card.
 // Keeps the visual treatment DRY — change here, updates everywhere.
-export const FLAGGED_BORDER_CLASS = "border-2 border-[#dc2626]";
+export const FLAGGED_BORDER_CLASS = "border-2 border-flag";
 export const FLAGGED_ICON_SIZE = 16;
 
 // ── Business Rule ──────────────────────────────────────────────────────

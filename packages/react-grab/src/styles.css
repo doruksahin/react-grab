@@ -32,6 +32,8 @@
   --color-label-success-text: #006e3b;
   --color-label-divider: #dedede;
   --color-label-muted: #767676;
+  --color-flag: #dc2626;
+  --color-flag-hover: rgba(220, 38, 38, 0.08);
   --transition-fast: 100ms;
   --transition-normal: 150ms;
   --transition-slow: 200ms;

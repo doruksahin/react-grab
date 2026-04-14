@@ -36,7 +36,7 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
       </div>
       <div class="px-4 py-3 space-y-2">
         {/* Flagged — cross-cutting override, shown above workflow statuses */}
-        <div class="flex items-start gap-2.5 bg-[rgba(220,38,38,0.06)] rounded-md p-1.5 -mx-1.5 border-l-[3px] border-l-[#dc2626]">
+        <div class="flex items-start gap-2.5 bg-flag-hover rounded-md p-1.5 -mx-1.5 border-l-[3px] border-l-flag">
           <div
             class="w-3 h-3 rounded-sm mt-0.5 shrink-0"
             style={{ background: FLAGGED_COLOR.hex }}
@@ -49,7 +49,7 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
           </div>
         </div>
         <div class="relative border-t border-border my-2">
-          <span class="absolute -top-[8px] left-1/2 -translate-x-1/2 bg-card/95 px-2 text-[9px] font-bold text-[#dc2626] tracking-wider">
+          <span class="absolute -top-[8px] left-1/2 -translate-x-1/2 bg-card/95 px-2 text-[9px] font-bold text-flag tracking-wider">
             OVERRIDES
           </span>
         </div>

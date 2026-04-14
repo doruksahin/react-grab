@@ -33,11 +33,11 @@ export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
     <Tooltip openDelay={200}>
       <TooltipTrigger
         as="span"
-        class="inline-flex items-center gap-1 shrink-0 cursor-help -my-1 py-1 -mx-0.5 px-0.5 rounded transition-colors hover:bg-[rgba(220,38,38,0.08)]"
+        class="inline-flex items-center justify-center gap-1 shrink-0 cursor-help rounded px-1 py-0.5 transition-colors duration-fast hover:bg-flag-hover"
       >
-        <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626]" />
+        <IconFlag size={FLAGGED_ICON_SIZE} class="text-flag" />
         <Show when={props.flaggedAt}>
-          <span class="text-[10px] text-[#dc2626] underline decoration-dotted decoration-[#dc2626]/40 underline-offset-2">
+          <span class="text-[10px] text-flag leading-none underline decoration-dotted decoration-flag/40 underline-offset-2">
             {relativeTime(new Date(props.flaggedAt!).getTime())}
           </span>
         </Show>
@@ -47,8 +47,8 @@ export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
       >
         <div class="px-3 pt-2.5 pb-2">
           <div class="flex items-center gap-1.5 mb-2">
-            <IconFlag size={14} class="text-[#dc2626]" />
-            <span class="text-[11px] font-semibold text-[#dc2626]">
+            <IconFlag size={14} class="text-flag" />
+            <span class="text-[11px] font-semibold text-flag">
               Flagged / Blocked
             </span>
           </div>
