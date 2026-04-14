@@ -1,5 +1,5 @@
 ---
-status: draft
+status: implemented
 date: 2026-04-14
 references: [PRD-007, ADR-0009, SPEC-004, SPEC-006]
 ---
@@ -183,61 +183,61 @@ This matches the existing pattern where active-group already overrides status co
 ## Acceptance Criteria
 
 ### Data Model
-- [ ] `SelectionGroupWithJira` type includes `jiraFlagged?: boolean`
-- [ ] `SelectionLabelInstance` type includes `jiraFlagged?: boolean`
-- [ ] Sync-server JIRA schema includes `flagged: z.boolean().optional()`
+- [x] `SelectionGroupWithJira` type includes `jiraFlagged?: boolean`
+- [x] `SelectionLabelInstance` type includes `jiraFlagged?: boolean`
+- [x] Sync-server JIRA schema includes `flagged: z.boolean().optional()`
 
 ### Data Fetching
-- [ ] Sync-server fetches `fields.flagged` from JIRA Agile API
-- [ ] `enrichGroupsWithJiraData()` maps `flagged` to `jiraFlagged`
-- [ ] Label instance builder propagates `jiraFlagged` from group to instance
-- [ ] Missing/unavailable flag data defaults to `false` (no false positives)
+- [x] Sync-server fetches `fields.flagged` from JIRA Agile API
+- [x] `enrichGroupsWithJiraData()` maps `flagged` to `jiraFlagged`
+- [x] Label instance builder propagates `jiraFlagged` from group to instance
+- [x] Missing/unavailable flag data defaults to `false` (no false positives)
 
 ### Selection Label Visual
-- [ ] `data-react-grab-selection-label` element has red border (`#dc2626`, 2px) when `jiraFlagged` is true
-- [ ] Red border is visible regardless of ATT status color
-- [ ] Red border coexists with existing status badge (no layout shift)
-- [ ] Red border removed when `jiraFlagged` becomes false
+- [x] `data-react-grab-selection-label` element has red border (`#dc2626`, 2px) when `jiraFlagged` is true
+- [x] Red border is visible regardless of ATT status color
+- [x] Red border coexists with existing status badge (no layout shift)
+- [x] Red border removed when `jiraFlagged` becomes false
 
 ### Canvas Overlay Visual
-- [ ] Canvas overlay border renders in red (`#dc2626`) for flagged selections
-- [ ] Canvas overlay fill uses red with `STATUS_OVERLAY_FILL_ALPHA` (0.08)
-- [ ] Flagged red overrides ATT status color in the canvas
-- [ ] Active-group highlight (lightblue) overrides flagged red
+- [x] Canvas overlay border renders in red (`#dc2626`) for flagged selections
+- [x] Canvas overlay fill uses red with `STATUS_OVERLAY_FILL_ALPHA` (0.08)
+- [x] Flagged red overrides ATT status color in the canvas
+- [x] Active-group highlight (lightblue) overrides flagged red
 
 ### Override Precedence
-- [ ] Active-group glow > flagged red > ATT status > default pink
-- [ ] Selecting a flagged group shows lightblue glow, not red
-- [ ] Deselecting a flagged group shows red, not status color
+- [x] Active-group glow > flagged red > ATT status > default pink
+- [x] Selecting a flagged group shows lightblue glow, not red
+- [x] Deselecting a flagged group shows red, not status color
 
 ### Business Rule Layer
-- [ ] `resolve-display-color.ts` module exists in `features/sidebar/`
-- [ ] `resolveDisplayColor()` returns `FLAGGED_COLOR` when `jiraFlagged` is true
-- [ ] `resolveDisplayColor()` falls through to `getStatusColor()` when not flagged
-- [ ] `FLAGGED_COLOR` exported as `StatusColorConfig` with hex `#dc2626`
-- [ ] Canvas overlay uses `resolveDisplayColor()` instead of `getStatusColor()` directly
-- [ ] Selection label border uses `resolveDisplayColor()` for color determination
+- [x] `resolve-display-color.ts` module exists in `features/sidebar/`
+- [x] `resolveDisplayColor()` returns `FLAGGED_COLOR` when `jiraFlagged` is true
+- [x] `resolveDisplayColor()` falls through to `getStatusColor()` when not flagged
+- [x] `FLAGGED_COLOR` exported as `StatusColorConfig` with hex `#dc2626`
+- [x] Canvas overlay uses `resolveDisplayColor()` instead of `getStatusColor()` directly
+- [x] Selection label border uses `resolveDisplayColor()` for color determination
 
 ### Sidebar Cards
-- [ ] `SelectionCard` accepts optional `jiraFlagged` prop
-- [ ] `data-react-grab-selection-card` shows red left-border accent (`border-l-[3px] border-l-[#dc2626]`) when flagged
-- [ ] `data-react-grab-loose-selection-card` inner container shows red left-border accent when flagged
-- [ ] `LooseSelectionCard` status pill uses `resolveDisplayColor` instead of `getStatusColor`
-- [ ] `loose-selection-list.tsx` passes `jiraFlagged` from backing group to `LooseSelectionCard`
+- [x] `SelectionCard` accepts optional `jiraFlagged` prop
+- [x] `data-react-grab-selection-card` shows red left-border accent (`border-l-[3px] border-l-[#dc2626]`) when flagged
+- [x] `data-react-grab-loose-selection-card` inner container shows red left-border accent when flagged
+- [x] `LooseSelectionCard` status pill uses `resolveDisplayColor` instead of `getStatusColor`
+- [x] `loose-selection-list.tsx` passes `jiraFlagged` from backing group to `LooseSelectionCard`
 
 ### Status Legend
-- [ ] Status Legend panel shows "Flagged / Blocked" entry with red indicator
-- [ ] Flagged entry appears above workflow statuses with visual separator
-- [ ] Flagged row has distinct visual treatment (background tint, left border accent)
+- [x] Status Legend panel shows "Flagged / Blocked" entry with red indicator
+- [x] Flagged entry appears above workflow statuses with visual separator
+- [x] Flagged row has distinct visual treatment (background tint, left border accent)
 
 ### Constants and Config
-- [ ] `FLAGGED_COLOR` constant defined in `resolve-display-color.ts` as `StatusColorConfig`
-- [ ] Flag color is `#dc2626` (red-600), distinct from "Won't Do" `#ef4444`
+- [x] `FLAGGED_COLOR` constant defined in `resolve-display-color.ts` as `StatusColorConfig`
+- [x] Flag color is `#dc2626` (red-600), distinct from "Won't Do" `#ef4444`
 
 ### HTML POC
-- [ ] [`docs/plans/poc/flag-selection-label.html`](../../docs/plans/poc/flag-selection-label.html) — selection label red border comparison
-- [ ] [`docs/plans/poc/flag-canvas-overlay.html`](../../docs/plans/poc/flag-canvas-overlay.html) — canvas overlay red override + precedence
-- [ ] [`docs/plans/poc/flag-status-legend.html`](../../docs/plans/poc/flag-status-legend.html) — status legend with flagged entry
+- [x] [`docs/plans/poc/flag-selection-label.html`](../../docs/plans/poc/flag-selection-label.html) — selection label red border comparison
+- [x] [`docs/plans/poc/flag-canvas-overlay.html`](../../docs/plans/poc/flag-canvas-overlay.html) — canvas overlay red override + precedence
+- [x] [`docs/plans/poc/flag-status-legend.html`](../../docs/plans/poc/flag-status-legend.html) — status legend with flagged entry
 
 ## Related Documents
 

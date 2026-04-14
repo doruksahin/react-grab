@@ -15,4 +15,4 @@
 | SPEC-010 | SPEC-010 Jira comments display in selection labels | implemented | 2026-04-08 |
 | SPEC-011 | SPEC-011 Loose-Selection Ticketing | implemented | 2026-04-08 |
 | SPEC-007 | SPEC-007 Group Dropdown Consistency — Unified New Group Action | draft | 2026-04-06 |
-| SPEC-012 | SPEC-012 JIRA Flag Blocked Visual Indicator | draft | 2026-04-14 |
+| SPEC-012 | SPEC-012 JIRA Flag/Blocked Visual Indicator | implemented | 2026-04-14 |
