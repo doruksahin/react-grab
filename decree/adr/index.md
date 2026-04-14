@@ -10,3 +10,5 @@
 | ADR-0005 | ADR-0005 Dialog and popover rendering inside Shadow DOM | accepted | 2026-04-05 |  |
 | ADR-0006 | ADR-0006 ATT Board Status Mapping and JIRA Metadata Polling | accepted | 2026-04-06 |  |
 | ADR-0007 | ADR-0007 Atlassian internal GraphQL gateway for threaded Jira comments | accepted | 2026-04-08 |  |
+| ADR-0008 | ADR-0008 Synthetic single-item groups for loose-selection ticketing | accepted | 2026-04-08 |  |
+| ADR-0009 | ADR-0009 Flag data source and blocked visual strategy | accepted | 2026-04-14 |  |
