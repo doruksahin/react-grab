@@ -218,7 +218,15 @@ This matches the existing pattern where active-group already overrides status co
 - [ ] "OVERRIDES" separator between flagged row and workflow statuses
 - [ ] "Won't Do" further down has a different red (`#ef4444`) — visually distinguishable
 
-#### MV-8: Edge Cases
+#### MV-8: Flag Tooltip ([POC reference](../../docs/plans/poc/flag-tooltip.html))
+- [ ] Hover the flag icon on a selection card → tooltip appears with header, avatar, name, exact date
+- [ ] Hover the flag icon on a selection label → same tooltip content
+- [ ] Hover the flag icon on a loose-selection card → same tooltip content
+- [ ] Tooltip shows correct flagger name (matches JIRA changelog author)
+- [ ] Tooltip shows exact date to the minute (not relative time)
+- [ ] Moving mouse away dismisses tooltip
+
+#### MV-9: Edge Cases
 - [ ] Unflagged ticket: no red anywhere — normal status colors
 - [ ] Ticket with no JIRA link: no red, shows default pink
 - [ ] "Won't Do" + flagged: red border on label, red overlay — distinct from unflagged "Won't Do"
@@ -292,6 +300,24 @@ This matches the existing pattern where active-group already overrides status co
 - [ ] Relative time shown next to flag icon on loose-selection card
 - [ ] Edge case: if flagged at creation (no changelog entry), falls back to issue `created` timestamp
 
+### Flag Author
+- [ ] Sync-server extracts `author.displayName` from flag changelog entry
+- [ ] Sync-server extracts `author.avatarUrls['48x48']` from flag changelog entry
+- [ ] `JiraTicketStatus` schema includes `flaggedBy: z.string().nullable().optional()`
+- [ ] `JiraTicketStatus` schema includes `flaggedByAvatar: z.string().nullable().optional()`
+- [ ] `SelectionGroupWithJira` type includes `jiraFlaggedBy?: string | null`
+- [ ] `SelectionGroupWithJira` type includes `jiraFlaggedByAvatar?: string | null`
+- [ ] `SelectionLabelInstance` type includes `jiraFlaggedBy?: string | null`
+- [ ] `SelectionLabelInstance` type includes `jiraFlaggedByAvatar?: string | null`
+
+### Flag Tooltip ([POC reference](../../docs/plans/poc/flag-tooltip.html))
+- [ ] Hovering the flag icon + relative time shows a Kobalte Tooltip
+- [ ] Tooltip header: flag icon + "Flagged / Blocked" in red
+- [ ] Tooltip shows flagger avatar (24px circle) + display name + "Flagged by" label
+- [ ] Tooltip shows exact date to the minute (e.g. "Apr 14, 2026 at 17:32") + "Flagged at" label
+- [ ] Tooltip renders in shadow DOM via portal (existing `useShadowMount()` pattern)
+- [ ] Tooltip appears on selection label, selection card, and loose-selection card
+
 ### Status Legend
 - [x] Status Legend panel shows "Flagged / Blocked" entry with red indicator
 - [x] Flagged entry appears above workflow statuses with visual separator
@@ -308,6 +334,7 @@ This matches the existing pattern where active-group already overrides status co
 - [x] [`docs/plans/poc/flag-canvas-overlay.html`](../../docs/plans/poc/flag-canvas-overlay.html) — canvas overlay red override + precedence
 - [x] [`docs/plans/poc/flag-status-legend.html`](../../docs/plans/poc/flag-status-legend.html) — status legend with flagged entry
 - [x] [`docs/plans/poc/flag-card-icon.html`](../../docs/plans/poc/flag-card-icon.html) — flag icon on selection cards and loose cards
+- [ ] [`docs/plans/poc/flag-tooltip.html`](../../docs/plans/poc/flag-tooltip.html) — hover tooltip with flagger info and exact date
 
 ## Related Documents
 

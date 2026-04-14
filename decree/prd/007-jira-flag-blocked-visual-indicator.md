@@ -38,10 +38,16 @@ For our enterprise workflow, flagged/blocked status must be immediately visible 
 - R21: The flag icon must follow the project's custom SVG icon pattern (`components/icons/icon-flag.tsx`) — no external icon library
 - R22: The flagged border style and icon size must be defined as shared constants in the business rule layer (`FLAGGED_BORDER_CLASS`, `FLAGGED_ICON_SIZE`) — DRY across all consumers
 
-### Data — Flag Date
+### Data — Flag Date and Author
 - R23: The sync-server must fetch the JIRA issue changelog and extract the timestamp of the most recent flag event (`field === "Flagged"`, `toString === "Impediment"`)
 - R24: The `flaggedAt` ISO timestamp must be included in the `JiraTicketStatus` response alongside `flagged`
 - R25: The flag date must be shown as relative time (e.g. "3h ago") next to the flag icon on all flagged surfaces (label, card, loose-card)
+- R26: The sync-server must extract the flagger's display name and avatar URL from the changelog entry `author` field
+- R27: `flaggedBy` (display name) and `flaggedByAvatar` (48x48 URL) must be included in the `JiraTicketStatus` response
+
+### Interaction — Flag Tooltip
+- R28: Hovering the flag icon + relative time must show a tooltip with: flag header, flagger avatar (24px), flagger name, and exact date to the minute (e.g. "Apr 14, 2026 at 17:32")
+- R29: The tooltip must use the existing Kobalte `Tooltip` component with shadow DOM portal mounting
 
 ### Visual — Canvas Overlay
 - R7: When a selection group's JIRA ticket is flagged, the canvas overlay border for that selection must render in **red** (`#dc2626`)
@@ -104,3 +110,4 @@ For our enterprise workflow, flagged/blocked status must be immediately visible 
 | [Canvas Overlay](../../docs/plans/poc/flag-canvas-overlay.html) | Red overlay + override precedence chain |
 | [Status Legend](../../docs/plans/poc/flag-status-legend.html) | Flagged entry with "OVERRIDES" separator |
 | [Card Flag Icon](../../docs/plans/poc/flag-card-icon.html) | Flag icon on selection cards + loose cards (R18-R20) |
+| [Flag Tooltip](../../docs/plans/poc/flag-tooltip.html) | Hover tooltip: who flagged + exact date (R26-R29) |
