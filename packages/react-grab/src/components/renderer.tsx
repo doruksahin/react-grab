@@ -9,25 +9,17 @@ import {
 } from "../constants.js";
 import { openFile } from "../utils/open-file.js";
 import { isElementConnected } from "../utils/is-element-connected.js";
-/** Pick all jira* fields from a label instance — avoids brittle
- *  per-field pass-through that breaks when new jira fields are added. */
-function pickJiraFields(inst: SelectionLabelInstance) {
-  return {
-    groupStatus: inst.groupStatus,
-    jiraTicketId: inst.jiraTicketId,
-    jiraUrl: inst.jiraUrl,
-    jiraStatusCategory: inst.jiraStatusCategory,
-    jiraAssignee: inst.jiraAssignee,
-    jiraReporter: inst.jiraReporter,
-    jiraAssigneeAvatar: inst.jiraAssigneeAvatar,
-    jiraReporterAvatar: inst.jiraReporterAvatar,
-    jiraLabels: inst.jiraLabels,
-    jiraComments: inst.jiraComments,
-    jiraFlagged: inst.jiraFlagged,
-    jiraFlaggedAt: inst.jiraFlaggedAt,
-    jiraFlaggedBy: inst.jiraFlaggedBy,
-    jiraFlaggedByAvatar: inst.jiraFlaggedByAvatar,
-  } as const;
+/** Pick all jira* and groupStatus fields from a label instance.
+ *  Uses runtime key filtering — new jira fields on SelectionLabelInstance
+ *  are forwarded automatically with zero maintenance. */
+function pickJiraFields(inst: SelectionLabelInstance): Partial<SelectionLabelInstance> {
+  const result: Record<string, unknown> = {};
+  for (const key in inst) {
+    if (key === "groupStatus" || key.startsWith("jira")) {
+      result[key] = (inst as Record<string, unknown>)[key];
+    }
+  }
+  return result;
 }
 
 import { OverlayCanvas } from "./overlay-canvas.js";
