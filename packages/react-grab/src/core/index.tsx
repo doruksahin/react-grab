@@ -3920,6 +3920,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           jiraReporterAvatar: group?.jiraReporterAvatar,
           jiraLabels: group?.jiraLabels,
           jiraComments: group?.jiraComments,
+          jiraFlagged: group?.jiraFlagged,
         };
       });
     });
