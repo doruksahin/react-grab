@@ -201,12 +201,14 @@ This matches the existing pattern where active-group already overrides status co
 - [ ] Deselect the flagged group: overlay goes back to red
 - [ ] Unflag the ticket: overlay returns to its status color
 
-#### MV-5: Selection Card (sidebar — group detail)
+#### MV-5: Selection Card (sidebar — group detail) ([POC reference](../../docs/plans/poc/flag-card-icon.html))
 - [ ] Open a group with a flagged ticket → selection card has red left-border accent (3px)
-- [ ] Unflag → wait → left-border disappears
+- [ ] Red flag icon appears next to the component name
+- [ ] Unflag → wait → left-border and flag icon disappear
 
-#### MV-6: Loose Selection Card (sidebar — loose list)
+#### MV-6: Loose Selection Card (sidebar — loose list) ([POC reference](../../docs/plans/poc/flag-card-icon.html))
 - [ ] Loose selection with a flagged backing ticket → red left-border accent (3px)
+- [ ] Red flag icon appears next to the ticket ID
 - [ ] Status pill color is red (`#dc2626`), not the workflow status color
 
 #### MV-7: Status Legend ([POC reference](../../docs/plans/poc/flag-status-legend.html))
@@ -269,6 +271,12 @@ This matches the existing pattern where active-group already overrides status co
 - [x] `loose-selection-list.tsx` passes `jiraFlagged` from backing group to `LooseSelectionCard`
 - [x] `IconFlag` component exists at `components/icons/icon-flag.tsx` (filled Lucide flag, matches JIRA flag visual)
 
+### Flag Icon Visual ([POC reference](../../docs/plans/poc/flag-card-icon.html))
+- [x] `IconFlag` renders a filled flag SVG (Lucide `flag` shape, solid fill, not stroked)
+- [x] `SelectionCard` shows red `IconFlag` (14px) next to component name when flagged
+- [x] `LooseSelectionCard` shows red `IconFlag` (12px) next to ticket ID when flagged
+- [x] Flag icon color is `#dc2626` matching `FLAGGED_COLOR`
+
 ### Status Legend
 - [x] Status Legend panel shows "Flagged / Blocked" entry with red indicator
 - [x] Flagged entry appears above workflow statuses with visual separator
@@ -282,6 +290,7 @@ This matches the existing pattern where active-group already overrides status co
 - [x] [`docs/plans/poc/flag-selection-label.html`](../../docs/plans/poc/flag-selection-label.html) — selection label red border comparison
 - [x] [`docs/plans/poc/flag-canvas-overlay.html`](../../docs/plans/poc/flag-canvas-overlay.html) — canvas overlay red override + precedence
 - [x] [`docs/plans/poc/flag-status-legend.html`](../../docs/plans/poc/flag-status-legend.html) — status legend with flagged entry
+- [x] [`docs/plans/poc/flag-card-icon.html`](../../docs/plans/poc/flag-card-icon.html) — flag icon on selection cards and loose cards
 
 ## Related Documents
 

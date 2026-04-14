@@ -31,6 +31,11 @@ For our enterprise workflow, flagged/blocked status must be immediately visible 
 - R16: `data-react-grab-loose-selection-card` must show a red left-border accent when its backing group's JIRA ticket is flagged
 - R17: The status pill color in `LooseSelectionCard` must use `resolveDisplayColor` (flag-aware) instead of `getStatusColor`
 
+### Visual — Flag Icon
+- R18: A filled red flag icon (matching JIRA's flag visual) must appear on flagged selection cards — next to the component name
+- R19: A filled red flag icon must appear on flagged loose-selection cards — next to the ticket ID
+- R20: The flag icon must follow the project's custom SVG icon pattern (`components/icons/icon-flag.tsx`) — no external icon library
+
 ### Visual — Canvas Overlay
 - R7: When a selection group's JIRA ticket is flagged, the canvas overlay border for that selection must render in **red** (`#dc2626`)
 - R8: The canvas overlay fill for a flagged selection must use red with the standard `STATUS_OVERLAY_FILL_ALPHA` (0.08)
@@ -91,3 +96,4 @@ For our enterprise workflow, flagged/blocked status must be immediately visible 
 | [Selection Label](../../docs/plans/poc/flag-selection-label.html) | Red border on label — normal vs flagged comparison |
 | [Canvas Overlay](../../docs/plans/poc/flag-canvas-overlay.html) | Red overlay + override precedence chain |
 | [Status Legend](../../docs/plans/poc/flag-status-legend.html) | Flagged entry with "OVERRIDES" separator |
+| [Card Flag Icon](../../docs/plans/poc/flag-card-icon.html) | Flag icon on selection cards + loose cards (R18-R20) |
