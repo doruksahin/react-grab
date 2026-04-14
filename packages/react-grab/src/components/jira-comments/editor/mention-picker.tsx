@@ -1,28 +1,19 @@
 import type { SuggestionOptions, SuggestionProps } from "@tiptap/suggestion";
-import type { JiraUserSuggestion } from "./types.js";
-
-/** Module-level cache for mention search results. 60s TTL. */
-const mentionCache = new Map<string, { users: JiraUserSuggestion[]; ts: number }>();
-const CACHE_TTL = 60_000;
-
-function getCached(query: string): JiraUserSuggestion[] | null {
-  const entry = mentionCache.get(query);
-  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.users;
-  if (entry) mentionCache.delete(query);
-  return null;
-}
+import type { JiraUserSuggestion } from "../../../features/jira-comments/types.js";
+import { getCachedUsers, setCachedUsers } from "../../../features/jira-comments/mention-cache.js";
+import { initials, avatarColor } from "../../../features/jira-comments/avatar-utils.js";
+import { useShadowMount } from "../../../utils/shadow-context.js";
 
 export function createMentionSuggestion(
   searchFn?: (query: string) => Promise<JiraUserSuggestion[]>,
-  getMountContainer?: () => Node,
 ): Omit<SuggestionOptions, "editor"> {
   return {
     items: async ({ query }) => {
       if (!searchFn || query.length < 1) return [];
-      const cached = getCached(query);
+      const cached = getCachedUsers(query);
       if (cached) return cached;
       const users = await searchFn(query);
-      mentionCache.set(query, { users, ts: Date.now() });
+      setCachedUsers(query, users);
       return users;
     },
     render: () => {
@@ -31,7 +22,7 @@ export function createMentionSuggestion(
       let items: JiraUserSuggestion[] = [];
       let commandFn: SuggestionProps["command"] | null = null;
 
-      function render() {
+      function renderList() {
         if (!popup) return;
         popup.innerHTML = items
           .map(
@@ -44,7 +35,7 @@ export function createMentionSuggestion(
           .join("");
       }
 
-      function select(index: number) {
+      function selectItem(index: number) {
         const item = items[index];
         if (item && commandFn) {
           commandFn({ id: item.accountId, label: item.displayName });
@@ -57,16 +48,17 @@ export function createMentionSuggestion(
           popup.className = "mention-picker-popup";
           popup.setAttribute("data-react-grab-mention-picker", "");
           popup.setAttribute("data-react-grab-ignore-events", "");
+          popup.style.pointerEvents = "auto";
           popup.addEventListener("mousedown", (e) => {
             e.preventDefault();
             const el = (e.target as HTMLElement).closest("[data-index]");
-            if (el) select(Number(el.getAttribute("data-index")));
+            if (el) selectItem(Number(el.getAttribute("data-index")));
           });
 
           items = props.items as JiraUserSuggestion[];
           commandFn = props.command;
           selected = 0;
-          render();
+          renderList();
 
           const { decorationNode } = props as SuggestionProps & { decorationNode: HTMLElement | null };
           if (decorationNode) {
@@ -77,14 +69,15 @@ export function createMentionSuggestion(
             popup.style.zIndex = "9999";
           }
 
-          const mount = getMountContainer?.() ?? document.body;
+          // Mount inside shadow DOM — same pattern as Kobalte portals
+          const mount = useShadowMount();
           mount.appendChild(popup);
         },
         onUpdate(props: SuggestionProps) {
           items = props.items as JiraUserSuggestion[];
           commandFn = props.command;
           selected = 0;
-          render();
+          renderList();
 
           const { decorationNode } = props as SuggestionProps & { decorationNode: HTMLElement | null };
           if (popup && decorationNode) {
@@ -96,16 +89,16 @@ export function createMentionSuggestion(
         onKeyDown(props: { event: KeyboardEvent }) {
           if (props.event.key === "ArrowDown") {
             selected = (selected + 1) % items.length;
-            render();
+            renderList();
             return true;
           }
           if (props.event.key === "ArrowUp") {
             selected = (selected - 1 + items.length) % items.length;
-            render();
+            renderList();
             return true;
           }
           if (props.event.key === "Enter" || props.event.key === "Tab") {
-            select(selected);
+            selectItem(selected);
             return true;
           }
           if (props.event.key === "Escape") {
@@ -122,20 +115,4 @@ export function createMentionSuggestion(
       };
     },
   };
-}
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function avatarColor(name: string): string {
-  const colors = ["#e74c3c", "#e67e22", "#f1c40f", "#2ecc71", "#1abc9c", "#3498db", "#9b59b6", "#e91e63"];
-  let hash = 0;
-  for (const ch of name) hash = ch.charCodeAt(0) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length]!;
 }

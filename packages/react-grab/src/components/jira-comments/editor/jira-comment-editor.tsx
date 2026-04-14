@@ -9,12 +9,12 @@ import Color from "@tiptap/extension-color";
 import Image from "@tiptap/extension-image";
 import Mention from "@tiptap/extension-mention";
 import Placeholder from "@tiptap/extension-placeholder";
-import { extractMentions } from "../../features/sidebar/extract-mentions.js";
+import { extractMentions } from "../../../features/jira-comments/extract-mentions.js";
+import type { JiraCommentEditorProps } from "../../../features/jira-comments/types.js";
 import { ToolbarButton, ToolbarSeparator, ToolbarDropdown } from "./toolbar.js";
 import { createMentionSuggestion } from "./mention-picker.js";
 import { EmojiPicker } from "./emoji-picker.js";
 import { ColorPicker } from "./color-picker.js";
-import type { JiraCommentEditorProps } from "./types.js";
 
 export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
   let editorEl!: HTMLDivElement;
@@ -35,10 +35,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         Image,
         Mention.configure({
           HTMLAttributes: { class: "mention" },
-          suggestion: createMentionSuggestion(
-            props.onSearchUsers,
-            () => editorEl.getRootNode(),
-          ),
+          suggestion: createMentionSuggestion(props.onSearchUsers),
           renderText: ({ node }) => `@${node.attrs.label ?? ""}`,
         }),
         Placeholder.configure({ placeholder: "Add a comment..." }),
@@ -47,9 +44,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
       onTransaction: () => tick((n) => n + 1),
     });
 
-    // Paste handler for images
     editorEl.addEventListener("paste", handlePaste);
-    // Drop handler for images
     editorEl.addEventListener("dragover", (e) => e.preventDefault());
     editorEl.addEventListener("drop", handleDrop);
   });
@@ -112,7 +107,6 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
       class="flex flex-col rounded border border-border bg-muted/40 overflow-hidden"
       style={{ "pointer-events": "auto" }}
     >
-      {/* Reply context bar */}
       <Show when={props.replyTo}>
         {(reply) => (
           <div
@@ -124,10 +118,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
             <button
               type="button"
               class="ml-auto text-muted-foreground hover:text-foreground"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                props.onCancelReply?.();
-              }}
+              onMouseDown={(e) => { e.preventDefault(); props.onCancelReply?.(); }}
             >
               ✕
             </button>
@@ -135,7 +126,6 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         )}
       </Show>
 
-      {/* Toolbar */}
       <div class="flex flex-wrap gap-0.5 px-2 py-1.5 border-b border-border bg-muted/50" data-react-grab-ignore-events>
         <ToolbarButton title="Bold" active={active("bold")} onClick={() => editor!.chain().focus().toggleBold().run()}>
           <b>B</b>
@@ -183,34 +173,20 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
           <ColorPicker
             activeColor={(editor?.getAttributes("textStyle")?.color as string | undefined) ?? null}
             onSelect={(color) => {
-              if (color) {
-                editor!.chain().focus().setColor(color).run();
-              } else {
-                editor!.chain().focus().unsetColor().run();
-              }
+              if (color) editor!.chain().focus().setColor(color).run();
+              else editor!.chain().focus().unsetColor().run();
             }}
           />
         </ToolbarDropdown>
 
-        <ToolbarButton
-          title="Link"
-          active={active("link")}
-          onClick={() => {
-            if (active("link")) {
-              editor!.chain().focus().unsetLink().run();
-            } else {
-              const url = prompt("Enter URL:");
-              if (url) editor!.chain().focus().setLink({ href: url }).run();
-            }
-          }}
-        >
+        <ToolbarButton title="Link" active={active("link")} onClick={() => {
+          if (active("link")) { editor!.chain().focus().unsetLink().run(); }
+          else { const url = prompt("Enter URL:"); if (url) editor!.chain().focus().setLink({ href: url }).run(); }
+        }}>
           🔗
         </ToolbarButton>
 
-        <ToolbarButton
-          title="Image"
-          onClick={() => fileInput?.click()}
-        >
+        <ToolbarButton title="Image" onClick={() => fileInput?.click()}>
           🖼
         </ToolbarButton>
 
@@ -228,20 +204,12 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         </ToolbarButton>
       </div>
 
-      {/* Hidden file input for image upload */}
-      <input
-        ref={fileInput}
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={(e) => {
-          const file = e.currentTarget.files?.[0];
-          if (file) insertImageFile(file);
-          e.currentTarget.value = "";
-        }}
-      />
+      <input ref={fileInput} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => {
+        const file = e.currentTarget.files?.[0];
+        if (file) insertImageFile(file);
+        e.currentTarget.value = "";
+      }} />
 
-      {/* Editor content area */}
       <div
         ref={editorEl}
         data-react-grab-comment-editor
@@ -249,16 +217,12 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         style={{ "pointer-events": "auto" }}
       />
 
-      {/* Action buttons */}
       <div class="flex items-center gap-2 px-2 py-1.5 border-t border-border" data-react-grab-ignore-events>
         <button
           type="button"
           data-react-grab-comment-submit
           class="px-3 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
+          onMouseDown={(e) => { e.preventDefault(); handleSubmit(); }}
         >
           {props.replyTo ? "Reply" : "Save"}
         </button>
@@ -267,10 +231,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
             type="button"
             data-react-grab-comment-cancel
             class="px-3 py-1 rounded text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              props.onCancel?.();
-            }}
+            onMouseDown={(e) => { e.preventDefault(); props.onCancel?.(); }}
           >
             Cancel
           </button>

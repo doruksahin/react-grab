@@ -43,7 +43,7 @@ import { DiscardPrompt } from './discard-prompt.js';
 import { ErrorView } from './error-view.js';
 import { CompletionView } from './completion-view.js';
 import { ArrowNavigationMenu } from './arrow-navigation-menu.js';
-import { JiraCommentsSection } from './jira-comments-section.js';
+import { CommentsSection } from '../jira-comments/comments-section.js';
 // Collapsible moved into JiraCommentsSection
 
 interface LabelPosition {
@@ -745,8 +745,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   </Show>
                 </div>
                 <Show when={props.onSubmitJiraComment || (props.jiraComments?.length ?? 0) > 0}>
-                  <JiraCommentsSection
-                    comments={(props.jiraComments ?? []) as import("../../features/sidebar/use-jira-comments.js").JiraComment[]}
+                  <CommentsSection
+                    comments={(props.jiraComments ?? []) as import("../../features/jira-comments/types.js").JiraComment[]}
                     onSubmitComment={props.onSubmitJiraComment ?? (async () => ({ id: "", created: "" }))}
                     onSearchUsers={props.onSearchJiraUsers}
                     onRefreshPoll={() => props.onRefreshJiraStatus?.()}

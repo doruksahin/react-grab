@@ -1,14 +1,14 @@
+import type { MentionMapping } from "./types.js";
+
 interface TipTapNode {
   type: string;
   attrs?: { id?: string; label?: string };
   content?: TipTapNode[];
 }
 
-export function extractMentions(
-  json: TipTapNode,
-): Array<{ text: string; accountId: string }> {
+export function extractMentions(json: TipTapNode): MentionMapping[] {
   const seen = new Set<string>();
-  const result: Array<{ text: string; accountId: string }> = [];
+  const result: MentionMapping[] = [];
 
   function walk(node: TipTapNode) {
     if (node.type === "mention" && node.attrs?.id && node.attrs?.label) {

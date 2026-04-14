@@ -1,18 +1,9 @@
 import { createSignal } from "solid-js";
-
-export interface JiraComment {
-  id: string;
-  parentId: string | null;
-  author: string;
-  authorAvatar: string | null;
-  body: string;
-  createdAt: string;
-  sending?: boolean;
-}
+import type { JiraComment, MentionMapping } from "./types.js";
 
 interface UseJiraCommentsProps {
   serverComments: () => ReadonlyArray<JiraComment>;
-  onSubmitComment: (markdown: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) => Promise<{ id: string; created: string }>;
+  onSubmitComment: (markdown: string, mentions: MentionMapping[], parentId?: string) => Promise<{ id: string; created: string }>;
   onRefreshPoll: () => void;
 }
 
@@ -26,10 +17,7 @@ export function useJiraComments(props: UseJiraCommentsProps) {
     ...optimistic(),
   ];
 
-  async function submitComment(
-    markdown: string,
-    mentions: Array<{ text: string; accountId: string }>,
-  ) {
+  async function submitComment(markdown: string, mentions: MentionMapping[]) {
     const parentId = replyTo()?.id;
     const tempId = `temp-${Date.now()}`;
     const optimisticEntry: JiraComment = {

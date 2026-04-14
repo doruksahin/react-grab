@@ -2,7 +2,7 @@ import { type Component, createSignal, onCleanup, onMount } from "solid-js";
 import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
-import { ToolbarButton } from "../editor/toolbar.js";
+import { ToolbarButton } from "../jira-comments/editor/toolbar.js";
 
 interface JiraEditorProps {
   initialValue?: string;

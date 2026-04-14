@@ -14,7 +14,6 @@ export const ColorPicker: Component<{
     style={{ "grid-template-columns": "repeat(5, 1fr)", "min-width": "140px" }}
     data-react-grab-ignore-events
   >
-    {/* Reset button */}
     <button
       type="button"
       class="w-6 h-6 rounded border border-dashed border-muted-foreground flex items-center justify-center text-[10px] text-muted-foreground hover:border-foreground"
