@@ -66,7 +66,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5 min-w-0">
           <Show when={props.jiraFlagged}>
-            <IconFlag size={14} class="text-[#dc2626] shrink-0" />
+            <IconFlag size={16} class="text-[#dc2626] shrink-0" />
           </Show>
           <span class="text-[13px] font-semibold text-foreground truncate">
             {props.item.componentName || props.item.elementName}

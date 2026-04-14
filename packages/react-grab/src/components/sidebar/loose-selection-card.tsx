@@ -81,7 +81,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             >
               <div class="flex items-center gap-1">
                 <Show when={props.jiraFlagged}>
-                  <IconFlag size={12} class="text-[#dc2626] shrink-0" />
+                  <IconFlag size={16} class="text-[#dc2626] shrink-0" />
                 </Show>
                 <a
                   href={props.jiraUrl}
