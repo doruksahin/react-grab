@@ -118,7 +118,7 @@
 
   <div>
     <h1>Selection Label — Flagged vs Normal</h1>
-    <h2>SPEC-012 / ADR-0009 — Red border (#dc2626) when JIRA ticket is flagged</h2>
+    <h2>SPEC-012 / ADR-0009 — Red border + JIRA flag icon (#dc2626) when ticket is flagged</h2>
 
     <div class="row">
       <!-- Normal: In Progress -->
@@ -139,6 +139,7 @@
       <div class="example">
         <div class="selection-label">
           <div class="selection-label-panel flagged">
+            <svg viewBox="-4 -4 24 24" fill="none" width="16" height="16" style="color: #dc2626; flex-shrink: 0;"><path fill="currentColor" fill-rule="evenodd" d="M2 1.75A.75.75 0 0 1 2.75 1H14a.75.75 0 0 1 .6 1.2l-2.662 3.55L14.6 9.3a.75.75 0 0 1-.6 1.2H3.5V15H2z" clip-rule="evenodd"/></svg>
             <span class="tag">div.hero-section</span>
             <span class="meta">ATT-1234</span>
           </div>
@@ -153,6 +154,7 @@
       <div class="example">
         <div class="selection-label">
           <div class="selection-label-panel flagged">
+            <svg viewBox="-4 -4 24 24" fill="none" width="16" height="16" style="color: #dc2626; flex-shrink: 0;"><path fill="currentColor" fill-rule="evenodd" d="M2 1.75A.75.75 0 0 1 2.75 1H14a.75.75 0 0 1 .6 1.2l-2.662 3.55L14.6 9.3a.75.75 0 0 1-.6 1.2H3.5V15H2z" clip-rule="evenodd"/></svg>
             <span class="tag">button.submit-cta</span>
             <span class="meta">ATT-5678</span>
           </div>
@@ -183,10 +185,13 @@
     <h1>Business Rule: Flagged Overrides Status</h1>
     <div class="comparison">
       <div class="business-rule">
-        <strong>RULE (ADR-0009):</strong> When a JIRA ticket is flagged, the red border (#dc2626) is
-        shown <em>regardless</em> of the current workflow status. The status badge retains its
-        original color — so you can see "In Progress" (blue badge) + "Blocked" (red border)
-        simultaneously. The border is the flag; the badge is the status.
+        <strong>RULE (ADR-0009):</strong> When a JIRA ticket is flagged, a red border (#dc2626) and
+        JIRA flag icon are shown <em>regardless</em> of the current workflow status. The status
+        badge retains its original color — so you can see "In Progress" (blue badge) +
+        "Blocked" (red border + flag icon) simultaneously. The border and icon are the flag;
+        the badge is the status. Both visual constants (<code>FLAGGED_BORDER_CLASS</code>,
+        <code>FLAGGED_ICON_SIZE</code>) are shared from <code>resolve-display-color.ts</code> — DRY across
+        selection-label, selection-card, and loose-selection-card.
       </div>
     </div>
   </div>

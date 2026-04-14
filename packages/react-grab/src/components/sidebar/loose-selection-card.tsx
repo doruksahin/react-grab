@@ -6,6 +6,7 @@ import { SelectionCard } from './selection-card.jsx';
 import { Button } from '../ui/button.jsx';
 import { RemoveSelectionButton } from '../remove-selection-button.jsx';
 import { IconFlag } from '../icons/icon-flag.js';
+import { FLAGGED_BORDER_CLASS, FLAGGED_ICON_SIZE } from '../../features/sidebar/resolve-display-color.js';
 import { LooseSelectionCardHeader } from './loose-selection-card-header.jsx';
 import { cn } from '../../utils/cn.js';
 
@@ -54,7 +55,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
     >
       <div class={cn(
         "relative bg-muted rounded-lg border border-border p-3 cursor-default",
-        props.jiraFlagged && "border-l-[3px] border-l-[#dc2626]"
+        props.jiraFlagged && FLAGGED_BORDER_CLASS
       )}>
         {/* Absolute close button — top right */}
         <Show when={!hasTicket() && props.onRemoveItem}>
@@ -81,7 +82,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             >
               <div class="flex items-center gap-1">
                 <Show when={props.jiraFlagged}>
-                  <IconFlag size={16} class="text-[#dc2626] shrink-0" />
+                  <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
                 </Show>
                 <a
                   href={props.jiraUrl}

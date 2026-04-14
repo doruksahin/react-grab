@@ -9,6 +9,7 @@ import {
 import { ScreenshotPair } from "./screenshot-pair";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 import { IconFlag } from "../icons/icon-flag.js";
+import { FLAGGED_BORDER_CLASS, FLAGGED_ICON_SIZE } from "../../features/sidebar/resolve-display-color.js";
 import { cn } from "../../utils/cn.js";
 
 export interface SelectionCardProps {
@@ -58,7 +59,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       data-react-grab-selection-card
       class={cn(
         "bg-muted rounded-lg p-3 mb-1.5 border border-border",
-        props.jiraFlagged && "border-l-[3px] border-l-[#dc2626]"
+        props.jiraFlagged && FLAGGED_BORDER_CLASS
       )}
       style={{ "pointer-events": "auto" }}
     >
@@ -66,7 +67,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5 min-w-0">
           <Show when={props.jiraFlagged}>
-            <IconFlag size={16} class="text-[#dc2626] shrink-0" />
+            <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
           </Show>
           <span class="text-[13px] font-semibold text-foreground truncate">
             {props.item.componentName || props.item.elementName}

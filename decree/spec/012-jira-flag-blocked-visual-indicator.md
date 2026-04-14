@@ -183,10 +183,11 @@ This matches the existing pattern where active-group already overrides status co
 - [ ] Wait one polling cycle (~30s)
 - [ ] DevTools → Network → filter `jira-status` → response includes `"flagged": true`
 
-#### MV-2: Selection Label — red border ([POC reference](../../docs/plans/poc/flag-selection-label.html))
+#### MV-2: Selection Label — red border + flag icon ([POC reference](../../docs/plans/poc/flag-selection-label.html))
 - [ ] Flagged ticket's selection label has 2px red border (`#dc2626`)
+- [ ] Red flag icon (JIRA pennant) appears next to the tag badge
 - [ ] Status badge (top-right) retains its original status color — badge is NOT red
-- [ ] Unflag in JIRA → wait one poll → red border disappears
+- [ ] Unflag in JIRA → wait one poll → red border and flag icon disappear
 
 #### MV-3: Canvas Overlay — red fill + border ([POC reference](../../docs/plans/poc/flag-canvas-overlay.html))
 - [ ] Flagged ticket's overlay border is red, not the normal status color
@@ -238,6 +239,7 @@ This matches the existing pattern where active-group already overrides status co
 
 ### Selection Label Visual
 - [x] `data-react-grab-selection-label` element has red border (`#dc2626`, 2px) when `jiraFlagged` is true
+- [x] `data-react-grab-selection-label` shows red `IconFlag` next to the tag badge when flagged
 - [x] Red border is visible regardless of ATT status color
 - [x] Red border coexists with existing status badge (no layout shift)
 - [x] Red border removed when `jiraFlagged` becomes false
@@ -263,13 +265,13 @@ This matches the existing pattern where active-group already overrides status co
 
 ### Sidebar Cards
 - [x] `SelectionCard` accepts optional `jiraFlagged` prop
-- [x] `data-react-grab-selection-card` shows red left-border accent (`border-l-[3px] border-l-[#dc2626]`) when flagged
+- [x] `data-react-grab-selection-card` shows unified red border (`FLAGGED_BORDER_CLASS`) when flagged — same as selection label
 - [x] `data-react-grab-selection-card` shows red flag icon (`IconFlag`) next to component name when flagged
-- [x] `data-react-grab-loose-selection-card` inner container shows red left-border accent when flagged
+- [x] `data-react-grab-loose-selection-card` inner container shows unified red border when flagged
 - [x] `data-react-grab-loose-selection-card` shows red flag icon next to ticket ID when flagged
 - [x] `LooseSelectionCard` status pill uses `resolveDisplayColor` instead of `getStatusColor`
 - [x] `loose-selection-list.tsx` passes `jiraFlagged` from backing group to `LooseSelectionCard`
-- [x] `IconFlag` component exists at `components/icons/icon-flag.tsx` (filled Lucide flag, matches JIRA flag visual)
+- [x] `IconFlag` component exists at `components/icons/icon-flag.tsx` (Atlassian @atlaskit flag SVG)
 
 ### Flag Icon Visual ([POC reference](../../docs/plans/poc/flag-card-icon.html))
 - [x] `IconFlag` renders a filled flag SVG (Lucide `flag` shape, solid fill, not stroked)
@@ -284,6 +286,8 @@ This matches the existing pattern where active-group already overrides status co
 
 ### Constants and Config
 - [x] `FLAGGED_COLOR` constant defined in `resolve-display-color.ts` as `StatusColorConfig`
+- [x] `FLAGGED_BORDER_CLASS` shared Tailwind class string in `resolve-display-color.ts` — used by label, card, loose-card
+- [x] `FLAGGED_ICON_SIZE` shared icon size constant (16px) in `resolve-display-color.ts`
 - [x] Flag color is `#dc2626` (red-600), distinct from "Won't Do" `#ef4444`
 
 ### HTML POC

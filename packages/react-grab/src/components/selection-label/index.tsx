@@ -33,6 +33,8 @@ import { CreateTicketButton } from './create-ticket-button.jsx';
 import { SelectionStatusBadge } from './status-badge.js';
 import { ActiveGroupPicker } from '../../features/selection-groups/components/active-group-picker.jsx';
 import { IconLoader } from '../icons/icon-loader.jsx';
+import { IconFlag } from '../icons/icon-flag.js';
+import { FLAGGED_BORDER_CLASS, FLAGGED_ICON_SIZE } from '../../features/sidebar/resolve-display-color.js';
 import { Arrow } from './arrow.js';
 import { TagBadge } from './tag-badge.js';
 import { BottomSection } from './bottom-section.js';
@@ -504,7 +506,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           class={cn(
             'relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]',
             'bg-popover',
-            props.jiraFlagged && 'border-2 border-[#dc2626]',
+            props.jiraFlagged && FLAGGED_BORDER_CLASS,
             isShaking() && 'animate-shake'
           )}
           style={{
@@ -604,6 +606,9 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     isArrowNavigationVisible() || isInspectNavigationVisible(),
                 }}
               >
+                <Show when={props.jiraFlagged}>
+                  <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
+                </Show>
                 <TagBadge
                   tagName={tagDisplayResult().tagName}
                   componentName={tagDisplayResult().componentName}

@@ -32,9 +32,11 @@ For our enterprise workflow, flagged/blocked status must be immediately visible 
 - R17: The status pill color in `LooseSelectionCard` must use `resolveDisplayColor` (flag-aware) instead of `getStatusColor`
 
 ### Visual — Flag Icon
-- R18: A filled red flag icon (matching JIRA's flag visual) must appear on flagged selection cards — next to the component name
-- R19: A filled red flag icon must appear on flagged loose-selection cards — next to the ticket ID
-- R20: The flag icon must follow the project's custom SVG icon pattern (`components/icons/icon-flag.tsx`) — no external icon library
+- R18: A filled red flag icon (matching JIRA's flag visual) must appear on flagged selection labels — next to the tag badge
+- R19: A filled red flag icon must appear on flagged selection cards — next to the component name
+- R20: A filled red flag icon must appear on flagged loose-selection cards — next to the ticket ID
+- R21: The flag icon must follow the project's custom SVG icon pattern (`components/icons/icon-flag.tsx`) — no external icon library
+- R22: The flagged border style and icon size must be defined as shared constants in the business rule layer (`FLAGGED_BORDER_CLASS`, `FLAGGED_ICON_SIZE`) — DRY across all consumers
 
 ### Visual — Canvas Overlay
 - R7: When a selection group's JIRA ticket is flagged, the canvas overlay border for that selection must render in **red** (`#dc2626`)
