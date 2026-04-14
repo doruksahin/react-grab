@@ -30,7 +30,7 @@ function formatExactDate(iso: string): string {
  */
 export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
   return (
-    <Tooltip openDelay={200}>
+    <Tooltip openDelay={200} closeDelay={300}>
       <TooltipTrigger
         as="span"
         class="inline-flex items-center justify-center gap-1 shrink-0 cursor-help rounded px-1 py-0.5 transition-colors duration-fast hover:bg-flag-hover"
