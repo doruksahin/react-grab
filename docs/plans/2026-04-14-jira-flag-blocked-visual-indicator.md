@@ -481,7 +481,120 @@ git commit -m "feat: selection label shows red border for flagged JIRA issues"
 
 ---
 
-## Task 10: Status Legend — add Flagged entry
+## Task 10: Sidebar cards — flag indicator on selection-card and loose-selection-card
+
+**Files:**
+- Modify: `packages/react-grab/src/components/sidebar/selection-card.tsx:12-20,54-58`
+- Modify: `packages/react-grab/src/components/sidebar/loose-selection-card.tsx:10-28,52`
+- Modify: `packages/react-grab/src/components/sidebar/loose-selection-list.tsx:53-65`
+- Modify: `packages/react-grab/src/components/sidebar/selection-list.tsx:36-42`
+
+**Step 1: Add `jiraFlagged` prop to `SelectionCard`**
+
+In `selection-card.tsx`, add to `SelectionCardProps`:
+
+```typescript
+export interface SelectionCardProps {
+  item: CommentItem;
+  syncServerUrl?: string;
+  syncWorkspace?: string;
+  scrollRoot: () => Element | null;
+  onRemoveItem?: () => void;
+  jiraFlagged?: boolean;  // NEW
+}
+```
+
+**Step 2: Add red left-border to `SelectionCard` when flagged**
+
+Change line 56:
+
+**Before:**
+```tsx
+class="bg-muted rounded-lg p-3 mb-1.5 border border-border"
+```
+
+**After:**
+```tsx
+class={cn(
+  "bg-muted rounded-lg p-3 mb-1.5 border border-border",
+  props.jiraFlagged && "border-l-[3px] border-l-[#dc2626]"
+)}
+```
+
+Import `cn` from the utils if not already imported.
+
+**Step 3: Add `jiraFlagged` prop to `LooseSelectionCard`**
+
+In `loose-selection-card.tsx`, add to `LooseSelectionCardProps`:
+
+```typescript
+jiraFlagged?: boolean;  // NEW
+```
+
+**Step 4: Add red left-border to `LooseSelectionCard` inner container when flagged**
+
+Change line 52:
+
+**Before:**
+```tsx
+<div class="relative bg-muted rounded-lg border border-border p-3 cursor-default">
+```
+
+**After:**
+```tsx
+<div class={cn(
+  "relative bg-muted rounded-lg border border-border p-3 cursor-default",
+  props.jiraFlagged && "border-l-[3px] border-l-[#dc2626]"
+)}>
+```
+
+Also pass `jiraFlagged` down to the inner `<SelectionCard>` (line 106):
+
+```tsx
+<SelectionCard
+  item={props.item}
+  syncServerUrl={props.syncServerUrl}
+  syncWorkspace={props.syncWorkspace}
+  scrollRoot={props.scrollRoot}
+  jiraFlagged={props.jiraFlagged}  // NEW
+/>
+```
+
+**Step 5: Wire `jiraFlagged` from parent components**
+
+In `loose-selection-list.tsx`, pass `jiraFlagged` to `LooseSelectionCard` (line 53-65):
+
+```tsx
+<LooseSelectionCard
+  item={item}
+  statusLabel={group() ? getStatusLabel(group()!) : "No Task"}
+  statusColor={resolveDisplayColor(group()?.jiraStatus, group()?.jiraFlagged)}
+  jiraTicketId={group()?.jiraTicketId}
+  jiraUrl={group()?.jiraUrl}
+  jiraFlagged={group()?.jiraFlagged}  // NEW
+  onCreateTicket={props.onCreateTicket}
+  ...
+```
+
+Note: also change `getStatusColor(group()?.jiraStatus)` to `resolveDisplayColor(group()?.jiraStatus, group()?.jiraFlagged)` — this makes the status pill flag-aware.
+
+In `selection-list.tsx`, the parent needs to pass `jiraFlagged` — check if the group context is available. If the parent (`GroupDetailView`) has the group, pass `jiraFlagged` through.
+
+**Step 6: Verify typecheck**
+
+Run: `pnpm --filter react-grab typecheck`
+Expected: PASS
+
+**Step 7: Commit**
+
+```bash
+git add packages/react-grab/src/components/sidebar/selection-card.tsx packages/react-grab/src/components/sidebar/loose-selection-card.tsx packages/react-grab/src/components/sidebar/loose-selection-list.tsx packages/react-grab/src/components/sidebar/selection-list.tsx
+git commit -m "feat: flag indicator on selection-card and loose-selection-card"
+```
+
+---
+
+## Task 11: Status Legend — add Flagged entry
 
 **Files:**
 - Modify: `packages/react-grab/src/components/sidebar/status-legend.tsx`
@@ -531,7 +644,7 @@ git commit -m "feat: status legend shows Flagged entry above workflow statuses"
 
 ---
 
-## Task 11: Build verification and final typecheck
+## Task 12: Build verification and final typecheck
 
 **Files:** None (verification only)
 
@@ -565,13 +678,14 @@ Check off all completed items in `decree/spec/012-jira-flag-blocked-visual-indic
 - [x] All Override Precedence items
 - [x] All Business Rule Layer items
 - [x] All Status Legend items
+- [x] All Sidebar Cards items
 - [x] All Constants and Config items
 - [x] All HTML POC items
 
 **Step 6: Decree progress check**
 
 Run: `decree progress`
-Expected: SPEC-012 shows 100% (32/32)
+Expected: SPEC-012 shows 100% (37/37)
 
 **Step 7: Final commit**
 

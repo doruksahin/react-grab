@@ -26,6 +26,11 @@ For our enterprise workflow, flagged/blocked status must be immediately visible 
 - R5: The red border must be visible regardless of the current ATT status color
 - R6: The red border must coexist with the existing status badge (top-right corner)
 
+### Visual — Sidebar Cards
+- R15: `data-react-grab-selection-card` must show a red left-border accent when its parent group's JIRA ticket is flagged
+- R16: `data-react-grab-loose-selection-card` must show a red left-border accent when its backing group's JIRA ticket is flagged
+- R17: The status pill color in `LooseSelectionCard` must use `resolveDisplayColor` (flag-aware) instead of `getStatusColor`
+
 ### Visual — Canvas Overlay
 - R7: When a selection group's JIRA ticket is flagged, the canvas overlay border for that selection must render in **red** (`#dc2626`)
 - R8: The canvas overlay fill for a flagged selection must use red with the standard `STATUS_OVERLAY_FILL_ALPHA` (0.08)

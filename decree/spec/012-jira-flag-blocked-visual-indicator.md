@@ -218,6 +218,13 @@ This matches the existing pattern where active-group already overrides status co
 - [ ] Canvas overlay uses `resolveDisplayColor()` instead of `getStatusColor()` directly
 - [ ] Selection label border uses `resolveDisplayColor()` for color determination
 
+### Sidebar Cards
+- [ ] `SelectionCard` accepts optional `jiraFlagged` prop
+- [ ] `data-react-grab-selection-card` shows red left-border accent (`border-l-[3px] border-l-[#dc2626]`) when flagged
+- [ ] `data-react-grab-loose-selection-card` inner container shows red left-border accent when flagged
+- [ ] `LooseSelectionCard` status pill uses `resolveDisplayColor` instead of `getStatusColor`
+- [ ] `loose-selection-list.tsx` passes `jiraFlagged` from backing group to `LooseSelectionCard`
+
 ### Status Legend
 - [ ] Status Legend panel shows "Flagged / Blocked" entry with red indicator
 - [ ] Flagged entry appears above workflow statuses with visual separator
