@@ -274,10 +274,23 @@ This matches the existing pattern where active-group already overrides status co
 - [x] `IconFlag` component exists at `components/icons/icon-flag.tsx` (Atlassian @atlaskit flag SVG)
 
 ### Flag Icon Visual ([POC reference](../../docs/plans/poc/flag-card-icon.html))
-- [x] `IconFlag` renders a filled flag SVG (Lucide `flag` shape, solid fill, not stroked)
-- [x] `SelectionCard` shows red `IconFlag` (14px) next to component name when flagged
-- [x] `LooseSelectionCard` shows red `IconFlag` (12px) next to ticket ID when flagged
+- [x] `IconFlag` renders a filled flag SVG (Atlassian @atlaskit flag, solid fill)
+- [x] `SelectionCard` shows red `IconFlag` next to component name when flagged
+- [x] `LooseSelectionCard` shows red `IconFlag` next to ticket ID when flagged
+- [x] Selection label shows red `IconFlag` next to tag badge when flagged (both render branches)
 - [x] Flag icon color is `#dc2626` matching `FLAGGED_COLOR`
+
+### Flag Date
+- [ ] Sync-server `getIssueStatus` fetches changelog and extracts latest flag event timestamp
+- [ ] `JiraTicketStatus` schema includes `flaggedAt: z.string().nullable().optional()`
+- [ ] `SelectionGroupWithJira` type includes `jiraFlaggedAt?: string`
+- [ ] `SelectionLabelInstance` type includes `jiraFlaggedAt?: string`
+- [ ] Status poller propagates `flaggedAt` to groups
+- [ ] Label instance builder propagates `jiraFlaggedAt` from group to instance
+- [ ] Relative time shown next to flag icon on selection label (e.g. "3h ago")
+- [ ] Relative time shown next to flag icon on selection card
+- [ ] Relative time shown next to flag icon on loose-selection card
+- [ ] Edge case: if flagged at creation (no changelog entry), falls back to issue `created` timestamp
 
 ### Status Legend
 - [x] Status Legend panel shows "Flagged / Blocked" entry with red indicator

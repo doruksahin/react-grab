@@ -3921,6 +3921,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           jiraLabels: group?.jiraLabels,
           jiraComments: group?.jiraComments,
           jiraFlagged: group?.jiraFlagged,
+          jiraFlaggedAt: group?.jiraFlaggedAt,
         };
       });
     });
@@ -3968,6 +3969,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 jiraResolved: resolved,
                 jiraUrl: status.jiraUrl,
                 jiraFlagged: status.flagged ?? false,
+                jiraFlaggedAt: status.flaggedAt ?? null,
               }
             : g,
         );

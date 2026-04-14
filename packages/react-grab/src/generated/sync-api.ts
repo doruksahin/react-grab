@@ -227,6 +227,8 @@ export type GetJiraTicketStatus200 = {
   labels: string[];
   comments: GetJiraTicketStatus200CommentsItem[];
   flagged?: boolean;
+  /** @nullable */
+  flaggedAt?: string | null;
 };
 
 export type GetJiraTicketStatus404 = {

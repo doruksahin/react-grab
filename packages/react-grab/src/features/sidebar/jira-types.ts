@@ -34,4 +34,6 @@ export type SelectionGroupWithJira = SelectionGroup & {
     createdAt: string;
   }>;
   jiraFlagged?: boolean;
+  /** ISO timestamp of when the ticket was flagged (from JIRA changelog) */
+  jiraFlaggedAt?: string | null;
 };

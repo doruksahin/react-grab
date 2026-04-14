@@ -35,6 +35,7 @@ import { ActiveGroupPicker } from '../../features/selection-groups/components/ac
 import { IconLoader } from '../icons/icon-loader.jsx';
 import { IconFlag } from '../icons/icon-flag.js';
 import { FLAGGED_BORDER_CLASS, FLAGGED_ICON_SIZE } from '../../features/sidebar/resolve-display-color.js';
+import { relativeTime } from '../../features/sidebar/relative-time.js';
 import { Arrow } from './arrow.js';
 import { TagBadge } from './tag-badge.js';
 import { BottomSection } from './bottom-section.js';
@@ -608,6 +609,11 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               >
                 <Show when={props.jiraFlagged}>
                   <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
+                  <Show when={props.jiraFlaggedAt}>
+                    <span class="text-[10px] text-[#dc2626] shrink-0">
+                      {relativeTime(new Date(props.jiraFlaggedAt!).getTime())}
+                    </span>
+                  </Show>
                 </Show>
                 <TagBadge
                   tagName={tagDisplayResult().tagName}
@@ -694,6 +700,11 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               <div class="contain-layout shrink-0 flex items-center gap-1 pt-1.5 pb-1 w-fit h-fit px-2 max-w-full">
                 <Show when={props.jiraFlagged}>
                   <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
+                  <Show when={props.jiraFlaggedAt}>
+                    <span class="text-[10px] text-[#dc2626] shrink-0">
+                      {relativeTime(new Date(props.jiraFlaggedAt!).getTime())}
+                    </span>
+                  </Show>
                 </Show>
                 <TagBadge
                   tagName={tagDisplayResult().tagName}

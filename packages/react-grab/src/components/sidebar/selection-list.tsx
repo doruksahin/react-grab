@@ -11,6 +11,7 @@ interface SelectionListProps {
    *  GroupDetailView passes undefined when the group is ticketed. */
   onRemoveItem?: (itemId: string) => void;
   jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
 }
 
 export const SelectionList: Component<SelectionListProps> = (props) => {
@@ -45,6 +46,7 @@ export const SelectionList: Component<SelectionListProps> = (props) => {
                   : undefined
               }
               jiraFlagged={props.jiraFlagged}
+              jiraFlaggedAt={props.jiraFlaggedAt}
             />
           )}
         </For>

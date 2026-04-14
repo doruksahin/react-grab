@@ -21,6 +21,7 @@ export interface SelectionCardProps {
    *  rendered — the caller gates this on the ticket-lock rule. */
   onRemoveItem?: () => void;
   jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
 }
 
 export const SelectionCard: Component<SelectionCardProps> = (props) => {
@@ -67,7 +68,14 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5 min-w-0">
           <Show when={props.jiraFlagged}>
-            <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
+            <div class="flex items-center gap-1 shrink-0">
+              <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626]" />
+              <Show when={props.jiraFlaggedAt}>
+                <span class="text-[10px] text-[#dc2626]">
+                  {relativeTime(new Date(props.jiraFlaggedAt!).getTime())}
+                </span>
+              </Show>
+            </div>
           </Show>
           <span class="text-[13px] font-semibold text-foreground truncate">
             {props.item.componentName || props.item.elementName}

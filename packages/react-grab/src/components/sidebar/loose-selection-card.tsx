@@ -7,6 +7,7 @@ import { Button } from '../ui/button.jsx';
 import { RemoveSelectionButton } from '../remove-selection-button.jsx';
 import { IconFlag } from '../icons/icon-flag.js';
 import { FLAGGED_BORDER_CLASS, FLAGGED_ICON_SIZE } from '../../features/sidebar/resolve-display-color.js';
+import { relativeTime } from '../../features/sidebar/relative-time.js';
 import { LooseSelectionCardHeader } from './loose-selection-card-header.jsx';
 import { cn } from '../../utils/cn.js';
 
@@ -29,6 +30,7 @@ interface LooseSelectionCardProps {
   syncWorkspace?: string;
   scrollRoot: () => Element | null;
   jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
 }
 
 /**
@@ -83,6 +85,11 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
               <div class="flex items-center gap-1">
                 <Show when={props.jiraFlagged}>
                   <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
+                  <Show when={props.jiraFlaggedAt}>
+                    <span class="text-[10px] text-[#dc2626]">
+                      {relativeTime(new Date(props.jiraFlaggedAt!).getTime())}
+                    </span>
+                  </Show>
                 </Show>
                 <a
                   href={props.jiraUrl}
@@ -121,6 +128,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             syncWorkspace={props.syncWorkspace}
             scrollRoot={props.scrollRoot}
             jiraFlagged={props.jiraFlagged}
+            jiraFlaggedAt={props.jiraFlaggedAt}
           />
         </div>
       </div>

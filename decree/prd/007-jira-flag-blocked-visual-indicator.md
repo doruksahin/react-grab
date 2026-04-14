@@ -38,6 +38,11 @@ For our enterprise workflow, flagged/blocked status must be immediately visible 
 - R21: The flag icon must follow the project's custom SVG icon pattern (`components/icons/icon-flag.tsx`) — no external icon library
 - R22: The flagged border style and icon size must be defined as shared constants in the business rule layer (`FLAGGED_BORDER_CLASS`, `FLAGGED_ICON_SIZE`) — DRY across all consumers
 
+### Data — Flag Date
+- R23: The sync-server must fetch the JIRA issue changelog and extract the timestamp of the most recent flag event (`field === "Flagged"`, `toString === "Impediment"`)
+- R24: The `flaggedAt` ISO timestamp must be included in the `JiraTicketStatus` response alongside `flagged`
+- R25: The flag date must be shown as relative time (e.g. "3h ago") next to the flag icon on all flagged surfaces (label, card, loose-card)
+
 ### Visual — Canvas Overlay
 - R7: When a selection group's JIRA ticket is flagged, the canvas overlay border for that selection must render in **red** (`#dc2626`)
 - R8: The canvas overlay fill for a flagged selection must use red with the standard `STATUS_OVERLAY_FILL_ALPHA` (0.08)

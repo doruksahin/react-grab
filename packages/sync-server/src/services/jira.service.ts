@@ -358,6 +358,7 @@ export class JiraService {
     );
 
     let flagged = false;
+    let flaggedAt: string | null = null;
     try {
       const response = await fetch(
         `${this.config.baseUrl}/rest/agile/1.0/issue/${ticketId}?fields=flagged`,
@@ -376,6 +377,27 @@ export class JiraService {
       // Agile API may not be available — default to not flagged
     }
 
+    // Fetch flag date from changelog (only when flagged)
+    if (flagged) {
+      try {
+        const changelogIssue = await this.client.issues.getIssue({
+          issueIdOrKey: ticketId,
+          fields: ["created"],
+          expand: "changelog",
+        });
+        const histories = (changelogIssue as any).changelog?.histories as
+          | Array<{ created: string; items: Array<{ field: string; toString: string | null }> }>
+          | undefined;
+        // Find the most recent "Flagged" → "Impediment" changelog entry
+        const flagEntry = histories
+          ?.filter((h) => h.items.some((i) => i.field === "Flagged" && i.toString === "Impediment"))
+          .at(-1);
+        flaggedAt = flagEntry?.created ?? (changelogIssue.fields.created as string | undefined) ?? null;
+      } catch {
+        // Changelog unavailable — flag date unknown
+      }
+    }
+
     return {
       status: issue.fields.status?.name ?? "Unknown",
       statusCategory: issue.fields.status?.statusCategory?.name ?? "Unknown",
@@ -387,6 +409,7 @@ export class JiraService {
       labels: (issue.fields.labels as string[] | undefined) ?? [],
       comments,
       flagged,
+      flaggedAt,
     };
   }
 

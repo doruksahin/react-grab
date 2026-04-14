@@ -53,6 +53,7 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
           isTicketed(props.group) ? undefined : props.onRemoveItem
         }
         jiraFlagged={props.group.jiraFlagged}
+        jiraFlaggedAt={props.group.jiraFlaggedAt}
       />
 
       {/* JIRA section — bottom of detail view */}

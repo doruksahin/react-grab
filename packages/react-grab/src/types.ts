@@ -492,6 +492,7 @@ export interface SelectionLabelInstance {
     createdAt: string;
   }>;
   jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
 }
 
 /**
@@ -771,4 +772,5 @@ export interface SelectionLabelProps
     createdAt: string;
   }>;
   jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
 }
