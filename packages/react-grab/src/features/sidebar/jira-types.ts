@@ -33,4 +33,5 @@ export type SelectionGroupWithJira = SelectionGroup & {
     body: string;
     createdAt: string;
   }>;
+  jiraFlagged?: boolean;
 };

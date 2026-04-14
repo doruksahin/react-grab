@@ -491,6 +491,7 @@ export interface SelectionLabelInstance {
     body: string;
     createdAt: string;
   }>;
+  jiraFlagged?: boolean;
 }
 
 /**
@@ -769,4 +770,5 @@ export interface SelectionLabelProps
     body: string;
     createdAt: string;
   }>;
+  jiraFlagged?: boolean;
 }
