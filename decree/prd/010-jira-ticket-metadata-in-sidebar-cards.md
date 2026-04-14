@@ -69,6 +69,17 @@ Surfacing these four fields closes the last metadata gap between "what JIRA show
 - Cards for unlinked groups show no priority, type, or date metadata -- no empty placeholders
 - The sync-server response size increase is minimal (four small string fields per ticket)
 
+## Implementation Notes (for SPEC author)
+
+These findings from architectural review must be addressed in the SPEC:
+
+1. **Fields array merge:** `getIssueStatus` currently fetches `["status", "assignee", "reporter", "labels", "attachment"]`. The SPEC must specify the merged array: `["status", "assignee", "reporter", "labels", "attachment", "priority", "issuetype", "duedate", "created"]`
+2. **Zod schema additions:** `JiraTicketStatus` in `packages/sync-server/src/schemas/jira.ts` needs 4 new fields added to the Zod schema — this is the input for Orval regeneration
+3. **Layout insertion points:** `group-card.tsx` already renders assignee/reporter with `UserAvatar` (lines 48-70). The SPEC must specify whether priority icon inserts into the existing meta row or creates a new bottom row per the POC
+4. **Priority name fallback:** R6 maps 5 JIRA default names. JIRA Cloud allows custom priorities ("Critical", "Blocker", "Trivial"). The SPEC must define fallback behavior — recommend: unmapped names render with Medium-orange icon and tooltip showing the actual name
+5. **New SVG icon components needed:** `icon-priority-up.tsx`, `icon-priority-down.tsx`, `icon-priority-bar.tsx`, `icon-bug.tsx`, `icon-task.tsx`, `icon-calendar.tsx` — following the existing `components/icons/` pattern (e.g. `icon-flag.tsx`)
+6. **`created` field guarantee:** JIRA `created` is always non-null for existing issues. The SPEC should state: if API returns null, skip the date row entirely (defensive, not expected)
+
 ## Out of Scope
 
 - Filtering or sorting by priority, issue type, or due date (future PRD)

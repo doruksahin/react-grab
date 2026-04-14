@@ -479,78 +479,78 @@ These are manual checks to confirm the feature works end-to-end:
 ## Acceptance Criteria
 
 ### Sync-Server
-- [ ] `getIssueStatus` fetches `fields: ["status", "assignee", "reporter"]`
-- [ ] Response includes `assignee: string | null` and `reporter: string | null`
-- [ ] `JiraTicketStatus` schema updated with assignee/reporter
-- [ ] OpenAPI spec regenerated
-- [ ] Orval regenerated in react-grab with `.js` extension fix
+- [x] `getIssueStatus` fetches `fields: ["status", "assignee", "reporter"]` (actual: `["status", "assignee", "reporter", "labels", "attachment"]` — superset)
+- [x] Response includes `assignee: string | null` and `reporter: string | null`
+- [x] `JiraTicketStatus` schema updated with assignee/reporter
+- [x] OpenAPI spec regenerated
+- [x] Orval regenerated in react-grab with `.js` extension fix
 - [ ] **UI verify:** Call `/jira/status` for an ATT ticket → response includes assignee display name
 
 ### Status Color Map
-- [ ] `status-colors.ts` created with `ATT_STATUS_COLORS` map (10 entries)
-- [ ] `getStatusColor()` returns correct config for each ATT status
-- [ ] `getStatusColor(undefined)` returns pink (No Task)
-- [ ] `getStatusColor("unknown")` returns gray fallback
-- [ ] `getStatusLabel()` returns "No Task" or JIRA status name
+- [x] `status-colors.ts` created with `ATT_STATUS_COLORS` map (10 entries)
+- [x] `getStatusColor()` returns correct config for each ATT status
+- [x] `getStatusColor(undefined)` returns pink (No Task)
+- [x] `getStatusColor("unknown")` returns gray fallback
+- [x] `getStatusLabel()` returns "No Task" or JIRA status name
 - [ ] **UI verify:** Each group card badge shows the correct color and status name
 
 ### Group Card Updates
-- [ ] Group card left border uses `getStatusColor().hex`
-- [ ] Status badge shows `getStatusLabel()` with dynamic color
-- [ ] Assignee displayed in meta row with person icon when present
-- [ ] Reporter displayed in meta row with pen icon (dimmer) when present
+- [x] Group card left border uses `getStatusColor().hex`
+- [x] Status badge shows `getStatusLabel()` with dynamic color
+- [x] Assignee displayed in meta row with person icon when present (implemented via UserAvatar component)
+- [x] Reporter displayed in meta row with pen icon (dimmer) when present (implemented via UserAvatar, same opacity — no pen icon)
 - [ ] **UI verify:** Cards visually match the HTML proposal — colored left border, status badge, assignee line
 
 ### Filter Bar
-- [ ] `filter-tabs.tsx` replaced by `filter-bar.tsx`
-- [ ] Status dropdown shows "All Statuses" + 10 ATT statuses + "No Task"
-- [ ] Assignee dropdown shows "All Assignees" + distinct assignees from groups
-- [ ] Reporter dropdown shows "All Reporters" + distinct reporters from groups
+- [x] `filter-tabs.tsx` replaced by `filter-bar.tsx`
+- [x] Status dropdown shows "All Statuses" + 10 ATT statuses + "No Task"
+- [x] Assignee dropdown shows "All Assignees" + distinct assignees from groups
+- [x] Reporter dropdown shows "All Reporters" + distinct reporters from groups
 - [ ] **UI verify:** Selecting a status hides non-matching groups from the sidebar list
 
 ### Filter Logic
-- [ ] `filter-state.ts` created with `FilterState`, `applyFilters()`, `isFilterActive()`
-- [ ] Filters are AND-combined
-- [ ] `getDistinctAssignees()` and `getDistinctReporters()` return sorted unique names
+- [x] `filter-state.ts` created with `FilterState`, `applyFilters()`, `isFilterActive()`
+- [x] Filters are AND-combined
+- [x] `getDistinctAssignees()` and `getDistinctReporters()` return sorted unique names
 - [ ] **UI verify:** Select "In Progress" + an assignee → only matching groups shown
 
 ### Filter Chips
-- [ ] Active filters shown as dismissible chips between filter bar and group list
-- [ ] Each chip has ✕ button that clears that filter dimension
-- [ ] Clear all button resets all filters
-- [ ] Chips hidden when no filter is active
+- [x] Active filters shown as dismissible chips between filter bar and group list
+- [x] Each chip has ✕ button that clears that filter dimension
+- [x] Clear all button resets all filters
+- [x] Chips hidden when no filter is active
 - [ ] **UI verify:** Apply a filter → chip appears → click ✕ → filter clears, groups reappear
 
 ### Reveal/Hide Integration
-- [ ] `setGroupsRevealed` batch method added to `SelectionVisibilityAPI`
-- [ ] `SidebarProps` extended with `onFilterVisibilityChange` callback
-- [ ] `core/index.tsx` wires `visibility.setGroupsRevealed` to sidebar callback
-- [ ] When filters active, non-matching groups' selections hidden on canvas (overlay boxes + labels disappear)
-- [ ] When filters cleared, all selections reappear on canvas
-- [ ] No reactivity loops — filter effect reads `filterState()` + `groups()`, writes only via callback to core
+- [x] `setGroupsRevealed` batch method added to `SelectionVisibilityAPI`
+- [x] `SidebarProps` extended with `onFilterVisibilityChange` callback
+- [x] `core/index.tsx` wires `visibility.setGroupsRevealed` to sidebar callback
+- [x] When filters active, non-matching groups' selections hidden on canvas (overlay boxes + labels disappear)
+- [x] When filters cleared, all selections reappear on canvas
+- [x] No reactivity loops — filter effect reads `filterState()` + `groups()`, writes only via callback to core (uses `untrack()` on `userFacingGroups()`)
 - [ ] **UI verify:** Apply status filter → look at the page → only matching group's selections visible → clear filter → all selections return
 
 ### Canvas Colors & Type Migration
-- [ ] `GroupStatus` type changed from `"open" | "ticketed" | "resolved"` to `string | undefined`
-- [ ] `core/index.tsx` passes `group?.jiraStatus` instead of `deriveStatus(group)` as `groupStatus`
-- [ ] `overlay-canvas.tsx` uses `getStatusColor(instance.groupStatus).hex` for border
-- [ ] `overlay-canvas.tsx` uses `hexToRgba()` helper for fill alpha
-- [ ] `selection-label/index.tsx` badges updated for new status model
-- [ ] Dead code removed: `statusOverlayColor()`, old `STATUS_COLORS`, old `OVERLAY_*_STATUS_*` constants, `deriveStatus()`
+- [x] `GroupStatus` type changed from `"open" | "ticketed" | "resolved"` to `string | undefined`
+- [x] `core/index.tsx` passes `group?.jiraStatus` instead of `deriveStatus(group)` as `groupStatus`
+- [x] `overlay-canvas.tsx` uses `getStatusColor(instance.groupStatus).hex` for border (via `resolveDisplayColor()` — flag-aware wrapper)
+- [x] `overlay-canvas.tsx` uses `hexToRgba()` helper for fill alpha
+- [x] `selection-label/index.tsx` badges updated for new status model
+- [x] Dead code removed: `statusOverlayColor()`, old `STATUS_COLORS`, old `OVERLAY_*_STATUS_*` constants, `deriveStatus()` (derive-status.ts only has `GroupedEntry` type now)
 - [ ] **UI verify:** Selection border color on the page matches the badge color in the sidebar
 
 ### Status Legend
-- [ ] (i) button in sidebar header opens legend overlay
-- [ ] Legend shows all 10 ATT statuses with correct color swatches
-- [ ] Legend shows "No Task" with pink swatch
-- [ ] Legend shows lifecycle flow diagram
-- [ ] "Got it" button closes the overlay
+- [x] (i) button in sidebar header opens legend overlay
+- [x] Legend shows all 10 ATT statuses with correct color swatches
+- [x] Legend shows "No Task" with pink swatch
+- [x] Legend shows lifecycle flow diagram
+- [x] "Got it" button closes the overlay
 - [ ] **UI verify:** Click (i) → legend matches the HTML proposal design
 
 ### Extended Group Type
-- [ ] `jiraAssignee` and `jiraReporter` added to `SelectionGroupWithJira`
-- [ ] Core's `onStatusUpdate` callback stores `assignee` and `reporter` from poll response via `selectionGroups.persistGroups()`
-- [ ] Sidebar has no `handleStatusUpdate` for poll results — mutations are owned by core
+- [x] `jiraAssignee` and `jiraReporter` added to `SelectionGroupWithJira`
+- [x] Core's `onStatusUpdate` callback stores `assignee` and `reporter` from poll response via `selectionGroups.persistGroups()`
+- [x] Sidebar has no `handleStatusUpdate` for poll results — mutations are owned by core
 - [ ] **UI verify:** Open a group detail → assignee name visible (if assigned in JIRA)
 
 ### Core-Level JIRA Status Polling
