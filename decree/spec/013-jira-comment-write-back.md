@@ -237,131 +237,131 @@ When the comment body contains base64 image data:
 
 ### Layer 1 — sync-server: addComment
 
-- [ ] `JiraService.addComment(ticketId, body)` calls `client.issueComments.addComment()` and returns `{ id, created }`
-- [ ] `JiraService.addComment(ticketId, body, parentId)` passes `parentId` for threaded replies
-- [ ] `AddJiraCommentRequest` schema validates `{ body: string, parentId?: string }`
-- [ ] `AddJiraCommentResponse` schema returns `{ id: string, created: string }`
-- [ ] `POST /workspaces/{id}/groups/{groupId}/jira-comment` route exists and delegates to `JiraService`
-- [ ] Route returns 404 when group has no `jiraTicketId`
-- [ ] Route returns 400 with JIRA error message on API failure
-- [ ] Route resolves `groupId` → `jiraTicketId` via `repo.listGroups()` (same pattern as `getTicketStatus`)
+- [x] `JiraService.addComment(ticketId, body)` calls `client.issueComments.addComment()` and returns `{ id, created }`
+- [x] `JiraService.addComment(ticketId, body, parentId)` passes `parentId` for threaded replies
+- [x] `AddJiraCommentRequest` schema validates `{ body: string, parentId?: string }`
+- [x] `AddJiraCommentResponse` schema returns `{ id: string, created: string }`
+- [x] `POST /workspaces/{id}/groups/{groupId}/jira-comment` route exists and delegates to `JiraService`
+- [x] Route returns 404 when group has no `jiraTicketId`
+- [x] Route returns 400 with JIRA error message on API failure
+- [x] Route resolves `groupId` → `jiraTicketId` via `repo.listGroups()` (same pattern as `getTicketStatus`)
 
 ### Layer 1 — sync-server: searchUsers
 
-- [ ] `JiraService.searchUsers(query)` calls `client.userSearch.findUsersWithAllPermissions()`
-- [ ] Returns `{ accountId, displayName, avatarUrl }[]` with max 10 results
-- [ ] `JiraUser` schema validates the response shape
-- [ ] `GET /jira/users?query=<string>` route exists and delegates to `JiraService`
-- [ ] Route returns 500 with error message on JIRA API failure
+- [x] `JiraService.searchUsers(query)` calls `client.userSearch.findUsersWithAllPermissions()`
+- [x] Returns `{ accountId, displayName, avatarUrl }[]` with max 10 results
+- [x] `JiraUser` schema validates the response shape
+- [x] `GET /jira/users?query=<string>` route exists and delegates to `JiraService`
+- [x] Route returns 500 with error message on JIRA API failure
 
 ### Layer 1 — sync-server: schemas
 
-- [ ] `AddJiraCommentRequest`, `AddJiraCommentResponse`, `JiraUser` exported from `schemas/index.ts`
-- [ ] All new schemas have `.openapi()` annotations for Swagger UI
+- [x] `AddJiraCommentRequest`, `AddJiraCommentResponse`, `JiraUser` exported from `schemas/index.ts`
+- [x] All new schemas have `.openapi()` annotations for Swagger UI
 
 ### Layer 2 — Orval client regeneration
 
-- [ ] `pnpm codegen` produces `addJiraComment()` and `searchJiraUsers()` typed functions
-- [ ] Generated types match the Zod schemas exactly
+- [x] `pnpm codegen` produces `addJiraComment()` and `searchJiraUsers()` typed functions
+- [x] Generated types match the Zod schemas exactly
 
 ### Layer 3 — TipTap editor: core
 
-- [ ] `JiraCommentEditor` component creates a TipTap `Editor` with extensions listed in ADR-0010
-- [ ] Editor renders inside the selection label's comment section
-- [ ] Editor outputs Markdown via `editor.storage.markdown.getMarkdown()`
-- [ ] Placeholder text "Add a comment..." shows when editor is empty
+- [x] `JiraCommentEditor` component creates a TipTap `Editor` with extensions listed in ADR-0010
+- [x] Editor renders inside the selection label's comment section
+- [x] Editor outputs Markdown via `editor.storage.markdown.getMarkdown()`
+- [x] Placeholder text "Add a comment..." shows when editor is empty
 - [ ] `Cmd+Enter` / `Ctrl+Enter` submits the comment
 - [ ] `Escape` cancels reply mode (if active)
 
 ### Layer 3 — TipTap editor: toolbar
 
-- [ ] Text style dropdown: Normal, H1, H2, H3
-- [ ] Formatting dropdown: Bold, Italic, Underline, Strikethrough, Code
-- [ ] List dropdown: Bullet list, Ordered list, Blockquote
-- [ ] Text color picker with palette (at minimum: red, orange, yellow, green, cyan, blue, purple, pink, reset)
-- [ ] Image button opens file picker → selected image inserted inline
-- [ ] Code block toggle button
-- [ ] Emoji picker with common emoji grid
+- [x] Text style dropdown: Normal, H1, H2, H3
+- [x] Formatting dropdown: Bold, Italic, Underline, Strikethrough, Code
+- [x] List dropdown: Bullet list, Ordered list, Blockquote
+- [x] Text color picker with palette (at minimum: red, orange, yellow, green, cyan, blue, purple, pink, reset)
+- [x] Image button opens file picker → selected image inserted inline
+- [x] Code block toggle button
+- [x] Emoji picker with common emoji grid
 - [ ] Insert menu (+): Divider, Code block, Quote
-- [ ] Link button: prompts for URL, toggles link on/off
-- [ ] Undo / Redo buttons with disabled state when unavailable
-- [ ] All toolbar buttons use `onMouseDown` + `e.preventDefault()` to preserve editor focus
-- [ ] Active state highlighting on toolbar buttons when formatting is active at cursor
+- [x] Link button: prompts for URL, toggles link on/off
+- [x] Undo / Redo buttons with disabled state when unavailable
+- [x] All toolbar buttons use `onMouseDown` + `e.preventDefault()` to preserve editor focus
+- [x] Active state highlighting on toolbar buttons when formatting is active at cursor
 
 ### Layer 3 — TipTap editor: @mentions
 
-- [ ] Typing `@` in the editor triggers the mention suggestion popup
-- [ ] Popup shows a filtered list of users based on text after `@`
-- [ ] Arrow keys navigate the popup; Enter/Tab selects the highlighted user
-- [ ] Escape closes the popup without inserting
-- [ ] Selected mention renders as a styled chip (blue background) with `data-id` = accountId
-- [ ] `extractMentions()` returns `[{ text: "@Name", accountId: "..." }]` from editor JSON
+- [x] Typing `@` in the editor triggers the mention suggestion popup
+- [x] Popup shows a filtered list of users based on text after `@`
+- [x] Arrow keys navigate the popup; Enter/Tab selects the highlighted user
+- [x] Escape closes the popup without inserting
+- [x] Selected mention renders as a styled chip (blue background) with `data-id` = accountId
+- [x] `extractMentions()` returns `[{ text: "@Name", accountId: "..." }]` from editor JSON
 
 ### Layer 3 — TipTap editor: images
 
-- [ ] Toolbar image button opens a file picker (`<input type="file" accept="image/*">`)
-- [ ] Selected file is read via `FileReader.readAsDataURL()` and inserted as `<img>` in editor
-- [ ] Pasting an image from clipboard (Cmd+V) inserts the image inline
-- [ ] Dragging and dropping an image file onto the editor inserts it inline
-- [ ] Images display with `max-width: 300px`, border, and rounded corners
-- [ ] Multiple images can be inserted in a single comment
+- [x] Toolbar image button opens a file picker (`<input type="file" accept="image/*">`)
+- [x] Selected file is read via `FileReader.readAsDataURL()` and inserted as `<img>` in editor
+- [x] Pasting an image from clipboard (Cmd+V) inserts the image inline
+- [x] Dragging and dropping an image file onto the editor inserts it inline
+- [x] Images display with `max-width: 300px`, border, and rounded corners
+- [x] Multiple images can be inserted in a single comment
 
 ### Layer 4 — Comment composer integration
 
-- [ ] Comment section shows a composer below the comment list
+- [x] Comment section shows a composer below the comment list
 - [ ] "Pro tip: press M to comment" hint shown above the composer
 - [ ] Pressing `M` (when no input is focused) focuses the comment editor
-- [ ] Each comment has a Reply button (visible on hover)
-- [ ] Clicking Reply shows "Replying to [author]" context bar above the editor
-- [ ] Cancel button in reply context bar clears reply state
-- [ ] Save button submits the comment (disabled when editor is empty)
+- [x] Each comment has a Reply button (visible on hover)
+- [x] Clicking Reply shows "Replying to [author]" context bar above the editor
+- [x] Cancel button in reply context bar clears reply state
+- [x] Save button submits the comment (disabled when editor is empty)
 - [ ] Cancel button below the editor clears the editor content (with confirmation if non-empty)
 
 ### Layer 4 — Optimistic UI and error handling
 
-- [ ] After submit, comment appears immediately in the list with "sending" visual state (dimmed)
-- [ ] On API success: comment ID and timestamp updated, "sending" state removed
-- [ ] On API failure: optimistic comment removed, error toast shown, editor content restored
-- [ ] After successful post, an immediate `getJiraTicketStatus()` poll is triggered (bypass 30s interval)
-- [ ] Threaded reply appears nested under the parent comment in the optimistic update
+- [x] After submit, comment appears immediately in the list with "sending" visual state (dimmed)
+- [x] On API success: comment ID and timestamp updated, "sending" state removed
+- [x] On API failure: optimistic comment removed, error toast shown, editor content restored
+- [x] After successful post, an immediate `getJiraTicketStatus()` poll is triggered (bypass 30s interval)
+- [x] Threaded reply appears nested under the parent comment in the optimistic update
 
 ### Layer 5 — ADF mention post-processing
 
-- [ ] `injectMentions(adf, mentions)` is a pure function in its own module
-- [ ] It walks the ADF tree and replaces `@Name` text patterns with `mention` ADF nodes
-- [ ] Each injected mention node has `{ type: "mention", attrs: { id: accountId, text: "@Name" } }`
-- [ ] Text before and after the mention is preserved as separate text nodes
-- [ ] Multiple mentions in a single text node are all replaced
-- [ ] Mentions inside list items, blockquotes, and other nested structures are handled
-- [ ] If no mentions array is provided, ADF passes through unchanged
+- [x] `injectMentions(adf, mentions)` is a pure function in its own module
+- [x] It walks the ADF tree and replaces `@Name` text patterns with `mention` ADF nodes
+- [x] Each injected mention node has `{ type: "mention", attrs: { id: accountId, text: "@Name" } }`
+- [x] Text before and after the mention is preserved as separate text nodes
+- [x] Multiple mentions in a single text node are all replaced
+- [x] Mentions inside list items, blockquotes, and other nested structures are handled
+- [x] If no mentions array is provided, ADF passes through unchanged
 
 ### Layer 5 — Image upload
 
-- [ ] Sync-server detects `![](data:image/...)` patterns in the Markdown body
-- [ ] Each base64 image is uploaded to JIRA via `POST /rest/api/3/issue/{id}/attachments`
-- [ ] Data URL is replaced with `![](/jira-attachment/{attachmentId})` in the Markdown before ADF conversion
-- [ ] `marklassian` converts the image markdown to `mediaSingle > media` ADF nodes
+- [x] Sync-server detects `![](data:image/...)` patterns in the Markdown body
+- [x] Each base64 image is uploaded to JIRA via `POST /rest/api/3/issue/{id}/attachments`
+- [x] Data URL is replaced with `![](/jira-attachment/{attachmentId})` in the Markdown before ADF conversion
+- [x] `marklassian` converts the image markdown to `mediaSingle > media` ADF nodes
 - [ ] If image upload fails, the comment is still posted (without the image) and an error is logged
 
 ### DOM attributes (`data-react-grab-*` convention)
 
 All interactive elements in the comment section must follow the project's `data-react-grab-*` attribute convention for event isolation, E2E test targeting, and CSS scoping:
 
-- [ ] Comment composer root: `data-react-grab-comment-composer`
-- [ ] Comment editor content area: `data-react-grab-comment-editor`
-- [ ] Comment submit button: `data-react-grab-comment-submit`
-- [ ] Comment cancel button: `data-react-grab-comment-cancel`
-- [ ] Reply button on each comment: `data-react-grab-comment-reply`
-- [ ] Reply context bar: `data-react-grab-reply-context`
-- [ ] Mention picker popup: `data-react-grab-mention-picker`
-- [ ] All interactive elements inside the editor/composer: `data-react-grab-ignore-events` (prevents parent selection-label from capturing pointer/click events — same pattern as existing toolbar buttons at lines 551, 566, 773, 802)
-- [ ] Comment section collapsible trigger: `data-react-grab-ignore-events` (already present)
+- [x] Comment composer root: `data-react-grab-comment-composer`
+- [x] Comment editor content area: `data-react-grab-comment-editor`
+- [x] Comment submit button: `data-react-grab-comment-submit`
+- [x] Comment cancel button: `data-react-grab-comment-cancel`
+- [x] Reply button on each comment: `data-react-grab-comment-reply`
+- [x] Reply context bar: `data-react-grab-reply-context`
+- [x] Mention picker popup: `data-react-grab-mention-picker`
+- [x] All interactive elements inside the editor/composer: `data-react-grab-ignore-events` (prevents parent selection-label from capturing pointer/click events — same pattern as existing toolbar buttons at lines 551, 566, 773, 802)
+- [x] Comment section collapsible trigger: `data-react-grab-ignore-events` (already present)
 
 ### Cross-cutting
 
-- [ ] TypeScript compiles with no errors (`pnpm typecheck`)
-- [ ] No new `eslint-disable` comments added
-- [ ] New service methods have JSDoc comments describing parameters and return types
-- [ ] The `injectMentions` module has no dependency on `JiraService` — pure data transformation
-- [ ] The comment editor component is a standalone module in `components/editor/` — not inlined in selection-label
-- [ ] All new UI elements follow `data-react-grab-*` attribute convention
+- [x] TypeScript compiles with no errors (`pnpm typecheck`)
+- [x] No new `eslint-disable` comments added
+- [x] New service methods have JSDoc comments describing parameters and return types
+- [x] The `injectMentions` module has no dependency on `JiraService` — pure data transformation
+- [x] The comment editor component is a standalone module in `components/editor/` — not inlined in selection-label
+- [x] All new UI elements follow `data-react-grab-*` attribute convention
