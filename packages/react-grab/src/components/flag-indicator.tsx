@@ -43,7 +43,7 @@ export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
         </Show>
       </TooltipTrigger>
       <TooltipContent
-        class="bg-popover text-popover-foreground border border-border rounded-lg p-0 text-xs shadow-lg max-w-[260px]"
+        class="bg-popover text-popover-foreground border border-border rounded-lg p-0 text-xs shadow-lg w-[240px] overflow-visible"
       >
         <div class="px-3 pt-2.5 pb-2">
           <div class="flex items-center gap-1.5 mb-2">
