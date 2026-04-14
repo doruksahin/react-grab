@@ -130,12 +130,37 @@
   .label-chip { background: #333; color: #999; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 500; }
 
   .flag-icon { color: #f87171; font-size: 12px; flex-shrink: 0; }
+
+  /* JIRA status pill */
+  .jira-status { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.3px; text-transform: uppercase; position: absolute; top: 12px; right: 16px; }
+  .jira-status.todo { color: #999; background: rgba(255,255,255,0.06); }
+  .jira-status.in-progress { color: #60a5fa; background: rgba(96,165,250,0.12); }
+  .jira-status.done { color: #22c55e; background: rgba(34,197,94,0.12); }
   .assignee { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; flex-shrink: 0; }
   .assignee .avatar-sm { width: 20px; height: 20px; border-radius: 50%; background: #444; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #e5e5e5; flex-shrink: 0; }
   .assignee .name { font-size: 10px; color: #999; font-weight: 500; }
 
+  .date-row { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #999; margin-top: 6px; }
+  .date-row svg { width: 12px; height: 12px; color: #666; flex-shrink: 0; }
+  .date-sep { color: #444; margin: 0 2px; }
+
   .screenshot-row { display: flex; gap: 6px; margin-top: 8px; }
   .screenshot-row .screenshot-thumb { width: 52px; height: 34px; }
+
+  /* Expandable group */
+  .group-card { cursor: pointer; }
+  .group-card .expand-icon { font-size: 10px; color: #555; transition: transform 0.2s; display: inline-block; }
+  .group-card.expanded .expand-icon { transform: rotate(90deg); }
+  .group-children { display: none; background: #1e1e1e; }
+  .group-card.expanded + .group-children { display: block; }
+  .child-card { padding: 12px 16px 12px 28px; border-bottom: 1px solid #2a2a2a; position: relative; }
+  .child-card::before { content: ''; position: absolute; left: 18px; top: 0; bottom: 0; width: 1px; background: #333; }
+  .child-card:last-child::before { bottom: 50%; }
+  .child-card .child-dot { position: absolute; left: 15px; top: 18px; width: 7px; height: 7px; border-radius: 50%; background: #444; border: 1px solid #555; }
+  .child-comment { font-size: 11px; color: #ccc; line-height: 1.4; margin-bottom: 6px; }
+  .child-meta { font-size: 9px; color: #666; display: flex; align-items: center; gap: 6px; }
+  .child-screenshots { display: flex; gap: 4px; margin-top: 6px; }
+  .child-screenshots .screenshot-thumb { width: 44px; height: 30px; }
 
   /* 7. Bulk Action Bar */
   .bulk-bar { position: absolute; bottom: 0; left: 0; right: 0; background: #a78bfa; color: white; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.3); border-top-left-radius: 16px; border-top-right-radius: 16px; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -184,17 +209,51 @@
       <div class="nav-tab active">Selections <span class="count">4</span></div>
     </div>
 
+    <!-- Search + Filter (Option B) -->
+    <div class="opt-b-wrap" style="border-bottom: 1px solid #333;">
+      <div class="opt-b-search-row">
+        <input class="p-search" type="text" placeholder="Search selections..." />
+        <div class="opt-b-icon-btn opt-b-flag-btn active" title="Flagged only">🚩</div>
+        <div class="opt-b-icon-btn active" title="Filters" onclick="this.closest('.panel').querySelector('.opt-b-panel').classList.toggle('hidden')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M4 8h8M6 12h4"/></svg>
+          <span class="opt-b-badge">2</span>
+        </div>
+      </div>
+    </div>
+    <div class="opt-b-panel">
+      <span class="opt-b-label">Status</span>
+      <div class="opt-b-status-row">
+        <div class="opt-b-status-pill">To Do</div>
+        <div class="opt-b-status-pill active">In Progress</div>
+        <div class="opt-b-status-pill done-pill">Done</div>
+      </div>
+
+      <span class="opt-b-label">Assignee</span>
+      <div class="opt-b-select">Anyone ▾</div>
+
+      <span class="opt-b-label">Reporter</span>
+      <div class="opt-b-select">Anyone ▾</div>
+
+      <span class="opt-b-label">Labels</span>
+      <div class="opt-b-select">All labels ▾</div>
+    </div>
+
     <div class="content-list">
       <!-- Card 1: Blocked/flagged — ticketed -->
       <div class="selection-card flagged selected">
         <div class="checkbox"></div>
         <div class="card-body">
+          <span class="jira-status in-progress">In Progress</span>
           <!-- Row 1: summary -->
           <div class="card-row-2">Missing brand assets for hero variant — blocking sprint 14</div>
           <!-- Row 2: labels -->
           <div class="card-row-3">
             <span class="label-chip">layout</span>
             <span class="label-chip">impediment</span>
+          </div>
+          <div class="date-row">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5 1v4M11 1v4"/></svg>
+            Apr 12, 2026 <span class="date-sep">→</span> Apr 15, 2026
           </div>
           <!-- Row 3: screenshots -->
           <div class="card-row-4">
@@ -234,6 +293,7 @@
       <div class="selection-card selected">
         <div class="checkbox"></div>
         <div class="card-body">
+          <span class="jira-status todo">To Do</span>
           <div class="card-row-2">Logo alignment mismatch on mobile headers</div>
           <div class="card-row-3">
             <span class="label-chip">asset</span>
@@ -247,9 +307,6 @@
           </div>
           <div class="card-row-1" style="margin-top:8px; margin-bottom:0;">
             <span class="jira-key" style="color:#555; font-style:italic;">no ticket</span>
-            <span class="assignee">
-              <span class="priority medium" title="Medium"><svg viewBox="0 0 16 16"><rect x="2" y="7" width="12" height="2" rx="1" fill="currentColor"/></svg></span>
-            </span>
           </div>
 
           <div class="dev-only">
@@ -271,10 +328,15 @@
       <div class="selection-card">
         <div class="checkbox"></div>
         <div class="card-body">
+          <span class="jira-status done">Done</span>
           <div class="card-row-2">Footer a11y — ARIA labels on social media icons</div>
           <div class="card-row-3">
             <span class="label-chip">layout</span>
             <span class="label-chip">a11y</span>
+          </div>
+          <div class="date-row">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5 1v4M11 1v4"/></svg>
+            Apr 10, 2026 <span class="date-sep">→</span> Apr 20, 2026
           </div>
           <div class="card-row-4">
             <div class="screenshot-row">
@@ -334,20 +396,112 @@
     </div>
 
     <div class="content-list">
-      <div class="selection-card" style="border-left: 3px solid #a78bfa; padding-left: 13px;">
+      <!-- Group 1: Ticketed (expandable) -->
+      <div class="selection-card group-card" style="border-left: 3px solid #a78bfa; padding-left: 13px;" onclick="this.classList.toggle('expanded')">
         <div class="card-body">
-          <div class="card-top">
-            <span class="card-title">group1</span>
-            <span class="card-badge" style="color:#22c55e">TICKETED</span>
+          <div class="card-row-2"><span class="expand-icon">▶</span> Header hero section</div>
+          <div class="card-row-3">
+            <span class="label-chip">layout</span>
+            <span class="label-chip">impediment</span>
           </div>
-          <div class="card-meta" style="font-size: 10px; color: #666; margin-top: 4px;">1 selection · ATT-2870 · 6h ago</div>
-          <div class="card-tags"><span class="card-tag">sprint-12</span></div>
+          <div class="date-row">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5 1v4M11 1v4"/></svg>
+            Apr 12, 2026 <span class="date-sep">→</span> Apr 15, 2026
+          </div>
+          <div class="card-row-1" style="margin-top:8px; margin-bottom:0;">
+            <span class="type-icon bug" title="Bug">🐛</span>
+            <span class="jira-key">ATT-3041</span>
+            <span style="font-size:10px; color:#666;">· 2 selections · 6h ago</span>
+            <span class="assignee">
+              <span class="priority high" title="High"><svg viewBox="0 0 16 16"><path d="M8 3l5 8H3z" fill="currentColor"/></svg></span>
+              <span class="avatar-sm">SD</span><span class="name">Salih D.</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <!-- Group 1 children (selections) -->
+      <div class="group-children">
+        <div class="child-card">
+          <div class="child-dot"></div>
+          <div class="child-comment">Missing the new brand assets for the hero variant. Blocking the sprint 14 deployment.</div>
+          <div class="child-screenshots">
+            <div class="screenshot-thumb"></div>
+            <div class="screenshot-thumb"></div>
+          </div>
+          <div class="child-meta">
+            <span>12m ago</span>
+          </div>
+        </div>
+        <div class="child-card">
+          <div class="child-dot"></div>
+          <div class="child-comment">Hero banner gradient doesn't match the Figma spec — colors are washed out on retina.</div>
+          <div class="child-screenshots">
+            <div class="screenshot-thumb"></div>
+          </div>
+          <div class="child-meta">
+            <span>3h ago</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: Not ticketed (expandable) -->
+      <div class="selection-card group-card" onclick="this.classList.toggle('expanded')">
+        <div class="card-body">
+          <div class="card-row-2"><span class="expand-icon">▶</span> Footer social icons</div>
+          <div class="card-row-3">
+            <span class="label-chip">a11y</span>
+          </div>
+          <div class="card-row-1" style="margin-top:8px; margin-bottom:0;">
+            <span class="jira-key" style="color:#555; font-style:italic;">no ticket</span>
+            <span style="font-size:10px; color:#666;">· 1 selection · 2h ago</span>
+          </div>
+        </div>
+      </div>
+      <!-- Group 2 children -->
+      <div class="group-children">
+        <div class="child-card">
+          <div class="child-dot"></div>
+          <div class="child-comment">ARIA labels missing on social media icons in the footer section.</div>
+          <div class="child-screenshots">
+            <div class="screenshot-thumb"></div>
+          </div>
+          <div class="child-meta">
+            <span>2h ago</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
 </div>
+
+<!-- Option B styles -->
+<style>
+  .p-search { width: 100%; background: #2a2a2a; border: 1px solid #333; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #e5e5e5; outline: none; }
+  .p-search::placeholder { color: #555; }
+
+  .opt-b-wrap { padding: 12px 16px; background: #1f1f1f; display: flex; flex-direction: column; gap: 10px; }
+  .opt-b-search-row { display: flex; gap: 8px; align-items: center; }
+  .opt-b-search-row .p-search { flex: 1; }
+  .opt-b-icon-btn { width: 34px; height: 34px; background: #2a2a2a; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; flex-shrink: 0; position: relative; }
+  .opt-b-icon-btn:hover { border-color: #555; }
+  .opt-b-icon-btn.active { border-color: #a78bfa; background: rgba(167,139,250,0.08); }
+  .opt-b-icon-btn svg { width: 14px; height: 14px; color: #888; }
+  .opt-b-icon-btn.active svg { color: #a78bfa; }
+  .opt-b-badge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #a78bfa; color: white; border-radius: 50%; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .opt-b-flag-btn { font-size: 13px; }
+  .opt-b-flag-btn.active { border-color: #f87171; background: rgba(248,113,113,0.08); }
+
+  .opt-b-panel { padding: 12px 16px; background: #1a1a1a; border-top: 1px solid #333; display: grid; grid-template-columns: 70px 1fr; gap: 8px 10px; align-items: center; }
+  .opt-b-panel.hidden { display: none; }
+  .opt-b-label { font-size: 10px; color: #666; font-weight: 600; }
+  .opt-b-select { background: #2a2a2a; border: 1px solid #333; border-radius: 6px; padding: 5px 10px; font-size: 11px; color: #ccc; cursor: pointer; width: 100%; }
+  .opt-b-status-row { display: flex; gap: 4px; }
+  .opt-b-status-pill { font-size: 9px; font-weight: 600; padding: 4px 10px; border-radius: 5px; cursor: pointer; border: 1px solid #333; background: #2a2a2a; color: #888; transition: all 0.15s; }
+  .opt-b-status-pill:hover { border-color: #555; }
+  .opt-b-status-pill.active { color: #60a5fa; border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.1); }
+  .opt-b-status-pill.active.done-pill { color: #22c55e; border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.1); }
+</style>
 
 <script>
   function toggleMode(el) {
