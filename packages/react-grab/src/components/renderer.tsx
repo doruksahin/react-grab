@@ -265,6 +265,18 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
               if (!item) return undefined;
               return () => props.onCreateTicketForLooseItem?.(item);
             })()}
+            onSubmitJiraComment={(() => {
+              const gid = instance().groupId;
+              if (!gid || !props.onSubmitJiraComment) return undefined;
+              return (md: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) =>
+                props.onSubmitJiraComment!(gid, md, mentions, parentId);
+            })()}
+            onSearchJiraUsers={props.onSearchJiraUsers}
+            onRefreshJiraStatus={(() => {
+              const gid = instance().groupId;
+              if (!gid || !props.onRefreshJiraStatus) return undefined;
+              return () => props.onRefreshJiraStatus!(gid);
+            })()}
           />
         );}}
       </Index>
