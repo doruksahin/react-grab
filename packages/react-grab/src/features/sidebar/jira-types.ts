@@ -36,4 +36,8 @@ export type SelectionGroupWithJira = SelectionGroup & {
   jiraFlagged?: boolean;
   /** ISO timestamp of when the ticket was flagged (from JIRA changelog) */
   jiraFlaggedAt?: string | null;
+  /** Display name of who flagged the ticket */
+  jiraFlaggedBy?: string | null;
+  /** Avatar URL (48x48) of who flagged the ticket */
+  jiraFlaggedByAvatar?: string | null;
 };

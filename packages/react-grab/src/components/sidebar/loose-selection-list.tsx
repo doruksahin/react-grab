@@ -59,6 +59,8 @@ export const LooseSelectionList: Component<LooseSelectionListProps> = (props) =>
                 jiraUrl={group()?.jiraUrl}
                 jiraFlagged={group()?.jiraFlagged}
                 jiraFlaggedAt={group()?.jiraFlaggedAt}
+                jiraFlaggedBy={group()?.jiraFlaggedBy}
+                jiraFlaggedByAvatar={group()?.jiraFlaggedByAvatar}
                 onCreateTicket={props.onCreateTicket}
                 onRemoveItem={props.onRemoveItem}
                 syncServerUrl={props.syncServerUrl}

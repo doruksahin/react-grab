@@ -33,9 +33,8 @@ import { CreateTicketButton } from './create-ticket-button.jsx';
 import { SelectionStatusBadge } from './status-badge.js';
 import { ActiveGroupPicker } from '../../features/selection-groups/components/active-group-picker.jsx';
 import { IconLoader } from '../icons/icon-loader.jsx';
-import { IconFlag } from '../icons/icon-flag.js';
-import { FLAGGED_BORDER_CLASS, FLAGGED_ICON_SIZE } from '../../features/sidebar/resolve-display-color.js';
-import { relativeTime } from '../../features/sidebar/relative-time.js';
+import { FlagIndicator } from '../flag-indicator.js';
+import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-color.js';
 import { Arrow } from './arrow.js';
 import { TagBadge } from './tag-badge.js';
 import { BottomSection } from './bottom-section.js';
@@ -608,12 +607,11 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 }}
               >
                 <Show when={props.jiraFlagged}>
-                  <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
-                  <Show when={props.jiraFlaggedAt}>
-                    <span class="text-[10px] text-[#dc2626] shrink-0">
-                      {relativeTime(new Date(props.jiraFlaggedAt!).getTime())}
-                    </span>
-                  </Show>
+                  <FlagIndicator
+                    flaggedAt={props.jiraFlaggedAt}
+                    flaggedBy={props.jiraFlaggedBy}
+                    flaggedByAvatar={props.jiraFlaggedByAvatar}
+                  />
                 </Show>
                 <TagBadge
                   tagName={tagDisplayResult().tagName}
@@ -699,12 +697,11 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
             <div class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit min-w-[150px] max-w-[280px] gap-1 pb-2">
               <div class="contain-layout shrink-0 flex items-center gap-1 pt-1.5 pb-1 w-fit h-fit px-2 max-w-full">
                 <Show when={props.jiraFlagged}>
-                  <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
-                  <Show when={props.jiraFlaggedAt}>
-                    <span class="text-[10px] text-[#dc2626] shrink-0">
-                      {relativeTime(new Date(props.jiraFlaggedAt!).getTime())}
-                    </span>
-                  </Show>
+                  <FlagIndicator
+                    flaggedAt={props.jiraFlaggedAt}
+                    flaggedBy={props.jiraFlaggedBy}
+                    flaggedByAvatar={props.jiraFlaggedByAvatar}
+                  />
                 </Show>
                 <TagBadge
                   tagName={tagDisplayResult().tagName}

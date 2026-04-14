@@ -5,9 +5,8 @@ import type { StatusColorConfig } from '../../features/sidebar/status-colors.js'
 import { SelectionCard } from './selection-card.jsx';
 import { Button } from '../ui/button.jsx';
 import { RemoveSelectionButton } from '../remove-selection-button.jsx';
-import { IconFlag } from '../icons/icon-flag.js';
-import { FLAGGED_BORDER_CLASS, FLAGGED_ICON_SIZE } from '../../features/sidebar/resolve-display-color.js';
-import { relativeTime } from '../../features/sidebar/relative-time.js';
+import { FlagIndicator } from '../flag-indicator.js';
+import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-color.js';
 import { LooseSelectionCardHeader } from './loose-selection-card-header.jsx';
 import { cn } from '../../utils/cn.js';
 
@@ -31,6 +30,8 @@ interface LooseSelectionCardProps {
   scrollRoot: () => Element | null;
   jiraFlagged?: boolean;
   jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
 }
 
 /**
@@ -84,12 +85,11 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             >
               <div class="flex items-center gap-1">
                 <Show when={props.jiraFlagged}>
-                  <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626] shrink-0" />
-                  <Show when={props.jiraFlaggedAt}>
-                    <span class="text-[10px] text-[#dc2626]">
-                      {relativeTime(new Date(props.jiraFlaggedAt!).getTime())}
-                    </span>
-                  </Show>
+                  <FlagIndicator
+                    flaggedAt={props.jiraFlaggedAt}
+                    flaggedBy={props.jiraFlaggedBy}
+                    flaggedByAvatar={props.jiraFlaggedByAvatar}
+                  />
                 </Show>
                 <a
                   href={props.jiraUrl}
@@ -129,6 +129,8 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             scrollRoot={props.scrollRoot}
             jiraFlagged={props.jiraFlagged}
             jiraFlaggedAt={props.jiraFlaggedAt}
+            jiraFlaggedBy={props.jiraFlaggedBy}
+            jiraFlaggedByAvatar={props.jiraFlaggedByAvatar}
           />
         </div>
       </div>

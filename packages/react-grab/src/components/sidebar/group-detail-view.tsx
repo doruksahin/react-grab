@@ -54,6 +54,8 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
         }
         jiraFlagged={props.group.jiraFlagged}
         jiraFlaggedAt={props.group.jiraFlaggedAt}
+        jiraFlaggedBy={props.group.jiraFlaggedBy}
+        jiraFlaggedByAvatar={props.group.jiraFlaggedByAvatar}
       />
 
       {/* JIRA section — bottom of detail view */}

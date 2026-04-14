@@ -12,6 +12,8 @@ interface SelectionListProps {
   onRemoveItem?: (itemId: string) => void;
   jiraFlagged?: boolean;
   jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
 }
 
 export const SelectionList: Component<SelectionListProps> = (props) => {
@@ -47,6 +49,8 @@ export const SelectionList: Component<SelectionListProps> = (props) => {
               }
               jiraFlagged={props.jiraFlagged}
               jiraFlaggedAt={props.jiraFlaggedAt}
+              jiraFlaggedBy={props.jiraFlaggedBy}
+              jiraFlaggedByAvatar={props.jiraFlaggedByAvatar}
             />
           )}
         </For>

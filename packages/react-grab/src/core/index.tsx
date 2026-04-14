@@ -3922,6 +3922,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           jiraComments: group?.jiraComments,
           jiraFlagged: group?.jiraFlagged,
           jiraFlaggedAt: group?.jiraFlaggedAt,
+          jiraFlaggedBy: group?.jiraFlaggedBy,
+          jiraFlaggedByAvatar: group?.jiraFlaggedByAvatar,
         };
       });
     });
@@ -3970,6 +3972,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 jiraUrl: status.jiraUrl,
                 jiraFlagged: status.flagged ?? false,
                 jiraFlaggedAt: status.flaggedAt ?? null,
+                jiraFlaggedBy: status.flaggedBy ?? null,
+                jiraFlaggedByAvatar: status.flaggedByAvatar ?? null,
               }
             : g,
         );

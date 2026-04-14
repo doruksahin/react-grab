@@ -57,6 +57,8 @@ export const JiraTicketStatus = z.object({
   comments: z.array(JiraComment),
   flagged: z.boolean().optional().default(false),
   flaggedAt: z.string().nullable().optional().default(null),
+  flaggedBy: z.string().nullable().optional().default(null),
+  flaggedByAvatar: z.string().nullable().optional().default(null),
 });
 
 export const GroupIdParam = z.object({

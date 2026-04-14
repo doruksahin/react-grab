@@ -229,6 +229,10 @@ export type GetJiraTicketStatus200 = {
   flagged?: boolean;
   /** @nullable */
   flaggedAt?: string | null;
+  /** @nullable */
+  flaggedBy?: string | null;
+  /** @nullable */
+  flaggedByAvatar?: string | null;
 };
 
 export type GetJiraTicketStatus404 = {

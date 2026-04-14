@@ -8,8 +8,8 @@ import {
 } from "../../features/sidebar";
 import { ScreenshotPair } from "./screenshot-pair";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
-import { IconFlag } from "../icons/icon-flag.js";
-import { FLAGGED_BORDER_CLASS, FLAGGED_ICON_SIZE } from "../../features/sidebar/resolve-display-color.js";
+import { FlagIndicator } from "../flag-indicator.js";
+import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";
 import { cn } from "../../utils/cn.js";
 
 export interface SelectionCardProps {
@@ -22,6 +22,8 @@ export interface SelectionCardProps {
   onRemoveItem?: () => void;
   jiraFlagged?: boolean;
   jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
 }
 
 export const SelectionCard: Component<SelectionCardProps> = (props) => {
@@ -68,14 +70,11 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       <div class="flex items-center justify-between mb-1.5">
         <div class="flex items-center gap-1.5 min-w-0">
           <Show when={props.jiraFlagged}>
-            <div class="flex items-center gap-1 shrink-0">
-              <IconFlag size={FLAGGED_ICON_SIZE} class="text-[#dc2626]" />
-              <Show when={props.jiraFlaggedAt}>
-                <span class="text-[10px] text-[#dc2626]">
-                  {relativeTime(new Date(props.jiraFlaggedAt!).getTime())}
-                </span>
-              </Show>
-            </div>
+            <FlagIndicator
+              flaggedAt={props.jiraFlaggedAt}
+              flaggedBy={props.jiraFlaggedBy}
+              flaggedByAvatar={props.jiraFlaggedByAvatar}
+            />
           </Show>
           <span class="text-[13px] font-semibold text-foreground truncate">
             {props.item.componentName || props.item.elementName}

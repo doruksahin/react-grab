@@ -493,6 +493,8 @@ export interface SelectionLabelInstance {
   }>;
   jiraFlagged?: boolean;
   jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
 }
 
 /**
@@ -773,4 +775,6 @@ export interface SelectionLabelProps
   }>;
   jiraFlagged?: boolean;
   jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
 }

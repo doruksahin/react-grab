@@ -359,6 +359,8 @@ export class JiraService {
 
     let flagged = false;
     let flaggedAt: string | null = null;
+    let flaggedBy: string | null = null;
+    let flaggedByAvatar: string | null = null;
     try {
       const response = await fetch(
         `${this.config.baseUrl}/rest/agile/1.0/issue/${ticketId}?fields=flagged`,
@@ -386,13 +388,19 @@ export class JiraService {
           expand: "changelog",
         });
         const histories = (changelogIssue as any).changelog?.histories as
-          | Array<{ created: string; items: Array<{ field: string; toString: string | null }> }>
+          | Array<{
+              created: string;
+              author?: { displayName?: string; avatarUrls?: Record<string, string> };
+              items: Array<{ field: string; toString: string | null }>;
+            }>
           | undefined;
         // Find the most recent "Flagged" → "Impediment" changelog entry
         const flagEntry = histories
           ?.filter((h) => h.items.some((i) => i.field === "Flagged" && i.toString === "Impediment"))
           .at(-1);
         flaggedAt = flagEntry?.created ?? (changelogIssue.fields.created as string | undefined) ?? null;
+        flaggedBy = flagEntry?.author?.displayName ?? null;
+        flaggedByAvatar = flagEntry?.author?.avatarUrls?.['48x48'] ?? null;
       } catch {
         // Changelog unavailable — flag date unknown
       }
@@ -410,6 +418,8 @@ export class JiraService {
       comments,
       flagged,
       flaggedAt,
+      flaggedBy,
+      flaggedByAvatar,
     };
   }
 
