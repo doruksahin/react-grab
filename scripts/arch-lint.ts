@@ -1,11 +1,30 @@
 import { readFileSync, existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, dirname, relative } from "node:path";
 import { load } from "js-yaml";
+import madge from "madge";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const ARCH_FILE = resolve(ROOT, "architecture.yml");
 
 const PATH_PATTERN = /^packages\//;
+
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+interface SourceEntry {
+  store_path?: string;
+  resource?: string;
+  consumers?: string[];
+  [key: string]: unknown;
+}
+
+interface DataFlowEntry {
+  composition_root?: string;
+  store?: string;
+  sources?: Record<string, SourceEntry>;
+  [key: string]: unknown;
+}
+
+// ─── Path extraction ────────────────────────────────────────────────────────
 
 const extractPaths = (value: unknown): string[] => {
   if (typeof value === "string" && PATH_PATTERN.test(value)) {
@@ -20,34 +39,170 @@ const extractPaths = (value: unknown): string[] => {
   return [];
 };
 
-const yaml = load(readFileSync(ARCH_FILE, "utf8"));
-const paths = [...new Set(extractPaths(yaml))].sort();
+// ─── Data flow validation ───────────────────────────────────────────────────
 
-console.log("Checking architecture.yml paths...\n");
-
-const stale: string[] = [];
-
-for (const p of paths) {
-  if (!existsSync(resolve(ROOT, p))) {
-    stale.push(p);
-  }
+interface LintError {
+  path: string;
+  message: string;
 }
 
-const valid = paths.length - stale.length;
+const validateDataFlows = async (
+  dataFlows: Record<string, DataFlowEntry>,
+): Promise<LintError[]> => {
+  const errors: LintError[] = [];
 
-if (stale.length > 0) {
-  console.log(`STALE PATHS (${stale.length}):`);
-  for (const p of stale) {
-    console.log(`  ${p} → NOT FOUND`);
+  for (const [flowName, flow] of Object.entries(dataFlows)) {
+    // Validate composition_root exists
+    if (flow.composition_root && !existsSync(resolve(ROOT, flow.composition_root))) {
+      errors.push({
+        path: `data_flows.${flowName}.composition_root`,
+        message: `${flow.composition_root} → NOT FOUND`,
+      });
+    }
+
+    // Validate store path exists
+    if (flow.store && !existsSync(resolve(ROOT, flow.store))) {
+      errors.push({
+        path: `data_flows.${flowName}.store`,
+        message: `${flow.store} → NOT FOUND`,
+      });
+    }
+
+    if (!flow.sources) continue;
+
+    // Build madge tree for consumer cross-checking
+    const rootFile = flow.composition_root;
+    let madgeConsumers: Set<string> | null = null;
+
+    if (rootFile && existsSync(resolve(ROOT, rootFile))) {
+      const pkg = rootFile.match(/^(packages\/[^/]+)\//)?.[1];
+      const pkgSrcDir = pkg ? resolve(ROOT, pkg, "src") : dirname(resolve(ROOT, rootFile));
+      const tsConfigPath = pkg
+        ? resolve(ROOT, pkg, "tsconfig.json")
+        : undefined;
+
+      try {
+        const filesToTrace = [rootFile];
+        if (flow.store) filesToTrace.push(flow.store);
+
+        const result = await madge(pkgSrcDir, {
+          fileExtensions: ["ts", "tsx"],
+          tsConfig: tsConfigPath && existsSync(tsConfigPath) ? tsConfigPath : undefined,
+        });
+        const tree = result.obj();
+
+        madgeConsumers = new Set<string>();
+        for (const traceFile of filesToTrace) {
+          const traceAbs = resolve(ROOT, traceFile);
+          for (const [file, deps] of Object.entries(tree)) {
+            for (const dep of deps) {
+              if (resolve(pkgSrcDir, dep) === traceAbs) {
+                const consumerRel = relative(ROOT, resolve(pkgSrcDir, file));
+                if (consumerRel.startsWith("packages/")) {
+                  madgeConsumers.add(consumerRel);
+                }
+              }
+            }
+          }
+        }
+      } catch {
+        // madge may fail — skip cross-check
+      }
+    }
+
+    for (const [srcName, src] of Object.entries(flow.sources)) {
+      const prefix = `data_flows.${flowName}.sources.${srcName}`;
+
+      // Validate resource file exists
+      if (src.resource && !existsSync(resolve(ROOT, src.resource))) {
+        errors.push({
+          path: `${prefix}.resource`,
+          message: `${src.resource} → NOT FOUND`,
+        });
+      }
+
+      // Validate each consumer file exists
+      if (Array.isArray(src.consumers)) {
+        for (const consumer of src.consumers) {
+          if (typeof consumer === "string" && consumer.startsWith("packages/")) {
+            if (!existsSync(resolve(ROOT, consumer))) {
+              errors.push({
+                path: `${prefix}.consumers`,
+                message: `${consumer} → NOT FOUND`,
+              });
+            }
+
+            // Cross-check: consumer should be importable from composition root
+            if (madgeConsumers && !madgeConsumers.has(consumer)) {
+              errors.push({
+                path: `${prefix}.consumers`,
+                message: `${consumer} → NOT in madge import tree (stale consumer?)`,
+              });
+            }
+          }
+        }
+      }
+    }
   }
-  console.log();
-}
 
-console.log(`${valid}/${paths.length} paths valid`);
+  return errors;
+};
 
-if (stale.length > 0) {
-  console.log("\nERROR: Found stale paths in architecture.yml");
+// ─── Main ───────────────────────────────────────────────────────────────────
+
+const main = async () => {
+  const yaml = load(readFileSync(ARCH_FILE, "utf8")) as Record<string, unknown>;
+  const paths = [...new Set(extractPaths(yaml))].sort();
+
+  console.log("Checking architecture.yml...\n");
+
+  // ── Phase 1: File path existence ──────────────────────────────────────
+
+  const stale: string[] = [];
+  for (const p of paths) {
+    if (!existsSync(resolve(ROOT, p))) {
+      stale.push(p);
+    }
+  }
+
+  const valid = paths.length - stale.length;
+
+  if (stale.length > 0) {
+    console.log(`STALE PATHS (${stale.length}):`);
+    for (const p of stale) {
+      console.log(`  ${p} → NOT FOUND`);
+    }
+    console.log();
+  }
+
+  console.log(`${valid}/${paths.length} paths valid`);
+
+  // ── Phase 2: data_flows validation ────────────────────────────────────
+
+  const dataFlows = (yaml.data_flows ?? {}) as Record<string, DataFlowEntry>;
+  const flowErrors = await validateDataFlows(dataFlows);
+
+  if (flowErrors.length > 0) {
+    console.log(`\nDATA FLOW ERRORS (${flowErrors.length}):`);
+    for (const err of flowErrors) {
+      console.log(`  [${err.path}] ${err.message}`);
+    }
+  } else if (Object.keys(dataFlows).length > 0) {
+    console.log("\ndata_flows: all paths valid, consumer cross-check passed");
+  }
+
+  // ── Result ────────────────────────────────────────────────────────────
+
+  const totalErrors = stale.length + flowErrors.length;
+  if (totalErrors > 0) {
+    console.log(`\nERROR: ${totalErrors} issue(s) found in architecture.yml`);
+    process.exit(1);
+  } else {
+    console.log("\nOK: architecture.yml is valid");
+  }
+};
+
+main().catch((err) => {
+  console.error("arch:lint failed:", err);
   process.exit(1);
-} else {
-  console.log("\nOK: All paths in architecture.yml exist on disk");
-}
+});

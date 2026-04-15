@@ -150,9 +150,16 @@ features:
     specs: [SPEC-001, SPEC-002]
     adrs: [ADR-0002, ADR-0005]
     files:
-      - packages/react-grab/src/features/sidebar/index.ts
       - packages/react-grab/src/components/sidebar/index.tsx
       - packages/react-grab/src/core/index.tsx
+      - packages/react-grab/src/features/sidebar/derive-status.ts
+      - packages/react-grab/src/features/sidebar/extract-file-path.ts
+      - packages/react-grab/src/features/sidebar/index.ts
+      - packages/react-grab/src/features/sidebar/jira-defaults.ts
+      - packages/react-grab/src/features/sidebar/jira-types.ts
+      - packages/react-grab/src/features/sidebar/relative-time.ts
+      - packages/react-grab/src/features/sidebar/screenshot-url.ts
+      - packages/react-grab/src/features/sidebar/use-lazy-visible.ts
 
   selection-groups:
     description: Group management — create, rename, assign selections to groups
@@ -160,7 +167,11 @@ features:
     prds: [PRD-002]
     specs: [SPEC-001]
     files:
+      - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
+      - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
+      - packages/react-grab/src/features/selection-groups/business/ticket-lock.ts
       - packages/react-grab/src/features/selection-groups/index.ts
+      - packages/react-grab/src/features/selection-groups/types.ts
       - packages/sync-server/src/routes/groups.ts
       - packages/sync-server/src/schemas/group.ts
 
@@ -170,11 +181,11 @@ features:
     prds: [PRD-003]
     specs: [SPEC-005]
     files:
-      - packages/react-grab/src/features/screenshot/index.ts
       - packages/react-grab/src/features/screenshot/capture.ts
+      - packages/react-grab/src/features/screenshot/index.ts
       - packages/react-grab/src/features/screenshot/orchestrate.ts
-      - packages/sync-server/src/routes/screenshots.ts
       - packages/sync-server/src/repositories/r2.store.ts
+      - packages/sync-server/src/routes/screenshots.ts
 
   selection-status-colors:
     description: Pink/yellow/green status overlays + active-group lightblue glow
@@ -182,8 +193,8 @@ features:
     specs: [SPEC-004]
     files:
       - packages/react-grab/src/components/overlay-canvas.tsx
-      - packages/react-grab/src/components/selection-label/index.tsx
       - packages/react-grab/src/components/renderer.tsx
+      - packages/react-grab/src/components/selection-label/index.tsx
 
   selection-visibility:
     description: Reveal/hide selections on canvas — batch visibility from filters
@@ -191,6 +202,7 @@ features:
     specs: [SPEC-006]
     files:
       - packages/react-grab/src/features/selection-visibility/index.ts
+      - packages/react-grab/src/features/selection-visibility/types.ts
 
   loose-selection-ticketing:
     description: File JIRA tickets for ungrouped selections via synthetic groups
@@ -199,18 +211,29 @@ features:
     specs: [SPEC-011]
     adrs: [ADR-0008]
     files:
-      - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
-      - packages/react-grab/src/features/selection-groups/business/membership.ts
       - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
       - packages/react-grab/src/components/sidebar/loose-selection-list.tsx
       - packages/react-grab/src/core/index.tsx
+      - packages/react-grab/src/features/selection-groups/business/membership.ts
+      - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
+      - packages/react-grab/src/features/selection-groups/types.ts
 
   group-dropdown-consistency:
     description: Unified "New group..." action in group picker + stale signal fix
     status: draft
     specs: [SPEC-007]
     files:
+      - packages/react-grab/src/components/selection-label/arrow-navigation-menu.tsx
+      - packages/react-grab/src/components/selection-label/arrow.tsx
+      - packages/react-grab/src/components/selection-label/bottom-section.tsx
+      - packages/react-grab/src/components/selection-label/completion-view.tsx
+      - packages/react-grab/src/components/selection-label/create-ticket-button.tsx
+      - packages/react-grab/src/components/selection-label/discard-prompt.tsx
+      - packages/react-grab/src/components/selection-label/error-view.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
+      - packages/react-grab/src/components/selection-label/jira-meta.tsx
+      - packages/react-grab/src/components/selection-label/status-badge.tsx
+      - packages/react-grab/src/components/selection-label/tag-badge.tsx
 
   expandable-inline-groups:
     description: Expand group cards inline to show child selections without navigating
@@ -227,18 +250,17 @@ features:
     specs: [SPEC-003, SPEC-009]
     adrs: [ADR-0003, ADR-0004, ADR-0005]
     files:
-      # react-grab (UI)
+      - packages/dashboard/src/api/endpoints/jira/jira.ts
+      - packages/dashboard/src/components/jira/jira-create-dialog.tsx
+      - packages/react-grab/src/components/sidebar/jira-create-button.tsx
       - packages/react-grab/src/components/sidebar/jira-create-dialog.tsx
       - packages/react-grab/src/components/sidebar/jira-create-form.tsx
-      - packages/react-grab/src/components/sidebar/jira-create-button.tsx
+      - packages/react-grab/src/features/sidebar/extract-file-path.ts
       - packages/react-grab/src/features/sidebar/jira-defaults.ts
-      # sync-server (API)
+      - packages/react-grab/src/features/sidebar/jira-types.ts
       - packages/sync-server/src/routes/jira.ts
-      - packages/sync-server/src/services/jira.service.ts
       - packages/sync-server/src/schemas/jira.ts
-      # dashboard
-      - packages/dashboard/src/components/jira/jira-create-dialog.tsx
-      - packages/dashboard/src/api/endpoints/jira/jira.ts
+      - packages/sync-server/src/services/jira.service.ts
 
   jira-status-polling:
     description: 30s interval polling of all ticketed groups for JIRA status updates
@@ -246,8 +268,13 @@ features:
     specs: [SPEC-003]
     adrs: [ADR-0006]
     files:
-      - packages/react-grab/src/features/sync/sync-layer.ts
       - packages/react-grab/src/core/index.tsx
+      - packages/react-grab/src/features/sync/adapter.ts
+      - packages/react-grab/src/features/sync/schemas.ts
+      - packages/react-grab/src/features/sync/store/sync-store.ts
+      - packages/react-grab/src/features/sync/sync-layer.ts
+      - packages/react-grab/src/features/sync/transforms.ts
+      - packages/react-grab/src/features/sync/types.ts
       - packages/sync-server/src/routes/jira.ts
       - packages/sync-server/src/services/jira.service.ts
 
@@ -258,14 +285,15 @@ features:
     specs: [SPEC-006]
     adrs: [ADR-0006]
     files:
-      - packages/react-grab/src/features/sidebar/status-colors.ts
-      - packages/react-grab/src/features/sidebar/filter-state.ts
+      - packages/dashboard/src/components/jira/jira-status-banner.tsx
       - packages/react-grab/src/components/sidebar/filter-bar.tsx
       - packages/react-grab/src/components/sidebar/filter-chips.tsx
-      - packages/react-grab/src/components/sidebar/status-legend.tsx
-      - packages/react-grab/src/components/sidebar/jira-status-banner.tsx
       - packages/react-grab/src/components/sidebar/jira-progress-dots.tsx
-      - packages/dashboard/src/components/jira/jira-status-banner.tsx
+      - packages/react-grab/src/components/sidebar/jira-status-banner.tsx
+      - packages/react-grab/src/components/sidebar/status-legend.tsx
+      - packages/react-grab/src/features/sidebar/filter-state.ts
+      - packages/react-grab/src/features/sidebar/jira-types.ts
+      - packages/react-grab/src/features/sidebar/status-colors.ts
 
   jira-avatars:
     description: Assignee/reporter avatar extraction (48x48) and display with initials fallback
@@ -273,10 +301,10 @@ features:
     prds: [PRD-005]
     specs: [SPEC-008]
     files:
-      - packages/react-grab/src/features/sidebar/jira-types.ts
       - packages/react-grab/src/components/selection-label/jira-meta.tsx
-      - packages/sync-server/src/services/jira.service.ts
+      - packages/react-grab/src/features/sidebar/jira-types.ts
       - packages/sync-server/src/schemas/jira.ts
+      - packages/sync-server/src/services/jira.service.ts
 
   jira-flag-indicator:
     description: JIRA flagged/blocked visual — red borders, flag icon, tooltip with flagger info
@@ -285,10 +313,12 @@ features:
     specs: [SPEC-012]
     adrs: [ADR-0009]
     files:
-      - packages/react-grab/src/features/sidebar/resolve-display-color.ts
-      - packages/react-grab/src/components/sidebar/group-card.tsx
-      - packages/react-grab/src/components/selection-label/index.tsx
       - packages/react-grab/src/components/icons/icon-flag.tsx
+      - packages/react-grab/src/components/selection-label/index.tsx
+      - packages/react-grab/src/components/sidebar/group-card.tsx
+      - packages/react-grab/src/features/sidebar/jira-types.ts
+      - packages/react-grab/src/features/sidebar/resolve-display-color.ts
+      - packages/react-grab/src/features/sidebar/status-colors.ts
       - packages/sync-server/src/services/jira.service.ts
 
   jira-flag-write-back:
@@ -304,10 +334,22 @@ features:
     specs: [SPEC-010]
     adrs: [ADR-0007]
     files:
+      - packages/react-grab/src/components/selection-label/arrow-navigation-menu.tsx
+      - packages/react-grab/src/components/selection-label/arrow.tsx
+      - packages/react-grab/src/components/selection-label/bottom-section.tsx
+      - packages/react-grab/src/components/selection-label/completion-view.tsx
+      - packages/react-grab/src/components/selection-label/create-ticket-button.tsx
+      - packages/react-grab/src/components/selection-label/discard-prompt.tsx
+      - packages/react-grab/src/components/selection-label/error-view.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
+      - packages/react-grab/src/components/selection-label/jira-meta.tsx
+      - packages/react-grab/src/components/selection-label/status-badge.tsx
+      - packages/react-grab/src/components/selection-label/tag-badge.tsx
+      - packages/react-grab/src/components/ui/button.tsx
       - packages/react-grab/src/components/ui/collapsible.tsx
-      - packages/sync-server/src/services/jira.service.ts
+      - packages/react-grab/src/components/ui/tooltip.tsx
       - packages/sync-server/src/routes/jira.ts
+      - packages/sync-server/src/services/jira.service.ts
 
   jira-comments-write:
     description: Post comments/replies to JIRA with @mentions, rich Tiptap editor, image paste
@@ -316,29 +358,27 @@ features:
     specs: [SPEC-013]
     adrs: [ADR-0007, ADR-0010]
     files:
-      # react-grab (feature logic)
-      - packages/react-grab/src/features/jira-comments/use-jira-comments.ts
-      - packages/react-grab/src/features/jira-comments/parse-comment-body.ts
-      - packages/react-grab/src/features/jira-comments/avatar-utils.ts
-      - packages/react-grab/src/features/jira-comments/mention-cache.ts
-      - packages/react-grab/src/features/jira-comments/types.ts
-      # react-grab (UI)
-      - packages/react-grab/src/components/jira-comments/comments-section.tsx
-      - packages/react-grab/src/components/jira-comments/comment-item.tsx
       - packages/react-grab/src/components/jira-comments/avatar.tsx
+      - packages/react-grab/src/components/jira-comments/comment-item.tsx
+      - packages/react-grab/src/components/jira-comments/comments-section.tsx
       - packages/react-grab/src/components/jira-comments/editor/jira-comment-editor.tsx
       - packages/react-grab/src/components/jira-comments/editor/mention-picker.tsx
-      # sync-server (API)
+      - packages/react-grab/src/features/jira-comments/avatar-utils.ts
+      - packages/react-grab/src/features/jira-comments/mention-cache.ts
+      - packages/react-grab/src/features/jira-comments/parse-comment-body.ts
+      - packages/react-grab/src/features/jira-comments/types.ts
+      - packages/react-grab/src/features/jira-comments/use-jira-comments.ts
       - packages/sync-server/src/routes/jira.ts
-      - packages/sync-server/src/services/jira.service.ts
-      - packages/sync-server/src/services/jira-adf-mentions.ts
       - packages/sync-server/src/schemas/jira.ts
+      - packages/sync-server/src/services/jira-adf-mentions.ts
+      - packages/sync-server/src/services/jira.service.ts
 
   jira-metadata-cards:
     description: Priority, issue type, creation/due dates in sidebar cards
     status: planned
     prds: [PRD-010]
     files:
+      - packages/react-grab/src/components/sidebar/UserAvatar.tsx
       - packages/react-grab/src/components/sidebar/group-card.tsx
       - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
       - packages/sync-server/src/services/jira.service.ts
@@ -360,17 +400,17 @@ data_flows:
         load: sync-layer.ts init() → adapter.loadGroups()
         persist: sync-layer.ts persistGroups() → adapter.persistGroups()
         consumers:
-          - components/sidebar/* (group list, detail view)
-          - components/selection-label/* (status colors, JIRA meta)
-          - features/selection-groups/index.ts (CRUD operations)
+          - packages/react-grab/src/core/index.tsx
+          - packages/react-grab/src/features/sync/index.ts
+          - packages/react-grab/src/features/sync/sync-layer.ts
       comments:
         store_path: store.comments
         load: sync-layer.ts init() → adapter.loadComments()
         persist: sync-layer.ts persistComments() → adapter.persistComments()
         consumers:
-          - components/selection-label/* (comment text, count)
-          - components/comments-dropdown.tsx
-          - features/selection-visibility/index.ts (reveal state)
+          - packages/react-grab/src/core/index.tsx
+          - packages/react-grab/src/features/sync/index.ts
+          - packages/react-grab/src/features/sync/sync-layer.ts
       jira_status:
         store_path: store.groups[i].jiraStatus (fine-grained per-group)
         trigger: pollJira() via 30s setInterval
@@ -380,9 +420,9 @@ data_flows:
           - jiraComments, jiraLabels, jiraResolved
           - jiraFlagged, jiraFlaggedAt, jiraFlaggedBy, jiraFlaggedByAvatar
         consumers:
-          - components/sidebar/group-card.tsx (status badge)
-          - components/selection-label/* (inline status)
-          - components/jira-comments/* (comment list)
+          - packages/react-grab/src/core/index.tsx
+          - packages/react-grab/src/features/sync/index.ts
+          - packages/react-grab/src/features/sync/sync-layer.ts
 
 # ─── API contract flow ────────────────────────────────────────────────────────
 

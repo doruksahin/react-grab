@@ -1,6 +1,6 @@
 ---
-status: proposed
-date: 2026-04-15
+date: '2026-04-15'
+status: accepted
 ---
 
 # ADR-0012 Architecture YAML codegen via madge and ts-morph

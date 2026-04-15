@@ -16,6 +16,8 @@
     "extension:dev": "pnpm --filter web-extension dev",
     "extension:build": "pnpm --filter web-extension build",
     "check:codegen": "pnpm --filter @react-grab/sync-server export-spec && pnpm --filter react-grab codegen && pnpm --filter dashboard codegen && git diff --exit-code packages/react-grab/src/generated/ packages/dashboard/src/api/",
+    "arch:codegen": "tsx scripts/arch-codegen.ts",
+    "arch:visual": "tsx scripts/arch-codegen.ts --visual",
     "arch:lint": "tsx scripts/arch-lint.ts",
     "arch:deps": "madge --json packages/react-grab/src/core/index.tsx",
     "arch:deps:circular": "madge --circular packages/react-grab/src/",
@@ -33,7 +35,8 @@
     "ts-morph": "^28.0.0",
     "tsx": "^4.21.0",
     "turbo": "^2.6.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "yaml": "^2.8.3"
   },
   "engines": {
     "node": ">=18",

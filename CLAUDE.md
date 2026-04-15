@@ -70,10 +70,12 @@ pnpm --filter react-grab codegen
 # Verify OpenAPI spec + codegen are in sync
 pnpm check:codegen
 
-# Architecture — dependency graph (madge + ts-morph)
-pnpm arch:deps                # JSON import tree from core/index.tsx
-pnpm arch:deps:circular       # Check for circular dependencies
-pnpm arch:deps:svg            # Generate SVG → docs/architecture/dependency-graph.svg
+# Architecture — codegen + lint + dependency graph
+pnpm arch:codegen              # Generate/merge machine-derivable sections of architecture.yml
+pnpm arch:lint                 # Validate architecture.yml paths + data_flows consumer cross-check
+pnpm arch:deps                 # JSON import tree from core/index.tsx
+pnpm arch:deps:circular        # Check for circular dependencies
+pnpm arch:deps:svg             # Generate SVG → docs/architecture/dependency-graph.svg
 
 # Playwright browser install (first-time)
 pnpm --filter react-grab exec playwright install chromium --with-deps
@@ -90,6 +92,17 @@ pnpm --filter @react-grab/gym dev:mcp
 ### Navigation
 
 See `architecture.yml` for the full architecture index — package entry points, cross-package feature map (17 features with file lists), and decree document (PRD/SPEC/ADR) registry. Use it with Serena MCP for quick navigation across package boundaries.
+
+`pnpm arch:codegen` keeps `architecture.yml` in sync with the codebase. It uses madge (import tree tracing) and ts-morph (AST analysis) to generate machine-derivable fields while preserving human-authored content:
+
+| Field | Codegen behavior |
+|---|---|
+| `features.*.files` | **Replaced** — madge traces import tree from entry point, scoped to owned dirs |
+| `features.*.description`, `status`, `prds`, `specs`, `adrs` | **Preserved** — human-authored |
+| `data_flows.*.sources.*.consumers` | **Replaced** — madge reverse-dependency tracing |
+| `data_flows.*.sources.*.trigger` | **Replaced** — ts-morph detects `setInterval` patterns |
+| `data_flows.*.description`, `init_sequence` | **Preserved** — human-authored |
+| `packages.*`, `decree.*` | **Preserved** — stable/managed elsewhere |
 
 ### Monorepo layout
 
