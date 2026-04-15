@@ -23,7 +23,7 @@ if (serverUrl && workspace && jiraProjectKey) {
     serverUrl,
     workspace,
     jiraProjectKey,
-    syncRevealedState: false,
+    syncRevealedState: true,
     onSyncError: (err) => console.warn("[react-grab e2e] sync error:", err.message),
   });
 }
