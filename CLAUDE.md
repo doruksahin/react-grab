@@ -33,29 +33,20 @@ pnpm --filter @react-grab/sync-server db:migrate:local
 # Test (Playwright E2E + Vitest CLI tests)
 pnpm test
 
-# E2E — overlay tests only (headless)
-pnpm --filter react-grab test:e2e:overlay
+# E2E — run single file (PREFERRED — always run targeted tests)
+pnpm --filter react-grab exec playwright test e2e/mocked/jira-comment-write.spec.ts --project=chromium
 
-# E2E — mocked JIRA tests only (headless)
-pnpm --filter react-grab test:e2e:mocked
-
-# E2E — headed (browser visible)
-pnpm --filter react-grab test:e2e:overlay   # already --headed
-pnpm --filter react-grab test:e2e:mocked    # already --headed
-
-# E2E — UI mode (interactive test explorer)
-pnpm --filter react-grab test:e2e:ui              # all projects
-pnpm --filter react-grab test:e2e:overlay:ui      # overlay only
-pnpm --filter react-grab test:e2e:mocked:ui       # mocked only
-
-# E2E — run single file
-pnpm --filter react-grab exec playwright test e2e/mocked/jira-comment-write.spec.ts --project=chromium-mocked
+# E2E — run mocked tests only
+pnpm --filter react-grab exec playwright test e2e/mocked/ --project=chromium
 
 # E2E — filter by test name
-pnpm --filter react-grab exec playwright test --project=chromium-mocked --headed --grep "comment"
+pnpm --filter react-grab exec playwright test --project=chromium --headed --grep "comment"
 
 # E2E — run tests for a decree spec (tags: @SPEC-004, @SPEC-010, @SPEC-013)
-pnpm --filter react-grab exec playwright test --project=chromium-mocked --headed --grep @SPEC-013
+pnpm --filter react-grab exec playwright test --project=chromium --headed --grep @SPEC-013
+
+# E2E — UI mode (interactive test explorer)
+pnpm --filter react-grab test:e2e:ui
 
 # E2E — open HTML report (latest run)
 pnpm --filter react-grab exec playwright show-report
@@ -191,29 +182,58 @@ Three terminals: `pnpm dev` (library watch), `pnpm sync:dev` (sync server on :87
 
 ## E2E Testing
 
-**Goal:** Run features against a mock sync-server with no real backend, capture screenshots as visual evidence, and link tests to decree SPEC acceptance criteria.
-
-**Quick start:**
+**CRITICAL: Never run the full test suite locally.** 580+ tests take 4.5+ minutes. Always run targeted tests:
 
 ```bash
-# Run all E2E tests (existing + mocked)
-pnpm test
+# Run tests for the spec you're working on
+pnpm --filter react-grab exec playwright test --project=chromium --grep @SPEC-013
 
-# Run only mocked tests (JIRA features, visual verification)
-pnpm --filter react-grab exec playwright test --project=chromium-mocked
+# Run a specific file
+pnpm --filter react-grab exec playwright test e2e/mocked/jira-comment-write.spec.ts --project=chromium
 
-# View screenshots and videos in the report
-pnpm --filter react-grab exec playwright show-report
+# Run mocked tests only
+pnpm --filter react-grab exec playwright test e2e/mocked/ --project=chromium
+
+# Quick smoke test (one file)
+pnpm --filter react-grab exec playwright test e2e/activation.spec.ts --project=chromium
+
+# UI mode for interactive debugging
+pnpm --filter react-grab test:e2e:ui
 ```
 
-### Architecture — two Playwright projects
+### Architecture — single Playwright project
 
-| Project | Port | e2e-app mode | What it tests | initSync |
-|---|---|---|---|---|
-| `chromium` | 5175 | `dev` (default) | Overlay behavior — activation, selection, toolbar, copy | Off |
-| `chromium-mocked` | 5176 | `dev:mock` (.env.mock) | JIRA features — sidebar groups, comments, ticket creation | On (mock server) |
+One project (`chromium`), one port (5175), one Vite dev server. Tests control sync state via the `reactGrab` page object — no Vite modes, no env vars, no separate ports.
 
-The `chromium` project runs existing tests unaffected. The `chromium-mocked` project runs tests in `e2e/mocked/` against a mock sync-server with video recording enabled.
+| Test type | How it gets data | Example |
+|---|---|---|
+| Overlay-only (activation, toolbar, selection) | No sync needed — sidebar renders empty | `e2e/activation.spec.ts` |
+| Sidebar/JIRA UI (visual, groups, comments) | `reactGrab.populate()` seeds store directly | `e2e/mocked/jira-comment-sidebar-visual.spec.ts` |
+| HTTP behavior (write-back, polling, error) | `mockServer` fixture + `reactGrab.triggerInitSync()` | `e2e/mocked/jira-comment-write.spec.ts` |
+
+### How sync data gets into tests
+
+The `reactGrab` page object exposes two methods:
+
+- **`reactGrab.populate(overrides?)`** — Seeds the sync store with mock data (groups, comments, workspace). No HTTP. For UI tests that need sidebar data.
+- **`reactGrab.triggerInitSync(config?)`** — Calls `initSync()` which makes real HTTP calls. For tests that need `mockServer` to intercept requests.
+
+**These are mutually exclusive.** Never use both in the same test.
+
+```ts
+// UI test — seed data directly, no HTTP
+test('sidebar shows groups', async ({ reactGrab }) => {
+  await reactGrab.populate();
+  await openSidebar(page);
+  // assert on sidebar content...
+});
+
+// HTTP test — mockServer intercepts initSync HTTP calls
+test('comment write-back posts to JIRA', async ({ reactGrab, mockServer }) => {
+  await reactGrab.triggerInitSync();
+  // assert on mockServer.requests()...
+});
+```
 
 ### How the mock server works
 
@@ -221,7 +241,7 @@ The `chromium` project runs existing tests unaffected. The `chromium-mocked` pro
 
 `e2e/mocks/routes.ts` — `mockSyncServer(page)` registers `page.route()` handlers that intercept network calls before they leave the browser. Supports per-test overrides and request capture.
 
-`e2e/fixtures.ts` — `mockServer` fixture auto-resolves before `reactGrab` navigates, so routes are registered before `initSync()` fetches data. `reactGrab.screenshot(name, target)` attaches PNGs to the Playwright HTML report.
+`e2e/fixtures.ts` — `mockServer` is opt-in (`{ auto: false }`). Only created when a test declares it in its function signature. For HTTP tests, declare `mockServer` in `beforeEach` so routes are registered before `triggerInitSync()`.
 
 ### Decree spec tags — linking tests to specs
 
@@ -233,7 +253,7 @@ Every mocked E2E test must be tagged with its decree spec using Playwright's `ta
 test.describe('JIRA comment write-back', { tag: ['@SPEC-013'] }, () => {
   test('AC-1: Cmd+Enter submits the comment', {
     annotation: { type: 'ac', description: 'SPEC-013 AC-1' },
-  }, async ({ page, reactGrab, mockServer }) => {
+  }, async ({ reactGrab, mockServer }) => {
     await reactGrab.screenshot('insert-menu-open', 'page');
     // assert...
   });
@@ -254,12 +274,11 @@ When adding new mocked tests, always add a `@SPEC-xxx` tag. See `TESTING.md` for
 
 | File | Purpose |
 |---|---|
-| `e2e/fixtures.ts` | `reactGrab` page object (70+ methods), `mockServer` fixture, `screenshot()` helper |
+| `e2e/fixtures.ts` | `reactGrab` page object (70+ methods, `populate()`, `triggerInitSync()`), `mockServer` fixture |
 | `e2e/mocks/fixtures.ts` | Typed mock data for all 15 endpoints |
 | `e2e/mocks/routes.ts` | `mockSyncServer(page)` — route interception + request capture |
-| `e2e/mocked/*.spec.ts` | Tests that need the mock server (run in `chromium-mocked` project) |
-| `packages/e2e-app/.env.mock` | Env vars for mock mode (`VITE_REACT_GRAB_SYNC_URL`, etc.) |
-| `playwright.config.ts` | Two projects, two web servers, video config |
+| `e2e/mocked/*.spec.ts` | Tests that need sync data or mock server |
+| `playwright.config.ts` | Single project, single web server |
 
 ## Conventions
 

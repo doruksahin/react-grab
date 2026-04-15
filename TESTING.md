@@ -1,74 +1,105 @@
 # Testing Cheatsheet
 
-## Run everything
+## CRITICAL: Never run the full suite locally
+
+580+ E2E tests take 4.5+ minutes. **Always run targeted tests.**
 
 ```bash
-pnpm test                   # E2E (Playwright) + CLI unit tests (Vitest)
+# By spec tag (PREFERRED)
+pnpm --filter react-grab exec playwright test --project=chromium --grep @SPEC-013
+
+# By file
+pnpm --filter react-grab exec playwright test e2e/mocked/jira-comment-write.spec.ts --project=chromium
+
+# By directory
+pnpm --filter react-grab exec playwright test e2e/mocked/ --project=chromium
+
+# Quick smoke test
+pnpm --filter react-grab exec playwright test e2e/activation.spec.ts --project=chromium
 ```
 
 ## E2E — Playwright
 
-All commands run from repo root. Add `--filter react-grab` or `cd packages/react-grab`.
+Single project (`chromium`), single port (5175). Tests control sync state via `reactGrab.populate()` or `reactGrab.triggerInitSync()`.
 
-```bash
-# All E2E projects (overlay + mocked + touch)
-pnpm --filter react-grab test:e2e
-
-# Overlay tests only (no backend, port 5175)
-pnpm --filter react-grab test:e2e:overlay
-
-# Mocked JIRA tests only (mock sync-server, port 5176)
-pnpm --filter react-grab test:e2e:mocked
-
-# Interactive UI mode (pick & run tests visually)
-pnpm --filter react-grab test:e2e:ui
-```
-
-### Useful flags (append to any command above)
+### Useful flags
 
 ```bash
 --headed                    # Show the browser window
 --debug                     # Headed + inspector (step through)
---ui                        # Interactive UI mode
 --grep "selection label"    # Run tests matching name
 --repeat-each 3             # Run each test N times (flake check)
 --workers 1                 # Serial execution (easier to watch)
 --trace on                  # Force trace capture (default: on-first-retry)
---update-snapshots          # Update visual snapshot baselines
 ```
 
-### Run a single test file
+### UI mode (interactive)
 
 ```bash
-pnpm --filter react-grab exec playwright test e2e/mocked/jira-selection-label-visual.spec.ts --project=chromium-mocked
-pnpm --filter react-grab exec playwright test e2e/activation.spec.ts --project=chromium
+pnpm --filter react-grab test:e2e:ui
 ```
 
 ### Reports & artifacts
 
 ```bash
-# Open HTML report (always the latest run)
+# Open HTML report (latest run)
 pnpm --filter react-grab exec playwright show-report
 
-# Videos: packages/react-grab/test-results/   (chromium-mocked records all runs)
-# Traces: packages/react-grab/test-results/   (captured on first retry)
+# Videos: packages/react-grab/test-results/  (enabled per-file with test.use({ video: "on" }))
+# Traces: packages/react-grab/test-results/  (captured on first retry)
+```
+
+## Test types and how they get data
+
+| Test type | Data method | Example |
+|---|---|---|
+| Overlay-only | No sync needed | `e2e/activation.spec.ts` |
+| Sidebar/JIRA UI | `await reactGrab.populate()` | `e2e/mocked/jira-comment-sidebar-visual.spec.ts` |
+| HTTP behavior | `mockServer` + `await reactGrab.triggerInitSync()` | `e2e/mocked/jira-comment-write.spec.ts` |
+
+**`populate()` and `triggerInitSync()` are mutually exclusive.** Never use both in the same test.
+
+### UI test pattern (syncData)
+
+```ts
+test.use({ video: "on" });
+
+test.describe("Feature", { tag: ["@SPEC-010"] }, () => {
+  test.beforeEach(async ({ reactGrab }) => {
+    await reactGrab.populate();   // seeds store with default mock data
+  });
+
+  test("sidebar shows groups", async ({ reactGrab }) => {
+    // sidebar has data, no HTTP involved
+  });
+});
+```
+
+### HTTP behavior test pattern (mockServer)
+
+```ts
+test.use({ video: "on" });
+
+test.describe("Feature", { tag: ["@SPEC-013"] }, () => {
+  test.beforeEach(async ({ reactGrab, mockServer }) => {
+    // mockServer routes registered during fixture setup
+    await reactGrab.triggerInitSync();  // fires HTTP, mockServer intercepts
+  });
+
+  test("posts comment to JIRA", async ({ reactGrab, mockServer }) => {
+    // assert on mockServer.requests("addJiraComment")
+  });
+});
 ```
 
 ## Decree spec tags — run tests by SPEC
 
-Mocked E2E tests are tagged with `@SPEC-xxx` matching `decree/spec/` documents. Use `--grep` to run tests for a specific spec.
-
-All commands run from repo root via `pnpm --filter react-grab exec`:
-
 ```bash
 # Run all tests for a specific spec
-pnpm --filter react-grab exec playwright test --project=chromium-mocked --headed --grep @SPEC-013
+pnpm --filter react-grab exec playwright test --project=chromium --headed --grep @SPEC-013
 
 # Multiple specs
-pnpm --filter react-grab exec playwright test --project=chromium-mocked --headed --grep "@SPEC-010|@SPEC-013"
-
-# Exclude a spec
-pnpm --filter react-grab exec playwright test --project=chromium-mocked --headed --grep-invert @SPEC-013
+pnpm --filter react-grab exec playwright test --project=chromium --headed --grep "@SPEC-010|@SPEC-013"
 ```
 
 ### Tag → spec mapping
@@ -93,35 +124,20 @@ test.describe("Feature name", { tag: ["@SPEC-013"] }, () => {
 });
 ```
 
-For standalone tests (no describe block):
-
-```ts
-test("test name", { tag: ["@SPEC-010"] }, async ({ reactGrab }) => {
-  // ...
-});
-```
-
-Tags show up in `--ui` mode sidebar and in the HTML report for filtering.
-
 ## Unit tests — Vitest
 
 ```bash
-# react-grab unit tests
 pnpm --filter react-grab test:unit
 pnpm --filter react-grab test:unit:watch    # watch mode
-
-# CLI unit tests
 pnpm --filter @react-grab/cli test
-pnpm --filter @react-grab/cli test:watch
 ```
 
-## Playwright projects
+## Playwright project
 
-| Project | Port | What it tests | initSync | Video |
-|---|---|---|---|---|
-| `chromium` | 5175 | Overlay — activation, selection, toolbar, copy | Off | Off |
-| `chromium-mocked` | 5176 | JIRA — sidebar, comments, tickets, labels | On (mock) | On |
-| `chromium-touch` | 5175 | Touch interactions | Off | Off |
+| Project | Port | What it tests | Video |
+|---|---|---|---|
+| `chromium` | 5175 | Everything — overlay, sidebar, JIRA, HTTP behavior | Per-file (`test.use`) |
+| `chromium-touch` | 5175 | Touch interactions | Off |
 
 ## First-time setup
 
