@@ -27,6 +27,7 @@ import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.j
 import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
 import { LooseSelectionList } from "./loose-selection-list.jsx";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
+import { TabBar } from "./tab-bar.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -65,6 +66,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     filterUserFacingGroups(props.groups),
   );
 
+  const [activeTab, setActiveTab] = createSignal<"groups" | "selections">("groups");
   const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
@@ -179,67 +181,80 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             fallback={
               <>
                 <StatsBar groups={props.groups ?? []} commentItems={props.commentItems ?? []} />
-                <FilterBar
-                  filter={filterState()}
-                  assignees={getDistinctAssignees(userFacingGroups())}
-                  reporters={getDistinctReporters(userFacingGroups())}
-                  labels={getDistinctLabels(userFacingGroups())}
-                  onFilterChange={setFilterState}
-                />
-                <FilterChips
-                  filter={filterState()}
-                  onFilterChange={setFilterState}
+                <TabBar
+                  activeTab={activeTab()}
+                  onTabChange={setActiveTab}
+                  groupsCount={userFacingGroups().length}
+                  selectionsCount={(props.commentItems ?? []).length}
                 />
 
-                <Show
-                  when={
-                    userFacingGroups().length > 0 ||
-                    props.commentItems.length > 0
-                  }
-                  fallback={
-                    <EmptyState
-                      message="No selections yet."
-                      submessage="Select elements on the page to get started."
-                    />
-                  }
-                >
-                  <div
-                    ref={(el) => { listScrollRef = el; }}
-                    class="flex-1 overflow-y-auto"
-                  >
-                    <LooseSelectionList
-                      allGroups={props.groups}
-                      commentItems={props.commentItems}
-                      syncServerUrl={props.syncServerUrl}
-                      syncWorkspace={props.syncWorkspace}
-                      scrollRoot={() => listScrollRef ?? null}
-                      onCreateTicket={(item) => props.onCreateTicketForLooseItem?.(item)}
-                      onRemoveItem={props.onRemoveItem}
-                    />
+                <Show when={activeTab() === "groups"}>
+                  <FilterBar
+                    filter={filterState()}
+                    assignees={getDistinctAssignees(userFacingGroups())}
+                    reporters={getDistinctReporters(userFacingGroups())}
+                    labels={getDistinctLabels(userFacingGroups())}
+                    onFilterChange={setFilterState}
+                  />
+                  <FilterChips
+                    filter={filterState()}
+                    onFilterChange={setFilterState}
+                  />
 
-                    <Show when={filteredGroups().length > 0}>
-                      <GroupList
-                        groupedItems={filteredGroups()}
-                        onGroupClick={(id: string, cardEl: HTMLElement) => {
-                          lastFocusedCard = cardEl;
-                          setActiveDetailGroupId(id);
-                        }}
-                      />
-                    </Show>
-
-                    {/* "No groups match" only makes sense when groups
-                        actually exist but are fully filtered out. */}
-                    <Show
-                      when={
-                        userFacingGroups().length > 0 &&
-                        filteredGroups().length === 0
-                      }
-                    >
+                  <Show
+                    when={
+                      userFacingGroups().length > 0 ||
+                      props.commentItems.length > 0
+                    }
+                    fallback={
                       <EmptyState
-                        message={"No groups match the active filters."}
+                        message="No selections yet."
+                        submessage="Select elements on the page to get started."
                       />
-                    </Show>
-                  </div>
+                    }
+                  >
+                    <div
+                      ref={(el) => { listScrollRef = el; }}
+                      class="flex-1 overflow-y-auto"
+                    >
+                      <LooseSelectionList
+                        allGroups={props.groups}
+                        commentItems={props.commentItems}
+                        syncServerUrl={props.syncServerUrl}
+                        syncWorkspace={props.syncWorkspace}
+                        scrollRoot={() => listScrollRef ?? null}
+                        onCreateTicket={(item) => props.onCreateTicketForLooseItem?.(item)}
+                        onRemoveItem={props.onRemoveItem}
+                      />
+
+                      <Show when={filteredGroups().length > 0}>
+                        <GroupList
+                          groupedItems={filteredGroups()}
+                          onGroupClick={(id: string, cardEl: HTMLElement) => {
+                            lastFocusedCard = cardEl;
+                            setActiveDetailGroupId(id);
+                          }}
+                        />
+                      </Show>
+
+                      {/* "No groups match" only makes sense when groups
+                          actually exist but are fully filtered out. */}
+                      <Show
+                        when={
+                          userFacingGroups().length > 0 &&
+                          filteredGroups().length === 0
+                        }
+                      >
+                        <EmptyState
+                          message={"No groups match the active filters."}
+                        />
+                      </Show>
+                    </div>
+                  </Show>
+                </Show>
+
+                <Show when={activeTab() === "selections"}>
+                  <div class="p-4 text-center text-muted-foreground text-sm">Selections tab — coming soon</div>
                 </Show>
               </>
             }
