@@ -251,7 +251,7 @@ export const OverlayCanvas: Component<OverlayCanvasProps> = (props) => {
 
   const resolveBoundsArray = (
     instance: SelectionLabelInstance,
-  ): OverlayBounds[] => instance.boundsMultiple ?? [instance.bounds];
+  ): OverlayBounds[] => instance.boundsMultiple ?? [instance.selectionBounds];
 
   const drawRoundedRectangle = (
     context: OffscreenCanvasRenderingContext2D,

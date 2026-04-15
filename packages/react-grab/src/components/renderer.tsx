@@ -211,7 +211,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             {...itemProps}
             visible={true}
             hasAgent={Boolean(instance().statusText)}
-            error={instance().errorMessage}
             // Full groups list — see note above. The picker needs
             // synthetic groups visible at the business layer so
             // ticket-lock on a loose-ticketed item resolves correctly.

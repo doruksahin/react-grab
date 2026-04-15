@@ -506,7 +506,7 @@ export interface SelectionLabelInstance extends JiraDisplayFields {
    *  selection. Used by the renderer to route per-instance mutations
    *  (remove, move) back to the selection-groups API. */
   itemId?: string;
-  bounds: OverlayBounds;
+  selectionBounds: OverlayBounds;
   boundsMultiple?: OverlayBounds[];
   tagName: string;
   componentName?: string;
@@ -521,7 +521,7 @@ export interface SelectionLabelInstance extends JiraDisplayFields {
   mouseX?: number;
   mouseXOffsetFromCenter?: number;
   mouseXOffsetRatio?: number;
-  errorMessage?: string;
+  error?: string;
   hideArrow?: boolean;
   groupId?: string;
 }

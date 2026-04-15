@@ -583,7 +583,7 @@ const createGrabStore = (input: GrabStoreInput) => {
           produce((instance) => {
             instance.status = status;
             if (errorMessage !== undefined) {
-              instance.errorMessage = errorMessage;
+              instance.error = errorMessage;
             }
           }),
         );

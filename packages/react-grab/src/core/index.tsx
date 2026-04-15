@@ -834,7 +834,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
       const instance: SelectionLabelInstance = {
         id: instanceId,
-        bounds,
+        selectionBounds: bounds,
         boundsMultiple: options?.boundsMultiple,
         tagName,
         componentName,
@@ -3425,19 +3425,19 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         document.body.contains(instanceElement);
       const newBounds = canRecalculateBounds
         ? createElementBounds(instanceElement)
-        : instance.bounds;
+        : instance.selectionBounds;
 
       const previousInstance = labelInstanceCache.get(instance.id);
       const boundsUnchanged =
         previousInstance &&
-        previousInstance.bounds.x === newBounds.x &&
-        previousInstance.bounds.y === newBounds.y &&
-        previousInstance.bounds.width === newBounds.width &&
-        previousInstance.bounds.height === newBounds.height;
+        previousInstance.selectionBounds.x === newBounds.x &&
+        previousInstance.selectionBounds.y === newBounds.y &&
+        previousInstance.selectionBounds.width === newBounds.width &&
+        previousInstance.selectionBounds.height === newBounds.height;
       if (
         previousInstance &&
         previousInstance.status === instance.status &&
-        previousInstance.errorMessage === instance.errorMessage &&
+        previousInstance.error === instance.error &&
         boundsUnchanged
       ) {
         return previousInstance;
@@ -3453,7 +3453,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       } else {
         newMouseX = instance.mouseX ?? newBoundsCenterX;
       }
-      const newCached = { ...instance, bounds: newBounds, mouseX: newMouseX };
+      const newCached = { ...instance, selectionBounds: newBounds, mouseX: newMouseX };
       labelInstanceCache.set(instance.id, newCached);
       return newCached;
     };
@@ -3809,7 +3809,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           actions.addLabelInstance({
             id: labelId,
             itemId: item.id,
-            bounds,
+            selectionBounds: bounds,
             tagName: item.tagName,
             componentName: item.componentName,
             elementsCount: item.elementsCount,
@@ -4237,7 +4237,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
               actions.addLabelInstance({
                 id: labelId,
-                bounds,
+                selectionBounds: bounds,
                 tagName: item.tagName,
                 componentName: item.componentName,
                 status: "copied",
@@ -4304,7 +4304,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
               actions.addLabelInstance({
                 id: labelId,
-                bounds,
+                selectionBounds: bounds,
                 tagName: item.tagName,
                 componentName: item.componentName,
                 status: "copied",
@@ -4413,8 +4413,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         actions.setPointer(position);
         actions.setFrozenElements(elementsToFreeze);
         const hasMultipleElements = elementsToFreeze.length > 1;
-        if (hasMultipleElements && instance.bounds) {
-          actions.setFrozenDragRect(createPageRectFromBounds(instance.bounds));
+        if (hasMultipleElements && instance.selectionBounds) {
+          actions.setFrozenDragRect(createPageRectFromBounds(instance.selectionBounds));
         }
         actions.freeze();
         actions.showContextMenu(position, contextMenuElement);
@@ -4434,7 +4434,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       // HACK: Dynamically imported to avoid solid-js/web's delegateEvents() running
       // at module evaluation time, which crashes during SSR (window is not defined).
       void import("../components/renderer.js")
-        .then(({ ReactGrabRenderer }) => {
+        .then(async ({ ReactGrabRenderer }) => {
+          if (process.env.NODE_ENV !== "production") {
+            try {
+              const { attachDevtoolsOverlay } = await import("@solid-devtools/overlay");
+              attachDevtoolsOverlay();
+            } catch { /* devtools not installed */ }
+          }
           if (disposed) return;
           disposeRenderer = render(() => {
             return (
