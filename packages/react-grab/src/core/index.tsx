@@ -4402,6 +4402,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 inspectNavigationState={inspectNavigationState()}
                 onInspectSelect={handleInspectSelect}
                 labelInstances={computedLabelInstancesWithStatus()}
+                collapsibleLabelsDefault={initialOptions.collapsibleLabels}
                 dragVisible={dragVisible()}
                 dragBounds={dragBounds()}
                 grabbedBoxes={computedGrabbedBoxes()}
