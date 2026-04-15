@@ -24,9 +24,10 @@ export interface SelectionGroup extends ServerSelectionGroup {
  * Dependencies injected from core/index.tsx into the selection groups module.
  */
 export interface SelectionGroupsDeps {
-  commentItems: Accessor<CommentItem[]>;
-  setCommentItems: Setter<CommentItem[]>;
+  commentItems: () => CommentItem[];
   persistCommentItems: (items: CommentItem[]) => CommentItem[];
+  groups: () => SelectionGroup[];
+  persistGroups: (groups: SelectionGroup[]) => SelectionGroup[];
 }
 
 /**

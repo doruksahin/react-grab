@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createRoot, createSignal } from "solid-js";
 import type { CommentItem } from "../../types.js";
+import type { SelectionGroup } from "./types.js";
 import { createSelectionGroups } from "./index.js";
 
 const seedItems = (): CommentItem[] =>
@@ -10,24 +11,34 @@ const seedItems = (): CommentItem[] =>
     { id: "c", groupId: "g2" },
   ] as unknown as CommentItem[];
 
+const makeDeps = (
+  initialItems: CommentItem[],
+  initialGroups: SelectionGroup[] = [],
+) => {
+  const [items, setItems] = createSignal<CommentItem[]>(initialItems);
+  const [groups, setGroups] = createSignal<SelectionGroup[]>(initialGroups);
+  return {
+    commentItems: items,
+    persistCommentItems: (next: CommentItem[]) => { setItems(next); return next; },
+    groups,
+    persistGroups: (next: SelectionGroup[]) => { setGroups(next); return next; },
+    rawItems: items,
+    rawGroups: groups,
+  };
+};
+
 describe("createSelectionGroups.handleDeleteGroup", () => {
   it("demotes selections in the deleted group to groupId: null (does NOT delete them)", () => {
     createRoot((dispose) => {
-      const [items, setItems] = createSignal<CommentItem[]>(seedItems());
-      const api = createSelectionGroups({
-        commentItems: items,
-        setCommentItems: setItems,
-        persistCommentItems: (next) => next,
-      });
-
-      api.setGroups([
+      const deps = makeDeps(seedItems(), [
         { id: "g1", name: "Alpha", createdAt: 0, revealed: false },
         { id: "g2", name: "Beta", createdAt: 0, revealed: false },
       ]);
+      const api = createSelectionGroups(deps);
 
       api.handleDeleteGroup("g1");
 
-      const next = items();
+      const next = deps.rawItems();
       expect(next.map((i) => i.id)).toEqual(["a", "b", "c"]); // nothing deleted
       expect(next.find((i) => i.id === "a")!.groupId).toBeNull();
       expect(next.find((i) => i.id === "b")!.groupId).toBeNull();
@@ -39,16 +50,11 @@ describe("createSelectionGroups.handleDeleteGroup", () => {
 
   it("resets activeGroupId to null when the active group is deleted", () => {
     createRoot((dispose) => {
-      const [items, setItems] = createSignal<CommentItem[]>(seedItems());
-      const api = createSelectionGroups({
-        commentItems: items,
-        setCommentItems: setItems,
-        persistCommentItems: (next) => next,
-      });
-
-      api.setGroups([
+      const deps = makeDeps(seedItems(), [
         { id: "g1", name: "Alpha", createdAt: 0, revealed: false },
       ]);
+      const api = createSelectionGroups(deps);
+
       api.setActiveGroupId("g1");
 
       api.handleDeleteGroup("g1");
@@ -67,13 +73,8 @@ describe("createSelectionGroups synthetic-group GC", () => {
       const initialItems = [
         { id: "a", groupId: "synth-1" },
       ] as unknown as CommentItem[];
-      const [items, setItems] = createSignal<CommentItem[]>(initialItems);
-      const api = createSelectionGroups({
-        commentItems: items,
-        setCommentItems: setItems,
-        persistCommentItems: (next) => next,
-      });
-      api.setGroups([synth, real]);
+      const deps = makeDeps(initialItems, [synth, real]);
+      const api = createSelectionGroups(deps);
 
       api.handleMoveItem("a", "real-1");
 
@@ -86,15 +87,11 @@ describe("createSelectionGroups synthetic-group GC", () => {
   it("does NOT delete a real group when emptied", () => {
     createRoot((dispose) => {
       const real = { id: "real-1", name: "Real", createdAt: 0, revealed: false };
-      const [items, setItems] = createSignal<CommentItem[]>(
+      const deps = makeDeps(
         [{ id: "a", groupId: "real-1" }] as unknown as CommentItem[],
+        [real],
       );
-      const api = createSelectionGroups({
-        commentItems: items,
-        setCommentItems: setItems,
-        persistCommentItems: (next) => next,
-      });
-      api.setGroups([real]);
+      const api = createSelectionGroups(deps);
       api.handleMoveItem("a", null);
       expect(api.groups().find((g) => g.id === "real-1")).toBeDefined();
       dispose();
@@ -105,18 +102,11 @@ describe("createSelectionGroups synthetic-group GC", () => {
 describe("createSelectionGroups.handleRemoveItem", () => {
   const makeApi = (
     initialItems: CommentItem[],
-    initialGroups: Parameters<
-      ReturnType<typeof createSelectionGroups>["setGroups"]
-    >[0],
+    initialGroups: SelectionGroup[],
   ) => {
-    const [items, setItems] = createSignal<CommentItem[]>(initialItems);
-    const api = createSelectionGroups({
-      commentItems: items,
-      setCommentItems: setItems,
-      persistCommentItems: (next) => next,
-    });
-    api.setGroups(initialGroups as never);
-    return { api, items };
+    const deps = makeDeps(initialItems, initialGroups);
+    const api = createSelectionGroups(deps);
+    return { api, items: deps.rawItems };
   };
 
   it("removes an ungrouped selection", () => {

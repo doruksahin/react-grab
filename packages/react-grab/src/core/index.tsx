@@ -1,6 +1,5 @@
 // @ts-expect-error - CSS imported as text via tsup loader
 import cssText from "../../dist/styles.css";
-import { setApiBaseUrl } from "../generated/custom-fetch.js";
 import {
   createMemo,
   createRoot,
@@ -80,6 +79,7 @@ import {
   NEXTJS_REVALIDATION_DELAY_MS,
   TOOLBAR_DEFAULT_POSITION_RATIO,
   DEFAULT_ACTION_ID,
+  MAX_COMMENT_ITEMS,
 } from "../constants.js";
 import { getBoundsCenter } from "../utils/get-bounds-center.js";
 import { getElementBoundsCenter } from "../utils/get-element-bounds-center.js";
@@ -146,7 +146,7 @@ import { createSelectionGroups } from "../features/selection-groups/index.js";
 import { createSyntheticGroupForItem, isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
 import { assignSelection } from "../features/selection-groups/business/selection-assignment.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
-import { createJiraStatusPoller } from "../features/sidebar/jira-status-poller.js";
+import { createSyncLayer } from "../features/sync/sync-layer.js";
 import { addJiraComment, searchJiraUsers, getJiraTicketStatus } from "../generated/sync-api.js";
 import {
   freezeAnimations,
@@ -160,22 +160,10 @@ import {
 } from "../utils/freeze-pseudo-states.js";
 import { freezeUpdates } from "../utils/freeze-updates.js";
 import {
-  loadComments,
-  addCommentItem,
-  patchCommentItem,
-  removeCommentItem,
-  clearComments,
   isClearConfirmed,
   confirmClear,
-  persistCommentItems,
-  initCommentStorage,
-  initLocalCommentStorage,
-  registerCommentsLoadedCallback,
-  getActiveAdapter,
 } from "../utils/comment-storage.js";
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
-import { initGroupStorage, initLocalGroupStorage, registerGroupsLoadedCallback } from "../features/selection-groups/store/group-storage.js";
-import { createHttpAdapter } from "../features/sync/index.js";
 import type { SyncConfig } from "../features/sync/types.js";
 import { copyContent, copyGroupedContent, type ReactGrabGroup } from "../utils/copy-content.js";
 import { joinSnippets, joinGroupedSnippets, type GroupedSnippet } from "../utils/join-snippets.js";
@@ -222,46 +210,14 @@ interface BuildActionContextOptions {
   customEnterPromptMode?: (agent?: AgentOptions) => void;
 }
 
-let syncState: { workspace: string; serverUrl: string; jiraProjectKey: string; status: "local" | "synced" | "error" } | null = null;
+const syncLayer = createSyncLayer();
 let pendingSyncOptions: Options | undefined;
 
 export const initSync = async (config: SyncConfig): Promise<void> => {
-  if (!config.jiraProjectKey) {
-    throw new Error("react-grab: SyncConfig.jiraProjectKey is required (e.g. 'ATT')");
-  }
-  // Store options to forward to init() when it auto-fires
   if (config.options) {
     pendingSyncOptions = config.options;
   }
-
-  // Set base URL for Orval-generated API functions (JIRA endpoints, etc.)
-  if (config.serverUrl) {
-    setApiBaseUrl(config.serverUrl);
-  }
-
-  if (!config.enabled) {
-    // Local-only mode — load the cached copies from localStorage now.
-    initLocalCommentStorage();
-    initLocalGroupStorage();
-    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "local" };
-    return;
-  }
-
-  try {
-    const adapter = createHttpAdapter(config);
-    await Promise.all([
-      initCommentStorage(adapter),
-      initGroupStorage(adapter),
-    ]);
-    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "synced" };
-  } catch (error) {
-    // Server unreachable — fall back to localStorage.
-    initLocalCommentStorage();
-    initLocalGroupStorage();
-    const err = error instanceof Error ? error : new Error(String(error));
-    config.onSyncError(err);
-    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "error" };
-  }
+  await syncLayer.init(config);
 };
 
 let hasInited = false;
@@ -381,8 +337,27 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       createSignal<ToolbarState | null>(savedToolbarState);
     const [isToolbarSelectHovered, setIsToolbarSelectHovered] =
       createSignal(false);
-    const [commentItems, setCommentItems] =
-      createSignal<CommentItem[]>(loadComments());
+    const commentItems = syncLayer.comments;
+    const setCommentItems: import("solid-js").Setter<CommentItem[]> = ((itemsOrFn: unknown) => {
+      const next = typeof itemsOrFn === "function" ? itemsOrFn(syncLayer.comments()) : itemsOrFn;
+      syncLayer.setComments(next as CommentItem[]);
+    }) as import("solid-js").Setter<CommentItem[]>;
+
+    const persistCommentItems = syncLayer.persistComments;
+    const getActiveAdapter = syncLayer.adapter;
+
+    const addCommentItem = (item: Omit<CommentItem, "id">): CommentItem[] =>
+      syncLayer.persistComments(
+        [{ ...item, id: generateId("comment") }, ...syncLayer.comments()].slice(0, MAX_COMMENT_ITEMS),
+      );
+
+    const removeCommentItem = (itemId: string): CommentItem[] =>
+      syncLayer.persistComments(syncLayer.comments().filter((i) => i.id !== itemId));
+
+    const patchCommentItem = (id: string, patch: Partial<CommentItem>): CommentItem[] =>
+      syncLayer.persistComments(syncLayer.comments().map((i) => (i.id === id ? { ...i, ...patch } : i)));
+
+    const clearComments = (): CommentItem[] => syncLayer.persistComments([]);
     const [commentsDropdownPosition, setCommentsDropdownPosition] =
       createSignal<DropdownAnchor | null>(null);
     const [toolbarMenuPosition, setToolbarMenuPosition] =
@@ -3829,14 +3804,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     };
 
     const selectionGroups = createSelectionGroups({
-      commentItems,
-      setCommentItems,
-      persistCommentItems,
+      commentItems: syncLayer.comments,
+      persistCommentItems: syncLayer.persistComments,
+      groups: syncLayer.groups,
+      persistGroups: syncLayer.persistGroups,
     });
-
-    // When initSync loads data from the server, flush it into the signals.
-    registerGroupsLoadedCallback((loaded) => selectionGroups.setGroups(loaded));
-    registerCommentsLoadedCallback((loaded) => setCommentItems(loaded));
 
     // --- Per-item ticketing orchestrator ---
     // State shape is { group, items } regardless of whether `group` is
@@ -3951,38 +3923,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       persistGroups: selectionGroups.persistGroups,
     });
 
-    // Poll JIRA status for all ticketed groups on init.
-    // Stores jiraStatus on core groups signal so canvas overlays
-    // and selection labels show correct status colors without opening the sidebar.
-    createJiraStatusPoller({
-      groups: selectionGroups.groups as () => SelectionGroupWithJira[],
-      syncWorkspace: () => syncState?.workspace,
-      onStatusUpdate: (groupId, status) => {
-        const resolved = status.statusCategory.toLowerCase() === "done";
-        const updated = selectionGroups.groups().map((g) =>
-          g.id === groupId
-            ? {
-                ...g,
-                jiraStatus: status.status,
-                jiraStatusCategory: status.statusCategory,
-                jiraAssignee: status.assignee,
-                jiraReporter: status.reporter,
-                jiraAssigneeAvatar: status.assigneeAvatar,
-                jiraReporterAvatar: status.reporterAvatar,
-                jiraLabels: status.labels,
-                jiraComments: status.comments,
-                jiraResolved: resolved,
-                jiraUrl: status.jiraUrl,
-                jiraFlagged: status.flagged ?? false,
-                jiraFlaggedAt: status.flaggedAt ?? null,
-                jiraFlaggedBy: status.flaggedBy ?? null,
-                jiraFlaggedByAvatar: status.flaggedByAvatar ?? null,
-              }
-            : g,
-        );
-        selectionGroups.persistGroups(updated);
-      },
-    });
 
     const showCommentItemPreview = (
       item: CommentItem,
@@ -4060,7 +4000,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       actions.hideContextMenu();
       dismissToolbarMenu();
       dismissClearPrompt();
-      setCommentItems(loadComments());
       openTrackedDropdown(setCommentsDropdownPosition);
     };
 
@@ -4581,10 +4520,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 selectionsRevealed={visibility.selectionsRevealed()}
                 onToggleSelectionsRevealed={visibility.handleToggleParent}
                 onToggleCommentItemRevealed={visibility.handleToggleItem}
-                syncStatus={syncState?.status ?? "local"}
-                syncWorkspace={syncState?.workspace}
-                syncServerUrl={syncState?.serverUrl}
-                jiraProjectKey={syncState?.jiraProjectKey}
+                syncStatus={(() => { const s = syncLayer.status(); return s === "synced" || s === "error" ? s : "local"; })()}
+                syncWorkspace={syncLayer.workspace() ?? undefined}
+                syncServerUrl={syncLayer.serverUrl() ?? undefined}
+                jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
                 groups={selectionGroups.groups()}
                 activeGroupId={selectionGroups.activeGroupId()}
                 onAddGroup={selectionGroups.handleAddGroup}
@@ -4621,25 +4560,20 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
                 looseTicketDialog={looseTicketDialog()}
                 onLooseTicketDialogClose={() => setLooseTicketDialog(null)}
-                onSubmitJiraComment={syncState?.workspace ? async (groupId, markdown, mentions, parentId) => {
-                  const res = await addJiraComment(syncState!.workspace, groupId, { body: markdown, mentions, parentId });
+                onSubmitJiraComment={syncLayer.workspace() ? async (groupId, markdown, mentions, parentId) => {
+                  const res = await addJiraComment(syncLayer.workspace()!, groupId, { body: markdown, mentions, parentId });
                   if (res.status !== 200) throw new Error("Failed to post comment");
                   return res.data as { id: string; created: string };
                 } : undefined}
-                onSearchJiraUsers={syncState?.workspace ? async (query) => {
-                  const res = await searchJiraUsers({ query, project: syncState!.jiraProjectKey });
+                onSearchJiraUsers={syncLayer.workspace() ? async (query) => {
+                  const res = await searchJiraUsers({ query, project: syncLayer.jiraProjectKey()! });
                   if (res.status !== 200) return [];
                   return res.data as Array<{ accountId: string; displayName: string; avatarUrl: string | null }>;
                 } : undefined}
-                onRefreshJiraStatus={syncState?.workspace ? (groupId) => {
-                  getJiraTicketStatus(syncState!.workspace, groupId).then((res) => {
+                onRefreshJiraStatus={syncLayer.workspace() ? (groupId) => {
+                  getJiraTicketStatus(syncLayer.workspace()!, groupId).then((res) => {
                     if (res.status !== 200) return;
-                    const status = res.data;
-                    const resolved = status.statusCategory.toLowerCase() === "done";
-                    const updated = selectionGroups.groups().map((g) =>
-                      g.id === groupId ? { ...g, jiraStatus: status.status, jiraStatusCategory: status.statusCategory, jiraAssignee: status.assignee, jiraReporter: status.reporter, jiraAssigneeAvatar: status.assigneeAvatar, jiraReporterAvatar: status.reporterAvatar, jiraLabels: status.labels, jiraComments: status.comments, jiraResolved: resolved, jiraUrl: status.jiraUrl, jiraFlagged: status.flagged ?? false, jiraFlaggedAt: status.flaggedAt ?? null, jiraFlaggedBy: status.flaggedBy ?? null, jiraFlaggedByAvatar: status.flaggedByAvatar ?? null } : g,
-                    );
-                    selectionGroups.persistGroups(updated);
+                    syncLayer.updateJiraStatus(groupId, res.data);
                   }).catch(() => {});
                 } : undefined}
               />
