@@ -21,7 +21,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-      testIgnore: /touch-mode\.spec\.ts/,
+      testIgnore: [/touch-mode\.spec\.ts/, /mocked\//],
     },
     {
       name: "chromium-touch",
@@ -31,18 +31,30 @@ export default defineConfig({
       },
       testMatch: /touch-mode\.spec\.ts/,
     },
-  ],
-  webServer: {
-    command: "pnpm --filter react-grab build && pnpm dev",
-    url: "http://localhost:5175",
-    reuseExistingServer: !process.env.CI,
-    cwd: path.resolve(__dirname, "../e2e-app"),
-    timeout: 30000,
-    env: {
-      ...process.env,
-      VITE_REACT_GRAB_SYNC_URL: "http://localhost:9999",
-      VITE_REACT_GRAB_SYNC_WORKSPACE: "test-workspace",
-      VITE_REACT_GRAB_JIRA_PROJECT_KEY: "ATT",
+    {
+      name: "chromium-mocked",
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: "http://localhost:5176",
+        video: "on",
+      },
+      testMatch: /mocked\/.+\.spec\.ts/,
     },
-  },
+  ],
+  webServer: [
+    {
+      command: "pnpm --filter react-grab build && pnpm dev",
+      url: "http://localhost:5175",
+      reuseExistingServer: !process.env.CI,
+      cwd: path.resolve(__dirname, "../e2e-app"),
+      timeout: 30000,
+    },
+    {
+      command: "pnpm dev:mock",
+      url: "http://localhost:5176",
+      reuseExistingServer: !process.env.CI,
+      cwd: path.resolve(__dirname, "../e2e-app"),
+      timeout: 30000,
+    },
+  ],
 });

@@ -2504,15 +2504,18 @@ export const test = base.extend<{
   reactGrab: ReactGrabPageObject;
   mockServer: MockServerHandle;
 }>({
-  // mockServer resolves FIRST — routes are registered before page.goto()
-  // triggers initSync() network calls.
+  // mockServer registers page.route() handlers for all 15 sync-server endpoints.
+  // In the chromium-mocked project (port 5176), initSync fires on page load —
+  // mockServer must resolve before reactGrab navigates so routes intercept.
   mockServer: async ({ page }, use) => {
     const handle = await mockSyncServer(page);
     await use(handle);
   },
 
-  // reactGrab declares mockServer as a dependency (via _mockServer param)
-  // so Playwright resolves it before navigating.
+  // reactGrab depends on mockServer so routes are registered before
+  // page.goto(). On port 5175 (chromium project), initSync is not called
+  // so the mock routes are no-ops. On port 5176 (chromium-mocked project),
+  // initSync fires and the routes intercept its fetches.
   reactGrab: async ({ page, mockServer: _mockServer }, use, testInfo) => {
     const waitForApiReady = async () => {
       await page.waitForFunction(

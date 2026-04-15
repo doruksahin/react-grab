@@ -1,3 +1,4 @@
+import "solid-devtools";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { init, initSync } from "react-grab";
