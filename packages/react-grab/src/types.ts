@@ -375,6 +375,8 @@ export interface Options {
   freezeReactUpdates?: boolean;
   sync?: SyncConfig;
   screenshot?: ScreenshotConfig;
+  /** When true, persistent labels start collapsed as a dot. Click to expand. */
+  collapsibleLabels?: boolean;
 }
 
 export interface SettableOptions extends Options {
@@ -560,6 +562,8 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   inspectNavigationState?: ArrowNavigationState;
   onInspectSelect?: (index: number) => void;
   labelInstances?: SelectionLabelInstance[];
+  /** When true, persistent label instances start collapsed */
+  collapsibleLabelsDefault?: boolean;
   dragVisible?: boolean;
   dragBounds?: OverlayBounds;
   grabbedBoxes?: Array<{
@@ -791,6 +795,8 @@ export interface SelectionLabelProps
    *  button that opens the JiraCreateDialog. */
   onCreateTicket?: () => void;
   hideArrow?: boolean;
+  /** Collapse the label to a minimal dot indicator */
+  onCollapse?: () => void;
   /** Submit a JIRA comment for the current group's ticket */
   onSubmitJiraComment?: (markdown: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) => Promise<{ id: string; created: string }>;
   /** Search JIRA users for @mention autocomplete */
