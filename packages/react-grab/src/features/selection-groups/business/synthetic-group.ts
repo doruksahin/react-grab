@@ -14,7 +14,7 @@ import { generateId } from "../../../utils/generate-id.js";
  * groups. It does NOT own:
  *   - the rendering rule (that's `business/membership.ts/isPresentedAsLoose`)
  *   - the dialog flow (that's wired in `core/index.tsx` and the sidebar)
- *   - persistence (that's `store/group-storage.ts`)
+ *   - persistence (that's the sync layer)
  */
 
 /**

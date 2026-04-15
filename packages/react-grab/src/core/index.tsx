@@ -162,7 +162,7 @@ import { freezeUpdates } from "../utils/freeze-updates.js";
 import {
   isClearConfirmed,
   confirmClear,
-} from "../utils/comment-storage.js";
+} from "../utils/clear-confirmation.js";
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
 import type { SyncConfig, SyncStatus } from "../features/sync/types.js";
 import { copyContent, copyGroupedContent, type ReactGrabGroup } from "../utils/copy-content.js";

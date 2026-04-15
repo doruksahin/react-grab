@@ -3,7 +3,7 @@ import { createSyncStore } from "./store/sync-store.js";
 import { createHttpAdapter } from "./adapter.js";
 import { setApiBaseUrl } from "../../generated/custom-fetch.js";
 import { getJiraTicketStatus } from "../../generated/sync-api.js";
-import { migrateLegacyDefaultGroup } from "../selection-groups/store/group-storage.js";
+import { migrateLegacyDefaultGroup } from "../../utils/migrate-legacy-groups.js";
 import { logRecoverableError } from "../../utils/log-recoverable-error.js";
 import type { SyncConfig } from "./types.js";
 import type { StorageAdapter } from "./types.js";

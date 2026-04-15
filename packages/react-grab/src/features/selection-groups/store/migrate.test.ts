@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { migrateLegacyDefaultGroup } from "./group-storage.js";
+import { migrateLegacyDefaultGroup } from "../../../utils/migrate-legacy-groups.js";
 
 describe("migrateLegacyDefaultGroup", () => {
   it("maps legacy 'default' / undefined / missing groupId to null", () => {
