@@ -1,4 +1,4 @@
-import { type Component, createEffect, createSignal, on, onCleanup, onMount, Show } from "solid-js";
+import { type Component, createSignal, onCleanup, onMount, Show } from "solid-js";
 import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
@@ -34,17 +34,6 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
   let editor: Editor | undefined;
   const [, tick] = createSignal(0);
 
-  createEffect(on(() => props.replyTo, (reply) => {
-    if (!reply || !editor) return;
-    editor.chain().focus()
-      .insertContent([
-        { type: "mention", attrs: { id: reply.author, label: reply.author } },
-        { type: "text", text: " " },
-      ])
-      .run();
-    props.onCancelReply?.();
-  }));
-
   onMount(() => {
     editor = new Editor({
       element: editorEl,
@@ -64,9 +53,9 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
           suggestion: createMentionSuggestion(props.onSearchUsers),
           renderText: ({ node }) => `@${node.attrs.label ?? ""}`,
         }),
-        Placeholder.configure({ placeholder: "Add a comment..." }),
+        Placeholder.configure({ placeholder: props.placeholder ?? "Add a comment..." }),
       ],
-      content: "",
+      content: props.initialContent ?? "",
       onTransaction: () => tick((n) => n + 1),
     });
 

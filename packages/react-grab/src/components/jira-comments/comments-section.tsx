@@ -2,7 +2,7 @@ import { type Component, createSignal, For, Show } from "solid-js";
 import type { JiraComment, JiraCommentsSectionProps } from "../../features/jira-comments/types.js";
 import { useJiraComments } from "../../features/jira-comments/use-jira-comments.js";
 import { JiraCommentEditor } from "./editor/jira-comment-editor.js";
-import { CommentItem } from "./comment-item.js";
+import { CommentThread } from "./comment-thread.js";
 
 export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
   const { mergedComments, replyTo, setReplyTo, submitComment, error } = useJiraComments({
@@ -38,8 +38,6 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
         >
           <div class="mb-2">
             <JiraCommentEditor
-              replyTo={replyTo()}
-              onCancelReply={() => setReplyTo(null)}
               onSearchUsers={props.onSearchUsers}
               onSubmit={(markdown, mentions) => submitComment(markdown, mentions)}
             />
@@ -52,19 +50,15 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
           <div class="flex flex-col gap-4 max-h-[300px] overflow-y-auto">
             <For each={rootComments()}>
               {(root) => (
-                <div class="flex flex-col group">
-                  <CommentItem
-                    comment={root}
-                    onReply={() => setReplyTo({ id: root.id, author: root.author })}
-                  />
-                  <Show when={replies(root.id).length > 0}>
-                    <div class="ml-3 pl-3 mt-1.5 flex flex-col gap-2 border-l-2 border-muted">
-                      <For each={replies(root.id)}>
-                        {(reply) => <CommentItem comment={reply} isReply />}
-                      </For>
-                    </div>
-                  </Show>
-                </div>
+                <CommentThread
+                  root={root}
+                  replies={replies(root.id)}
+                  isReplying={replyTo()?.id === root.id}
+                  onReply={() => setReplyTo({ id: root.id, author: root.author })}
+                  onCancelReply={() => setReplyTo(null)}
+                  onSubmitReply={(md, mentions) => submitComment(md, mentions, root.id)}
+                  onSearchUsers={props.onSearchUsers}
+                />
               )}
             </For>
           </div>

@@ -17,8 +17,7 @@ export function useJiraComments(props: UseJiraCommentsProps) {
     ...optimistic(),
   ];
 
-  async function submitComment(markdown: string, mentions: MentionMapping[]) {
-    const parentId = replyTo()?.id;
+  async function submitComment(markdown: string, mentions: MentionMapping[], parentId?: string) {
     const tempId = `temp-${Date.now()}`;
     const optimisticEntry: JiraComment = {
       id: tempId,

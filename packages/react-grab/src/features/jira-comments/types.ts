@@ -23,8 +23,22 @@ export interface JiraCommentEditorProps {
   onSubmit: (markdown: string, mentions: MentionMapping[]) => void;
   onCancel?: () => void;
   onSearchUsers?: (query: string) => Promise<JiraUserSuggestion[]>;
-  replyTo?: { id: string; author: string } | null;
-  onCancelReply?: () => void;
+  placeholder?: string;
+  initialContent?: string;
+}
+
+export interface InlineReplyEditorProps extends Pick<JiraCommentEditorProps, "onSubmit" | "onCancel" | "onSearchUsers"> {
+  author: string;
+  authorAvatar: string | null;
+}
+
+export interface CommentThreadProps extends Pick<InlineReplyEditorProps, "onSearchUsers"> {
+  root: JiraComment;
+  replies: JiraComment[];
+  isReplying: boolean;
+  onReply: () => void;
+  onCancelReply: () => void;
+  onSubmitReply: JiraCommentEditorProps["onSubmit"];
 }
 
 export interface JiraCommentsSectionProps {
