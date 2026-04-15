@@ -72,6 +72,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = createSignal("");
+  const [flaggedOnly, setFlaggedOnly] = createSignal(false);
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -200,6 +202,28 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   selectionsCount={(props.commentItems ?? []).length}
                 />
 
+                <div class="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-foreground/[0.01]">
+                  <input
+                    type="text"
+                    placeholder="Search selections..."
+                    class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-400 transition-colors"
+                    value={searchQuery()}
+                    onInput={(e) => setSearchQuery(e.currentTarget.value)}
+                    data-react-grab-ignore-events
+                  />
+                  <button
+                    class="w-[34px] h-[34px] flex items-center justify-center border rounded-lg cursor-pointer transition-all shrink-0 text-[13px]"
+                    classList={{
+                      "border-red-400 bg-red-400/[0.08]": flaggedOnly(),
+                      "border-border bg-foreground/[0.03] hover:border-foreground/20": !flaggedOnly(),
+                    }}
+                    onClick={() => setFlaggedOnly((prev) => !prev)}
+                    title="Flagged only"
+                  >
+                    {"\uD83D\uDEA9"}
+                  </button>
+                </div>
+
                 <Show when={activeTab() === "groups"}>
                   <FilterBar
                     filter={filterState()}
@@ -271,6 +295,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     groups={props.groups ?? []}
                     selectedIds={selectedIds()}
                     onToggleSelect={toggleSelect}
+                    searchQuery={searchQuery()}
+                    flaggedOnly={flaggedOnly()}
                   />
                 </Show>
               </>

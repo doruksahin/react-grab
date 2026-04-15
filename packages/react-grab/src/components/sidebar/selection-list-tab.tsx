@@ -12,6 +12,8 @@ interface SelectionListTabProps {
   groups: SelectionGroupWithJira[];
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
+  searchQuery?: string;
+  flaggedOnly?: boolean;
 }
 
 const getStatusPillClass = (category?: string): string => {
@@ -43,9 +45,36 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
     () => new Map(props.groups.map((g) => [g.id, g])),
   );
 
+  const filteredItems = () => {
+    let items = props.commentItems;
+
+    const query = props.searchQuery?.toLowerCase();
+    if (query) {
+      items = items.filter((item) => {
+        const text = (item.commentText ?? item.componentName ?? item.tagName).toLowerCase();
+        return text.includes(query);
+      });
+    }
+
+    if (props.flaggedOnly) {
+      items = items.filter((item) => {
+        if (!item.groupId) return false;
+        const group = groupMap().get(item.groupId);
+        return group?.jiraFlagged === true;
+      });
+    }
+
+    return items;
+  };
+
   return (
     <div class="flex-1 overflow-y-auto">
-      <For each={props.commentItems}>
+      <Show when={filteredItems().length === 0}>
+        <div class="py-8 text-center text-[12px] text-muted-foreground italic">
+          No matching selections
+        </div>
+      </Show>
+      <For each={filteredItems()}>
         {(item) => {
           const group = () => (item.groupId ? groupMap().get(item.groupId) : undefined);
           const isFlagged = () => group()?.jiraFlagged === true;
