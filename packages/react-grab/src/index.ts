@@ -1,4 +1,4 @@
-export { init, initSync, populateSync } from "./core/index.js";
+export { init, initSync } from "./core/index.js";
 export {
   getStack,
   formatElementInfo,
