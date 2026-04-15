@@ -4,11 +4,13 @@ import * as fixtures from "../mocks/fixtures.js";
 /**
  * E2E tests verifying mid-test mock override + JIRA status refresh.
  *
- * Runs in chromium-mocked project (port 5176, initSync enabled).
+ * Uses mockServer fixture for HTTP interception + manual initSync.
  * The sync layer polls JIRA status on init and exposes updateJiraStatus
  * via onRefreshJiraStatus — these tests prove the mock infrastructure
  * supports mid-test data changes and the UI reflects initial poll results.
  */
+
+test.use({ video: "on" });
 
 const ATTR = "data-react-grab";
 
@@ -144,6 +146,18 @@ const navigateToGroupDetail = async (
 
 test.describe("Sync refresh — JIRA status mid-test override", { tag: ["@SYNC-REFRESH"] }, () => {
   test.beforeEach(async ({ reactGrab }) => {
+    // Trigger initSync manually — mockServer routes intercept the HTTP calls
+    await reactGrab.page.evaluate(() => {
+      return (window as any).__reactGrabSync.initSync({
+        enabled: true,
+        serverUrl: "http://localhost:9999",
+        workspace: "test-workspace",
+        jiraProjectKey: "ATT",
+        syncRevealedState: true,
+        onSyncError: (err: Error) => console.warn("[e2e] sync error:", err.message),
+      });
+    });
+
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
       .toBe(true);

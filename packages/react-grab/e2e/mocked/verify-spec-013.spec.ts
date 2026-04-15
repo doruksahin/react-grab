@@ -4,8 +4,7 @@ import * as fixtures from "../mocks/fixtures.js";
 /**
  * SPEC-013 Acceptance Criteria verification tests.
  *
- * Runs in chromium-mocked project (port 5176, initSync enabled).
- * mockServer intercepts all sync-server endpoints with deterministic fixture data.
+ * Uses mockServer fixture for HTTP interception + manual initSync.
  * Screenshots are attached to the Playwright HTML report at every meaningful step.
  *
  * Each test is annotated with its AC item for traceability in the HTML report.
@@ -16,6 +15,8 @@ import * as fixtures from "../mocks/fixtures.js";
  * 1. Convert early returns to hard expect() assertions
  * 2. Replace waitForTimeout() calls with expect.poll() for stability
  */
+
+test.use({ video: "on" });
 
 const ATTR = "data-react-grab";
 
@@ -246,8 +247,20 @@ const waitForCommentsLoaded = async (
 
 const MODIFIER_KEY = process.platform === "darwin" ? "Meta" : "Control";
 
-test.describe("SPEC-013 AC Verification", () => {
+test.describe("SPEC-013 AC Verification", { tag: ["@SPEC-013"] }, () => {
   test.beforeEach(async ({ reactGrab }) => {
+    // Trigger initSync manually — mockServer routes intercept the HTTP calls
+    await reactGrab.page.evaluate(() => {
+      return (window as any).__reactGrabSync.initSync({
+        enabled: true,
+        serverUrl: "http://localhost:9999",
+        workspace: "test-workspace",
+        jiraProjectKey: "ATT",
+        syncRevealedState: true,
+        onSyncError: (err: Error) => console.warn("[e2e] sync error:", err.message),
+      });
+    });
+
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
       .toBe(true);

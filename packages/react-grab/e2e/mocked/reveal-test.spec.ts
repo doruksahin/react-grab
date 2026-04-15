@@ -4,12 +4,29 @@ import { test, expect } from "../fixtures.js";
  * Quick test: do revealed selections from initSync show as labels on the page?
  * The mock fixture sel-1 has revealed: true + elementSelectors: ["nav.main-nav"]
  * The e2e-app has a <nav class="main-nav"> element.
+ *
+ * Uses mockServer fixture for HTTP interception + manual initSync.
  */
-test("revealed selections should anchor to DOM elements", async ({
+
+test.use({ video: "on" });
+
+test("revealed selections should anchor to DOM elements", { tag: ["@SPEC-010"] }, async ({
   page,
   reactGrab,
   mockServer,
 }) => {
+  // Trigger initSync manually — mockServer routes intercept the HTTP calls
+  await page.evaluate(() => {
+    return (window as any).__reactGrabSync.initSync({
+      enabled: true,
+      serverUrl: "http://localhost:9999",
+      workspace: "test-workspace",
+      jiraProjectKey: "ATT",
+      syncRevealedState: true,
+      onSyncError: (err: Error) => console.warn("[e2e] sync error:", err.message),
+    });
+  });
+
   // Wait for overlay to be ready
   await expect
     .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })

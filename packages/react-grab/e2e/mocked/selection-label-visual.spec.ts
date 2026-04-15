@@ -3,8 +3,13 @@ import { test, expect } from "../fixtures.js";
 /**
  * Visual verification of the selection label — the floating popup
  * that appears when you click an element in the overlay.
+ *
+ * UI-only test — no sync data or HTTP mocking needed.
  */
-test.describe("Selection Label — Visual Verification", () => {
+
+test.use({ video: "on" });
+
+test.describe("Selection Label — Visual Verification", { tag: ["@SPEC-004"] }, () => {
   test.beforeEach(async ({ reactGrab }) => {
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })

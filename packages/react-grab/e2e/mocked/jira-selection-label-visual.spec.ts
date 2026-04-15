@@ -3,14 +3,15 @@ import { test, expect } from "../fixtures.js";
 /**
  * Visual verification E2E tests for JIRA data in the selection label popup.
  *
- * Runs in chromium-mocked project (port 5176, initSync enabled).
- * mockServer intercepts all sync-server endpoints with deterministic fixture data.
+ * Uses syncData fixture to seed the store directly (no HTTP).
  * Screenshots are attached to the Playwright HTML report at every meaningful step.
  *
  * The e2e-app has a "JIRA Integration Test" section with:
  *   - nav.main-nav → matches fixture sel-1 (grp-1, ATT-101, In Progress, 2 comments)
  *   - header.top-bar → matches fixture sel-2 (grp-2, ATT-102, To Do, no comments)
  */
+
+test.use({ video: "on" });
 
 const ATTR = "data-react-grab";
 
@@ -53,8 +54,8 @@ const getShadowTextContent = async (
 // Tests
 // ---------------------------------------------------------------------------
 
-test.describe("JIRA Selection Label — Visual Verification", () => {
-  test.beforeEach(async ({ reactGrab }) => {
+test.describe("JIRA Selection Label — Visual Verification", { tag: ["@SPEC-010"] }, () => {
+  test.beforeEach(async ({ reactGrab, syncData }) => {
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
       .toBe(true);
@@ -63,7 +64,6 @@ test.describe("JIRA Selection Label — Visual Verification", () => {
   test("selection label appears when clicking nav element", async ({
     page,
     reactGrab,
-    mockServer,
   }) => {
     // Activate overlay
     await reactGrab.activate();
@@ -85,7 +85,7 @@ test.describe("JIRA Selection Label — Visual Verification", () => {
     if (labelVisible) {
       await reactGrab.screenshot("selection-label-visible", "page");
 
-      // Wait for JIRA status to load (the mock returns comments for grp-1)
+      // Wait for JIRA status to load
       await page.waitForTimeout(2000);
       await reactGrab.screenshot("selection-label-with-jira", "page");
 
@@ -99,16 +99,11 @@ test.describe("JIRA Selection Label — Visual Verification", () => {
         await reactGrab.screenshot("comment-editor-visible", "page");
       }
     }
-
-    // Log what mockServer captured
-    const statusRequests = mockServer.requests("getJiraTicketStatus");
-    console.log(`getJiraTicketStatus requests: ${statusRequests.length}`);
   });
 
   test("selection label for header element (no comments)", async ({
     page,
     reactGrab,
-    mockServer,
   }) => {
     await reactGrab.activate();
 
@@ -120,10 +115,6 @@ test.describe("JIRA Selection Label — Visual Verification", () => {
     // Wait for any JIRA data to load
     await page.waitForTimeout(2000);
     await reactGrab.screenshot("header-selection-label", "page");
-
-    // Log what mockServer captured
-    const statusRequests = mockServer.requests("getJiraTicketStatus");
-    console.log(`getJiraTicketStatus requests: ${statusRequests.length}`);
   });
 
   test("hover reveals selection box before click", async ({

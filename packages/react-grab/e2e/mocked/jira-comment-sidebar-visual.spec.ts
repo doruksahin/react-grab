@@ -3,10 +3,11 @@ import { test, expect } from "../fixtures.js";
 /**
  * Visual verification E2E tests for JIRA comments in the sidebar.
  *
- * Runs in chromium-mocked project (port 5176, initSync enabled).
- * mockServer intercepts all sync-server endpoints with deterministic fixture data.
+ * Uses syncData fixture to seed the store directly (no HTTP).
  * Screenshots are attached to the Playwright HTML report at every meaningful step.
  */
+
+test.use({ video: "on" });
 
 const ATTR = "data-react-grab";
 
@@ -170,8 +171,8 @@ const openSidebar = async (page: import("@playwright/test").Page) => {
 // Tests
 // ---------------------------------------------------------------------------
 
-test.describe("JIRA Comments — Visual Verification", () => {
-  test.beforeEach(async ({ reactGrab }) => {
+test.describe("JIRA Comments — Visual Verification", { tag: ["@SPEC-010"] }, () => {
+  test.beforeEach(async ({ reactGrab, syncData }) => {
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
       .toBe(true);

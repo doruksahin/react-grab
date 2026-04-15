@@ -4,13 +4,27 @@ import * as fixtures from "../mocks/fixtures.js";
 /**
  * Proof-of-concept E2E tests for JIRA comment write-back.
  *
- * Runs in chromium-mocked project (port 5176, initSync enabled).
- * mockServer is a dependency of reactGrab in fixtures.ts, so routes
- * are registered before page.goto() triggers initSync.
+ * Uses mockServer fixture for HTTP interception + manual initSync.
+ * mockServer routes are registered before page navigation, then
+ * initSync is triggered manually in beforeEach.
  */
 
-test.describe("JIRA comment write-back (PoC)", () => {
+test.use({ video: "on" });
+
+test.describe("JIRA comment write-back (PoC)", { tag: ["@SPEC-013"] }, () => {
   test.beforeEach(async ({ reactGrab }) => {
+    // Trigger initSync manually — mockServer routes intercept the HTTP calls
+    await reactGrab.page.evaluate(() => {
+      return (window as any).__reactGrabSync.initSync({
+        enabled: true,
+        serverUrl: "http://localhost:9999",
+        workspace: "test-workspace",
+        jiraProjectKey: "ATT",
+        syncRevealedState: true,
+        onSyncError: (err: Error) => console.warn("[e2e] sync error:", err.message),
+      });
+    });
+
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
       .toBe(true);
@@ -20,9 +34,8 @@ test.describe("JIRA comment write-back (PoC)", () => {
     mockServer,
     reactGrab,
   }) => {
-    // The page has already loaded via the reactGrab fixture, which triggers
-    // initSync(). By this point the overlay should have fetched comments and
-    // groups from the mock server.
+    // initSync was triggered in beforeEach. By this point the overlay should
+    // have fetched comments and groups from the mock server.
 
     const commentRequests = mockServer.requests("listComments");
     expect(commentRequests.length).toBeGreaterThanOrEqual(1);
@@ -69,7 +82,8 @@ test.describe("JIRA comment write-back (PoC)", () => {
 
     // Verify both requests were captured
     const statusRequests = mockServer.requests("getJiraTicketStatus");
-    expect(statusRequests).toHaveLength(2);
+    // At least 2 from our manual fetches; the JIRA poller may add more
+    expect(statusRequests.length).toBeGreaterThanOrEqual(2);
   });
 
   test("searchJiraUsers override responds with filtered users", async ({
