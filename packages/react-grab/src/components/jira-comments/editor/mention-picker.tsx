@@ -47,7 +47,7 @@ export function createMentionSuggestion(
 ): Omit<SuggestionOptions, "editor"> {
   return {
     items: async ({ query }) => {
-      if (!searchFn || query.length < 1) return [];
+      if (!searchFn) return [];
       const cached = getCachedUsers(query);
       if (cached) return cached;
       const users = await searchFn(query);

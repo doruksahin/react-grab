@@ -31,11 +31,10 @@ import { EditorToolbar } from "./editor-toolbar.js";
 export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
   let editorEl!: HTMLDivElement;
   let fileInput!: HTMLInputElement;
-  let editor: Editor | undefined;
-  const [, tick] = createSignal(0);
+  const [editor, setEditor] = createSignal<Editor>();
 
   onMount(() => {
-    editor = new Editor({
+    const ed = new Editor({
       element: editorEl,
       extensions: [
         StarterKit,
@@ -56,27 +55,28 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         Placeholder.configure({ placeholder: props.placeholder ?? "Add a comment..." }),
       ],
       content: props.initialContent ?? "",
-      onTransaction: () => tick((n) => n + 1),
     });
+    setEditor(ed);
 
-    const images = setupImageHandlers(editorEl, () => editor);
+    const images = setupImageHandlers(editorEl, () => editor());
     fileInput.addEventListener("change", images.handleFileInput as EventListener);
     onCleanup(() => {
       images.cleanup();
       fileInput?.removeEventListener("change", images.handleFileInput as EventListener);
-      editor?.destroy();
+      ed.destroy();
     });
   });
 
   function handleSubmit() {
-    if (!editor) return;
+    const ed = editor();
+    if (!ed) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const md: string = (editor.storage as any).markdown.getMarkdown();
+    const md: string = (ed.storage as any).markdown.getMarkdown();
     if (!md.trim()) return;
-    const json = editor.getJSON();
+    const json = ed.getJSON();
     const mentions = extractMentions(json as Parameters<typeof extractMentions>[0]);
     props.onSubmit(md, mentions);
-    editor.commands.clearContent();
+    ed.commands.clearContent();
   }
 
   return (
@@ -86,7 +86,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
       style={{ "pointer-events": "auto" }}
     >
       {/* Toolbar */}
-      <Show when={editor}>
+      <Show when={editor()}>
         {(ed) => <EditorToolbar editor={ed()} onImageClick={() => fileInput?.click()} />}
       </Show>
 

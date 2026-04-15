@@ -206,7 +206,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       <Index each={props.labelInstances ?? []}>
         {(instance) => {
-          const [jiraFields] = splitProps(instance(), [...JIRA_DISPLAY_KEYS]);
           return (
           <SelectionLabel
             tagName={instance().tagName}
@@ -222,7 +221,20 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             inputValue={instance().inputValue}
             error={instance().errorMessage}
             hideArrow={instance().hideArrow}
-            {...jiraFields}
+            groupStatus={instance().groupStatus}
+            jiraTicketId={instance().jiraTicketId}
+            jiraUrl={instance().jiraUrl}
+            jiraStatusCategory={instance().jiraStatusCategory}
+            jiraAssignee={instance().jiraAssignee}
+            jiraReporter={instance().jiraReporter}
+            jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
+            jiraReporterAvatar={instance().jiraReporterAvatar}
+            jiraLabels={instance().jiraLabels}
+            jiraComments={instance().jiraComments}
+            jiraFlagged={instance().jiraFlagged}
+            jiraFlaggedAt={instance().jiraFlaggedAt}
+            jiraFlaggedBy={instance().jiraFlaggedBy}
+            jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
             // Full groups list — see note above. The picker needs
             // synthetic groups visible at the business layer so
             // ticket-lock on a loose-ticketed item resolves correctly.
