@@ -28,6 +28,7 @@ import { filterUserFacingGroups } from "../../features/selection-groups/business
 import { LooseSelectionList } from "./loose-selection-list.jsx";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 import { TabBar } from "./tab-bar.js";
+import { SelectionListTab } from "./selection-list-tab.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -254,7 +255,10 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 </Show>
 
                 <Show when={activeTab() === "selections"}>
-                  <div class="p-4 text-center text-muted-foreground text-sm">Selections tab — coming soon</div>
+                  <SelectionListTab
+                    commentItems={props.commentItems ?? []}
+                    groups={props.groups ?? []}
+                  />
                 </Show>
               </>
             }
