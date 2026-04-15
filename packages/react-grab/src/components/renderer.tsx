@@ -20,6 +20,8 @@ import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
+import { useCollapsibleLabel } from "../features/collapsible-label/index.js";
+import { CollapsedDot } from "./collapsible-label/collapsed-dot.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
@@ -205,7 +207,21 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       <Index each={props.labelInstances ?? []}>
         {(instance) => {
+          const collapsible = useCollapsibleLabel({
+            instanceId: instance().id,
+            defaultCollapsed: props.collapsibleLabelsDefault,
+          });
+
           return (
+          <Show
+            when={!collapsible.isCollapsed()}
+            fallback={
+              <CollapsedDot
+                selectionBounds={instance().selectionBounds}
+                onExpand={collapsible.expand}
+              />
+            }
+          >
           <SelectionLabel
             tagName={instance().tagName}
             componentName={instance().componentName}
@@ -292,7 +308,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
                   }
                 : undefined
             }
+            onCollapse={collapsible.collapse}
           />
+          </Show>
         );}}
       </Index>
 
