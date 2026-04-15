@@ -4,6 +4,9 @@ export { SelectionGroup, SelectionGroupArray, GroupStatus } from "./group.js";
 export {
   CreateJiraTicketRequest,
   CreateJiraTicketResponse,
+  AddJiraCommentRequest,
+  AddJiraCommentResponse,
+  JiraUser,
   JiraProject,
   JiraIssueType,
   JiraPriority,
