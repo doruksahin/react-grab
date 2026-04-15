@@ -178,7 +178,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             when={activeDetailGroupId() !== null && activeGroup() !== null}
             fallback={
               <>
-                <StatsBar groupedItems={groupedItems()} />
+                <StatsBar groups={props.groups ?? []} commentItems={props.commentItems ?? []} />
                 <FilterBar
                   filter={filterState()}
                   assignees={getDistinctAssignees(userFacingGroups())}

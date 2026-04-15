@@ -1,37 +1,93 @@
 import type { Component } from "solid-js";
-import type { GroupedEntry } from "../../features/sidebar";
+import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { CommentItem } from "../../types.js";
+import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
+import { ProgressBar } from "./progress-bar.js";
 
 interface StatsBarProps {
-  groupedItems: GroupedEntry[];
+  groups: SelectionGroupWithJira[];
+  commentItems: CommentItem[];
 }
 
 export const StatsBar: Component<StatsBarProps> = (props) => {
-  const stats = () => {
-    const items = props.groupedItems;
-    return items.reduce(
-      (acc, e) => {
-        return {
-          groups: acc.groups + 1,
-          selections: acc.selections + e.items.length,
-          ticketed: acc.ticketed + (e.group.jiraTicketId ? 1 : 0),
-        };
-      },
-      { groups: 0, selections: 0, ticketed: 0 },
-    );
+  const userFacing = () => filterUserFacingGroups(props.groups);
+
+  const groupStats = () => {
+    const groups = userFacing();
+    const total = groups.length;
+    const linked = groups.filter((g) => Boolean(g.jiraTicketId)).length;
+    const flagged = groups.filter((g) => g.jiraFlagged === true).length;
+    return { total, linked, flagged };
+  };
+
+  const selectionStats = () => {
+    const items = props.commentItems;
+    const total = items.length;
+    const groupMap = new Map(props.groups.map((g) => [g.id, g]));
+    let ticketed = 0;
+    let flagged = 0;
+    for (const item of items) {
+      if (!item.groupId) continue;
+      const group = groupMap.get(item.groupId);
+      if (!group) continue;
+      if (group.jiraTicketId) ticketed++;
+      if (group.jiraFlagged === true) flagged++;
+    }
+    return { total, ticketed, flagged };
   };
 
   return (
-    <div data-react-grab-stats-bar class="flex border-b border-border">
-      <StatCell value={stats().groups} label="Groups" />
-      <StatCell value={stats().selections} label="Items" />
-      <StatCell value={stats().ticketed} label="Ticketed" />
+    <div data-react-grab-stats-bar class="border-b border-border px-3 py-2.5 space-y-1.5">
+      <MetricRow
+        label="Groups"
+        total={groupStats().total}
+        linked={groupStats().linked}
+        linkedLabel="Linked"
+        flagged={groupStats().flagged}
+        progressColor="bg-green-400"
+      />
+      <MetricRow
+        label="Selections"
+        total={selectionStats().total}
+        linked={selectionStats().ticketed}
+        linkedLabel="Ticketed"
+        flagged={selectionStats().flagged}
+        progressColor="bg-purple-400"
+      />
     </div>
   );
 };
 
-const StatCell: Component<{ value: number; label: string }> = (props) => (
-  <div class="flex-1 text-center py-2.5 px-1">
-    <div class="text-lg font-bold text-foreground">{props.value}</div>
-    <div class="text-[10px] text-muted-foreground uppercase tracking-wider">{props.label}</div>
-  </div>
-);
+interface MetricRowProps {
+  label: string;
+  total: number;
+  linked: number;
+  linkedLabel: string;
+  flagged: number;
+  progressColor: string;
+}
+
+const MetricRow: Component<MetricRowProps> = (props) => {
+  const ratio = () => (props.total > 0 ? props.linked / props.total : 0);
+
+  return (
+    <div
+      class="grid items-center gap-1.5"
+      style={{ "grid-template-columns": "75px 50px 70px 75px 1fr" }}
+    >
+      <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        {props.label}
+      </span>
+      <span class="text-xs text-foreground">
+        Total <span class="font-bold">{props.total}</span>
+      </span>
+      <span class="text-xs text-foreground">
+        {props.linkedLabel} <span class="font-bold">{props.linked}</span>
+      </span>
+      <span class="text-xs text-red-400">
+        Flagged <span class="font-bold">{props.flagged}</span>
+      </span>
+      <ProgressBar value={ratio()} colorClass={props.progressColor} />
+    </div>
+  );
+};
