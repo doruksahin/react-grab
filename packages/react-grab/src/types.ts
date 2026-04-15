@@ -647,6 +647,8 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onToggleSelectionsRevealed?: () => void;
   onToggleCommentItemRevealed?: (commentItemId: string) => void;
   syncStatus?: SyncStatus;
+  /** When false, the sidebar is hidden (sync layer has not been populated). */
+  syncReady?: boolean;
   syncWorkspace?: string;
   syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
   jiraProjectKey?: string;

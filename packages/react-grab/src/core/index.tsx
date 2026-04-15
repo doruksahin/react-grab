@@ -220,6 +220,8 @@ export const initSync = async (config: SyncConfig): Promise<void> => {
   await syncLayer.init(config);
 };
 
+export const populateSync = syncLayer.populate;
+
 let hasInited = false;
 const toolbarStateChangeCallbacks = new Set<(state: ToolbarState) => void>();
 
@@ -4528,6 +4530,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onToggleSelectionsRevealed={visibility.handleToggleParent}
                 onToggleCommentItemRevealed={visibility.handleToggleItem}
                 syncStatus={derivedSyncStatus()}
+                syncReady={syncLayer.status() !== "idle"}
                 syncWorkspace={syncLayer.workspace() ?? undefined}
                 syncServerUrl={syncLayer.serverUrl() ?? undefined}
                 jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
