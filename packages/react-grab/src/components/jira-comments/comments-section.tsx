@@ -1,9 +1,4 @@
-import { type Component, For, Show } from "solid-js";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../ui/collapsible.jsx";
+import { type Component, createSignal, For, Show } from "solid-js";
 import type { JiraComment, JiraCommentsSectionProps } from "../../features/jira-comments/types.js";
 import { useJiraComments } from "../../features/jira-comments/use-jira-comments.js";
 import { JiraCommentEditor } from "./editor/jira-comment-editor.js";
@@ -18,52 +13,63 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
 
   const rootComments = () => mergedComments().filter((c) => !c.parentId);
   const replies = (parentId: string) => mergedComments().filter((c) => c.parentId === parentId);
+  const [isOpen, setIsOpen] = createSignal(true);
 
   return (
     <div data-react-grab-ignore-events>
       <Show when={mergedComments().length > 0}>
-        <Collapsible>
-          <CollapsibleTrigger
-            data-react-grab-ignore-events
-            class="flex items-center justify-between w-[calc(100%+16px)] -mx-2 mt-1 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent cursor-pointer"
-            onPointerDown={(e: PointerEvent) => e.stopPropagation()}
-            onClick={(e: MouseEvent) => e.stopImmediatePropagation()}
-          >
-            <span>Comments ({mergedComments().length})</span>
-            <span class="text-[10px]">▾</span>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1.5 gap-3 max-h-[250px] overflow-y-auto">
-              <For each={rootComments()}>
-                {(root) => (
-                  <div class="flex flex-col gap-1.5 group">
-                    <CommentItem
-                      comment={root}
-                      onReply={() => setReplyTo({ id: root.id, author: root.author })}
-                    />
-                    <For each={replies(root.id)}>
-                      {(reply) => <CommentItem comment={reply} isReply />}
-                    </For>
-                  </div>
-                )}
-              </For>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </Show>
+        <button
+          data-react-grab-ignore-events
+          class="flex items-center justify-between w-[calc(100%+16px)] -mx-2 mt-1 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent cursor-pointer"
+          aria-expanded={isOpen()}
+          onPointerDown={(e: PointerEvent) => e.stopPropagation()}
+          onClick={(e: MouseEvent) => {
+            e.stopImmediatePropagation();
+            setIsOpen((prev) => !prev);
+          }}
+        >
+          <span>Comments ({mergedComments().length})</span>
+          <span class="text-[10px]" style={{ transform: isOpen() ? undefined : "rotate(-90deg)", transition: "transform 0.15s" }}>▾</span>
+        </button>
 
-      <Show when={error()}>
-        <div class="text-[10px] text-destructive px-1 py-0.5 mt-1">{error()}</div>
-      </Show>
+        <div
+          class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1.5 gap-1"
+          style={{ display: isOpen() ? undefined : "none" }}
+        >
+          <div class="mb-2">
+            <JiraCommentEditor
+              replyTo={replyTo()}
+              onCancelReply={() => setReplyTo(null)}
+              onSearchUsers={props.onSearchUsers}
+              onSubmit={(markdown, mentions) => submitComment(markdown, mentions)}
+            />
+          </div>
 
-      <div class="mt-1">
-        <JiraCommentEditor
-          replyTo={replyTo()}
-          onCancelReply={() => setReplyTo(null)}
-          onSearchUsers={props.onSearchUsers}
-          onSubmit={(markdown, mentions) => submitComment(markdown, mentions)}
-        />
-      </div>
+          <Show when={error()}>
+            <div class="text-[10px] text-destructive px-1 py-0.5">{error()}</div>
+          </Show>
+
+          <div class="flex flex-col gap-4 max-h-[300px] overflow-y-auto">
+            <For each={rootComments()}>
+              {(root) => (
+                <div class="flex flex-col group">
+                  <CommentItem
+                    comment={root}
+                    onReply={() => setReplyTo({ id: root.id, author: root.author })}
+                  />
+                  <Show when={replies(root.id).length > 0}>
+                    <div class="ml-3 pl-3 mt-1.5 flex flex-col gap-2 border-l-2 border-muted">
+                      <For each={replies(root.id)}>
+                        {(reply) => <CommentItem comment={reply} isReply />}
+                      </For>
+                    </div>
+                  </Show>
+                </div>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
     </div>
   );
 };
