@@ -1,0 +1,498 @@
+# architecture.yml — Serena MCP navigation index
+#
+# Structure:
+#   packages:  — entry points + feature directories per package (lean, Serena discovers the rest)
+#   features:  — flat cross-package feature map (the thing Serena can't discover itself)
+#   api_contract: — Zod → OpenAPI → Orval codegen flow
+#   decree:    — PRD/SPEC/ADR index with file paths and statuses
+
+# ─── Packages ─────────────────────────────────────────────────────────────────
+# Entry points and feature directories only. Serena discovers individual files.
+
+packages:
+
+  react-grab:
+    description: Core overlay library (Solid.js) — element selection, sync, JIRA UI
+    entry: packages/react-grab/src/index.ts
+    core: packages/react-grab/src/core/index.tsx
+    types: packages/react-grab/src/types.ts
+    constants: packages/react-grab/src/constants.ts
+    generated_api: packages/react-grab/src/generated/sync-api.ts
+    features:
+      sidebar:
+        description: Embedded dashboard sidebar — groups list, detail view, filters
+        index: packages/react-grab/src/features/sidebar/index.ts
+      selection-groups:
+        description: Group management — create, rename, assign, synthetic groups
+        index: packages/react-grab/src/features/selection-groups/index.ts
+      selection-visibility:
+        description: Reveal/hide selections on canvas — filter integration
+        index: packages/react-grab/src/features/selection-visibility/index.ts
+      screenshot:
+        description: Full-page + element screenshots with highlight overlay
+        index: packages/react-grab/src/features/screenshot/index.ts
+      sync:
+        description: HTTP sync adapter — persist selections to sync-server
+        index: packages/react-grab/src/features/sync/index.ts
+      jira-comments:
+        description: JIRA comment authoring — optimistic updates, reply threading
+        index: packages/react-grab/src/features/jira-comments/use-jira-comments.ts
+    components:
+      sidebar: packages/react-grab/src/components/sidebar/
+      jira-comments: packages/react-grab/src/components/jira-comments/
+      selection-label: packages/react-grab/src/components/selection-label/
+      toolbar: packages/react-grab/src/components/toolbar/
+      overlay-canvas: packages/react-grab/src/components/overlay-canvas.tsx
+      renderer: packages/react-grab/src/components/renderer.tsx
+
+  sync-server:
+    description: Cloudflare Worker — Hono + D1 + R2, persists selections, JIRA proxy
+    entry: packages/sync-server/src/app.ts
+    worker: packages/sync-server/src/worker.ts
+    types: packages/sync-server/src/types.ts
+    config: packages/sync-server/wrangler.toml
+    routes:
+      comments: packages/sync-server/src/routes/comments.ts
+      groups: packages/sync-server/src/routes/groups.ts
+      screenshots: packages/sync-server/src/routes/screenshots.ts
+      jira: packages/sync-server/src/routes/jira.ts
+      health: packages/sync-server/src/routes/health.ts
+    schemas:
+      index: packages/sync-server/src/schemas/index.ts
+      comment: packages/sync-server/src/schemas/comment.ts
+      group: packages/sync-server/src/schemas/group.ts
+      jira: packages/sync-server/src/schemas/jira.ts
+      common: packages/sync-server/src/schemas/common.ts
+    repositories:
+      index: packages/sync-server/src/repositories/index.ts
+      d1: packages/sync-server/src/repositories/d1.repo.ts
+      r2: packages/sync-server/src/repositories/r2.store.ts
+    services:
+      jira-service:
+        description: JIRA API — tickets, status, comments, flags, users
+        file: packages/sync-server/src/services/jira.service.ts
+        capabilities:
+          - createTicketFromGroup
+          - getIssueStatus
+          - addComment
+          - uploadBase64Images
+          - searchUsers
+          - fetchThreadedComments
+      jira-adf-mentions:
+        description: Convert @Name text patterns to ADF mention nodes
+        file: packages/sync-server/src/services/jira-adf-mentions.ts
+        test: packages/sync-server/src/services/__tests__/jira-adf-mentions.test.ts
+    db:
+      schema: packages/sync-server/src/db/schema.ts
+      migrations: packages/sync-server/drizzle/
+    middleware:
+      inject_repos: packages/sync-server/src/middleware/inject-repos.ts
+
+  dashboard:
+    description: React Vite SPA — workspace dashboard, groups/selections views
+    entry: packages/dashboard/src/main.tsx
+    router: packages/dashboard/src/router.tsx
+    pages:
+      groups_list: packages/dashboard/src/pages/groups/list.tsx
+      groups_detail: packages/dashboard/src/pages/groups/detail.tsx
+      selections_list: packages/dashboard/src/pages/selections/list.tsx
+      selections_detail: packages/dashboard/src/pages/selections/detail.tsx
+      settings: packages/dashboard/src/pages/settings/index.tsx
+    api: packages/dashboard/src/api/endpoints/
+
+  cli:
+    description: CLI installer — npx grab@latest init
+    entry: packages/cli/src/cli.ts
+    commands:
+      init: packages/cli/src/commands/init.ts
+      add: packages/cli/src/commands/add.ts
+      remove: packages/cli/src/commands/remove.ts
+      configure: packages/cli/src/commands/configure.ts
+
+  mcp:
+    description: MCP server for Claude Code / Cursor agent integration
+    entry: packages/mcp/src/cli.ts
+    server: packages/mcp/src/server.ts
+    client: packages/mcp/src/client.ts
+
+  gym:
+    description: Next.js 15 playground — test MCP & agent integration
+    entry: packages/gym/app/layout.tsx
+    pages:
+      home: packages/gym/app/page.tsx
+      dashboard: packages/gym/app/dashboard/page.tsx
+      playground: packages/gym/app/playground/page.tsx
+
+  web-extension:
+    description: Chrome/Firefox extension
+    manifest: packages/web-extension/src/manifest.json
+    background: packages/web-extension/src/background/service-worker.ts
+    content_scripts:
+      react_grab: packages/web-extension/src/content/react-grab.ts
+      bridge: packages/web-extension/src/content/bridge.ts
+
+  design-system:
+    description: Shared Solid.js component library (tsup)
+    entry: packages/design-system/src/index.tsx
+
+# ─── Features (flat cross-package map) ────────────────────────────────────────
+# One entry per feature, all files across all packages in one place.
+# This is what Serena can't discover on its own — the cross-package picture.
+
+features:
+
+  sidebar:
+    description: Embedded dashboard sidebar — groups list, detail view, navigation
+    status: implemented
+    prds: [PRD-002]
+    specs: [SPEC-001, SPEC-002]
+    adrs: [ADR-0002, ADR-0005]
+    files:
+      - packages/react-grab/src/features/sidebar/index.ts
+      - packages/react-grab/src/components/sidebar/index.tsx
+      - packages/react-grab/src/core/index.tsx
+
+  selection-groups:
+    description: Group management — create, rename, assign selections to groups
+    status: implemented
+    prds: [PRD-002]
+    specs: [SPEC-001]
+    files:
+      - packages/react-grab/src/features/selection-groups/index.ts
+      - packages/sync-server/src/routes/groups.ts
+      - packages/sync-server/src/schemas/group.ts
+
+  screenshot:
+    description: Full-page + element screenshots with amber highlight overlay
+    status: implemented
+    prds: [PRD-003]
+    specs: [SPEC-005]
+    files:
+      - packages/react-grab/src/features/screenshot/index.ts
+      - packages/react-grab/src/features/screenshot/capture.ts
+      - packages/react-grab/src/features/screenshot/orchestrate.ts
+      - packages/sync-server/src/routes/screenshots.ts
+      - packages/sync-server/src/repositories/r2.store.ts
+
+  selection-status-colors:
+    description: Pink/yellow/green status overlays + active-group lightblue glow
+    status: implemented
+    specs: [SPEC-004]
+    files:
+      - packages/react-grab/src/components/overlay-canvas.tsx
+      - packages/react-grab/src/components/selection-label/index.tsx
+      - packages/react-grab/src/components/renderer.tsx
+
+  selection-visibility:
+    description: Reveal/hide selections on canvas — batch visibility from filters
+    status: implemented
+    specs: [SPEC-006]
+    files:
+      - packages/react-grab/src/features/selection-visibility/index.ts
+
+  loose-selection-ticketing:
+    description: File JIRA tickets for ungrouped selections via synthetic groups
+    status: implemented
+    prds: [PRD-006]
+    specs: [SPEC-011]
+    adrs: [ADR-0008]
+    files:
+      - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
+      - packages/react-grab/src/features/selection-groups/business/membership.ts
+      - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
+      - packages/react-grab/src/components/sidebar/loose-selection-list.tsx
+      - packages/react-grab/src/core/index.tsx
+
+  group-dropdown-consistency:
+    description: Unified "New group..." action in group picker + stale signal fix
+    status: draft
+    specs: [SPEC-007]
+    files:
+      - packages/react-grab/src/components/selection-label/index.tsx
+
+  expandable-inline-groups:
+    description: Expand group cards inline to show child selections without navigating
+    status: planned
+    prds: [PRD-011]
+    files: []
+
+  # ─── JIRA features ───────────────────────────────────────────────────────
+
+  jira-ticket-creation:
+    description: Create JIRA tickets from groups — dialog, form, auto-summary, screenshot attachments
+    status: implemented
+    prds: [PRD-002]
+    specs: [SPEC-003, SPEC-009]
+    adrs: [ADR-0003, ADR-0004, ADR-0005]
+    files:
+      # react-grab (UI)
+      - packages/react-grab/src/components/sidebar/jira-create-dialog.tsx
+      - packages/react-grab/src/components/sidebar/jira-create-form.tsx
+      - packages/react-grab/src/components/sidebar/jira-create-button.tsx
+      - packages/react-grab/src/features/sidebar/jira-defaults.ts
+      # sync-server (API)
+      - packages/sync-server/src/routes/jira.ts
+      - packages/sync-server/src/services/jira.service.ts
+      - packages/sync-server/src/schemas/jira.ts
+      # dashboard
+      - packages/dashboard/src/components/jira/jira-create-dialog.tsx
+      - packages/dashboard/src/api/endpoints/jira/jira.ts
+
+  jira-status-polling:
+    description: 30s interval polling of all ticketed groups for JIRA status updates
+    status: implemented
+    specs: [SPEC-003]
+    adrs: [ADR-0006]
+    files:
+      - packages/react-grab/src/features/sidebar/jira-status-poller.ts
+      - packages/react-grab/src/core/index.tsx
+      - packages/sync-server/src/routes/jira.ts
+      - packages/sync-server/src/services/jira.service.ts
+
+  jira-status-visualization:
+    description: ATT board 10-status color mapping, filter bar, status legend
+    status: implemented
+    prds: [PRD-004]
+    specs: [SPEC-006]
+    adrs: [ADR-0006]
+    files:
+      - packages/react-grab/src/features/sidebar/status-colors.ts
+      - packages/react-grab/src/features/sidebar/filter-state.ts
+      - packages/react-grab/src/components/sidebar/filter-bar.tsx
+      - packages/react-grab/src/components/sidebar/filter-chips.tsx
+      - packages/react-grab/src/components/sidebar/status-legend.tsx
+      - packages/react-grab/src/components/sidebar/jira-status-banner.tsx
+      - packages/react-grab/src/components/sidebar/jira-progress-dots.tsx
+      - packages/dashboard/src/components/jira/jira-status-banner.tsx
+
+  jira-avatars:
+    description: Assignee/reporter avatar extraction (48x48) and display with initials fallback
+    status: implemented
+    prds: [PRD-005]
+    specs: [SPEC-008]
+    files:
+      - packages/react-grab/src/features/sidebar/jira-types.ts
+      - packages/react-grab/src/components/selection-label/jira-meta.tsx
+      - packages/sync-server/src/services/jira.service.ts
+      - packages/sync-server/src/schemas/jira.ts
+
+  jira-flag-indicator:
+    description: JIRA flagged/blocked visual — red borders, flag icon, tooltip with flagger info
+    status: implemented
+    prds: [PRD-007]
+    specs: [SPEC-012]
+    adrs: [ADR-0009]
+    files:
+      - packages/react-grab/src/features/sidebar/resolve-display-color.ts
+      - packages/react-grab/src/components/sidebar/group-card.tsx
+      - packages/react-grab/src/components/selection-label/index.tsx
+      - packages/react-grab/src/components/icons/icon-flag.tsx
+      - packages/sync-server/src/services/jira.service.ts
+
+  jira-flag-write-back:
+    description: Toggle JIRA flag from overlay with optimistic UI and rollback
+    status: planned
+    prds: [PRD-008]
+    depends_on: [jira-flag-indicator]
+    files: []
+
+  jira-comments-read:
+    description: Fetch threaded JIRA comments via GraphQL gateway, ADF → markdown, inline images
+    status: implemented
+    specs: [SPEC-010]
+    adrs: [ADR-0007]
+    files:
+      - packages/react-grab/src/components/selection-label/index.tsx
+      - packages/react-grab/src/components/ui/collapsible.tsx
+      - packages/sync-server/src/services/jira.service.ts
+      - packages/sync-server/src/routes/jira.ts
+
+  jira-comments-write:
+    description: Post comments/replies to JIRA with @mentions, rich Tiptap editor, image paste
+    status: in-progress
+    prds: [PRD-009]
+    specs: [SPEC-013]
+    adrs: [ADR-0007, ADR-0010]
+    files:
+      # react-grab (feature logic)
+      - packages/react-grab/src/features/jira-comments/use-jira-comments.ts
+      - packages/react-grab/src/features/jira-comments/parse-comment-body.ts
+      - packages/react-grab/src/features/jira-comments/avatar-utils.ts
+      - packages/react-grab/src/features/jira-comments/mention-cache.ts
+      - packages/react-grab/src/features/jira-comments/types.ts
+      # react-grab (UI)
+      - packages/react-grab/src/components/jira-comments/comments-section.tsx
+      - packages/react-grab/src/components/jira-comments/comment-item.tsx
+      - packages/react-grab/src/components/jira-comments/avatar.tsx
+      - packages/react-grab/src/components/jira-comments/editor/jira-comment-editor.tsx
+      - packages/react-grab/src/components/jira-comments/editor/mention-picker.tsx
+      # sync-server (API)
+      - packages/sync-server/src/routes/jira.ts
+      - packages/sync-server/src/services/jira.service.ts
+      - packages/sync-server/src/services/jira-adf-mentions.ts
+      - packages/sync-server/src/schemas/jira.ts
+
+  jira-metadata-cards:
+    description: Priority, issue type, creation/due dates in sidebar cards
+    status: planned
+    prds: [PRD-010]
+    files:
+      - packages/react-grab/src/components/sidebar/group-card.tsx
+      - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
+      - packages/sync-server/src/services/jira.service.ts
+
+# ─── API contract flow ────────────────────────────────────────────────────────
+
+api_contract:
+  description: Zod schemas → OpenAPI spec → Orval codegen → typed fetch clients
+  source_of_truth: packages/sync-server/src/schemas/index.ts
+  openapi_spec: packages/sync-server/openapi.json
+  consumers:
+    react-grab: packages/react-grab/src/generated/sync-api.ts
+    dashboard: packages/dashboard/src/api/endpoints/
+  commands:
+    export_spec: pnpm --filter @react-grab/sync-server export-spec
+    codegen_react_grab: pnpm --filter react-grab codegen
+    codegen_dashboard: pnpm --filter dashboard codegen
+    verify: pnpm check:codegen
+
+# ─── Decree documents ─────────────────────────────────────────────────────────
+
+decree:
+  config: decree.toml
+
+  prds:
+    PRD-002:
+      title: Embedded Dashboard Sidebar
+      file: decree/prd/002-embedded-dashboard-sidebar.md
+      status: draft
+    PRD-003:
+      title: Full-Page Screenshot Element Highlighting
+      file: decree/prd/003-full-page-screenshot-element-highlighting.md
+      status: draft
+    PRD-004:
+      title: JIRA Status Visualization and Filtering
+      file: decree/prd/004-jira-status-visualization-and-filtering.md
+      status: approved
+    PRD-005:
+      title: JIRA Assignee and Reporter Avatar Display
+      file: decree/prd/005-jira-assignee-and-reporter-avatar-display.md
+      status: draft
+    PRD-006:
+      title: Loose-Selection Ticketing
+      file: decree/prd/006-loose-selection-ticketing.md
+      status: approved
+    PRD-007:
+      title: JIRA Flag/Blocked Visual Indicator
+      file: decree/prd/007-jira-flag-blocked-visual-indicator.md
+      status: draft
+    PRD-008:
+      title: JIRA Flag Toggle Write-Back
+      file: decree/prd/008-jira-flag-toggle-write-back.md
+      status: draft
+    PRD-009:
+      title: JIRA Comment Write-Back
+      file: decree/prd/009-jira-comment-write-back.md
+      status: draft
+    PRD-010:
+      title: JIRA Ticket Metadata in Sidebar Cards
+      file: decree/prd/010-jira-ticket-metadata-in-sidebar-cards.md
+      status: draft
+    PRD-011:
+      title: Expandable Inline Groups
+      file: decree/prd/011-expandable-inline-groups.md
+      status: draft
+
+  specs:
+    SPEC-001:
+      title: Sidebar Shell and Groups List
+      file: decree/spec/001-sidebar-shell-and-groups-list.md
+      status: implemented
+    SPEC-002:
+      title: Group Detail View
+      file: decree/spec/002-group-detail-view.md
+      status: implemented
+    SPEC-003:
+      title: JIRA Integration — Ticket Creation and Status Tracking
+      file: decree/spec/003-jira-integration-ticket-creation-and-status-tracking.md
+      status: implemented
+    SPEC-004:
+      title: Selection Status Colors
+      file: decree/spec/004-selection-status-colors.md
+      status: implemented
+    SPEC-005:
+      title: Full-Page Screenshot Element Highlighting
+      file: decree/spec/005-full-page-screenshot-element-highlighting.md
+      status: implemented
+    SPEC-006:
+      title: ATT Status Visualization and Filtering
+      file: decree/spec/006-att-status-visualization-and-filtering.md
+      status: implemented
+    SPEC-007:
+      title: Group Dropdown Consistency
+      file: decree/spec/007-group-dropdown-consistency-unified-new-group-action.md
+      status: draft
+    SPEC-008:
+      title: JIRA Assignee and Reporter Avatar Display
+      file: decree/spec/008-jira-assignee-and-reporter-avatar-display.md
+      status: implemented
+    SPEC-009:
+      title: Hardcode ATT Project in JIRA Create Dialog
+      file: decree/spec/009-hardcode-att-project-in-jira-create-dialog.md
+      status: implemented
+    SPEC-010:
+      title: JIRA Comments Display in Selection Labels
+      file: decree/spec/010-jira-comments-display-in-selection-labels.md
+      status: implemented
+    SPEC-011:
+      title: Loose-Selection Ticketing
+      file: decree/spec/011-loose-selection-ticketing.md
+      status: implemented
+    SPEC-012:
+      title: JIRA Flag/Blocked Visual Indicator
+      file: decree/spec/012-jira-flag-blocked-visual-indicator.md
+      status: implemented
+    SPEC-013:
+      title: JIRA Comment Write-Back
+      file: decree/spec/013-jira-comment-write-back.md
+      status: in-progress
+
+  adrs:
+    ADR-0002:
+      title: Solid.js Sidebar with Orval-Generated Types
+      file: decree/adr/0002-solid-js-sidebar-with-orval-generated-types.md
+      status: accepted
+    ADR-0003:
+      title: JIRA API Client — Native Fetch vs jira.js
+      file: decree/adr/0003-jira-api-client-native-fetch-vs-jira-js.md
+      status: accepted
+      decision: jira.js
+    ADR-0004:
+      title: Markdown to ADF Conversion
+      file: decree/adr/0004-markdown-to-adf-conversion-for-jira-ticket-description.md
+      status: accepted
+      decision: marklassian
+    ADR-0005:
+      title: Dialog and Popover Rendering Inside Shadow DOM
+      file: decree/adr/0005-dialog-and-popover-rendering-inside-shadow-dom.md
+      status: accepted
+    ADR-0006:
+      title: ATT Board Status Mapping and JIRA Metadata Polling
+      file: decree/adr/0006-att-board-status-mapping-and-jira-metadata-polling.md
+      status: accepted
+    ADR-0007:
+      title: Atlassian Internal GraphQL Gateway for Threaded Comments
+      file: decree/adr/0007-atlassian-internal-graphql-gateway-for-threaded-jira.md
+      status: accepted
+    ADR-0008:
+      title: Synthetic Single-Item Groups for Loose Selection Ticketing
+      file: decree/adr/0008-synthetic-single-item-groups-for-loose-selection-ticketing.md
+      status: accepted
+    ADR-0009:
+      title: Flag Data Source and Blocked Visual Strategy
+      file: decree/adr/0009-flag-data-source-and-blocked-visual-strategy.md
+      status: accepted
+    ADR-0010:
+      title: Tiptap WYSIWYG Editor for JIRA Comment Authoring
+      file: decree/adr/0010-tiptap-wysiwyg-editor-for-jira-comment-authoring.md
+      status: accepted
