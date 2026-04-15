@@ -1,4 +1,4 @@
-import { createStore, reconcile } from "solid-js/store";
+import { createStore } from "solid-js/store";
 import type { CommentItem } from "../../../types.js";
 import type { SelectionGroupWithJira } from "../../sidebar/jira-types.js";
 import type { GetJiraTicketStatus200 } from "../../../generated/sync-api.js";
@@ -34,21 +34,17 @@ export const createSyncStore = () => {
     setStatus: (status: SyncStoreShape["status"], error?: string) => {
       setStore({ status, error: error ?? null });
     },
-    reconcileGroups: (next: SelectionGroupWithJira[]) => {
-      setStore("groups", reconcile(next, { key: "id" }));
-    },
     updateGroup: (groupId: string, patch: Partial<SelectionGroupWithJira>) => {
       setStore("groups", (g) => g.id === groupId, patch);
     },
     setGroups: (next: SelectionGroupWithJira[]) => {
       setStore("groups", next);
     },
-    reconcileComments: (next: CommentItem[]) => {
-      setStore("comments", reconcile(next, { key: "id" }));
-    },
     setComments: (next: CommentItem[]) => {
       setStore("comments", next);
     },
+    // Fine-grained per-group JIRA status update — uses path-based setStore
+    // so only the affected group's properties change in the store.
     updateJiraStatus: (groupId: string, status: GetJiraTicketStatus200) => {
       const resolved = status.statusCategory.toLowerCase() === "done";
       setStore(

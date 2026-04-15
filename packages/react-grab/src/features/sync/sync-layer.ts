@@ -100,13 +100,13 @@ export const createSyncLayer = () => {
   const refetchGroups = async () => {
     if (!adapterRef) return;
     const groups = await adapterRef.loadGroups();
-    storeHandle.reconcileGroups(groups);
+    storeHandle.setGroups(groups);
   };
 
   const refetchComments = async () => {
     if (!adapterRef) return;
     const comments = await adapterRef.loadComments();
-    storeHandle.reconcileComments(comments);
+    storeHandle.setComments(comments);
   };
 
   // --- JIRA polling ---
@@ -157,8 +157,8 @@ export const createSyncLayer = () => {
 
     if (!config.enabled) {
       batch(() => {
-        storeHandle.reconcileGroups(loadGroupsFromLocalStorage());
-        storeHandle.reconcileComments(loadCommentsFromLocalStorage());
+        storeHandle.setGroups(loadGroupsFromLocalStorage());
+        storeHandle.setComments(loadCommentsFromLocalStorage());
         storeHandle.setStatus("local");
       });
       return;
@@ -172,16 +172,16 @@ export const createSyncLayer = () => {
         httpAdapter.loadComments(),
       ]);
       batch(() => {
-        storeHandle.reconcileGroups(groups);
-        storeHandle.reconcileComments(comments);
+        storeHandle.setGroups(groups);
+        storeHandle.setComments(comments);
         storeHandle.setStatus("synced");
       });
       startPolling();
       pollJira();
     } catch (error) {
       batch(() => {
-        storeHandle.reconcileGroups(loadGroupsFromLocalStorage());
-        storeHandle.reconcileComments(loadCommentsFromLocalStorage());
+        storeHandle.setGroups(loadGroupsFromLocalStorage());
+        storeHandle.setComments(loadCommentsFromLocalStorage());
         storeHandle.setStatus("error", String(error));
       });
       config.onSyncError(error instanceof Error ? error : new Error(String(error)));
@@ -218,8 +218,6 @@ export const createSyncLayer = () => {
 
     setGroups: storeHandle.setGroups,
     setComments: storeHandle.setComments,
-    reconcileGroups: storeHandle.reconcileGroups,
-    reconcileComments: storeHandle.reconcileComments,
     updateGroup: storeHandle.updateGroup,
     updateJiraStatus: storeHandle.updateJiraStatus,
 
