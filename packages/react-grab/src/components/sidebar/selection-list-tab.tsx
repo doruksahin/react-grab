@@ -2,6 +2,7 @@ import { type Component, createMemo, For, Show } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
+import { CardComments } from "./card-comments.js";
 import { IssueTypeIcon } from "./issue-type-icon.js";
 import { PriorityIcon } from "./priority-icon.js";
 import { UserAvatar } from "./UserAvatar.js";
@@ -163,6 +164,11 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                   </div>
                 </Show>
               </div>
+
+              {/* Inline comment threads */}
+              <Show when={group()?.jiraComments?.length}>
+                <CardComments comments={group()!.jiraComments!} />
+              </Show>
             </div>
           );
         }}
