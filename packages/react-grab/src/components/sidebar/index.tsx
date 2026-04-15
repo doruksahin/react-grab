@@ -70,6 +70,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
 
   const [activeTab, setActiveTab] = createSignal<"groups" | "selections">("groups");
   const [showLegend, setShowLegend] = createSignal(false);
+  const [isDevMode, setIsDevMode] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = createSignal("");
@@ -173,7 +174,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         aria-modal="true"
         aria-label="React Grab Dashboard"
       >
-        <SidebarHeader syncStatus={props.syncStatus} onClose={props.onClose} onInfoClick={() => setShowLegend(true)} />
+        <SidebarHeader
+          syncStatus={props.syncStatus}
+          onClose={props.onClose}
+          onInfoClick={() => setShowLegend(true)}
+          isDevMode={isDevMode()}
+          onToggleDevMode={() => setIsDevMode((prev) => !prev)}
+        />
 
         <Show when={showLegend()}>
           <StatusLegend onClose={() => setShowLegend(false)} />
@@ -297,6 +304,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     onToggleSelect={toggleSelect}
                     searchQuery={searchQuery()}
                     flaggedOnly={flaggedOnly()}
+                    isDevMode={isDevMode()}
                   />
                 </Show>
               </>

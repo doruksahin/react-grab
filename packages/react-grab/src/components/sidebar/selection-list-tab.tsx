@@ -3,6 +3,7 @@ import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
 import { CardComments } from "./card-comments.js";
+import { DevInsights } from "./dev-insights.js";
 import { IssueTypeIcon } from "./issue-type-icon.js";
 import { PriorityIcon } from "./priority-icon.js";
 import { UserAvatar } from "./UserAvatar.js";
@@ -14,6 +15,7 @@ interface SelectionListTabProps {
   onToggleSelect?: (id: string) => void;
   searchQuery?: string;
   flaggedOnly?: boolean;
+  isDevMode?: boolean;
 }
 
 const getStatusPillClass = (category?: string): string => {
@@ -221,6 +223,15 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
               {/* Inline comment threads */}
               <Show when={group()?.jiraComments?.length}>
                 <CardComments comments={group()!.jiraComments!} />
+              </Show>
+
+              {/* Dev insights (technical info) */}
+              <Show when={props.isDevMode}>
+                <DevInsights
+                  tagName={item.tagName}
+                  componentName={item.componentName}
+                  content={item.content}
+                />
               </Show>
                 </div>{/* end card content */}
               </div>{/* end flex row */}
