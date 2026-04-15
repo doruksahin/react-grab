@@ -41,13 +41,13 @@ export const createSyncStore = () => {
       setStore("groups", (g) => g.id === groupId, patch);
     },
     setGroups: (next: SelectionGroupWithJira[]) => {
-      setStore("groups", reconcile(next, { key: "id" }));
+      setStore("groups", next);
     },
     reconcileComments: (next: CommentItem[]) => {
       setStore("comments", reconcile(next, { key: "id" }));
     },
     setComments: (next: CommentItem[]) => {
-      setStore("comments", reconcile(next, { key: "id" }));
+      setStore("comments", next);
     },
     updateJiraStatus: (groupId: string, status: GetJiraTicketStatus200) => {
       const resolved = status.statusCategory.toLowerCase() === "done";
