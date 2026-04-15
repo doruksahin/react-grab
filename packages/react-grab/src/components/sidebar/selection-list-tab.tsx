@@ -1,6 +1,9 @@
 import { type Component, createMemo, For, Show } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import { relativeTime } from "../../features/sidebar/relative-time.js";
+import { IssueTypeIcon } from "./issue-type-icon.js";
+import { PriorityIcon } from "./priority-icon.js";
 import { UserAvatar } from "./UserAvatar.js";
 
 interface SelectionListTabProps {
@@ -24,6 +27,13 @@ const getStatusDisplayText = (group?: SelectionGroupWithJira): string => {
   if (!group?.jiraTicketId) return "no ticket";
   return group.jiraStatus ?? "To Do";
 };
+
+const formatDueDate = (dueDate: string): string =>
+  new Date(dueDate).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 
 export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
   const groupMap = createMemo(
@@ -84,6 +94,29 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 </div>
               </Show>
 
+              {/* Date range row */}
+              <div class="flex items-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <rect x="2" y="3" width="12" height="11" rx="2" />
+                  <path d="M2 7h12M5 1v4M11 1v4" />
+                </svg>
+                <span>{relativeTime(item.timestamp)}</span>
+                <span class="text-muted-foreground/50">{"\u2192"}</span>
+                <Show
+                  when={group()?.jiraDueDate}
+                  fallback={<span class="italic">No due date</span>}
+                >
+                  <span>{formatDueDate(group()!.jiraDueDate!)}</span>
+                </Show>
+              </div>
+
               {/* Screenshot row */}
               <Show when={item.screenshotElement || item.screenshotFullPage}>
                 <div class="flex gap-1.5 mt-1.5">
@@ -98,6 +131,8 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
 
               {/* Bottom row */}
               <div class="flex items-center gap-1.5 mt-1.5">
+                <IssueTypeIcon issueType={group()?.jiraIssueType} />
+
                 <Show
                   when={group()?.jiraTicketId}
                   fallback={
@@ -112,6 +147,8 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 </Show>
 
                 <span class="flex-1" />
+
+                <PriorityIcon priority={group()?.jiraPriority} />
 
                 <Show when={group()?.jiraAssignee}>
                   <div class="flex items-center gap-1">
