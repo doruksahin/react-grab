@@ -338,7 +338,7 @@ export class JiraService {
   async getIssueStatus(ticketId: string) {
     const issue = await this.client.issues.getIssue({
       issueIdOrKey: ticketId,
-      fields: ["status", "assignee", "reporter", "labels", "attachment"],
+      fields: ["status", "assignee", "reporter", "labels", "attachment", "priority", "issuetype", "duedate"],
     });
 
     // Map filename → attachment id so fetchThreadedComments can rewrite
@@ -420,6 +420,9 @@ export class JiraService {
       flaggedAt,
       flaggedBy,
       flaggedByAvatar,
+      priority: (issue.fields.priority as { name?: string } | null)?.name ?? null,
+      issueType: (issue.fields.issuetype as { name?: string } | null)?.name ?? null,
+      dueDate: (issue.fields.duedate as string | null) ?? null,
     };
   }
 
