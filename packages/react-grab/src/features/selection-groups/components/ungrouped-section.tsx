@@ -23,8 +23,8 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
       {/* Header */}
       <div
         class={cn(
-          "group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-black/[0.03] cursor-pointer",
-          !props.isFirst && "border-t border-[#D9D9D9]/50",
+          "group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-foreground/[0.03] cursor-pointer",
+          !props.isFirst && "border-t border-border",
         )}
         onClick={() => setIsOpen((prev) => !prev)}
       >
@@ -32,15 +32,15 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
           <svg
             width="10" height="10" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-            class={cn("text-black/30 transition-transform duration-150 shrink-0", !isOpen() && "-rotate-90")}
+            class={cn("text-foreground/30 transition-transform duration-150 shrink-0", !isOpen() && "-rotate-90")}
           >
             <path d="m6 9 6 6 6-6" />
           </svg>
-          <span class="text-[12px] font-semibold text-black/70 truncate">
+          <span class="text-[12px] font-semibold text-foreground/70 truncate">
             Ungrouped
           </span>
         </div>
-        <span class="text-[10px] font-medium text-black/30 bg-black/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+        <span class="text-[10px] font-medium text-muted-foreground bg-foreground/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
           {props.items.length}
         </span>
       </div>
@@ -53,7 +53,7 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
           <Show
             when={props.items.length > 0}
             fallback={
-              <div class="px-2 py-2 text-[11px] text-black/30 text-center italic">
+              <div class="px-2 py-2 text-[11px] text-muted-foreground text-center italic">
                 No selections yet
               </div>
             }

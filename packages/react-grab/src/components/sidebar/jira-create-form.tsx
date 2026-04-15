@@ -26,7 +26,7 @@ import {
   listJiraLabels,
   createJiraTicket,
 } from "../../generated/sync-api.js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import { defaultSummary, defaultDescription } from "../../features/sidebar/jira-defaults.js";
 
@@ -38,7 +38,7 @@ interface JiraCreateFormProps {
   workspaceId: string;
   syncServerUrl?: string;
   groupId: string;
-  group: SelectionGroupWithJira;
+  group: SelectionGroup;
   commentItems: CommentItem[];
   jiraProjectKey: string;
   onSuccess: TicketCreatedCallback;

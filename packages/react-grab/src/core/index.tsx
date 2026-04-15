@@ -1,6 +1,5 @@
 // @ts-expect-error - CSS imported as text via tsup loader
 import cssText from "../../dist/styles.css";
-import { setApiBaseUrl } from "../generated/custom-fetch.js";
 import {
   createMemo,
   createRoot,
@@ -80,6 +79,7 @@ import {
   NEXTJS_REVALIDATION_DELAY_MS,
   TOOLBAR_DEFAULT_POSITION_RATIO,
   DEFAULT_ACTION_ID,
+  MAX_COMMENT_ITEMS,
 } from "../constants.js";
 import { getBoundsCenter } from "../utils/get-bounds-center.js";
 import { getElementBoundsCenter } from "../utils/get-element-bounds-center.js";
@@ -143,10 +143,10 @@ import { copyHtmlPlugin } from "./plugins/copy-html.js";
 import { copyStylesPlugin } from "./plugins/copy-styles.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
-import { createSyntheticGroupForItem, isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
-import { assignSelection } from "../features/selection-groups/business/selection-assignment.js";
+import type { SelectionGroup } from "../features/selection-groups/types.js";
+import { isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
-import { createJiraStatusPoller } from "../features/sidebar/jira-status-poller.js";
+import { createSyncLayer } from "../features/sync/sync-layer.js";
 import { addJiraComment, searchJiraUsers, getJiraTicketStatus } from "../generated/sync-api.js";
 import {
   freezeAnimations,
@@ -160,22 +160,11 @@ import {
 } from "../utils/freeze-pseudo-states.js";
 import { freezeUpdates } from "../utils/freeze-updates.js";
 import {
-  loadComments,
-  addCommentItem,
-  patchCommentItem,
-  removeCommentItem,
-  clearComments,
   isClearConfirmed,
   confirmClear,
-  persistCommentItems,
-  initCommentStorage,
-  initLocalCommentStorage,
-  getActiveAdapter,
-} from "../utils/comment-storage.js";
+} from "../utils/clear-confirmation.js";
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
-import { initGroupStorage, initLocalGroupStorage, registerGroupsLoadedCallback } from "../features/selection-groups/store/group-storage.js";
-import { createHttpAdapter } from "../features/sync/index.js";
-import type { SyncConfig } from "../features/sync/types.js";
+import type { SyncConfig, SyncStatus } from "../features/sync/types.js";
 import { copyContent, copyGroupedContent, type ReactGrabGroup } from "../utils/copy-content.js";
 import { joinSnippets, joinGroupedSnippets, type GroupedSnippet } from "../utils/join-snippets.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
@@ -221,47 +210,17 @@ interface BuildActionContextOptions {
   customEnterPromptMode?: (agent?: AgentOptions) => void;
 }
 
-let syncState: { workspace: string; serverUrl: string; jiraProjectKey: string; status: "local" | "synced" | "error" } | null = null;
+const syncLayer = createSyncLayer();
 let pendingSyncOptions: Options | undefined;
 
 export const initSync = async (config: SyncConfig): Promise<void> => {
-  if (!config.jiraProjectKey) {
-    throw new Error("react-grab: SyncConfig.jiraProjectKey is required (e.g. 'ATT')");
-  }
-  // Store options to forward to init() when it auto-fires
   if (config.options) {
     pendingSyncOptions = config.options;
   }
-
-  // Set base URL for Orval-generated API functions (JIRA endpoints, etc.)
-  if (config.serverUrl) {
-    setApiBaseUrl(config.serverUrl);
-  }
-
-  if (!config.enabled) {
-    // Local-only mode — load the cached copies from localStorage now.
-    initLocalCommentStorage();
-    initLocalGroupStorage();
-    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "local" };
-    return;
-  }
-
-  try {
-    const adapter = createHttpAdapter(config);
-    await Promise.all([
-      initCommentStorage(adapter),
-      initGroupStorage(adapter),
-    ]);
-    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "synced" };
-  } catch (error) {
-    // Server unreachable — fall back to localStorage.
-    initLocalCommentStorage();
-    initLocalGroupStorage();
-    const err = error instanceof Error ? error : new Error(String(error));
-    config.onSyncError(err);
-    syncState = { workspace: config.workspace, serverUrl: config.serverUrl, jiraProjectKey: config.jiraProjectKey, status: "error" };
-  }
+  await syncLayer.init(config);
 };
+
+export const populateSync = syncLayer.populate;
 
 let hasInited = false;
 const toolbarStateChangeCallbacks = new Set<(state: ToolbarState) => void>();
@@ -380,8 +339,34 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       createSignal<ToolbarState | null>(savedToolbarState);
     const [isToolbarSelectHovered, setIsToolbarSelectHovered] =
       createSignal(false);
-    const [commentItems, setCommentItems] =
-      createSignal<CommentItem[]>(loadComments());
+    const commentItems = syncLayer.comments;
+    const setCommentItems: import("solid-js").Setter<CommentItem[]> = ((itemsOrFn: unknown) => {
+      const next = typeof itemsOrFn === "function" ? itemsOrFn(syncLayer.comments()) : itemsOrFn;
+      syncLayer.setComments(next as CommentItem[]);
+    }) as import("solid-js").Setter<CommentItem[]>;
+
+    const persistCommentItems = syncLayer.persistComments;
+    const getActiveAdapter = syncLayer.adapter;
+
+    const addCommentItem = (item: Omit<CommentItem, "id">): CommentItem[] =>
+      syncLayer.persistComments(
+        [{ ...item, id: generateId("comment") }, ...syncLayer.comments()].slice(0, MAX_COMMENT_ITEMS),
+      );
+
+    const removeCommentItem = (itemId: string): CommentItem[] =>
+      syncLayer.persistComments(syncLayer.comments().filter((i) => i.id !== itemId));
+
+    const patchCommentItem = (id: string, patch: Partial<CommentItem>): CommentItem[] =>
+      syncLayer.persistComments(syncLayer.comments().map((i) => (i.id === id ? { ...i, ...patch } : i)));
+
+    const clearComments = (): CommentItem[] => syncLayer.persistComments([]);
+
+    const derivedSyncStatus = (): SyncStatus => {
+      const s = syncLayer.status();
+      if (s === "synced" || s === "error") return s;
+      return "local";
+    };
+
     const [commentsDropdownPosition, setCommentsDropdownPosition] =
       createSignal<DropdownAnchor | null>(null);
     const [toolbarMenuPosition, setToolbarMenuPosition] =
@@ -834,7 +819,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
       const instance: SelectionLabelInstance = {
         id: instanceId,
-        bounds,
+        selectionBounds: bounds,
         boundsMultiple: options?.boundsMultiple,
         tagName,
         componentName,
@@ -968,10 +953,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         createElementSelector(copiedElement, index === 0),
       );
 
-      const updatedCommentItems = addCommentItem({
-        // Respect the picker's active group, if any. Falls back to
-        // ungrouped when the user hasn't picked one.
-        groupId: selectionGroups.activeGroupId(),
+      const itemSeed = {
         content,
         elementName: elementName ?? "element",
         tagName: tagName ?? "div",
@@ -984,6 +966,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         commentText: extraPrompt,
         timestamp: Date.now(),
         revealed: visibility.selectionsRevealed(),
+      };
+      const groupId = selectionGroups.ensureGroupForItem(itemSeed);
+      const updatedCommentItems = addCommentItem({
+        ...itemSeed,
+        groupId,
       });
       setCommentItems(updatedCommentItems);
       setClockFlashTrigger((previous) => previous + 1);
@@ -3425,19 +3412,19 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         document.body.contains(instanceElement);
       const newBounds = canRecalculateBounds
         ? createElementBounds(instanceElement)
-        : instance.bounds;
+        : instance.selectionBounds;
 
       const previousInstance = labelInstanceCache.get(instance.id);
       const boundsUnchanged =
         previousInstance &&
-        previousInstance.bounds.x === newBounds.x &&
-        previousInstance.bounds.y === newBounds.y &&
-        previousInstance.bounds.width === newBounds.width &&
-        previousInstance.bounds.height === newBounds.height;
+        previousInstance.selectionBounds.x === newBounds.x &&
+        previousInstance.selectionBounds.y === newBounds.y &&
+        previousInstance.selectionBounds.width === newBounds.width &&
+        previousInstance.selectionBounds.height === newBounds.height;
       if (
         previousInstance &&
         previousInstance.status === instance.status &&
-        previousInstance.errorMessage === instance.errorMessage &&
+        previousInstance.error === instance.error &&
         boundsUnchanged
       ) {
         return previousInstance;
@@ -3453,7 +3440,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       } else {
         newMouseX = instance.mouseX ?? newBoundsCenterX;
       }
-      const newCached = { ...instance, bounds: newBounds, mouseX: newMouseX };
+      const newCached = { ...instance, selectionBounds: newBounds, mouseX: newMouseX };
       labelInstanceCache.set(instance.id, newCached);
       return newCached;
     };
@@ -3809,7 +3796,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           actions.addLabelInstance({
             id: labelId,
             itemId: item.id,
-            bounds,
+            selectionBounds: bounds,
             tagName: item.tagName,
             componentName: item.componentName,
             elementsCount: item.elementsCount,
@@ -3828,13 +3815,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     };
 
     const selectionGroups = createSelectionGroups({
-      commentItems,
-      setCommentItems,
-      persistCommentItems,
+      commentItems: syncLayer.comments,
+      persistCommentItems: syncLayer.persistComments,
+      groups: syncLayer.groups,
+      persistGroups: syncLayer.persistGroups,
     });
-
-    // When initSync loads groups from the server, flush them into the signal.
-    registerGroupsLoadedCallback((loaded) => selectionGroups.setGroups(loaded));
 
     // --- Per-item ticketing orchestrator ---
     // State shape is { group, items } regardless of whether `group` is
@@ -3842,43 +3827,25 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     // only needs group.name + group.id + the items to list in the
     // description. One shape, one mount, no casts.
     const [looseTicketDialog, setLooseTicketDialog] = createSignal<{
-      group: SelectionGroupWithJira;
+      group: SelectionGroup;
       items: CommentItem[];
     } | null>(null);
 
     const handleCreateTicketForLooseItem = (item: CommentItem) => {
-      // If the item is already in a real (non-synthetic) group, open
-      // the dialog against that group directly — no migration, no
-      // synthetic group. The dialog lists every item in the group so
-      // the description reflects the full group context.
-      const existingGroup = selectionGroups
+      // Every item has a group (real or synthetic) from selection time.
+      // Find it and open the dialog.
+      const group = selectionGroups
         .groups()
         .find((g) => g.id === item.groupId);
-      if (existingGroup && !isSynthetic(existingGroup)) {
-        const groupItems = commentItems().filter(
-          (ci) => ci.groupId === existingGroup.id,
-        );
-        setLooseTicketDialog({
-          group: existingGroup as SelectionGroupWithJira,
-          items: groupItems,
-        });
-        return;
-      }
+      if (!group) return;
 
-      // Loose path: no real group — create a synthetic group and
-      // migrate the item into it so the ticket has a group to attach to.
-      const syntheticGroup = createSyntheticGroupForItem(item);
-      selectionGroups.persistGroups([
-        ...selectionGroups.groups(),
-        syntheticGroup,
-      ]);
-      const updatedItems = assignSelection(commentItems(), item.id, syntheticGroup.id);
-      persistCommentItems(updatedItems);
-      setCommentItems(updatedItems);
+      const groupItems = isSynthetic(group)
+        ? [item]
+        : commentItems().filter((ci) => ci.groupId === group.id);
 
       setLooseTicketDialog({
-        group: syntheticGroup as unknown as SelectionGroupWithJira,
-        items: [item],
+        group,
+        items: groupItems,
       });
     };
     // --- end per-item ticketing orchestrator ---
@@ -3949,38 +3916,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       persistGroups: selectionGroups.persistGroups,
     });
 
-    // Poll JIRA status for all ticketed groups on init.
-    // Stores jiraStatus on core groups signal so canvas overlays
-    // and selection labels show correct status colors without opening the sidebar.
-    createJiraStatusPoller({
-      groups: selectionGroups.groups as () => SelectionGroupWithJira[],
-      syncWorkspace: () => syncState?.workspace,
-      onStatusUpdate: (groupId, status) => {
-        const resolved = status.statusCategory.toLowerCase() === "done";
-        const updated = selectionGroups.groups().map((g) =>
-          g.id === groupId
-            ? {
-                ...g,
-                jiraStatus: status.status,
-                jiraStatusCategory: status.statusCategory,
-                jiraAssignee: status.assignee,
-                jiraReporter: status.reporter,
-                jiraAssigneeAvatar: status.assigneeAvatar,
-                jiraReporterAvatar: status.reporterAvatar,
-                jiraLabels: status.labels,
-                jiraComments: status.comments,
-                jiraResolved: resolved,
-                jiraUrl: status.jiraUrl,
-                jiraFlagged: status.flagged ?? false,
-                jiraFlaggedAt: status.flaggedAt ?? null,
-                jiraFlaggedBy: status.flaggedBy ?? null,
-                jiraFlaggedByAvatar: status.flaggedByAvatar ?? null,
-              }
-            : g,
-        );
-        selectionGroups.persistGroups(updated);
-      },
-    });
 
     const showCommentItemPreview = (
       item: CommentItem,
@@ -4058,7 +3993,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       actions.hideContextMenu();
       dismissToolbarMenu();
       dismissClearPrompt();
-      setCommentItems(loadComments());
       openTrackedDropdown(setCommentsDropdownPosition);
     };
 
@@ -4237,7 +4171,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
               actions.addLabelInstance({
                 id: labelId,
-                bounds,
+                selectionBounds: bounds,
                 tagName: item.tagName,
                 componentName: item.componentName,
                 status: "copied",
@@ -4304,7 +4238,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
               actions.addLabelInstance({
                 id: labelId,
-                bounds,
+                selectionBounds: bounds,
                 tagName: item.tagName,
                 componentName: item.componentName,
                 status: "copied",
@@ -4413,8 +4347,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         actions.setPointer(position);
         actions.setFrozenElements(elementsToFreeze);
         const hasMultipleElements = elementsToFreeze.length > 1;
-        if (hasMultipleElements && instance.bounds) {
-          actions.setFrozenDragRect(createPageRectFromBounds(instance.bounds));
+        if (hasMultipleElements && instance.selectionBounds) {
+          actions.setFrozenDragRect(createPageRectFromBounds(instance.selectionBounds));
         }
         actions.freeze();
         actions.showContextMenu(position, contextMenuElement);
@@ -4434,7 +4368,14 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       // HACK: Dynamically imported to avoid solid-js/web's delegateEvents() running
       // at module evaluation time, which crashes during SSR (window is not defined).
       void import("../components/renderer.js")
-        .then(({ ReactGrabRenderer }) => {
+        .then(async ({ ReactGrabRenderer }) => {
+          if (process.env.NODE_ENV !== "production") {
+            try {
+              // @ts-ignore — optional dev dependency, guarded by try/catch
+              const { attachDevtoolsOverlay } = await import("@solid-devtools/overlay");
+              attachDevtoolsOverlay();
+            } catch { /* devtools not installed */ }
+          }
           if (disposed) return;
           disposeRenderer = render(() => {
             return (
@@ -4572,10 +4513,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 selectionsRevealed={visibility.selectionsRevealed()}
                 onToggleSelectionsRevealed={visibility.handleToggleParent}
                 onToggleCommentItemRevealed={visibility.handleToggleItem}
-                syncStatus={syncState?.status ?? "local"}
-                syncWorkspace={syncState?.workspace}
-                syncServerUrl={syncState?.serverUrl}
-                jiraProjectKey={syncState?.jiraProjectKey}
+                syncStatus={derivedSyncStatus()}
+                syncWorkspace={syncLayer.workspace() ?? undefined}
+                syncServerUrl={syncLayer.serverUrl() ?? undefined}
+                jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
                 groups={selectionGroups.groups()}
                 activeGroupId={selectionGroups.activeGroupId()}
                 onAddGroup={selectionGroups.handleAddGroup}
@@ -4612,25 +4553,20 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
                 looseTicketDialog={looseTicketDialog()}
                 onLooseTicketDialogClose={() => setLooseTicketDialog(null)}
-                onSubmitJiraComment={syncState?.workspace ? async (groupId, markdown, mentions, parentId) => {
-                  const res = await addJiraComment(syncState!.workspace, groupId, { body: markdown, mentions, parentId });
+                onSubmitJiraComment={syncLayer.workspace() ? async (groupId, markdown, mentions, parentId) => {
+                  const res = await addJiraComment(syncLayer.workspace()!, groupId, { body: markdown, mentions, parentId });
                   if (res.status !== 200) throw new Error("Failed to post comment");
                   return res.data as { id: string; created: string };
                 } : undefined}
-                onSearchJiraUsers={syncState?.workspace ? async (query) => {
-                  const res = await searchJiraUsers({ query, project: syncState!.jiraProjectKey });
+                onSearchJiraUsers={syncLayer.workspace() ? async (query) => {
+                  const res = await searchJiraUsers({ query, project: syncLayer.jiraProjectKey()! });
                   if (res.status !== 200) return [];
                   return res.data as Array<{ accountId: string; displayName: string; avatarUrl: string | null }>;
                 } : undefined}
-                onRefreshJiraStatus={syncState?.workspace ? (groupId) => {
-                  getJiraTicketStatus(syncState!.workspace, groupId).then((res) => {
+                onRefreshJiraStatus={syncLayer.workspace() ? (groupId) => {
+                  getJiraTicketStatus(syncLayer.workspace()!, groupId).then((res) => {
                     if (res.status !== 200) return;
-                    const status = res.data;
-                    const resolved = status.statusCategory.toLowerCase() === "done";
-                    const updated = selectionGroups.groups().map((g) =>
-                      g.id === groupId ? { ...g, jiraStatus: status.status, jiraStatusCategory: status.statusCategory, jiraAssignee: status.assignee, jiraReporter: status.reporter, jiraAssigneeAvatar: status.assigneeAvatar, jiraReporterAvatar: status.reporterAvatar, jiraLabels: status.labels, jiraComments: status.comments, jiraResolved: resolved, jiraUrl: status.jiraUrl, jiraFlagged: status.flagged ?? false, jiraFlaggedAt: status.flaggedAt ?? null, jiraFlaggedBy: status.flaggedBy ?? null, jiraFlaggedByAvatar: status.flaggedByAvatar ?? null } : g,
-                    );
-                    selectionGroups.persistGroups(updated);
+                    syncLayer.updateJiraStatus(groupId, res.data);
                   }).catch(() => {});
                 } : undefined}
               />
@@ -4769,6 +4705,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         cancelCommentsHoverCloseTimeout();
         stopTrackingDropdownPosition();
         toolbarStateChangeCallbacks.clear();
+        syncLayer.dispose();
         dispose();
       },
       copyElement: copyElementAPI,

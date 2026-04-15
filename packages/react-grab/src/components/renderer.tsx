@@ -1,4 +1,4 @@
-import { Show, Index, mergeProps, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
+import { Show, Index, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
 import type { Component } from "solid-js";
 import type { AgentSession, ReactGrabRendererProps } from "../types.js";
 import {
@@ -26,9 +26,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<string | null>(null);
   let dashboardBtnRef: HTMLButtonElement | undefined;
 
-  // Picker surfaces (SelectionLabel, CommentsDropdown) must never show synthetic
-  // groups. Sidebar receives the full list so LooseSelectionList can look up
-  // synthetic groups by id when rendering ticketed loose cards.
+  // Picker surfaces (SelectionLabel) must never show synthetic groups in the
+  // group picker. CommentsDropdown receives the full list so isPresentedAsLoose
+  // can classify synthetic-grouped items as ungrouped.
   const userFacingGroups = createMemo(() =>
     filterUserFacingGroups(props.groups ?? []),
   );
@@ -205,13 +205,35 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       <Index each={props.labelInstances ?? []}>
         {(instance) => {
-          const itemProps = mergeProps(instance);
           return (
           <SelectionLabel
-            {...itemProps}
+            tagName={instance().tagName}
+            componentName={instance().componentName}
+            elementsCount={instance().elementsCount}
+            selectionBounds={instance().selectionBounds}
+            mouseX={instance().mouseX}
             visible={true}
+            status={instance().status}
+            statusText={instance().statusText}
             hasAgent={Boolean(instance().statusText)}
-            error={instance().errorMessage}
+            isPromptMode={instance().isPromptMode}
+            inputValue={instance().inputValue}
+            error={instance().error}
+            hideArrow={instance().hideArrow}
+            groupStatus={instance().groupStatus}
+            jiraTicketId={instance().jiraTicketId}
+            jiraUrl={instance().jiraUrl}
+            jiraStatusCategory={instance().jiraStatusCategory}
+            jiraAssignee={instance().jiraAssignee}
+            jiraReporter={instance().jiraReporter}
+            jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
+            jiraReporterAvatar={instance().jiraReporterAvatar}
+            jiraLabels={instance().jiraLabels}
+            jiraComments={instance().jiraComments}
+            jiraFlagged={instance().jiraFlagged}
+            jiraFlaggedAt={instance().jiraFlaggedAt}
+            jiraFlaggedBy={instance().jiraFlaggedBy}
+            jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
             // Full groups list — see note above. The picker needs
             // synthetic groups visible at the business layer so
             // ticket-lock on a loose-ticketed item resolves correctly.
@@ -223,49 +245,53 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
               props.onMoveItem?.(itemId, groupId ?? null);
             }}
             onAddGroup={props.onAddGroup}
-            onShowContextMenu={(() => {
-              const currentInstance = instance();
-              const hasCompletedStatus =
-                currentInstance.status === "copied" ||
-                currentInstance.status === "fading";
-              if (
-                !hasCompletedStatus ||
-                !isElementConnected(currentInstance.element)
-              ) {
-                return undefined;
-              }
-              return () =>
-                props.onShowContextMenuInstance?.(currentInstance.id);
-            })()}
+            onShowContextMenu={
+              (instance().status === "copied" || instance().status === "fading") &&
+              isElementConnected(instance().element)
+                ? () => props.onShowContextMenuInstance?.(instance().id)
+                : undefined
+            }
             onHoverChange={(isHovered) =>
               props.onLabelInstanceHoverChange?.(instance().id, isHovered)
             }
-            onRemoveItem={(() => {
-              const itemId = instance().itemId;
-              if (!itemId || !props.onRemoveItem) return undefined;
-              return () => props.onRemoveItem?.(itemId);
-            })()}
-            onCreateTicket={(() => {
-              const itemId = instance().itemId;
-              if (!itemId || !props.onCreateTicketForLooseItem) return undefined;
-              const item = (props.commentItems ?? []).find(
-                (ci) => ci.id === itemId,
-              );
-              if (!item) return undefined;
-              return () => props.onCreateTicketForLooseItem?.(item);
-            })()}
-            onSubmitJiraComment={(() => {
-              const gid = instance().groupId;
-              if (!gid || !props.onSubmitJiraComment) return undefined;
-              return (md: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) =>
-                props.onSubmitJiraComment!(gid, md, mentions, parentId);
-            })()}
+            onRemoveItem={
+              instance().itemId && props.onRemoveItem
+                ? () => {
+                    const itemId = instance().itemId;
+                    if (itemId) props.onRemoveItem?.(itemId);
+                  }
+                : undefined
+            }
+            onCreateTicket={
+              instance().itemId && props.onCreateTicketForLooseItem
+                ? () => {
+                    const itemId = instance().itemId;
+                    if (!itemId) return;
+                    const item = (props.commentItems ?? []).find(
+                      (ci) => ci.id === itemId,
+                    );
+                    if (item) props.onCreateTicketForLooseItem?.(item);
+                  }
+                : undefined
+            }
+            onSubmitJiraComment={
+              instance().groupId && props.onSubmitJiraComment
+                ? async (md: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) => {
+                    const gid = instance().groupId;
+                    if (!gid) return { id: "", created: "" };
+                    return props.onSubmitJiraComment!(gid, md, mentions, parentId);
+                  }
+                : undefined
+            }
             onSearchJiraUsers={props.onSearchJiraUsers}
-            onRefreshJiraStatus={(() => {
-              const gid = instance().groupId;
-              if (!gid || !props.onRefreshJiraStatus) return undefined;
-              return () => props.onRefreshJiraStatus!(gid);
-            })()}
+            onRefreshJiraStatus={
+              instance().groupId && props.onRefreshJiraStatus
+                ? () => {
+                    const gid = instance().groupId;
+                    if (gid) props.onRefreshJiraStatus!(gid);
+                  }
+                : undefined
+            }
           />
         );}}
       </Index>
@@ -333,7 +359,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           position={props.commentsDropdownPosition ?? null}
           items={props.commentItems ?? []}
           disconnectedItemIds={props.commentsDisconnectedItemIds}
-          groups={userFacingGroups()}
+          groups={props.groups ?? []}
           onSelectItem={props.onCommentItemSelect}
           onItemHover={props.onCommentItemHover}
           onCopyAll={props.onCommentsCopyAll}

@@ -21,7 +21,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-      testIgnore: /touch-mode\.spec\.ts/,
+      testIgnore: [/touch-mode\.spec\.ts/],
     },
     {
       name: "chromium-touch",

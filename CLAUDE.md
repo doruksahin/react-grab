@@ -33,6 +33,24 @@ pnpm --filter @react-grab/sync-server db:migrate:local
 # Test (Playwright E2E + Vitest CLI tests)
 pnpm test
 
+# E2E — run single file (PREFERRED — always run targeted tests)
+pnpm --filter react-grab exec playwright test e2e/mocked/jira-comment-write.spec.ts --project=chromium
+
+# E2E — run mocked tests only
+pnpm --filter react-grab exec playwright test e2e/mocked/ --project=chromium
+
+# E2E — filter by test name
+pnpm --filter react-grab exec playwright test --project=chromium --headed --grep "comment"
+
+# E2E — run tests for a decree spec (tags: @SPEC-004, @SPEC-010, @SPEC-013)
+pnpm --filter react-grab exec playwright test --project=chromium --headed --grep @SPEC-013
+
+# E2E — UI mode (interactive test explorer)
+pnpm --filter react-grab test:e2e:ui
+
+# E2E — open HTML report (latest run)
+pnpm --filter react-grab exec playwright show-report
+
 # Single package test
 pnpm --filter @react-grab/cli test
 
@@ -52,8 +70,15 @@ pnpm --filter react-grab codegen
 # Verify OpenAPI spec + codegen are in sync
 pnpm check:codegen
 
+# Architecture — codegen + lint + dependency graph
+pnpm arch:codegen              # Generate/merge machine-derivable sections of architecture.yml
+pnpm arch:lint                 # Validate architecture.yml paths + data_flows consumer cross-check
+pnpm arch:deps                 # JSON import tree from core/index.tsx
+pnpm arch:deps:circular        # Check for circular dependencies
+pnpm arch:deps:svg             # Generate SVG → docs/architecture/dependency-graph.svg
+
 # Playwright browser install (first-time)
-npx --prefix packages/react-grab playwright install chromium --with-deps
+pnpm --filter react-grab exec playwright install chromium --with-deps
 
 # Dashboard dev
 pnpm --filter dashboard dev
@@ -67,6 +92,17 @@ pnpm --filter @react-grab/gym dev:mcp
 ### Navigation
 
 See `architecture.yml` for the full architecture index — package entry points, cross-package feature map (17 features with file lists), and decree document (PRD/SPEC/ADR) registry. Use it with Serena MCP for quick navigation across package boundaries.
+
+`pnpm arch:codegen` keeps `architecture.yml` in sync with the codebase. It uses madge (import tree tracing) and ts-morph (AST analysis) to generate machine-derivable fields while preserving human-authored content:
+
+| Field | Codegen behavior |
+|---|---|
+| `features.*.files` | **Replaced** — madge traces import tree from entry point, scoped to owned dirs |
+| `features.*.description`, `status`, `prds`, `specs`, `adrs` | **Preserved** — human-authored |
+| `data_flows.*.sources.*.consumers` | **Replaced** — madge reverse-dependency tracing |
+| `data_flows.*.sources.*.trigger` | **Replaced** — ts-morph detects `setInterval` patterns |
+| `data_flows.*.description`, `init_sequence` | **Preserved** — human-authored |
+| `packages.*`, `decree.*` | **Preserved** — stable/managed elsewhere |
 
 ### Monorepo layout
 
@@ -156,6 +192,106 @@ VITE_REACT_GRAB_SYNC_WORKSPACE=<name>-workspace
 ## Local dev (full stack)
 
 Three terminals: `pnpm dev` (library watch), `pnpm sync:dev` (sync server on :8787), and `pnpm dev` in AdCreative-Frontend-V2. The symlink in AdCreative's `node_modules/react-grab` points to `../../react-grab/packages/react-grab` — Vite HMR picks up changes automatically.
+
+## E2E Testing
+
+**CRITICAL: Never run the full test suite locally.** 580+ tests take 4.5+ minutes. Always run targeted tests:
+
+```bash
+# Run tests for the spec you're working on
+pnpm --filter react-grab exec playwright test --project=chromium --grep @SPEC-013
+
+# Run a specific file
+pnpm --filter react-grab exec playwright test e2e/mocked/jira-comment-write.spec.ts --project=chromium
+
+# Run mocked tests only
+pnpm --filter react-grab exec playwright test e2e/mocked/ --project=chromium
+
+# Quick smoke test (one file)
+pnpm --filter react-grab exec playwright test e2e/activation.spec.ts --project=chromium
+
+# UI mode for interactive debugging
+pnpm --filter react-grab test:e2e:ui
+```
+
+### Architecture — single Playwright project
+
+One project (`chromium`), one port (5175), one Vite dev server. Tests control sync state via the `reactGrab` page object — no Vite modes, no env vars, no separate ports.
+
+| Test type | How it gets data | Example |
+|---|---|---|
+| Overlay-only (activation, toolbar, selection) | No sync needed — sidebar renders empty | `e2e/activation.spec.ts` |
+| Sidebar/JIRA UI (visual, groups, comments) | `reactGrab.populate()` seeds store directly | `e2e/mocked/jira-comment-sidebar-visual.spec.ts` |
+| HTTP behavior (write-back, polling, error) | `mockServer` fixture + `reactGrab.triggerInitSync()` | `e2e/mocked/jira-comment-write.spec.ts` |
+
+### How sync data gets into tests
+
+The `reactGrab` page object exposes two methods:
+
+- **`reactGrab.populate(overrides?)`** — Seeds the sync store with mock data (groups, comments, workspace). No HTTP. For UI tests that need sidebar data.
+- **`reactGrab.triggerInitSync(config?)`** — Calls `initSync()` which makes real HTTP calls. For tests that need `mockServer` to intercept requests.
+
+**These are mutually exclusive.** Never use both in the same test.
+
+```ts
+// UI test — seed data directly, no HTTP
+test('sidebar shows groups', async ({ reactGrab }) => {
+  await reactGrab.populate();
+  await openSidebar(page);
+  // assert on sidebar content...
+});
+
+// HTTP test — mockServer intercepts initSync HTTP calls
+test('comment write-back posts to JIRA', async ({ reactGrab, mockServer }) => {
+  await reactGrab.triggerInitSync();
+  // assert on mockServer.requests()...
+});
+```
+
+### How the mock server works
+
+`e2e/mocks/fixtures.ts` — deterministic data for all 15 sync-server endpoints (groups, selections, JIRA tickets, comments, users, projects, priorities, labels, screenshots).
+
+`e2e/mocks/routes.ts` — `mockSyncServer(page)` registers `page.route()` handlers that intercept network calls before they leave the browser. Supports per-test overrides and request capture.
+
+`e2e/fixtures.ts` — `mockServer` is opt-in (`{ auto: false }`). Only created when a test declares it in its function signature. For HTTP tests, declare `mockServer` in `beforeEach` so routes are registered before `triggerInitSync()`.
+
+### Decree spec tags — linking tests to specs
+
+Every mocked E2E test must be tagged with its decree spec using Playwright's `tag` option. This enables filtering tests by spec (`--grep @SPEC-013`) and shows in the HTML report + UI mode.
+
+**Convention:** Tag the `test.describe` block so all tests inside inherit the tag. Add `annotation` on individual tests for AC-level traceability.
+
+```ts
+test.describe('JIRA comment write-back', { tag: ['@SPEC-013'] }, () => {
+  test('AC-1: Cmd+Enter submits the comment', {
+    annotation: { type: 'ac', description: 'SPEC-013 AC-1' },
+  }, async ({ reactGrab, mockServer }) => {
+    await reactGrab.screenshot('insert-menu-open', 'page');
+    // assert...
+  });
+});
+```
+
+**Current tag mapping:**
+
+| Tag | Decree spec | Test files |
+|---|---|---|
+| `@SPEC-004` | Selection status colors | `selection-label-visual.spec.ts` |
+| `@SPEC-010` | JIRA comments display | `jira-comment-sidebar-visual.spec.ts`, `jira-selection-label-visual.spec.ts`, `reveal-test.spec.ts` |
+| `@SPEC-013` | JIRA comment write-back | `verify-spec-013.spec.ts`, `jira-comment-write.spec.ts` |
+
+When adding new mocked tests, always add a `@SPEC-xxx` tag. See `TESTING.md` for the full cheatsheet.
+
+### Key files
+
+| File | Purpose |
+|---|---|
+| `e2e/fixtures.ts` | `reactGrab` page object (70+ methods, `populate()`, `triggerInitSync()`), `mockServer` fixture |
+| `e2e/mocks/fixtures.ts` | Typed mock data for all 15 endpoints |
+| `e2e/mocks/routes.ts` | `mockSyncServer(page)` — route interception + request capture |
+| `e2e/mocked/*.spec.ts` | Tests that need sync data or mock server |
+| `playwright.config.ts` | Single project, single web server |
 
 ## Conventions
 

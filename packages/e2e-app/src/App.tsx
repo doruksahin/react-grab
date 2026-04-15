@@ -651,6 +651,48 @@ const PointerUpModalSection = () => {
   );
 };
 
+const JiraTestSection = () => {
+  return (
+    <section className="space-y-4" data-testid="jira-test-section">
+      <h1 className="text-xl font-bold">JIRA Integration Test</h1>
+      <p className="text-sm text-gray-500">
+        Elements below match mock fixture selections. Activate the overlay and
+        click them to see selection labels with JIRA data.
+      </p>
+      <nav
+        className="main-nav rounded-lg border border-gray-200 bg-white p-4"
+        data-testid="jira-nav-element"
+      >
+        <div className="flex items-center gap-4">
+          <span className="font-semibold">Navigation Bar</span>
+          <a href="#" className="text-blue-600 hover:underline">Home</a>
+          <a href="#" className="text-blue-600 hover:underline">Products</a>
+          <a href="#" className="text-blue-600 hover:underline">About</a>
+          <a href="#" className="text-blue-600 hover:underline">Contact</a>
+        </div>
+      </nav>
+      <header
+        className="top-bar rounded-lg border border-gray-200 bg-white p-4"
+        data-testid="jira-header-element"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-lg font-bold">App Header</span>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Search..."
+              className="rounded border px-2 py-1 text-sm"
+            />
+            <button className="rounded bg-purple-600 px-3 py-1 text-sm text-white">
+              Search
+            </button>
+          </div>
+        </div>
+      </header>
+    </section>
+  );
+};
+
 const HiddenToggleSection = () => {
   const [isVisible, setIsVisible] = useState(true);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -694,6 +736,8 @@ export default function App() {
           Comprehensive test page for E2E testing
         </p>
       </header>
+
+      <JiraTestSection />
 
       <TodoList />
 

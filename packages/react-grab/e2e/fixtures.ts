@@ -1,4 +1,6 @@
-import { test as base, expect, Page, Locator } from "@playwright/test";
+import { test as base, expect, Page, Locator, type TestInfo } from "@playwright/test";
+import { mockSyncServer, type MockServerHandle } from "./mocks/routes.js";
+import * as mockFixtures from "./mocks/fixtures.js";
 
 const ATTRIBUTE_NAME = "data-react-grab";
 const DEFAULT_KEY_HOLD_DURATION_MS = 200;
@@ -241,9 +243,37 @@ export interface ReactGrabPageObject {
   >;
   clearCallbackHistory: () => Promise<void>;
   waitForCallback: (name: string, timeout?: number) => Promise<unknown[]>;
+  /** Take a screenshot and attach it to the Playwright HTML report. */
+  screenshot: (
+    name: string,
+    target?: "overlay" | "page",
+  ) => Promise<void>;
 }
 
-const createReactGrabPageObject = (page: Page): ReactGrabPageObject => {
+interface SeedPayload {
+  workspace: string;
+  serverUrl: string;
+  jiraProjectKey: string;
+  groups: any[];
+  comments: any[];
+}
+
+interface SyncDataHandle {
+  seed: (overrides: Partial<SeedPayload>) => void;
+}
+
+const DEFAULT_SEED: SeedPayload = {
+  workspace: "test-workspace",
+  serverUrl: "http://localhost:9999",
+  jiraProjectKey: "ATT",
+  groups: mockFixtures.groups,
+  comments: mockFixtures.comments,
+};
+
+const createReactGrabPageObject = (
+  page: Page,
+  testInfo?: TestInfo,
+): ReactGrabPageObject => {
   const getOverlayHost = () => page.locator(`[${ATTRIBUTE_NAME}]`).first();
 
   const getShadowRoot = async () => {
@@ -2469,11 +2499,69 @@ const createReactGrabPageObject = (page: Page): ReactGrabPageObject => {
     getCallbackHistory,
     clearCallbackHistory,
     waitForCallback,
+
+    screenshot: async (
+      name: string,
+      target: "overlay" | "page" = "overlay",
+    ) => {
+      let buffer: Buffer;
+      if (target === "overlay") {
+        const host = getOverlayHost();
+        buffer = await host.screenshot();
+      } else {
+        buffer = await page.screenshot({ fullPage: true });
+      }
+      if (testInfo) {
+        await testInfo.attach(name, {
+          body: buffer,
+          contentType: "image/png",
+        });
+      }
+    },
+
+    /** Seed the sync store with mock data. Call before interacting with sidebar/JIRA features. */
+    populate: async (overrides?: Partial<SeedPayload>) => {
+      const data = { ...DEFAULT_SEED, ...overrides };
+      await page.evaluate((d) => {
+        (window as any).__reactGrabSync.populate(d);
+      }, data);
+    },
+
+    /** Trigger initSync manually. For HTTP behavior tests — call AFTER mockServer routes are registered. */
+    triggerInitSync: async (config?: Partial<{
+      serverUrl: string;
+      workspace: string;
+      jiraProjectKey: string;
+    }>) => {
+      await page.evaluate((cfg) => {
+        return (window as any).__reactGrabSync.initSync({
+          enabled: true,
+          serverUrl: cfg.serverUrl ?? "http://localhost:9999",
+          workspace: cfg.workspace ?? "test-workspace",
+          jiraProjectKey: cfg.jiraProjectKey ?? "ATT",
+          syncRevealedState: true,
+          onSyncError: (err: Error) => console.warn("[e2e] sync error:", err.message),
+        });
+      }, config ?? {});
+    },
   };
 };
 
-export const test = base.extend<{ reactGrab: ReactGrabPageObject }>({
-  reactGrab: async ({ page }, use) => {
+export const test = base.extend<{
+  reactGrab: ReactGrabPageObject;
+  mockServer: MockServerHandle;
+}>({
+  // Opt-in: only created when test declares `mockServer` in its function signature.
+  // Registers page.route() handlers for all 15 sync-server endpoints.
+  // MUST be declared in beforeEach (not just test body) for HTTP tests so
+  // routes are registered before reactGrab navigates.
+  mockServer: [async ({ page }, use) => {
+    const handle = await mockSyncServer(page);
+    await use(handle);
+  }, { auto: false }],
+
+  // Always created. Navigates, waits for API, exposes populate() on page object.
+  reactGrab: async ({ page }, use, testInfo) => {
     const waitForApiReady = async () => {
       await page.waitForFunction(
         () => {
@@ -2520,7 +2608,7 @@ export const test = base.extend<{ reactGrab: ReactGrabPageObject }>({
 
     await initializePage();
 
-    const reactGrab = createReactGrabPageObject(page);
+    const reactGrab = createReactGrabPageObject(page, testInfo);
     await use(reactGrab);
   },
 });

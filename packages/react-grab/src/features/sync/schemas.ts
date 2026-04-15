@@ -18,6 +18,7 @@ export const CommentItemSchema = z.object({
   screenshotElement: z.string().optional(),
   jiraTicketId: z.string().optional(),
   capturedBy: z.string().optional(),
+  revealed: z.boolean().optional(),
 });
 
 export const SelectionGroupSchema = z.object({
@@ -26,6 +27,7 @@ export const SelectionGroupSchema = z.object({
   createdAt: z.number(),
   status: z.enum(["open", "ticketed", "resolved"]).optional(),
   jiraTicketId: z.string().optional(),
+  revealed: z.boolean().optional(),
   /** Auto-created backing group for a loose selection that earned a
    *  ticket. Must round-trip through sync — without it, the flag is
    *  stripped on reload and the group is no longer recognized as

@@ -24,9 +24,10 @@ export interface SelectionGroup extends ServerSelectionGroup {
  * Dependencies injected from core/index.tsx into the selection groups module.
  */
 export interface SelectionGroupsDeps {
-  commentItems: Accessor<CommentItem[]>;
-  setCommentItems: Setter<CommentItem[]>;
+  commentItems: () => CommentItem[];
   persistCommentItems: (items: CommentItem[]) => CommentItem[];
+  groups: () => SelectionGroup[];
+  persistGroups: (groups: SelectionGroup[]) => SelectionGroup[];
 }
 
 /**
@@ -45,6 +46,9 @@ export interface SelectionGroupsAPI {
   /** Remove a selection. Gated by ticket-lock — returns false if the
    *  selection is in a ticketed group. GCs empty synthetic groups. */
   handleRemoveItem: (itemId: string) => boolean;
+  /** Guarantee the item has a group. Returns the groupId to assign.
+   *  Uses activeGroupId when set, otherwise creates a synthetic group. */
+  ensureGroupForItem: (item: { componentName?: string; elementName: string }) => string;
 }
 
 /**
