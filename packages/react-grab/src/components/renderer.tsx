@@ -1,7 +1,6 @@
-import { Show, Index, splitProps, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
+import { Show, Index, mergeProps, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
 import type { Component } from "solid-js";
 import type { AgentSession, ReactGrabRendererProps } from "../types.js";
-import { JIRA_DISPLAY_KEYS } from "../types.js";
 import {
   DEFAULT_ACTION_ID,
   FADE_DURATION_MS,
@@ -206,35 +205,13 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       <Index each={props.labelInstances ?? []}>
         {(instance) => {
+          const itemProps = mergeProps(instance);
           return (
           <SelectionLabel
-            tagName={instance().tagName}
-            componentName={instance().componentName}
-            elementsCount={instance().elementsCount}
-            selectionBounds={instance().bounds}
-            mouseX={instance().mouseX}
+            {...itemProps}
             visible={true}
-            status={instance().status}
-            statusText={instance().statusText}
             hasAgent={Boolean(instance().statusText)}
-            isPromptMode={instance().isPromptMode}
-            inputValue={instance().inputValue}
             error={instance().errorMessage}
-            hideArrow={instance().hideArrow}
-            groupStatus={instance().groupStatus}
-            jiraTicketId={instance().jiraTicketId}
-            jiraUrl={instance().jiraUrl}
-            jiraStatusCategory={instance().jiraStatusCategory}
-            jiraAssignee={instance().jiraAssignee}
-            jiraReporter={instance().jiraReporter}
-            jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
-            jiraReporterAvatar={instance().jiraReporterAvatar}
-            jiraLabels={instance().jiraLabels}
-            jiraComments={instance().jiraComments}
-            jiraFlagged={instance().jiraFlagged}
-            jiraFlaggedAt={instance().jiraFlaggedAt}
-            jiraFlaggedBy={instance().jiraFlaggedBy}
-            jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
             // Full groups list — see note above. The picker needs
             // synthetic groups visible at the business layer so
             // ticket-lock on a loose-ticketed item resolves correctly.
