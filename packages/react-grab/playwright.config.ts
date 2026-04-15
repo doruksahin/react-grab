@@ -21,7 +21,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-      testIgnore: [/touch-mode\.spec\.ts/, /mocked\//],
+      testIgnore: [/touch-mode\.spec\.ts/],
     },
     {
       name: "chromium-touch",
@@ -31,30 +31,12 @@ export default defineConfig({
       },
       testMatch: /touch-mode\.spec\.ts/,
     },
-    {
-      name: "chromium-mocked",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: "http://localhost:5176",
-        video: "on",
-      },
-      testMatch: /mocked\/.+\.spec\.ts/,
-    },
   ],
-  webServer: [
-    {
-      command: "pnpm --filter react-grab build && pnpm dev",
-      url: "http://localhost:5175",
-      reuseExistingServer: !process.env.CI,
-      cwd: path.resolve(__dirname, "../e2e-app"),
-      timeout: 30000,
-    },
-    {
-      command: "pnpm dev:mock",
-      url: "http://localhost:5176",
-      reuseExistingServer: !process.env.CI,
-      cwd: path.resolve(__dirname, "../e2e-app"),
-      timeout: 30000,
-    },
-  ],
+  webServer: {
+    command: "pnpm --filter react-grab build && pnpm dev",
+    url: "http://localhost:5175",
+    reuseExistingServer: !process.env.CI,
+    cwd: path.resolve(__dirname, "../e2e-app"),
+    timeout: 30000,
+  },
 });
