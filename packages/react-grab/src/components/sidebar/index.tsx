@@ -70,6 +70,16 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   const [activeTab, setActiveTab] = createSignal<"groups" | "selections">("groups");
   const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
+  const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
     string | null
   >(null);
@@ -258,6 +268,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   <SelectionListTab
                     commentItems={props.commentItems ?? []}
                     groups={props.groups ?? []}
+                    selectedIds={selectedIds()}
+                    onToggleSelect={toggleSelect}
                   />
                 </Show>
               </>

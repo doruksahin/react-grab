@@ -10,6 +10,8 @@ import { UserAvatar } from "./UserAvatar.js";
 interface SelectionListTabProps {
   commentItems: CommentItem[];
   groups: SelectionGroupWithJira[];
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
 }
 
 const getStatusPillClass = (category?: string): string => {
@@ -48,6 +50,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
           const group = () => (item.groupId ? groupMap().get(item.groupId) : undefined);
           const isFlagged = () => group()?.jiraFlagged === true;
           const hasTicket = () => Boolean(group()?.jiraTicketId);
+          const isSelected = () => props.selectedIds?.has(item.id) === true;
           const summary = () =>
             item.commentText || item.componentName || item.tagName;
 
@@ -56,11 +59,32 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
               class="border-b border-border px-4 py-3 cursor-pointer hover:bg-foreground/[0.02]"
               classList={{
                 "border-l-[3px] border-l-red-400 pl-[13px]": isFlagged(),
+                "bg-purple-400/[0.03] border-l-[3px] border-l-purple-400 pl-[13px]": isSelected() && !isFlagged(),
               }}
               style={{ position: "relative" }}
             >
+              <div class="flex gap-3 items-start">
+                {/* Multi-select checkbox */}
+                <div
+                  class="w-[14px] h-[14px] border rounded-[3px] mt-0.5 shrink-0 flex items-center justify-center cursor-pointer transition-all"
+                  classList={{
+                    "bg-purple-400 border-purple-400": isSelected(),
+                    "bg-foreground/[0.03] border-foreground/20": !isSelected(),
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    props.onToggleSelect?.(item.id);
+                  }}
+                >
+                  <Show when={isSelected()}>
+                    <span class="text-white text-[9px] font-bold">{"\u2713"}</span>
+                  </Show>
+                </div>
+
+                {/* Card content */}
+                <div class="flex-1 min-w-0" style={{ position: "relative" }}>
               {/* JIRA status pill — absolute top-right */}
-              <div class="absolute top-3 right-4">
+              <div class="absolute top-0 right-0">
                 <Show
                   when={hasTicket()}
                   fallback={
@@ -169,6 +193,8 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
               <Show when={group()?.jiraComments?.length}>
                 <CardComments comments={group()!.jiraComments!} />
               </Show>
+                </div>{/* end card content */}
+              </div>{/* end flex row */}
             </div>
           );
         }}
