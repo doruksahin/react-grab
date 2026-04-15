@@ -233,6 +233,12 @@ export type GetJiraTicketStatus200 = {
   flaggedBy?: string | null;
   /** @nullable */
   flaggedByAvatar?: string | null;
+  /** @nullable */
+  priority?: string | null;
+  /** @nullable */
+  issueType?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
 };
 
 export type GetJiraTicketStatus404 = {

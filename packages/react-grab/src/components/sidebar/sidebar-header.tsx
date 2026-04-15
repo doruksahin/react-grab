@@ -7,6 +7,8 @@ interface SidebarHeaderProps {
   syncStatus: SyncStatus;
   onClose: () => void;
   onInfoClick?: () => void;
+  isDevMode?: boolean;
+  onToggleDevMode?: () => void;
 }
 
 export const SidebarHeader: Component<SidebarHeaderProps> = (props) => {
@@ -26,6 +28,37 @@ export const SidebarHeader: Component<SidebarHeaderProps> = (props) => {
         {APP_NAME}
       </h2>
       <div class="flex items-center gap-1.5">
+        {/* DEV mode toggle */}
+        <div
+          class="flex items-center gap-2 cursor-pointer select-none px-1 py-0.5 rounded hover:bg-foreground/[0.05]"
+          onClick={() => props.onToggleDevMode?.()}
+        >
+          <span
+            class="text-[9px] font-extrabold tracking-wider"
+            classList={{
+              "text-muted-foreground": !props.isDevMode,
+              "text-sky-500": Boolean(props.isDevMode),
+            }}
+          >
+            DEV
+          </span>
+          <div
+            class="w-6 h-3.5 rounded-full relative transition-all border"
+            classList={{
+              "bg-foreground/10 border-foreground/20": !props.isDevMode,
+              "bg-sky-500/20 border-sky-500/50": Boolean(props.isDevMode),
+            }}
+          >
+            <div
+              class="w-2.5 h-2.5 rounded-full absolute top-px transition-all"
+              classList={{
+                "left-px bg-muted-foreground": !props.isDevMode,
+                "left-[11px] bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.6)]": Boolean(props.isDevMode),
+              }}
+            />
+          </div>
+        </div>
+
         <button
           class="w-6 h-6 rounded-full border border-border text-[11px] text-muted-foreground hover:text-foreground hover:border-border cursor-pointer flex items-center justify-center"
           onClick={() => props.onInfoClick?.()}

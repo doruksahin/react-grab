@@ -40,4 +40,10 @@ export type SelectionGroupWithJira = SelectionGroup & {
   jiraFlaggedBy?: string | null;
   /** Avatar URL (48x48) of who flagged the ticket */
   jiraFlaggedByAvatar?: string | null;
+  /** JIRA priority name, e.g. "High", "Medium", "Low" */
+  jiraPriority?: string | null;
+  /** JIRA issue type name, e.g. "Bug", "Task", "Story" */
+  jiraIssueType?: string | null;
+  /** JIRA due date as ISO string, e.g. "2026-04-20", null if not set */
+  jiraDueDate?: string | null;
 };

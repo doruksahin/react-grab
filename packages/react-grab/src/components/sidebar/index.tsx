@@ -27,6 +27,9 @@ import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.j
 import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
 import { LooseSelectionList } from "./loose-selection-list.jsx";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
+import { TabBar } from "./tab-bar.js";
+import { SelectionListTab } from "./selection-list-tab.js";
+import { BulkActionBar } from "./bulk-action-bar.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -65,8 +68,22 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     filterUserFacingGroups(props.groups),
   );
 
+  const [activeTab, setActiveTab] = createSignal<"groups" | "selections">("groups");
   const [showLegend, setShowLegend] = createSignal(false);
+  const [isDevMode, setIsDevMode] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
+  const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = createSignal("");
+  const [flaggedOnly, setFlaggedOnly] = createSignal(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
     string | null
   >(null);
@@ -157,7 +174,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         aria-modal="true"
         aria-label="React Grab Dashboard"
       >
-        <SidebarHeader syncStatus={props.syncStatus} onClose={props.onClose} onInfoClick={() => setShowLegend(true)} />
+        <SidebarHeader
+          syncStatus={props.syncStatus}
+          onClose={props.onClose}
+          onInfoClick={() => setShowLegend(true)}
+          isDevMode={isDevMode()}
+          onToggleDevMode={() => setIsDevMode((prev) => !prev)}
+        />
 
         <Show when={showLegend()}>
           <StatusLegend onClose={() => setShowLegend(false)} />
@@ -178,68 +201,111 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             when={activeDetailGroupId() !== null && activeGroup() !== null}
             fallback={
               <>
-                <StatsBar groupedItems={groupedItems()} />
-                <FilterBar
-                  filter={filterState()}
-                  assignees={getDistinctAssignees(userFacingGroups())}
-                  reporters={getDistinctReporters(userFacingGroups())}
-                  labels={getDistinctLabels(userFacingGroups())}
-                  onFilterChange={setFilterState}
-                />
-                <FilterChips
-                  filter={filterState()}
-                  onFilterChange={setFilterState}
+                <StatsBar groups={props.groups ?? []} commentItems={props.commentItems ?? []} />
+                <TabBar
+                  activeTab={activeTab()}
+                  onTabChange={setActiveTab}
+                  groupsCount={userFacingGroups().length}
+                  selectionsCount={(props.commentItems ?? []).length}
                 />
 
-                <Show
-                  when={
-                    userFacingGroups().length > 0 ||
-                    props.commentItems.length > 0
-                  }
-                  fallback={
-                    <EmptyState
-                      message="No selections yet."
-                      submessage="Select elements on the page to get started."
-                    />
-                  }
-                >
-                  <div
-                    ref={(el) => { listScrollRef = el; }}
-                    class="flex-1 overflow-y-auto"
+                <div class="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-foreground/[0.01]">
+                  <input
+                    type="text"
+                    placeholder="Search selections..."
+                    class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-400 transition-colors"
+                    value={searchQuery()}
+                    onInput={(e) => setSearchQuery(e.currentTarget.value)}
+                    data-react-grab-ignore-events
+                  />
+                  <button
+                    class="w-[34px] h-[34px] flex items-center justify-center border rounded-lg cursor-pointer transition-all shrink-0 text-[13px]"
+                    classList={{
+                      "border-red-400 bg-red-400/[0.08]": flaggedOnly(),
+                      "border-border bg-foreground/[0.03] hover:border-foreground/20": !flaggedOnly(),
+                    }}
+                    onClick={() => setFlaggedOnly((prev) => !prev)}
+                    title="Flagged only"
                   >
-                    <LooseSelectionList
-                      allGroups={props.groups}
-                      commentItems={props.commentItems}
-                      syncServerUrl={props.syncServerUrl}
-                      syncWorkspace={props.syncWorkspace}
-                      scrollRoot={() => listScrollRef ?? null}
-                      onCreateTicket={(item) => props.onCreateTicketForLooseItem?.(item)}
-                      onRemoveItem={props.onRemoveItem}
-                    />
+                    {"\uD83D\uDEA9"}
+                  </button>
+                </div>
 
-                    <Show when={filteredGroups().length > 0}>
-                      <GroupList
-                        groupedItems={filteredGroups()}
-                        onGroupClick={(id: string, cardEl: HTMLElement) => {
-                          lastFocusedCard = cardEl;
-                          setActiveDetailGroupId(id);
-                        }}
-                      />
-                    </Show>
+                <Show when={activeTab() === "groups"}>
+                  <FilterBar
+                    filter={filterState()}
+                    assignees={getDistinctAssignees(userFacingGroups())}
+                    reporters={getDistinctReporters(userFacingGroups())}
+                    labels={getDistinctLabels(userFacingGroups())}
+                    onFilterChange={setFilterState}
+                  />
+                  <FilterChips
+                    filter={filterState()}
+                    onFilterChange={setFilterState}
+                  />
 
-                    {/* "No groups match" only makes sense when groups
-                        actually exist but are fully filtered out. */}
-                    <Show
-                      when={
-                        userFacingGroups().length > 0 &&
-                        filteredGroups().length === 0
-                      }
-                    >
+                  <Show
+                    when={
+                      userFacingGroups().length > 0 ||
+                      props.commentItems.length > 0
+                    }
+                    fallback={
                       <EmptyState
-                        message={"No groups match the active filters."}
+                        message="No selections yet."
+                        submessage="Select elements on the page to get started."
                       />
-                    </Show>
-                  </div>
+                    }
+                  >
+                    <div
+                      ref={(el) => { listScrollRef = el; }}
+                      class="flex-1 overflow-y-auto"
+                    >
+                      <LooseSelectionList
+                        allGroups={props.groups}
+                        commentItems={props.commentItems}
+                        syncServerUrl={props.syncServerUrl}
+                        syncWorkspace={props.syncWorkspace}
+                        scrollRoot={() => listScrollRef ?? null}
+                        onCreateTicket={(item) => props.onCreateTicketForLooseItem?.(item)}
+                        onRemoveItem={props.onRemoveItem}
+                      />
+
+                      <Show when={filteredGroups().length > 0}>
+                        <GroupList
+                          groupedItems={filteredGroups()}
+                          onGroupClick={(id: string, cardEl: HTMLElement) => {
+                            lastFocusedCard = cardEl;
+                            setActiveDetailGroupId(id);
+                          }}
+                        />
+                      </Show>
+
+                      {/* "No groups match" only makes sense when groups
+                          actually exist but are fully filtered out. */}
+                      <Show
+                        when={
+                          userFacingGroups().length > 0 &&
+                          filteredGroups().length === 0
+                        }
+                      >
+                        <EmptyState
+                          message={"No groups match the active filters."}
+                        />
+                      </Show>
+                    </div>
+                  </Show>
+                </Show>
+
+                <Show when={activeTab() === "selections"}>
+                  <SelectionListTab
+                    commentItems={props.commentItems ?? []}
+                    groups={props.groups ?? []}
+                    selectedIds={selectedIds()}
+                    onToggleSelect={toggleSelect}
+                    searchQuery={searchQuery()}
+                    flaggedOnly={flaggedOnly()}
+                    isDevMode={isDevMode()}
+                  />
                 </Show>
               </>
             }
@@ -277,6 +343,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               onClose={() => setGroupTicketDialog(null)}
             />
           )}
+        </Show>
+
+        <Show when={selectedIds().size > 0}>
+          <BulkActionBar
+            selectedCount={selectedIds().size}
+            onClearSelection={() => setSelectedIds(new Set())}
+          />
         </Show>
 
     </div>

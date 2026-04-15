@@ -59,6 +59,9 @@ export const JiraTicketStatus = z.object({
   flaggedAt: z.string().nullable().optional().default(null),
   flaggedBy: z.string().nullable().optional().default(null),
   flaggedByAvatar: z.string().nullable().optional().default(null),
+  priority: z.string().nullable().optional().default(null),
+  issueType: z.string().nullable().optional().default(null),
+  dueDate: z.string().nullable().optional().default(null),
 });
 
 export const AddJiraCommentRequest = z.object({

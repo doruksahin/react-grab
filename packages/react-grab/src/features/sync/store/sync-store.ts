@@ -65,6 +65,9 @@ export const createSyncStore = () => {
           jiraFlaggedAt: status.flaggedAt ?? null,
           jiraFlaggedBy: status.flaggedBy ?? null,
           jiraFlaggedByAvatar: status.flaggedByAvatar ?? null,
+          jiraPriority: status.priority,
+          jiraIssueType: status.issueType,
+          jiraDueDate: status.dueDate,
         },
       );
     },
