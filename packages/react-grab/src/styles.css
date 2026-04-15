@@ -234,51 +234,7 @@
   margin: 0.75em 0;
 }
 
-/* Mention picker popup */
-.mention-picker-popup {
-  background: hsl(var(--popover));
-  color: hsl(var(--popover-foreground));
-  border: 1px solid hsl(var(--border));
-  border-radius: 6px;
-  box-shadow: 0 8px 24px hsl(0 0% 0% / 0.5), 0 2px 8px hsl(0 0% 0% / 0.3);
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 4px;
-  min-width: 200px;
-  backdrop-filter: blur(8px);
-}
-.mention-picker-popup .mention-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.1s;
-}
-.mention-picker-popup .mention-item:hover,
-.mention-picker-popup .mention-item.active {
-  background: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
-}
-.mention-picker-popup .mention-avatar {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
-}
-.mention-picker-popup .mention-name {
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/* Mention picker popup — styles are inline via Tailwind classes + SolidJS render */
 
 /*
  * shadcn-solid design tokens — dark mode.
