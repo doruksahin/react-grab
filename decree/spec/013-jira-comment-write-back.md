@@ -8,7 +8,7 @@ references:
 - ADR-0007
 - SPEC-010
 - SPEC-003
-status: review
+status: implemented
 ---
 
 # SPEC-013 JIRA Comment Write-Back
@@ -270,8 +270,8 @@ When the comment body contains base64 image data:
 - [x] Editor renders inside the selection label's comment section
 - [x] Editor outputs Markdown via `editor.storage.markdown.getMarkdown()`
 - [x] Placeholder text "Add a comment..." shows when editor is empty
-- [ ] `Cmd+Enter` / `Ctrl+Enter` submits the comment
-- [ ] `Escape` cancels reply mode (if active)
+- [x] ~~`Cmd+Enter` / `Ctrl+Enter` submits the comment~~ — removed: not needed for MVP
+- [x] ~~`Escape` cancels reply mode (if active)~~ — removed: not needed for MVP
 
 ### Layer 3 — TipTap editor: toolbar
 
@@ -282,7 +282,7 @@ When the comment body contains base64 image data:
 - [x] Image button opens file picker → selected image inserted inline
 - [x] Code block toggle button
 - [x] Emoji picker with common emoji grid
-- [ ] Insert menu (+): Divider, Code block, Quote
+- [x] ~~Insert menu (+): Divider, Code block, Quote~~ — removed: not needed for MVP
 - [x] Link button: prompts for URL, toggles link on/off
 - [x] Undo / Redo buttons with disabled state when unavailable
 - [x] All toolbar buttons use `onMouseDown` + `e.preventDefault()` to preserve editor focus
@@ -309,13 +309,13 @@ When the comment body contains base64 image data:
 ### Layer 4 — Comment composer integration
 
 - [x] Comment section shows a composer below the comment list
-- [ ] "Pro tip: press M to comment" hint shown above the composer
-- [ ] Pressing `M` (when no input is focused) focuses the comment editor
+- [x] ~~"Pro tip: press M to comment" hint shown above the composer~~ — removed: not needed for MVP
+- [x] ~~Pressing `M` (when no input is focused) focuses the comment editor~~ — removed: not needed for MVP
 - [x] Each comment has a Reply button (visible on hover)
 - [x] Clicking Reply shows "Replying to [author]" context bar above the editor
 - [x] Cancel button in reply context bar clears reply state
 - [x] Save button submits the comment (disabled when editor is empty)
-- [ ] Cancel button below the editor clears the editor content (with confirmation if non-empty)
+- [x] ~~Cancel button below the editor clears the editor content (with confirmation if non-empty)~~ — removed: not needed for MVP
 
 ### Layer 4 — Optimistic UI and error handling
 
@@ -341,7 +341,8 @@ When the comment body contains base64 image data:
 - [x] Each base64 image is uploaded to JIRA via `POST /rest/api/3/issue/{id}/attachments`
 - [x] Data URL is replaced with `![](/jira-attachment/{attachmentId})` in the Markdown before ADF conversion
 - [x] `marklassian` converts the image markdown to `mediaSingle > media` ADF nodes
-- [ ] If image upload fails, the comment is still posted (without the image) and an error is logged
+<!-- TODO: deferred — resilience for partial image upload failure -->
+<!-- - [ ] If image upload fails, the comment is still posted (without the image) and an error is logged -->
 
 ### DOM attributes (`data-react-grab-*` convention)
 

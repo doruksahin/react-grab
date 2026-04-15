@@ -16,6 +16,6 @@
 | SPEC-010 | SPEC-010 Jira comments display in selection labels | implemented | 2026-04-08 |
 | SPEC-011 | SPEC-011 Loose-Selection Ticketing | implemented | 2026-04-08 |
 | SPEC-012 | SPEC-012 JIRA Flag/Blocked Visual Indicator | implemented | 2026-04-14 |
+| SPEC-013 | SPEC-013 JIRA Comment Write-Back | implemented | 2026-04-15 |
 | SPEC-015 | SPEC-015 Architecture YAML codegen | implemented | 2026-04-15 |
 | SPEC-007 | SPEC-007 Group Dropdown Consistency — Unified New Group Action | draft | 2026-04-06 |
-| SPEC-013 | SPEC-013 JIRA Comment Write-Back | review | 2026-04-15 |
