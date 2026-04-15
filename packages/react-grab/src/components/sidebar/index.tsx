@@ -29,6 +29,7 @@ import { LooseSelectionList } from "./loose-selection-list.jsx";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 import { TabBar } from "./tab-bar.js";
 import { SelectionListTab } from "./selection-list-tab.js";
+import { BulkActionBar } from "./bulk-action-bar.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -308,6 +309,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               onClose={() => setGroupTicketDialog(null)}
             />
           )}
+        </Show>
+
+        <Show when={selectedIds().size > 0}>
+          <BulkActionBar
+            selectedCount={selectedIds().size}
+            onClearSelection={() => setSelectedIds(new Set())}
+          />
         </Show>
 
     </div>
