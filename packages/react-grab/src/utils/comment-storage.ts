@@ -92,6 +92,8 @@ migrateFromLegacyStorage();
 let commentItems: CommentItem[] = [];
 let didConfirmClear = readSessionFlag(CLEAR_CONFIRMED_KEY);
 
+let onCommentsLoadedCallback: ((items: CommentItem[]) => void) | null = null;
+
 /**
  * Load comments from localStorage into the in-memory cache. Only call
  * this when there's no sync adapter — when `initCommentStorage` will
@@ -101,12 +103,20 @@ let didConfirmClear = readSessionFlag(CLEAR_CONFIRMED_KEY);
 export const initLocalCommentStorage = (): void => {
   if (activeAdapter) return;
   commentItems = loadFromLocalStorage();
+  onCommentsLoadedCallback?.(commentItems);
+};
+
+export const registerCommentsLoadedCallback = (
+  cb: (items: CommentItem[]) => void,
+): void => {
+  onCommentsLoadedCallback = cb;
 };
 
 export const initCommentStorage = async (adapter: StorageAdapter): Promise<void> => {
   activeAdapter = adapter;
   const remoteItems = await adapter.loadComments();
   commentItems = remoteItems;
+  onCommentsLoadedCallback?.(commentItems);
 };
 
 export const loadComments = (): CommentItem[] => commentItems;

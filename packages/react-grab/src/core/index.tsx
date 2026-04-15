@@ -170,6 +170,7 @@ import {
   persistCommentItems,
   initCommentStorage,
   initLocalCommentStorage,
+  registerCommentsLoadedCallback,
   getActiveAdapter,
 } from "../utils/comment-storage.js";
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
@@ -3833,8 +3834,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       persistCommentItems,
     });
 
-    // When initSync loads groups from the server, flush them into the signal.
+    // When initSync loads data from the server, flush it into the signals.
     registerGroupsLoadedCallback((loaded) => selectionGroups.setGroups(loaded));
+    registerCommentsLoadedCallback((loaded) => setCommentItems(loaded));
 
     // --- Per-item ticketing orchestrator ---
     // State shape is { group, items } regardless of whether `group` is
@@ -4437,6 +4439,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         .then(async ({ ReactGrabRenderer }) => {
           if (process.env.NODE_ENV !== "production") {
             try {
+              // @ts-ignore — optional dev dependency, guarded by try/catch
               const { attachDevtoolsOverlay } = await import("@solid-devtools/overlay");
               attachDevtoolsOverlay();
             } catch { /* devtools not installed */ }
