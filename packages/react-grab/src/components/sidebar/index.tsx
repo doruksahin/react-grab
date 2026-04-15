@@ -294,6 +294,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     searchQuery={searchQuery()}
                     flaggedOnly={flaggedOnly()}
                     isDevMode={isDevMode()}
+                    syncServerUrl={props.syncServerUrl}
+                    syncWorkspace={props.syncWorkspace}
                   />
                 </Show>
               </>

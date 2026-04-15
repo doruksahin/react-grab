@@ -7,6 +7,7 @@ import { DevInsights } from "./dev-insights.js";
 import { IssueTypeIcon } from "./issue-type-icon.js";
 import { PriorityIcon } from "./priority-icon.js";
 import { UserAvatar } from "./UserAvatar.js";
+import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];
@@ -16,6 +17,8 @@ interface SelectionListTabProps {
   searchQuery?: string;
   flaggedOnly?: boolean;
   isDevMode?: boolean;
+  syncServerUrl?: string;
+  syncWorkspace?: string;
 }
 
 const getStatusPillClass = (category?: string): string => {
@@ -174,13 +177,23 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
               </div>
 
               {/* Screenshot row */}
-              <Show when={item.screenshotElement || item.screenshotFullPage}>
+              <Show when={(item.screenshotElement || item.screenshotFullPage) && props.syncServerUrl && props.syncWorkspace}>
                 <div class="flex gap-1.5 mt-1.5">
                   <Show when={item.screenshotElement}>
-                    <div class="w-[52px] h-[34px] bg-foreground/[0.04] border border-border rounded" />
+                    <img
+                      src={screenshotUrl(props.syncServerUrl!, props.syncWorkspace!, item.id, "element")}
+                      alt="Element screenshot"
+                      class="w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04]"
+                      loading="lazy"
+                    />
                   </Show>
                   <Show when={item.screenshotFullPage}>
-                    <div class="w-[52px] h-[34px] bg-foreground/[0.04] border border-border rounded" />
+                    <img
+                      src={screenshotUrl(props.syncServerUrl!, props.syncWorkspace!, item.id, "full")}
+                      alt="Full page screenshot"
+                      class="w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04]"
+                      loading="lazy"
+                    />
                   </Show>
                 </div>
               </Show>
