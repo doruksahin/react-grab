@@ -1,4 +1,5 @@
-import { test as base, expect, Page, Locator } from "@playwright/test";
+import { test as base, expect, Page, Locator, type TestInfo } from "@playwright/test";
+import { mockSyncServer, type MockServerHandle } from "./mocks/routes.js";
 
 const ATTRIBUTE_NAME = "data-react-grab";
 const DEFAULT_KEY_HOLD_DURATION_MS = 200;
@@ -241,9 +242,17 @@ export interface ReactGrabPageObject {
   >;
   clearCallbackHistory: () => Promise<void>;
   waitForCallback: (name: string, timeout?: number) => Promise<unknown[]>;
+  /** Take a screenshot and attach it to the Playwright HTML report. */
+  screenshot: (
+    name: string,
+    target?: "overlay" | "page",
+  ) => Promise<void>;
 }
 
-const createReactGrabPageObject = (page: Page): ReactGrabPageObject => {
+const createReactGrabPageObject = (
+  page: Page,
+  testInfo?: TestInfo,
+): ReactGrabPageObject => {
   const getOverlayHost = () => page.locator(`[${ATTRIBUTE_NAME}]`).first();
 
   const getShadowRoot = async () => {
@@ -2469,11 +2478,42 @@ const createReactGrabPageObject = (page: Page): ReactGrabPageObject => {
     getCallbackHistory,
     clearCallbackHistory,
     waitForCallback,
+
+    screenshot: async (
+      name: string,
+      target: "overlay" | "page" = "overlay",
+    ) => {
+      let buffer: Buffer;
+      if (target === "overlay") {
+        const host = getOverlayHost();
+        buffer = await host.screenshot();
+      } else {
+        buffer = await page.screenshot({ fullPage: true });
+      }
+      if (testInfo) {
+        await testInfo.attach(name, {
+          body: buffer,
+          contentType: "image/png",
+        });
+      }
+    },
   };
 };
 
-export const test = base.extend<{ reactGrab: ReactGrabPageObject }>({
-  reactGrab: async ({ page }, use) => {
+export const test = base.extend<{
+  reactGrab: ReactGrabPageObject;
+  mockServer: MockServerHandle;
+}>({
+  // mockServer resolves FIRST — routes are registered before page.goto()
+  // triggers initSync() network calls.
+  mockServer: async ({ page }, use) => {
+    const handle = await mockSyncServer(page);
+    await use(handle);
+  },
+
+  // reactGrab declares mockServer as a dependency (via _mockServer param)
+  // so Playwright resolves it before navigating.
+  reactGrab: async ({ page, mockServer: _mockServer }, use, testInfo) => {
     const waitForApiReady = async () => {
       await page.waitForFunction(
         () => {
@@ -2520,7 +2560,7 @@ export const test = base.extend<{ reactGrab: ReactGrabPageObject }>({
 
     await initializePage();
 
-    const reactGrab = createReactGrabPageObject(page);
+    const reactGrab = createReactGrabPageObject(page, testInfo);
     await use(reactGrab);
   },
 });
