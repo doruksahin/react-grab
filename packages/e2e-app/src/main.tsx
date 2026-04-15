@@ -2,6 +2,7 @@ import "solid-devtools";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { init, initSync } from "react-grab";
+import { populateSync } from "react-grab/src/core/index.js";
 import "./index.css";
 import App from "./App.tsx";
 
@@ -13,19 +14,13 @@ declare global {
 
 window.initReactGrab = init;
 
-const serverUrl = import.meta.env.VITE_REACT_GRAB_SYNC_URL as string | undefined;
-const workspace = import.meta.env.VITE_REACT_GRAB_SYNC_WORKSPACE as string | undefined;
-const jiraProjectKey = import.meta.env.VITE_REACT_GRAB_JIRA_PROJECT_KEY as string | undefined;
-
-if (serverUrl && workspace && jiraProjectKey) {
-  initSync({
-    enabled: true,
-    serverUrl,
-    workspace,
-    jiraProjectKey,
-    syncRevealedState: true,
-    onSyncError: (err) => console.warn("[react-grab e2e] sync error:", err.message),
-  });
+// Expose sync controls for E2E tests — tests call populate() or initSync() manually.
+// No auto-initSync on boot. See SPEC-014 (ADR-0011).
+if (import.meta.env.DEV) {
+  (window as any).__reactGrabSync = {
+    populate: populateSync,
+    initSync,
+  };
 }
 
 createRoot(document.getElementById("root")!).render(

@@ -4,7 +4,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:mock": "vite --mode mock --port 5176",
     "build": "vite build",
     "preview": "vite preview"
   },
