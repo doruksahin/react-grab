@@ -175,11 +175,11 @@ All tests live in `packages/react-grab/src`. Baseline before this branch: 5 file
 ### Manual smoke tests (browser)
 
 - [ ] Fresh load with no selections → no loose section visible, no synthetic groups in localStorage
-- [ ] Make 1 selection → loose card appears with "No Task" pill and "+ Create ticket" button
-- [ ] Click "+ Create ticket" → `JiraCreateDialog` opens with inferred component name as summary
+- [ ] Make 1 selection → synthetic group auto-created (`c95ad64d`); loose card appears with "No Task" pill and "+ Create ticket" button
+- [ ] Click "+ Create ticket" → `JiraCreateDialog` opens with inferred component name as summary; item stays visible in comments dropdown throughout
 - [ ] Submit dialog → dialog closes; loose card shows ticket ID; after poll cycle, status pill updates
-- [ ] Check localStorage `react-grab-selection-groups` → synthetic group present with `synthetic: true` and `jiraTicketId`; does NOT appear in group list, picker, stats, or filters
-- [ ] Make a second selection → second loose card appears independently
+- [ ] Check localStorage `react-grab-selection-groups` → synthetic group present with `synthetic: true`; after ticket creation, `jiraTicketId` set; does NOT appear in group list, picker, stats, or filters
+- [ ] Make a second selection → second loose card appears independently with its own synthetic group
 - [ ] Open "Move to group" picker on second card → only real groups appear (synthetic group hidden)
 - [ ] Move first (ticketed) loose card into a real group via picker → loose card disappears from loose section; synthetic group absent from localStorage; item appears in real group card
 - [ ] Reload → ticketed loose cards persist; synthetic groups remain hidden on all surfaces
@@ -202,13 +202,13 @@ All tests live in `packages/react-grab/src`. Baseline before this branch: 5 file
 - [x] `LooseSelectionList` renders above `GroupList` in the sidebar list view
 - [x] `LooseSelectionList` renders nothing when there are no loose items
 - [x] `LooseSelectionList` receives `allGroups={props.groups}` (full list, including synthetic)
-- [x] `userFacingGroups` in `renderer.tsx` filters synthetic groups from `SelectionLabel` and `CommentsDropdown`
+- [x] `userFacingGroups` in `renderer.tsx` filters synthetic groups from `SelectionLabel` group picker; `CommentsDropdown` receives full groups list so `isPresentedAsLoose` works (`c95ad64d`)
 - [x] `userFacingGroups` in `sidebar/index.tsx` filters synthetic groups from `groupedItems`, filter distincts, and empty-state guard
 - [x] `Sidebar` `props.groups` is NOT filtered — full list preserved for `LooseSelectionList` lookup
 - [x] Second `JiraCreateDialog` in `Sidebar` is controlled by `looseTicketDialog` prop (fully declarative)
 - [x] Dialog opens with `group.name` = inferred name as default summary
 - [x] `onTicketCreated` stores `jiraTicketId` + `jiraUrl` on the synthetic group via existing `persistGroups` callback
-- [x] `handleCreateTicketForLooseItem` in `core/index.tsx` creates group → persists → moves item → opens dialog in that order
+- [x] `handleCreateTicketForLooseItem` in `core/index.tsx` finds existing group (real or synthetic) → opens dialog; synthetic group creation moved to `ensureGroupForItem` at selection time (`c95ad64d`)
 - [x] `handleMoveItem` GC: deletes empty synthetic group from signal and storage when its last item is moved out
 - [x] `handleMoveItem` GC: does NOT delete real groups when emptied
 - [x] Synthetic group absent from `GroupPickerFlyout` in `ActiveGroupPicker` (via `SelectionLabel`)

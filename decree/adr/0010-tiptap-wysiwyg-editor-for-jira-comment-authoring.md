@@ -1,7 +1,12 @@
 ---
-status: proposed
-date: 2026-04-15
-references: [PRD-009, ADR-0003, ADR-0004, ADR-0007, SPEC-010]
+date: '2026-04-15'
+references:
+- PRD-009
+- ADR-0003
+- ADR-0004
+- ADR-0007
+- SPEC-010
+status: accepted
 ---
 
 # ADR-0010 TipTap WYSIWYG editor for JIRA comment authoring

@@ -82,7 +82,15 @@ Synthetic groups must be invisible in `GroupList`, `GroupPickerFlyout` (Selectio
 
 **Strategy 2 — client-only synthetic groups.**
 
-The server contract is unchanged. `SelectionGroup` gains `synthetic?: boolean`. The new module `business/synthetic-group.ts` owns creation (`createSyntheticGroupForItem`) and identification (`isSynthetic`). The new predicate `isPresentedAsLoose` in `membership.ts` is the single rendering rule. Synthetic groups are filtered at two explicit boundaries (renderer, sidebar). The orchestrator in `core/index.tsx:handleCreateTicketForLooseItem` wires all four primitives. GC runs inside `handleMoveItem` — empty synthetic groups are deleted immediately.
+The server contract is unchanged. `SelectionGroup` gains `synthetic?: boolean`. The new module `business/synthetic-group.ts` owns creation (`createSyntheticGroupForItem`, `ensureGroupForItem`) and identification (`isSynthetic`). The new predicate `isPresentedAsLoose` in `membership.ts` is the single rendering rule. Synthetic groups are filtered at two explicit boundaries (renderer, sidebar). GC runs inside `handleMoveItem` — empty synthetic groups are deleted immediately.
+
+### Amendment (2026-04-16) — synthetic group created at selection time
+
+**Commit:** `c95ad64d` — `refactor(selection-groups): create synthetic group at selection time`
+
+The original design created synthetic groups lazily — only when the user clicked "Create ticket" on a loose selection (`handleCreateTicketForLooseItem`). This caused a flow gap: the item lived as `groupId: null` between selection and ticketing, which made it vanish from the comments dropdown when the "Create ticket" click assigned it to a synthetic group that the dropdown filtered out.
+
+**Changed to:** every selection gets a synthetic group at registration time via `ensureGroupForItem()`. Items are never ungrouped. `handleCreateTicketForLooseItem` simplified to a group lookup + dialog open — no more synthetic group creation or item reassignment. The `isUngrouped` predicate was removed (dead code); `isPresentedAsLoose` remains the single rendering rule. The `CommentsDropdown` now receives the full groups list (including synthetic) so `isPresentedAsLoose` can classify items correctly.
 
 ## Consequences
 
