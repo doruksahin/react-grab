@@ -143,8 +143,8 @@ import { copyHtmlPlugin } from "./plugins/copy-html.js";
 import { copyStylesPlugin } from "./plugins/copy-styles.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
-import { createSyntheticGroupForItem, isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
-import { assignSelection } from "../features/selection-groups/business/selection-assignment.js";
+import type { SelectionGroup } from "../features/selection-groups/types.js";
+import { isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { createSyncLayer } from "../features/sync/sync-layer.js";
 import { addJiraComment, searchJiraUsers, getJiraTicketStatus } from "../generated/sync-api.js";
@@ -953,10 +953,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         createElementSelector(copiedElement, index === 0),
       );
 
-      const updatedCommentItems = addCommentItem({
-        // Respect the picker's active group, if any. Falls back to
-        // ungrouped when the user hasn't picked one.
-        groupId: selectionGroups.activeGroupId(),
+      const itemSeed = {
         content,
         elementName: elementName ?? "element",
         tagName: tagName ?? "div",
@@ -969,6 +966,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         commentText: extraPrompt,
         timestamp: Date.now(),
         revealed: visibility.selectionsRevealed(),
+      };
+      const groupId = selectionGroups.ensureGroupForItem(itemSeed);
+      const updatedCommentItems = addCommentItem({
+        ...itemSeed,
+        groupId,
       });
       setCommentItems(updatedCommentItems);
       setClockFlashTrigger((previous) => previous + 1);
@@ -3825,43 +3827,25 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     // only needs group.name + group.id + the items to list in the
     // description. One shape, one mount, no casts.
     const [looseTicketDialog, setLooseTicketDialog] = createSignal<{
-      group: SelectionGroupWithJira;
+      group: SelectionGroup;
       items: CommentItem[];
     } | null>(null);
 
     const handleCreateTicketForLooseItem = (item: CommentItem) => {
-      // If the item is already in a real (non-synthetic) group, open
-      // the dialog against that group directly — no migration, no
-      // synthetic group. The dialog lists every item in the group so
-      // the description reflects the full group context.
-      const existingGroup = selectionGroups
+      // Every item has a group (real or synthetic) from selection time.
+      // Find it and open the dialog.
+      const group = selectionGroups
         .groups()
         .find((g) => g.id === item.groupId);
-      if (existingGroup && !isSynthetic(existingGroup)) {
-        const groupItems = commentItems().filter(
-          (ci) => ci.groupId === existingGroup.id,
-        );
-        setLooseTicketDialog({
-          group: existingGroup as SelectionGroupWithJira,
-          items: groupItems,
-        });
-        return;
-      }
+      if (!group) return;
 
-      // Loose path: no real group — create a synthetic group and
-      // migrate the item into it so the ticket has a group to attach to.
-      const syntheticGroup = createSyntheticGroupForItem(item);
-      selectionGroups.persistGroups([
-        ...selectionGroups.groups(),
-        syntheticGroup,
-      ]);
-      const updatedItems = assignSelection(commentItems(), item.id, syntheticGroup.id);
-      persistCommentItems(updatedItems);
-      setCommentItems(updatedItems);
+      const groupItems = isSynthetic(group)
+        ? [item]
+        : commentItems().filter((ci) => ci.groupId === group.id);
 
       setLooseTicketDialog({
-        group: syntheticGroup as unknown as SelectionGroupWithJira,
-        items: [item],
+        group,
+        items: groupItems,
       });
     };
     // --- end per-item ticketing orchestrator ---

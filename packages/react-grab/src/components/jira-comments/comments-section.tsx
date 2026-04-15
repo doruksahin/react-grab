@@ -7,8 +7,8 @@ import { CommentThread } from "./comment-thread.js";
 export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
   const { mergedComments, replyTo, setReplyTo, submitComment, error } = useJiraComments({
     serverComments: () => props.comments as JiraComment[],
-    onSubmitComment: props.onSubmitComment,
-    onRefreshPoll: props.onRefreshPoll,
+    onSubmitComment: (md, mentions, parentId) => props.onSubmitComment(md, mentions, parentId),
+    onRefreshPoll: () => props.onRefreshPoll(),
   });
 
   const rootComments = () => mergedComments().filter((c) => !c.parentId);

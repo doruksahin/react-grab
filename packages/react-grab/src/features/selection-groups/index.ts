@@ -9,7 +9,7 @@ import {
   assignSelection,
   unassignSelectionsInGroup,
 } from "./business/selection-assignment.js";
-import { gcEmptySyntheticGroups } from "./business/synthetic-group.js";
+import { ensureGroupForItem, gcEmptySyntheticGroups } from "./business/synthetic-group.js";
 import { canRemoveSelection } from "./business/ticket-lock.js";
 import { generateId } from "../../utils/generate-id.js";
 
@@ -71,6 +71,14 @@ export function createSelectionGroups(
     return true;
   };
 
+  const handleEnsureGroupForItem = (item: { componentName?: string; elementName: string }): string => {
+    const result = ensureGroupForItem(item, activeGroupId(), deps.groups());
+    if (result.groups !== deps.groups()) {
+      deps.persistGroups(result.groups);
+    }
+    return result.groupId;
+  };
+
   return {
     groups: deps.groups,
     setGroups: (groups) => deps.persistGroups(typeof groups === "function" ? groups(deps.groups()) : groups),
@@ -82,6 +90,7 @@ export function createSelectionGroups(
     handleDeleteGroup,
     handleMoveItem,
     handleRemoveItem,
+    ensureGroupForItem: handleEnsureGroupForItem,
   };
 }
 

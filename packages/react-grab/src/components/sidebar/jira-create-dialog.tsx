@@ -1,7 +1,7 @@
 import { type Component } from "solid-js";
 import { Portal } from "solid-js/web";
 import { JiraCreateForm } from "./jira-create-form.js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
 
@@ -9,7 +9,7 @@ interface JiraCreateDialogProps {
   workspaceId: string;
   syncServerUrl?: string;
   groupId: string;
-  group: SelectionGroupWithJira;
+  group: SelectionGroup;
   commentItems: CommentItem[];
   jiraProjectKey: string;
   onTicketCreated: TicketCreatedCallback;

@@ -1,9 +1,8 @@
 /**
  * Membership predicates for selections relative to groups.
  *
- * Compiled against a structural shape (`{ groupId: string | null }`) rather
- * than `CommentItem` directly so this module can land before `CommentItem`
- * is widened to nullable in the atomic Task 2 commit.
+ * Every selection always belongs to a group (real or synthetic).
+ * These predicates classify items for rendering and business rules.
  */
 import type { CommentItem } from "../../../types.js";
 import type { SelectionGroup } from "../types.js";
@@ -13,18 +12,15 @@ interface HasMembership {
   groupId: string | null;
 }
 
-export const isUngrouped = (item: HasMembership): boolean =>
-  item.groupId === null;
-
 export const belongsTo = (item: HasMembership, groupId: string): boolean =>
   item.groupId === groupId;
 
 /**
  * Single source of truth for "should this item be rendered as a loose card?"
  *
- * An item is presented as loose when:
- *   - it has no group at all (`groupId === null`), OR
- *   - it lives in a synthetic group that contains exactly this one item.
+ * An item is presented as loose when it lives in a synthetic group that
+ * contains exactly one item. Synthetic groups are invisible to the user —
+ * their single item renders as ungrouped in every surface.
  *
  * This predicate is the only place that knows about the synthetic-group
  * rendering rule. Every render path consults this function rather than

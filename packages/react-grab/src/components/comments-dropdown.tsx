@@ -14,7 +14,8 @@ import { GroupCollapsible } from "../features/selection-groups/components/group-
 import { GroupPickerFlyout } from "../features/selection-groups/components/group-picker-flyout.jsx";
 import { UngroupedSection } from "../features/selection-groups/components/ungrouped-section.jsx";
 import { groupComments, fuzzyMatchGroup } from "../features/selection-groups/business/group-operations.js";
-import { isUngrouped } from "../features/selection-groups/business/membership.js";
+import { isPresentedAsLoose } from "../features/selection-groups/business/membership.js";
+import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
 import {
   DROPDOWN_EDGE_TRANSFORM_ORIGIN,
   DROPDOWN_ICON_SIZE_PX,
@@ -110,10 +111,13 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
 
   let copyAllFeedbackTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  const groupedItems = () =>
-    groupComments(props.groups ?? [], props.items);
+  const visibleGroups = () => filterUserFacingGroups(props.groups ?? []);
 
-  const ungroupedItems = () => props.items.filter(isUngrouped);
+  const groupedItems = () =>
+    groupComments(visibleGroups(), props.items);
+
+  const ungroupedItems = () =>
+    props.items.filter((item) => isPresentedAsLoose(item, props.groups ?? [], props.items));
 
   // Shared row renderer used by both UngroupedSection and GroupCollapsible.
   const renderRow = (item: CommentItem) => (

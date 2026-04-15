@@ -5,23 +5,28 @@ import type { CommentItem } from "../types.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
 import { GroupCollapsible } from "../features/selection-groups/components/group-collapsible.jsx";
 import { UngroupedSection } from "../features/selection-groups/components/ungrouped-section.jsx";
-import { isUngrouped } from "../features/selection-groups/business/membership.js";
+import { isPresentedAsLoose } from "../features/selection-groups/business/membership.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
+import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
 
 /**
  * Thin wrapper around the grouped-list section of comments-dropdown.tsx.
  * Mounting the full dropdown would require the anchored-dropdown DOM
  * machinery, so we test the composition contract here directly:
  *   - data-react-grab-group-list is the container
- *   - UngroupedSection renders for selections with groupId === null
- *   - GroupCollapsible renders one card per user group
+ *   - UngroupedSection renders for items in synthetic groups (presented as loose)
+ *   - GroupCollapsible renders one card per user-facing group
  */
 const GroupListHarness = (props: {
   selections: CommentItem[];
   groups: SelectionGroup[];
 }) => {
-  const ungrouped = () => props.selections.filter(isUngrouped);
-  const grouped = () => groupComments(props.groups, props.selections);
+  const ungrouped = () =>
+    props.selections.filter((item) =>
+      isPresentedAsLoose(item, props.groups, props.selections),
+    );
+  const visibleGroups = () => filterUserFacingGroups(props.groups);
+  const grouped = () => groupComments(visibleGroups(), props.selections);
   return (
     <div data-react-grab-group-list>
       {ungrouped().length > 0 && (
@@ -49,17 +54,20 @@ const GroupListHarness = (props: {
 };
 
 describe("comments-dropdown group-list composition", () => {
-  it("renders ungrouped selections and user groups under one container", () => {
+  it("renders loose selections (synthetic group) and user groups under one container", () => {
+    const synthGroup: SelectionGroup = {
+      id: "synth1", name: "Button", createdAt: 0, revealed: false, synthetic: true,
+    };
+    const realGroup: SelectionGroup = {
+      id: "g1", name: "Alpha", createdAt: 0, revealed: false,
+    };
     const selections = [
-      { id: "u1", groupId: null },
+      { id: "u1", groupId: "synth1" },
       { id: "g1-item", groupId: "g1" },
     ] as unknown as CommentItem[];
-    const groups: SelectionGroup[] = [
-      { id: "g1", name: "Alpha", createdAt: 0, revealed: false },
-    ];
 
     const { container } = render(() => (
-      <GroupListHarness selections={selections} groups={groups} />
+      <GroupListHarness selections={selections} groups={[synthGroup, realGroup]} />
     ));
 
     const list = container.querySelector("[data-react-grab-group-list]");
@@ -71,7 +79,7 @@ describe("comments-dropdown group-list composition", () => {
     expect(list!.textContent).toContain("Alpha");
   });
 
-  it("hides the ungrouped section when there are no ungrouped selections", () => {
+  it("hides the ungrouped section when all selections are in real groups", () => {
     const selections = [
       { id: "g1-item", groupId: "g1" },
     ] as unknown as CommentItem[];

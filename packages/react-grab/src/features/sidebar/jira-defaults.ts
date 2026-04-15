@@ -1,5 +1,5 @@
 // packages/react-grab/src/features/sidebar/jira-defaults.ts
-import type { SelectionGroupWithJira } from "./jira-types.js";
+import type { SelectionGroup } from "../selection-groups/types.js";
 import type { CommentItem } from "../../types.js";
 import { isSynthetic } from "../selection-groups/business/synthetic-group.js";
 import { extractFilePath } from "./extract-file-path.js";
@@ -9,7 +9,7 @@ const RAW_HTML_MAX_CHARS = 1000;
 /**
  * Generates the default JIRA ticket summary from the group name.
  */
-export function defaultSummary(group: SelectionGroupWithJira): string {
+export function defaultSummary(group: SelectionGroup): string {
   return group.name;
 }
 
@@ -63,7 +63,7 @@ function renderSelection(item: CommentItem, index: number): string {
  * the "Group:" header — the ticket reads as a single-selection ticket.
  */
 export function defaultDescription(
-  group: SelectionGroupWithJira,
+  group: SelectionGroup,
   items: CommentItem[],
 ): string {
   const sections: string[] = [];

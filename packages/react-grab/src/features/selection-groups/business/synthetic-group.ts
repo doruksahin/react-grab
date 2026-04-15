@@ -1,17 +1,21 @@
-import type { CommentItem } from "../../../types.js";
 import type { SelectionGroup } from "../types.js";
 import { generateId } from "../../../utils/generate-id.js";
 
+/** Minimal shape needed to name a synthetic group. */
+interface SyntheticGroupSeed {
+  componentName?: string;
+  elementName: string;
+}
+
 /**
- * Synthetic-group operations. A synthetic group is auto-created when a
- * loose selection earns a JIRA ticket: it exists purely as a backing store
- * for the ticket fields (jiraTicketId, jiraStatus, etc.) that the rest of
- * the system expects to live on a SelectionGroup. Synthetic groups are
- * filtered out of every user-facing surface; their single item renders as
- * a loose card via `isPresentedAsLoose`.
+ * Synthetic-group operations. Every selection always belongs to a group.
+ * When the user hasn't picked a real group, a synthetic group is
+ * auto-created at selection time so the item is never ungrouped. Synthetic
+ * groups are invisible in user-facing surfaces; their single item renders
+ * as a loose card via `isPresentedAsLoose`.
  *
- * SRP: this module owns the *creation* and *identification* of synthetic
- * groups. It does NOT own:
+ * SRP: this module owns the *creation*, *identification*, and *lifecycle*
+ * of synthetic groups. It does NOT own:
  *   - the rendering rule (that's `business/membership.ts/isPresentedAsLoose`)
  *   - the dialog flow (that's wired in `core/index.tsx` and the sidebar)
  *   - persistence (that's the sync layer)
@@ -22,7 +26,7 @@ import { generateId } from "../../../utils/generate-id.js";
  * synthetic group's `name`, which feeds `defaultSummary(group)` in the
  * Jira create form.
  */
-export const inferSyntheticGroupName = (item: CommentItem): string =>
+export const inferSyntheticGroupName = (item: SyntheticGroupSeed): string =>
   item.componentName || item.elementName || "Untitled";
 
 /**
@@ -31,7 +35,7 @@ export const inferSyntheticGroupName = (item: CommentItem): string =>
  * orchestrator's `setGroups` / `persistGroups`.
  */
 export const createSyntheticGroupForItem = (
-  item: CommentItem,
+  item: SyntheticGroupSeed,
 ): SelectionGroup => ({
   id: generateId("group"),
   name: inferSyntheticGroupName(item),
@@ -39,6 +43,29 @@ export const createSyntheticGroupForItem = (
   revealed: false,
   synthetic: true,
 });
+
+/**
+ * Guarantee every item has a group. If `activeGroupId` is set (user picked
+ * a group in the picker), returns it — no new group needed. Otherwise
+ * creates a synthetic group so the item is never ungrouped.
+ *
+ * Pure function — does NOT persist. Returns the (possibly augmented) groups
+ * array and the groupId to assign. The caller persists if `groups` changed.
+ */
+export const ensureGroupForItem = (
+  item: SyntheticGroupSeed,
+  activeGroupId: string | null,
+  currentGroups: SelectionGroup[],
+): { groups: SelectionGroup[]; groupId: string } => {
+  if (activeGroupId) {
+    return { groups: currentGroups, groupId: activeGroupId };
+  }
+  const syntheticGroup = createSyntheticGroupForItem(item);
+  return {
+    groups: [...currentGroups, syntheticGroup],
+    groupId: syntheticGroup.id,
+  };
+};
 
 /**
  * Predicate for "is this a synthetic group?" — used by every filter that

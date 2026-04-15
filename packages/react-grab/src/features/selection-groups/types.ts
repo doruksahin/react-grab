@@ -46,6 +46,9 @@ export interface SelectionGroupsAPI {
   /** Remove a selection. Gated by ticket-lock — returns false if the
    *  selection is in a ticketed group. GCs empty synthetic groups. */
   handleRemoveItem: (itemId: string) => boolean;
+  /** Guarantee the item has a group. Returns the groupId to assign.
+   *  Uses activeGroupId when set, otherwise creates a synthetic group. */
+  ensureGroupForItem: (item: { componentName?: string; elementName: string }) => string;
 }
 
 /**
