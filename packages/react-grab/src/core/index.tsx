@@ -4618,7 +4618,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                   return res.data as { id: string; created: string };
                 } : undefined}
                 onSearchJiraUsers={syncState?.workspace ? async (query) => {
-                  const res = await searchJiraUsers({ query });
+                  const res = await searchJiraUsers({ query, project: syncState!.jiraProjectKey });
                   if (res.status !== 200) return [];
                   return res.data as Array<{ accountId: string; displayName: string; avatarUrl: string | null }>;
                 } : undefined}

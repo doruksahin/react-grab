@@ -4,6 +4,20 @@ import { getCachedUsers, setCachedUsers } from "../../../features/jira-comments/
 import { initials, avatarColor } from "../../../features/jira-comments/avatar-utils.js";
 import { useShadowMount } from "../../../utils/shadow-context.js";
 
+function positionPopup(popup: HTMLDivElement, rect: DOMRect) {
+  popup.style.left = `${rect.left}px`;
+  // Always try above first, fall back to below if no room
+  requestAnimationFrame(() => {
+    const popupHeight = popup.offsetHeight || 200;
+    const spaceAbove = rect.top;
+    if (spaceAbove >= popupHeight + 4) {
+      popup.style.top = `${rect.top - popupHeight - 4}px`;
+    } else {
+      popup.style.top = `${rect.bottom + 4}px`;
+    }
+  });
+}
+
 export function createMentionSuggestion(
   searchFn?: (query: string) => Promise<JiraUserSuggestion[]>,
 ): Omit<SuggestionOptions, "editor"> {
@@ -28,8 +42,8 @@ export function createMentionSuggestion(
           .map(
             (u, i) =>
               `<div class="mention-item${i === selected ? " active" : ""}" data-index="${i}">
-                <div class="avatar" style="background:${avatarColor(u.displayName)};width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${initials(u.displayName)}</div>
-                <span class="name" style="font-size:12px">${u.displayName}</span>
+                <div class="mention-avatar" style="background:${avatarColor(u.displayName)}">${initials(u.displayName)}</div>
+                <span class="mention-name">${u.displayName}</span>
               </div>`,
           )
           .join("");
@@ -49,6 +63,8 @@ export function createMentionSuggestion(
           popup.setAttribute("data-react-grab-mention-picker", "");
           popup.setAttribute("data-react-grab-ignore-events", "");
           popup.style.pointerEvents = "auto";
+          popup.style.position = "fixed";
+          popup.style.zIndex = "9999";
           popup.addEventListener("mousedown", (e) => {
             e.preventDefault();
             const el = (e.target as HTMLElement).closest("[data-index]");
@@ -60,18 +76,13 @@ export function createMentionSuggestion(
           selected = 0;
           renderList();
 
-          const { decorationNode } = props as SuggestionProps & { decorationNode: HTMLElement | null };
-          if (decorationNode) {
-            const rect = decorationNode.getBoundingClientRect();
-            popup.style.position = "fixed";
-            popup.style.left = `${rect.left}px`;
-            popup.style.top = `${rect.bottom + 4}px`;
-            popup.style.zIndex = "9999";
-          }
-
-          // Mount inside shadow DOM — same pattern as Kobalte portals
           const mount = useShadowMount();
           mount.appendChild(popup);
+
+          const { decorationNode } = props as SuggestionProps & { decorationNode: HTMLElement | null };
+          if (decorationNode) {
+            positionPopup(popup, decorationNode.getBoundingClientRect());
+          }
         },
         onUpdate(props: SuggestionProps) {
           items = props.items as JiraUserSuggestion[];
@@ -81,9 +92,7 @@ export function createMentionSuggestion(
 
           const { decorationNode } = props as SuggestionProps & { decorationNode: HTMLElement | null };
           if (popup && decorationNode) {
-            const rect = decorationNode.getBoundingClientRect();
-            popup.style.left = `${rect.left}px`;
-            popup.style.top = `${rect.bottom + 4}px`;
+            positionPopup(popup, decorationNode.getBoundingClientRect());
           }
         },
         onKeyDown(props: { event: KeyboardEvent }) {

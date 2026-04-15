@@ -180,6 +180,7 @@ const searchUsers = createRoute({
   request: {
     query: z.object({
       query: z.string().openapi({ description: "Search query for user name/email", example: "salih" }),
+      project: z.string().optional().openapi({ description: "Project key to scope results", example: "ATT" }),
     }),
   },
   responses: {
@@ -280,9 +281,9 @@ export const jiraRoutes = createRouter()
     }
   })
   .openapi(searchUsers, async (c) => {
-    const { query } = c.req.valid("query");
+    const { query, project } = c.req.valid("query");
     try {
-      const users = await c.var.jira.searchUsers(query);
+      const users = await c.var.jira.searchUsers(query, project);
       return c.json(users, 200);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to search JIRA users";

@@ -316,6 +316,10 @@ export type SearchJiraUsersParams = {
  * Search query for user name/email
  */
 query: string;
+/**
+ * Project key to scope results
+ */
+project?: string;
 };
 
 export type SearchJiraUsers200Item = {

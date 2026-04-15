@@ -483,10 +483,10 @@ export class JiraService {
    * Search for JIRA users that can be mentioned in comments.
    * Uses the user picker endpoint which returns users with accountId needed for ADF mentions.
    */
-  async searchUsers(query: string): Promise<Array<{ accountId: string; displayName: string; avatarUrl: string | null }>> {
-    const results = await this.client.userSearch.findUsersWithAllPermissions({
+  async searchUsers(query: string, projectKey?: string): Promise<Array<{ accountId: string; displayName: string; avatarUrl: string | null }>> {
+    const results = await this.client.userSearch.findAssignableUsers({
       query,
-      permissions: "BROWSE",
+      project: projectKey,
       maxResults: 10,
     });
     return (results ?? []).map((u) => ({
