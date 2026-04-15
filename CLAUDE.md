@@ -33,6 +33,33 @@ pnpm --filter @react-grab/sync-server db:migrate:local
 # Test (Playwright E2E + Vitest CLI tests)
 pnpm test
 
+# E2E — overlay tests only (headless)
+pnpm --filter react-grab test:e2e:overlay
+
+# E2E — mocked JIRA tests only (headless)
+pnpm --filter react-grab test:e2e:mocked
+
+# E2E — headed (browser visible)
+pnpm --filter react-grab test:e2e:overlay   # already --headed
+pnpm --filter react-grab test:e2e:mocked    # already --headed
+
+# E2E — UI mode (interactive test explorer)
+pnpm --filter react-grab test:e2e:ui              # all projects
+pnpm --filter react-grab test:e2e:overlay:ui      # overlay only
+pnpm --filter react-grab test:e2e:mocked:ui       # mocked only
+
+# E2E — run single file
+pnpm --filter react-grab exec playwright test e2e/mocked/jira-comment-write.spec.ts --project=chromium-mocked
+
+# E2E — filter by test name
+pnpm --filter react-grab exec playwright test --project=chromium-mocked --headed --grep "comment"
+
+# E2E — run tests for a decree spec (tags: @SPEC-004, @SPEC-010, @SPEC-013)
+pnpm --filter react-grab exec playwright test --project=chromium-mocked --headed --grep @SPEC-013
+
+# E2E — open HTML report (latest run)
+pnpm --filter react-grab exec playwright show-report
+
 # Single package test
 pnpm --filter @react-grab/cli test
 
@@ -52,8 +79,13 @@ pnpm --filter react-grab codegen
 # Verify OpenAPI spec + codegen are in sync
 pnpm check:codegen
 
+# Architecture — dependency graph (madge + ts-morph)
+pnpm arch:deps                # JSON import tree from core/index.tsx
+pnpm arch:deps:circular       # Check for circular dependencies
+pnpm arch:deps:svg            # Generate SVG → docs/architecture/dependency-graph.svg
+
 # Playwright browser install (first-time)
-npx --prefix packages/react-grab playwright install chromium --with-deps
+pnpm --filter react-grab exec playwright install chromium --with-deps
 
 # Dashboard dev
 pnpm --filter dashboard dev
@@ -168,10 +200,10 @@ Three terminals: `pnpm dev` (library watch), `pnpm sync:dev` (sync server on :87
 pnpm test
 
 # Run only mocked tests (JIRA features, visual verification)
-cd packages/react-grab && npx playwright test --project=chromium-mocked
+pnpm --filter react-grab exec playwright test --project=chromium-mocked
 
 # View screenshots and videos in the report
-npx playwright show-report
+pnpm --filter react-grab exec playwright show-report
 ```
 
 ### Architecture — two Playwright projects
@@ -191,21 +223,32 @@ The `chromium` project runs existing tests unaffected. The `chromium-mocked` pro
 
 `e2e/fixtures.ts` — `mockServer` fixture auto-resolves before `reactGrab` navigates, so routes are registered before `initSync()` fetches data. `reactGrab.screenshot(name, target)` attaches PNGs to the Playwright HTML report.
 
-### Verifying a SPEC acceptance criteria item
+### Decree spec tags — linking tests to specs
 
-Use Playwright's native `annotation` API to link tests to decree SPEC items:
+Every mocked E2E test must be tagged with its decree spec using Playwright's `tag` option. This enables filtering tests by spec (`--grep @SPEC-013`) and shows in the HTML report + UI mode.
+
+**Convention:** Tag the `test.describe` block so all tests inside inherit the tag. Add `annotation` on individual tests for AC-level traceability.
 
 ```ts
-test('Insert menu shows Divider, Code block, Quote', {
-  annotation: { type: 'ac', description: 'SPEC-013: Insert menu (+)' },
-}, async ({ page, reactGrab, mockServer }) => {
-  // navigate to group detail
-  await reactGrab.screenshot('insert-menu-open', 'page');
-  // assert...
+test.describe('JIRA comment write-back', { tag: ['@SPEC-013'] }, () => {
+  test('AC-1: Cmd+Enter submits the comment', {
+    annotation: { type: 'ac', description: 'SPEC-013 AC-1' },
+  }, async ({ page, reactGrab, mockServer }) => {
+    await reactGrab.screenshot('insert-menu-open', 'page');
+    // assert...
+  });
 });
 ```
 
-The HTML report shows the annotation + screenshots inline. That's the entire verification system — no custom reporter, no mapping files.
+**Current tag mapping:**
+
+| Tag | Decree spec | Test files |
+|---|---|---|
+| `@SPEC-004` | Selection status colors | `selection-label-visual.spec.ts` |
+| `@SPEC-010` | JIRA comments display | `jira-comment-sidebar-visual.spec.ts`, `jira-selection-label-visual.spec.ts`, `reveal-test.spec.ts` |
+| `@SPEC-013` | JIRA comment write-back | `verify-spec-013.spec.ts`, `jira-comment-write.spec.ts` |
+
+When adding new mocked tests, always add a `@SPEC-xxx` tag. See `TESTING.md` for the full cheatsheet.
 
 ### Key files
 

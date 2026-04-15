@@ -6,6 +6,7 @@
 |-----|-----|-----|-----|
 | PRD-004 | PRD-004 JIRA Status Visualization and Filtering | approved | 2026-04-06 |
 | PRD-006 | PRD-006 Loose-Selection Ticketing | approved | 2026-04-08 |
+| PRD-012 | PRD-012 Testable Sync Decoupling | approved | 2026-04-15 |
 | PRD-002 | PRD-002 Embedded Dashboard Sidebar | draft | 2026-04-05 |
 | PRD-003 | PRD-003 Full-Page Screenshot Element Highlighting | draft | 2026-04-06 |
 | PRD-005 | PRD-005 Jira assignee and reporter avatar display | draft | 2026-04-06 |

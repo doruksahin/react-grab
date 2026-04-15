@@ -395,7 +395,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         )}
       </Show>
 
-      <Show when={props.syncReady !== false && sidebarOpen()}>
+      <Show when={sidebarOpen()}>
         <Sidebar
           groups={(props.groups ?? []) as SelectionGroupWithJira[]}
           commentItems={props.commentItems ?? []}

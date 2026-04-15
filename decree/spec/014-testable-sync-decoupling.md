@@ -279,12 +279,11 @@ test.use({ video: "on" });
 - [ ] `populate()` does NOT set the adapter signal (no HTTP fetchers fire)
 - [ ] `populate()` does NOT start JIRA polling
 
-#### Readiness gate
-- [ ] Sidebar gated by `syncLayer.status() !== "idle"` — passed as `syncReady` prop from core/index.tsx to renderer
-- [ ] Overlay (activation, selection, toolbar) renders regardless of sync status
-- [ ] Sidebar does not render when `populate()` has not been called and `initSync()` has not been called
-- [ ] Sidebar renders immediately (no loading flash) after `populate()` is called
-- [ ] Sidebar components with `onMount`-based setup (poller, listeners) function correctly with delayed mount via readiness gate
+#### Sidebar consistency
+- [ ] Sidebar always renders when opened — no readiness gate, same as production offline behavior
+- [ ] Sidebar shows empty state when no groups are present (no syncData, no initSync)
+- [ ] Sidebar shows seeded groups/comments when `populate()` has been called
+- [ ] JIRA-specific callbacks remain gated on `syncLayer.workspace()` (existing pattern, unchanged)
 
 #### e2e-app changes
 - [ ] `main.tsx` no longer reads sync env vars or auto-calls `initSync()`

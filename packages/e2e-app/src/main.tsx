@@ -1,8 +1,7 @@
 import "solid-devtools";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { init, initSync } from "react-grab";
-import { populateSync } from "react-grab/src/core/index.js";
+import { init, initSync, populateSync } from "react-grab";
 import "./index.css";
 import App from "./App.tsx";
 
