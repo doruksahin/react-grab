@@ -429,14 +429,14 @@ export class JiraService {
    */
   async addComment(
     ticketId: string,
-    body: object,
+    adf: ReturnType<typeof import("marklassian").markdownToAdf>,
     parentId?: string,
   ): Promise<{ id: string; created: string }> {
     const result = await this.client.issueComments.addComment({
       issueIdOrKey: ticketId,
-      body,
+      comment: adf,
       ...(parentId ? { parentId } : {}),
-    } as Parameters<typeof this.client.issueComments.addComment>[0]);
+    });
     return {
       id: result.id ?? "",
       created: result.created ?? new Date().toISOString(),

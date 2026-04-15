@@ -212,6 +212,7 @@
   margin: 0.25em 0;
   border: 1px solid hsl(var(--border));
   display: block;
+  cursor: pointer;
 }
 .jira-editor-content .ProseMirror img.ProseMirror-selectednode {
   outline: 2px solid hsl(var(--primary));

@@ -4,8 +4,8 @@ import { injectMentions } from "../jira-adf-mentions.js";
 describe("injectMentions", () => {
   it("returns ADF unchanged when no mentions provided", () => {
     const adf = {
-      type: "doc",
-      version: 1,
+      type: "doc" as const,
+      version: 1 as const,
       content: [{ type: "paragraph", content: [{ type: "text", text: "Hello world" }] }],
     };
     expect(injectMentions(adf, [])).toEqual(adf);
@@ -13,8 +13,8 @@ describe("injectMentions", () => {
 
   it("replaces @Name with a mention node in a paragraph", () => {
     const adf = {
-      type: "doc",
-      version: 1,
+      type: "doc" as const,
+      version: 1 as const,
       content: [
         { type: "paragraph", content: [{ type: "text", text: "Hello @Alice Cooper, looks good" }] },
       ],
@@ -33,8 +33,8 @@ describe("injectMentions", () => {
 
   it("handles multiple mentions in one text node", () => {
     const adf = {
-      type: "doc",
-      version: 1,
+      type: "doc" as const,
+      version: 1 as const,
       content: [
         { type: "paragraph", content: [{ type: "text", text: "@Alice Cooper and @Bob Martinez" }] },
       ],
@@ -54,8 +54,8 @@ describe("injectMentions", () => {
 
   it("handles mentions inside nested structures (list items)", () => {
     const adf = {
-      type: "doc",
-      version: 1,
+      type: "doc" as const,
+      version: 1 as const,
       content: [{
         type: "bulletList",
         content: [{
@@ -76,8 +76,8 @@ describe("injectMentions", () => {
 
   it("leaves non-text nodes untouched", () => {
     const adf = {
-      type: "doc",
-      version: 1,
+      type: "doc" as const,
+      version: 1 as const,
       content: [
         { type: "rule" },
         { type: "paragraph", content: [{ type: "text", text: "no mentions here" }] },

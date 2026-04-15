@@ -1,11 +1,7 @@
-interface AdfNode {
-  type: string;
-  text?: string;
-  content?: AdfNode[];
-  attrs?: Record<string, unknown>;
-  marks?: unknown[];
-  [key: string]: unknown;
-}
+import type { markdownToAdf } from "marklassian";
+
+type AdfDocument = ReturnType<typeof markdownToAdf>;
+type AdfNode = AdfDocument["content"][number];
 
 interface MentionMapping {
   text: string;      // e.g. "@Alice Cooper"
@@ -17,25 +13,27 @@ interface MentionMapping {
  * Pure function — no side effects, no dependencies on JiraService.
  */
 export function injectMentions(
-  adf: AdfNode,
+  adf: AdfDocument,
   mentions: MentionMapping[],
-): AdfNode {
+): AdfDocument {
   if (mentions.length === 0) return adf;
-  return walkNode(structuredClone(adf), mentions);
+  const clone = structuredClone(adf);
+  clone.content = walkChildren(clone.content, mentions);
+  return clone;
 }
 
-function walkNode(node: AdfNode, mentions: MentionMapping[]): AdfNode {
-  if (!node.content) return node;
-  const expanded: AdfNode[] = [];
-  for (const child of node.content) {
+function walkChildren(nodes: AdfNode[], mentions: MentionMapping[]): AdfNode[] {
+  const result: AdfNode[] = [];
+  for (const child of nodes) {
     if (child.type === "text" && child.text) {
-      expanded.push(...splitTextNode(child, mentions));
+      result.push(...splitTextNode(child, mentions));
+    } else if (child.content) {
+      result.push({ ...child, content: walkChildren(child.content, mentions) });
     } else {
-      expanded.push(walkNode(child, mentions));
+      result.push(child);
     }
   }
-  node.content = expanded;
-  return node;
+  return result;
 }
 
 function splitTextNode(node: AdfNode, mentions: MentionMapping[]): AdfNode[] {

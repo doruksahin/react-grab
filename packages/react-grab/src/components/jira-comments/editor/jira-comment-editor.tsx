@@ -1,4 +1,4 @@
-import { type Component, createSignal, onCleanup, onMount, Show } from "solid-js";
+import { type Component, createEffect, createSignal, on, onCleanup, onMount, Show } from "solid-js";
 import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
@@ -9,6 +9,19 @@ import Color from "@tiptap/extension-color";
 import Image from "@tiptap/extension-image";
 import Mention from "@tiptap/extension-mention";
 import Placeholder from "@tiptap/extension-placeholder";
+
+const MentionWithMarkdown = Mention.extend({
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: { write(s: string): void }, node: { attrs: Record<string, string> }) {
+          state.write(`@${node.attrs.label ?? ""}`);
+        },
+        parse: {},
+      },
+    };
+  },
+});
 import { extractMentions } from "../../../features/jira-comments/extract-mentions.js";
 import { setupImageHandlers } from "../../../features/jira-comments/use-editor-images.js";
 import type { JiraCommentEditorProps } from "../../../features/jira-comments/types.js";
@@ -21,6 +34,17 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
   let editor: Editor | undefined;
   const [, tick] = createSignal(0);
 
+  createEffect(on(() => props.replyTo, (reply) => {
+    if (!reply || !editor) return;
+    editor.chain().focus()
+      .insertContent([
+        { type: "mention", attrs: { id: reply.author, label: reply.author } },
+        { type: "text", text: " " },
+      ])
+      .run();
+    props.onCancelReply?.();
+  }));
+
   onMount(() => {
     editor = new Editor({
       element: editorEl,
@@ -31,8 +55,11 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         Underline,
         TextStyle,
         Color,
-        Image,
-        Mention.configure({
+        Image.configure({
+          allowBase64: true,
+          HTMLAttributes: { class: "jira-editor-image" },
+        }),
+        MentionWithMarkdown.configure({
           HTMLAttributes: { class: "mention" },
           suggestion: createMentionSuggestion(props.onSearchUsers),
           renderText: ({ node }) => `@${node.attrs.label ?? ""}`,
@@ -69,26 +96,6 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
       class="flex flex-col rounded border border-border bg-muted/40 overflow-hidden"
       style={{ "pointer-events": "auto" }}
     >
-      {/* Reply context bar */}
-      <Show when={props.replyTo}>
-        {(reply) => (
-          <div
-            data-react-grab-reply-context
-            data-react-grab-ignore-events
-            class="flex items-center gap-2 px-2 py-1 bg-accent/30 border-b border-border text-[10px] text-muted-foreground"
-          >
-            <span>Replying to <strong class="text-foreground">{reply().author}</strong></span>
-            <button
-              type="button"
-              class="ml-auto text-muted-foreground hover:text-foreground"
-              onMouseDown={(e) => { e.preventDefault(); props.onCancelReply?.(); }}
-            >
-              ✕
-            </button>
-          </div>
-        )}
-      </Show>
-
       {/* Toolbar */}
       <Show when={editor}>
         {(ed) => <EditorToolbar editor={ed()} onImageClick={() => fileInput?.click()} />}
@@ -101,6 +108,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
       <div
         ref={editorEl}
         data-react-grab-comment-editor
+        data-react-grab-ignore-events
         class="jira-editor-content px-3 py-2 min-h-[100px] text-[12px] text-foreground outline-none"
         style={{ "pointer-events": "auto" }}
       />
@@ -113,7 +121,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
           class="px-3 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           onMouseDown={(e) => { e.preventDefault(); handleSubmit(); }}
         >
-          {props.replyTo ? "Reply" : "Save"}
+          Save
         </button>
         <Show when={props.onCancel}>
           <button
