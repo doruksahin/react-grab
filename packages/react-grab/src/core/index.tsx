@@ -164,7 +164,7 @@ import {
   confirmClear,
 } from "../utils/comment-storage.js";
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
-import type { SyncConfig } from "../features/sync/types.js";
+import type { SyncConfig, SyncStatus } from "../features/sync/types.js";
 import { copyContent, copyGroupedContent, type ReactGrabGroup } from "../utils/copy-content.js";
 import { joinSnippets, joinGroupedSnippets, type GroupedSnippet } from "../utils/join-snippets.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
@@ -358,6 +358,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       syncLayer.persistComments(syncLayer.comments().map((i) => (i.id === id ? { ...i, ...patch } : i)));
 
     const clearComments = (): CommentItem[] => syncLayer.persistComments([]);
+
+    const derivedSyncStatus = (): SyncStatus => {
+      const s = syncLayer.status();
+      if (s === "synced" || s === "error") return s;
+      return "local";
+    };
+
     const [commentsDropdownPosition, setCommentsDropdownPosition] =
       createSignal<DropdownAnchor | null>(null);
     const [toolbarMenuPosition, setToolbarMenuPosition] =
@@ -4520,7 +4527,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 selectionsRevealed={visibility.selectionsRevealed()}
                 onToggleSelectionsRevealed={visibility.handleToggleParent}
                 onToggleCommentItemRevealed={visibility.handleToggleItem}
-                syncStatus={(() => { const s = syncLayer.status(); return s === "synced" || s === "error" ? s : "local"; })()}
+                syncStatus={derivedSyncStatus()}
                 syncWorkspace={syncLayer.workspace() ?? undefined}
                 syncServerUrl={syncLayer.serverUrl() ?? undefined}
                 jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
@@ -4712,6 +4719,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         cancelCommentsHoverCloseTimeout();
         stopTrackingDropdownPosition();
         toolbarStateChangeCallbacks.clear();
+        syncLayer.dispose();
         dispose();
       },
       copyElement: copyElementAPI,
