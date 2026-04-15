@@ -1,6 +1,6 @@
 import { type Component, For } from "solid-js";
-import type { GroupedEntry } from "../../features/sidebar";
-import { GroupCard } from "./group-card";
+import type { GroupedEntry } from "../../features/sidebar/index.js";
+import { GroupCard } from "./group-card.js";
 
 interface GroupListProps {
   groupedItems: GroupedEntry[];
@@ -14,7 +14,7 @@ export const GroupList: Component<GroupListProps> = (props) => {
         {(entry) => (
           <GroupCard
             entry={entry}
-            onClick={props.onGroupClick}
+            onDetailOpen={props.onGroupClick}
           />
         )}
       </For>

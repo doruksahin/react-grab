@@ -1,29 +1,60 @@
-import { type Component, For, Show } from "solid-js";
-import type { GroupedEntry } from "../../features/sidebar";
-import { relativeTime } from "../../features/sidebar";
+import { type Component, createSignal, For, Show } from "solid-js";
+import type { GroupedEntry } from "../../features/sidebar/index.js";
+import { relativeTime } from "../../features/sidebar/index.js";
 import { getStatusColor, getStatusLabel } from "../../features/sidebar/status-colors.js";
 import { UserAvatar } from "./UserAvatar.js";
+import { GroupChildren } from "./group-children.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 
 interface GroupCardProps {
   entry: GroupedEntry;
-  onClick: (groupId: string, cardEl: HTMLElement) => void;
+  onDetailOpen: (groupId: string, cardEl: HTMLElement) => void;
 }
 
 export const GroupCard: Component<GroupCardProps> = (props) => {
+  const [isExpanded, setIsExpanded] = createSignal(false);
   const statusLabel = () => getStatusLabel(props.entry.group);
   const statusColor = () => getStatusColor(props.entry.group.jiraStatus);
   const comments = () => props.entry.items;
 
+  const handleCardClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded((prev) => !prev);
+  };
+
+  const handleDetailOpen = (e: MouseEvent) => {
+    e.stopPropagation();
+    const target = e.currentTarget as HTMLElement;
+    const card = target.closest("[data-react-grab-group-card]") as HTMLElement;
+    props.onDetailOpen(props.entry.group.id, card);
+  };
+
   return (
     <div
       data-react-grab-group-card
-      class="bg-muted rounded-lg p-3 mb-1.5 cursor-pointer border border-transparent hover:border-border hover:bg-accent transition-colors"
+      class="group/card bg-muted rounded-lg mb-1.5 cursor-pointer border border-transparent hover:border-border hover:bg-accent transition-colors overflow-hidden"
       style={{ "border-left": `2px solid ${statusColor().hex}` }}
-      onClick={(e) => props.onClick(props.entry.group.id, e.currentTarget as HTMLElement)}
+      onClick={handleCardClick}
     >
+      <div class="p-3">
       <div class="flex items-center justify-between mb-1.5">
-        <span class="font-semibold text-[13px] text-foreground">{props.entry.group.name}</span>
+        <div class="flex items-center gap-1.5 min-w-0">
+          {/* Chevron */}
+          <svg
+            viewBox="0 0 10 10"
+            class="text-foreground/30 transition-transform duration-150 shrink-0 w-2.5 h-2.5"
+            classList={{ "-rotate-90": !isExpanded() }}
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m2 3.5 3 3 3-3" />
+          </svg>
+          <span class="font-semibold text-[13px] text-foreground truncate">{props.entry.group.name}</span>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
         <span
           class="text-[10px] px-1.5 py-0.5 rounded"
           style={{
@@ -33,6 +64,17 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
         >
           {statusLabel()}
         </span>
+          {/* Detail open button — visible on hover */}
+          <button
+            class="opacity-0 group-hover/card:opacity-100 transition-opacity p-0.5 rounded hover:bg-foreground/10"
+            onClick={handleDetailOpen}
+            title="Open detail view"
+          >
+            <svg viewBox="0 0 10 10" class="w-2.5 h-2.5 text-foreground/40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m3.5 2 3 3-3 3" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div class="flex gap-3 text-[11px] text-muted-foreground mb-2">
@@ -82,30 +124,37 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
         </div>
       </Show>
 
-      <div class="flex flex-col gap-1">
-        <For each={comments().slice(0, 3)}>
-          {(comment) => (
-            <div class="flex items-center gap-1.5 text-[10px]">
-              <span class="px-1.5 py-0.5 rounded bg-muted text-foreground">
-                {comment.componentName || comment.elementName}
-              </span>
-              <span class="px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                {comment.tagName}
-              </span>
-              <Show when={comment.commentText}>
-                <span class="text-muted-foreground italic truncate max-w-[150px]">
-                  {comment.commentText}
+      <Show when={!isExpanded()}>
+        <div class="flex flex-col gap-1">
+          <For each={comments().slice(0, 3)}>
+            {(comment) => (
+              <div class="flex items-center gap-1.5 text-[10px]">
+                <span class="px-1.5 py-0.5 rounded bg-muted text-foreground">
+                  {comment.componentName || comment.elementName}
                 </span>
-              </Show>
-            </div>
-          )}
-        </For>
-        <Show when={comments().length > 3}>
-          <span class="text-[10px] text-muted-foreground px-1.5">
-            +{comments().length - 3} more
-          </span>
-        </Show>
+                <span class="px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  {comment.tagName}
+                </span>
+                <Show when={comment.commentText}>
+                  <span class="text-muted-foreground italic truncate max-w-[150px]">
+                    {comment.commentText}
+                  </span>
+                </Show>
+              </div>
+            )}
+          </For>
+          <Show when={comments().length > 3}>
+            <span class="text-[10px] text-muted-foreground px-1.5">
+              +{comments().length - 3} more
+            </span>
+          </Show>
+        </div>
+      </Show>
       </div>
+
+      <Show when={isExpanded()}>
+        <GroupChildren items={props.entry.items} />
+      </Show>
     </div>
   );
 };
