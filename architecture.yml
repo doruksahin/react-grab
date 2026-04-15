@@ -32,8 +32,10 @@ packages:
         description: Full-page + element screenshots with highlight overlay
         index: packages/react-grab/src/features/screenshot/index.ts
       sync:
-        description: HTTP sync adapter — persist selections to sync-server
+        description: Reactive sync layer — createStore + reconcile for server state
         index: packages/react-grab/src/features/sync/index.ts
+        composition_root: packages/react-grab/src/features/sync/sync-layer.ts
+        store: packages/react-grab/src/features/sync/store/sync-store.ts
       jira-comments:
         description: JIRA comment authoring — optimistic updates, reply threading
         index: packages/react-grab/src/features/jira-comments/use-jira-comments.ts
@@ -244,7 +246,7 @@ features:
     specs: [SPEC-003]
     adrs: [ADR-0006]
     files:
-      - packages/react-grab/src/features/sidebar/jira-status-poller.ts
+      - packages/react-grab/src/features/sync/sync-layer.ts
       - packages/react-grab/src/core/index.tsx
       - packages/sync-server/src/routes/jira.ts
       - packages/sync-server/src/services/jira.service.ts
@@ -340,6 +342,47 @@ features:
       - packages/react-grab/src/components/sidebar/group-card.tsx
       - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
       - packages/sync-server/src/services/jira.service.ts
+
+data_flows:
+  sync_layer:
+    description: Server data loading, JIRA polling, and reactive state
+    composition_root: packages/react-grab/src/features/sync/sync-layer.ts
+    store: packages/react-grab/src/features/sync/store/sync-store.ts
+    init_sequence:
+      1: "host calls initSync(config) → syncLayer.init(config)"
+      2: "init() creates httpAdapter, awaits loadGroups + loadComments"
+      3: "reconcile data into createStore → reactive state available"
+      4: "startPolling() begins 30s JIRA status interval"
+      5: "host calls init() → UI reads from store reactively"
+    sources:
+      groups:
+        store_path: store.groups
+        load: sync-layer.ts init() → adapter.loadGroups()
+        persist: sync-layer.ts persistGroups() → adapter.persistGroups()
+        consumers:
+          - components/sidebar/* (group list, detail view)
+          - components/selection-label/* (status colors, JIRA meta)
+          - features/selection-groups/index.ts (CRUD operations)
+      comments:
+        store_path: store.comments
+        load: sync-layer.ts init() → adapter.loadComments()
+        persist: sync-layer.ts persistComments() → adapter.persistComments()
+        consumers:
+          - components/selection-label/* (comment text, count)
+          - components/comments-dropdown.tsx
+          - features/selection-visibility/index.ts (reveal state)
+      jira_status:
+        store_path: store.groups[i].jiraStatus (fine-grained per-group)
+        trigger: pollJira() via 30s setInterval
+        fields_updated:
+          - jiraStatus, jiraStatusCategory, jiraUrl
+          - jiraAssignee, jiraReporter, jiraAssigneeAvatar, jiraReporterAvatar
+          - jiraComments, jiraLabels, jiraResolved
+          - jiraFlagged, jiraFlaggedAt, jiraFlaggedBy, jiraFlaggedByAvatar
+        consumers:
+          - components/sidebar/group-card.tsx (status badge)
+          - components/selection-label/* (inline status)
+          - components/jira-comments/* (comment list)
 
 # ─── API contract flow ────────────────────────────────────────────────────────
 
