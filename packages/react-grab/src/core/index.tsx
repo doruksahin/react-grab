@@ -147,6 +147,7 @@ import { createSyntheticGroupForItem, isSynthetic } from "../features/selection-
 import { assignSelection } from "../features/selection-groups/business/selection-assignment.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { createJiraStatusPoller } from "../features/sidebar/jira-status-poller.js";
+import { addJiraComment, searchJiraUsers, getJiraTicketStatus } from "../generated/sync-api.js";
 import {
   freezeAnimations,
   freezeAllAnimations,
@@ -4611,6 +4612,27 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
                 looseTicketDialog={looseTicketDialog()}
                 onLooseTicketDialogClose={() => setLooseTicketDialog(null)}
+                onSubmitJiraComment={syncState?.workspace ? async (groupId, markdown, mentions, parentId) => {
+                  const res = await addJiraComment(syncState!.workspace, groupId, { body: markdown, mentions, parentId });
+                  if (res.status !== 200) throw new Error("Failed to post comment");
+                  return res.data as { id: string; created: string };
+                } : undefined}
+                onSearchJiraUsers={syncState?.workspace ? async (query) => {
+                  const res = await searchJiraUsers({ query, project: syncState!.jiraProjectKey });
+                  if (res.status !== 200) return [];
+                  return res.data as Array<{ accountId: string; displayName: string; avatarUrl: string | null }>;
+                } : undefined}
+                onRefreshJiraStatus={syncState?.workspace ? (groupId) => {
+                  getJiraTicketStatus(syncState!.workspace, groupId).then((res) => {
+                    if (res.status !== 200) return;
+                    const status = res.data;
+                    const resolved = status.statusCategory.toLowerCase() === "done";
+                    const updated = selectionGroups.groups().map((g) =>
+                      g.id === groupId ? { ...g, jiraStatus: status.status, jiraStatusCategory: status.statusCategory, jiraAssignee: status.assignee, jiraReporter: status.reporter, jiraAssigneeAvatar: status.assigneeAvatar, jiraReporterAvatar: status.reporterAvatar, jiraLabels: status.labels, jiraComments: status.comments, jiraResolved: resolved, jiraUrl: status.jiraUrl, jiraFlagged: status.flagged ?? false, jiraFlaggedAt: status.flaggedAt ?? null, jiraFlaggedBy: status.flaggedBy ?? null, jiraFlaggedByAvatar: status.flaggedByAvatar ?? null } : g,
+                    );
+                    selectionGroups.persistGroups(updated);
+                  }).catch(() => {});
+                } : undefined}
               />
             );
           }, rendererRoot);

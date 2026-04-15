@@ -1,7 +1,8 @@
 ---
-status: draft
-date: 2026-04-06
-references: [PRD-002]
+date: '2026-04-06'
+references:
+- PRD-002
+status: approved
 ---
 
 # PRD-004 JIRA Status Visualization and Filtering

@@ -655,6 +655,12 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   looseTicketDialog?: { group: SelectionGroupWithJira; items: CommentItem[] } | null;
   onLooseTicketDialogClose?: () => void;
+  /** Submit a JIRA comment for a specific group */
+  onSubmitJiraComment?: (groupId: string, markdown: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) => Promise<{ id: string; created: string }>;
+  /** Search JIRA users for @mention autocomplete */
+  onSearchJiraUsers?: (query: string) => Promise<Array<{ accountId: string; displayName: string; avatarUrl: string | null }>>;
+  /** Trigger JIRA status refresh for a specific group */
+  onRefreshJiraStatus?: (groupId: string) => void;
 }
 
 export interface GrabbedBox {
@@ -785,4 +791,10 @@ export interface SelectionLabelProps
    *  button that opens the JiraCreateDialog. */
   onCreateTicket?: () => void;
   hideArrow?: boolean;
+  /** Submit a JIRA comment for the current group's ticket */
+  onSubmitJiraComment?: (markdown: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) => Promise<{ id: string; created: string }>;
+  /** Search JIRA users for @mention autocomplete */
+  onSearchJiraUsers?: (query: string) => Promise<Array<{ accountId: string; displayName: string; avatarUrl: string | null }>>;
+  /** Trigger a JIRA status refresh (after posting a comment) */
+  onRefreshJiraStatus?: () => void;
 }

@@ -1,8 +1,13 @@
 import { createRoute, z } from "@hono/zod-openapi";
+import { markdownToAdf } from "marklassian";
 import { createRouter } from "../lib/create-router.js";
+import { injectMentions } from "../services/jira-adf-mentions.js";
 import {
   CreateJiraTicketRequest,
   CreateJiraTicketResponse,
+  AddJiraCommentRequest,
+  AddJiraCommentResponse,
+  JiraUser,
   JiraProject,
   JiraIssueType,
   JiraPriority,
@@ -137,6 +142,59 @@ const listLabels = createRoute({
   },
 });
 
+const addComment = createRoute({
+  method: "post",
+  path: "/workspaces/{id}/groups/{groupId}/jira-comment",
+  tags: ["jira"],
+  summary: "Add a comment to a JIRA ticket linked to a group",
+  operationId: "addJiraComment",
+  request: {
+    params: GroupIdParam,
+    body: {
+      content: { "application/json": { schema: AddJiraCommentRequest } },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: "Comment created",
+      content: { "application/json": { schema: AddJiraCommentResponse } },
+    },
+    404: {
+      description: "No JIRA ticket linked",
+      content: { "application/json": { schema: ErrorResponse } },
+    },
+    400: {
+      description: "Bad request",
+      content: { "application/json": { schema: ErrorResponse } },
+    },
+  },
+});
+
+const searchUsers = createRoute({
+  method: "get",
+  path: "/jira/users",
+  tags: ["jira"],
+  summary: "Search JIRA users for mentions",
+  operationId: "searchJiraUsers",
+  request: {
+    query: z.object({
+      query: z.string().openapi({ description: "Search query for user name/email", example: "salih" }),
+      project: z.string().optional().openapi({ description: "Project key to scope results", example: "ATT" }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "List of matching users",
+      content: { "application/json": { schema: z.array(JiraUser) } },
+    },
+    500: {
+      description: "Internal server error",
+      content: { "application/json": { schema: ErrorResponse } },
+    },
+  },
+});
+
 export const jiraRoutes = createRouter()
   .openapi(createTicket, async (c) => {
     const { id: workspaceId, groupId } = c.req.valid("param");
@@ -164,6 +222,25 @@ export const jiraRoutes = createRouter()
     }
     const status = await c.var.jira.getIssueStatus(group.jiraTicketId);
     return c.json(status, 200);
+  })
+  .openapi(addComment, async (c) => {
+    const { id: workspaceId, groupId } = c.req.valid("param");
+    const { body, parentId, mentions } = c.req.valid("json");
+    const groups = await c.var.repo.listGroups(workspaceId);
+    const group = groups.find((g) => g.id === groupId);
+    if (!group?.jiraTicketId) {
+      return c.json({ error: "No JIRA ticket linked to this group" }, 404);
+    }
+    try {
+      const processedBody = await c.var.jira.uploadBase64Images(group.jiraTicketId, body);
+      const adf = markdownToAdf(processedBody);
+      const enriched = mentions?.length ? injectMentions(adf, mentions) : adf;
+      const result = await c.var.jira.addComment(group.jiraTicketId, enriched, parentId);
+      return c.json(result, 200);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to add JIRA comment";
+      return c.json({ error: message }, 400);
+    }
   })
   .openapi(listProjects, async (c) => {
     try {
@@ -200,6 +277,16 @@ export const jiraRoutes = createRouter()
       return c.json(labels, 200);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to list JIRA labels";
+      return c.json({ error: message }, 500);
+    }
+  })
+  .openapi(searchUsers, async (c) => {
+    const { query, project } = c.req.valid("query");
+    try {
+      const users = await c.var.jira.searchUsers(query, project);
+      return c.json(users, 200);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to search JIRA users";
       return c.json({ error: message }, 500);
     }
   });

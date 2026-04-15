@@ -423,4 +423,77 @@ export class JiraService {
     };
   }
 
+  /**
+   * Add a comment to a JIRA issue. Supports threaded replies via parentId.
+   * Body must be an ADF document — route handler converts markdown first.
+   */
+  async addComment(
+    ticketId: string,
+    adf: ReturnType<typeof import("marklassian").markdownToAdf>,
+    parentId?: string,
+  ): Promise<{ id: string; created: string }> {
+    const result = await this.client.issueComments.addComment({
+      issueIdOrKey: ticketId,
+      comment: adf,
+      ...(parentId ? { parentId } : {}),
+    });
+    return {
+      id: result.id ?? "",
+      created: result.created ?? new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Extract base64 data: URLs from markdown, upload to JIRA as attachments,
+   * and replace with proxy URLs. Returns rewritten markdown.
+   */
+  async uploadBase64Images(ticketId: string, body: string): Promise<string> {
+    const imgRegex = /!\[([^\]]*)\]\((data:image\/[^)]+)\)/g;
+    let processed = body;
+    for (const match of body.matchAll(imgRegex)) {
+      const [full, alt, dataUrl] = match;
+      const base64 = dataUrl!.split(",")[1];
+      if (!base64) continue;
+      const mimeType = dataUrl!.match(/data:([^;]+)/)?.[1] ?? "image/png";
+      const ext = mimeType.split("/")[1] ?? "png";
+      const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+      const blob = new Blob([bytes], { type: mimeType });
+      const form = new FormData();
+      form.append("file", blob, `comment-${Date.now()}.${ext}`);
+      const authHeader = "Basic " + btoa(`${this.config.email}:${this.config.apiToken}`);
+      const attachRes = await fetch(
+        `${this.config.baseUrl}/rest/api/3/issue/${ticketId}/attachments`,
+        {
+          method: "POST",
+          headers: { Authorization: authHeader, "X-Atlassian-Token": "no-check" },
+          body: form,
+        },
+      );
+      if (attachRes.ok) {
+        const attachments = (await attachRes.json()) as Array<{ id: string }>;
+        if (attachments[0]) {
+          processed = processed.replace(full!, `![${alt}](/jira-attachment/${attachments[0].id})`);
+        }
+      }
+    }
+    return processed;
+  }
+
+  /**
+   * Search for JIRA users that can be mentioned in comments.
+   * Uses the user picker endpoint which returns users with accountId needed for ADF mentions.
+   */
+  async searchUsers(query: string, projectKey?: string): Promise<Array<{ accountId: string; displayName: string; avatarUrl: string | null }>> {
+    const results = await this.client.userSearch.findAssignableUsers({
+      query,
+      project: projectKey,
+      maxResults: 10,
+    });
+    return (results ?? []).map((u) => ({
+      accountId: u.accountId ?? "",
+      displayName: u.displayName ?? "Unknown",
+      avatarUrl: u.avatarUrls?.["48x48"] ?? null,
+    }));
+  }
+
 }

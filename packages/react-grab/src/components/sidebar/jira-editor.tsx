@@ -2,39 +2,12 @@ import { type Component, createSignal, onCleanup, onMount } from "solid-js";
 import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
+import { ToolbarButton } from "../jira-comments/editor/toolbar.js";
 
 interface JiraEditorProps {
   initialValue?: string;
   onChange?: (markdown: string) => void;
 }
-
-const ToolbarButton: Component<{
-  active?: boolean;
-  disabled?: boolean;
-  title: string;
-  onClick: () => void;
-  children: any;
-}> = (props) => (
-  <button
-    type="button"
-    title={props.title}
-    disabled={props.disabled}
-    onMouseDown={(e) => {
-      e.preventDefault(); // keep editor focus + selection intact
-      if (!props.disabled) props.onClick();
-    }}
-    class={[
-      "px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors",
-      props.active
-        ? "bg-accent text-accent-foreground"
-        : "text-muted-foreground hover:text-foreground hover:bg-accent",
-      props.disabled ? "opacity-30 cursor-not-allowed" : "",
-    ].join(" ")}
-    style={{ "pointer-events": "auto" }}
-  >
-    {props.children}
-  </button>
-);
 
 export const JiraEditor: Component<JiraEditorProps> = (props) => {
   let editorEl!: HTMLDivElement;

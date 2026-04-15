@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoC: JIRA Rich Text Comment Editor</title>
+<!-- TipTap CDN via esm.sh -->
+<script type="importmap">
+{
+  "imports": {
+    "@tiptap/core": "https://esm.sh/@tiptap/core@2.11.5",
+    "@tiptap/pm/": "https://esm.sh/@tiptap/pm@2.11.5/",
+    "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@2.11.5",
+    "@tiptap/extension-link": "https://esm.sh/@tiptap/extension-link@2.11.5",
+    "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@2.11.5",
+    "@tiptap/extension-underline": "https://esm.sh/@tiptap/extension-underline@2.11.5",
+    "@tiptap/extension-text-align": "https://esm.sh/@tiptap/extension-text-align@2.11.5",
+    "@tiptap/extension-color": "https://esm.sh/@tiptap/extension-color@2.11.5",
+    "@tiptap/extension-text-style": "https://esm.sh/@tiptap/extension-text-style@2.11.5",
+    "@tiptap/extension-image": "https://esm.sh/@tiptap/extension-image@2.11.5",
+    "@tiptap/extension-mention": "https://esm.sh/@tiptap/extension-mention@2.11.5",
+    "@tiptap/suggestion": "https://esm.sh/@tiptap/suggestion@2.11.5"
+  }
+}
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; }
+  h2 { font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 16px; }
+
+  .comparison { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .panel-label { font-size: 11px; color: #888; padding: 8px 12px; background: #1f1f1f; border-bottom: 1px solid #333; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+
+  /* Comment wrapper */
+  .comment-edit-wrapper { width: 700px; }
+  .comment-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .comment-meta .avatar { width: 36px; height: 36px; border-radius: 50%; background: #3ba55d; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .comment-meta .info .name { font-size: 13px; font-weight: 600; color: #e5e5e5; }
+  .comment-meta .info .time { font-size: 12px; color: #666; }
+
+  /* Editor chrome */
+  .editor-chrome { border: 1px solid #444; border-radius: 8px; overflow: hidden; background: #262626; position: relative; transition: border-color 0.15s; }
+
+  /* Toolbar */
+  .toolbar { display: flex; align-items: center; gap: 2px; padding: 6px 10px; border-bottom: 1px solid #333; background: #2a2a2a; flex-wrap: wrap; }
+  .toolbar .sep { width: 1px; height: 20px; background: #444; margin: 0 4px; flex-shrink: 0; }
+  .toolbar button { background: none; border: 1px solid transparent; color: #888; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 13px; display: flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; transition: all 0.12s; position: relative; }
+  .toolbar button:hover { background: #383838; color: #ddd; border-color: #555; }
+  .toolbar button.active { background: #444; color: #fff; border-color: #555; }
+  .toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .toolbar button svg { width: 16px; height: 16px; }
+  .toolbar .dropdown-trigger { gap: 2px; }
+  .toolbar .dropdown-trigger .chevron { font-size: 8px; color: #666; }
+
+  /* Dropdown menus */
+  .toolbar-dropdown { position: absolute; top: 100%; left: 0; margin-top: 4px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 50; min-width: 140px; padding: 4px; }
+  .toolbar-dropdown button { width: 100%; justify-content: flex-start; padding: 6px 8px; font-size: 12px; border-radius: 4px; }
+  .toolbar-dropdown button:hover { background: #383838; }
+  .toolbar-dropdown button.active { background: #444; }
+
+  /* Color picker */
+  .color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 8px; min-width: 160px; }
+  .color-swatch { width: 24px; height: 24px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: all 0.1s; }
+  .color-swatch:hover { border-color: #888; transform: scale(1.1); }
+  .color-swatch.active { border-color: #fff; }
+  .color-swatch.reset { background: transparent; border: 1px dashed #666; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #888; }
+
+  /* Editor content */
+  .editor-content { padding: 14px 16px; min-height: 200px; max-height: 400px; overflow-y: auto; font-size: 14px; line-height: 1.6; color: #e5e5e5; outline: none; cursor: text; }
+  .editor-content::-webkit-scrollbar { width: 4px; }
+  .editor-content::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+
+  /* ProseMirror styles */
+  .ProseMirror { outline: none; }
+  .ProseMirror p { margin: 0 0 0.5em; }
+  .ProseMirror h1 { font-size: 1.6em; font-weight: 700; margin: 0.8em 0 0.4em; }
+  .ProseMirror h2 { font-size: 1.3em; font-weight: 700; margin: 0.7em 0 0.3em; }
+  .ProseMirror h3 { font-size: 1.1em; font-weight: 700; margin: 0.6em 0 0.3em; }
+  .ProseMirror ul, .ProseMirror ol { padding-left: 1.5em; margin: 0.3em 0; }
+  .ProseMirror li { margin: 0.1em 0; }
+  .ProseMirror blockquote { border-left: 3px solid #555; padding-left: 12px; color: #999; margin: 0.5em 0; }
+  .ProseMirror code { background: #383838; padding: 2px 5px; border-radius: 3px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.9em; color: #f0a; }
+  .ProseMirror pre { background: #1f1f1f; border: 1px solid #333; border-radius: 6px; padding: 12px; margin: 0.5em 0; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85em; overflow-x: auto; }
+  .ProseMirror pre code { background: none; padding: 0; color: #e5e5e5; }
+  .ProseMirror a { color: #7b8cf8; text-decoration: underline; }
+  .ProseMirror hr { border: none; border-top: 1px solid #444; margin: 1em 0; }
+  .ProseMirror img { max-width: 100%; border-radius: 6px; margin: 0.5em 0; }
+  .ProseMirror strong { font-weight: 700; }
+  .ProseMirror u { text-decoration: underline; }
+
+  /* Image card (JIRA-style) */
+  .ProseMirror img { max-width: 300px; border-radius: 6px; margin: 0.5em 0; border: 1px solid #444; cursor: pointer; display: block; }
+  .ProseMirror img.ProseMirror-selectednode { outline: 2px solid #5865f2; outline-offset: 2px; }
+
+  /* Drag-drop overlay */
+  .editor-chrome.drag-over { border-color: #5865f2; background: rgba(88, 101, 242, 0.05); }
+  .editor-chrome.drag-over::after { content: 'Drop image here'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(88, 101, 242, 0.08); color: #7b8cf8; font-size: 14px; font-weight: 600; border-radius: 8px; pointer-events: none; z-index: 10; }
+
+  /* Mention chip */
+  .ProseMirror .mention { background: rgba(88, 101, 242, 0.2); color: #7b8cf8; padding: 2px 6px; border-radius: 4px; font-weight: 500; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+
+  /* ── Comment Thread (JIRA-style) ──────────────────────────── */
+  .thread-section { max-width: 700px; margin-bottom: 40px; }
+  .thread-section h3 { font-size: 14px; font-weight: 600; color: #999; margin-bottom: 16px; }
+
+  /* Single comment */
+  .jira-comment { display: flex; gap: 12px; padding: 12px 0; }
+  .jira-comment .avatar-col { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+  .jira-comment .avatar-col .avatar { width: 36px; height: 36px; border-radius: 50%; background: #3ba55d; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; }
+  .jira-comment .comment-content { flex: 1; min-width: 0; }
+  .jira-comment .comment-header .author { font-size: 14px; font-weight: 600; color: #e5e5e5; }
+  .jira-comment .comment-header .timestamp { font-size: 12px; color: #666; margin-top: 1px; }
+  .jira-comment .comment-body { font-size: 14px; color: #c9d1d9; margin-top: 6px; line-height: 1.5; }
+  .jira-comment .comment-body .mention-chip { background: rgba(88, 101, 242, 0.2); color: #7b8cf8; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+
+  /* Action row below each comment */
+  .comment-actions { display: flex; gap: 4px; margin-top: 8px; }
+  .comment-actions button { background: none; border: none; color: #666; cursor: pointer; padding: 4px 6px; border-radius: 4px; font-size: 16px; display: flex; align-items: center; justify-content: center; width: 32px; height: 28px; transition: all 0.12s; }
+  .comment-actions button:hover { background: #333; color: #ccc; }
+  .comment-actions button svg { width: 16px; height: 16px; }
+
+  /* Threading: vertical line connecting parent → replies */
+  .thread-line { width: 2px; flex: 1; background: #444; margin-top: 6px; min-height: 12px; }
+
+  /* Reply wrapper — indented with continued thread line */
+  .reply-group { margin-left: 18px; padding-left: 18px; border-left: 2px solid #444; }
+  .reply-group .jira-comment .avatar-col .avatar { width: 28px; height: 28px; font-size: 11px; }
+  .reply-group .jira-comment .comment-header .author { font-size: 13px; }
+  .reply-group .jira-comment .comment-body { font-size: 13px; }
+
+  /* Image attachment card */
+  .attachment-card { display: inline-block; margin-top: 8px; border: 1px solid #444; border-radius: 8px; overflow: hidden; background: #262626; max-width: 220px; }
+  .attachment-card img { display: block; width: 100%; max-height: 140px; object-fit: cover; }
+  .attachment-card .attachment-info { padding: 8px 10px; }
+  .attachment-card .attachment-info .filename { font-size: 11px; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .attachment-card .attachment-info .filedate { font-size: 11px; color: #666; margin-top: 2px; }
+
+  /* "Add a comment" input area */
+  .add-comment-area { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px; }
+  .add-comment-area .avatar { width: 36px; height: 36px; border-radius: 50%; background: #3ba55d; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .add-comment-box { flex: 1; border: 1px solid #444; border-radius: 8px; padding: 12px 14px; background: #262626; }
+  .add-comment-box .placeholder-text { font-size: 14px; color: #666; margin-bottom: 10px; }
+  .add-comment-box .suggestion-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .add-comment-box .suggestion-chip { font-size: 12px; color: #888; border: 1px solid #444; border-radius: 16px; padding: 4px 12px; background: none; cursor: pointer; transition: all 0.12s; }
+  .add-comment-box .suggestion-chip:hover { border-color: #666; color: #ccc; }
+  .pro-tip { font-size: 12px; color: #666; margin-top: 6px; margin-bottom: 20px; }
+  .pro-tip kbd { background: #333; border: 1px solid #555; border-radius: 3px; padding: 1px 5px; font-size: 11px; color: #aaa; }
+
+  /* Placeholder */
+  .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #555; pointer-events: none; float: left; height: 0; }
+
+  /* Mention picker */
+  .mention-picker-popup { background: #2a2a2a; border: 1px solid #444; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.5); max-height: 200px; overflow-y: auto; padding: 4px; min-width: 200px; }
+  .mention-picker-popup .mention-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: background 0.1s; }
+  .mention-picker-popup .mention-item:hover, .mention-picker-popup .mention-item.active { background: #383838; }
+  .mention-picker-popup .mention-item .avatar { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .mention-picker-popup .mention-item .name { font-size: 12px; color: #e5e5e5; }
+
+  /* Emoji picker */
+  .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; padding: 8px; min-width: 260px; }
+  .emoji-btn { font-size: 18px; padding: 4px; border-radius: 4px; background: none; border: none; cursor: pointer; text-align: center; }
+  .emoji-btn:hover { background: #383838; }
+
+  /* Action buttons */
+  .editor-actions { display: flex; gap: 10px; padding: 12px 0 0; }
+  .btn-save { background: #5865f2; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .btn-save:hover { background: #4752c4; }
+  .btn-cancel { background: none; border: none; color: #888; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .btn-cancel:hover { color: #ddd; }
+
+  /* Output panels */
+  .output-panel { margin-top: 24px; width: 100%; max-width: 700px; }
+  .output-panel pre { background: #1f1f1f; border: 1px solid #333; border-radius: 8px; padding: 12px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; color: #888; max-height: 250px; overflow: auto; white-space: pre-wrap; }
+  .output-tabs { display: flex; gap: 0; margin-bottom: 0; }
+  .output-tab { padding: 6px 14px; font-size: 11px; font-weight: 600; color: #666; background: #1f1f1f; border: 1px solid #333; cursor: pointer; transition: all 0.15s; }
+  .output-tab:first-child { border-radius: 6px 0 0 0; }
+  .output-tab:last-child { border-radius: 0 6px 0 0; border-left: none; }
+  .output-tab.active { color: #e5e5e5; background: #2a2a2a; border-bottom-color: #2a2a2a; }
+
+  /* Loading state */
+  .loading-overlay { position: fixed; inset: 0; background: rgba(26,26,26,0.9); display: flex; align-items: center; justify-content: center; z-index: 999; font-size: 14px; color: #888; flex-direction: column; gap: 8px; }
+  .loading-overlay .spinner { width: 24px; height: 24px; border: 2px solid #444; border-top-color: #7b8cf8; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <span>Loading TipTap editor...</span>
+</div>
+
+<h2>PoC: JIRA Rich Text Comment Editor</h2>
+<p style="font-size: 12px; color: #555; margin-bottom: 24px;">
+  Replicates the JIRA comment edit view with TipTap WYSIWYG. Uses the same libraries already in <code>package.json</code>:
+  <code>@tiptap/core</code>, <code>@tiptap/starter-kit</code>, <code>tiptap-extension-jira</code>.
+  Output as Markdown (for <code>marklassian</code> &rarr; ADF conversion).
+</p>
+
+<!-- ── Comment Thread (JIRA layout reference) ───────────────── -->
+<div class="thread-section">
+  <h3>Comment Thread (JIRA layout)</h3>
+
+  <!-- Add a comment area -->
+  <div class="add-comment-area">
+    <div class="avatar">SD</div>
+    <div class="add-comment-box">
+      <div class="placeholder-text">Add a comment...</div>
+      <div class="suggestion-chips">
+        <button class="suggestion-chip">Suggest a reply...</button>
+        <button class="suggestion-chip">Who is working on this...?</button>
+        <button class="suggestion-chip">Status update...</button>
+      </div>
+    </div>
+  </div>
+  <div class="pro-tip">Pro tip: press <kbd>M</kbd> to comment</div>
+
+  <!-- Comment 1: root, no replies -->
+  <div class="jira-comment">
+    <div class="avatar-col">
+      <div class="avatar">SD</div>
+    </div>
+    <div class="comment-content">
+      <div class="comment-header">
+        <div class="author">Salih Doruk Şahin</div>
+        <div class="timestamp">21 hours ago</div>
+      </div>
+      <div class="comment-body">test 4</div>
+      <div class="comment-actions">
+        <button title="Reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17H4v-5"/><path d="M4 17l7-7 4 4 5-5"/></svg></button>
+        <button title="Like"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-6 0v1H5a2 2 0 00-2 2v7a2 2 0 002 2h3l2 3h4l1-3h3a2 2 0 002-2V9h-6z"/></svg></button>
+        <button title="Emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
+        <button title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+        <button title="More">⋯</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comment 2: root with reply thread -->
+  <div class="jira-comment">
+    <div class="avatar-col">
+      <div class="avatar">SD</div>
+      <div class="thread-line"></div>
+    </div>
+    <div class="comment-content">
+      <div class="comment-header">
+        <div class="author">Salih Doruk Şahin</div>
+        <div class="timestamp">21 hours ago</div>
+      </div>
+      <div class="comment-body">test2</div>
+      <div class="comment-actions">
+        <button title="Reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17H4v-5"/><path d="M4 17l7-7 4 4 5-5"/></svg></button>
+        <button title="Like"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-6 0v1H5a2 2 0 00-2 2v7a2 2 0 002 2h3l2 3h4l1-3h3a2 2 0 002-2V9h-6z"/></svg></button>
+        <button title="Emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
+        <button title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+        <button title="More">⋯</button>
+      </div>
+
+      <!-- Replies -->
+      <div class="reply-group">
+        <div class="jira-comment">
+          <div class="avatar-col">
+            <div class="avatar">SD</div>
+            <div class="thread-line"></div>
+          </div>
+          <div class="comment-content">
+            <div class="comment-header">
+              <div class="author">Salih Doruk Şahin</div>
+              <div class="timestamp">21 hours ago</div>
+            </div>
+            <div class="comment-body">
+              <span class="mention-chip">@Salih Doruk Şahin</span> test3
+            </div>
+
+            <!-- Image attachment card -->
+            <div class="attachment-card">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Bucephala-albeola-010.jpg/320px-Bucephala-albeola-010.jpg" alt="comment attachment" />
+              <div class="attachment-info">
+                <div class="filename">comment-1776...ent.png</div>
+                <div class="filedate">14 Apr 2026, 04:04 PM</div>
+              </div>
+            </div>
+
+            <div class="comment-actions">
+              <button title="Reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17H4v-5"/><path d="M4 17l7-7 4 4 5-5"/></svg></button>
+              <button title="Like"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 00-6 0v1H5a2 2 0 00-2 2v7a2 2 0 002 2h3l2 3h4l1-3h3a2 2 0 002-2V9h-6z"/></svg></button>
+              <button title="Emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
+              <button title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+              <button title="More">⋯</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr style="border:none;border-top:1px solid #333;margin:32px 0;">
+
+<div class="comparison">
+  <div class="comment-edit-wrapper">
+    <!-- Comment author meta -->
+    <div class="comment-meta">
+      <div class="avatar">SD</div>
+      <div class="info">
+        <div class="name">Salih Doruk Sahin</div>
+        <div class="time">8 hours ago</div>
+      </div>
+    </div>
+
+    <!-- Editor chrome -->
+    <div class="editor-chrome" id="editor-chrome">
+      <!-- Toolbar -->
+      <div class="toolbar" id="toolbar">
+        <!-- Text style dropdown -->
+        <div style="position:relative;">
+          <button class="dropdown-trigger" id="btn-textstyle" title="Text styles">
+            <span style="font-size:14px;font-weight:700;">Tt</span>
+            <span class="chevron">&#x25BE;</span>
+          </button>
+          <div class="toolbar-dropdown" id="dropdown-textstyle" style="display:none;">
+            <button data-cmd="paragraph">Normal text</button>
+            <button data-cmd="h1" style="font-size:16px;font-weight:700;">Heading 1</button>
+            <button data-cmd="h2" style="font-size:14px;font-weight:700;">Heading 2</button>
+            <button data-cmd="h3" style="font-size:13px;font-weight:700;">Heading 3</button>
+          </div>
+        </div>
+
+        <!-- Bold dropdown -->
+        <div style="position:relative;">
+          <button class="dropdown-trigger" id="btn-formatting" title="Text formatting">
+            <b style="font-size:14px;">B</b>
+            <span class="chevron">&#x25BE;</span>
+          </button>
+          <div class="toolbar-dropdown" id="dropdown-formatting" style="display:none;">
+            <button data-cmd="bold"><b>Bold</b></button>
+            <button data-cmd="italic"><i>Italic</i></button>
+            <button data-cmd="underline"><u>Underline</u></button>
+            <button data-cmd="strike"><s>Strikethrough</s></button>
+            <button data-cmd="code"><code style="font-size:11px;background:#383838;padding:1px 4px;border-radius:2px;">Code</code></button>
+          </div>
+        </div>
+
+        <!-- List dropdown -->
+        <div style="position:relative;">
+          <button class="dropdown-trigger" id="btn-lists" title="Lists">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
+            <span class="chevron">&#x25BE;</span>
+          </button>
+          <div class="toolbar-dropdown" id="dropdown-lists" style="display:none;">
+            <button data-cmd="bulletList">&#x2022; Bullet list</button>
+            <button data-cmd="orderedList">1. Ordered list</button>
+            <button data-cmd="blockquote">" Blockquote</button>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- Text color -->
+        <div style="position:relative;">
+          <button id="btn-color" title="Text color">
+            <span style="font-size:14px;font-weight:700;">A</span>
+            <div id="color-indicator" style="position:absolute;bottom:3px;left:6px;right:6px;height:2px;background:#fff;border-radius:1px;"></div>
+          </button>
+          <div class="toolbar-dropdown" id="dropdown-color" style="display:none;">
+            <div class="color-grid">
+              <div class="color-swatch reset" data-color="" title="Default">&#x2715;</div>
+              <div class="color-swatch" data-color="#e5e5e5" style="background:#e5e5e5;" title="White"></div>
+              <div class="color-swatch" data-color="#f87171" style="background:#f87171;" title="Red"></div>
+              <div class="color-swatch" data-color="#fb923c" style="background:#fb923c;" title="Orange"></div>
+              <div class="color-swatch" data-color="#facc15" style="background:#facc15;" title="Yellow"></div>
+              <div class="color-swatch" data-color="#4ade80" style="background:#4ade80;" title="Green"></div>
+              <div class="color-swatch" data-color="#22d3ee" style="background:#22d3ee;" title="Cyan"></div>
+              <div class="color-swatch" data-color="#60a5fa" style="background:#60a5fa;" title="Blue"></div>
+              <div class="color-swatch" data-color="#a78bfa" style="background:#a78bfa;" title="Purple"></div>
+              <div class="color-swatch" data-color="#f472b6" style="background:#f472b6;" title="Pink"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image (opens file picker) -->
+        <button id="btn-image" title="Insert image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        </button>
+        <input type="file" id="image-file-input" accept="image/*" style="display:none;" multiple>
+
+        <!-- Code block -->
+        <button id="btn-codeblock" title="Code block">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </button>
+
+        <!-- Emoji -->
+        <div style="position:relative;">
+          <button id="btn-emoji" title="Emoji">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </button>
+          <div class="toolbar-dropdown" id="dropdown-emoji" style="display:none;">
+            <div class="emoji-grid" id="emoji-grid"></div>
+          </div>
+        </div>
+
+        <!-- Insert menu (+) -->
+        <div style="position:relative;">
+          <button id="btn-insert" title="Insert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="toolbar-dropdown" id="dropdown-insert" style="display:none;">
+            <button data-cmd="horizontalRule">&#x2015; Divider</button>
+            <button data-cmd="codeBlock">&lt;/&gt; Code block</button>
+            <button data-cmd="blockquote">" Quote</button>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- Link -->
+        <button id="btn-link" title="Insert link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        </button>
+
+        <div class="sep"></div>
+
+        <!-- Undo / Redo -->
+        <button id="btn-undo" title="Undo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h13a4 4 0 010 8H7"/><polyline points="7 6 3 10 7 14"/></svg>
+        </button>
+        <button id="btn-redo" title="Redo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10H8a4 4 0 000 8h9"/><polyline points="17 6 21 10 17 14"/></svg>
+        </button>
+      </div>
+
+      <!-- Editor content area -->
+      <div class="editor-content" id="editor"></div>
+    </div>
+
+    <!-- Save / Cancel -->
+    <div class="editor-actions">
+      <button class="btn-save" id="btn-save" onclick="handleSave()">Save</button>
+      <button class="btn-cancel" onclick="handleCancel()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Output panel -->
+<div class="output-panel">
+  <div class="output-tabs">
+    <div class="output-tab active" data-output="markdown" onclick="switchOutput('markdown', this)">Markdown</div>
+    <div class="output-tab" data-output="html" onclick="switchOutput('html', this)">HTML</div>
+    <div class="output-tab" data-output="json" onclick="switchOutput('json', this)">JSON (ProseMirror)</div>
+  </div>
+  <pre id="output-content">Loading...</pre>
+</div>
+
+<script type="module">
+import { Editor } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import Placeholder from '@tiptap/extension-placeholder';
+import Underline from '@tiptap/extension-underline';
+import Color from '@tiptap/extension-color';
+import TextStyle from '@tiptap/extension-text-style';
+import Image from '@tiptap/extension-image';
+import Mention from '@tiptap/extension-mention';
+
+// ── Mock users for mention ──────────────────────────────────────
+const MOCK_USERS = [
+  { id: 'u1', label: 'Salih Doruk Sahin' },
+  { id: 'u2', label: 'Alice Cooper' },
+  { id: 'u3', label: 'Bob Martinez' },
+  { id: 'u4', label: 'Charlie Kim' },
+  { id: 'u5', label: 'Diana Petrova' },
+  { id: 'u6', label: 'Emre Yilmaz' },
+  { id: 'u7', label: 'Fatma Demir' },
+  { id: 'u8', label: 'George Chen' },
+];
+
+// ── Mention suggestion plugin ───────────────────────────────────
+function mentionSuggestion() {
+  return {
+    items: ({ query }) => {
+      return MOCK_USERS.filter(u =>
+        u.label.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 8);
+    },
+    render: () => {
+      let popup, selectedIndex = 0, items = [];
+
+      return {
+        onStart: (props) => {
+          items = props.items;
+          selectedIndex = 0;
+          popup = document.createElement('div');
+          popup.className = 'mention-picker-popup';
+          renderPopup(popup, items, selectedIndex, props.command);
+          document.body.appendChild(popup);
+          positionPopup(popup, props.clientRect);
+        },
+        onUpdate: (props) => {
+          items = props.items;
+          selectedIndex = 0;
+          renderPopup(popup, items, selectedIndex, props.command);
+          positionPopup(popup, props.clientRect);
+        },
+        onKeyDown: (props) => {
+          if (props.event.key === 'ArrowDown') {
+            selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+            renderPopup(popup, items, selectedIndex, props.command);
+            return true;
+          }
+          if (props.event.key === 'ArrowUp') {
+            selectedIndex = Math.max(selectedIndex - 1, 0);
+            renderPopup(popup, items, selectedIndex, props.command);
+            return true;
+          }
+          if (props.event.key === 'Enter') {
+            if (items[selectedIndex]) props.command(items[selectedIndex]);
+            return true;
+          }
+          if (props.event.key === 'Escape') {
+            popup?.remove();
+            return true;
+          }
+          return false;
+        },
+        onExit: () => popup?.remove(),
+      };
+    },
+  };
+}
+
+function renderPopup(popup, items, selectedIndex, command) {
+  if (!popup) return;
+  const colors = ['#5865f2', '#ed4245', '#57f287', '#fee75c', '#eb459e', '#3ba55d'];
+  popup.innerHTML = items.length === 0
+    ? '<div style="padding:8px 12px;font-size:12px;color:#666;">No results</div>'
+    : items.map((u, i) => {
+        const initials = u.label.split(' ').map(w => w[0]).join('').slice(0, 2);
+        const color = colors[u.label.length % colors.length];
+        return `<div class="mention-item${i === selectedIndex ? ' active' : ''}" data-index="${i}">
+          <div class="avatar" style="background:${color};">${initials}</div>
+          <span class="name">${u.label}</span>
+        </div>`;
+      }).join('');
+
+  popup.querySelectorAll('.mention-item').forEach(el => {
+    el.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      command(items[parseInt(el.dataset.index)]);
+    });
+    el.addEventListener('mouseenter', () => {
+      popup.querySelector('.mention-item.active')?.classList.remove('active');
+      el.classList.add('active');
+    });
+  });
+}
+
+function positionPopup(popup, clientRect) {
+  if (!popup || !clientRect) return;
+  const rect = typeof clientRect === 'function' ? clientRect() : clientRect;
+  if (!rect) return;
+  popup.style.position = 'fixed';
+  popup.style.left = rect.left + 'px';
+  popup.style.top = (rect.bottom + 6) + 'px';
+  popup.style.zIndex = '999';
+}
+
+// ── Emoji data ──────────────────────────────────────────────────
+const EMOJIS = ['😀','😂','🥲','😍','🤔','👍','👎','🎉','🔥','💯','✅','❌','⚠️','💡','🐛','🚀','📌','👀','💬','🤝','👏','🙏','😎','🫡','❤️','💪','🎯','📝','🔧','🗑️','📎','🔗'];
+
+// ── Create Editor ───────────────────────────────────────────────
+const editor = new Editor({
+  element: document.getElementById('editor'),
+  extensions: [
+    StarterKit,
+    Link.configure({ openOnClick: false }),
+    Placeholder.configure({ placeholder: 'Type a comment...' }),
+    Underline,
+    TextStyle,
+    Color,
+    Image,
+    Mention.configure({
+      HTMLAttributes: { class: 'mention' },
+      suggestion: mentionSuggestion(),
+      renderText: ({ node }) => `@${node.attrs.label}`,
+    }),
+  ],
+  content: `<p><span class="mention" data-type="mention" data-id="u1" data-label="Salih Doruk Sahin">@Salih Doruk Sahin</span> test3</p>`,
+  onTransaction: () => updateToolbarState(),
+  onUpdate: () => updateOutput(),
+});
+
+// ── Toolbar wiring ──────────────────────────────────────────────
+const dropdowns = {};
+function setupDropdown(btnId, dropdownId) {
+  const btn = document.getElementById(btnId);
+  const dd = document.getElementById(dropdownId);
+  if (!btn || !dd) return;
+  dropdowns[dropdownId] = dd;
+  btn.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const isOpen = dd.style.display !== 'none';
+    closeAllDropdowns();
+    if (!isOpen) dd.style.display = 'block';
+  });
+}
+
+function closeAllDropdowns() {
+  Object.values(dropdowns).forEach(d => d.style.display = 'none');
+}
+
+document.addEventListener('mousedown', (e) => {
+  if (!e.target.closest('.toolbar-dropdown') && !e.target.closest('.dropdown-trigger') && !e.target.closest('[id^="btn-"]')) {
+    closeAllDropdowns();
+  }
+});
+
+setupDropdown('btn-textstyle', 'dropdown-textstyle');
+setupDropdown('btn-formatting', 'dropdown-formatting');
+setupDropdown('btn-lists', 'dropdown-lists');
+setupDropdown('btn-color', 'dropdown-color');
+setupDropdown('btn-emoji', 'dropdown-emoji');
+setupDropdown('btn-insert', 'dropdown-insert');
+
+// Text style commands
+document.querySelectorAll('#dropdown-textstyle button').forEach(btn => {
+  btn.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const cmd = btn.dataset.cmd;
+    if (cmd === 'paragraph') editor.chain().focus().setParagraph().run();
+    else if (cmd === 'h1') editor.chain().focus().toggleHeading({ level: 1 }).run();
+    else if (cmd === 'h2') editor.chain().focus().toggleHeading({ level: 2 }).run();
+    else if (cmd === 'h3') editor.chain().focus().toggleHeading({ level: 3 }).run();
+    closeAllDropdowns();
+  });
+});
+
+// Formatting commands
+document.querySelectorAll('#dropdown-formatting button').forEach(btn => {
+  btn.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const cmd = btn.dataset.cmd;
+    const chain = editor.chain().focus();
+    if (cmd === 'bold') chain.toggleBold().run();
+    else if (cmd === 'italic') chain.toggleItalic().run();
+    else if (cmd === 'underline') chain.toggleUnderline().run();
+    else if (cmd === 'strike') chain.toggleStrike().run();
+    else if (cmd === 'code') chain.toggleCode().run();
+    closeAllDropdowns();
+  });
+});
+
+// List commands
+document.querySelectorAll('#dropdown-lists button').forEach(btn => {
+  btn.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const cmd = btn.dataset.cmd;
+    const chain = editor.chain().focus();
+    if (cmd === 'bulletList') chain.toggleBulletList().run();
+    else if (cmd === 'orderedList') chain.toggleOrderedList().run();
+    else if (cmd === 'blockquote') chain.toggleBlockquote().run();
+    closeAllDropdowns();
+  });
+});
+
+// Color picker
+document.querySelectorAll('.color-swatch').forEach(swatch => {
+  swatch.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const color = swatch.dataset.color;
+    if (color) {
+      editor.chain().focus().setColor(color).run();
+      document.getElementById('color-indicator').style.background = color;
+    } else {
+      editor.chain().focus().unsetColor().run();
+      document.getElementById('color-indicator').style.background = '#fff';
+    }
+    closeAllDropdowns();
+  });
+});
+
+// Insert menu commands
+document.querySelectorAll('#dropdown-insert button').forEach(btn => {
+  btn.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const cmd = btn.dataset.cmd;
+    const chain = editor.chain().focus();
+    if (cmd === 'horizontalRule') chain.setHorizontalRule().run();
+    else if (cmd === 'codeBlock') chain.toggleCodeBlock().run();
+    else if (cmd === 'blockquote') chain.toggleBlockquote().run();
+    closeAllDropdowns();
+  });
+});
+
+// Emoji picker
+const emojiGrid = document.getElementById('emoji-grid');
+EMOJIS.forEach(emoji => {
+  const btn = document.createElement('button');
+  btn.className = 'emoji-btn';
+  btn.textContent = emoji;
+  btn.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    editor.chain().focus().insertContent(emoji).run();
+    closeAllDropdowns();
+  });
+  emojiGrid.appendChild(btn);
+});
+
+// Code block
+document.getElementById('btn-codeblock').addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  editor.chain().focus().toggleCodeBlock().run();
+});
+
+// ── Image handling (file picker, paste, drag-drop) ──────────────
+const fileInput = document.getElementById('image-file-input');
+
+// Toolbar button → file picker
+document.getElementById('btn-image').addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  fileInput.click();
+});
+
+fileInput.addEventListener('change', () => {
+  for (const file of fileInput.files) insertImageFile(file);
+  fileInput.value = '';
+});
+
+// Convert File → data URL → insert into editor
+function insertImageFile(file) {
+  if (!file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    editor.chain().focus().setImage({ src: reader.result, alt: file.name }).run();
+  };
+  reader.readAsDataURL(file);
+}
+
+// Paste from clipboard (Cmd+V screenshots)
+document.getElementById('editor').addEventListener('paste', (e) => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      insertImageFile(item.getAsFile());
+      return;
+    }
+  }
+});
+
+// Drag & drop
+const editorChrome = document.getElementById('editor-chrome');
+editorChrome.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  editorChrome.classList.add('drag-over');
+});
+editorChrome.addEventListener('dragleave', () => {
+  editorChrome.classList.remove('drag-over');
+});
+editorChrome.addEventListener('drop', (e) => {
+  e.preventDefault();
+  editorChrome.classList.remove('drag-over');
+  const files = e.dataTransfer?.files;
+  if (!files) return;
+  for (const file of files) insertImageFile(file);
+});
+
+// Link
+document.getElementById('btn-link').addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  if (editor.isActive('link')) {
+    editor.chain().focus().unsetLink().run();
+  } else {
+    const url = prompt('Link URL:');
+    if (url) editor.chain().focus().setLink({ href: url }).run();
+  }
+});
+
+// Undo/Redo
+document.getElementById('btn-undo').addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  editor.chain().focus().undo().run();
+});
+document.getElementById('btn-redo').addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  editor.chain().focus().redo().run();
+});
+
+// ── Toolbar state ───────────────────────────────────────────────
+function updateToolbarState() {
+  // Active states for dropdown triggers
+  const boldActive = editor.isActive('bold');
+  const italicActive = editor.isActive('italic');
+  document.getElementById('btn-formatting').classList.toggle('active', boldActive || italicActive);
+  document.getElementById('btn-codeblock').classList.toggle('active', editor.isActive('codeBlock'));
+  document.getElementById('btn-link').classList.toggle('active', editor.isActive('link'));
+
+  // Heading indicator
+  const h1 = editor.isActive('heading', { level: 1 });
+  const h2 = editor.isActive('heading', { level: 2 });
+  const h3 = editor.isActive('heading', { level: 3 });
+  document.getElementById('btn-textstyle').classList.toggle('active', h1 || h2 || h3);
+
+  // Undo/redo disable states
+  document.getElementById('btn-undo').disabled = !editor.can().undo();
+  document.getElementById('btn-redo').disabled = !editor.can().redo();
+}
+
+// ── Output panel ────────────────────────────────────────────────
+let currentOutput = 'markdown';
+function switchOutput(type, tabEl) {
+  currentOutput = type;
+  document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  updateOutput();
+}
+window.switchOutput = switchOutput;
+
+function updateOutput() {
+  const pre = document.getElementById('output-content');
+  if (currentOutput === 'html') {
+    pre.textContent = editor.getHTML();
+  } else if (currentOutput === 'json') {
+    pre.textContent = JSON.stringify(editor.getJSON(), null, 2);
+  } else {
+    // Markdown approximation: extract text with formatting hints
+    // In production this would use tiptap-markdown extension
+    pre.textContent = htmlToMarkdownApprox(editor.getHTML());
+  }
+}
+
+function htmlToMarkdownApprox(html) {
+  return html
+    .replace(/<h1[^>]*>(.*?)<\/h1>/g, '# $1\n')
+    .replace(/<h2[^>]*>(.*?)<\/h2>/g, '## $1\n')
+    .replace(/<h3[^>]*>(.*?)<\/h3>/g, '### $1\n')
+    .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
+    .replace(/<em>(.*?)<\/em>/g, '*$1*')
+    .replace(/<s>(.*?)<\/s>/g, '~~$1~~')
+    .replace(/<u>(.*?)<\/u>/g, '$1')
+    .replace(/<code>(.*?)<\/code>/g, '`$1`')
+    .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g, '[$2]($1)')
+    .replace(/<img[^>]*src="([^"]*)"[^>]*\/?>/g, '![]($1)')
+    .replace(/<li><p>(.*?)<\/p><\/li>/g, '- $1\n')
+    .replace(/<li>(.*?)<\/li>/g, '- $1\n')
+    .replace(/<\/?[uo]l>/g, '')
+    .replace(/<blockquote><p>(.*?)<\/p><\/blockquote>/g, '> $1\n')
+    .replace(/<hr\s*\/?>/g, '---\n')
+    .replace(/<p><\/p>/g, '\n')
+    .replace(/<p>(.*?)<\/p>/g, '$1\n')
+    .replace(/<br\s*\/?>/g, '\n')
+    .replace(/<span[^>]*data-type="mention"[^>]*data-label="([^"]*)"[^>]*>[^<]*<\/span>/g, '@$1')
+    .replace(/<\/?[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+// ── Save/Cancel ─────────────────────────────────────────────────
+window.handleSave = function() {
+  const markdown = htmlToMarkdownApprox(editor.getHTML());
+  alert('Comment saved!\n\nMarkdown output:\n' + markdown);
+};
+window.handleCancel = function() {
+  if (confirm('Discard changes?')) {
+    editor.commands.clearContent();
+  }
+};
+
+// ── Hide loading ────────────────────────────────────────────────
+document.getElementById('loading').style.display = 'none';
+updateOutput();
+</script>
+</body>
+</html>

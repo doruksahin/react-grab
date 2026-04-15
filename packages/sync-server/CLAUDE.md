@@ -1,0 +1,84 @@
+# sync-server — Package Guide
+
+Cloudflare Worker backend — Hono + D1 (Drizzle ORM) + R2. Persists selections, screenshots, and proxies JIRA API.
+
+## Layered pattern
+
+Don't create feature folders on the server. Follow the existing layers:
+
+```
+src/
+  schemas/<resource>.ts         — Zod schemas (SSOT for the API contract)
+  routes/<resource>.ts          — Hono route handlers (thin — validate, delegate, respond)
+  services/<name>.service.ts    — business logic (external API calls, data transforms)
+  services/__tests__/           — service unit tests
+  repositories/                 — data access (D1, R2)
+  middleware/                   — request middleware (repo injection, auth)
+  db/schema.ts                  — Drizzle ORM table definitions
+```
+
+### Layer rules
+
+- **Schemas** are the single source of truth. Routes, services, and generated clients all derive from them.
+- **Routes** are thin glue — validate input with Zod, call the service, return the response. No business logic in routes.
+- **Services** own business logic. They receive typed inputs, call external APIs (JIRA, etc.), and return typed outputs. Services don't know about Hono request/response objects.
+- **Repositories** abstract storage (D1 queries, R2 reads/writes). Services call repositories, not D1/R2 directly.
+
+## Zod → OpenAPI → Codegen flow
+
+Schemas are defined with `@hono/zod-openapi` decorators. When you add or modify a schema:
+
+```bash
+# 1. Export updated OpenAPI spec
+pnpm --filter @react-grab/sync-server export-spec
+
+# 2. Regenerate react-grab typed client
+pnpm --filter react-grab codegen
+
+# 3. Regenerate dashboard typed client
+pnpm --filter dashboard codegen
+
+# 4. Verify everything is in sync
+pnpm check:codegen
+```
+
+## Database (D1 + Drizzle)
+
+Schema in `src/db/schema.ts`. Migrations in `drizzle/`.
+
+```bash
+# Generate migration from schema changes
+pnpm --filter @react-grab/sync-server db:generate
+
+# Apply migrations to local D1
+pnpm --filter @react-grab/sync-server db:migrate:local
+
+# Reset local D1 (destructive)
+pnpm --filter @react-grab/sync-server db:reset:local
+```
+
+## JIRA service
+
+`src/services/jira.service.ts` is the main JIRA integration point. Capabilities:
+
+- `createTicketFromGroup` — create issue, attach screenshots, save ticket ID
+- `getIssueStatus` — fetch status, comments, flag state, assignee, reporter, avatars
+- `addComment` — markdown → ADF conversion with mention injection via `jira-adf-mentions.ts`
+- `uploadBase64Images` — upload inline images to JIRA attachments
+- `searchUsers` — user search for @mention resolution
+- `fetchThreadedComments` — threaded comments via Atlassian GraphQL gateway
+
+JIRA credentials: `JIRA_EMAIL` and `JIRA_API_TOKEN` in `.dev.vars` (gitignored). `JIRA_BASE_URL` in `wrangler.toml`.
+
+## Dev server
+
+```bash
+pnpm sync:dev    # wrangler dev on :8787 with local D1/R2 emulation
+```
+
+Swagger UI available at `http://localhost:8787/swagger`.
+Health check at `http://localhost:8787/health`.
+
+## Middleware
+
+`inject-repos.ts` creates repository and service instances from Cloudflare bindings and injects them into Hono context. Routes access them via `c.var.syncRepo`, `c.var.screenshotStore`, `c.var.jiraService`.

@@ -239,6 +239,33 @@ export type GetJiraTicketStatus404 = {
   error: string;
 };
 
+export type AddJiraCommentBodyMentionsItem = {
+  text: string;
+  accountId: string;
+};
+
+export type AddJiraCommentBody = {
+  /** Comment text (Markdown) */
+  body: string;
+  /** Parent comment ID for threaded replies */
+  parentId?: string;
+  /** Mention mappings for ADF injection */
+  mentions?: AddJiraCommentBodyMentionsItem[];
+};
+
+export type AddJiraComment200 = {
+  id: string;
+  created: string;
+};
+
+export type AddJiraComment400 = {
+  error: string;
+};
+
+export type AddJiraComment404 = {
+  error: string;
+};
+
 export type ListJiraProjects200Item = {
   key: string;
   name: string;
@@ -281,6 +308,28 @@ projectKey: string;
 };
 
 export type ListJiraLabels500 = {
+  error: string;
+};
+
+export type SearchJiraUsersParams = {
+/**
+ * Search query for user name/email
+ */
+query: string;
+/**
+ * Project key to scope results
+ */
+project?: string;
+};
+
+export type SearchJiraUsers200Item = {
+  accountId: string;
+  displayName: string;
+  /** @nullable */
+  avatarUrl: string | null;
+};
+
+export type SearchJiraUsers500 = {
   error: string;
 };
 
@@ -671,6 +720,58 @@ export const getJiraTicketStatus = async (id: string,
 
 
 /**
+ * @summary Add a comment to a JIRA ticket linked to a group
+ */
+export type addJiraCommentResponse200 = {
+  data: AddJiraComment200
+  status: 200
+}
+
+export type addJiraCommentResponse400 = {
+  data: AddJiraComment400
+  status: 400
+}
+
+export type addJiraCommentResponse404 = {
+  data: AddJiraComment404
+  status: 404
+}
+
+export type addJiraCommentResponseSuccess = (addJiraCommentResponse200) & {
+  headers: Headers;
+};
+export type addJiraCommentResponseError = (addJiraCommentResponse400 | addJiraCommentResponse404) & {
+  headers: Headers;
+};
+
+export type addJiraCommentResponse = (addJiraCommentResponseSuccess | addJiraCommentResponseError)
+
+export const getAddJiraCommentUrl = (id: string,
+    groupId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/groups/${groupId}/jira-comment`
+}
+
+export const addJiraComment = async (id: string,
+    groupId: string,
+    addJiraCommentBody: AddJiraCommentBody, options?: RequestInit): Promise<addJiraCommentResponse> => {
+
+  return customFetch<addJiraCommentResponse>(getAddJiraCommentUrl(id,groupId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      addJiraCommentBody,)
+  }
+);}
+
+
+
+/**
  * @summary List JIRA projects
  */
 export type listJiraProjectsResponse200 = {
@@ -846,6 +947,56 @@ export const getListJiraLabelsUrl = (params: ListJiraLabelsParams,) => {
 export const listJiraLabels = async (params: ListJiraLabelsParams, options?: RequestInit): Promise<listJiraLabelsResponse> => {
 
   return customFetch<listJiraLabelsResponse>(getListJiraLabelsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+/**
+ * @summary Search JIRA users for mentions
+ */
+export type searchJiraUsersResponse200 = {
+  data: SearchJiraUsers200Item[]
+  status: 200
+}
+
+export type searchJiraUsersResponse500 = {
+  data: SearchJiraUsers500
+  status: 500
+}
+
+export type searchJiraUsersResponseSuccess = (searchJiraUsersResponse200) & {
+  headers: Headers;
+};
+export type searchJiraUsersResponseError = (searchJiraUsersResponse500) & {
+  headers: Headers;
+};
+
+export type searchJiraUsersResponse = (searchJiraUsersResponseSuccess | searchJiraUsersResponseError)
+
+export const getSearchJiraUsersUrl = (params: SearchJiraUsersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/jira/users?${stringifiedParams}` : `/jira/users`
+}
+
+export const searchJiraUsers = async (params: SearchJiraUsersParams, options?: RequestInit): Promise<searchJiraUsersResponse> => {
+
+  return customFetch<searchJiraUsersResponse>(getSearchJiraUsersUrl(params),
   {
     ...options,
     method: 'GET'
