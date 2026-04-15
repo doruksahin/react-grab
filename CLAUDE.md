@@ -157,6 +157,67 @@ VITE_REACT_GRAB_SYNC_WORKSPACE=<name>-workspace
 
 Three terminals: `pnpm dev` (library watch), `pnpm sync:dev` (sync server on :8787), and `pnpm dev` in AdCreative-Frontend-V2. The symlink in AdCreative's `node_modules/react-grab` points to `../../react-grab/packages/react-grab` — Vite HMR picks up changes automatically.
 
+## E2E Testing
+
+**Goal:** Run features against a mock sync-server with no real backend, capture screenshots as visual evidence, and link tests to decree SPEC acceptance criteria.
+
+**Quick start:**
+
+```bash
+# Run all E2E tests (existing + mocked)
+pnpm test
+
+# Run only mocked tests (JIRA features, visual verification)
+cd packages/react-grab && npx playwright test --project=chromium-mocked
+
+# View screenshots and videos in the report
+npx playwright show-report
+```
+
+### Architecture — two Playwright projects
+
+| Project | Port | e2e-app mode | What it tests | initSync |
+|---|---|---|---|---|
+| `chromium` | 5175 | `dev` (default) | Overlay behavior — activation, selection, toolbar, copy | Off |
+| `chromium-mocked` | 5176 | `dev:mock` (.env.mock) | JIRA features — sidebar groups, comments, ticket creation | On (mock server) |
+
+The `chromium` project runs existing tests unaffected. The `chromium-mocked` project runs tests in `e2e/mocked/` against a mock sync-server with video recording enabled.
+
+### How the mock server works
+
+`e2e/mocks/fixtures.ts` — deterministic data for all 15 sync-server endpoints (groups, selections, JIRA tickets, comments, users, projects, priorities, labels, screenshots).
+
+`e2e/mocks/routes.ts` — `mockSyncServer(page)` registers `page.route()` handlers that intercept network calls before they leave the browser. Supports per-test overrides and request capture.
+
+`e2e/fixtures.ts` — `mockServer` fixture auto-resolves before `reactGrab` navigates, so routes are registered before `initSync()` fetches data. `reactGrab.screenshot(name, target)` attaches PNGs to the Playwright HTML report.
+
+### Verifying a SPEC acceptance criteria item
+
+Use Playwright's native `annotation` API to link tests to decree SPEC items:
+
+```ts
+test('Insert menu shows Divider, Code block, Quote', {
+  annotation: { type: 'ac', description: 'SPEC-013: Insert menu (+)' },
+}, async ({ page, reactGrab, mockServer }) => {
+  // navigate to group detail
+  await reactGrab.screenshot('insert-menu-open', 'page');
+  // assert...
+});
+```
+
+The HTML report shows the annotation + screenshots inline. That's the entire verification system — no custom reporter, no mapping files.
+
+### Key files
+
+| File | Purpose |
+|---|---|
+| `e2e/fixtures.ts` | `reactGrab` page object (70+ methods), `mockServer` fixture, `screenshot()` helper |
+| `e2e/mocks/fixtures.ts` | Typed mock data for all 15 endpoints |
+| `e2e/mocks/routes.ts` | `mockSyncServer(page)` — route interception + request capture |
+| `e2e/mocked/*.spec.ts` | Tests that need the mock server (run in `chromium-mocked` project) |
+| `packages/e2e-app/.env.mock` | Env vars for mock mode (`VITE_REACT_GRAB_SYNC_URL`, etc.) |
+| `playwright.config.ts` | Two projects, two web servers, video config |
+
 ## Conventions
 
 - Conventional commits: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`
