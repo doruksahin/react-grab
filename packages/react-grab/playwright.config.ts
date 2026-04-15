@@ -38,5 +38,11 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     cwd: path.resolve(__dirname, "../e2e-app"),
     timeout: 30000,
+    env: {
+      ...process.env,
+      VITE_REACT_GRAB_SYNC_URL: "http://localhost:9999",
+      VITE_REACT_GRAB_SYNC_WORKSPACE: "test-workspace",
+      VITE_REACT_GRAB_JIRA_PROJECT_KEY: "ATT",
+    },
   },
 });
