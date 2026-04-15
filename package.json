@@ -16,6 +16,7 @@
     "extension:dev": "pnpm --filter web-extension dev",
     "extension:build": "pnpm --filter web-extension build",
     "check:codegen": "pnpm --filter @react-grab/sync-server export-spec && pnpm --filter react-grab codegen && pnpm --filter dashboard codegen && git diff --exit-code packages/react-grab/src/generated/ packages/dashboard/src/api/",
+    "arch": "tsx scripts/arch-index.ts",
     "arch:codegen": "tsx scripts/arch-codegen.ts",
     "arch:visual": "tsx scripts/arch-codegen.ts --visual",
     "arch:lint": "tsx scripts/arch-lint.ts",
