@@ -10,11 +10,10 @@ import Image from "@tiptap/extension-image";
 import Mention from "@tiptap/extension-mention";
 import Placeholder from "@tiptap/extension-placeholder";
 import { extractMentions } from "../../../features/jira-comments/extract-mentions.js";
+import { setupImageHandlers } from "../../../features/jira-comments/use-editor-images.js";
 import type { JiraCommentEditorProps } from "../../../features/jira-comments/types.js";
-import { ToolbarButton, ToolbarSeparator, ToolbarDropdown } from "./toolbar.js";
 import { createMentionSuggestion } from "./mention-picker.js";
-import { EmojiPicker } from "./emoji-picker.js";
-import { ColorPicker } from "./color-picker.js";
+import { EditorToolbar } from "./editor-toolbar.js";
 
 export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
   let editorEl!: HTMLDivElement;
@@ -44,48 +43,14 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
       onTransaction: () => tick((n) => n + 1),
     });
 
-    editorEl.addEventListener("paste", handlePaste);
-    editorEl.addEventListener("dragover", (e) => e.preventDefault());
-    editorEl.addEventListener("drop", handleDrop);
+    const images = setupImageHandlers(editorEl, () => editor);
+    fileInput.addEventListener("change", images.handleFileInput as EventListener);
+    onCleanup(() => {
+      images.cleanup();
+      fileInput?.removeEventListener("change", images.handleFileInput as EventListener);
+      editor?.destroy();
+    });
   });
-
-  onCleanup(() => {
-    editorEl?.removeEventListener("paste", handlePaste);
-    editorEl?.removeEventListener("drop", handleDrop);
-    editor?.destroy();
-  });
-
-  function handlePaste(e: ClipboardEvent) {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (const item of items) {
-      if (item.type.startsWith("image/")) {
-        e.preventDefault();
-        const file = item.getAsFile();
-        if (file) insertImageFile(file);
-        return;
-      }
-    }
-  }
-
-  function handleDrop(e: DragEvent) {
-    e.preventDefault();
-    const files = e.dataTransfer?.files;
-    if (!files) return;
-    for (const file of files) {
-      if (file.type.startsWith("image/")) insertImageFile(file);
-    }
-  }
-
-  function insertImageFile(file: File) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        editor?.chain().focus().setImage({ src: reader.result }).run();
-      }
-    };
-    reader.readAsDataURL(file);
-  }
 
   function handleSubmit() {
     if (!editor) return;
@@ -98,15 +63,13 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
     editor.commands.clearContent();
   }
 
-  const active = (name: string, attrs?: Record<string, unknown>) =>
-    editor?.isActive(name, attrs) ?? false;
-
   return (
     <div
       data-react-grab-comment-composer
       class="flex flex-col rounded border border-border bg-muted/40 overflow-hidden"
       style={{ "pointer-events": "auto" }}
     >
+      {/* Reply context bar */}
       <Show when={props.replyTo}>
         {(reply) => (
           <div
@@ -126,90 +89,15 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         )}
       </Show>
 
-      <div class="flex flex-wrap gap-0.5 px-2 py-1.5 border-b border-border bg-muted/50" data-react-grab-ignore-events>
-        <ToolbarButton title="Bold" active={active("bold")} onClick={() => editor!.chain().focus().toggleBold().run()}>
-          <b>B</b>
-        </ToolbarButton>
-        <ToolbarButton title="Italic" active={active("italic")} onClick={() => editor!.chain().focus().toggleItalic().run()}>
-          <i>I</i>
-        </ToolbarButton>
-        <ToolbarButton title="Underline" active={active("underline")} onClick={() => editor!.chain().focus().toggleUnderline().run()}>
-          <u>U</u>
-        </ToolbarButton>
-        <ToolbarButton title="Strike" active={active("strike")} onClick={() => editor!.chain().focus().toggleStrike().run()}>
-          <s>S</s>
-        </ToolbarButton>
-        <ToolbarButton title="Inline code" active={active("code")} onClick={() => editor!.chain().focus().toggleCode().run()}>
-          {"<>"}
-        </ToolbarButton>
+      {/* Toolbar */}
+      <Show when={editor}>
+        {(ed) => <EditorToolbar editor={ed()} onImageClick={() => fileInput?.click()} />}
+      </Show>
 
-        <ToolbarSeparator />
+      {/* Hidden file input */}
+      <input ref={fileInput} type="file" accept="image/*" style={{ display: "none" }} />
 
-        <ToolbarDropdown title="Headings" label={<span>H</span>}>
-          <button class="block w-full text-left px-2 py-1 text-[11px] rounded hover:bg-accent" onMouseDown={(e) => { e.preventDefault(); editor!.chain().focus().setParagraph().run(); }}>Normal</button>
-          <button class="block w-full text-left px-2 py-1 text-[11px] rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); editor!.chain().focus().toggleHeading({ level: 1 }).run(); }}>Heading 1</button>
-          <button class="block w-full text-left px-2 py-1 text-[11px] rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); editor!.chain().focus().toggleHeading({ level: 2 }).run(); }}>Heading 2</button>
-          <button class="block w-full text-left px-2 py-1 text-[11px] rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); editor!.chain().focus().toggleHeading({ level: 3 }).run(); }}>Heading 3</button>
-        </ToolbarDropdown>
-
-        <ToolbarSeparator />
-
-        <ToolbarButton title="Bullet list" active={active("bulletList")} onClick={() => editor!.chain().focus().toggleBulletList().run()}>
-          •—
-        </ToolbarButton>
-        <ToolbarButton title="Ordered list" active={active("orderedList")} onClick={() => editor!.chain().focus().toggleOrderedList().run()}>
-          1.
-        </ToolbarButton>
-        <ToolbarButton title="Blockquote" active={active("blockquote")} onClick={() => editor!.chain().focus().toggleBlockquote().run()}>
-          "
-        </ToolbarButton>
-        <ToolbarButton title="Code block" active={active("codeBlock")} onClick={() => editor!.chain().focus().toggleCodeBlock().run()}>
-          {"{ }"}
-        </ToolbarButton>
-
-        <ToolbarSeparator />
-
-        <ToolbarDropdown title="Text color" label={<span style={{ color: editor?.getAttributes("textStyle")?.color ?? undefined }}>A</span>}>
-          <ColorPicker
-            activeColor={(editor?.getAttributes("textStyle")?.color as string | undefined) ?? null}
-            onSelect={(color) => {
-              if (color) editor!.chain().focus().setColor(color).run();
-              else editor!.chain().focus().unsetColor().run();
-            }}
-          />
-        </ToolbarDropdown>
-
-        <ToolbarButton title="Link" active={active("link")} onClick={() => {
-          if (active("link")) { editor!.chain().focus().unsetLink().run(); }
-          else { const url = prompt("Enter URL:"); if (url) editor!.chain().focus().setLink({ href: url }).run(); }
-        }}>
-          🔗
-        </ToolbarButton>
-
-        <ToolbarButton title="Image" onClick={() => fileInput?.click()}>
-          🖼
-        </ToolbarButton>
-
-        <ToolbarDropdown title="Emoji" label={<span>😀</span>}>
-          <EmojiPicker onSelect={(emoji) => editor!.chain().focus().insertContent(emoji).run()} />
-        </ToolbarDropdown>
-
-        <ToolbarSeparator />
-
-        <ToolbarButton title="Undo" disabled={!editor?.can().undo()} onClick={() => editor!.chain().focus().undo().run()}>
-          ↩
-        </ToolbarButton>
-        <ToolbarButton title="Redo" disabled={!editor?.can().redo()} onClick={() => editor!.chain().focus().redo().run()}>
-          ↪
-        </ToolbarButton>
-      </div>
-
-      <input ref={fileInput} type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => {
-        const file = e.currentTarget.files?.[0];
-        if (file) insertImageFile(file);
-        e.currentTarget.value = "";
-      }} />
-
+      {/* Editor content area */}
       <div
         ref={editorEl}
         data-react-grab-comment-editor
@@ -217,6 +105,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         style={{ "pointer-events": "auto" }}
       />
 
+      {/* Action bar */}
       <div class="flex items-center gap-2 px-2 py-1.5 border-t border-border" data-react-grab-ignore-events>
         <button
           type="button"
