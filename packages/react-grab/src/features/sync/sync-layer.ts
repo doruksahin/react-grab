@@ -192,6 +192,21 @@ export const createSyncLayer = () => {
     stopPolling();
   };
 
+  const populate = (data: {
+    workspace: string;
+    serverUrl: string;
+    jiraProjectKey: string;
+    groups?: SelectionGroup[];
+    comments?: CommentItem[];
+  }) => {
+    batch(() => {
+      storeHandle.setConfig(data.workspace, data.serverUrl, data.jiraProjectKey);
+      if (data.groups) storeHandle.setGroups(data.groups);
+      if (data.comments) storeHandle.setComments(data.comments);
+      storeHandle.setStatus("local");
+    });
+  };
+
   return {
     store: storeHandle.store,
     groups: () => storeHandle.store.groups,
@@ -219,6 +234,7 @@ export const createSyncLayer = () => {
 
     init,
     dispose,
+    populate,
   };
 };
 
