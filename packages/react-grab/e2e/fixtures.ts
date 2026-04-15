@@ -1,5 +1,6 @@
 import { test as base, expect, Page, Locator, type TestInfo } from "@playwright/test";
 import { mockSyncServer, type MockServerHandle } from "./mocks/routes.js";
+import * as mockFixtures from "./mocks/fixtures.js";
 
 const ATTRIBUTE_NAME = "data-react-grab";
 const DEFAULT_KEY_HOLD_DURATION_MS = 200;
@@ -248,6 +249,26 @@ export interface ReactGrabPageObject {
     target?: "overlay" | "page",
   ) => Promise<void>;
 }
+
+interface SeedPayload {
+  workspace: string;
+  serverUrl: string;
+  jiraProjectKey: string;
+  groups: any[];
+  comments: any[];
+}
+
+interface SyncDataHandle {
+  seed: (overrides: Partial<SeedPayload>) => void;
+}
+
+const DEFAULT_SEED: SeedPayload = {
+  workspace: "test-workspace",
+  serverUrl: "http://localhost:9999",
+  jiraProjectKey: "ATT",
+  groups: mockFixtures.groups,
+  comments: mockFixtures.comments,
+};
 
 const createReactGrabPageObject = (
   page: Page,
@@ -2502,21 +2523,37 @@ const createReactGrabPageObject = (
 
 export const test = base.extend<{
   reactGrab: ReactGrabPageObject;
+  syncData: SyncDataHandle;
   mockServer: MockServerHandle;
 }>({
-  // mockServer registers page.route() handlers for all 15 sync-server endpoints.
-  // In the chromium-mocked project (port 5176), initSync fires on page load —
-  // mockServer must resolve before reactGrab navigates so routes intercept.
-  mockServer: async ({ page }, use) => {
+  // Opt-in: only created when test declares `syncData` in its function signature.
+  // Stashes seed data on window via addInitScript — available before app JS runs.
+  syncData: [async ({ page }, use) => {
+    let seedPayload: SeedPayload = { ...DEFAULT_SEED };
+
+    const handle: SyncDataHandle = {
+      seed: (overrides: Partial<SeedPayload>) => {
+        Object.assign(seedPayload, overrides);
+      },
+    };
+
+    // Inject seed data before any page script executes
+    await page.addInitScript((data) => {
+      (window as any).__REACT_GRAB_SEED__ = data;
+    }, seedPayload);
+
+    await use(handle);
+  }, { auto: false }],
+
+  // Opt-in: only created when test declares `mockServer` in its function signature.
+  // Registers page.route() handlers for all 15 sync-server endpoints.
+  mockServer: [async ({ page }, use) => {
     const handle = await mockSyncServer(page);
     await use(handle);
-  },
+  }, { auto: false }],
 
-  // reactGrab depends on mockServer so routes are registered before
-  // page.goto(). On port 5175 (chromium project), initSync is not called
-  // so the mock routes are no-ops. On port 5176 (chromium-mocked project),
-  // initSync fires and the routes intercept its fetches.
-  reactGrab: async ({ page, mockServer: _mockServer }, use, testInfo) => {
+  // Always created. Navigates, waits for API, seeds if data was injected.
+  reactGrab: async ({ page }, use, testInfo) => {
     const waitForApiReady = async () => {
       await page.waitForFunction(
         () => {
@@ -2562,6 +2599,16 @@ export const test = base.extend<{
     };
 
     await initializePage();
+
+    // If syncData fixture injected seed data, populate the store now.
+    // This happens AFTER navigation but BEFORE tests interact with the page.
+    await page.evaluate(() => {
+      const seed = (window as any).__REACT_GRAB_SEED__;
+      if (seed) {
+        (window as any).__reactGrabSync.populate(seed);
+        delete (window as any).__REACT_GRAB_SEED__;
+      }
+    });
 
     const reactGrab = createReactGrabPageObject(page, testInfo);
     await use(reactGrab);
