@@ -11,6 +11,10 @@ import * as fixtures from "../mocks/fixtures.js";
  * Each test is annotated with its AC item for traceability in the HTML report.
  * Tests are resilient — if a UI element is not reachable, the test still
  * captures screenshots at whatever state it reaches, so the report remains useful.
+ *
+ * TODO(SPEC-013): When comment UI is wired into the detail view:
+ * 1. Convert early returns to hard expect() assertions
+ * 2. Replace waitForTimeout() calls with expect.poll() for stability
  */
 
 const ATTR = "data-react-grab";
@@ -274,6 +278,7 @@ test.describe("SPEC-013 AC Verification", () => {
 
     if (!hasComposer) {
       await reactGrab.screenshot("ac1-no-composer", "page");
+      // TODO(SPEC-013): convert to hard assertion when comment UI is wired into detail view
       console.log("AC-1: Comment composer not found — screenshot captured");
       return;
     }
@@ -285,6 +290,7 @@ test.describe("SPEC-013 AC Verification", () => {
     console.log("AC-1: Editor found:", hasEditor);
 
     if (!hasEditor) {
+      // TODO(SPEC-013): convert to hard assertion when comment UI is wired into detail view
       await reactGrab.screenshot("ac1-no-editor", "page");
       return;
     }
@@ -345,6 +351,7 @@ test.describe("SPEC-013 AC Verification", () => {
 
     if (!hasReplyButton) {
       await reactGrab.screenshot("ac2-no-reply-button", "page");
+      // TODO(SPEC-013): convert to hard assertion when comment UI is wired into detail view
       console.log("AC-2: No reply button found — screenshot captured");
       return;
     }
@@ -398,6 +405,7 @@ test.describe("SPEC-013 AC Verification", () => {
 
     if (!hasComposer) {
       await reactGrab.screenshot("ac3-no-composer", "page");
+      // TODO(SPEC-013): convert to hard assertion when comment UI is wired into detail view
       console.log("AC-3: Comment composer not found — screenshot captured");
       return;
     }
@@ -538,6 +546,7 @@ test.describe("SPEC-013 AC Verification", () => {
 
     if (!hasEditor) {
       await reactGrab.screenshot("ac5-no-editor", "page");
+      // TODO(SPEC-013): convert to hard assertion when comment UI is wired into detail view
       console.log("AC-5: Editor not found — screenshot captured");
       return;
     }
@@ -599,6 +608,7 @@ test.describe("SPEC-013 AC Verification", () => {
       console.log(
         "AC-6: Required elements not found — screenshot captured",
       );
+      // TODO(SPEC-013): convert to hard assertion when comment UI is wired into detail view
       return;
     }
 
@@ -704,6 +714,7 @@ test.describe("SPEC-013 AC Verification", () => {
 
     if (!hasEditor) {
       await reactGrab.screenshot("ac7-no-editor", "page");
+      // TODO(SPEC-013): convert to hard assertion when comment UI is wired into detail view
       console.log("AC-7: Editor not found — screenshot captured");
       return;
     }
