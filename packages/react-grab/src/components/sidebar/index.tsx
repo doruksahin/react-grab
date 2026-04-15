@@ -25,7 +25,6 @@ import {
 } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
-import { LooseSelectionList } from "./loose-selection-list.jsx";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 import { TabBar } from "./tab-bar.js";
 import { SelectionListTab } from "./selection-list-tab.js";
@@ -61,9 +60,9 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // solid-focus-trap restores focus to the previously focused element on cleanup.
   createFocusTrap({ element: () => containerRef ?? null, enabled: () => true });
 
-  // Synthetic groups are invisible in every user-facing surface (GroupList,
-  // filter chips, stats bar, empty-state guard). The full props.groups list
-  // is preserved so LooseSelectionList can look up synthetic groups by id.
+  // Synthetic groups are invisible in user-facing surfaces (GroupList,
+  // filter chips, stats bar, empty-state guard). Loose selections appear
+  // in the Selections tab via SelectionListTab + isPresentedAsLoose.
   const userFacingGroups = createMemo(() =>
     filterUserFacingGroups(props.groups),
   );
@@ -260,16 +259,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                       ref={(el) => { listScrollRef = el; }}
                       class="flex-1 overflow-y-auto"
                     >
-                      <LooseSelectionList
-                        allGroups={props.groups}
-                        commentItems={props.commentItems}
-                        syncServerUrl={props.syncServerUrl}
-                        syncWorkspace={props.syncWorkspace}
-                        scrollRoot={() => listScrollRef ?? null}
-                        onCreateTicket={(item) => props.onCreateTicketForLooseItem?.(item)}
-                        onRemoveItem={props.onRemoveItem}
-                      />
-
                       <Show when={filteredGroups().length > 0}>
                         <GroupList
                           groupedItems={filteredGroups()}
