@@ -11,6 +11,7 @@
     "db:migrate:local": "wrangler d1 migrations apply react-grab-sync --local",
     "db:migrate:prod": "wrangler d1 migrations apply react-grab-sync",
     "db:reset:local": "wrangler d1 execute react-grab-sync --local --command \"DELETE FROM comments; DELETE FROM groups;\"",
+    "db:open": "open \"$(find .wrangler/state/v3/d1 -name '*.sqlite' ! -name 'metadata.sqlite' | head -1)\"",
     "publish:worker": "wrangler deploy"
   },
   "dependencies": {
