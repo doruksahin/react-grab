@@ -145,18 +145,9 @@ const navigateToGroupDetail = async (
 // ---------------------------------------------------------------------------
 
 test.describe("Sync refresh — JIRA status mid-test override", { tag: ["@SYNC-REFRESH"] }, () => {
-  test.beforeEach(async ({ reactGrab }) => {
-    // Trigger initSync manually — mockServer routes intercept the HTTP calls
-    await reactGrab.page.evaluate(() => {
-      return (window as any).__reactGrabSync.initSync({
-        enabled: true,
-        serverUrl: "http://localhost:9999",
-        workspace: "test-workspace",
-        jiraProjectKey: "ATT",
-        syncRevealedState: true,
-        onSyncError: (err: Error) => console.warn("[e2e] sync error:", err.message),
-      });
-    });
+  test.beforeEach(async ({ reactGrab, mockServer }) => {
+    // mockServer routes registered during fixture setup. Now trigger initSync.
+    await reactGrab.triggerInitSync();
 
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })

@@ -55,7 +55,8 @@ const getShadowTextContent = async (
 // ---------------------------------------------------------------------------
 
 test.describe("JIRA Selection Label — Visual Verification", { tag: ["@SPEC-010"] }, () => {
-  test.beforeEach(async ({ reactGrab, syncData }) => {
+  test.beforeEach(async ({ reactGrab }) => {
+    await reactGrab.populate();
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
       .toBe(true);

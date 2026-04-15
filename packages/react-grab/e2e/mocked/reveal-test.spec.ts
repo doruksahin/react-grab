@@ -15,17 +15,8 @@ test("revealed selections should anchor to DOM elements", { tag: ["@SPEC-010"] }
   reactGrab,
   mockServer,
 }) => {
-  // Trigger initSync manually — mockServer routes intercept the HTTP calls
-  await page.evaluate(() => {
-    return (window as any).__reactGrabSync.initSync({
-      enabled: true,
-      serverUrl: "http://localhost:9999",
-      workspace: "test-workspace",
-      jiraProjectKey: "ATT",
-      syncRevealedState: true,
-      onSyncError: (err: Error) => console.warn("[e2e] sync error:", err.message),
-    });
-  });
+  // mockServer routes registered during fixture setup. Now trigger initSync.
+  await reactGrab.triggerInitSync();
 
   // Wait for overlay to be ready
   await expect

@@ -172,7 +172,8 @@ const openSidebar = async (page: import("@playwright/test").Page) => {
 // ---------------------------------------------------------------------------
 
 test.describe("JIRA Comments — Visual Verification", { tag: ["@SPEC-010"] }, () => {
-  test.beforeEach(async ({ reactGrab, syncData }) => {
+  test.beforeEach(async ({ reactGrab }) => {
+    await reactGrab.populate();
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
       .toBe(true);
