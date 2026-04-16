@@ -19,10 +19,12 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
   };
 
   return (
-    <div
+    <button
+      type="button"
       data-react-grab-ignore-events
       data-react-grab-collapsed-dot
-      class="fixed cursor-pointer transition-transform duration-150 ease-out hover:scale-150"
+      title="Expand"
+      class="fixed flex items-center justify-center rounded-full bg-popover border border-border shadow-md cursor-pointer transition-all duration-150 ease-out hover:bg-accent hover:border-ring hover:shadow-lg hover:scale-110 p-[6px]"
       style={{
         left: `${position().left}px`,
         top: `${position().top}px`,
@@ -43,6 +45,6 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
           height: `${DOT_SIZE_PX}px`,
         }}
       />
-    </div>
+    </button>
   );
 };
