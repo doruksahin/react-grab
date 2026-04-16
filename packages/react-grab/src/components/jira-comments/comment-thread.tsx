@@ -4,7 +4,7 @@ import { CommentItem } from "./comment-item.js";
 import { InlineReplyEditor } from "./inline-reply-editor.js";
 
 export const CommentThread: Component<CommentThreadProps> = (props) => (
-  <div class="flex flex-col group">
+  <div data-react-grab-comment-thread class="flex flex-col group">
     <CommentItem
       comment={props.root}
       onReply={props.onReply}
