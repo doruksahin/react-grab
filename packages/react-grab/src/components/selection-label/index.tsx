@@ -39,13 +39,11 @@ import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-col
 import { Arrow } from './arrow.js';
 import { TagBadge } from './tag-badge.js';
 import { BottomSection } from './bottom-section.js';
-import { JiraMeta } from './jira-meta.js';
 import { DiscardPrompt } from './discard-prompt.js';
 import { ErrorView } from './error-view.js';
 import { CompletionView } from './completion-view.js';
 import { ArrowNavigationMenu } from './arrow-navigation-menu.js';
-import { CommentsSection } from '../jira-comments/comments-section.js';
-// Collapsible moved into JiraCommentsSection
+import { SelectionCardBody } from '../sidebar/selection-card-body.js';
 
 interface LabelPosition {
   left: number;
@@ -711,17 +709,47 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 <CreateTicketButton onClick={() => props.onCreateTicket?.()} />
               </Show>
               <BottomSection>
-                <Show when={props.jiraTicketId}>
-                  {(ticketId) => (
-                    <JiraMeta
-                      jiraTicketId={ticketId()}
-                      jiraUrl={props.jiraUrl}
-                      jiraAssignee={props.jiraAssignee}
-                      jiraReporter={props.jiraReporter}
-                      jiraAssigneeAvatar={props.jiraAssigneeAvatar}
-                      jiraReporterAvatar={props.jiraReporterAvatar}
+                <Show
+                  when={(() => {
+                    const ticketId = props.jiraTicketId;
+                    const itemId = props.itemId;
+                    const timestamp = props.timestamp;
+                    if (!ticketId || !itemId || timestamp === undefined)
+                      return undefined;
+                    return { ticketId, itemId, timestamp };
+                  })()}
+                >
+                  {(ctx) => (
+                    <SelectionCardBody
+                      summary={
+                        props.commentText ??
+                        props.componentName ??
+                        props.tagName ??
+                        ''
+                      }
+                      timestamp={ctx().timestamp}
+                      itemId={ctx().itemId}
+                      hasElementScreenshot={props.hasElementScreenshot}
+                      hasFullPageScreenshot={props.hasFullPageScreenshot}
+                      syncServerUrl={props.syncServerUrl}
+                      syncWorkspace={props.syncWorkspace}
+                      jiraTicketId={ctx().ticketId}
                       jiraStatus={props.groupStatus}
-                      labels={props.jiraLabels}
+                      jiraStatusCategory={props.jiraStatusCategory}
+                      jiraLabels={props.jiraLabels}
+                      jiraDueDate={props.jiraDueDate}
+                      jiraIssueType={props.jiraIssueType}
+                      jiraPriority={props.jiraPriority}
+                      jiraAssignee={props.jiraAssignee}
+                      jiraAssigneeAvatar={props.jiraAssigneeAvatar}
+                      jiraComments={props.jiraComments}
+                      onSubmitComment={props.onSubmitJiraComment}
+                      onSearchUsers={props.onSearchJiraUsers}
+                      onRefreshStatus={
+                        props.onRefreshJiraStatus
+                          ? () => props.onRefreshJiraStatus?.()
+                          : undefined
+                      }
                     />
                   )}
                 </Show>
@@ -776,14 +804,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     </button>
                   </Show>
                 </div>
-                <Show when={props.onSubmitJiraComment || (props.jiraComments?.length ?? 0) > 0}>
-                  <CommentsSection
-                    comments={props.jiraComments ?? []}
-                    onSubmitComment={props.onSubmitJiraComment ?? (async () => ({ id: "", created: "" }))}
-                    onSearchUsers={props.onSearchJiraUsers}
-                    onRefreshPoll={() => props.onRefreshJiraStatus?.()}
-                  />
-                </Show>
               </BottomSection>
             </div>
           </Show>
