@@ -2775,7 +2775,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
         const isFromReactGrabInput = isEventFromOverlay(
           event,
-          "data-react-grab-input",
+          "data-react-grab-generation-input",
         );
         if (
           isPromptMode() &&

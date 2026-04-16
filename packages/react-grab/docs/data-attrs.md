@@ -212,18 +212,18 @@ You build a "Notifications panel" with 4 attrs: `notifications-panel`,
 
 ### Scenario C — Rename an attr
 
-Rename `data-react-grab-submit` (bare verb) → `data-react-grab-jira-submit`.
+Rename `data-react-grab-submit` (bare verb) → `data-react-grab-generation-submit`.
 
 1. Rename at declaration in JSX.
-2. Grep `e2e/` for the old selector; update all test selectors in the same
-   commit.
-3. Update the `owns` entry in the scope (`jira`):
-   remove `submit`, add `jira-submit`.
+2. Grep `e2e/` and `src/` for the old selector; update all references in
+   the same commit (test files, string selectors in core/, etc.).
+3. Update the `owns` entry in the scope: remove `submit`, add
+   `generation-submit` (and add a new scope first if one doesn't exist).
 4. `pnpm arch:codegen` + `pnpm arch:lint`.
 5. Commit.
 
 **Forgot step 2?** Lint reports `[stale-test] data-react-grab-submit`.
-**Forgot step 3?** Lint reports `[orphan] data-react-grab-jira-submit`.
+**Forgot step 3?** Lint reports `[orphan] data-react-grab-generation-submit`.
 
 ### Scenario D — Delete a component
 

@@ -65,7 +65,7 @@ export const ErrorView: Component<ErrorViewProps> = (props) => {
         <BottomSection>
           <div class="contain-layout shrink-0 flex items-center justify-end gap-[5px] w-full h-fit">
             <button
-              data-react-grab-retry
+              data-react-grab-error-retry
               class="contain-layout shrink-0 flex items-center justify-center gap-1 px-[3px] py-px rounded-sm bg-popover [border-width:0.5px] border-solid border-border cursor-pointer transition-all hover:bg-accent press-scale h-[17px]"
               onClick={props.onRetry}
             >

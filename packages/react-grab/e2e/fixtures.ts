@@ -713,7 +713,7 @@ const createReactGrabPageObject = (
       const root = shadowRoot.querySelector(`[${attrName}]`);
       if (!root) return;
       const textarea = root.querySelector<HTMLTextAreaElement>(
-        "[data-react-grab-input]",
+        "[data-react-grab-generation-input]",
       );
       if (textarea) {
         textarea.focus();
@@ -2023,7 +2023,7 @@ const createReactGrabPageObject = (
       if (!root) return;
 
       const dismissButton = root.querySelector<HTMLButtonElement>(
-        "[data-react-grab-dismiss]",
+        "[data-react-grab-completion-dismiss]",
       );
       dismissButton?.click();
     }, ATTRIBUTE_NAME);
@@ -2038,7 +2038,7 @@ const createReactGrabPageObject = (
       if (!root) return;
 
       const undoButton = root.querySelector<HTMLButtonElement>(
-        "[data-react-grab-undo]",
+        "[data-react-grab-completion-undo]",
       );
       undoButton?.click();
     }, ATTRIBUTE_NAME);
@@ -2053,7 +2053,7 @@ const createReactGrabPageObject = (
       if (!root) return;
 
       const retryButton = root.querySelector<HTMLButtonElement>(
-        "[data-react-grab-retry]",
+        "[data-react-grab-error-retry]",
       );
       retryButton?.click();
     }, ATTRIBUTE_NAME);
@@ -2068,7 +2068,7 @@ const createReactGrabPageObject = (
       if (!root) return;
 
       const abortButton = root.querySelector<HTMLButtonElement>(
-        "[data-react-grab-abort]",
+        "[data-react-grab-generation-abort]",
       );
       abortButton?.click();
     }, ATTRIBUTE_NAME);
