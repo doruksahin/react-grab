@@ -368,7 +368,7 @@ test.describe("SPEC-013 AC Verification", { tag: ["@SPEC-013"] }, () => {
     // Check if reply context bar appeared
     const hasReplyContext = await shadowSelectorExists(
       page,
-      "[data-react-grab-reply-context]",
+      "[data-react-grab-inline-reply]",
     );
     console.log("AC-2: Reply context bar visible:", hasReplyContext);
 
@@ -380,7 +380,7 @@ test.describe("SPEC-013 AC Verification", { tag: ["@SPEC-013"] }, () => {
     // Check if reply context bar disappeared
     const replyContextGone = !(await shadowSelectorExists(
       page,
-      "[data-react-grab-reply-context]",
+      "[data-react-grab-inline-reply]",
     ));
     console.log("AC-2: Reply context dismissed after Escape:", replyContextGone);
   });
@@ -429,8 +429,6 @@ test.describe("SPEC-013 AC Verification", { tag: ["@SPEC-013"] }, () => {
     // Look for insert menu button — typically a "+" button in the toolbar.
     // Try several common selectors for the insert/plus button.
     const insertButtonSelectors = [
-      "[data-react-grab-insert-menu]",
-      "[data-react-grab-editor-insert]",
       "[aria-label='Insert']",
       "[aria-label='insert']",
       "[title='Insert']",
@@ -635,7 +633,7 @@ test.describe("SPEC-013 AC Verification", { tag: ["@SPEC-013"] }, () => {
     const hasConfirmation = await shadowRootContainsText(page, "Discard");
     const hasConfirmButton = await shadowSelectorExists(
       page,
-      "[data-react-grab-confirm-discard]",
+      "[data-react-grab-discard-yes]",
     );
     console.log("AC-6: Discard text visible:", hasConfirmation);
     console.log("AC-6: Confirm discard button:", hasConfirmButton);
@@ -647,7 +645,7 @@ test.describe("SPEC-013 AC Verification", { tag: ["@SPEC-013"] }, () => {
       if (hasConfirmButton) {
         await clickShadowSelector(
           page,
-          "[data-react-grab-confirm-discard]",
+          "[data-react-grab-discard-yes]",
         );
         await page.waitForTimeout(300);
         await reactGrab.screenshot("ac6-after-confirm-discard", "page");
