@@ -1,5 +1,10 @@
 import { type Component, Show } from "solid-js";
-import type { FilterState } from "../../features/sidebar/filter-state.js";
+import {
+  type FilterState,
+  type DueDatePreset,
+  DUE_DATE_PRESETS,
+  DUE_DATE_PRESET_LABEL_ALL,
+} from "../../features/sidebar/filter-state.js";
 import { ALL_ATT_STATUSES } from "../../features/sidebar/status-colors.js";
 import { Button } from "../ui/button.js";
 import {
@@ -17,6 +22,11 @@ interface FilterBarProps {
   labels: string[];
   onFilterChange: (filter: FilterState) => void;
 }
+
+const dueDatePresetLabel = (key: string): string => {
+  if (key === "") return DUE_DATE_PRESET_LABEL_ALL;
+  return DUE_DATE_PRESETS.find((p) => p.key === key)?.label ?? key;
+};
 
 export const FilterBar: Component<FilterBarProps> = (props) => {
   const handleStatusChange = (value: string | null) => {
@@ -36,14 +46,26 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
     props.onFilterChange({ ...props.filter, label: value || null });
   };
 
+  const handleDueDateChange = (value: string | null) => {
+    const preset = value ? (value as DueDatePreset) : null;
+    props.onFilterChange({ ...props.filter, dueDatePreset: preset });
+  };
+
   const hasActiveFilter = () =>
     props.filter.statuses.size > 0 ||
     props.filter.assignee !== null ||
     props.filter.reporter !== null ||
-    props.filter.label !== null;
+    props.filter.label !== null ||
+    props.filter.dueDatePreset !== null;
 
   const handleClear = () => {
-    props.onFilterChange({ statuses: new Set(), assignee: null, reporter: null, label: null });
+    props.onFilterChange({
+      statuses: new Set(),
+      assignee: null,
+      reporter: null,
+      label: null,
+      dueDatePreset: null,
+    });
   };
 
   const triggerClass = "flex-1 min-w-0 text-[11px] h-7 bg-muted border-border text-foreground";
@@ -119,6 +141,25 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
           <SelectContent />
         </Select>
       </Show>
+
+      <Select
+        value={props.filter.dueDatePreset ?? ""}
+        onChange={handleDueDateChange}
+        placeholder={DUE_DATE_PRESET_LABEL_ALL}
+        options={["", ...DUE_DATE_PRESETS.map((p) => p.key)]}
+        itemComponent={(itemProps) => (
+          <SelectItem item={itemProps.item}>
+            {dueDatePresetLabel(itemProps.item.rawValue)}
+          </SelectItem>
+        )}
+      >
+        <SelectTrigger class={triggerClass} data-react-grab-due-date-filter>
+          <SelectValue<string>>
+            {(state) => dueDatePresetLabel(state.selectedOption())}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent />
+      </Select>
 
       <Show when={hasActiveFilter()}>
         <Button variant="ghost" size="sm" class="text-[10px] text-muted-foreground hover:text-foreground h-auto py-0.5 px-1.5 whitespace-nowrap" onClick={handleClear}>

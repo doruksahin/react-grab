@@ -1,5 +1,5 @@
 import { type Component, Show, For } from "solid-js";
-import type { FilterState } from "../../features/sidebar/filter-state.js";
+import { type FilterState, DUE_DATE_PRESETS } from "../../features/sidebar/filter-state.js";
 
 interface FilterChipsProps {
   filter: FilterState;
@@ -35,6 +35,13 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
       result.push({
         label: `Label: ${props.filter.label}`,
         onDismiss: () => props.onFilterChange({ ...props.filter, label: null }),
+      });
+    }
+    if (props.filter.dueDatePreset) {
+      const preset = DUE_DATE_PRESETS.find((p) => p.key === props.filter.dueDatePreset);
+      result.push({
+        label: `Due: ${preset?.label ?? props.filter.dueDatePreset}`,
+        onDismiss: () => props.onFilterChange({ ...props.filter, dueDatePreset: null }),
       });
     }
     return result;

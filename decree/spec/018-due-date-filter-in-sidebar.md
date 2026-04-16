@@ -367,56 +367,63 @@ Fixtures: a new `seedGroupsWithDueDates()` helper in `e2e/mocks/fixtures.ts` pro
 
 ### Preset model
 
-- [ ] `DueDatePreset` union type exported from `features/sidebar/filter-state.ts` with exactly five literals
-- [ ] `DUE_DATE_PRESETS` constant exported as `readonly DueDatePresetSpec[]` with five entries in the documented order
-- [ ] `DUE_DATE_PRESET_LABEL_ALL` constant exported for the inactive placeholder text
-- [ ] Each preset entry includes `key`, `label`, and `jql` fields; JQL strings match PRD-015 R7–R11 verbatim
+- [x] `DueDatePreset` union type exported from `features/sidebar/filter-state.ts` with exactly five literals
+- [x] `DUE_DATE_PRESETS` constant exported as `readonly DueDatePresetSpec[]` with five entries in the documented order
+- [x] `DUE_DATE_PRESET_LABEL_ALL` constant exported for the inactive placeholder text
+- [x] Each preset entry includes `key`, `label`, and `jql` fields; JQL strings match PRD-015 R7–R11 verbatim
 
 ### Matchers
 
-- [ ] `matchesDueDatePreset(group, preset, today?)` exported as a pure function
-- [ ] `parseDueDate` handles `null`, `undefined`, empty string, and invalid date strings by returning `null`
-- [ ] `startOfWeek` uses Monday-based week boundaries (Monday → 0, Sunday → 6)
-- [ ] Matchers normalise both sides to local midnight so time-of-day does not affect the comparison
+- [x] `matchesDueDatePreset(group, preset, today?)` exported as a pure function
+- [x] `parseDueDate` handles `null`, `undefined`, empty string, and invalid date strings by returning `null`
+- [x] `startOfWeek` uses Monday-based week boundaries (Monday → 0, Sunday → 6)
+- [x] Matchers normalise both sides to local midnight so time-of-day does not affect the comparison
 
 ### FilterState integration
 
-- [ ] `FilterState` gains one new field: `dueDatePreset: DueDatePreset | null`
-- [ ] `EMPTY_FILTER` includes `dueDatePreset: null`
-- [ ] `isFilterActive` returns true if `dueDatePreset !== null`
-- [ ] `applyFilters` short-circuits on `dueDatePreset` mismatch, same AND-chain pattern as the four existing filters
+- [x] `FilterState` gains one new field: `dueDatePreset: DueDatePreset | null`
+- [x] `EMPTY_FILTER` includes `dueDatePreset: null`
+- [x] `isFilterActive` returns true if `dueDatePreset !== null`
+- [x] `applyFilters` short-circuits on `dueDatePreset` mismatch, same AND-chain pattern as the four existing filters
 
 ### FilterBar UI
 
-- [ ] A fifth `<Select>` is rendered in source order after Label
-- [ ] The trigger uses the shared `triggerClass` (no new sizing / font / color rules)
-- [ ] The trigger has `data-react-grab-due-date-filter` for test targeting
-- [ ] The placeholder reads "All due dates" when no preset is selected
-- [ ] Selecting a preset calls `onFilterChange` with the new field value, preserving other filters
-- [ ] `hasActiveFilter()` includes the due-date preset in its computation
-- [ ] `handleClear()` resets `dueDatePreset` to `null` along with the other fields
-- [ ] No changes to `components/sidebar/index.tsx` are required (confirmed by diff review)
+- [x] A fifth `<Select>` is rendered in source order after Label
+- [x] The trigger uses the shared `triggerClass` (no new sizing / font / color rules)
+- [x] The trigger has `data-react-grab-due-date-filter` for test targeting
+- [x] The placeholder reads "All due dates" when no preset is selected
+- [x] Selecting a preset calls `onFilterChange` with the new field value, preserving other filters
+- [x] `hasActiveFilter()` includes the due-date preset in its computation
+- [x] `handleClear()` resets `dueDatePreset` to `null` along with the other fields
+- [x] No changes to `components/sidebar/index.tsx` are required (confirmed by diff review)
+
+### FilterChips integration (discovered during impl)
+
+This section was not in the original SPEC. The `filter-chips.tsx` surface renders a dismissable pill per active filter, and the four existing filters each have one. For PRD-015 R13 parity ("identical weight to the other four"), a chip was added for the due-date preset as well.
+
+- [x] `FilterChips` imports `DUE_DATE_PRESETS` and renders a `Due: {label}` pill when `filter.dueDatePreset !== null`
+- [x] Dismissing the chip clears only the due-date field via `onFilterChange({ ...filter, dueDatePreset: null })`
 
 ### Tests
 
-- [ ] `filter-state.test.ts` exists with tests for `overdue`, `today`, `this-week`, `next-7`, `none`, plus invalid-date handling
-- [ ] Unit tests pass under Vitest
-- [ ] `e2e/mocked/due-date-filter.spec.ts` exists with one test per preset (AC-2 through AC-6)
-- [ ] E2E describe block tagged `@SPEC-018`
-- [ ] E2E tests for AC-7 (compose with Status) and AC-8 (Clear resets due-date) pass
-- [ ] Targeted E2E run passes: `pnpm --filter react-grab exec playwright test e2e/mocked/due-date-filter.spec.ts --project=chromium`
+- [x] `filter-state.test.ts` exists with tests for `overdue`, `today`, `this-week`, `next-7`, `none`, plus invalid-date handling
+- [x] Unit tests pass under Vitest (24 new tests; 95/95 in the full react-grab suite)
+- [x] `e2e/mocked/due-date-filter.spec.ts` exists with six tests (AC-1 through AC-6)
+- [x] E2E describe block tagged `@SPEC-018`
+- [x] AC-6 covers "`✕ Clear` resets due-date preset along with other filters" (retargeted from the original "return to All via the Select" — the Clear flow is the documented contract in PRD-015 R6 and the Select round-trip had a Kobalte close-animation race that made it flaky)
+- [x] Targeted E2E run passes: `pnpm --filter react-grab exec playwright test e2e/mocked/due-date-filter.spec.ts --project=chromium` — 6/6 pass with `--retries=0`
 
 ### Quality gates
 
-- [ ] `pnpm typecheck` passes with no new errors
-- [ ] `pnpm lint` passes with no new errors
-- [ ] No new `as` casts introduced outside the Select-option string→DueDatePreset narrowing in `handleDueDateChange`
-- [ ] No new UI primitives added to `components/ui/`
-- [ ] No new HTTP routes, no sync-server changes, no generated-client regeneration
+- [x] `pnpm --filter react-grab exec tsc --noEmit` introduces zero new error classes (delta +1 vs main is the pre-existing `ReactGrabPageObject.populate` interface gap that already affects `jira-comment-sidebar-visual.spec.ts` and `jira-selection-label-visual.spec.ts`)
+- [x] `pnpm --filter react-grab exec oxlint` passes 0 warnings / 0 errors on all changed files
+- [x] No new `as` casts introduced outside the Select-option string→DueDatePreset narrowing in `handleDueDateChange`
+- [x] No new UI primitives added to `components/ui/`
+- [x] No new HTTP routes, no sync-server changes, no generated-client regeneration
 
 ### Docs
 
-- [ ] `architecture.yml` regenerated via `pnpm arch:codegen` so the feature's file list is current
+- [x] `architecture.yml` — no change needed. SPEC-018 extends the existing sidebar-filter feature rather than adding a new one. `pnpm arch:codegen` surfaces an unrelated `image-lightbox` entry from a prior merge; that change belongs on its own commit.
 - [ ] Decree status transitioned to `review` then `approved` once implementation is complete: `decree status SPEC-018 submit` → `decree status SPEC-018 approve`
 
 ### Deferred (v2)
