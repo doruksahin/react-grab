@@ -91,7 +91,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
       </Show>
 
       {/* Hidden file input */}
-      <input ref={fileInput} type="file" accept="image/*" style={{ display: "none" }} />
+      <input data-react-grab-editor-image-input ref={fileInput} type="file" accept="image/*" style={{ display: "none" }} />
 
       {/* Editor content area */}
       <div
@@ -122,7 +122,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
             Cancel
           </button>
         </Show>
-        <span class="ml-auto text-[10px] text-muted-foreground">
+        <span data-react-grab-comment-hint class="ml-auto text-[10px] text-muted-foreground">
           Tip: Type <kbd class="px-1 py-0.5 bg-muted rounded text-[9px]">@</kbd> to mention
         </span>
       </div>
