@@ -114,7 +114,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
               }}
               style={{ position: "relative" }}
             >
-              <div style={{ position: "relative" }}>
+              <div>
                 <SelectionCardBody
                   leading={
                     props.onToggleSelect

@@ -41,8 +41,9 @@ const formatDueDate = (dueDate: string): string =>
 interface SelectionCardBodySlots {
   /** Optional element rendered before the summary text (e.g. a multi-select checkbox). */
   leading?: JSX.Element;
-  statusPill?: JSX.Element;
+  /** Summary text element — pass undefined when omitted so the header is hidden. */
   summary?: JSX.Element;
+  statusPill?: JSX.Element;
   labels?: JSX.Element;
   dates?: JSX.Element;
   screenshots?: JSX.Element;
@@ -50,25 +51,33 @@ interface SelectionCardBodySlots {
   comments?: JSX.Element;
 }
 
-const SelectionCardBodyLayout: Component<SelectionCardBodySlots> = (props) => (
-  <div data-react-grab-selection-card-body class="relative w-full">
-    <div class="absolute top-0 right-0">{props.statusPill}</div>
-    <Show when={props.leading} fallback={props.summary}>
-      <div class="flex items-center gap-2">
-        {props.leading}
-        {props.summary}
+const SelectionCardBodyLayout: Component<SelectionCardBodySlots> = (props) => {
+  const hasHeader = () =>
+    props.leading !== undefined || props.summary !== undefined;
+
+  return (
+    <div data-react-grab-selection-card-body class="w-full">
+      <Show when={hasHeader()}>
+        <div class="flex items-center gap-2">
+          {props.leading}
+          {props.summary}
+        </div>
+        <hr class="border-border my-2" />
+      </Show>
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex flex-wrap gap-1.5">{props.labels}</div>
+        {props.statusPill}
       </div>
-    </Show>
-    {props.labels}
-    {props.dates}
-    {props.screenshots}
-    {props.meta}
-    {props.comments}
-  </div>
-);
+      {props.dates}
+      {props.screenshots}
+      {props.meta}
+      {props.comments}
+    </div>
+  );
+};
 
 export interface SelectionCardBodyProps {
-  // Status pill (top-right, absolute)
+  // Status pill (labels row, right-aligned)
   jiraTicketId?: string;
   jiraStatus?: string;
   jiraStatusCategory?: string;
@@ -128,6 +137,15 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
   return (
     <SelectionCardBodyLayout
       leading={props.leading}
+      summary={
+        props.summary
+          ? (
+              <div class="text-[12px] font-medium text-foreground truncate">
+                {props.summary}
+              </div>
+            )
+          : undefined
+      }
       statusPill={
         <Show
           when={hasTicket()}
@@ -144,24 +162,15 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
           </span>
         </Show>
       }
-      summary={
-        <Show when={props.summary}>
-          <div class="text-[12px] font-medium text-foreground pr-16 truncate">
-            {props.summary}
-          </div>
-        </Show>
-      }
       labels={
         <Show when={props.jiraLabels?.length}>
-          <div class="flex flex-wrap gap-1.5 mt-1.5">
-            <For each={props.jiraLabels}>
-              {(label) => (
-                <span class="bg-foreground/[0.06] text-muted-foreground text-[9px] font-medium px-1.5 py-0.5 rounded">
-                  {label}
-                </span>
-              )}
-            </For>
-          </div>
+          <For each={props.jiraLabels}>
+            {(label) => (
+              <span class="bg-foreground/[0.06] text-muted-foreground text-[9px] font-medium px-1.5 py-0.5 rounded">
+                {label}
+              </span>
+            )}
+          </For>
         </Show>
       }
       dates={
