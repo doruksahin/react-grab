@@ -44,6 +44,7 @@ import { ErrorView } from './error-view.js';
 import { CompletionView } from './completion-view.js';
 import { ArrowNavigationMenu } from './arrow-navigation-menu.js';
 import { SelectionCardBody } from '../sidebar/selection-card-body.js';
+import { DevInsights } from '../sidebar/dev-insights.js';
 
 interface LabelPosition {
   left: number;
@@ -559,19 +560,28 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     flaggedByAvatar={props.jiraFlaggedByAvatar}
                   />
                 </Show>
-                <TagBadge
-                  tagName={tagDisplayResult().tagName}
-                  componentName={tagDisplayResult().componentName}
-                  isClickable={Boolean(props.filePath && props.onOpen)}
-                  onClick={handleTagClick}
-                  onHoverChange={handleTagHoverChange}
-                  shrink
-                  forceShowIcon={
-                    isArrowNavigationVisible() || isInspectNavigationVisible()
-                      ? Boolean(props.filePath && props.onOpen)
-                      : Boolean(props.isContextMenuOpen)
+                <Show
+                  when={props.inputValue}
+                  fallback={
+                    <TagBadge
+                      tagName={tagDisplayResult().tagName}
+                      componentName={tagDisplayResult().componentName}
+                      isClickable={Boolean(props.filePath && props.onOpen)}
+                      onClick={handleTagClick}
+                      onHoverChange={handleTagHoverChange}
+                      shrink
+                      forceShowIcon={
+                        isArrowNavigationVisible() || isInspectNavigationVisible()
+                          ? Boolean(props.filePath && props.onOpen)
+                          : Boolean(props.isContextMenuOpen)
+                      }
+                    />
                   }
-                />
+                >
+                  <span class="text-[13px] leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-popover-foreground">
+                    {props.inputValue}
+                  </span>
+                </Show>
                 <Show when={props.onCollapse}>
                   <button
                     data-react-grab-ignore-events
@@ -664,14 +674,23 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     flaggedByAvatar={props.jiraFlaggedByAvatar}
                   />
                 </Show>
-                <TagBadge
-                  tagName={tagDisplayResult().tagName}
-                  componentName={tagDisplayResult().componentName}
-                  isClickable={Boolean(props.filePath && props.onOpen)}
-                  onClick={handleTagClick}
-                  onHoverChange={handleTagHoverChange}
-                  forceShowIcon
-                />
+                <Show
+                  when={props.inputValue}
+                  fallback={
+                    <TagBadge
+                      tagName={tagDisplayResult().tagName}
+                      componentName={tagDisplayResult().componentName}
+                      isClickable={Boolean(props.filePath && props.onOpen)}
+                      onClick={handleTagClick}
+                      onHoverChange={handleTagHoverChange}
+                      forceShowIcon
+                    />
+                  }
+                >
+                  <span class="text-[13px] leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-popover-foreground">
+                    {props.inputValue}
+                  </span>
+                </Show>
                 <Show when={props.onCollapse}>
                   <button
                     data-react-grab-ignore-events
@@ -708,12 +727,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 <Show when={props.jiraTicketId}>
                   {(ticketId) => (
                     <SelectionCardBody
-                      summary={
-                        props.commentText ??
-                        props.componentName ??
-                        props.tagName ??
-                        ''
-                      }
                       timestamp={props.timestamp}
                       itemId={props.itemId}
                       hasElementScreenshot={props.hasElementScreenshot}
@@ -796,6 +809,13 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   </div>
                 </Show>
               </BottomSection>
+              <Show when={props.tagName}>
+                <DevInsights
+                  tagName={props.tagName!}
+                  componentName={props.componentName}
+                  content={props.content}
+                />
+              </Show>
             </div>
           </Show>
 

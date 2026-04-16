@@ -12,7 +12,6 @@ import type {
   SearchJiraUsersFn,
   SubmitGroupCommentFn,
 } from "../../features/jira-comments/types.js";
-import { DevInsights } from "./dev-insights.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { SelectionCardBody } from "./selection-card-body.js";
 
@@ -159,14 +158,6 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 onScreenshotClick={(src, label) => lightbox.open(src, label)}
               />
 
-              {/* Dev insights (technical info) — stays outside SelectionCardBody, sidebar-only */}
-              <Show when={props.isDevMode}>
-                <DevInsights
-                  tagName={item.tagName}
-                  componentName={item.componentName}
-                  content={item.content}
-                />
-              </Show>
                 </div>{/* end card content */}
               </div>{/* end flex row */}
             </div>

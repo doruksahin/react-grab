@@ -246,6 +246,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           <SelectionLabel
             tagName={instance().tagName}
             componentName={instance().componentName}
+            content={instance().content}
             elementsCount={instance().elementsCount}
             selectionBounds={instance().selectionBounds}
             mouseX={instance().mouseX}

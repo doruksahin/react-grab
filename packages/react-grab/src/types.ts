@@ -768,6 +768,7 @@ export interface SelectionLabelProps
     JiraDisplayFields {
   tagName?: string;
   componentName?: string;
+  content?: string;
   elementsCount?: number;
   selectionBounds?: OverlayBounds;
   // From backing CommentItem — passed through to <SelectionCardBody>

@@ -44,8 +44,8 @@ export interface SelectionCardBodyProps {
   jiraStatus?: string;
   jiraStatusCategory?: string;
 
-  // Summary row
-  summary: string;
+  // Summary row — omitted when not provided (e.g. inside the overlay label)
+  summary?: string;
 
   // Labels row
   jiraLabels?: readonly string[];
@@ -115,10 +115,12 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (
         </Show>
       </div>
 
-      {/* Summary text */}
-      <div class="text-[12px] font-medium text-foreground pr-16 truncate">
-        {props.summary}
-      </div>
+      {/* Summary text — only rendered when provided (omitted in overlay label usage) */}
+      <Show when={props.summary}>
+        <div class="text-[12px] font-medium text-foreground pr-16 truncate">
+          {props.summary}
+        </div>
+      </Show>
 
       {/* Labels row */}
       <Show when={props.jiraLabels?.length}>
@@ -270,6 +272,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (
           />
         )}
       </Show>
+
     </div>
   );
 };
