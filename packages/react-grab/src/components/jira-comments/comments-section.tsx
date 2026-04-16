@@ -16,8 +16,9 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
   const [isOpen, setIsOpen] = createSignal(true);
 
   return (
-    <div data-react-grab-ignore-events>
+    <div data-react-grab-comments-section data-react-grab-ignore-events>
       <button
+        data-react-grab-comments-collapse
         data-react-grab-ignore-events
         class="flex items-center justify-between w-[calc(100%+16px)] -mx-2 mt-1 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent cursor-pointer"
         aria-expanded={isOpen()}
@@ -27,7 +28,7 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
           setIsOpen((prev) => !prev);
         }}
       >
-        <span>Comments ({mergedComments().length})</span>
+        <span>Comments <span data-react-grab-comments-count>({mergedComments().length})</span></span>
         <span class="text-[10px]" style={{ transform: isOpen() ? undefined : "rotate(-90deg)", transition: "transform 0.15s" }}>▾</span>
       </button>
 
@@ -43,11 +44,11 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
         </div>
 
         <Show when={error()}>
-          <div class="text-[10px] text-destructive px-1 py-0.5">{error()}</div>
+          <div data-react-grab-comments-error class="text-[10px] text-destructive px-1 py-0.5">{error()}</div>
         </Show>
 
         <Show when={mergedComments().length > 0}>
-          <div class="flex flex-col gap-4 max-h-[300px] overflow-y-auto">
+          <div data-react-grab-comments-list class="flex flex-col gap-4 max-h-[300px] overflow-y-auto">
             <For each={rootComments()}>
               {(root) => (
                 <CommentThread
