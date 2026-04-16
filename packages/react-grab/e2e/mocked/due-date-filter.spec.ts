@@ -111,6 +111,48 @@ const boundingCentreOfOptionByLabel = (
     { attrName: ATTR, target: label },
   );
 
+/** Return the bounding centre of any filter sub-trigger by its data-react-grab-filter-row value. */
+const boundingCentreOfFilterRow = (
+  page: import("@playwright/test").Page,
+  row: string,
+) =>
+  page.evaluate(
+    ({ attrName, rowVal }) => {
+      const host = document.querySelector(`[${attrName}]`);
+      const root = host?.shadowRoot;
+      const el = root?.querySelector<HTMLElement>(
+        `[data-react-grab-filter-row="${rowVal}"]`,
+      );
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    },
+    { attrName: ATTR, rowVal: row },
+  );
+
+/** Count currently visible menuitemradio elements in the shadow root. */
+const countOpenSubMenuOptions = (page: import("@playwright/test").Page) =>
+  page.evaluate((attrName) => {
+    const host = document.querySelector(`[${attrName}]`);
+    return (
+      host?.shadowRoot?.querySelectorAll("[role='menuitemradio']").length ?? 0
+    );
+  }, ATTR);
+
+/** Open the filter trigger only (without opening a sub-menu). */
+const openFilterMenu = async (page: import("@playwright/test").Page) => {
+  await expect
+    .poll(() => boundingCentreOfFilterTrigger(page), { timeout: 5000 })
+    .not.toBeNull();
+  const box = await boundingCentreOfFilterTrigger(page);
+  if (!box) throw new Error("filter menu trigger not found");
+  await page.mouse.click(box.x, box.y);
+  // Wait for the menu content to be visible (at least one sub-trigger row)
+  await expect
+    .poll(() => boundingCentreOfFilterRow(page, "status"), { timeout: 5000 })
+    .not.toBeNull();
+};
+
 const openDueDateFilter = async (page: import("@playwright/test").Page) => {
   // Step 1: click the Filter trigger with real pointer events so Kobalte opens the menu.
   await expect
@@ -138,7 +180,9 @@ const pickDueDateOption = async (
   const box = await boundingCentreOfOptionByLabel(page, label);
   if (!box) throw new Error(`option '${label}' not found`);
   await page.mouse.click(box.x, box.y);
-  // Wait for the submenu to close so subsequent interactions land cleanly.
+  // FilterMenu uses closeOnSelect=false to keep the menu open for multi-filter
+  // sessions. Dismiss explicitly with Escape so subsequent interactions are clean.
+  await page.keyboard.press("Escape");
   await expect
     .poll(
       () =>
@@ -311,5 +355,89 @@ test.describe("Due date filter (SPEC-018)", { tag: ["@SPEC-018"] }, () => {
     await expect
       .poll(() => countVisibleGroupCards(page), { timeout: 3000 })
       .toBe(6);
+  });
+
+  test("AC-7: opening a second sub closes the first (single-open-sub invariant)", async ({
+    reactGrab,
+  }) => {
+    const { page } = reactGrab;
+    await openSidebar(page);
+
+    // Open the filter menu and click the Status sub-trigger.
+    await openFilterMenu(page);
+    const statusBox = await boundingCentreOfFilterRow(page, "status");
+    if (!statusBox) throw new Error("status sub-trigger not found");
+    await page.mouse.click(statusBox.x, statusBox.y);
+
+    // Status sub should now be open — radio items visible.
+    await expect
+      .poll(() => countOpenSubMenuOptions(page), { timeout: 3000 })
+      .toBeGreaterThan(0);
+
+    // Now click the Due Date sub-trigger. Status sub must close.
+    const dueDateBox = await boundingCentreOfFilterRow(page, "due-date");
+    if (!dueDateBox) throw new Error("due-date sub-trigger not found");
+    await page.mouse.click(dueDateBox.x, dueDateBox.y);
+
+    // Due Date sub is open. The radio items visible are now Due Date's options only.
+    // The Status sub's "All Statuses" option must not be in the shadow root.
+    // Poll because solid-presence runs its cleanup effect in a microtask after the click.
+    await expect
+      .poll(
+        () =>
+          page.evaluate((attrName) => {
+            const host = document.querySelector(`[${attrName}]`);
+            const root = host?.shadowRoot;
+            if (!root) return false;
+            return Array.from(
+              root.querySelectorAll("[role='menuitemradio']"),
+            ).some((el) => el.textContent?.trim() === "All Statuses");
+          }, ATTR),
+        { timeout: 3000 },
+      )
+      .toBe(false);
+
+    // Due Date sub's "All due dates" option must be visible.
+    const allDueDatesVisible = await page.evaluate((attrName) => {
+      const host = document.querySelector(`[${attrName}]`);
+      const root = host?.shadowRoot;
+      if (!root) return false;
+      return Array.from(root.querySelectorAll("[role='menuitemradio']")).some(
+        (el) => el.textContent?.trim() === "All due dates",
+      );
+    }, ATTR);
+    expect(allDueDatesVisible).toBe(true);
+
+    await page.keyboard.press("Escape");
+  });
+
+  test("AC-8: Left Arrow inside an open sub closes it and returns to parent menu", async ({
+    reactGrab,
+  }) => {
+    const { page } = reactGrab;
+    await openSidebar(page);
+
+    // Open filter menu and then the due-date sub.
+    await openDueDateFilter(page);
+
+    // Sub is open — radio items are visible.
+    await expect
+      .poll(() => countOpenSubMenuOptions(page), { timeout: 3000 })
+      .toBeGreaterThan(0);
+
+    // Press Left Arrow — Kobalte closes the sub and moves focus to parent menu.
+    await page.keyboard.press("ArrowLeft");
+
+    // Sub must be closed — no more radio items in the shadow root.
+    await expect
+      .poll(() => countOpenSubMenuOptions(page), { timeout: 3000 })
+      .toBe(0);
+
+    // Parent menu must still be open — at least the due-date sub-trigger is visible.
+    await expect
+      .poll(() => boundingCentreOfFilterRow(page, "due-date"), { timeout: 3000 })
+      .not.toBeNull();
+
+    await page.keyboard.press("Escape");
   });
 });

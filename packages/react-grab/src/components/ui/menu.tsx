@@ -1,14 +1,16 @@
 import { DropdownMenu } from "@kobalte/core/dropdown-menu";
-import type { Component, ComponentProps } from "solid-js";
-import { splitProps } from "solid-js";
+import {
+  type Component,
+  type ComponentProps,
+  mergeProps,
+  splitProps,
+} from "solid-js";
 import { cn } from "../../utils/cn.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
 
-// Re-export root and sub unchanged
-export const Menu = DropdownMenu;
-export const MenuSub = DropdownMenu.Sub;
-export const MenuRadioGroup = DropdownMenu.RadioGroup;
-export const MenuSeparator = DropdownMenu.Separator;
+export const Menu: Component<ComponentProps<typeof DropdownMenu>> = (props) => {
+  return <DropdownMenu {...props} />;
+};
 
 export const MenuTrigger: Component<
   ComponentProps<typeof DropdownMenu.Trigger>
@@ -61,6 +63,12 @@ export const MenuItem: Component<ComponentProps<typeof DropdownMenu.Item>> = (
   );
 };
 
+export const MenuSub: Component<ComponentProps<typeof DropdownMenu.Sub>> = (
+  props,
+) => {
+  return <DropdownMenu.Sub {...props} />;
+};
+
 export const MenuSubTrigger: Component<
   ComponentProps<typeof DropdownMenu.SubTrigger>
 > = (props) => {
@@ -86,7 +94,7 @@ export const MenuSubContent: Component<
     <DropdownMenu.Portal mount={useShadowMount()}>
       <DropdownMenu.SubContent
         class={cn(
-          "z-50 min-w-[12rem] overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 data-[closed]:zoom-out-95 data-[expanded]:zoom-in-95",
+          "z-50 min-w-[12rem] overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none data-[expanded]:animate-in data-[expanded]:fade-in-0 data-[expanded]:zoom-in-95",
           local.class,
         )}
         {...rest}
@@ -95,9 +103,15 @@ export const MenuSubContent: Component<
   );
 };
 
+export const MenuRadioGroup = DropdownMenu.RadioGroup;
+
+export const MenuSeparator = DropdownMenu.Separator;
+
 export const MenuRadioItem: Component<
   ComponentProps<typeof DropdownMenu.RadioItem>
-> = (props) => {
+> = (rawProps) => {
+  // closeOnSelect: false — keeps the menu open after picking a filter value.
+  const props = mergeProps({ closeOnSelect: false }, rawProps);
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
     <DropdownMenu.RadioItem
