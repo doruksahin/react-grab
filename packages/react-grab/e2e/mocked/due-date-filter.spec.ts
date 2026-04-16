@@ -52,7 +52,7 @@ const countVisibleGroupCards = async (
 /**
  * The due-date filter is now inside a nested DropdownMenu (FilterMenu).
  * Interaction flow:
- *   1. Click the parent "Filter" trigger (MenuTrigger inside [data-react-grab-filter-menu])
+ *   1. Click the parent "Filter" trigger (MenuTrigger inside [data-react-grab-sidebar-search])
  *      → portalled MenuContent appears in the shadow root.
  *   2. Click the due-date SubTrigger ([data-react-grab-due-date-filter])
  *      → portalled MenuSubContent appears in the shadow root.
@@ -68,7 +68,7 @@ const boundingCentreOfFilterTrigger = (page: import("@playwright/test").Page) =>
     const host = document.querySelector(`[${attrName}]`);
     const root = host?.shadowRoot;
     const trigger = root?.querySelector<HTMLElement>(
-      "[data-react-grab-filter-menu] button",
+      "[data-react-grab-sidebar-search] button",
     );
     if (!trigger) return null;
     const rect = trigger.getBoundingClientRect();
