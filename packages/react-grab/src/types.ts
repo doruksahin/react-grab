@@ -487,6 +487,9 @@ export interface JiraDisplayFields {
   jiraFlaggedAt?: string | null;
   jiraFlaggedBy?: string | null;
   jiraFlaggedByAvatar?: string | null;
+  jiraPriority?: string | null;
+  jiraIssueType?: string | null;
+  jiraDueDate?: string | null;
 }
 
 /** Keys of JiraDisplayFields — used by renderer to pick fields
@@ -507,6 +510,9 @@ export const JIRA_DISPLAY_KEYS = [
   "jiraFlaggedAt",
   "jiraFlaggedBy",
   "jiraFlaggedByAvatar",
+  "jiraPriority",
+  "jiraIssueType",
+  "jiraDueDate",
 ] as const satisfies readonly (keyof JiraDisplayFields)[];
 
 export interface SelectionLabelInstance extends JiraDisplayFields {
