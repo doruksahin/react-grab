@@ -675,6 +675,21 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   onHoverChange={handleTagHoverChange}
                   forceShowIcon
                 />
+                <Show when={props.onCollapse}>
+                  <button
+                    data-react-grab-ignore-events
+                    data-react-grab-collapse-label
+                    title="Collapse"
+                    class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer transition-colors"
+                    onClick={(event) => {
+                      event.stopImmediatePropagation();
+                      props.onCollapse?.();
+                    }}
+                    onPointerDown={(event) => event.stopImmediatePropagation()}
+                  >
+                    <IconChevron size={12} />
+                  </button>
+                </Show>
               </div>
               <ActiveGroupPicker
                 groups={props.groups}
