@@ -95,7 +95,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (
   };
 
   return (
-    <div data-react-grab-selection-card-body class="relative">
+    <div data-react-grab-selection-card-body class="relative w-full">
       {/* JIRA status pill — absolute top-right */}
       <div class="absolute top-0 right-0">
         <Show
