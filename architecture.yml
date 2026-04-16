@@ -538,6 +538,7 @@ data_attrs:
         - arrow-nav-item
         - arrow-nav-index
         - selection-remove
+        - dev-insights
 
     generation:
       description: Active generation flow inside a selection label (prompt textarea, submit, abort)

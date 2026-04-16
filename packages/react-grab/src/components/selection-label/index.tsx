@@ -44,7 +44,7 @@ import { ErrorView } from './error-view.js';
 import { CompletionView } from './completion-view.js';
 import { ArrowNavigationMenu } from './arrow-navigation-menu.js';
 import { SelectionCardBody } from '../sidebar/selection-card-body.js';
-import { DevInsights } from '../sidebar/dev-insights.js';
+import { DevInsights } from '../ui/dev-insights/index.js';
 
 interface LabelPosition {
   left: number;
@@ -810,11 +810,10 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 </Show>
               </BottomSection>
               <Show when={props.tagName}>
-                <DevInsights
-                  tagName={props.tagName!}
-                  componentName={props.componentName}
-                  content={props.content}
-                />
+                <DevInsights>
+                  <DevInsights.Field label="tag" value={props.tagName} color="green" />
+                  <DevInsights.Field label="node" value={props.componentName} color="purple" />
+                </DevInsights>
               </Show>
             </div>
           </Show>

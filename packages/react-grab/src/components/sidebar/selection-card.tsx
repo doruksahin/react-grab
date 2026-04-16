@@ -11,6 +11,7 @@ import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 import { FlagIndicator } from "../flag-indicator.js";
 import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";
 import { cn } from "../../utils/cn.js";
+import { DevInsights } from "../ui/dev-insights/index.js";
 
 export interface SelectionCardProps {
   item: CommentItem;
@@ -100,22 +101,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
         <p class="text-[11px] text-foreground mb-1.5">{props.item.commentText}</p>
       </Show>
 
-      {/* Row 3: source file path (omit when extraction returns null — A-014) */}
-      <Show when={filePath()}>
-        {(fp) => (
-          <div
-            class="text-[10px] text-muted-foreground font-mono truncate mb-1.5"
-            title={fp().path}
-          >
-            {fp().path}
-            <Show when={fp().line !== null}>
-              <span class="text-muted-foreground">:{fp().line}</span>
-            </Show>
-          </div>
-        )}
-      </Show>
-
-      {/* Row 4: screenshots — hidden entirely when both are absent (A-018) */}
+      {/* Screenshots — hidden entirely when both are absent (A-018) */}
       <Show when={elementSrc() || fullPageSrc()}>
         <ScreenshotPair
           elementSrc={elementSrc()}
@@ -124,25 +110,25 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
         />
       </Show>
 
-      {/* Row 5: CSS selector */}
-      <Show when={props.item.elementSelectors?.length}>
-        <div
-          class="text-[10px] text-muted-foreground font-mono truncate mt-1.5"
-          title={props.item.elementSelectors?.[0]}
-        >
-          {props.item.elementSelectors?.[0]}
-        </div>
-      </Show>
-
-      {/* Row 6: collapsible raw HTML — collapsed by default */}
-      <details class="mt-1.5">
-        <summary class="text-[10px] text-muted-foreground cursor-pointer select-none hover:text-foreground">
-          Raw HTML
-        </summary>
-        <pre class="mt-1 text-[9px] text-muted-foreground bg-muted rounded p-2 overflow-x-auto max-h-[200px] overflow-y-auto whitespace-pre-wrap break-all">
-          {props.item.content}
-        </pre>
-      </details>
+      {/* Dev Insights — unified technical metadata */}
+      <DevInsights>
+        <DevInsights.Field label="tag" value={props.item.tagName} color="green" />
+        <DevInsights.Field label="node" value={props.item.componentName ?? props.item.elementName} color="purple" />
+        <DevInsights.Field
+          label="file"
+          value={filePath() ? `${filePath()!.path}${filePath()!.line !== null ? `:${filePath()!.line}` : ""}` : undefined}
+          color="amber"
+        />
+        <DevInsights.Attributes content={props.item.content} />
+        <Show when={props.item.elementSelectors?.[0]}>
+          <DevInsights.Section label="selector">
+            <span class="text-[9px] font-mono text-[#cbd5e1] break-all">{props.item.elementSelectors?.[0]}</span>
+          </DevInsights.Section>
+        </Show>
+        <DevInsights.Section label="html">
+          <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">{props.item.content}</pre>
+        </DevInsights.Section>
+      </DevInsights>
     </div>
   );
 };
