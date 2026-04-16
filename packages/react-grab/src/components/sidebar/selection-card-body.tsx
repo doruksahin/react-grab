@@ -73,6 +73,7 @@ export interface SelectionCardBodyProps {
   onSubmitComment?: SubmitCommentFn;
   onSearchUsers?: SearchJiraUsersFn;
   onRefreshStatus?: () => void;
+  commentEditorToolbarVisible?: boolean;
 
   // Screenshot click — when provided, thumbnails open in a lightbox. The
   // sidebar wires this via useImageLightbox; the floating selection label
@@ -265,6 +266,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (
             onSubmitComment={submitComment()}
             onSearchUsers={props.onSearchUsers}
             onRefreshPoll={props.onRefreshStatus ?? (() => {})}
+            commentEditorToolbarVisible={props.commentEditorToolbarVisible}
           />
         )}
       </Show>

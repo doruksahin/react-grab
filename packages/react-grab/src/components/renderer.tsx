@@ -218,6 +218,18 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             instanceId: instance().id,
             defaultCollapsed: props.labelsStartCollapsedDefault,
           });
+          const [isLabelExiting, setIsLabelExiting] = createSignal(false);
+          const [isDotExiting, setIsDotExiting] = createSignal(false);
+          const ANIM_MS = 150;
+
+          const handleCollapse = () => {
+            setIsLabelExiting(true);
+            setTimeout(() => { collapsible.collapse(); setIsLabelExiting(false); }, ANIM_MS);
+          };
+          const handleExpand = () => {
+            setIsDotExiting(true);
+            setTimeout(() => { collapsible.expand(); setIsDotExiting(false); }, ANIM_MS);
+          };
 
           return (
           <Show
@@ -225,8 +237,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             fallback={
               <CollapsedDot
                 selectionBounds={instance().selectionBounds}
-                onExpand={collapsible.expand}
+                onExpand={handleExpand}
                 inputValue={instance().inputValue}
+                isExpanding={isDotExiting()}
               />
             }
           >
@@ -315,13 +328,15 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
                 : undefined
             }
             onSearchJiraUsers={props.onSearchJiraUsers}
+            commentEditorToolbarVisible={props.commentEditorToolbarVisible}
             onRefreshJiraStatus={
               instance().groupId && props.onRefreshJiraStatus
                 ? () => props.onRefreshJiraStatus!(instance().groupId!)
                 : undefined
             }
+            isCollapsing={isLabelExiting()}
             onCollapse={
-              props.collapsibleLabelsDefault ? collapsible.collapse : undefined
+              props.collapsibleLabelsDefault ? handleCollapse : undefined
             }
           />
           </Show>
@@ -450,6 +465,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onSubmitJiraComment={props.onSubmitJiraComment}
           onSearchJiraUsers={props.onSearchJiraUsers}
           onRefreshJiraStatus={props.onRefreshJiraStatus}
+          commentEditorToolbarVisible={props.commentEditorToolbarVisible}
           onClose={() => {
             setSidebarOpen(false);
             setActiveDetailGroupId(null);

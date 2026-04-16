@@ -14,6 +14,7 @@ export const InlineReplyEditor: Component<InlineReplyEditorProps> = (props) => (
     <JiraCommentEditor
       placeholder={`Reply to ${props.author}...`}
       onSearchUsers={props.onSearchUsers}
+      toolbarInitiallyVisible={props.toolbarInitiallyVisible}
       onCancel={props.onCancel}
       onSubmit={props.onSubmit}
     />

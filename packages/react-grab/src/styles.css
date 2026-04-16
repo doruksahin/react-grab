@@ -178,7 +178,6 @@
 /* Tiptap / ProseMirror editor prose styles */
 .jira-editor-content .ProseMirror {
   outline: none;
-  min-height: 140px;
 }
 .jira-editor-content .ProseMirror p { margin: 0 0 0.5em; }
 .jira-editor-content .ProseMirror p:last-child { margin-bottom: 0; }

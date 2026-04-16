@@ -29,7 +29,7 @@ export const CommentItem: Component<{
           <CommentBody body={props.comment.body} />
         </div>
         <Show when={!props.isReply && !props.comment.sending}>
-          <div class="flex gap-0.5 mt-1 opacity-0 group-hover:opacity-100">
+          <div class="flex gap-0.5 mt-1">
             <button
               data-react-grab-comment-reply
               data-react-grab-ignore-events

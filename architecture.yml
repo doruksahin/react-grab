@@ -628,6 +628,7 @@ data_attrs:
       owning_feature: jira-comments-write
       owns:
         - editor-toolbar
+        - editor-toolbar-toggle
         - editor-action
         - editor-dropdown
         - editor-image-input
@@ -641,7 +642,6 @@ data_attrs:
       description: Sidebar filter menu / chips / row
       owning_feature: sidebar
       owns:
-        - filter-menu
         - filter-row
         - filter-badge
         - filter-clear
@@ -708,6 +708,7 @@ data_attrs:
     editor-dropdown: {scope: editor, src: 1, tests: 0}
     editor-image-input: {scope: editor, src: 1, tests: 0}
     editor-toolbar: {scope: editor, src: 1, tests: 0}
+    editor-toolbar-toggle: {scope: editor, src: 1, tests: 0}
     emoji: {scope: editor, src: 1, tests: 0}
     emoji-picker: {scope: editor, src: 1, tests: 0}
     error: {scope: error, src: 1, tests: 1}
@@ -715,8 +716,7 @@ data_attrs:
     error-retry: {scope: error, src: 1, tests: 1}
     filter-badge: {scope: filter, src: 1, tests: 0}
     filter-clear: {scope: filter, src: 1, tests: 0}
-    filter-menu: {scope: filter, src: 1, tests: 2}
-    filter-row: {scope: filter, src: 5, tests: 0}
+    filter-row: {scope: filter, src: 5, tests: 2}
     generation-abort: {scope: generation, src: 1, tests: 1}
     generation-input: {scope: generation, src: 2, tests: 1}
     generation-submit: {scope: generation, src: 1, tests: 0}
@@ -769,7 +769,7 @@ data_attrs:
     selection-list: {scope: sidebar, src: 1, tests: 0}
     sidebar: {scope: sidebar, src: 1, tests: 0}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
-    sidebar-search: {scope: sidebar, src: 1, tests: 0}
+    sidebar-search: {scope: sidebar, src: 1, tests: 2}
     stats-bar: {scope: sidebar, src: 1, tests: 0}
     status-legend: {scope: sidebar, src: 1, tests: 0}
     tab-bar: {scope: sidebar, src: 1, tests: 0}

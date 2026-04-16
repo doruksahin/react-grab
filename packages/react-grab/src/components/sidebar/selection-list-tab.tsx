@@ -30,6 +30,7 @@ interface SelectionListTabProps {
   onSubmitJiraComment?: SubmitGroupCommentFn;
   onSearchJiraUsers?: SearchJiraUsersFn;
   onRefreshJiraStatus?: RefreshGroupStatusFn;
+  commentEditorToolbarVisible?: boolean;
 }
 
 export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
@@ -154,6 +155,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 onSubmitComment={boundCommentSubmit()}
                 onSearchUsers={props.onSearchJiraUsers}
                 onRefreshStatus={refreshStatus()}
+                commentEditorToolbarVisible={props.commentEditorToolbarVisible}
                 onScreenshotClick={(src, label) => lightbox.open(src, label)}
               />
 

@@ -4581,6 +4581,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                     syncLayer.updateJiraStatus(groupId, res.data);
                   }).catch(() => {});
                 } : undefined}
+                commentEditorToolbarVisible={initialOptions.commentEditorToolbarVisible}
               />
             );
           }, rendererRoot);

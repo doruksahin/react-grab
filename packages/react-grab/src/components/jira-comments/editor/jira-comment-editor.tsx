@@ -27,11 +27,13 @@ import { setupImageHandlers } from "../../../features/jira-comments/use-editor-i
 import type { JiraCommentEditorProps } from "../../../features/jira-comments/types.js";
 import { createMentionSuggestion } from "./mention-picker.js";
 import { EditorToolbar } from "./editor-toolbar.js";
+import { EditorActionBar } from "./editor-action-bar.js";
 
 export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
   let editorEl!: HTMLDivElement;
   let fileInput!: HTMLInputElement;
   const [editor, setEditor] = createSignal<Editor>();
+  const [toolbarVisible, setToolbarVisible] = createSignal(props.toolbarInitiallyVisible ?? false);
 
   onMount(() => {
     const ed = new Editor({
@@ -85,9 +87,19 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
       class="flex flex-col rounded border border-border bg-muted/40 overflow-hidden"
       style={{ "pointer-events": "auto" }}
     >
-      {/* Toolbar */}
+      {/* Toolbar — always mounted once editor is ready; animated via max-height */}
       <Show when={editor()}>
-        {(ed) => <EditorToolbar editor={ed()} onImageClick={() => fileInput?.click()} />}
+        {(ed) => (
+          <div
+            class="overflow-hidden transition-[max-height,opacity] duration-200 ease-in-out"
+            style={{
+              "max-height": toolbarVisible() ? "60px" : "0px",
+              opacity: toolbarVisible() ? "1" : "0",
+            }}
+          >
+            <EditorToolbar editor={ed()} onImageClick={() => fileInput?.click()} />
+          </div>
+        )}
       </Show>
 
       {/* Hidden file input */}
@@ -98,34 +110,17 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         ref={editorEl}
         data-react-grab-comment-editor
         data-react-grab-ignore-events
-        class="jira-editor-content px-3 py-2 min-h-[100px] text-[12px] text-foreground outline-none"
+        class="jira-editor-content px-3 py-2 min-h-[2rem] text-[12px] text-foreground outline-none"
         style={{ "pointer-events": "auto" }}
       />
 
       {/* Action bar */}
-      <div class="flex items-center gap-2 px-2 py-1.5 border-t border-border" data-react-grab-ignore-events>
-        <button
-          type="button"
-          data-react-grab-comment-submit
-          class="px-3 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          onMouseDown={(e) => { e.preventDefault(); handleSubmit(); }}
-        >
-          Save
-        </button>
-        <Show when={props.onCancel}>
-          <button
-            type="button"
-            data-react-grab-comment-cancel
-            class="px-3 py-1 rounded text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-            onMouseDown={(e) => { e.preventDefault(); props.onCancel?.(); }}
-          >
-            Cancel
-          </button>
-        </Show>
-        <span data-react-grab-comment-hint class="ml-auto text-[10px] text-muted-foreground">
-          Tip: Type <kbd class="px-1 py-0.5 bg-muted rounded text-[9px]">@</kbd> to mention
-        </span>
-      </div>
+      <EditorActionBar
+        toolbarVisible={toolbarVisible()}
+        onToggleToolbar={() => setToolbarVisible((v) => !v)}
+        onSubmit={handleSubmit}
+        onCancel={props.onCancel}
+      />
     </div>
   );
 };

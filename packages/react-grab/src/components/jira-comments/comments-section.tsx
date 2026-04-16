@@ -40,6 +40,7 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
           <JiraCommentEditor
             onSearchUsers={props.onSearchUsers}
             onSubmit={(markdown, mentions) => submitComment(markdown, mentions)}
+            toolbarInitiallyVisible={props.commentEditorToolbarVisible}
           />
         </div>
 
@@ -59,6 +60,7 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
                   onCancelReply={() => setReplyTo(null)}
                   onSubmitReply={(md, mentions) => submitComment(md, mentions, root.id)}
                   onSearchUsers={props.onSearchUsers}
+                  toolbarInitiallyVisible={props.commentEditorToolbarVisible}
                 />
               )}
             </For>

@@ -56,14 +56,15 @@ export interface JiraCommentEditorProps {
   onSearchUsers?: SearchJiraUsersFn;
   placeholder?: string;
   initialContent?: string;
+  toolbarInitiallyVisible?: boolean;
 }
 
-export interface InlineReplyEditorProps extends Pick<JiraCommentEditorProps, "onSubmit" | "onCancel" | "onSearchUsers"> {
+export interface InlineReplyEditorProps extends Pick<JiraCommentEditorProps, "onSubmit" | "onCancel" | "onSearchUsers" | "toolbarInitiallyVisible"> {
   author: string;
   authorAvatar: string | null;
 }
 
-export interface CommentThreadProps extends Pick<InlineReplyEditorProps, "onSearchUsers"> {
+export interface CommentThreadProps extends Pick<InlineReplyEditorProps, "onSearchUsers" | "toolbarInitiallyVisible"> {
   root: JiraComment;
   replies: JiraComment[];
   isReplying: boolean;
@@ -77,4 +78,5 @@ export interface JiraCommentsSectionProps {
   onSubmitComment: SubmitCommentFn;
   onSearchUsers?: SearchJiraUsersFn;
   onRefreshPoll: () => void;
+  commentEditorToolbarVisible?: boolean;
 }

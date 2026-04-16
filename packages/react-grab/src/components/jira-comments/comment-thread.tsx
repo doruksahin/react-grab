@@ -23,6 +23,7 @@ export const CommentThread: Component<CommentThreadProps> = (props) => (
         author={props.root.author}
         authorAvatar={props.root.authorAvatar}
         onSearchUsers={props.onSearchUsers}
+        toolbarInitiallyVisible={props.toolbarInitiallyVisible}
         onCancel={props.onCancelReply}
         onSubmit={props.onSubmitReply}
       />

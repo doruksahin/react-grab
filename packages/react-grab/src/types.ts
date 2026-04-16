@@ -391,6 +391,8 @@ export interface Options {
    * Ignored when `collapsibleLabels` is off.
    */
   labelsStartCollapsed?: boolean;
+  /** When true, the comment editor toolbar is shown by default. @default false */
+  commentEditorToolbarVisible?: boolean;
 }
 
 export interface SettableOptions extends Options {
@@ -684,6 +686,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onSearchJiraUsers?: SearchJiraUsersFn;
   /** Trigger JIRA status refresh for a specific group */
   onRefreshJiraStatus?: RefreshGroupStatusFn;
+  commentEditorToolbarVisible?: boolean;
 }
 
 export interface GrabbedBox {
@@ -824,10 +827,13 @@ export interface SelectionLabelProps
   hideArrow?: boolean;
   /** Collapse the label to a minimal dot indicator */
   onCollapse?: () => void;
+  /** True during the exit animation before the label is actually collapsed */
+  isCollapsing?: boolean;
   /** Submit a JIRA comment for the current group's ticket */
   onSubmitJiraComment?: SubmitCommentFn;
   /** Search JIRA users for @mention autocomplete */
   onSearchJiraUsers?: SearchJiraUsersFn;
   /** Trigger a JIRA status refresh (after posting a comment) */
   onRefreshJiraStatus?: () => void;
+  commentEditorToolbarVisible?: boolean;
 }

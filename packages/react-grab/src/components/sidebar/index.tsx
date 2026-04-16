@@ -60,6 +60,7 @@ export interface SidebarProps {
   onSearchJiraUsers?: SearchJiraUsersFn;
   /** Trigger JIRA status refresh for a specific group */
   onRefreshJiraStatus?: RefreshGroupStatusFn;
+  commentEditorToolbarVisible?: boolean;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -235,6 +236,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     onInput={(e) => setSearchQuery(e.currentTarget.value)}
                     data-react-grab-ignore-events
                   />
+                  <FilterMenu
+                    filter={filterState()}
+                    assignees={getDistinctAssignees(userFacingGroups())}
+                    reporters={getDistinctReporters(userFacingGroups())}
+                    labels={getDistinctLabels(userFacingGroups())}
+                    onFilterChange={setFilterState}
+                  />
                   <button
                     class="w-[34px] h-[34px] flex items-center justify-center border rounded-lg cursor-pointer transition-all shrink-0 text-[13px]"
                     classList={{
@@ -247,14 +255,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     {"\uD83D\uDEA9"}
                   </button>
                 </div>
-
-                <FilterMenu
-                  filter={filterState()}
-                  assignees={getDistinctAssignees(userFacingGroups())}
-                  reporters={getDistinctReporters(userFacingGroups())}
-                  labels={getDistinctLabels(userFacingGroups())}
-                  onFilterChange={setFilterState}
-                />
                 <FilterChips
                   filter={filterState()}
                   onFilterChange={setFilterState}
@@ -318,6 +318,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     onSubmitJiraComment={props.onSubmitJiraComment}
                     onSearchJiraUsers={props.onSearchJiraUsers}
                     onRefreshJiraStatus={props.onRefreshJiraStatus}
+                    commentEditorToolbarVisible={props.commentEditorToolbarVisible}
                   />
                 </Show>
               </>

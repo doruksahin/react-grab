@@ -406,7 +406,10 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         data-react-grab-selection-label
         class={cn(
           'fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out',
-          props.onCollapse && 'animate-in fade-in-0 zoom-in-95 duration-200 ease-out origin-top'
+          props.isCollapsing
+            ? 'animate-out fade-out-0 zoom-out-95 duration-150 ease-in fill-mode-forwards origin-top'
+            : props.onCollapse &&
+                'animate-in fade-in-0 zoom-in-95 duration-200 ease-out origin-top'
         )}
         style={{
           top: `${positionComputation().position.top}px`,
@@ -463,11 +466,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           onAnimationEnd={() => setIsShaking(false)}
         >
           <Show
-            when={
-              canInteract() &&
-              props.onRemoveItem &&
-              !props.jiraTicketId
-            }
+            when={canInteract() && props.onRemoveItem && !props.jiraTicketId}
           >
             <div class="absolute -top-2 -right-2 z-10">
               <RemoveSelectionButton
@@ -476,7 +475,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               />
             </div>
           </Show>
-
 
           <Show when={props.status === 'copying' && !props.isPendingAbort}>
             <div
@@ -657,7 +655,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               canInteract() && props.isPromptMode && !props.isPendingDismiss
             }
           >
-            <div class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit min-w-[150px] max-w-[280px] gap-1 pb-2">
+            <div class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit min-w-[150px] max-w-[280px] gap-1">
               <div class="contain-layout shrink-0 flex items-center gap-1 pt-1.5 pb-1 w-fit h-fit px-2 max-w-full">
                 <Show when={props.jiraFlagged}>
                   <FlagIndicator
@@ -701,9 +699,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               </ActiveGroupPicker>
               <Show
                 when={
-                  canInteract() &&
-                  props.onCreateTicket &&
-                  !props.jiraTicketId
+                  canInteract() && props.onCreateTicket && !props.jiraTicketId
                 }
               >
                 <CreateTicketButton onClick={() => props.onCreateTicket?.()} />
@@ -744,57 +740,61 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     />
                   )}
                 </Show>
-                <Show when={props.replyToPrompt}>
-                  <div class="flex items-center gap-1 w-full mb-1 overflow-hidden">
-                    <IconReply
-                      size={10}
-                      class="text-muted-foreground shrink-0"
+                <Show when={!props.jiraTicketId}>
+                  <Show when={props.replyToPrompt}>
+                    <div class="flex items-center gap-1 w-full mb-1 overflow-hidden">
+                      <IconReply
+                        size={10}
+                        class="text-muted-foreground shrink-0"
+                      />
+                      <span class="text-muted-foreground text-[11px] leading-3 font-medium truncate italic">
+                        {props.replyToPrompt}
+                      </span>
+                    </div>
+                  </Show>
+                  <div
+                    class="shrink-0 flex justify-between items-end w-full min-h-4"
+                    style={{
+                      'padding-left': props.replyToPrompt ? '14px' : '0',
+                    }}
+                  >
+                    <textarea
+                      ref={(element) => {
+                        inputRef = element;
+                        if (props.onSubmit) {
+                          queueMicrotask(() => {
+                            element.focus({ preventScroll: true });
+                            autoResizeTextarea(element, TEXTAREA_MAX_HEIGHT_PX);
+                          });
+                        }
+                      }}
+                      data-react-grab-ignore-events
+                      data-react-grab-generation-input
+                      class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
+                      style={{
+                        'field-sizing': 'content',
+                        'min-height': '16px',
+                        'max-height': `${TEXTAREA_MAX_HEIGHT_PX}px`,
+                        'scrollbar-width': 'none',
+                      }}
+                      value={props.inputValue ?? ''}
+                      onInput={handleInput}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Add context"
+                      rows={1}
+                      readOnly={!props.onSubmit}
                     />
-                    <span class="text-muted-foreground text-[11px] leading-3 font-medium truncate italic">
-                      {props.replyToPrompt}
-                    </span>
+                    <Show when={props.onSubmit}>
+                      <button
+                        data-react-grab-generation-submit
+                        class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale"
+                        onClick={() => props.onSubmit?.()}
+                      >
+                        <IconSubmit size={10} class="text-popover" />
+                      </button>
+                    </Show>
                   </div>
                 </Show>
-                <div
-                  class="shrink-0 flex justify-between items-end w-full min-h-4"
-                  style={{ 'padding-left': props.replyToPrompt ? '14px' : '0' }}
-                >
-                  <textarea
-                    ref={(element) => {
-                      inputRef = element;
-                      if (props.onSubmit) {
-                        queueMicrotask(() => {
-                          element.focus({ preventScroll: true });
-                          autoResizeTextarea(element, TEXTAREA_MAX_HEIGHT_PX);
-                        });
-                      }
-                    }}
-                    data-react-grab-ignore-events
-                    data-react-grab-generation-input
-                    class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
-                    style={{
-                      'field-sizing': 'content',
-                      'min-height': '16px',
-                      'max-height': `${TEXTAREA_MAX_HEIGHT_PX}px`,
-                      'scrollbar-width': 'none',
-                    }}
-                    value={props.inputValue ?? ''}
-                    onInput={handleInput}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Add context"
-                    rows={1}
-                    readOnly={!props.onSubmit}
-                  />
-                  <Show when={props.onSubmit}>
-                    <button
-                      data-react-grab-generation-submit
-                      class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale"
-                      onClick={() => props.onSubmit?.()}
-                    >
-                      <IconSubmit size={10} class="text-popover" />
-                    </button>
-                  </Show>
-                </div>
               </BottomSection>
             </div>
           </Show>

@@ -10,6 +10,7 @@ interface CollapsedDotProps {
   selectionBounds: OverlayBounds;
   onExpand: () => void;
   inputValue?: string;
+  isExpanding?: boolean;
 }
 
 const toPreview = (value: string): string => {
@@ -36,7 +37,7 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
 
   return (
     <div
-      class="fixed animate-in fade-in-0 zoom-in-75 duration-200 ease-out"
+      class={`fixed duration-150 ease-in ${props.isExpanding ? "animate-out fade-out-0 zoom-out-75 fill-mode-forwards" : "animate-in fade-in-0 zoom-in-75 ease-out"}`}
       style={{
         left: `${position().left}px`,
         top: `${position().top}px`,
