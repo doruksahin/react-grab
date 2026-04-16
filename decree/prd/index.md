@@ -15,5 +15,5 @@
 | PRD-009 | PRD-009 JIRA Comment Write-Back | draft | 2026-04-15 |
 | PRD-010 | PRD-010 JIRA Ticket Metadata in Sidebar Cards | draft | 2026-04-15 |
 | PRD-011 | PRD-011 Expandable Inline Groups | draft | 2026-04-15 |
-| PRD-013 | PRD-013 Collapsible Selection Labels | draft | 2026-04-16 |
 | PRD-014 | PRD-014 Enlargeable Screenshot Viewer | draft | 2026-04-16 |
+| PRD-015 | PRD-015 Due Date Filter in Sidebar | draft | 2026-04-16 |
