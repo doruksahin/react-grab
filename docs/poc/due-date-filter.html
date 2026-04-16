@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Due Date Filter POC — react-grab</title>
+    <style>
+      :root {
+        --bg: #0b0b0d;
+        --panel: #17171a;
+        --panel-2: #1d1d22;
+        --border: #2a2a30;
+        --border-strong: #3a3a42;
+        --muted: #8b8b93;
+        --muted-2: #5c5c66;
+        --text: #e8e8ec;
+        --accent: #7c84ff;
+        --danger: #ff6b6b;
+        --warn: #ffb454;
+        --ok: #4ec9a7;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .page-header {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 24px 0;
+      }
+
+      .page-header h1 {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0 0 6px;
+      }
+
+      .page-header p {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .stage {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+      }
+
+      .column h2 {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0 0 4px;
+      }
+
+      .column .subtitle {
+        font-size: 11px;
+        color: var(--muted);
+        margin: 0 0 16px;
+        line-height: 1.5;
+      }
+
+      .column .jql {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 10px;
+        color: var(--accent);
+        background: #15151a;
+        border: 1px solid var(--border);
+        padding: 6px 8px;
+        border-radius: 4px;
+        margin: 0 0 12px;
+        min-height: 26px;
+        display: flex;
+        align-items: center;
+        word-break: break-all;
+      }
+
+      /* ---- Sidebar shell (mimics react-grab sidebar) ---- */
+
+      .sidebar {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .sidebar-header {
+        padding: 10px 14px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .sidebar-header .count {
+        font-weight: 500;
+        color: var(--muted-2);
+      }
+
+      /* ---- Filter bar shared ---- */
+
+      .filter-bar {
+        display: flex;
+        gap: 6px;
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--border);
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .filter-bar .existing {
+        display: flex;
+        gap: 6px;
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      .filter-bar .existing .fake-select {
+        flex: 1 1 0;
+        min-width: 0;
+        height: 26px;
+        font-size: 11px;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--muted);
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        opacity: 0.55;
+      }
+
+      .filter-bar .existing .fake-select::after {
+        content: "▾";
+        font-size: 9px;
+        margin-left: 6px;
+        opacity: 0.5;
+      }
+
+      .clear-btn {
+        font-size: 10px;
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+
+      .clear-btn:hover {
+        color: var(--text);
+        background: var(--border);
+      }
+
+      /* ---- OPTION A: Preset Select ---- */
+
+      .select-trigger {
+        height: 26px;
+        font-size: 11px;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text);
+        padding: 0 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+        flex: 1 1 0;
+        min-width: 0;
+        justify-content: space-between;
+      }
+
+      .select-trigger:hover { border-color: var(--border-strong); }
+      .select-trigger.active {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .select-trigger .caret { font-size: 9px; opacity: 0.6; }
+
+      .select-menu {
+        position: absolute;
+        margin-top: 4px;
+        background: var(--panel-2);
+        border: 1px solid var(--border-strong);
+        border-radius: 6px;
+        padding: 4px;
+        min-width: 180px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        z-index: 50;
+        display: none;
+      }
+
+      .select-menu.open { display: block; }
+
+      .select-menu .item {
+        padding: 6px 10px;
+        font-size: 12px;
+        border-radius: 3px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .select-menu .item:hover { background: var(--border); }
+      .select-menu .item.selected { color: var(--accent); }
+      .select-menu .item .hint {
+        font-size: 10px;
+        color: var(--muted-2);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      /* ---- OPTION B: Popover with presets + calendar ---- */
+
+      .popover {
+        position: absolute;
+        margin-top: 4px;
+        background: var(--panel-2);
+        border: 1px solid var(--border-strong);
+        border-radius: 8px;
+        padding: 10px;
+        display: none;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+        z-index: 50;
+        width: 420px;
+      }
+
+      .popover.open { display: grid; grid-template-columns: 130px 1fr; gap: 10px; }
+
+      .popover .preset-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        border-right: 1px solid var(--border);
+        padding-right: 10px;
+      }
+
+      .popover .preset-list .preset {
+        padding: 6px 8px;
+        font-size: 11px;
+        border-radius: 3px;
+        cursor: pointer;
+        color: var(--text);
+      }
+
+      .popover .preset-list .preset:hover { background: var(--border); }
+      .popover .preset-list .preset.active {
+        background: rgba(124, 132, 255, 0.15);
+        color: var(--accent);
+      }
+
+      .popover .calendar {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .cal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 4px 8px;
+        color: var(--text);
+      }
+
+      .cal-header .nav {
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+
+      .cal-header .nav:hover { background: var(--border); color: var(--text); }
+
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+      }
+
+      .cal-grid .dow {
+        font-size: 9px;
+        color: var(--muted-2);
+        text-align: center;
+        padding: 2px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .cal-grid .day {
+        aspect-ratio: 1;
+        font-size: 11px;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        border-radius: 3px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .cal-grid .day:hover { background: var(--border); }
+      .cal-grid .day.muted { color: var(--muted-2); }
+      .cal-grid .day.today {
+        outline: 1px dashed var(--accent);
+        outline-offset: -2px;
+      }
+      .cal-grid .day.in-range {
+        background: rgba(124, 132, 255, 0.15);
+        border-radius: 0;
+      }
+      .cal-grid .day.range-start,
+      .cal-grid .day.range-end {
+        background: var(--accent);
+        color: #fff;
+        border-radius: 3px;
+      }
+
+      .popover-footer {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 8px;
+        border-top: 1px solid var(--border);
+        margin-top: 4px;
+      }
+
+      .popover-footer .summary {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      .btn {
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 4px;
+        border: 1px solid var(--border-strong);
+        background: var(--panel);
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .btn:hover { background: var(--border); }
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .btn.primary:hover { opacity: 0.9; }
+      .btn.ghost {
+        background: transparent;
+        border-color: transparent;
+        color: var(--muted);
+      }
+      .btn.ghost:hover { color: var(--text); }
+
+      /* ---- Task cards ---- */
+
+      .list {
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 320px;
+        max-height: 420px;
+        overflow-y: auto;
+      }
+
+      .card {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px 12px;
+      }
+
+      .card-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .card-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text);
+        margin: 0;
+      }
+
+      .card-key {
+        font-size: 10px;
+        color: var(--muted-2);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      .card-meta {
+        display: flex;
+        gap: 8px;
+        margin-top: 6px;
+        font-size: 10px;
+        color: var(--muted);
+        align-items: center;
+      }
+
+      .due-pill {
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 10px;
+        background: var(--border);
+        color: var(--muted);
+      }
+
+      .due-pill.overdue { background: rgba(255, 107, 107, 0.15); color: var(--danger); }
+      .due-pill.today   { background: rgba(255, 180, 84, 0.15); color: var(--warn); }
+      .due-pill.soon    { background: rgba(78, 201, 167, 0.15); color: var(--ok); }
+      .due-pill.none    { background: transparent; border: 1px dashed var(--border-strong); color: var(--muted-2); }
+
+      .empty {
+        padding: 24px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      /* ---- Pros/cons table ---- */
+
+      .compare {
+        max-width: 1200px;
+        margin: 0 auto 40px;
+        padding: 0 24px;
+      }
+
+      .compare h2 {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 24px 0 8px;
+      }
+
+      table.tradeoffs {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+
+      table.tradeoffs th, table.tradeoffs td {
+        padding: 8px 10px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      table.tradeoffs th {
+        font-weight: 600;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-header">
+      <h1>Due Date Filter — UX POC</h1>
+      <p>
+        Two proposals for filtering sidebar tasks by due date. Both feed a JQL
+        clause shown below the header (e.g. <code>duedate &lt; now()</code>).
+        The task list below each filter updates live.
+      </p>
+    </div>
+
+    <div class="stage">
+      <!-- ========================= OPTION A ========================= -->
+      <div class="column">
+        <h2>Option A — Preset Select (minimalist)</h2>
+        <p class="subtitle">
+          A 5th Select added to the existing <code>FilterBar</code>. Same primitive,
+          same size, same behavior as Status / Assignee / Reporter / Label.
+          Zero new UI vocabulary.
+        </p>
+        <div class="jql" id="jql-a">— no filter —</div>
+
+        <div class="sidebar">
+          <div class="sidebar-header">
+            <span>Tasks</span>
+            <span class="count" id="count-a">8 of 8</span>
+          </div>
+          <div class="filter-bar">
+            <div class="existing">
+              <div class="fake-select">Status</div>
+              <div class="fake-select">Assignee</div>
+              <div class="fake-select">Reporter</div>
+              <div class="fake-select">Label</div>
+            </div>
+            <div style="position: relative; flex: 1 1 0; min-width: 0;">
+              <button class="select-trigger" id="trigger-a">
+                <span id="label-a">All due dates</span>
+                <span class="caret">▾</span>
+              </button>
+              <div class="select-menu" id="menu-a">
+                <div class="item" data-preset-a="all">
+                  <span>All due dates</span>
+                </div>
+                <div class="item" data-preset-a="overdue">
+                  <span>Overdue</span>
+                  <span class="hint">&lt; today</span>
+                </div>
+                <div class="item" data-preset-a="today">
+                  <span>Due today</span>
+                  <span class="hint">= today</span>
+                </div>
+                <div class="item" data-preset-a="this-week">
+                  <span>This week</span>
+                  <span class="hint">Mon–Sun</span>
+                </div>
+                <div class="item" data-preset-a="next-7">
+                  <span>Next 7 days</span>
+                  <span class="hint">+7d</span>
+                </div>
+                <div class="item" data-preset-a="none">
+                  <span>No due date</span>
+                  <span class="hint">is EMPTY</span>
+                </div>
+              </div>
+            </div>
+            <button class="clear-btn" id="clear-a" style="display: none;">✕ Clear</button>
+          </div>
+          <div class="list" id="list-a"></div>
+        </div>
+      </div>
+
+      <!-- ========================= OPTION B ========================= -->
+      <div class="column">
+        <h2>Option B — Popover with presets + range calendar (shadcn-solid style)</h2>
+        <p class="subtitle">
+          One trigger button. Opens a popover: preset list on the left, two-click
+          range calendar on the right. Mirrors shadcn-solid <code>DatePicker</code> /
+          <code>RangePicker</code> (Kobalte-backed).
+        </p>
+        <div class="jql" id="jql-b">— no filter —</div>
+
+        <div class="sidebar">
+          <div class="sidebar-header">
+            <span>Tasks</span>
+            <span class="count" id="count-b">8 of 8</span>
+          </div>
+          <div class="filter-bar">
+            <div class="existing">
+              <div class="fake-select">Status</div>
+              <div class="fake-select">Assignee</div>
+              <div class="fake-select">Reporter</div>
+              <div class="fake-select">Label</div>
+            </div>
+            <div style="position: relative; flex: 1 1 0; min-width: 0;">
+              <button class="select-trigger" id="trigger-b">
+                <span id="label-b">Any due date</span>
+                <span class="caret">📅</span>
+              </button>
+              <div class="popover" id="popover-b">
+                <div class="preset-list">
+                  <div class="preset" data-preset-b="overdue">Overdue</div>
+                  <div class="preset" data-preset-b="today">Due today</div>
+                  <div class="preset" data-preset-b="this-week">This week</div>
+                  <div class="preset" data-preset-b="next-7">Next 7 days</div>
+                  <div class="preset" data-preset-b="this-sprint">This sprint</div>
+                  <div class="preset" data-preset-b="none">No due date</div>
+                  <div class="preset" data-preset-b="custom">Custom range…</div>
+                </div>
+                <div class="calendar">
+                  <div class="cal-header">
+                    <button class="nav" id="cal-prev">‹</button>
+                    <span id="cal-title">April 2026</span>
+                    <button class="nav" id="cal-next">›</button>
+                  </div>
+                  <div class="cal-grid" id="cal-grid"></div>
+                </div>
+                <div class="popover-footer">
+                  <span class="summary" id="cal-summary">Pick a start date</span>
+                  <div style="display: flex; gap: 6px;">
+                    <button class="btn ghost" id="b-clear">Clear</button>
+                    <button class="btn primary" id="b-apply">Apply</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="list" id="list-b"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare">
+      <h2>Trade-offs</h2>
+      <table class="tradeoffs">
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            <th>A — Preset Select</th>
+            <th>B — Popover + Range Calendar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Footprint in filter bar</td>
+            <td>1 select, same size as the other 4 — fully consistent.</td>
+            <td>1 trigger button, but the popover is 420px wide when open.</td>
+          </tr>
+          <tr>
+            <td>Implementation cost</td>
+            <td>Reuses existing <code>Select</code> primitive. ~40 lines.</td>
+            <td>New primitives: <code>Popover</code> + <code>Calendar</code> (Kobalte). ~300+ lines.</td>
+          </tr>
+          <tr>
+            <td>Coverage of JQL</td>
+            <td>~6 common presets. Custom ranges not supported.</td>
+            <td>Presets + arbitrary range → any <code>duedate &gt;= X AND &lt;= Y</code>.</td>
+          </tr>
+          <tr>
+            <td>Cognitive load</td>
+            <td>Minimal — single click, labeled option.</td>
+            <td>Higher — user decides between preset column and calendar grid.</td>
+          </tr>
+          <tr>
+            <td>Matches current sidebar style</td>
+            <td>Yes — identical to the other 4 filters.</td>
+            <td>Breaks uniformity — the only popover-based filter.</td>
+          </tr>
+          <tr>
+            <td>Mobile / narrow sidebar</td>
+            <td>Wraps naturally with the other selects.</td>
+            <td>Popover overflows; needs responsive layout.</td>
+          </tr>
+          <tr>
+            <td>shadcn-solid proposal</td>
+            <td>Just <code>Select</code> (already used).</td>
+            <td><code>DatePicker</code> / <code>RangePicker</code> built on Kobalte's <code>DatePicker</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Recommendation</h2>
+      <p style="color: var(--muted); font-size: 12px; line-height: 1.6; margin: 0 0 40px;">
+        <strong style="color: var(--text)">Option A</strong> is the right call for v1 — it matches
+        your existing filter vocabulary, costs almost nothing to build, and covers the 90%
+        case (overdue, today, this week, no date). Ship A first; if users start asking for
+        specific date ranges ("show me everything due between June 10 and June 20"), upgrade
+        to B — but only behind a "Custom range…" entry in the preset list, so the simple case
+        still stays one click.
+      </p>
+    </div>
+
+    <script>
+      // ---- Mock data ----------------------------------------------------
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const d = (offsetDays) => {
+        const dt = new Date(today);
+        dt.setDate(dt.getDate() + offsetDays);
+        return dt;
+      };
+      const fmt = (dt) =>
+        dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+      const tasks = [
+        { key: "ADC-101", title: "Fix login spinner flicker",        due: d(-5)  },
+        { key: "ADC-102", title: "Empty state copy for Creatives",   due: d(-1)  },
+        { key: "ADC-103", title: "Sidebar filter regression",        due: d(0)   },
+        { key: "ADC-104", title: "Tiptap paste image flow",          due: d(2)   },
+        { key: "ADC-105", title: "Worker migration: D1 schema v3",   due: d(5)   },
+        { key: "ADC-106", title: "JIRA comment mention cache",       due: d(12)  },
+        { key: "ADC-107", title: "Refactor screenshot orchestrator", due: null   },
+        { key: "ADC-108", title: "Add due date to card metadata",    due: null   },
+      ];
+
+      const bucketOf = (due) => {
+        if (!due) return "none";
+        const diff = Math.round((due - today) / (1000 * 60 * 60 * 24));
+        if (diff < 0)   return "overdue";
+        if (diff === 0) return "today";
+        if (diff <= 7)  return "soon";
+        return "later";
+      };
+
+      const renderCard = (t) => {
+        const bucket = bucketOf(t.due);
+        const pillLabel =
+          bucket === "none"    ? "no due date" :
+          bucket === "today"   ? `Today · ${fmt(t.due)}` :
+          bucket === "overdue" ? `Overdue · ${fmt(t.due)}` :
+                                 fmt(t.due);
+        return `
+          <div class="card">
+            <div class="card-row">
+              <p class="card-title">${t.title}</p>
+              <span class="card-key">${t.key}</span>
+            </div>
+            <div class="card-meta">
+              <span class="due-pill ${bucket}">${pillLabel}</span>
+            </div>
+          </div>`;
+      };
+
+      // ---- Preset logic (shared) ----------------------------------------
+
+      const startOfWeek = () => {
+        const dt = new Date(today);
+        const day = dt.getDay(); // 0 = Sun
+        const mondayOffset = day === 0 ? -6 : 1 - day;
+        dt.setDate(dt.getDate() + mondayOffset);
+        return dt;
+      };
+      const endOfWeek = () => {
+        const dt = startOfWeek();
+        dt.setDate(dt.getDate() + 6);
+        return dt;
+      };
+
+      const inclusive = (t, from, to) => t.due && t.due >= from && t.due <= to;
+
+      const matchersByPreset = {
+        all:         () => true,
+        overdue:     (t) => t.due && t.due < today,
+        today:       (t) => t.due && +t.due === +today,
+        "this-week": (t) => inclusive(t, startOfWeek(), endOfWeek()),
+        "next-7":    (t) => inclusive(t, today, d(7)),
+        "this-sprint": (t) => inclusive(t, today, d(14)),
+        none:        (t) => !t.due,
+      };
+
+      const jqlByPreset = {
+        all:           "",
+        overdue:       "duedate < now()",
+        today:         "duedate = now()",
+        "this-week":   "duedate >= startOfWeek() AND duedate <= endOfWeek()",
+        "next-7":      "duedate >= now() AND duedate <= 7d",
+        "this-sprint": "duedate >= now() AND duedate <= 14d",
+        none:          "duedate is EMPTY",
+      };
+
+      const labelByPreset = {
+        all:           "All due dates",
+        overdue:       "Overdue",
+        today:         "Due today",
+        "this-week":   "This week",
+        "next-7":      "Next 7 days",
+        "this-sprint": "This sprint",
+        none:          "No due date",
+      };
+
+      // ---- Option A wiring ----------------------------------------------
+
+      let presetA = "all";
+      const triggerA = document.getElementById("trigger-a");
+      const menuA = document.getElementById("menu-a");
+      const labelA = document.getElementById("label-a");
+      const listA = document.getElementById("list-a");
+      const countA = document.getElementById("count-a");
+      const jqlA = document.getElementById("jql-a");
+      const clearA = document.getElementById("clear-a");
+
+      const renderA = () => {
+        const filtered = tasks.filter(matchersByPreset[presetA]);
+        listA.innerHTML = filtered.length
+          ? filtered.map(renderCard).join("")
+          : `<div class="empty">No tasks match.</div>`;
+        countA.textContent = `${filtered.length} of ${tasks.length}`;
+        labelA.textContent = labelByPreset[presetA];
+        triggerA.classList.toggle("active", presetA !== "all");
+        jqlA.textContent = jqlByPreset[presetA] || "— no filter —";
+        clearA.style.display = presetA === "all" ? "none" : "inline";
+        [...menuA.querySelectorAll(".item")].forEach((el) => {
+          el.classList.toggle("selected", el.dataset.presetA === presetA);
+        });
+      };
+
+      triggerA.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuA.classList.toggle("open");
+      });
+      menuA.addEventListener("click", (e) => {
+        const item = e.target.closest(".item");
+        if (!item) return;
+        presetA = item.dataset.presetA;
+        menuA.classList.remove("open");
+        renderA();
+      });
+      clearA.addEventListener("click", () => {
+        presetA = "all";
+        renderA();
+      });
+      document.addEventListener("click", () => menuA.classList.remove("open"));
+      renderA();
+
+      // ---- Option B wiring ----------------------------------------------
+
+      let presetB = null;                  // null | preset key | "custom"
+      let rangeStart = null;
+      let rangeEnd = null;
+      let calMonth = today.getMonth();
+      let calYear = today.getFullYear();
+
+      const triggerB = document.getElementById("trigger-b");
+      const popoverB = document.getElementById("popover-b");
+      const labelB = document.getElementById("label-b");
+      const listB = document.getElementById("list-b");
+      const countB = document.getElementById("count-b");
+      const jqlB = document.getElementById("jql-b");
+      const calTitle = document.getElementById("cal-title");
+      const calGrid = document.getElementById("cal-grid");
+      const calPrev = document.getElementById("cal-prev");
+      const calNext = document.getElementById("cal-next");
+      const calSummary = document.getElementById("cal-summary");
+      const bApply = document.getElementById("b-apply");
+      const bClear = document.getElementById("b-clear");
+
+      const MONTHS = [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December",
+      ];
+      const DOW = ["mo", "tu", "we", "th", "fr", "sa", "su"];
+
+      const renderCalendar = () => {
+        calTitle.textContent = `${MONTHS[calMonth]} ${calYear}`;
+        const firstOfMonth = new Date(calYear, calMonth, 1);
+        const startDow = (firstOfMonth.getDay() + 6) % 7; // Monday-based
+        const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+        const html = [];
+        DOW.forEach((d) => html.push(`<div class="dow">${d}</div>`));
+        for (let i = 0; i < startDow; i++) {
+          html.push(`<button class="day muted" disabled></button>`);
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dt = new Date(calYear, calMonth, day);
+          const classes = ["day"];
+          if (+dt === +today) classes.push("today");
+          if (rangeStart && rangeEnd && dt >= rangeStart && dt <= rangeEnd) classes.push("in-range");
+          if (rangeStart && +dt === +rangeStart) classes.push("range-start");
+          if (rangeEnd && +dt === +rangeEnd) classes.push("range-end");
+          html.push(
+            `<button class="${classes.join(" ")}" data-day="${day}">${day}</button>`
+          );
+        }
+        calGrid.innerHTML = html.join("");
+      };
+
+      const customMatcher = (t) => {
+        if (!rangeStart) return true;
+        const to = rangeEnd || rangeStart;
+        return t.due && t.due >= rangeStart && t.due <= to;
+      };
+
+      const renderB = () => {
+        let filtered, jql, label;
+        if (presetB === "custom") {
+          filtered = tasks.filter(customMatcher);
+          if (rangeStart && rangeEnd) {
+            jql = `duedate >= "${fmt(rangeStart)}" AND duedate <= "${fmt(rangeEnd)}"`;
+            label = `${fmt(rangeStart)} → ${fmt(rangeEnd)}`;
+          } else if (rangeStart) {
+            jql = `duedate = "${fmt(rangeStart)}"`;
+            label = fmt(rangeStart);
+          } else {
+            jql = "";
+            label = "Custom range";
+          }
+        } else if (presetB) {
+          filtered = tasks.filter(matchersByPreset[presetB]);
+          jql = jqlByPreset[presetB];
+          label = labelByPreset[presetB];
+        } else {
+          filtered = tasks;
+          jql = "";
+          label = "Any due date";
+        }
+        listB.innerHTML = filtered.length
+          ? filtered.map(renderCard).join("")
+          : `<div class="empty">No tasks match.</div>`;
+        countB.textContent = `${filtered.length} of ${tasks.length}`;
+        labelB.textContent = label;
+        triggerB.classList.toggle("active", Boolean(presetB));
+        jqlB.textContent = jql || "— no filter —";
+
+        [...popoverB.querySelectorAll(".preset")].forEach((el) => {
+          el.classList.toggle("active", el.dataset.presetB === presetB);
+        });
+        calSummary.textContent = !rangeStart
+          ? "Pick a start date"
+          : !rangeEnd
+          ? `${fmt(rangeStart)} → pick end`
+          : `${fmt(rangeStart)} → ${fmt(rangeEnd)}`;
+      };
+
+      triggerB.addEventListener("click", (e) => {
+        e.stopPropagation();
+        popoverB.classList.toggle("open");
+        renderCalendar();
+      });
+      popoverB.addEventListener("click", (e) => e.stopPropagation());
+      document.addEventListener("click", () => popoverB.classList.remove("open"));
+
+      popoverB.addEventListener("click", (e) => {
+        const preset = e.target.closest(".preset");
+        if (!preset) return;
+        presetB = preset.dataset.presetB;
+        if (presetB !== "custom") {
+          rangeStart = null;
+          rangeEnd = null;
+          popoverB.classList.remove("open");
+        }
+        renderB();
+        renderCalendar();
+      });
+
+      calGrid.addEventListener("click", (e) => {
+        const btn = e.target.closest(".day");
+        if (!btn || btn.disabled) return;
+        const day = Number(btn.dataset.day);
+        const picked = new Date(calYear, calMonth, day);
+        presetB = "custom";
+        if (!rangeStart || (rangeStart && rangeEnd)) {
+          rangeStart = picked;
+          rangeEnd = null;
+        } else if (picked < rangeStart) {
+          rangeStart = picked;
+        } else {
+          rangeEnd = picked;
+        }
+        renderCalendar();
+        renderB();
+      });
+
+      calPrev.addEventListener("click", (e) => {
+        e.stopPropagation();
+        calMonth--;
+        if (calMonth < 0) { calMonth = 11; calYear--; }
+        renderCalendar();
+      });
+      calNext.addEventListener("click", (e) => {
+        e.stopPropagation();
+        calMonth++;
+        if (calMonth > 11) { calMonth = 0; calYear++; }
+        renderCalendar();
+      });
+
+      bApply.addEventListener("click", () => {
+        popoverB.classList.remove("open");
+        renderB();
+      });
+      bClear.addEventListener("click", () => {
+        presetB = null;
+        rangeStart = null;
+        rangeEnd = null;
+        renderCalendar();
+        renderB();
+      });
+
+      renderB();
+    </script>
+  </body>
+</html>
