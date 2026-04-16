@@ -50,12 +50,13 @@ export interface SelectionCardBodyProps {
   // Labels row
   jiraLabels?: readonly string[];
 
-  // Date row
-  timestamp: number;
+  // Date row — omitted when timestamp is undefined (e.g. primary-selection
+  // label that has a ticket but isn't persisted yet)
+  timestamp?: number;
   jiraDueDate?: string | null;
 
-  // Screenshot row (item-scoped)
-  itemId: string;
+  // Screenshot row (item-scoped) — requires itemId + sync config to render
+  itemId?: string;
   hasElementScreenshot?: boolean;
   hasFullPageScreenshot?: boolean;
   syncServerUrl?: string;
@@ -81,10 +82,11 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (
   const screenshotContext = () => {
     const serverUrl = props.syncServerUrl;
     const workspace = props.syncWorkspace;
-    if (!serverUrl || !workspace) return undefined;
+    const itemId = props.itemId;
+    if (!serverUrl || !workspace || !itemId) return undefined;
     if (!props.hasElementScreenshot && !props.hasFullPageScreenshot)
       return undefined;
-    return { serverUrl, workspace };
+    return { serverUrl, workspace, itemId };
   };
 
   return (
@@ -125,28 +127,32 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (
         </div>
       </Show>
 
-      {/* Date range row */}
-      <div class="flex items-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-        >
-          <rect x="2" y="3" width="12" height="11" rx="2" />
-          <path d="M2 7h12M5 1v4M11 1v4" />
-        </svg>
-        <span>{relativeTime(props.timestamp)}</span>
-        <span class="text-muted-foreground/50">{"\u2192"}</span>
-        <Show
-          when={props.jiraDueDate}
-          fallback={<span class="italic">No due date</span>}
-        >
-          {(dueDate) => <span>{formatDueDate(dueDate())}</span>}
-        </Show>
-      </div>
+      {/* Date range row — only shown when the backing item has a timestamp */}
+      <Show when={props.timestamp !== undefined ? props.timestamp : undefined}>
+        {(timestamp) => (
+          <div class="flex items-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <rect x="2" y="3" width="12" height="11" rx="2" />
+              <path d="M2 7h12M5 1v4M11 1v4" />
+            </svg>
+            <span>{relativeTime(timestamp())}</span>
+            <span class="text-muted-foreground/50">{"\u2192"}</span>
+            <Show
+              when={props.jiraDueDate}
+              fallback={<span class="italic">No due date</span>}
+            >
+              {(dueDate) => <span>{formatDueDate(dueDate())}</span>}
+            </Show>
+          </div>
+        )}
+      </Show>
 
       {/* Screenshot row */}
       <Show when={screenshotContext()}>
@@ -157,7 +163,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (
                 src={screenshotUrl(
                   ctx().serverUrl,
                   ctx().workspace,
-                  props.itemId,
+                  ctx().itemId,
                   "element",
                 )}
                 alt="Element screenshot"
@@ -170,7 +176,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (
                 src={screenshotUrl(
                   ctx().serverUrl,
                   ctx().workspace,
-                  props.itemId,
+                  ctx().itemId,
                   "full",
                 )}
                 alt="Full page screenshot"

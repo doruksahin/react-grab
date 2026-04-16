@@ -709,17 +709,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 <CreateTicketButton onClick={() => props.onCreateTicket?.()} />
               </Show>
               <BottomSection>
-                <Show
-                  when={(() => {
-                    const ticketId = props.jiraTicketId;
-                    const itemId = props.itemId;
-                    const timestamp = props.timestamp;
-                    if (!ticketId || !itemId || timestamp === undefined)
-                      return undefined;
-                    return { ticketId, itemId, timestamp };
-                  })()}
-                >
-                  {(ctx) => (
+                <Show when={props.jiraTicketId}>
+                  {(ticketId) => (
                     <SelectionCardBody
                       summary={
                         props.commentText ??
@@ -727,13 +718,13 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                         props.tagName ??
                         ''
                       }
-                      timestamp={ctx().timestamp}
-                      itemId={ctx().itemId}
+                      timestamp={props.timestamp}
+                      itemId={props.itemId}
                       hasElementScreenshot={props.hasElementScreenshot}
                       hasFullPageScreenshot={props.hasFullPageScreenshot}
                       syncServerUrl={props.syncServerUrl}
                       syncWorkspace={props.syncWorkspace}
-                      jiraTicketId={ctx().ticketId}
+                      jiraTicketId={ticketId()}
                       jiraStatus={props.groupStatus}
                       jiraStatusCategory={props.jiraStatusCategory}
                       jiraLabels={props.jiraLabels}
