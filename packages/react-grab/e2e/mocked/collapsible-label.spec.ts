@@ -38,8 +38,10 @@ const clickInShadow = async (page: Page, selector: string): Promise<void> => {
   );
 };
 
-test.describe("Collapsible Label", () => {
-  test("flag off — labels render expanded (no dot, no collapse button)", async ({
+test.describe("Collapsible Label", { tag: ["@SPEC-016"] }, () => {
+  test("flag off — labels render expanded (no dot, no collapse button)", {
+    annotation: { type: "ac", description: "SPEC-016 AC1-AC3" },
+  }, async ({
     page,
     reactGrab,
   }) => {
@@ -63,7 +65,9 @@ test.describe("Collapsible Label", () => {
     expect(collapseBtnCount).toBe(0);
   });
 
-  test("flag on — labels start as dots, click to expand, click chevron to collapse", async ({
+  test("flag on — labels start as dots, click to expand, click chevron to collapse", {
+    annotation: { type: "ac", description: "SPEC-016 AC6, AC11-AC14" },
+  }, async ({
     page,
     reactGrab,
   }) => {
