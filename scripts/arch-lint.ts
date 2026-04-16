@@ -2,6 +2,11 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname, relative } from "node:path";
 import { load } from "js-yaml";
 import madge from "madge";
+import {
+  scanDataAttrs,
+  validateDataAttrs,
+  type DataAttrsConfig,
+} from "./data-attrs.js";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const ARCH_FILE = resolve(ROOT, "architecture.yml");
@@ -191,9 +196,52 @@ const main = async () => {
     console.log("\ndata_flows: all paths valid, consumer cross-check passed");
   }
 
+  // ── Phase 3: data_attrs validation ────────────────────────────────────
+
+  const dataAttrsConfig = (yaml.data_attrs ?? {}) as DataAttrsConfig;
+  const hasDataAttrs =
+    dataAttrsConfig.scopes && Object.keys(dataAttrsConfig.scopes).length > 0;
+  let attrErrorCount = 0;
+
+  if (hasDataAttrs) {
+    const scanResult = scanDataAttrs(ROOT, dataAttrsConfig);
+    const { errors: attrErrors, warnings: attrWarnings } = validateDataAttrs(
+      scanResult,
+      dataAttrsConfig,
+    );
+
+    if (attrErrors.length > 0) {
+      console.log(`\nDATA ATTR ERRORS (${attrErrors.length}):`);
+      for (const err of attrErrors) {
+        const detail = err.detail ? ` — ${err.detail}` : "";
+        console.log(`  [${err.kind}] data-react-grab-${err.attr}${detail}`);
+      }
+    }
+
+    if (attrWarnings.length > 0) {
+      console.log(`\nDATA ATTR WARNINGS (${attrWarnings.length}):`);
+      for (const warn of attrWarnings) {
+        const detail = warn.detail ? ` — ${warn.detail}` : "";
+        console.log(`  [${warn.kind}] data-react-grab-${warn.attr}${detail}`);
+      }
+    }
+
+    if (attrErrors.length === 0 && attrWarnings.length === 0) {
+      console.log(
+        `\ndata_attrs: ${Object.keys(scanResult.inventory).length} attrs, all scoped`,
+      );
+    } else if (attrErrors.length === 0) {
+      console.log(
+        `\ndata_attrs: ${Object.keys(scanResult.inventory).length} attrs, no errors (${attrWarnings.length} warning${attrWarnings.length === 1 ? "" : "s"})`,
+      );
+    }
+
+    attrErrorCount = attrErrors.length;
+  }
+
   // ── Result ────────────────────────────────────────────────────────────
 
-  const totalErrors = stale.length + flowErrors.length;
+  const totalErrors = stale.length + flowErrors.length + attrErrorCount;
   if (totalErrors > 0) {
     console.log(`\nERROR: ${totalErrors} issue(s) found in architecture.yml`);
     process.exit(1);

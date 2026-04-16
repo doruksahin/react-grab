@@ -9,6 +9,11 @@ import { resolve, relative, dirname, basename } from "node:path";
 import { parseDocument } from "yaml";
 import madge from "madge";
 import { Project, SyntaxKind } from "ts-morph";
+import {
+  scanDataAttrs,
+  writeInventoryToDoc,
+  type DataAttrsConfig,
+} from "./data-attrs.js";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const ARCH_FILE = resolve(ROOT, "architecture.yml");
@@ -595,6 +600,12 @@ const main = async () => {
   console.log("Pass 3: merging into architecture.yml...\n");
   mergeIntoDocument(doc, madgeResults, tsMorphResults, newFeatures);
 
+  // Pass 5: data-attrs inventory
+  console.log("Pass 4: scanning data-react-grab-* attributes...");
+  const dataAttrsConfig = (yaml.data_attrs ?? {}) as DataAttrsConfig;
+  const dataAttrsResult = scanDataAttrs(ROOT, dataAttrsConfig);
+  writeInventoryToDoc(doc, dataAttrsResult.inventory);
+
   // Write
   writeFileSync(
     ARCH_FILE,
@@ -635,6 +646,26 @@ const main = async () => {
     for (const f of newFeatures) console.log(`  ${f}`);
   } else {
     console.log("\nNEW features detected (not in YAML):\n  none");
+  }
+
+  // data_attrs summary
+  const totalAttrs = Object.keys(dataAttrsResult.inventory).length;
+  const attrsBySource = Object.values(dataAttrsResult.inventory).reduce(
+    (acc, entry) => {
+      if (entry.src > 0) acc.inSrc++;
+      if (entry.tests > 0) acc.inTests++;
+      return acc;
+    },
+    { inSrc: 0, inTests: 0 },
+  );
+  console.log("\ndata_attrs:");
+  console.log(
+    `  ${totalAttrs} attrs scanned (${attrsBySource.inSrc} in src/, ${attrsBySource.inTests} in tests)`,
+  );
+  if (dataAttrsResult.orphans.length > 0) {
+    console.log(
+      `  ${dataAttrsResult.orphans.length} orphan(s) (run pnpm arch:lint for details)`,
+    );
   }
 
   console.log("\nChanges written to architecture.yml. Review the diff before committing.");
