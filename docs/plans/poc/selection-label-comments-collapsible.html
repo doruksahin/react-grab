@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC: Collapsible Selection Label Comments</title>
+  <style>
+    :root {
+      --page-bg: #121212;
+      --page-grid: rgba(255, 255, 255, 0.04);
+      --surface: #ffffff;
+      --surface-muted: #f5f6f8;
+      --surface-hover: #f0f1f3;
+      --surface-elevated: #ffffff;
+      --border: rgba(15, 23, 42, 0.1);
+      --border-strong: rgba(15, 23, 42, 0.18);
+      --text: #121826;
+      --text-muted: #667085;
+      --text-subtle: #98a2b3;
+      --accent: #2563eb;
+      --accent-soft: rgba(37, 99, 235, 0.12);
+      --success: #0f9d6c;
+      --shadow-lg: 0 22px 50px rgba(7, 11, 25, 0.22);
+      --shadow-md: 0 10px 22px rgba(7, 11, 25, 0.14);
+      --shadow-sm: 0 2px 8px rgba(7, 11, 25, 0.08);
+      --selection-width-px: 308px;
+      --flyout-width-px: 280px;
+      --trigger-size-px: 24px;
+      --radius-panel-px: 12px;
+      --radius-pill-px: 999px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        radial-gradient(circle at top, rgba(66, 153, 225, 0.12), transparent 38%),
+        var(--page-bg);
+      background-size: 24px 24px, 24px 24px, auto, auto;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+    }
+
+    .frame {
+      width: min(100%, 1120px);
+      display: grid;
+      gap: 28px;
+    }
+
+    .intro {
+      max-width: 680px;
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .intro h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .intro p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .demo-grid {
+      display: grid;
+      gap: 22px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      align-items: start;
+    }
+
+    .demo-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 18px;
+      backdrop-filter: blur(12px);
+      min-height: 480px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .demo-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.54);
+    }
+
+    .jira-panel {
+      position: relative;
+      min-height: 420px;
+      border-radius: 18px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 26%),
+        #1a1a1b;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 18px 16px 20px;
+    }
+
+    .jira-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .jira-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 11px;
+      margin-bottom: 18px;
+    }
+
+    .jira-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .jira-title {
+      color: white;
+      font-size: 30px;
+      line-height: 1.15;
+      font-weight: 700;
+      margin: 0 0 18px;
+    }
+
+    .jira-editor {
+      min-height: 196px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+      padding: 14px;
+      color: rgba(255, 255, 255, 0.44);
+      font-size: 14px;
+    }
+
+    .selection-anchor {
+      position: absolute;
+      top: 186px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    [data-react-grab-selection-label] {
+      position: relative;
+      width: var(--selection-width-px);
+      filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.28));
+      user-select: none;
+    }
+
+    .selection-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 38px;
+      padding: 7px 8px 7px 10px;
+      border-radius: var(--radius-panel-px);
+      background: var(--surface);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .selection-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .selection-tag {
+      display: inline-flex;
+      align-items: center;
+      max-width: 126px;
+      min-height: 24px;
+      padding: 0 9px;
+      border-radius: 8px;
+      background: #fdf2f8;
+      border: 1px solid #fbcfe8;
+      color: #831843;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .selection-copy {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex: 1;
+    }
+
+    .ticket-pill {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: var(--accent);
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .selection-title {
+      min-width: 0;
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .selection-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .comment-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .comments-trigger {
+      width: var(--trigger-size-px);
+      height: var(--trigger-size-px);
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .comments-trigger:hover {
+      background: var(--surface-hover);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .comments-trigger[aria-expanded="true"] {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .dots {
+      display: inline-flex;
+      gap: 2px;
+    }
+
+    .dots span {
+      width: 3px;
+      height: 3px;
+      border-radius: 999px;
+      background: currentColor;
+      opacity: 0.92;
+    }
+
+    .comments-flyout {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: var(--flyout-width-px);
+      padding: 12px;
+      border-radius: 16px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      transform-origin: top right;
+      transform: scale(0.96) translateY(-4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 180ms ease, opacity 180ms ease;
+    }
+
+    .comments-flyout[data-open="true"] {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .flyout-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .flyout-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .flyout-title strong {
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    .flyout-title span {
+      font-size: 11px;
+      line-height: 1.2;
+      color: var(--text-muted);
+    }
+
+    .flyout-close {
+      width: 24px;
+      height: 24px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-subtle);
+      cursor: pointer;
+      transition: background-color 160ms ease, color 160ms ease;
+    }
+
+    .flyout-close:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+
+    .composer {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--surface-muted);
+      margin-bottom: 12px;
+    }
+
+    .composer textarea {
+      width: 100%;
+      min-height: 78px;
+      border: 0;
+      outline: 0;
+      resize: none;
+      background: transparent;
+      padding: 10px 11px 8px;
+      font: inherit;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .composer-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 9px 9px;
+      border-top: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .composer-hint {
+      font-size: 10px;
+      line-height: 1.2;
+      color: var(--text-muted);
+    }
+
+    .post-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 24px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--text);
+      color: white;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .comments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 180px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .comment-item {
+      padding: 9px 10px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .comment-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 5px;
+      font-size: 10px;
+      line-height: 1.2;
+    }
+
+    .comment-author {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .comment-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 9px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .comment-body {
+      font-size: 11px;
+      line-height: 1.45;
+      color: #344054;
+    }
+
+    .empty-hint {
+      padding: 14px 10px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px dashed rgba(15, 23, 42, 0.14);
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .ux-note {
+      margin-top: 18px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .ux-note strong {
+      color: white;
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 18px;
+      }
+
+      .demo-card {
+        min-height: 440px;
+      }
+
+      [data-react-grab-selection-label] {
+        width: min(100%, 296px);
+      }
+
+      .comments-flyout {
+        width: min(100vw - 72px, var(--flyout-width-px));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="frame">
+    <section class="intro">
+      <h1>Collapsible comments for <code>data-react-grab-selection-label</code></h1>
+      <p>
+        The label stays tiny by default. Comments live behind a small ellipsis trigger and expand as a flyout,
+        so the floating selection affordance does not become a full panel until the user asks for it.
+      </p>
+    </section>
+
+    <section class="demo-grid">
+      <article class="demo-card">
+        <div class="demo-label">Default collapsed</div>
+        <div class="jira-panel">
+          <div class="jira-header">
+            <span>CardDescription.div</span>
+            <span>Ungrouped</span>
+          </div>
+          <div class="jira-meta">
+            <span class="jira-chip">ATT-2899</span>
+            <span class="jira-chip">To Do</span>
+            <span class="jira-chip">ADC bot admin</span>
+          </div>
+          <h2 class="jira-title">TestCard</h2>
+          <div class="jira-editor">The underlying Jira card stays visible. The floating label does not consume the full vertical space unless comments are explicitly opened.</div>
+
+          <div class="selection-anchor">
+            <div data-react-grab-selection-label data-demo="collapsed">
+              <div class="selection-panel">
+                <div class="selection-main">
+                  <span class="selection-tag">test1</span>
+                  <div class="selection-copy">
+                    <span class="ticket-pill">ATT-2899</span>
+                    <span class="selection-title">TestCard</span>
+                  </div>
+                </div>
+
+                <div class="selection-actions">
+                  <span class="comment-count">3</span>
+                  <button class="comments-trigger" type="button" aria-expanded="false" aria-controls="comments-flyout-collapsed">
+                    <span class="dots" aria-hidden="true">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="comments-flyout" id="comments-flyout-collapsed" data-open="false">
+                <div class="flyout-header">
+                  <div class="flyout-title">
+                    <strong>Comments</strong>
+                    <span>3 messages</span>
+                  </div>
+                  <button class="flyout-close" type="button" aria-label="Close comments">×</button>
+                </div>
+
+                <div class="composer">
+                  <textarea placeholder="Add a comment..."></textarea>
+                  <div class="composer-footer">
+                    <span class="composer-hint">Tiny trigger, full composer only on demand</span>
+                    <button class="post-button" type="button">Post</button>
+                  </div>
+                </div>
+
+                <div class="comments-list">
+                  <article class="comment-item">
+                    <div class="comment-meta">
+                      <div class="comment-author">
+                        <span class="comment-avatar" style="background: #2563eb;">AA</span>
+                        <span>ADC bot admin</span>
+                      </div>
+                      <span>2m</span>
+                    </div>
+                    <div class="comment-body">We should keep this near the label, but never let it dominate the overlay by default.</div>
+                  </article>
+
+                  <article class="comment-item">
+                    <div class="comment-meta">
+                      <div class="comment-author">
+                        <span class="comment-avatar" style="background: #0f9d6c;">DK</span>
+                        <span>Doruk</span>
+                      </div>
+                      <span>8m</span>
+                    </div>
+                    <div class="comment-body">The ellipsis works better than a full “Comments (3)” row here because the label remains visually light.</div>
+                  </article>
+
+                  <article class="comment-item">
+                    <div class="comment-meta">
+                      <div class="comment-author">
+                        <span class="comment-avatar" style="background: #f59e0b;">LA</span>
+                        <span>Layout QA</span>
+                      </div>
+                      <span>14m</span>
+                    </div>
+                    <div class="comment-body">Unread count stays visible even while collapsed, which preserves awareness without expanding the UI.</div>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ux-note">
+          <strong>Why this works:</strong> the main label footprint stays one line tall. The comments area becomes a flyout instead of stretching the label into a mini sidebar.
+        </div>
+      </article>
+
+      <article class="demo-card">
+        <div class="demo-label">Expanded state</div>
+        <div class="jira-panel">
+          <div class="jira-header">
+            <span>CardDescription.div</span>
+            <span>Ungrouped</span>
+          </div>
+          <div class="jira-meta">
+            <span class="jira-chip">ATT-2899</span>
+            <span class="jira-chip">To Do</span>
+            <span class="jira-chip">ADC bot admin</span>
+          </div>
+          <h2 class="jira-title">TestCard</h2>
+          <div class="jira-editor">This panel shows the opened flyout pinned under the ellipsis. The core label remains stable, and only the comments layer grows.</div>
+
+          <div class="selection-anchor">
+            <div data-react-grab-selection-label data-demo="expanded">
+              <div class="selection-panel">
+                <div class="selection-main">
+                  <span class="selection-tag">test1</span>
+                  <div class="selection-copy">
+                    <span class="ticket-pill">ATT-2899</span>
+                    <span class="selection-title">TestCard</span>
+                  </div>
+                </div>
+
+                <div class="selection-actions">
+                  <button class="comments-trigger" type="button" aria-expanded="true" aria-controls="comments-flyout-expanded">
+                    <span class="dots" aria-hidden="true">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="comments-flyout" id="comments-flyout-expanded" data-open="true">
+                <div class="flyout-header">
+                  <div class="flyout-title">
+                    <strong>Comments</strong>
+                    <span>Start the thread</span>
+                  </div>
+                  <button class="flyout-close" type="button" aria-label="Close comments">×</button>
+                </div>
+
+                <div class="composer">
+                  <textarea placeholder="Add a comment...">@adc-bot should this stay collapsed by default?</textarea>
+                  <div class="composer-footer">
+                    <span class="composer-hint">Opens near the anchor, not inside the main label body</span>
+                    <button class="post-button" type="button">Post</button>
+                  </div>
+                </div>
+
+                <div class="empty-hint">
+                  No existing comments yet. The first interaction gets the full editor, but the idle state stays as small as the three-dot trigger.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ux-note">
+          <strong>Preferred behavior:</strong> if comments exist, keep the count visible. If none exist, keep only the ellipsis trigger so the empty state does not advertise a large dormant panel.
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const labelElements = document.querySelectorAll("[data-react-grab-selection-label]");
+
+    const closeFlyout = (labelElement) => {
+      const triggerElement = labelElement.querySelector(".comments-trigger");
+      const flyoutElement = labelElement.querySelector(".comments-flyout");
+
+      if (!triggerElement || !flyoutElement) {
+        return;
+      }
+
+      triggerElement.setAttribute("aria-expanded", "false");
+      flyoutElement.setAttribute("data-open", "false");
+    };
+
+    const openFlyout = (labelElement) => {
+      const triggerElement = labelElement.querySelector(".comments-trigger");
+      const flyoutElement = labelElement.querySelector(".comments-flyout");
+
+      if (!triggerElement || !flyoutElement) {
+        return;
+      }
+
+      triggerElement.setAttribute("aria-expanded", "true");
+      flyoutElement.setAttribute("data-open", "true");
+    };
+
+    labelElements.forEach((labelElement) => {
+      const triggerElement = labelElement.querySelector(".comments-trigger");
+      const closeElement = labelElement.querySelector(".flyout-close");
+
+      if (triggerElement) {
+        triggerElement.addEventListener("click", () => {
+          const isExpanded = triggerElement.getAttribute("aria-expanded") === "true";
+          if (isExpanded) {
+            closeFlyout(labelElement);
+            return;
+          }
+
+          labelElements.forEach((innerLabelElement) => {
+            if (innerLabelElement !== labelElement) {
+              closeFlyout(innerLabelElement);
+            }
+          });
+          openFlyout(labelElement);
+        });
+      }
+
+      if (closeElement) {
+        closeElement.addEventListener("click", () => {
+          closeFlyout(labelElement);
+        });
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      const didClickInsideLabel = Array.from(labelElements).some((labelElement) => labelElement.contains(event.target));
+
+      if (didClickInsideLabel) {
+        return;
+      }
+
+      labelElements.forEach((labelElement) => closeFlyout(labelElement));
+    });
+  </script>
+</body>
+</html>

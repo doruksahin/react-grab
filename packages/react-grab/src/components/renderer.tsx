@@ -308,7 +308,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
                   }
                 : undefined
             }
-            onCollapse={collapsible.collapse}
+            onCollapse={
+              props.collapsibleLabelsDefault ? collapsible.collapse : undefined
+            }
           />
           </Show>
         );}}
