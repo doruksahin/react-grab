@@ -631,7 +631,6 @@ data_attrs:
         - editor-action
         - editor-dropdown
         - editor-image-input
-        - editor-insert
         - color
         - color-picker
         - color-reset
@@ -684,7 +683,7 @@ data_attrs:
     comments-error: {scope: comments, src: 1, tests: 0}
     comments-list: {scope: comments, src: 1, tests: 0}
     comments-section: {scope: comments, src: 1, tests: 0}
-    inline-reply: {scope: comments, src: 1, tests: 0}
+    inline-reply: {scope: comments, src: 1, tests: 2}
     jira-comment: {scope: comments, src: 1, tests: 0}
     jira-comment-id: {scope: comments, src: 1, tests: 0}
     jira-comment-state: {scope: comments, src: 1, tests: 0}
@@ -701,14 +700,13 @@ data_attrs:
     clear-comments-prompt: {scope: dialog, src: 1, tests: 3}
     discard-no: {scope: dialog, src: 1, tests: 2}
     discard-prompt: {scope: dialog, src: 1, tests: 1}
-    discard-yes: {scope: dialog, src: 1, tests: 3}
+    discard-yes: {scope: dialog, src: 1, tests: 5}
     color: {scope: editor, src: 1, tests: 0}
     color-picker: {scope: editor, src: 1, tests: 0}
     color-reset: {scope: editor, src: 1, tests: 0}
     editor-action: {scope: editor, src: 1, tests: 0}
     editor-dropdown: {scope: editor, src: 1, tests: 0}
     editor-image-input: {scope: editor, src: 1, tests: 0}
-    editor-insert: {scope: editor, src: 0, tests: 1}
     editor-toolbar: {scope: editor, src: 1, tests: 0}
     emoji: {scope: editor, src: 1, tests: 0}
     emoji-picker: {scope: editor, src: 1, tests: 0}
@@ -785,10 +783,6 @@ data_attrs:
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 2, tests: 4}
     toolbar-visibility: {scope: toolbar, src: 1, tests: 0}
-    confirm-discard: {scope: UNKNOWN, src: 0, tests: 2}
-    grabbed-box: {scope: UNKNOWN, src: 0, tests: 1}
-    insert-menu: {scope: UNKNOWN, src: 0, tests: 1}
-    reply-context: {scope: UNKNOWN, src: 0, tests: 2}
 
 # ─── API contract flow ────────────────────────────────────────────────────────
 

@@ -35,15 +35,6 @@ test("revealed selections should anchor to DOM elements", { tag: ["@SPEC-010"] }
   });
   console.log(`Selection labels found: ${labelCount}`);
 
-  // Check if any grabbed boxes exist (the highlight rectangles)
-  const boxCount = await page.evaluate(() => {
-    const host = document.querySelector("[data-react-grab]");
-    const root = host?.shadowRoot?.querySelector("[data-react-grab]");
-    if (!root) return 0;
-    return root.querySelectorAll("[data-react-grab-grabbed-box]").length;
-  });
-  console.log(`Grabbed boxes found: ${boxCount}`);
-
   // Wait a bit for reveal effect to fire, then check again
   await page.waitForTimeout(2000);
   await reactGrab.screenshot("after-wait", "page");
