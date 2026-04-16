@@ -48,10 +48,17 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   createEffect(() => {
     if (!sidebarOpen()) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setSidebarOpen(false);
-        dashboardBtnRef?.focus();
-      }
+      if (e.key !== "Escape") return;
+      // Defer so Kobalte's DismissableLayer handlers (registered on document
+      // after the sidebar opens) can run first and call e.preventDefault() if
+      // they handle the Escape (e.g. closing a dropdown sub-menu). We only
+      // close the sidebar if no nested layer consumed the event.
+      queueMicrotask(() => {
+        if (!e.defaultPrevented) {
+          setSidebarOpen(false);
+          dashboardBtnRef?.focus();
+        }
+      });
     };
     document.addEventListener("keydown", handler);
     onCleanup(() => document.removeEventListener("keydown", handler));
