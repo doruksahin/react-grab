@@ -33,6 +33,7 @@ import { CreateTicketButton } from './create-ticket-button.jsx';
 import { SelectionStatusBadge } from './status-badge.js';
 import { ActiveGroupPicker } from '../../features/selection-groups/components/active-group-picker.jsx';
 import { IconLoader } from '../icons/icon-loader.jsx';
+import { IconChevron } from '../icons/icon-chevron.jsx';
 import { FlagIndicator } from '../flag-indicator.js';
 import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-color.js';
 import { Arrow } from './arrow.js';
@@ -579,14 +580,14 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     data-react-grab-ignore-events
                     data-react-grab-collapse-label
                     title="Collapse"
-                    class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full hover:bg-accent cursor-pointer transition-colors"
+                    class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer transition-colors"
                     onClick={(event) => {
                       event.stopImmediatePropagation();
                       props.onCollapse?.();
                     }}
                     onPointerDown={(event) => event.stopImmediatePropagation()}
                   >
-                    <div class="size-[6px] rounded-full bg-primary" />
+                    <IconChevron size={12} />
                   </button>
                 </Show>
               </div>
