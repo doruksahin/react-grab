@@ -2,6 +2,11 @@ import { type Component, createMemo, For, Show } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
+import {
+  applyFilters,
+  type FilterState,
+  isFilterActive,
+} from "../../features/sidebar/filter-state.js";
 import { CardComments } from "./card-comments.js";
 import { DevInsights } from "./dev-insights.js";
 import { IssueTypeIcon } from "./issue-type-icon.js";
@@ -12,6 +17,7 @@ import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
 interface SelectionListTabProps {
   commentItems: CommentItem[];
   groups: SelectionGroupWithJira[];
+  filter?: FilterState;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
   searchQuery?: string;
@@ -67,6 +73,16 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
         const group = groupMap().get(item.groupId);
         return group?.jiraFlagged === true;
       });
+    }
+
+    const filter = props.filter;
+    if (filter && isFilterActive(filter)) {
+      const allowedGroupIds = new Set(
+        applyFilters(props.groups, filter).map((g) => g.id),
+      );
+      items = items.filter(
+        (item) => item.groupId != null && allowedGroupIds.has(item.groupId),
+      );
     }
 
     return items;

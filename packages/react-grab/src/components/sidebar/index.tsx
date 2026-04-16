@@ -230,19 +230,19 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   </button>
                 </div>
 
-                <Show when={activeTab() === "groups"}>
-                  <FilterBar
-                    filter={filterState()}
-                    assignees={getDistinctAssignees(userFacingGroups())}
-                    reporters={getDistinctReporters(userFacingGroups())}
-                    labels={getDistinctLabels(userFacingGroups())}
-                    onFilterChange={setFilterState}
-                  />
-                  <FilterChips
-                    filter={filterState()}
-                    onFilterChange={setFilterState}
-                  />
+                <FilterBar
+                  filter={filterState()}
+                  assignees={getDistinctAssignees(userFacingGroups())}
+                  reporters={getDistinctReporters(userFacingGroups())}
+                  labels={getDistinctLabels(userFacingGroups())}
+                  onFilterChange={setFilterState}
+                />
+                <FilterChips
+                  filter={filterState()}
+                  onFilterChange={setFilterState}
+                />
 
+                <Show when={activeTab() === "groups"}>
                   <Show
                     when={
                       userFacingGroups().length > 0 ||
@@ -289,6 +289,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   <SelectionListTab
                     commentItems={props.commentItems ?? []}
                     groups={props.groups ?? []}
+                    filter={filterState()}
                     selectedIds={selectedIds()}
                     onToggleSelect={toggleSelect}
                     searchQuery={searchQuery()}
