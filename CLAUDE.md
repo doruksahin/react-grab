@@ -225,6 +225,30 @@ VITE_REACT_GRAB_SYNC_WORKSPACE=<name>-workspace
 
 Three terminals: `pnpm dev` (library watch), `pnpm sync:dev` (sync server on :8787), and `pnpm dev` in AdCreative-Frontend-V2. The symlink in AdCreative's `node_modules/react-grab` points to `../../react-grab/packages/react-grab` — Vite HMR picks up changes automatically.
 
+### Watch modes
+
+| Script | Emits | Rebuild time | Use when |
+|---|---|---|---|
+| `pnpm dev` | JS only (ESM+CJS+IIFE) | ~15–20s | Default. Fast iteration on implementation. |
+| `pnpm dev:full` | JS + DTS | ~30–40s | Iterating on public types/exports and you need the IDE to reflect them live. |
+
+`pnpm dev` passes `--no-dts --no-clean` to tsup. DTS comes from a prior `pnpm build` and is preserved across watch restarts via the tsup `clean` pattern (`"!**/*.d.ts", "!**/*.d.cts"`).
+
+### First-run sequence
+
+```bash
+pnpm build   # one-shot — writes fresh DTS + full dist
+pnpm dev     # watch — JS-only rebuilds
+```
+
+Without the initial `pnpm build`, ADC's TypeScript will fail to resolve `react-grab` types (runtime still works — Vite strips types).
+
+### Gotchas
+
+- **Never run stray `tsup` / `pnpm build` while `pnpm dev` is running in another terminal.** Two tsup processes racing on the same `dist/` will corrupt outputs and wedge the watcher.
+- **If ADC's Vite errors with `Failed to resolve entry for package "react-grab"`:** ADC started while tsup was mid-rebuild and cached the failure. Fix: `rm -rf AdCreative-Frontend-V2/node_modules/.vite` then restart ADC's Vite.
+- **If ADC's Vite errors with `Failed to resolve import "@solid-devtools/overlay"`:** you're on a version before the `fix(dev): avoid static resolution of optional solid-devtools import` commit. Pull latest `main`.
+
 ## E2E Testing
 
 **CRITICAL: Never run the full test suite locally.** 580+ tests take 4.5+ minutes. Always run targeted tests:
