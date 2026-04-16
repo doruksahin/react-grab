@@ -17,10 +17,11 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
 
   return (
     <div data-react-grab-comments-section data-react-grab-ignore-events>
+      <div class="border-t border-border/40 w-[calc(100%+16px)] -mx-2 mt-2" />
       <button
         data-react-grab-comments-collapse
         data-react-grab-ignore-events
-        class="flex items-center justify-between w-[calc(100%+16px)] -mx-2 mt-1 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent cursor-pointer"
+        class="flex items-center justify-between w-[calc(100%+16px)] -mx-2 px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent cursor-pointer"
         aria-expanded={isOpen()}
         onPointerDown={(e: PointerEvent) => e.stopPropagation()}
         onClick={(e: MouseEvent) => {

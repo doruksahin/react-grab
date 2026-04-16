@@ -14,6 +14,7 @@ import type {
 } from "../../features/jira-comments/types.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { SelectionCardBody } from "./selection-card-body.js";
+import { SelectionCheckbox } from "../ui/selection-checkbox.js";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];
@@ -113,53 +114,37 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
               }}
               style={{ position: "relative" }}
             >
-              <div class="flex gap-3 items-start">
-                {/* Multi-select checkbox */}
-                <div
-                  class="w-[14px] h-[14px] border rounded-[3px] mt-0.5 shrink-0 flex items-center justify-center cursor-pointer transition-all"
-                  classList={{
-                    "bg-purple-400 border-purple-400": isSelected(),
-                    "bg-foreground/[0.03] border-foreground/20": !isSelected(),
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    props.onToggleSelect?.(item.id);
-                  }}
-                >
-                  <Show when={isSelected()}>
-                    <span class="text-white text-[9px] font-bold">{"\u2713"}</span>
-                  </Show>
-                </div>
-
-                {/* Card content */}
-                <div class="flex-1 min-w-0" style={{ position: "relative" }}>
-              <SelectionCardBody
-                summary={summary()}
-                timestamp={item.timestamp}
-                itemId={item.id}
-                hasElementScreenshot={Boolean(item.screenshotElement)}
-                hasFullPageScreenshot={Boolean(item.screenshotFullPage)}
-                syncServerUrl={props.syncServerUrl}
-                syncWorkspace={props.syncWorkspace}
-                jiraTicketId={group()?.jiraTicketId}
-                jiraStatus={group()?.jiraStatus}
-                jiraStatusCategory={group()?.jiraStatusCategory}
-                jiraLabels={group()?.jiraLabels}
-                jiraDueDate={group()?.jiraDueDate}
-                jiraIssueType={group()?.jiraIssueType}
-                jiraPriority={group()?.jiraPriority}
-                jiraAssignee={group()?.jiraAssignee}
-                jiraAssigneeAvatar={group()?.jiraAssigneeAvatar}
-                jiraComments={group()?.jiraComments}
-                onSubmitComment={boundCommentSubmit()}
-                onSearchUsers={props.onSearchJiraUsers}
-                onRefreshStatus={refreshStatus()}
-                commentEditorToolbarVisible={props.commentEditorToolbarVisible}
-                onScreenshotClick={(src, label) => lightbox.open(src, label)}
-              />
-
-                </div>{/* end card content */}
-              </div>{/* end flex row */}
+              <div style={{ position: "relative" }}>
+                <SelectionCardBody
+                  leading={
+                    props.onToggleSelect
+                      ? <SelectionCheckbox checked={isSelected()} onToggle={() => props.onToggleSelect?.(item.id)} />
+                      : undefined
+                  }
+                  summary={summary()}
+                  timestamp={item.timestamp}
+                  itemId={item.id}
+                  hasElementScreenshot={Boolean(item.screenshotElement)}
+                  hasFullPageScreenshot={Boolean(item.screenshotFullPage)}
+                  syncServerUrl={props.syncServerUrl}
+                  syncWorkspace={props.syncWorkspace}
+                  jiraTicketId={group()?.jiraTicketId}
+                  jiraStatus={group()?.jiraStatus}
+                  jiraStatusCategory={group()?.jiraStatusCategory}
+                  jiraLabels={group()?.jiraLabels}
+                  jiraDueDate={group()?.jiraDueDate}
+                  jiraIssueType={group()?.jiraIssueType}
+                  jiraPriority={group()?.jiraPriority}
+                  jiraAssignee={group()?.jiraAssignee}
+                  jiraAssigneeAvatar={group()?.jiraAssigneeAvatar}
+                  jiraComments={group()?.jiraComments}
+                  onSubmitComment={boundCommentSubmit()}
+                  onSearchUsers={props.onSearchJiraUsers}
+                  onRefreshStatus={refreshStatus()}
+                  commentEditorToolbarVisible={props.commentEditorToolbarVisible}
+                  onScreenshotClick={(src, label) => lightbox.open(src, label)}
+                />
+              </div>
             </div>
           );
         }}
