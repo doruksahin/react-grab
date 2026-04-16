@@ -22,7 +22,7 @@ export const TabBar: Component<TabBarProps> = (props) => {
   return (
     <div
       data-react-grab-tab-bar
-      class="flex border-b border-border px-3 pt-2 pb-0"
+      class="flex border-b border-border px-2 py-1.5"
     >
       {tabs().map((tab, index) => {
         const isActive = () => props.activeTab === tab.id;
@@ -32,7 +32,7 @@ export const TabBar: Component<TabBarProps> = (props) => {
         return (
           <button
             type="button"
-            class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 font-semibold text-[11px] cursor-pointer border border-border transition-colors"
+            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 font-semibold text-[11px] cursor-pointer border border-border transition-colors"
             classList={{
               "rounded-l-lg border-r-0": isFirst,
               "rounded-r-lg": isLast,

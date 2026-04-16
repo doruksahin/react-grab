@@ -57,15 +57,10 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
             <svg
               width="10"
               height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              viewBox="0 0 16 16"
               class="text-black/50 shrink-0"
             >
-              <path d="m5 12 5 5L20 7" />
+              <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
             </svg>
           </Show>
           <span
@@ -97,15 +92,10 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
                   <svg
                     width="10"
                     height="10"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    viewBox="0 0 16 16"
                     class="text-black/50 shrink-0"
                   >
-                    <path d="m5 12 5 5L20 7" />
+                    <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
                   </svg>
                 </Show>
                 <span
@@ -125,7 +115,7 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
       <Show when={props.onAddGroup}>
         <div class="border-t border-[#D9D9D9] px-2 py-1.5">
           <div class="flex items-center gap-1.5">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black/25 shrink-0"><path d="M12 5v14m-7-7h14"/></svg>
+            <svg width="10" height="10" viewBox="0 0 16 16" class="text-black/25 shrink-0"><path fill="currentColor" fill-rule="evenodd" d="M7.25 8.75V15h1.5V8.75H15v-1.5H8.75V1h-1.5v6.25H1v1.5z" clip-rule="evenodd" /></svg>
             <input
               data-react-grab-ignore-events
               type="text"

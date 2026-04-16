@@ -10,18 +10,12 @@ export const IconChevron: Component<IconChevronProps> = (props) => {
 
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
       width={size()}
       height={size()}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      viewBox="0 0 16 16"
       class={props.class}
     >
-      <path d="m18 15-6-6-6 6" />
+      <path fill="currentColor" d="m14.53 9.97-6-6a.75.75 0 0 0-1.004-.052l-.056.052-6 6 1.06 1.06L8 5.56l5.47 5.47z" />
     </svg>
   );
 };

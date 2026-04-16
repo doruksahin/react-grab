@@ -10,16 +10,12 @@ export const IconEllipsis: Component<IconEllipsisProps> = (props) => {
 
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
       width={size()}
       height={size()}
-      viewBox="0 0 24 24"
-      fill="currentColor"
+      viewBox="0 0 16 16"
       class={props.class}
     >
-      <circle cx="5" cy="12" r="2" />
-      <circle cx="12" cy="12" r="2" />
-      <circle cx="19" cy="12" r="2" />
+      <path fill="currentColor" fill-rule="evenodd" d="M0 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0m6.5 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0M13 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0" clip-rule="evenodd" />
     </svg>
   );
 };
