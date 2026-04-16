@@ -1,28 +1,18 @@
 import type { SelectionGroupWithJira } from "./jira-types.js";
 import { getStatusLabel } from "./status-colors.js";
+import { type DueDatePreset, matchesDueDatePreset } from "./due-date/index.js";
 
-export type DueDatePreset =
-  | "overdue"
-  | "today"
-  | "this-week"
-  | "next-7"
-  | "none";
-
-export interface DueDatePresetSpec {
-  key: DueDatePreset;
-  label: string;
-  jql: string;
-}
-
-export const DUE_DATE_PRESETS: readonly DueDatePresetSpec[] = [
-  { key: "overdue",   label: "Overdue",     jql: "duedate < now()" },
-  { key: "today",     label: "Due today",   jql: "duedate = now()" },
-  { key: "this-week", label: "This week",   jql: "duedate >= startOfWeek() AND duedate <= endOfWeek()" },
-  { key: "next-7",    label: "Next 7 days", jql: "duedate >= now() AND duedate <= 7d" },
-  { key: "none",      label: "No due date", jql: "duedate is EMPTY" },
-] as const;
-
-export const DUE_DATE_PRESET_LABEL_ALL = "All due dates";
+// Re-export the due-date types/values consumers reach via filter-state today,
+// so the existing import paths keep working without churn.
+export type { DueDatePreset } from "./due-date/index.js";
+export {
+  DUE_DATE_PRESET_ORDER,
+  DUE_DATE_PRESET_JQL,
+  DUE_DATE_PRESET_LABEL,
+  DUE_DATE_PRESET_LABEL_ALL,
+  dueDatePresetLabel,
+  matchesDueDatePreset,
+} from "./due-date/index.js";
 
 export interface FilterState {
   statuses: Set<string>;               // empty = all
@@ -39,63 +29,6 @@ export const EMPTY_FILTER: FilterState = {
   label: null,
   dueDatePreset: null,
 };
-
-const startOfToday = (): Date => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-};
-
-const addDays = (d: Date, days: number): Date => {
-  const next = new Date(d);
-  next.setDate(next.getDate() + days);
-  return next;
-};
-
-const startOfWeek = (from: Date): Date => {
-  // Monday-based week: matches Atlassian Cloud's startOfWeek() for the ATT org.
-  const day = from.getDay();
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  return addDays(from, mondayOffset);
-};
-
-const endOfWeek = (from: Date): Date => addDays(startOfWeek(from), 6);
-
-const parseDueDate = (raw: string | null | undefined): Date | null => {
-  if (!raw) return null;
-  const d = new Date(raw);
-  if (Number.isNaN(d.getTime())) return null;
-  d.setHours(0, 0, 0, 0);
-  return d;
-};
-
-type Matcher = (group: SelectionGroupWithJira, today: Date) => boolean;
-
-const MATCHERS: Record<DueDatePreset, Matcher> = {
-  overdue: (g, today) => {
-    const d = parseDueDate(g.jiraDueDate);
-    return d !== null && d < today;
-  },
-  today: (g, today) => {
-    const d = parseDueDate(g.jiraDueDate);
-    return d !== null && d.getTime() === today.getTime();
-  },
-  "this-week": (g, today) => {
-    const d = parseDueDate(g.jiraDueDate);
-    return d !== null && d >= startOfWeek(today) && d <= endOfWeek(today);
-  },
-  "next-7": (g, today) => {
-    const d = parseDueDate(g.jiraDueDate);
-    return d !== null && d >= today && d <= addDays(today, 7);
-  },
-  none: (g) => parseDueDate(g.jiraDueDate) === null,
-};
-
-export const matchesDueDatePreset = (
-  group: SelectionGroupWithJira,
-  preset: DueDatePreset,
-  today: Date = startOfToday(),
-): boolean => MATCHERS[preset](group, today);
 
 export function isFilterActive(filter: FilterState): boolean {
   return (

@@ -1,10 +1,11 @@
 import { type Component, Show } from "solid-js";
+import type { FilterState } from "../../features/sidebar/filter-state.js";
 import {
-  type FilterState,
   type DueDatePreset,
-  DUE_DATE_PRESETS,
+  DUE_DATE_PRESET_ORDER,
   DUE_DATE_PRESET_LABEL_ALL,
-} from "../../features/sidebar/filter-state.js";
+  dueDatePresetLabel,
+} from "../../features/sidebar/due-date/index.js";
 import { ALL_ATT_STATUSES } from "../../features/sidebar/status-colors.js";
 import { Button } from "../ui/button.js";
 import {
@@ -22,11 +23,6 @@ interface FilterBarProps {
   labels: string[];
   onFilterChange: (filter: FilterState) => void;
 }
-
-const dueDatePresetLabel = (key: string): string => {
-  if (key === "") return DUE_DATE_PRESET_LABEL_ALL;
-  return DUE_DATE_PRESETS.find((p) => p.key === key)?.label ?? key;
-};
 
 export const FilterBar: Component<FilterBarProps> = (props) => {
   const handleStatusChange = (value: string | null) => {
@@ -146,7 +142,7 @@ export const FilterBar: Component<FilterBarProps> = (props) => {
         value={props.filter.dueDatePreset ?? ""}
         onChange={handleDueDateChange}
         placeholder={DUE_DATE_PRESET_LABEL_ALL}
-        options={["", ...DUE_DATE_PRESETS.map((p) => p.key)]}
+        options={["", ...DUE_DATE_PRESET_ORDER]}
         itemComponent={(itemProps) => (
           <SelectItem item={itemProps.item}>
             {dueDatePresetLabel(itemProps.item.rawValue)}
