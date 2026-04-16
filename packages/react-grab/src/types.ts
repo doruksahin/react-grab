@@ -2,6 +2,12 @@ import type { ServerCommentItem } from "./generated/types.js";
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
 import type { SelectionGroup } from "./features/selection-groups/types.js";
 import type { SyncConfig, SyncStatus } from "./features/sync/types.js";
+import type {
+  RefreshGroupStatusFn,
+  SearchJiraUsersFn,
+  SubmitCommentFn,
+  SubmitGroupCommentFn,
+} from "./features/jira-comments/types.js";
 
 export interface Position {
   x: number;
@@ -375,8 +381,15 @@ export interface Options {
   freezeReactUpdates?: boolean;
   sync?: SyncConfig;
   screenshot?: ScreenshotConfig;
-  /** When true, persistent labels start collapsed as a dot. Click to expand. */
+  /** When true, persistent labels expose the collapse affordance (dot + chevron). */
   collapsibleLabels?: boolean;
+  /**
+   * Controls the initial state of persistent labels when `collapsibleLabels` is on.
+   * - `true` (default when the feature is enabled): labels start collapsed as a dot.
+   * - `false`: labels start expanded; users can collapse them via the chevron.
+   * Ignored when `collapsibleLabels` is off.
+   */
+  labelsStartCollapsed?: boolean;
 }
 
 export interface SettableOptions extends Options {
@@ -564,6 +577,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   labelInstances?: SelectionLabelInstance[];
   /** When true, persistent label instances start collapsed */
   collapsibleLabelsDefault?: boolean;
+  labelsStartCollapsedDefault?: boolean;
   dragVisible?: boolean;
   dragBounds?: OverlayBounds;
   grabbedBoxes?: Array<{
@@ -660,11 +674,11 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   looseTicketDialog?: { group: SelectionGroup; items: CommentItem[] } | null;
   onLooseTicketDialogClose?: () => void;
   /** Submit a JIRA comment for a specific group */
-  onSubmitJiraComment?: (groupId: string, markdown: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) => Promise<{ id: string; created: string }>;
+  onSubmitJiraComment?: SubmitGroupCommentFn;
   /** Search JIRA users for @mention autocomplete */
-  onSearchJiraUsers?: (query: string) => Promise<Array<{ accountId: string; displayName: string; avatarUrl: string | null }>>;
+  onSearchJiraUsers?: SearchJiraUsersFn;
   /** Trigger JIRA status refresh for a specific group */
-  onRefreshJiraStatus?: (groupId: string) => void;
+  onRefreshJiraStatus?: RefreshGroupStatusFn;
 }
 
 export interface GrabbedBox {
@@ -798,9 +812,9 @@ export interface SelectionLabelProps
   /** Collapse the label to a minimal dot indicator */
   onCollapse?: () => void;
   /** Submit a JIRA comment for the current group's ticket */
-  onSubmitJiraComment?: (markdown: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) => Promise<{ id: string; created: string }>;
+  onSubmitJiraComment?: SubmitCommentFn;
   /** Search JIRA users for @mention autocomplete */
-  onSearchJiraUsers?: (query: string) => Promise<Array<{ accountId: string; displayName: string; avatarUrl: string | null }>>;
+  onSearchJiraUsers?: SearchJiraUsersFn;
   /** Trigger a JIRA status refresh (after posting a comment) */
   onRefreshJiraStatus?: () => void;
 }

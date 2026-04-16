@@ -209,7 +209,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         {(instance) => {
           const collapsible = useCollapsibleLabel({
             instanceId: instance().id,
-            defaultCollapsed: props.collapsibleLabelsDefault,
+            defaultCollapsed: props.labelsStartCollapsedDefault,
           });
 
           return (
@@ -219,6 +219,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
               <CollapsedDot
                 selectionBounds={instance().selectionBounds}
                 onExpand={collapsible.expand}
+                inputValue={instance().inputValue}
               />
             }
           >
@@ -292,20 +293,14 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             }
             onSubmitJiraComment={
               instance().groupId && props.onSubmitJiraComment
-                ? async (md: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) => {
-                    const gid = instance().groupId;
-                    if (!gid) return { id: "", created: "" };
-                    return props.onSubmitJiraComment!(gid, md, mentions, parentId);
-                  }
+                ? (md, mentions, parentId) =>
+                    props.onSubmitJiraComment!(instance().groupId!, md, mentions, parentId)
                 : undefined
             }
             onSearchJiraUsers={props.onSearchJiraUsers}
             onRefreshJiraStatus={
               instance().groupId && props.onRefreshJiraStatus
-                ? () => {
-                    const gid = instance().groupId;
-                    if (gid) props.onRefreshJiraStatus!(gid);
-                  }
+                ? () => props.onRefreshJiraStatus!(instance().groupId!)
                 : undefined
             }
             onCollapse={
@@ -435,6 +430,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onRemoveItem={props.onRemoveItem}
           looseTicketDialog={props.looseTicketDialog}
           onLooseTicketDialogClose={props.onLooseTicketDialogClose}
+          onSubmitJiraComment={props.onSubmitJiraComment}
+          onSearchJiraUsers={props.onSearchJiraUsers}
+          onRefreshJiraStatus={props.onRefreshJiraStatus}
           onClose={() => {
             setSidebarOpen(false);
             setActiveDetailGroupId(null);

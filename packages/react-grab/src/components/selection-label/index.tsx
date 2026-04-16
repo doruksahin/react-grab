@@ -407,12 +407,13 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         data-react-grab-ignore-events
         data-react-grab-selection-label
         class={cn(
-          'fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out'
+          'fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out',
+          props.onCollapse && 'animate-in fade-in-0 zoom-in-95 duration-200 ease-out origin-top'
         )}
         style={{
           top: `${positionComputation().position.top}px`,
           left: `${positionComputation().position.left}px`,
-          transform: `translateX(calc(-50% + ${positionComputation().position.edgeOffsetX}px))`,
+          translate: `calc(-50% + ${positionComputation().position.edgeOffsetX}px) 0`,
           'z-index': 'var(--z-overlay)',
           'pointer-events': shouldEnablePointerEvents() ? 'auto' : 'none',
           opacity: props.status === 'fading' || isInternalFading() ? 0 : 1,
