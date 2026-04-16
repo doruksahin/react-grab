@@ -144,14 +144,9 @@ export const MenuRadioItem: Component<
           <svg
             width="12"
             height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            viewBox="0 0 16 16"
           >
-            <polyline points="20 6 9 17 4 12" />
+            <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
           </svg>
         </DropdownMenu.ItemIndicator>
       </span>

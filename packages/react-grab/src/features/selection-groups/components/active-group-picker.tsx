@@ -128,16 +128,11 @@ const ChevronDownIcon: Component<{ rotated: boolean }> = (props) => (
   <svg
     width="8"
     height="8"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
+    viewBox="0 0 16 16"
     class="text-muted-foreground transition-transform duration-100"
     style={{ transform: props.rotated ? "rotate(180deg)" : "" }}
   >
-    <path d="m6 9 6 6 6-6" />
+    <path fill="currentColor" d="m14.53 6.03-6 6a.75.75 0 0 1-1.004.052l-.056-.052-6-6 1.06-1.06L8 10.44l5.47-5.47z" />
   </svg>
 );
 
@@ -145,16 +140,10 @@ const FolderIcon: Component = () => (
   <svg
     width="9"
     height="9"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
+    viewBox="0 0 16 16"
     class="text-muted-foreground shrink-0"
   >
-    <rect x="2" y="7" width="20" height="14" rx="2" />
-    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    <path fill="currentColor" fill-rule="evenodd" d="M3 2.5a.5.5 0 0 0-.5.5v3h11V4.75a.5.5 0 0 0-.5-.5H7.69L5.94 2.5zm10.5 5h-11V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5zM1 3a2 2 0 0 1 2-2h3.56l1.75 1.75H13a2 2 0 0 1 2 2V13a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z" clip-rule="evenodd" />
   </svg>
 );
 

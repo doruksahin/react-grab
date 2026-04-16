@@ -5,22 +5,14 @@ interface IconFlagProps {
   class?: string;
 }
 
-/**
- * Filled flag icon — exact JIRA "flagged/impediment" indicator.
- * SVG path from Atlassian Design System (@atlaskit/icon).
- *
- * @see decree/adr/0009-flag-data-source-and-blocked-visual-strategy.md
- */
 export const IconFlag: Component<IconFlagProps> = (props) => {
   const size = () => props.size ?? 16;
 
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
       width={size()}
       height={size()}
-      viewBox="-4 -4 24 24"
-      fill="none"
+      viewBox="0 0 16 16"
       class={props.class}
     >
       <path

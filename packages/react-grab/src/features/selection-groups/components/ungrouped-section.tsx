@@ -30,11 +30,10 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
       >
         <div class="flex items-center gap-1.5 min-w-0 flex-1">
           <svg
-            width="10" height="10" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            width="10" height="10" viewBox="0 0 16 16"
             class={cn("text-foreground/30 transition-transform duration-150 shrink-0", !isOpen() && "-rotate-90")}
           >
-            <path d="m6 9 6 6 6-6" />
+            <path fill="currentColor" d="m14.53 6.03-6 6a.75.75 0 0 1-1.004.052l-.056-.052-6-6 1.06-1.06L8 10.44l5.47-5.47z" />
           </svg>
           <span class="text-[12px] font-semibold text-foreground/70 truncate">
             Ungrouped

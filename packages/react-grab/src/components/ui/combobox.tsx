@@ -64,19 +64,11 @@ export const ComboboxTrigger = <T extends ValidComponent = 'button'>(
         {local.children}
         <ComboboxPrimitive.Icon class="flex h-3.5 w-3.5 items-center justify-center">
           <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
+            viewBox="0 0 16 16"
             class="h-4 w-4 opacity-50"
           >
-            <path
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="m8 9l4-4l4 4m0 6l-4 4l-4-4"
-            />
-            <title>Arrow</title>
+            <path fill="currentColor" d="m14.53 9.97-6-6a.75.75 0 0 0-1.004-.052l-.056.052-6 6 1.06 1.06L8 5.56l5.47 5.47z" />
+            <path fill="currentColor" d="m14.53 6.03-6 6a.75.75 0 0 1-1.004.052l-.056-.052-6-6 1.06-1.06L8 10.44l5.47-5.47z" />
           </svg>
         </ComboboxPrimitive.Icon>
       </ComboboxPrimitive.Trigger>
@@ -133,19 +125,10 @@ export const ComboboxItem = <T extends ValidComponent = 'li'>(
     >
       <ComboboxPrimitive.ItemIndicator class="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
         <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
+          viewBox="0 0 16 16"
           class="h-4 w-4"
         >
-          <path
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="m5 12l5 5L20 7"
-          />
-          <title>Checked</title>
+          <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
         </svg>
       </ComboboxPrimitive.ItemIndicator>
       <ComboboxPrimitive.ItemLabel>

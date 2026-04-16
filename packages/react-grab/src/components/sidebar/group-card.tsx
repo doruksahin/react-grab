@@ -41,16 +41,11 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
         <div class="flex items-center gap-1.5 min-w-0">
           {/* Chevron */}
           <svg
-            viewBox="0 0 10 10"
+            viewBox="0 0 16 16"
             class="text-foreground/30 transition-transform duration-150 shrink-0 w-2.5 h-2.5"
             classList={{ "-rotate-90": !isExpanded() }}
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
           >
-            <path d="m2 3.5 3 3 3-3" />
+            <path fill="currentColor" d="m14.53 6.03-6 6a.75.75 0 0 1-1.004.052l-.056-.052-6-6 1.06-1.06L8 10.44l5.47-5.47z" />
           </svg>
           <span class="font-semibold text-[13px] text-foreground truncate">{props.entry.group.name}</span>
         </div>
@@ -70,8 +65,8 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
             onClick={handleDetailOpen}
             title="Open detail view"
           >
-            <svg viewBox="0 0 10 10" class="w-2.5 h-2.5 text-foreground/40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m3.5 2 3 3-3 3" />
+            <svg viewBox="0 0 16 16" class="w-2.5 h-2.5 text-foreground/40">
+              <path fill="currentColor" d="m6.03 1.47 6 6a.75.75 0 0 1 .052 1.004l-.052.056-6 6-1.06-1.06L10.44 8 4.97 2.53z" />
             </svg>
           </button>
         </div>

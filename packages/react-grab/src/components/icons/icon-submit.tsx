@@ -10,20 +10,12 @@ export const IconSubmit: Component<IconSubmitProps> = (props) => {
 
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
       width={size()}
       height={size()}
-      viewBox="0 0 12 12"
-      fill="none"
+      viewBox="0 0 16 16"
       class={props.class}
     >
-      <path
-        d="M6 1L6 11M6 1L2 5M6 1L10 5"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
+      <path fill="currentColor" fill-rule="evenodd" d="M14.78 1.22a.75.75 0 0 1 .173.79l-5 13.5a.75.75 0 0 1-1.361.1l-2.895-5.307L.391 7.408A.75.75 0 0 1 .49 6.047l13.5-5a.75.75 0 0 1 .79.173M7.177 9.884l1.942 3.56 3.237-8.74zm4.118-6.24L2.556 6.881l3.56 1.942z" clip-rule="evenodd" />
     </svg>
   );
 };

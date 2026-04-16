@@ -37,8 +37,8 @@ export const CommentItem: Component<{
               title="Reply"
               onMouseDown={(e) => { e.preventDefault(); props.onReply?.(); }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 17H4v-5" /><path d="M4 17l7-7 4 4 5-5" />
+              <svg width="14" height="14" viewBox="0 0 16 16">
+                <path fill="currentColor" fill-rule="evenodd" d="m1.22 4.72 3.5-3.5 1.06 1.06L3.56 4.5h6.69a4.75 4.75 0 1 1 0 9.5H8v-1.5h2.25a3.25 3.25 0 0 0 0-6.5H3.56l2.22 2.22-1.06 1.06-3.5-3.5a.75.75 0 0 1 0-1.06" clip-rule="evenodd" />
               </svg>
             </button>
           </div>

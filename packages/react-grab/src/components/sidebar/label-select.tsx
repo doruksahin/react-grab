@@ -69,8 +69,8 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
         >
           <Combobox.ItemLabel class="text-[12px]">{itemProps.item.rawValue}</Combobox.ItemLabel>
           <Show when={selected().includes(itemProps.item.rawValue)}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m5 12l5 5L20 7" />
+            <svg width="12" height="12" viewBox="0 0 16 16">
+              <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
             </svg>
           </Show>
         </Combobox.Item>
@@ -116,8 +116,8 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
               style={{ "pointer-events": "auto" }}
             >
               <Combobox.Icon class="flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m6 9 6 6 6-6" />
+                <svg width="12" height="12" viewBox="0 0 16 16">
+                  <path fill="currentColor" d="m14.53 6.03-6 6a.75.75 0 0 1-1.004.052l-.056-.052-6-6 1.06-1.06L8 10.44l5.47-5.47z" />
                 </svg>
               </Combobox.Icon>
             </Combobox.Trigger>

@@ -36,6 +36,7 @@ import { SelectionListTab } from "./selection-list-tab.js";
 import { BulkActionBar } from "./bulk-action-bar.js";
 import { ImageLightbox } from "../ui/image-lightbox.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
+import { IconFlag } from "../icons/icon-flag.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -244,15 +245,15 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     onFilterChange={setFilterState}
                   />
                   <button
-                    class="w-[34px] h-[34px] flex items-center justify-center border rounded-lg cursor-pointer transition-all shrink-0 text-[13px]"
+                    class="inline-flex items-center justify-center rounded-md border h-7 w-7 shrink-0 cursor-pointer transition-all"
                     classList={{
                       "border-red-400 bg-red-400/[0.08]": flaggedOnly(),
-                      "border-border bg-foreground/[0.03] hover:border-foreground/20": !flaggedOnly(),
+                      "border-border bg-muted hover:border-foreground/20": !flaggedOnly(),
                     }}
                     onClick={() => setFlaggedOnly((prev) => !prev)}
                     title="Flagged only"
                   >
-                    {"\uD83D\uDEA9"}
+                    <IconFlag size={14} class={flaggedOnly() ? "text-red-400" : "text-muted-foreground"} />
                   </button>
                 </div>
                 <FilterChips

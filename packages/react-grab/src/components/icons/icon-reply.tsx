@@ -10,18 +10,12 @@ export const IconReply: Component<IconReplyProps> = (props) => {
 
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
       width={size()}
       height={size()}
-      viewBox="0 0 12 12"
-      fill="none"
+      viewBox="0 0 16 16"
       class={props.class}
-      style={{ transform: "rotate(180deg)" }}
     >
-      <path
-        d="M5 3V1L1 4.5L5 8V6C8 6 10 7 11 10C11 7 9 4 5 3Z"
-        fill="currentColor"
-      />
+      <path fill="currentColor" fill-rule="evenodd" d="m1.22 4.72 3.5-3.5 1.06 1.06L3.56 4.5h6.69a4.75 4.75 0 1 1 0 9.5H8v-1.5h2.25a3.25 3.25 0 0 0 0-6.5H3.56l2.22 2.22-1.06 1.06-3.5-3.5a.75.75 0 0 1 0-1.06" clip-rule="evenodd" />
     </svg>
   );
 };
