@@ -10,12 +10,14 @@ export const ColorPicker: Component<{
   activeColor?: string | null;
 }> = (props) => (
   <div
+    data-react-grab-color-picker
     class="grid gap-1 p-2"
     style={{ "grid-template-columns": "repeat(5, 1fr)", "min-width": "140px" }}
     data-react-grab-ignore-events
   >
     <button
       type="button"
+      data-react-grab-color-reset
       class="w-6 h-6 rounded border border-dashed border-muted-foreground flex items-center justify-center text-[10px] text-muted-foreground hover:border-foreground"
       title="Reset color"
       onMouseDown={(e) => {
@@ -29,6 +31,7 @@ export const ColorPicker: Component<{
       {(color) => (
         <button
           type="button"
+          data-react-grab-color={color}
           class={[
             "w-6 h-6 rounded border-2 transition-all hover:scale-110",
             props.activeColor === color ? "border-foreground" : "border-transparent",
