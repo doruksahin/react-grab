@@ -8,9 +8,24 @@ React Grab is a developer-tool overlay library that lets you select elements fro
 
 This is the **AdCreative fork** — consumed by `AdCreative-Frontend-V2` via a local pnpm symlink. AdCreative is an enterprise product — code quality must be production-grade. No shortcuts, no half-finished implementations, no "good enough" workarounds. Every change should be clean, typed, tested, and maintainable.
 
+## CRITICAL: Read `architecture.yml` first
+
+**Every session must load `architecture.yml` at the start — before scanning code, debugging, or proposing changes.** It is the canonical index of this codebase and the cheapest way to understand the cross-package picture that no single file exposes.
+
+| Section | What's in it | Use it when |
+|---|---|---|
+| `packages.*` | Entry points for every package (core, sync-server, dashboard, cli, mcp, web-extension, gym, etc.) | Starting exploration of any package |
+| `features.*` | 17 cross-package features with file lists, statuses, linked PRDs/SPECs/ADRs | Finding every file related to a feature in one lookup (no grepping) |
+| `data_flows.*` | Reactive data flow — composition roots, stores, sources, consumers, triggers (e.g., 30s JIRA polling) | Tracing how data moves end-to-end; debugging reactive chains |
+| `data_attrs.*` | Catalog of 121+ `data-react-grab-*` DOM identifiers with scope ownership + generated inventory | Picking the right attr for a test selector or overlay event boundary |
+| `api_contract` | Zod → OpenAPI → Orval codegen chain | Before touching schemas or regenerating the fetch client |
+| `decree.*` | PRD / SPEC / ADR registry with file paths + statuses | Finding the spec or ADR behind any decision |
+
+Keep it in sync: `pnpm arch:codegen` regenerates derived sections; `pnpm arch:lint` validates it (enforced via pre-commit hook + CI).
+
 ## CRITICAL: Code navigation
 
-**MUST use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) for all code scanning and navigation.** Do not read entire files with `Read` or search with `Grep` when Serena can answer the question symbolically. Serena is token-efficient — it returns only what you need. Use `architecture.yml` to find entry points, then drill into symbols with Serena.
+Once `architecture.yml` has given you the file path, **MUST use Serena MCP tools (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) for all code scanning and navigation.** Do not read entire files with `Read` or search with `Grep` when Serena can answer the question symbolically. Serena is token-efficient — it returns only what you need.
 
 ## Commands
 
@@ -91,9 +106,9 @@ pnpm --filter @react-grab/gym dev:mcp
 
 ### Navigation
 
-See `architecture.yml` for the full architecture index — package entry points, cross-package feature map (17 features with file lists), and decree document (PRD/SPEC/ADR) registry. Use it with Serena MCP for quick navigation across package boundaries.
+See the [Read `architecture.yml` first](#critical-read-architectureyml-first) section above — that's the map. Below is how codegen keeps it in sync.
 
-`pnpm arch:codegen` keeps `architecture.yml` in sync with the codebase. It uses madge (import tree tracing) and ts-morph (AST analysis) to generate machine-derivable fields while preserving human-authored content:
+`pnpm arch:codegen` uses madge (import tree tracing) and ts-morph (AST analysis) to generate machine-derivable fields while preserving human-authored content:
 
 | Field | Codegen behavior |
 |---|---|
