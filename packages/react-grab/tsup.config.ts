@@ -37,7 +37,7 @@ const DEFAULT_OPTIONS: Options = {
   banner: {
     js: banner,
   },
-  clean: ["**/*", "!styles.css"],
+  clean: ["**/*", "!styles.css", "!**/*.d.ts", "!**/*.d.cts"],
   dts: true,
   entry: [],
   env: {
