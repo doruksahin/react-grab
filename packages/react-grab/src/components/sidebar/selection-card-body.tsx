@@ -295,7 +295,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
         </div>
       }
       comments={
-        <Show when={props.onSubmitComment}>
+        <Show when={hasTicket() && props.onSubmitComment}>
           {(submitComment) => (
             <CommentsSection
               comments={props.jiraComments ?? []}
