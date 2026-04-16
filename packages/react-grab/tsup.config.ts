@@ -50,7 +50,22 @@ const DEFAULT_OPTIONS: Options = {
     ".css": "text",
   },
   minify: process.env.NODE_ENV === "production",
-  noExternal: ["clsx", "solid-js", "bippy"],
+  // Direct solid-js-consuming deps must be bundled alongside the inlined
+  // solid-js; otherwise they import solid-js from the consumer's node_modules
+  // and end up with a second solid-js instance that cannot track our signals.
+  // Transitive deps (@corvu/utils, solid-presence, @solid-primitives/*) are
+  // bundled automatically because only direct `dependencies` are external by
+  // default in tsup.
+  //
+  // Rule: when adding a new direct `dependencies` entry that imports solid-js,
+  // add it here. See ADR-0017.
+  noExternal: [
+    "clsx",
+    "solid-js",
+    "bippy",
+    /^@kobalte\//,
+    "solid-focus-trap",
+  ],
   onSuccess: process.env.COPY ? "pbcopy < ./dist/index.global.js" : undefined,
   outDir: "./dist",
   sourcemap: false,

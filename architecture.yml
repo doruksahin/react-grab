@@ -939,3 +939,7 @@ decree:
       title: Tiptap WYSIWYG Editor for JIRA Comment Authoring
       file: decree/adr/0010-tiptap-wysiwyg-editor-for-jira-comment-authoring.md
       status: accepted
+    ADR-0017:
+      title: Bundle all solid-js-consuming deps into react-grab's dist
+      file: decree/adr/0017-bundle-solid-js-deps-to-prevent-dual-instance.md
+      status: accepted
