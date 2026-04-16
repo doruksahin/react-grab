@@ -25,6 +25,8 @@ const MentionList: Component<{
   <For each={props.items()}>
     {(user, i) => (
       <div
+        data-react-grab-mention-option
+        data-react-grab-mention-id={user.accountId}
         class={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors ${
           i() === props.selected()
             ? "bg-accent text-accent-foreground"
