@@ -1,6 +1,7 @@
 // packages/react-grab/src/components/sidebar/screenshot-pair.tsx
 import { type Component, Show } from "solid-js";
 import { useLazyVisible } from "../../features/sidebar";
+import { useImageLightbox } from "../../features/image-lightbox/index.js";
 
 interface ScreenshotPairProps {
   /** Constructed screenshot URL (not an R2 key) — undefined if sync is disabled or key absent */
@@ -18,6 +19,7 @@ const ScreenshotSlot: Component<{
 }> = (props) => {
   let containerRef: HTMLDivElement | undefined;
   const visible = useLazyVisible(() => containerRef, props.scrollRoot);
+  const lightbox = useImageLightbox();
 
   return (
     <div class="flex-1 min-w-0" ref={containerRef}>
@@ -35,10 +37,14 @@ const ScreenshotSlot: Component<{
           }
         >
           <img
+            data-react-grab-screenshot-thumb
             src={props.src}
             alt={`${props.label} screenshot`}
-            class="w-full rounded border border-border object-contain max-h-32"
+            class="w-full rounded border border-border object-contain max-h-32 cursor-zoom-in hover:border-primary/60 transition-colors"
             loading="lazy"
+            onClick={() => {
+              if (props.src) lightbox.open(props.src, props.label);
+            }}
           />
         </Show>
       </Show>

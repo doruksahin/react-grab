@@ -29,6 +29,8 @@ import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 import { TabBar } from "./tab-bar.js";
 import { SelectionListTab } from "./selection-list-tab.js";
 import { BulkActionBar } from "./bulk-action-bar.js";
+import { ImageLightbox } from "../ui/image-lightbox.js";
+import { useImageLightbox } from "../../features/image-lightbox/index.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -55,6 +57,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   let detailViewRef: HTMLDivElement | undefined;
   let containerRef: HTMLDivElement | undefined;
   let listScrollRef: HTMLDivElement | undefined;
+
+  const lightbox = useImageLightbox();
 
   // Trap focus inside the sidebar for the duration it is mounted.
   // solid-focus-trap restores focus to the previously focused element on cleanup.
@@ -342,6 +346,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             onClearSelection={() => setSelectedIds(new Set())}
           />
         </Show>
+
+        <ImageLightbox
+          open={lightbox.state().open}
+          src={lightbox.state().src}
+          caption={lightbox.state().caption}
+          onClose={lightbox.close}
+        />
 
     </div>
   );

@@ -15,3 +15,5 @@
 | ADR-0010 | ADR-0010 TipTap WYSIWYG editor for JIRA comment authoring | accepted | 2026-04-15 |  |
 | ADR-0011 | ADR-0011 Sync store populate pattern for test decoupling | accepted | 2026-04-15 |  |
 | ADR-0012 | ADR-0012 Architecture YAML codegen via madge and ts-morph | accepted | 2026-04-15 |  |
+| ADR-0013 | ADR-0013 Collapsible label composition pattern — feature hook + pure UI + renderer shell | accepted | 2026-04-16 |  |
+| ADR-0014 | ADR-0014 Reusable Image Lightbox Composition — UI primitive + singleton hook + Portal-to-shadow | accepted | 2026-04-16 |  |
