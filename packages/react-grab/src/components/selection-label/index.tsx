@@ -578,7 +578,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   <button
                     data-react-grab-ignore-events
                     data-react-grab-collapse-label
-                    class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full hover:bg-accent cursor-pointer transition-colors ml-auto"
+                    title="Collapse"
+                    class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full hover:bg-accent cursor-pointer transition-colors"
                     onClick={(event) => {
                       event.stopImmediatePropagation();
                       props.onCollapse?.();
