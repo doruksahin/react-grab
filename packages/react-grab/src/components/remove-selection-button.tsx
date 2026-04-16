@@ -44,7 +44,7 @@ export const RemoveSelectionButton: Component<RemoveSelectionButtonProps> = (
   return (
     <button
       {...(isOverlay() ? { "data-react-grab-ignore-events": "" } : {})}
-      data-react-grab-remove
+      data-react-grab-selection-remove
       type="button"
       aria-label="Remove selection"
       title="Remove selection"

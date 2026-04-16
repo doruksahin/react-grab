@@ -26,7 +26,7 @@ const MoreOptionsButton: Component<MoreOptionsButtonProps> = (props) => {
   return (
     <button
       data-react-grab-ignore-events
-      data-react-grab-more-options
+      data-react-grab-completion-more-options
       class="flex items-center justify-center size-[18px] rounded-sm cursor-pointer bg-transparent hover:bg-accent text-muted-foreground hover:text-popover-foreground border-none outline-none p-0 shrink-0 press-scale"
       // HACK: Native events with stopImmediatePropagation needed to block document-level handlers in the overlay system
       on:pointerdown={(event) => {
@@ -180,7 +180,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
             </Show>
             <Show when={props.supportsUndo && props.onUndo}>
               <button
-                data-react-grab-undo
+                data-react-grab-completion-undo
                 class="contain-layout shrink-0 flex items-center justify-center px-[3px] py-px rounded-sm bg-destructive/10 cursor-pointer transition-all hover:bg-destructive/20 press-scale h-[17px]"
                 onClick={() => props.onUndo?.()}
               >
@@ -191,7 +191,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
             </Show>
             <Show when={props.onDismiss}>
               <button
-                data-react-grab-dismiss
+                data-react-grab-completion-dismiss
                 class="contain-layout shrink-0 flex items-center justify-center gap-1 px-[3px] py-px rounded-sm bg-popover [border-width:0.5px] border-solid border-border cursor-pointer transition-all hover:bg-accent press-scale h-[17px]"
                 onClick={handleAccept}
                 disabled={didCopy()}

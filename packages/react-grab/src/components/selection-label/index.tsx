@@ -512,7 +512,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     <Show when={props.onAbort}>
                       <button
                         data-react-grab-ignore-events
-                        data-react-grab-abort
+                        data-react-grab-generation-abort
                         class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale"
                         onPointerDown={(event) => event.stopPropagation()}
                         onClick={(event) => {
@@ -770,7 +770,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                       }
                     }}
                     data-react-grab-ignore-events
-                    data-react-grab-input
+                    data-react-grab-generation-input
                     class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
                     style={{
                       'field-sizing': 'content',
@@ -787,7 +787,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   />
                   <Show when={props.onSubmit}>
                     <button
-                      data-react-grab-submit
+                      data-react-grab-generation-submit
                       class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale"
                       onClick={() => props.onSubmit?.()}
                     >
