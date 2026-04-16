@@ -1,7 +1,10 @@
 ---
-status: draft
-date: 2026-04-16
-references: [PRD-015, ADR-0015, SPEC-006]
+date: '2026-04-16'
+references:
+- PRD-015
+- ADR-0015
+- SPEC-006
+status: implemented
 ---
 
 # SPEC-018 Due Date Filter in Sidebar
@@ -424,7 +427,7 @@ This section was not in the original SPEC. The `filter-chips.tsx` surface render
 ### Docs
 
 - [x] `architecture.yml` — no change needed. SPEC-018 extends the existing sidebar-filter feature rather than adding a new one. `pnpm arch:codegen` surfaces an unrelated `image-lightbox` entry from a prior merge; that change belongs on its own commit.
-- [ ] Decree status transitioned to `review` then `approved` once implementation is complete: `decree status SPEC-018 submit` → `decree status SPEC-018 approve`
+- [x] Decree status transitioned through `review` → `approved` → `implemented` (and PRD-015 followed the same chain)
 
 ### Deferred (v2)
 

@@ -1,7 +1,8 @@
 ---
-status: draft
-date: 2026-04-16
-references: [PRD-004]
+date: '2026-04-16'
+references:
+- PRD-004
+status: implemented
 ---
 
 # PRD-015 Due Date Filter in Sidebar

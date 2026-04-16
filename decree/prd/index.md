@@ -7,6 +7,7 @@
 | PRD-004 | PRD-004 JIRA Status Visualization and Filtering | approved | 2026-04-06 |
 | PRD-006 | PRD-006 Loose-Selection Ticketing | approved | 2026-04-08 |
 | PRD-012 | PRD-012 Testable Sync Decoupling | approved | 2026-04-15 |
+| PRD-015 | PRD-015 Due Date Filter in Sidebar | implemented | 2026-04-16 |
 | PRD-002 | PRD-002 Embedded Dashboard Sidebar | draft | 2026-04-05 |
 | PRD-003 | PRD-003 Full-Page Screenshot Element Highlighting | draft | 2026-04-06 |
 | PRD-005 | PRD-005 Jira assignee and reporter avatar display | draft | 2026-04-06 |
@@ -16,4 +17,3 @@
 | PRD-010 | PRD-010 JIRA Ticket Metadata in Sidebar Cards | draft | 2026-04-15 |
 | PRD-011 | PRD-011 Expandable Inline Groups | draft | 2026-04-15 |
 | PRD-014 | PRD-014 Enlargeable Screenshot Viewer | draft | 2026-04-16 |
-| PRD-015 | PRD-015 Due Date Filter in Sidebar | draft | 2026-04-16 |
