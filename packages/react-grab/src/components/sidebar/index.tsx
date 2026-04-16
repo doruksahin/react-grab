@@ -18,7 +18,7 @@ import type {
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
 import { StatsBar } from "./stats-bar.js";
-import { FilterBar } from "./filter-bar.js";
+import { FilterMenu } from "./filter-menu.js";
 import { FilterChips } from "./filter-chips.js";
 import { type FilterState, EMPTY_FILTER, isFilterActive, applyFilters, getDistinctAssignees, getDistinctReporters, getDistinctLabels } from "../../features/sidebar/filter-state.js";
 import { GroupList } from "./group-list.js";
@@ -245,7 +245,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   </button>
                 </div>
 
-                <FilterBar
+                <FilterMenu
                   filter={filterState()}
                   assignees={getDistinctAssignees(userFacingGroups())}
                   reporters={getDistinctReporters(userFacingGroups())}
