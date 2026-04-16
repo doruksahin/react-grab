@@ -778,7 +778,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 </div>
                 <Show when={props.onSubmitJiraComment || (props.jiraComments?.length ?? 0) > 0}>
                   <CommentsSection
-                    comments={(props.jiraComments ?? []) as import("../../features/jira-comments/types.js").JiraComment[]}
+                    comments={props.jiraComments ?? []}
                     onSubmitComment={props.onSubmitJiraComment ?? (async () => ({ id: "", created: "" }))}
                     onSearchUsers={props.onSearchJiraUsers}
                     onRefreshPoll={() => props.onRefreshJiraStatus?.()}

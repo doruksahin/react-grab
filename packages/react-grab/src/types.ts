@@ -3,6 +3,7 @@ import type { SelectionGroupsViewProps } from "./features/selection-groups/types
 import type { SelectionGroup } from "./features/selection-groups/types.js";
 import type { SyncConfig, SyncStatus } from "./features/sync/types.js";
 import type {
+  JiraComment,
   RefreshGroupStatusFn,
   SearchJiraUsersFn,
   SubmitCommentFn,
@@ -481,14 +482,7 @@ export interface JiraDisplayFields {
   jiraAssigneeAvatar?: string | null;
   jiraReporterAvatar?: string | null;
   jiraLabels?: string[];
-  jiraComments?: ReadonlyArray<{
-    id: string;
-    parentId: string | null;
-    author: string;
-    authorAvatar: string | null;
-    body: string;
-    createdAt: string;
-  }>;
+  jiraComments?: ReadonlyArray<JiraComment>;
   jiraFlagged?: boolean;
   jiraFlaggedAt?: string | null;
   jiraFlaggedBy?: string | null;
