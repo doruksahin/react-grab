@@ -539,6 +539,11 @@ export interface SelectionLabelInstance extends JiraDisplayFields {
   error?: string;
   hideArrow?: boolean;
   groupId?: string;
+  // From backing CommentItem — used by <SelectionCardBody> in the selection label
+  commentText?: string;
+  timestamp?: number;
+  hasElementScreenshot?: boolean;
+  hasFullPageScreenshot?: boolean;
 }
 
 /**
