@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selection Label — Stats-Bar Unification (3 options)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; color: #e5e5e5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; min-height: 100vh; }
+
+  h1 { font-size: 16px; color: #ccc; font-weight: 700; margin-bottom: 6px; }
+  h1 small { color: #666; font-weight: 400; font-size: 12px; margin-left: 8px; }
+  .subtitle { font-size: 12px; color: #888; margin-bottom: 32px; }
+
+  .options-row { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+  .option { flex: 1; min-width: 340px; max-width: 400px; }
+  .option-header { margin-bottom: 16px; }
+  .option-title { font-size: 13px; font-weight: 700; color: #e5e5e5; margin-bottom: 4px; letter-spacing: 0.3px; }
+  .option-num { display: inline-block; width: 22px; height: 22px; background: #333; border-radius: 50%; text-align: center; line-height: 22px; font-size: 11px; font-weight: 800; color: #a78bfa; margin-right: 8px; border: 1px solid #444; }
+  .option-sub { font-size: 11px; color: #888; line-height: 1.5; }
+
+  /* Mock anchor element (the thing the label points to) */
+  .anchor-wrap { background: #111; border: 1px dashed #333; border-radius: 8px; padding: 40px 20px 20px; position: relative; min-height: 380px; display: flex; flex-direction: column; align-items: center; }
+  .anchor-el { background: #1e1e1e; border: 1px solid #333; border-radius: 6px; padding: 10px 14px; font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; width: 90%; text-align: center; margin-top: auto; }
+  .anchor-el .el-label { display: block; font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .anchor-el .sel-ring { position: absolute; border: 1px solid #a78bfa; border-radius: 6px; pointer-events: none; }
+
+  /* Arrow under the floating label */
+  .label-arrow { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #262626; filter: drop-shadow(0 1px 0 #333); }
+
+  /* Base floating label style (mimics real SelectionLabel popover) */
+  .label {
+    background: #262626;
+    border: 1px solid #333;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+  }
+  .label .label-arrow { border-top-color: #262626; }
+
+  /* ---------------- Tag badge (top row on all options) ---------------- */
+  .tag-row { display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
+  .tag-row .component { font-size: 12px; font-weight: 600; color: #e5e5e5; }
+  .tag-row .tagname { font-size: 10px; color: #888; background: #1a1a1a; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; border: 1px solid #333; }
+  .tag-row .flex-grow { flex: 1; }
+  .tag-row .collapse-btn { font-size: 11px; color: #666; cursor: pointer; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+  .tag-row .collapse-btn:hover { background: rgba(255,255,255,0.05); color: #ccc; }
+
+  /* ---------------- Divider between header and body ---------------- */
+  .divider { height: 1px; background: #333; margin: 0; }
+
+  /* ---------------- Card-body rows (shared with sidebar) ---------------- */
+  .card-body { padding: 10px 12px; position: relative; }
+  .card-body .status-abs { position: absolute; top: 10px; right: 12px; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.3px; text-transform: uppercase; }
+  .status-todo { color: #999; background: rgba(255,255,255,0.06); }
+  .status-inprogress { color: #60a5fa; background: rgba(96,165,250,0.12); }
+  .status-done { color: #22c55e; background: rgba(34,197,94,0.12); }
+
+  .summary { font-size: 12px; font-weight: 500; color: #e5e5e5; line-height: 1.4; margin-bottom: 8px; padding-right: 70px; }
+  .labels-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .label-chip { background: #333; color: #999; padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 500; }
+
+  .date-row { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #999; margin-bottom: 8px; }
+  .date-row svg { width: 12px; height: 12px; color: #666; }
+  .date-sep { color: #444; margin: 0 2px; }
+
+  .screenshot-row { display: flex; gap: 6px; margin-bottom: 8px; }
+  .screenshot-thumb { width: 52px; height: 34px; background: #111; border-radius: 4px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; }
+  .screenshot-thumb::after { content: '📷'; font-size: 10px; opacity: 0.15; }
+
+  .meta-row { display: flex; align-items: center; gap: 6px; }
+  .type-icon { font-size: 11px; }
+  .type-icon.task { color: #60a5fa; }
+  .type-icon.bug { color: #f87171; }
+  .jira-key { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #888; font-weight: 500; }
+  .priority { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; }
+  .priority svg { width: 11px; height: 11px; }
+  .priority.high { color: #f87171; }
+  .priority.low { color: #60a5fa; }
+  .avatar-sm { width: 18px; height: 18px; border-radius: 50%; background: #444; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #e5e5e5; }
+  .assignee-name { font-size: 10px; color: #999; }
+  .meta-spacer { flex: 1; }
+
+  /* ---------------- Comments toggle ---------------- */
+  .comments-toggle { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; color: #888; padding: 8px 12px; border-top: 1px solid #333; cursor: pointer; }
+  .comments-toggle svg { width: 12px; height: 12px; }
+  .comments-toggle .chev { margin-left: auto; color: #555; font-size: 8px; }
+
+  /* ---------------- Prompt-mode input (option 2 + 3b) ---------------- */
+  .group-picker { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: #1f1f1f; border-radius: 6px; margin: 8px 12px; font-size: 11px; color: #ccc; cursor: pointer; border: 1px solid #333; }
+  .group-picker .dot-p { width: 7px; height: 7px; background: #a78bfa; border-radius: 50%; }
+  .group-picker .chev { margin-left: auto; color: #666; font-size: 9px; }
+
+  .create-ticket-btn { display: flex; align-items: center; gap: 5px; margin: 0 12px 8px; padding: 6px 10px; background: transparent; border: 1px dashed #444; border-radius: 6px; color: #a78bfa; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .create-ticket-btn:hover { background: rgba(167,139,250,0.05); border-color: #a78bfa; }
+
+  .composer { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-top: 1px solid #333; background: #1e1e1e; border-radius: 0 0 10px 10px; }
+  .composer input { flex: 1; background: transparent; border: none; outline: none; color: #e5e5e5; font-size: 12px; }
+  .composer input::placeholder { color: #555; }
+  .composer .submit { width: 18px; height: 18px; background: #e5e5e5; border-radius: 50%; color: #262626; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; cursor: pointer; }
+
+  /* ---------------- Reuse annotation under each option ---------------- */
+  .reuse { margin-top: 18px; padding: 12px; background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px; font-size: 10px; line-height: 1.55; color: #999; }
+  .reuse h4 { font-size: 10px; color: #ccc; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .reuse .reuse-item { margin-bottom: 3px; }
+  .reuse .ok { color: #22c55e; }
+  .reuse .no { color: #f87171; }
+  .reuse .maybe { color: #f59e0b; }
+  .reuse .file { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #666; }
+
+  .tradeoffs { margin-top: 10px; padding: 10px 12px; background: #1a1a1a; border-left: 2px solid #444; border-radius: 0 4px 4px 0; font-size: 10px; color: #888; line-height: 1.6; }
+  .tradeoffs b { color: #ccc; font-weight: 700; }
+  .tradeoffs .plus { color: #22c55e; font-weight: 700; }
+  .tradeoffs .minus { color: #f87171; font-weight: 700; }
+
+  .legend { display: flex; gap: 18px; margin-top: 4px; font-size: 11px; color: #666; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .variant-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px; text-align: center; font-weight: 700; }
+  .variant-label:first-of-type { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<h1>Selection Label — Stats-Bar Unification <small>3 options · reuse surface from <code>poc-stats-bar.html</code></small></h1>
+<div class="subtitle">Same anchor element in every column. What varies is <b>how much of the sidebar card</b> the floating label adopts.</div>
+
+<div class="options-row">
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- OPTION 1 — FULL PARITY                                             -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="option">
+    <div class="option-header">
+      <div class="option-title"><span class="option-num">1</span>Full parity</div>
+      <div class="option-sub">Expanded label = the sidebar card, 1:1. Same rows, same order, same density. Label only adds arrow + collapse chevron.</div>
+    </div>
+
+    <div class="anchor-wrap">
+      <div class="label">
+        <!-- header: tag badge + collapse -->
+        <div class="tag-row">
+          <span class="component">SocialIcons</span>
+          <span class="tagname">footer</span>
+          <span class="flex-grow"></span>
+          <span class="collapse-btn">▾</span>
+        </div>
+        <div class="divider"></div>
+
+        <!-- card body = full sidebar card -->
+        <div class="card-body">
+          <span class="status-abs status-done">DONE</span>
+          <div class="summary">Footer a11y — ARIA labels on social media icons</div>
+          <div class="labels-row">
+            <span class="label-chip">layout</span>
+            <span class="label-chip">a11y</span>
+          </div>
+          <div class="date-row">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5 1v4M11 1v4"/></svg>
+            Apr 10, 2026 <span class="date-sep">→</span> Apr 20, 2026
+          </div>
+          <div class="screenshot-row">
+            <div class="screenshot-thumb"></div>
+            <div class="screenshot-thumb"></div>
+          </div>
+          <div class="meta-row">
+            <span class="type-icon task" title="Task">☑</span>
+            <span class="jira-key">ATT-2870</span>
+            <span class="meta-spacer"></span>
+            <span class="priority low"><svg viewBox="0 0 16 16"><path d="M8 13l5-8H3z" fill="currentColor"/></svg></span>
+            <span class="avatar-sm">EK</span>
+            <span class="assignee-name">Emre K.</span>
+          </div>
+        </div>
+
+        <div class="comments-toggle">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v8H6l-3 3v-3H2z"/></svg>
+          Comments (1)
+          <span class="chev">▾</span>
+        </div>
+        <div class="label-arrow"></div>
+      </div>
+
+      <div class="anchor-el">
+        <span class="el-label">anchor element</span>
+        &lt;footer&gt;...social icons...&lt;/footer&gt;
+      </div>
+    </div>
+
+    <div class="reuse">
+      <h4>What gets extracted</h4>
+      <div class="reuse-item"><span class="ok">✓</span> One new component: <span class="file">&lt;SelectionCardBody&gt;</span> — the whole stats-bar block (status, summary, labels, date, screenshots, meta, comments).</div>
+      <div class="reuse-item"><span class="ok">✓</span> Sidebar list item + label both render <span class="file">&lt;SelectionCardBody&gt;</span> verbatim.</div>
+      <div class="reuse-item"><span class="no">✗</span> Prompt mode (composing a new selection) can't use this wholesale — no ticket data yet, needs to interleave with textarea + group picker.</div>
+    </div>
+
+    <div class="tradeoffs">
+      <b>Tradeoff.</b>
+      <span class="plus">+</span> Highest reuse when ticketed. Visual parity is free.<br>
+      <span class="minus">−</span> Label no longer feels like a label — it's a mini sidebar. Screenshots are redundant (you're ON the element).<br>
+      <span class="minus">−</span> Prompt mode still needs its own path — the "card" is only for the expanded/ticketed case.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- OPTION 2 — SHARED PRIMITIVES ONLY                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="option">
+    <div class="option-header">
+      <div class="option-title"><span class="option-num">2</span>Shared primitives only</div>
+      <div class="option-sub">Extract each row as a small component. Label picks the subset that makes sense — no summary, no screenshots, no date range with calendar icon. Keeps a tight popover footprint.</div>
+    </div>
+
+    <div class="anchor-wrap">
+      <div class="label" style="max-width: 300px;">
+        <div class="tag-row">
+          <span class="component">SocialIcons</span>
+          <span class="tagname">footer</span>
+          <span class="flex-grow"></span>
+          <span class="status-abs status-done" style="position: static;">DONE</span>
+          <span class="collapse-btn">▾</span>
+        </div>
+
+        <!-- just labels + compact meta -->
+        <div class="card-body" style="padding-top: 0;">
+          <div class="labels-row">
+            <span class="label-chip">layout</span>
+            <span class="label-chip">a11y</span>
+          </div>
+          <div class="meta-row">
+            <span class="type-icon task">☑</span>
+            <span class="jira-key">ATT-2870</span>
+            <span class="meta-spacer"></span>
+            <span class="priority low"><svg viewBox="0 0 16 16"><path d="M8 13l5-8H3z" fill="currentColor"/></svg></span>
+            <span class="avatar-sm">EK</span>
+          </div>
+        </div>
+
+        <div class="comments-toggle">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v8H6l-3 3v-3H2z"/></svg>
+          Comments (1)
+          <span class="chev">▾</span>
+        </div>
+        <div class="label-arrow"></div>
+      </div>
+
+      <div class="anchor-el">
+        <span class="el-label">anchor element</span>
+        &lt;footer&gt;...social icons...&lt;/footer&gt;
+      </div>
+    </div>
+
+    <div class="reuse">
+      <h4>What gets extracted</h4>
+      <div class="reuse-item"><span class="ok">✓</span> <span class="file">&lt;StatusPill&gt;</span> — inline or absolute.</div>
+      <div class="reuse-item"><span class="ok">✓</span> <span class="file">&lt;LabelsRow&gt;</span> — JIRA label chips.</div>
+      <div class="reuse-item"><span class="ok">✓</span> <span class="file">&lt;JiraMetaRow&gt;</span> — issue-type + key + priority + assignee.</div>
+      <div class="reuse-item"><span class="ok">✓</span> <span class="file">&lt;DateRangeRow&gt;</span> — used by sidebar, omitted by label.</div>
+      <div class="reuse-item"><span class="maybe">~</span> Label composes its own subset. Sidebar keeps composing all 7 rows.</div>
+    </div>
+
+    <div class="tradeoffs">
+      <b>Tradeoff.</b>
+      <span class="plus">+</span> Each row is testable in isolation. Label stays compact — respects that the element IS the subject.<br>
+      <span class="plus">+</span> Prompt mode can also consume the same primitives (labels row, meta row) in whatever order.<br>
+      <span class="minus">−</span> More moving parts. Risk of visual drift if someone restyles a row in one place and forgets the primitive.<br>
+      <span class="minus">−</span> Sidebar still needs its own composition file — there's no single "card body" component to reuse wholesale.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- OPTION 3 — HYBRID                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div class="option">
+    <div class="option-header">
+      <div class="option-title"><span class="option-num">3</span>Hybrid</div>
+      <div class="option-sub">One <span class="file" style="font-family: 'JetBrains Mono', monospace;">&lt;SelectionCardBody&gt;</span> for the expanded/ticketed case (sidebar + label share it), plus row primitives for prompt mode where rows interleave with the textarea + group picker.</div>
+    </div>
+
+    <div class="variant-label">3a — expanded / ticketed</div>
+    <div class="anchor-wrap" style="min-height: 360px;">
+      <div class="label">
+        <div class="tag-row">
+          <span class="component">SocialIcons</span>
+          <span class="tagname">footer</span>
+          <span class="flex-grow"></span>
+          <span class="collapse-btn">▾</span>
+        </div>
+        <div class="divider"></div>
+
+        <!-- same card body as sidebar -->
+        <div class="card-body">
+          <span class="status-abs status-done">DONE</span>
+          <div class="summary">Footer a11y — ARIA labels on social media icons</div>
+          <div class="labels-row">
+            <span class="label-chip">layout</span>
+            <span class="label-chip">a11y</span>
+          </div>
+          <div class="date-row">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5 1v4M11 1v4"/></svg>
+            Apr 10, 2026 <span class="date-sep">→</span> Apr 20, 2026
+          </div>
+          <div class="meta-row">
+            <span class="type-icon task">☑</span>
+            <span class="jira-key">ATT-2870</span>
+            <span class="meta-spacer"></span>
+            <span class="priority low"><svg viewBox="0 0 16 16"><path d="M8 13l5-8H3z" fill="currentColor"/></svg></span>
+            <span class="avatar-sm">EK</span>
+            <span class="assignee-name">Emre K.</span>
+          </div>
+        </div>
+
+        <div class="comments-toggle">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v8H6l-3 3v-3H2z"/></svg>
+          Comments (1)
+          <span class="chev">▾</span>
+        </div>
+        <div class="label-arrow"></div>
+      </div>
+
+      <div class="anchor-el">
+        <span class="el-label">anchor element (ticketed)</span>
+        &lt;footer&gt;...social icons...&lt;/footer&gt;
+      </div>
+    </div>
+
+    <div class="variant-label">3b — prompt mode (new selection)</div>
+    <div class="anchor-wrap" style="min-height: 340px;">
+      <div class="label" style="max-width: 320px;">
+        <div class="tag-row">
+          <span class="component">HeroBanner</span>
+          <span class="tagname">section</span>
+          <span class="flex-grow"></span>
+          <span class="collapse-btn">▾</span>
+        </div>
+
+        <!-- row primitives interleaved with pickers/input -->
+        <div class="group-picker">
+          <span class="dot-p"></span>
+          <span>Active group: Header hero</span>
+          <span class="chev">▾</span>
+        </div>
+
+        <button class="create-ticket-btn">
+          <span>+</span> Create ticket
+        </button>
+
+        <!-- reused primitive: LabelsRow (if group already has labels) -->
+        <div class="card-body" style="padding: 0 12px 4px;">
+          <div class="labels-row">
+            <span class="label-chip">layout</span>
+            <span class="label-chip">impediment</span>
+          </div>
+        </div>
+
+        <div class="composer">
+          <input type="text" placeholder="Add context…" />
+          <span class="submit">↑</span>
+        </div>
+        <div class="label-arrow"></div>
+      </div>
+
+      <div class="anchor-el">
+        <span class="el-label">anchor element (no ticket yet)</span>
+        &lt;section&gt;...hero banner...&lt;/section&gt;
+      </div>
+    </div>
+
+    <div class="reuse">
+      <h4>What gets extracted</h4>
+      <div class="reuse-item"><span class="ok">✓</span> <span class="file">&lt;SelectionCardBody&gt;</span> — used by sidebar AND expanded label (3a). One block, one SSOT.</div>
+      <div class="reuse-item"><span class="ok">✓</span> <span class="file">&lt;LabelsRow&gt;</span>, <span class="file">&lt;JiraMetaRow&gt;</span>, <span class="file">&lt;StatusPill&gt;</span> also exposed individually for prompt mode (3b).</div>
+      <div class="reuse-item"><span class="ok">✓</span> Prompt mode keeps its own composition — textarea, group picker, create-ticket CTA — but reuses rows where the group already has ticket metadata.</div>
+    </div>
+
+    <div class="tradeoffs">
+      <b>Tradeoff.</b>
+      <span class="plus">+</span> Best of both: wholesale reuse when the card is the same, primitive reuse when it isn't.<br>
+      <span class="plus">+</span> Clear SSOT — "sidebar card body" is a named thing that lives in one file.<br>
+      <span class="minus">−</span> Two public surfaces to maintain (the block + the primitives). Needs a clear doc on when to use which.<br>
+      <span class="minus">−</span> Slightly more upfront extraction work than option 1.
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

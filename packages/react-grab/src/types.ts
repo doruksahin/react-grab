@@ -487,6 +487,9 @@ export interface JiraDisplayFields {
   jiraFlaggedAt?: string | null;
   jiraFlaggedBy?: string | null;
   jiraFlaggedByAvatar?: string | null;
+  jiraPriority?: string | null;
+  jiraIssueType?: string | null;
+  jiraDueDate?: string | null;
 }
 
 /** Keys of JiraDisplayFields — used by renderer to pick fields
@@ -507,6 +510,9 @@ export const JIRA_DISPLAY_KEYS = [
   "jiraFlaggedAt",
   "jiraFlaggedBy",
   "jiraFlaggedByAvatar",
+  "jiraPriority",
+  "jiraIssueType",
+  "jiraDueDate",
 ] as const satisfies readonly (keyof JiraDisplayFields)[];
 
 export interface SelectionLabelInstance extends JiraDisplayFields {
@@ -533,6 +539,11 @@ export interface SelectionLabelInstance extends JiraDisplayFields {
   error?: string;
   hideArrow?: boolean;
   groupId?: string;
+  // From backing CommentItem — used by <SelectionCardBody> in the selection label
+  commentText?: string;
+  timestamp?: number;
+  hasElementScreenshot?: boolean;
+  hasFullPageScreenshot?: boolean;
 }
 
 /**
@@ -756,6 +767,14 @@ export interface SelectionLabelProps
   componentName?: string;
   elementsCount?: number;
   selectionBounds?: OverlayBounds;
+  // From backing CommentItem — passed through to <SelectionCardBody>
+  itemId?: string;
+  commentText?: string;
+  timestamp?: number;
+  hasElementScreenshot?: boolean;
+  hasFullPageScreenshot?: boolean;
+  syncServerUrl?: string;
+  syncWorkspace?: string;
   mouseX?: number;
   visible?: boolean;
   isPromptMode?: boolean;
