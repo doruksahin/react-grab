@@ -6,12 +6,14 @@ export const ToolbarButton: Component<{
   title: string;
   onClick: () => void;
   children: JSX.Element;
+  dataAction?: string;
 }> = (props) => (
   <button
     type="button"
     title={props.title}
     disabled={props.disabled}
     data-react-grab-ignore-events
+    {...(props.dataAction ? { "data-react-grab-editor-action": props.dataAction } : {})}
     onMouseDown={(e) => {
       e.preventDefault();
       if (!props.disabled) props.onClick();
@@ -37,6 +39,7 @@ export const ToolbarDropdown: Component<{
   title: string;
   label: JSX.Element;
   children: JSX.Element;
+  dataDropdown?: string;
 }> = (props) => {
   const [open, setOpen] = createSignal(false);
 
@@ -45,6 +48,7 @@ export const ToolbarDropdown: Component<{
       <button
         type="button"
         title={props.title}
+        {...(props.dataDropdown ? { "data-react-grab-editor-dropdown": props.dataDropdown } : {})}
         onMouseDown={(e) => {
           e.preventDefault();
           setOpen((v) => !v);
