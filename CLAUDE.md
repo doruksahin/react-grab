@@ -72,7 +72,7 @@ pnpm check:codegen
 
 # Architecture — codegen + lint + dependency graph
 pnpm arch:codegen              # Generate/merge machine-derivable sections of architecture.yml
-pnpm arch:lint                 # Validate architecture.yml paths + data_flows consumer cross-check
+pnpm arch:lint                 # Validate paths + data_flows consumers + data-react-grab-* attr scoping
 pnpm arch:deps                 # JSON import tree from core/index.tsx
 pnpm arch:deps:circular        # Check for circular dependencies
 pnpm arch:deps:svg             # Generate SVG → docs/architecture/dependency-graph.svg
@@ -102,6 +102,8 @@ See `architecture.yml` for the full architecture index — package entry points,
 | `data_flows.*.sources.*.consumers` | **Replaced** — madge reverse-dependency tracing |
 | `data_flows.*.sources.*.trigger` | **Replaced** — ts-morph detects `setInterval` patterns |
 | `data_flows.*.description`, `init_sequence` | **Preserved** — human-authored |
+| `data_attrs.inventory` | **Replaced** — scans `src/` + `e2e/` for `data-react-grab-*` occurrences |
+| `data_attrs.scopes`, `reserved`, `bare_verbs` | **Preserved** — human-authored |
 | `packages.*`, `decree.*` | **Preserved** — stable/managed elsewhere |
 
 ### Monorepo layout
@@ -129,6 +131,21 @@ Zod schemas in `sync-server/src/schemas/` → `pnpm --filter @react-grab/sync-se
 ### How react-grab mounts in React apps
 
 `react-grab/src/core/index.tsx` exports `initSync()` — called in the consuming app's entry point (dev-only via `import.meta.env.DEV` guard). The Solid.js overlay renders inside a shadow DOM portal, isolated from the host app's styles.
+
+### Data attributes (`data-react-grab-*`)
+
+Every overlay element carries a `data-react-grab-*` attribute used for:
+event boundaries (overlay ignore), Playwright selectors, and devtool inspection. There is a central catalog in `architecture.yml` under `data_attrs` with scope declarations (authored) and a generated inventory (all 120+ attrs).
+
+**SSOT split:** JSX is the source of truth for what exists. `data_attrs.scopes` is the source of truth for what's allowed. `data_attrs.inventory` is a materialized report — `pnpm arch:codegen` regenerates it from a code scan; never edit it by hand.
+
+**Check `packages/react-grab/docs/data-attrs.md` when:**
+- Adding a new `data-react-grab-*` attr (rules R1–R4, scope choice)
+- Renaming / removing an attr (atomic JSX + test + scope update)
+- `pnpm arch:lint` fails with `[orphan]`, `[stale-test]`, or warns `[bare-verb]`
+- Creating a new feature region (whether to extend a scope or create one)
+
+Flow for a new attr: write JSX → add suffix to the right `scopes.*.owns` → run `pnpm arch:codegen` → run `pnpm arch:lint` → commit JSX and `architecture.yml` together. Full scenarios (new region, rename, delete) + enforcement status in the doc.
 
 ## Feature structure
 

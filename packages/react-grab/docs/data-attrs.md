@@ -122,3 +122,135 @@ When adding a new feature region:
    ```
 3. Add the attrs in JSX per R1–R4.
 4. Run `pnpm arch:codegen` then `pnpm arch:lint`.
+
+## When to check this doc
+
+Explicit triggers — consult this doc (and/or run `pnpm arch:lint`) when:
+
+| Trigger | Why |
+|---|---|
+| You're about to add a new `data-react-grab-*` attr | To pick the right scope + follow R1–R4 |
+| You're renaming or removing an existing attr | To update `scopes.*.owns` atomically with tests |
+| You're creating a new feature region (new component folder) | To decide scope name + register it |
+| `pnpm arch:lint` fails with `[orphan]` | An attr in code matches no scope — declare it or mark reserved |
+| `pnpm arch:lint` fails with `[stale-test]` | A test targets a selector that no longer exists in src/ |
+| You see a `[bare-verb]` warning | An attr is a single imperative verb — consider scoping it |
+| PR review — a reviewer sees `architecture.yml` `data_attrs.inventory` diff | Someone added/removed an attr; sanity-check the scope assignment |
+| Building an external tool that reads `architecture.yml` | The inventory is the canonical attr catalog for consumers |
+
+Do **not** need to check it for purely cosmetic JSX changes, CSS tweaks, or
+refactors that don't touch attrs.
+
+## SSOT hierarchy
+
+Three layered sources of truth, in order of authority:
+
+| Thing | Lives in | Owner | Changes when |
+|---|---|---|---|
+| The attrs themselves | `*.tsx` JSX | Developer (SSOT) | You add/remove JSX |
+| Scope declarations (`scopes.*.owns`) | `architecture.yml` | Developer (authored) | New region or new action |
+| Reserved attrs | `architecture.yml` | Developer (authored) | Rarely — internal machinery only |
+| Rules R1–R4 | this doc | Developer (authored) | Rarely — convention changes |
+| **Inventory** | `architecture.yml` `data_attrs.inventory` | Codegen (generated) | Every `pnpm arch:codegen` |
+| Orphan / stale / warning reports | `pnpm arch:lint` stdout | Lint (derived) | Every lint run |
+
+Rule of thumb: **edit JSX and `scopes.*.owns`; let codegen own everything
+else.** If you find yourself hand-editing `inventory`, stop — run
+`pnpm arch:codegen` instead.
+
+## What the inventory is for
+
+`data_attrs.inventory` is a **materialized snapshot** of every attr found in
+the codebase. It's not the source of truth — it's a report. Four concrete
+jobs:
+
+1. **Makes attr additions visible in PR review.** A new attr in JSX also
+   shows up as a new line in `architecture.yml` `inventory`. Reviewers see
+   it without having to scan every component diff.
+2. **Surfaces test-only attrs.** An entry with `src: 0, tests: N` means
+   tests target an element that no longer exists in src/ — a stale selector.
+3. **Flags zero-coverage roots.** An entry with `tests: 0` tells you a
+   region has no test coverage yet.
+4. **Enables external consumption.** Other tools (docs generators, MCP
+   server, future dashboards) can parse `architecture.yml` and read the
+   full catalog without scanning code themselves.
+
+## Workflow scenarios
+
+### Scenario A — Add a new attr inside an existing region
+
+You add `emoji-shortcuts.tsx` inside the comments editor with a
+`data-react-grab-emoji-shortcut` button.
+
+1. Write the JSX per R1–R4.
+2. In `architecture.yml`, add `emoji-shortcut` to `scopes.editor.owns`.
+3. `pnpm arch:codegen` — refreshes inventory.
+4. `pnpm arch:lint` — should be green.
+5. Commit: JSX + `architecture.yml` together.
+
+**Forgot step 2?** Lint reports `[orphan] data-react-grab-emoji-shortcut`.
+
+### Scenario B — Add a new top-level region
+
+You build a "Notifications panel" with 4 attrs: `notifications-panel`,
+`notifications-item`, `notifications-clear`, `notifications-mute`.
+
+1. Write the JSX.
+2. In `architecture.yml`, add a new scope:
+   ```yaml
+   notifications:
+     description: Notifications panel + items
+     owning_feature: notifications
+     owns:
+       - notifications-panel
+       - notifications-item
+       - notifications-clear
+       - notifications-mute
+   ```
+3. `pnpm arch:codegen` + `pnpm arch:lint`.
+4. Commit.
+
+### Scenario C — Rename an attr
+
+Rename `data-react-grab-submit` (bare verb) → `data-react-grab-jira-submit`.
+
+1. Rename at declaration in JSX.
+2. Grep `e2e/` for the old selector; update all test selectors in the same
+   commit.
+3. Update the `owns` entry in the scope (`jira`):
+   remove `submit`, add `jira-submit`.
+4. `pnpm arch:codegen` + `pnpm arch:lint`.
+5. Commit.
+
+**Forgot step 2?** Lint reports `[stale-test] data-react-grab-submit`.
+**Forgot step 3?** Lint reports `[orphan] data-react-grab-jira-submit`.
+
+### Scenario D — Delete a component
+
+Delete `completion-view.tsx` along with its `data-react-grab-completion`
+attr.
+
+1. Delete the JSX.
+2. Remove the attr from tests (or delete the tests that target it).
+3. Remove the suffix from `scopes.completion.owns` (or delete the whole
+   `completion` scope if empty).
+4. `pnpm arch:codegen` + `pnpm arch:lint`.
+5. Commit.
+
+**Forgot step 3?** Lint reports `[unused] completion` warning (declared
+but not in code).
+
+## Enforcement layers — current state
+
+| Layer | State | Catches |
+|---|---|---|
+| `pnpm arch:codegen` | ✅ Works, manual | Rebuilds inventory from scan |
+| `pnpm arch:lint` | ✅ Works, manual | Orphans, stale-tests, bare-verbs |
+| CI gate (GitHub Actions) | ❌ Not wired | — |
+| Pre-commit hook | ❌ Not wired | — |
+
+Today, sync is **developer-discipline + lint-on-demand**. To close the
+automation gap, add `pnpm arch:lint` as a CI step — one GitHub Actions
+entry. Optional: add a pre-commit hook that runs `pnpm arch:codegen` and
+fails if the inventory diff is non-empty, forcing regeneration before
+commit.
