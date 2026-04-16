@@ -13,14 +13,17 @@ export const CommentItem: Component<{
 
   return (
     <div
+      data-react-grab-jira-comment
+      data-react-grab-jira-comment-id={props.comment.id}
+      data-react-grab-jira-comment-state={props.comment.sending ? "sending" : "synced"}
       class={`flex gap-2.5 ${props.comment.sending ? "opacity-50" : ""}`}
       style={{ "pointer-events": "auto" }}
     >
       <Avatar name={props.comment.author} url={props.comment.authorAvatar} size={props.isReply ? 20 : 24} />
       <div class="flex-1 min-w-0">
         <div class="flex flex-col">
-          <span class="text-[12px] font-semibold text-popover-foreground leading-tight">{props.comment.author}</span>
-          <span class="text-[10px] text-muted-foreground leading-tight">{props.comment.sending ? "sending..." : ts()}</span>
+          <span data-react-grab-comment-author class="text-[12px] font-semibold text-popover-foreground leading-tight">{props.comment.author}</span>
+          <span data-react-grab-comment-time class="text-[10px] text-muted-foreground leading-tight">{props.comment.sending ? "sending..." : ts()}</span>
         </div>
         <div class="mt-1">
           <CommentBody body={props.comment.body} />
