@@ -8,6 +8,7 @@ export const Avatar: Component<{ name: string; url: string | null; size?: number
       when={props.url}
       fallback={
         <div
+          data-react-grab-comment-avatar
           class="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
           style={{
             width: `${sz()}px`,
@@ -21,6 +22,7 @@ export const Avatar: Component<{ name: string; url: string | null; size?: number
       }
     >
       <img
+        data-react-grab-comment-avatar
         src={props.url!}
         alt={props.name}
         class="rounded-full flex-shrink-0"
