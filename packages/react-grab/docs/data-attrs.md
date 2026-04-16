@@ -246,11 +246,23 @@ but not in code).
 |---|---|---|
 | `pnpm arch:codegen` | ✅ Works, manual | Rebuilds inventory from scan |
 | `pnpm arch:lint` | ✅ Works, manual | Orphans, stale-tests, bare-verbs |
-| CI gate (GitHub Actions) | ❌ Not wired | — |
-| Pre-commit hook | ❌ Not wired | — |
+| Pre-commit hook | ✅ Wired via `simple-git-hooks` | Runs `pnpm arch:lint` on every commit |
+| CI gate | ❌ Not wired (no remote yet) | — |
 
-Today, sync is **developer-discipline + lint-on-demand**. To close the
-automation gap, add `pnpm arch:lint` as a CI step — one GitHub Actions
-entry. Optional: add a pre-commit hook that runs `pnpm arch:codegen` and
-fails if the inventory diff is non-empty, forcing regeneration before
-commit.
+**Pre-commit enforcement:** the repo installs a pre-commit hook via
+[`simple-git-hooks`](https://github.com/toplenboren/simple-git-hooks).
+It's wired through the `prepare` script in root `package.json`, so every
+`pnpm install` reinstalls the hook. The hook runs `pnpm arch:lint`; if
+any orphan, stale-test, or bare-verb violation exists, the commit is
+rejected.
+
+**If a commit is unexpectedly blocked**, run `pnpm arch:lint` manually to
+see the error message. Common fixes:
+
+- Orphan attr → add the suffix to the right `scopes.*.owns` entry.
+- Stale test → update the selector or remove the dead probe.
+- Bare verb → rename to a scoped form.
+
+**Future — CI gate:** once the repo has a remote, add a GitHub Actions
+step that runs `pnpm arch:lint` on PR. Mirrors the pre-commit layer for
+any contributor whose local hook isn't installed.
