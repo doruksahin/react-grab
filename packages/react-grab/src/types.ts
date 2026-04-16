@@ -767,6 +767,14 @@ export interface SelectionLabelProps
   componentName?: string;
   elementsCount?: number;
   selectionBounds?: OverlayBounds;
+  // From backing CommentItem — passed through to <SelectionCardBody>
+  itemId?: string;
+  commentText?: string;
+  timestamp?: number;
+  hasElementScreenshot?: boolean;
+  hasFullPageScreenshot?: boolean;
+  syncServerUrl?: string;
+  syncWorkspace?: string;
   mouseX?: number;
   visible?: boolean;
   isPromptMode?: boolean;
