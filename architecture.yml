@@ -499,7 +499,14 @@ data_attrs:
       owns:
         - sidebar
         - sidebar-header
+        - sidebar-search
         - stats-bar
+        - tab-bar
+        - status-legend
+        - filter-chips
+        - progress-bar
+        - bulk-action-bar
+        - jira-status-banner
         - empty-state
         - ungrouped-section
         - due-date-filter
@@ -569,7 +576,6 @@ data_attrs:
         - jira-form
         - jira-create
         - jira-dots
-        - jira-status
         - submit # bare-verb — rename to jira-submit in Phase 2
 
     comments:
@@ -714,13 +720,12 @@ data_attrs:
     retry: {scope: error, src: 1, tests: 1}
     filter-badge: {scope: filter, src: 1, tests: 0}
     filter-clear: {scope: filter, src: 1, tests: 0}
-    filter-menu: {scope: filter, src: 1, tests: 0}
+    filter-menu: {scope: filter, src: 1, tests: 2}
     filter-row: {scope: filter, src: 5, tests: 0}
     jira-create: {scope: jira, src: 1, tests: 0}
     jira-dialog: {scope: jira, src: 1, tests: 0}
     jira-dots: {scope: jira, src: 1, tests: 0}
     jira-form: {scope: jira, src: 1, tests: 0}
-    jira-status: {scope: jira, src: 1, tests: 0}
     submit: {scope: jira, src: 1, tests: 0}
     image-lightbox: {scope: lightbox, src: 1, tests: 3}
     lightbox-close: {scope: lightbox, src: 1, tests: 1}
@@ -753,18 +758,25 @@ data_attrs:
     unread-indicator: {scope: selection, src: 1, tests: 0}
     active-group-picker: {scope: sidebar, src: 1, tests: 0}
     active-group-picker-locked: {scope: sidebar, src: 1, tests: 0}
+    bulk-action-bar: {scope: sidebar, src: 1, tests: 0}
     detail-header: {scope: sidebar, src: 1, tests: 1}
-    due-date-filter: {scope: sidebar, src: 1, tests: 1}
+    due-date-filter: {scope: sidebar, src: 1, tests: 2}
     empty-state: {scope: sidebar, src: 1, tests: 0}
+    filter-chips: {scope: sidebar, src: 1, tests: 0}
     group-card: {scope: sidebar, src: 2, tests: 1}
     group-detail: {scope: sidebar, src: 1, tests: 0}
     group-list: {scope: sidebar, src: 2, tests: 3}
+    jira-status-banner: {scope: sidebar, src: 1, tests: 0}
     loose-selection-card: {scope: sidebar, src: 1, tests: 0}
     loose-selection-list: {scope: sidebar, src: 1, tests: 0}
+    progress-bar: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}
     sidebar: {scope: sidebar, src: 1, tests: 0}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
+    sidebar-search: {scope: sidebar, src: 1, tests: 0}
     stats-bar: {scope: sidebar, src: 1, tests: 0}
+    status-legend: {scope: sidebar, src: 1, tests: 0}
+    tab-bar: {scope: sidebar, src: 1, tests: 0}
     ungrouped-section: {scope: sidebar, src: 1, tests: 2}
     toolbar: {scope: toolbar, src: 2, tests: 7}
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
