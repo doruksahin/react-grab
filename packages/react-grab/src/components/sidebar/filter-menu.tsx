@@ -120,10 +120,7 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
     `text-[11px] max-w-[120px] truncate ${active ? "text-primary" : "text-muted-foreground"}`;
 
   return (
-    <div
-      data-react-grab-filter-menu
-      class="flex items-center gap-1.5 px-4 py-2 border-b border-border"
-    >
+    <>
       <Menu>
         <MenuTrigger
           aria-label="Filter"
@@ -379,6 +376,6 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
           ✕ Clear
         </Button>
       </Show>
-    </div>
+    </>
   );
-};
+}

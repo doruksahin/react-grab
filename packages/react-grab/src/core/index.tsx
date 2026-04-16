@@ -4378,8 +4378,15 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         .then(async ({ ReactGrabRenderer }) => {
           if (process.env.NODE_ENV !== "production") {
             try {
+              // HACK: Non-literal specifier + @vite-ignore prevents consumer
+              // bundlers (e.g. Vite via a symlinked dev build of react-grab)
+              // from trying to statically resolve this optional dev-only dep
+              // before the try/catch runs. See ADC local-dev integration.
+              const devtoolsPkg = "@solid-devtools/overlay";
               // @ts-ignore — optional dev dependency, guarded by try/catch
-              const { attachDevtoolsOverlay } = await import("@solid-devtools/overlay");
+              const { attachDevtoolsOverlay } = await import(
+                /* @vite-ignore */ devtoolsPkg
+              );
               attachDevtoolsOverlay();
             } catch { /* devtools not installed */ }
           }
