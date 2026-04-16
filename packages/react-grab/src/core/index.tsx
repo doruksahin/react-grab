@@ -3807,6 +3807,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             element: previewElement,
             mouseX: bounds.x + bounds.width / 2,
             groupId: item.groupId ?? undefined,
+            commentText: item.commentText,
+            timestamp: item.timestamp,
+            hasElementScreenshot: Boolean(item.screenshotElement),
+            hasFullPageScreenshot: Boolean(item.screenshotFullPage),
           });
         }
 
@@ -3892,6 +3896,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           jiraFlaggedAt: group?.jiraFlaggedAt,
           jiraFlaggedBy: group?.jiraFlaggedBy,
           jiraFlaggedByAvatar: group?.jiraFlaggedByAvatar,
+          jiraPriority: group?.jiraPriority,
+          jiraIssueType: group?.jiraIssueType,
+          jiraDueDate: group?.jiraDueDate,
         };
       });
     });
