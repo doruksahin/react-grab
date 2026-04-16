@@ -24,7 +24,10 @@ const FLOW = ["No Task", "To Do", "In Progress", "Code Review", "Test", "Test Pa
 
 export const StatusLegend: Component<StatusLegendProps> = (props) => {
   return (
-    <div class="absolute inset-0 z-50 bg-card/95 backdrop-blur-sm flex flex-col overflow-y-auto">
+    <div
+      data-react-grab-status-legend
+      class="absolute inset-0 z-50 bg-card/95 backdrop-blur-sm flex flex-col overflow-y-auto"
+    >
       <div class="px-4 py-3 border-b border-border flex items-center justify-between">
         <span class="text-[13px] font-semibold text-foreground">Status Legend</span>
         <button

@@ -223,7 +223,10 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   selectionsCount={(props.commentItems ?? []).length}
                 />
 
-                <div class="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-foreground/[0.01]">
+                <div
+                  data-react-grab-sidebar-search
+                  class="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-foreground/[0.01]"
+                >
                   <input
                     type="text"
                     placeholder="Search selections..."

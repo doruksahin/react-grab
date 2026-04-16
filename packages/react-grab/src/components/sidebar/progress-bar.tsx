@@ -9,7 +9,10 @@ interface ProgressBarProps {
 
 export const ProgressBar: Component<ProgressBarProps> = (props) => {
   return (
-    <div class="h-1 w-full rounded-full bg-foreground/10">
+    <div
+      data-react-grab-progress-bar
+      class="h-1 w-full rounded-full bg-foreground/10"
+    >
       <div
         class={`h-1 rounded-full ${props.colorClass ?? "bg-green-500"}`}
         style={{ width: `${props.value * 100}%`, transition: "width 0.3s ease" }}

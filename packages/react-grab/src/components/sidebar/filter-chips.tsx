@@ -49,7 +49,10 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
 
   return (
     <Show when={chips().length > 0}>
-      <div class="flex flex-wrap gap-1.5 px-4 py-1.5">
+      <div
+        data-react-grab-filter-chips
+        class="flex flex-wrap gap-1.5 px-4 py-1.5"
+      >
         <For each={chips()}>
           {(chip) => (
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent text-[10px] text-foreground">

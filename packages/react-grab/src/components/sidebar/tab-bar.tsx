@@ -20,7 +20,10 @@ export const TabBar: Component<TabBarProps> = (props) => {
   ];
 
   return (
-    <div class="flex border-b border-border px-3 pt-2 pb-0">
+    <div
+      data-react-grab-tab-bar
+      class="flex border-b border-border px-3 pt-2 pb-0"
+    >
       {tabs().map((tab, index) => {
         const isActive = () => props.activeTab === tab.id;
         const isFirst = index === 0;
