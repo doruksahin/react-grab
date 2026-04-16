@@ -7,6 +7,8 @@ status: accepted
 
 # ADR-0013 Collapsible label composition pattern — feature hook + pure UI + renderer shell
 
+**Design POC:** [`docs/plans/poc/collapsible-label-poc.html`](../../docs/plans/poc/collapsible-label-poc.html) — the visual interaction model (click dot to expand, chevron button to collapse) was validated here before implementation. This ADR describes the *code structure* chosen to ship that interaction.
+
 ## Context and Problem Statement
 
 PRD-013 requires persistent label instances to be collapsible to a minimal dot. The `SelectionLabel` component that renders the full card is already 400+ lines and handles three distinct rendering modes (agent session, primary selection, persistent instance), complex viewport-aware positioning with arrows, and multiple interaction states (copying, copied, fading, error, prompt mode).

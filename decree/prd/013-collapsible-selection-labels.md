@@ -6,6 +6,8 @@ references: [SPEC-010, SPEC-013]
 
 # PRD-013 Collapsible Selection Labels
 
+**Design POC:** [`docs/plans/poc/collapsible-label-poc.html`](../../docs/plans/poc/collapsible-label-poc.html) — standalone HTML exploring three collapsed-state variants (Pill, Dot, Mini bar) with click-to-expand and chevron-to-collapse interactions. The **Dot** variant was chosen for implementation.
+
 ## Problem Statement
 
 Persistent selection labels pin to every selected element on a page and render the full JIRA card — ticket ID, status, assignee avatar, labels, comments count, and a rich-text comment editor with toolbar. A single label consumes ~320×400 pixels of screen real estate.
