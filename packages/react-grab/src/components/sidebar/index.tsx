@@ -10,6 +10,11 @@ import {
 import createFocusTrap from "solid-focus-trap";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import type { SyncStatus } from "../../features/sync/types.js";
+import type {
+  RefreshGroupStatusFn,
+  SearchJiraUsersFn,
+  SubmitGroupCommentFn,
+} from "../../features/jira-comments/types.js";
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
 import { StatsBar } from "./stats-bar.js";
@@ -49,6 +54,12 @@ export interface SidebarProps {
   /** When set, opens the Jira create dialog for this loose item + its synthetic group. */
   looseTicketDialog?: { group: SelectionGroupWithJira; items: CommentItem[] } | null;
   onLooseTicketDialogClose?: () => void;
+  /** Submit a JIRA comment for a specific group */
+  onSubmitJiraComment?: SubmitGroupCommentFn;
+  /** Search JIRA users for @mention autocomplete */
+  onSearchJiraUsers?: SearchJiraUsersFn;
+  /** Trigger JIRA status refresh for a specific group */
+  onRefreshJiraStatus?: RefreshGroupStatusFn;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -234,19 +245,19 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   </button>
                 </div>
 
-                <Show when={activeTab() === "groups"}>
-                  <FilterBar
-                    filter={filterState()}
-                    assignees={getDistinctAssignees(userFacingGroups())}
-                    reporters={getDistinctReporters(userFacingGroups())}
-                    labels={getDistinctLabels(userFacingGroups())}
-                    onFilterChange={setFilterState}
-                  />
-                  <FilterChips
-                    filter={filterState()}
-                    onFilterChange={setFilterState}
-                  />
+                <FilterBar
+                  filter={filterState()}
+                  assignees={getDistinctAssignees(userFacingGroups())}
+                  reporters={getDistinctReporters(userFacingGroups())}
+                  labels={getDistinctLabels(userFacingGroups())}
+                  onFilterChange={setFilterState}
+                />
+                <FilterChips
+                  filter={filterState()}
+                  onFilterChange={setFilterState}
+                />
 
+                <Show when={activeTab() === "groups"}>
                   <Show
                     when={
                       userFacingGroups().length > 0 ||
@@ -293,6 +304,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   <SelectionListTab
                     commentItems={props.commentItems ?? []}
                     groups={props.groups ?? []}
+                    filter={filterState()}
                     selectedIds={selectedIds()}
                     onToggleSelect={toggleSelect}
                     searchQuery={searchQuery()}
@@ -300,6 +312,9 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     isDevMode={isDevMode()}
                     syncServerUrl={props.syncServerUrl}
                     syncWorkspace={props.syncWorkspace}
+                    onSubmitJiraComment={props.onSubmitJiraComment}
+                    onSearchJiraUsers={props.onSearchJiraUsers}
+                    onRefreshJiraStatus={props.onRefreshJiraStatus}
                   />
                 </Show>
               </>

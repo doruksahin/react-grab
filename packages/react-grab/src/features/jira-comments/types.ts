@@ -19,10 +19,41 @@ export interface JiraUserSuggestion {
   avatarUrl: string | null;
 }
 
+export interface CommentCreated {
+  id: string;
+  created: string;
+}
+
+/** Group-scoped submit — caller passes the groupId explicitly. */
+export type SubmitGroupCommentFn = (
+  groupId: string,
+  markdown: string,
+  mentions: MentionMapping[],
+  parentId?: string,
+) => Promise<CommentCreated>;
+
+/** Pre-bound submit — group id already captured by the caller. */
+export type SubmitCommentFn = (
+  markdown: string,
+  mentions: MentionMapping[],
+  parentId?: string,
+) => Promise<CommentCreated>;
+
+export type SearchJiraUsersFn = (query: string) => Promise<JiraUserSuggestion[]>;
+
+export type RefreshGroupStatusFn = (groupId: string) => void;
+
+/** Bundle for surfaces that render a specific group's comment thread. */
+export interface GroupCommentCallbacks {
+  onSubmitComment: SubmitGroupCommentFn;
+  onSearchUsers?: SearchJiraUsersFn;
+  onRefreshStatus?: RefreshGroupStatusFn;
+}
+
 export interface JiraCommentEditorProps {
   onSubmit: (markdown: string, mentions: MentionMapping[]) => void;
   onCancel?: () => void;
-  onSearchUsers?: (query: string) => Promise<JiraUserSuggestion[]>;
+  onSearchUsers?: SearchJiraUsersFn;
   placeholder?: string;
   initialContent?: string;
 }
@@ -43,7 +74,7 @@ export interface CommentThreadProps extends Pick<InlineReplyEditorProps, "onSear
 
 export interface JiraCommentsSectionProps {
   comments: ReadonlyArray<JiraComment>;
-  onSubmitComment: (markdown: string, mentions: MentionMapping[], parentId?: string) => Promise<{ id: string; created: string }>;
-  onSearchUsers?: (query: string) => Promise<JiraUserSuggestion[]>;
+  onSubmitComment: SubmitCommentFn;
+  onSearchUsers?: SearchJiraUsersFn;
   onRefreshPoll: () => void;
 }

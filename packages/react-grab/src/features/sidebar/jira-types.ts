@@ -1,5 +1,6 @@
 // packages/react-grab/src/features/sidebar/jira-types.ts
 import type { SelectionGroup } from "../selection-groups/types.js";
+import type { JiraComment } from "../jira-comments/types.js";
 
 /**
  * Extension of SelectionGroup with JIRA tracking fields.
@@ -25,14 +26,7 @@ export type SelectionGroupWithJira = SelectionGroup & {
   /** JIRA labels array, e.g. ["UI Ticket Manager", "frontend"] */
   jiraLabels?: string[];
   /** Jira comments fetched alongside status. Flat list with parentId for threading. */
-  jiraComments?: Array<{
-    id: string;
-    parentId: string | null;
-    author: string;
-    authorAvatar: string | null;
-    body: string;
-    createdAt: string;
-  }>;
+  jiraComments?: JiraComment[];
   jiraFlagged?: boolean;
   /** ISO timestamp of when the ticket was flagged (from JIRA changelog) */
   jiraFlaggedAt?: string | null;

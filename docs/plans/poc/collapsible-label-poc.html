@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POC — Collapsible Selection Label (PRD-013 / SPEC-016)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #1a1a2e;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    /* Simulated page content behind the label */
+    .page-mock {
+      position: fixed;
+      inset: 0;
+      background: #16213e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #444;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+
+    /* ── Selection Label Container ── */
+    .selection-label {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    /* ── Collapsed State: Small Pill ── */
+    .label-collapsed {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: #1e1e2e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      user-select: none;
+      max-width: 200px;
+    }
+
+    .label-collapsed:hover {
+      background: #252538;
+      border-color: #555;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .label-collapsed .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #7c5cfc;
+      flex-shrink: 0;
+    }
+
+    .label-collapsed .element-name {
+      font-size: 11px;
+      color: #aaa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .label-collapsed .chevron {
+      font-size: 10px;
+      color: #666;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    /* ── Expanded State: Full Card ── */
+    .label-expanded {
+      width: 320px;
+      background: #1e1e2e;
+      border: 1px solid #333;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      overflow: hidden;
+      transform-origin: bottom right;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ── Card Header (always visible when expanded) ── */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #252538;
+      border-bottom: 1px solid #333;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card-header:hover {
+      background: #2a2a40;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .header-left .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #7c5cfc;
+      flex-shrink: 0;
+    }
+
+    .header-left .element-name {
+      font-size: 12px;
+      color: #e0e0e0;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-left .external-link {
+      color: #666;
+      font-size: 11px;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .collapse-btn {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px;
+      line-height: 1;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+    }
+
+    .collapse-btn:hover { color: #aaa; }
+
+    .group-badge {
+      font-size: 10px;
+      color: #888;
+      background: #2a2a3a;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* ── Card Body ── */
+    .card-body {
+      padding: 12px;
+    }
+
+    .jira-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .ticket-id {
+      font-size: 12px;
+      color: #7c9cfc;
+      font-weight: 500;
+    }
+
+    .status-badge {
+      font-size: 10px;
+      color: #aaa;
+      background: #2a2a3a;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #f0a030;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .assignee-name {
+      font-size: 11px;
+      color: #999;
+    }
+
+    .description {
+      font-size: 12px;
+      color: #ccc;
+      margin-bottom: 4px;
+    }
+
+    .summary {
+      font-size: 13px;
+      color: #e0e0e0;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    /* ── Comments Section ── */
+    .comments-header {
+      font-size: 12px;
+      color: #888;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2a2a3a;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      gap: 2px;
+      padding: 6px 8px;
+      background: #252538;
+      border-radius: 8px 8px 0 0;
+      border: 1px solid #333;
+      border-bottom: none;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-btn {
+      background: none;
+      border: none;
+      color: #777;
+      font-size: 12px;
+      padding: 4px 6px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    .toolbar-btn:hover {
+      background: #333;
+      color: #bbb;
+    }
+
+    .toolbar-sep {
+      width: 1px;
+      background: #333;
+      margin: 2px 4px;
+    }
+
+    .editor-area {
+      border: 1px solid #333;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 12px;
+      min-height: 60px;
+      color: #666;
+      font-size: 12px;
+    }
+
+    .save-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .save-btn {
+      background: #2a2a3a;
+      border: 1px solid #444;
+      color: #ccc;
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .save-btn:hover {
+      background: #333;
+    }
+
+    .tip {
+      font-size: 10px;
+      color: #555;
+    }
+
+    /* ── Animation States ── */
+    .selection-label[data-state="collapsed"] .label-expanded {
+      display: none;
+    }
+
+    .selection-label[data-state="expanded"] .label-collapsed {
+      display: none;
+    }
+
+    /* Animate in */
+    .selection-label[data-state="expanding"] .label-expanded {
+      animation: expandIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .selection-label[data-state="collapsing"] .label-expanded {
+      animation: collapseOut 0.2s ease-in forwards;
+    }
+
+    @keyframes expandIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8) translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @keyframes collapseOut {
+      from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: scale(0.8) translateY(8px);
+      }
+    }
+
+    /* ── Option Variants ── */
+    .variants {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10000;
+    }
+
+    .variant-btn {
+      background: #252538;
+      border: 1px solid #444;
+      color: #ccc;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .variant-btn:hover {
+      background: #333;
+      border-color: #7c5cfc;
+    }
+
+    .variant-btn.active {
+      border-color: #7c5cfc;
+      background: #2a2040;
+    }
+
+    .variant-label {
+      display: block;
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    /* Variant: dot-only collapsed (CHOSEN) */
+    .selection-label[data-variant="dot"] .label-collapsed {
+      padding: 8px;
+      border-radius: 50%;
+      gap: 0;
+    }
+
+    .selection-label[data-variant="dot"] .label-collapsed .element-name,
+    .selection-label[data-variant="dot"] .label-collapsed .chevron {
+      display: none;
+    }
+
+    .selection-label[data-variant="dot"] .label-collapsed .dot {
+      width: 10px;
+      height: 10px;
+    }
+
+    /* Variant: mini bar */
+    .selection-label[data-variant="bar"] .label-collapsed {
+      padding: 4px 8px;
+      border-radius: 6px;
+      gap: 4px;
+    }
+
+    .selection-label[data-variant="bar"] .label-collapsed .dot {
+      width: 6px;
+      height: 6px;
+    }
+
+    .selection-label[data-variant="bar"] .label-collapsed .element-name {
+      font-size: 10px;
+      max-width: 120px;
+    }
+
+    /* ── Decree header ── */
+    .header-banner {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #252538;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 11px;
+      color: #aaa;
+      max-width: 300px;
+      line-height: 1.5;
+      z-index: 10000;
+    }
+    .header-banner .title {
+      color: #e0e0e0;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .header-banner .refs {
+      color: #7c9cfc;
+      font-family: 'SF Mono', monospace;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-mock">your app content here</div>
+
+  <div class="header-banner">
+    <div class="title">Collapsible Selection Label POC</div>
+    <div>Pre-implementation design exploration. Three collapsed variants compared; <strong>Dot</strong> was chosen.</div>
+    <div class="refs">PRD-013 · ADR-0013 · SPEC-016</div>
+  </div>
+
+  <!-- Variant picker -->
+  <div class="variants">
+    <div style="font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;">Collapsed style</div>
+    <button class="variant-btn" data-variant="pill" onclick="setVariant('pill')">
+      Pill
+      <span class="variant-label">Name + dot</span>
+    </button>
+    <button class="variant-btn active" data-variant="dot" onclick="setVariant('dot')">
+      Dot ← chosen
+      <span class="variant-label">Minimal — just a dot</span>
+    </button>
+    <button class="variant-btn" data-variant="bar" onclick="setVariant('bar')">
+      Mini bar
+      <span class="variant-label">Compact with truncated name</span>
+    </button>
+  </div>
+
+  <!-- Selection Label -->
+  <div class="selection-label" data-state="collapsed" data-variant="dot" id="label">
+
+    <!-- Collapsed State -->
+    <div class="label-collapsed" onclick="expand()">
+      <span class="dot"></span>
+      <span class="element-name">CardDescription.div</span>
+      <span class="chevron">&#9650;</span>
+    </div>
+
+    <!-- Expanded State -->
+    <div class="label-expanded">
+      <div class="card-header" onclick="collapse()">
+        <div class="header-left">
+          <span class="dot"></span>
+          <span class="element-name">CardDescription.div</span>
+          <a href="#" class="external-link">&#8599;</a>
+        </div>
+        <div class="header-right">
+          <span class="group-badge">&#9651; Ungrouped</span>
+          <button class="collapse-btn" title="Collapse">&#9660;</button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="jira-row">
+          <span class="ticket-id">ATT-2900</span>
+          <span class="status-badge">To Do</span>
+          <span class="avatar">A</span>
+          <span class="assignee-name">ADC bot admin</span>
+        </div>
+        <div class="description">test1</div>
+        <div class="summary">hey</div>
+
+        <div class="comments-header">
+          <span>Comments (0)</span>
+          <span style="font-size:10px; color:#555;">&#8226;</span>
+        </div>
+
+        <div class="editor-toolbar">
+          <button class="toolbar-btn"><b>B</b></button>
+          <button class="toolbar-btn"><i>I</i></button>
+          <button class="toolbar-btn"><u>U</u></button>
+          <button class="toolbar-btn"><s>S</s></button>
+          <button class="toolbar-btn">&lt;&gt;</button>
+          <button class="toolbar-btn">H</button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn">&#8212;</button>
+          <button class="toolbar-btn">1.</button>
+          <button class="toolbar-btn">"</button>
+        </div>
+        <div class="editor-area">Add a comment...</div>
+
+        <div class="save-row">
+          <button class="save-btn">Save</button>
+          <span class="tip">Tip: Type <b>@</b> to mention</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const label = document.getElementById('label');
+
+    function expand() {
+      label.dataset.state = 'expanding';
+      setTimeout(() => { label.dataset.state = 'expanded'; }, 250);
+    }
+
+    function collapse() {
+      label.dataset.state = 'collapsing';
+      setTimeout(() => { label.dataset.state = 'collapsed'; }, 200);
+    }
+
+    function setVariant(v) {
+      label.dataset.variant = v;
+      document.querySelectorAll('.variant-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.variant === v);
+      });
+    }
+
+    // Keyboard shortcut: Escape to collapse
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && label.dataset.state === 'expanded') {
+        collapse();
+      }
+    });
+  </script>
+</body>
+</html>

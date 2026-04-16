@@ -33,6 +33,7 @@ import { CreateTicketButton } from './create-ticket-button.jsx';
 import { SelectionStatusBadge } from './status-badge.js';
 import { ActiveGroupPicker } from '../../features/selection-groups/components/active-group-picker.jsx';
 import { IconLoader } from '../icons/icon-loader.jsx';
+import { IconChevron } from '../icons/icon-chevron.jsx';
 import { FlagIndicator } from '../flag-indicator.js';
 import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-color.js';
 import { Arrow } from './arrow.js';
@@ -406,12 +407,13 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         data-react-grab-ignore-events
         data-react-grab-selection-label
         class={cn(
-          'fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out'
+          'fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out',
+          props.onCollapse && 'animate-in fade-in-0 zoom-in-95 duration-200 ease-out origin-top'
         )}
         style={{
           top: `${positionComputation().position.top}px`,
           left: `${positionComputation().position.left}px`,
-          transform: `translateX(calc(-50% + ${positionComputation().position.edgeOffsetX}px))`,
+          translate: `calc(-50% + ${positionComputation().position.edgeOffsetX}px) 0`,
           'z-index': 'var(--z-overlay)',
           'pointer-events': shouldEnablePointerEvents() ? 'auto' : 'none',
           opacity: props.status === 'fading' || isInternalFading() ? 0 : 1,
@@ -574,6 +576,21 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                       : Boolean(props.isContextMenuOpen)
                   }
                 />
+                <Show when={props.onCollapse}>
+                  <button
+                    data-react-grab-ignore-events
+                    data-react-grab-collapse-label
+                    title="Collapse"
+                    class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-popover-foreground opacity-60 hover:opacity-100 hover:bg-accent cursor-pointer transition-all ml-1"
+                    onClick={(event) => {
+                      event.stopImmediatePropagation();
+                      props.onCollapse?.();
+                    }}
+                    onPointerDown={(event) => event.stopImmediatePropagation()}
+                  >
+                    <IconChevron size={12} />
+                  </button>
+                </Show>
               </div>
               <Show when={props.arrowNavigationState?.isVisible}>
                 <ArrowNavigationMenu
@@ -659,6 +676,21 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   onHoverChange={handleTagHoverChange}
                   forceShowIcon
                 />
+                <Show when={props.onCollapse}>
+                  <button
+                    data-react-grab-ignore-events
+                    data-react-grab-collapse-label
+                    title="Collapse"
+                    class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-popover-foreground opacity-60 hover:opacity-100 hover:bg-accent cursor-pointer transition-all ml-1"
+                    onClick={(event) => {
+                      event.stopImmediatePropagation();
+                      props.onCollapse?.();
+                    }}
+                    onPointerDown={(event) => event.stopImmediatePropagation()}
+                  >
+                    <IconChevron size={12} />
+                  </button>
+                </Show>
               </div>
               <ActiveGroupPicker
                 groups={props.groups}
@@ -746,7 +778,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 </div>
                 <Show when={props.onSubmitJiraComment || (props.jiraComments?.length ?? 0) > 0}>
                   <CommentsSection
-                    comments={(props.jiraComments ?? []) as import("../../features/jira-comments/types.js").JiraComment[]}
+                    comments={props.jiraComments ?? []}
                     onSubmitComment={props.onSubmitJiraComment ?? (async () => ({ id: "", created: "" }))}
                     onSearchUsers={props.onSearchJiraUsers}
                     onRefreshPoll={() => props.onRefreshJiraStatus?.()}

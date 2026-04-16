@@ -20,6 +20,8 @@ import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
+import { useCollapsibleLabel } from "../features/collapsible-label/index.js";
+import { CollapsedDot } from "./collapsible-label/collapsed-dot.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
@@ -205,7 +207,22 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       <Index each={props.labelInstances ?? []}>
         {(instance) => {
+          const collapsible = useCollapsibleLabel({
+            instanceId: instance().id,
+            defaultCollapsed: props.labelsStartCollapsedDefault,
+          });
+
           return (
+          <Show
+            when={!collapsible.isCollapsed()}
+            fallback={
+              <CollapsedDot
+                selectionBounds={instance().selectionBounds}
+                onExpand={collapsible.expand}
+                inputValue={instance().inputValue}
+              />
+            }
+          >
           <SelectionLabel
             tagName={instance().tagName}
             componentName={instance().componentName}
@@ -276,23 +293,21 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             }
             onSubmitJiraComment={
               instance().groupId && props.onSubmitJiraComment
-                ? async (md: string, mentions: Array<{ text: string; accountId: string }>, parentId?: string) => {
-                    const gid = instance().groupId;
-                    if (!gid) return { id: "", created: "" };
-                    return props.onSubmitJiraComment!(gid, md, mentions, parentId);
-                  }
+                ? (md, mentions, parentId) =>
+                    props.onSubmitJiraComment!(instance().groupId!, md, mentions, parentId)
                 : undefined
             }
             onSearchJiraUsers={props.onSearchJiraUsers}
             onRefreshJiraStatus={
               instance().groupId && props.onRefreshJiraStatus
-                ? () => {
-                    const gid = instance().groupId;
-                    if (gid) props.onRefreshJiraStatus!(gid);
-                  }
+                ? () => props.onRefreshJiraStatus!(instance().groupId!)
                 : undefined
             }
+            onCollapse={
+              props.collapsibleLabelsDefault ? collapsible.collapse : undefined
+            }
           />
+          </Show>
         );}}
       </Index>
 
@@ -415,6 +430,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onRemoveItem={props.onRemoveItem}
           looseTicketDialog={props.looseTicketDialog}
           onLooseTicketDialogClose={props.onLooseTicketDialogClose}
+          onSubmitJiraComment={props.onSubmitJiraComment}
+          onSearchJiraUsers={props.onSearchJiraUsers}
+          onRefreshJiraStatus={props.onRefreshJiraStatus}
           onClose={() => {
             setSidebarOpen(false);
             setActiveDetailGroupId(null);

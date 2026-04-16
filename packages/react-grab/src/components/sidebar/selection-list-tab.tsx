@@ -2,7 +2,18 @@ import { type Component, createMemo, For, Show } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
-import { CardComments } from "./card-comments.js";
+import {
+  applyFilters,
+  type FilterState,
+  isFilterActive,
+} from "../../features/sidebar/filter-state.js";
+import { CommentsSection } from "../jira-comments/comments-section.js";
+import { bindGroupCommentCallbacks } from "../../features/jira-comments/bind-group-callbacks.js";
+import type {
+  RefreshGroupStatusFn,
+  SearchJiraUsersFn,
+  SubmitGroupCommentFn,
+} from "../../features/jira-comments/types.js";
 import { DevInsights } from "./dev-insights.js";
 import { IssueTypeIcon } from "./issue-type-icon.js";
 import { PriorityIcon } from "./priority-icon.js";
@@ -13,6 +24,7 @@ import { useImageLightbox } from "../../features/image-lightbox/index.js";
 interface SelectionListTabProps {
   commentItems: CommentItem[];
   groups: SelectionGroupWithJira[];
+  filter?: FilterState;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
   searchQuery?: string;
@@ -20,6 +32,9 @@ interface SelectionListTabProps {
   isDevMode?: boolean;
   syncServerUrl?: string;
   syncWorkspace?: string;
+  onSubmitJiraComment?: SubmitGroupCommentFn;
+  onSearchJiraUsers?: SearchJiraUsersFn;
+  onRefreshJiraStatus?: RefreshGroupStatusFn;
 }
 
 const getStatusPillClass = (category?: string): string => {
@@ -70,6 +85,16 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
         const group = groupMap().get(item.groupId);
         return group?.jiraFlagged === true;
       });
+    }
+
+    const filter = props.filter;
+    if (filter && isFilterActive(filter)) {
+      const allowedGroupIds = new Set(
+        applyFilters(props.groups, filter).map((g) => g.id),
+      );
+      items = items.filter(
+        (item) => item.groupId != null && allowedGroupIds.has(item.groupId),
+      );
     }
 
     return items;
@@ -251,8 +276,15 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
               </div>
 
               {/* Inline comment threads */}
-              <Show when={group()?.jiraComments?.length}>
-                <CardComments comments={group()!.jiraComments!} />
+              <Show when={props.onSubmitJiraComment && group()}>
+                <CommentsSection
+                  comments={group()!.jiraComments ?? []}
+                  {...bindGroupCommentCallbacks(group()!.id, {
+                    onSubmitComment: props.onSubmitJiraComment!,
+                    onSearchUsers: props.onSearchJiraUsers,
+                    onRefreshStatus: props.onRefreshJiraStatus,
+                  })}
+                />
               </Show>
 
               {/* Dev insights (technical info) */}
