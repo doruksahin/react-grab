@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Screenshot Lightbox POC — react-grab</title>
+    <style>
+      :root {
+        --bg: #0b0b0d;
+        --panel: #17171a;
+        --border: #2a2a30;
+        --muted: #8b8b93;
+        --text: #e8e8ec;
+        --accent: #7c84ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      /* ---- Fake sidebar (simulates react-grab sidebar) ---- */
+
+      .stage {
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+      }
+
+      .sidebar {
+        width: 360px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+      }
+
+      .sidebar-header {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin: 0 0 14px;
+      }
+
+      .card {
+        background: #1d1d22;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+
+      .card-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0 0 2px;
+      }
+
+      .card-path {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        margin: 0 0 10px;
+      }
+
+      .screenshot-pair {
+        display: flex;
+        gap: 8px;
+      }
+
+      .slot {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .slot-label {
+        font-size: 9px;
+        color: var(--muted);
+        margin-bottom: 2px;
+      }
+
+      /* Current small thumbnail — cursor hints it's clickable */
+      .thumb {
+        width: 100%;
+        max-height: 128px;
+        object-fit: contain;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        display: block;
+        cursor: zoom-in;
+        transition: border-color 0.15s ease;
+        background: #0f0f12;
+      }
+
+      .thumb:hover {
+        border-color: var(--accent);
+      }
+
+      .hint {
+        margin-top: 20px;
+        font-size: 11px;
+        color: var(--muted);
+        text-align: center;
+        line-height: 1.6;
+      }
+
+      .hint kbd {
+        background: #222228;
+        border: 1px solid var(--border);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 10px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      /* ---- Lightbox ---- */
+
+      .lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.86);
+        backdrop-filter: blur(4px);
+        display: none;
+        z-index: 9999;
+        animation: fadeIn 0.18s ease-out;
+      }
+
+      .lightbox[data-open="true"] {
+        display: flex;
+        flex-direction: column;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .lightbox-topbar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        z-index: 2;
+        pointer-events: none;
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.55),
+          transparent
+        );
+      }
+
+      .lightbox-caption {
+        pointer-events: auto;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.88);
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 6px 10px;
+        border-radius: 6px;
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .lightbox-caption .zoom-badge {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      .lightbox-close {
+        pointer-events: auto;
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.4);
+        color: #fff;
+        cursor: pointer;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(6px);
+        transition:
+          background 0.15s ease,
+          transform 0.15s ease;
+      }
+
+      .lightbox-close:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(1.05);
+      }
+
+      /* Viewport = the scrollable area that holds the image */
+      .lightbox-viewport {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px;
+        /* When fitted, prevent scrollbars */
+      }
+
+      .lightbox-viewport[data-mode="fit"] {
+        overflow: hidden;
+      }
+
+      .lightbox-viewport[data-mode="actual"] {
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+
+      .lightbox-image {
+        display: block;
+        user-select: none;
+        -webkit-user-drag: none;
+        transition:
+          max-width 0.2s ease,
+          max-height 0.2s ease;
+      }
+
+      .lightbox-viewport[data-mode="fit"] .lightbox-image {
+        max-width: calc(100vw - 96px);
+        max-height: calc(100vh - 96px);
+        object-fit: contain;
+        cursor: zoom-in;
+      }
+
+      .lightbox-viewport[data-mode="actual"] .lightbox-image {
+        max-width: none;
+        max-height: none;
+        cursor: zoom-out;
+      }
+
+      .lightbox-viewport[data-mode="actual"][data-dragging="true"]
+        .lightbox-image {
+        cursor: grabbing;
+      }
+
+      /* Bottom hint */
+      .lightbox-hint {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.55);
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 5px 10px;
+        border-radius: 999px;
+        backdrop-filter: blur(6px);
+        pointer-events: none;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .lightbox-hint kbd {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 3px;
+        padding: 1px 5px;
+        font-size: 9px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="stage">
+      <div class="sidebar" data-react-grab-sidebar>
+        <p class="sidebar-header">Screenshots</p>
+
+        <!-- Card 1: wide element -->
+        <div class="card">
+          <p class="card-title">HeaderBanner.tsx</p>
+          <p class="card-path">src/components/header-banner.tsx:42</p>
+          <div class="screenshot-pair">
+            <div class="slot">
+              <div class="slot-label">Element</div>
+              <img
+                class="thumb"
+                data-lightbox
+                data-caption="Element — HeaderBanner.tsx"
+                src="https://picsum.photos/id/1018/1200/300"
+                alt="Element screenshot"
+              />
+            </div>
+            <div class="slot">
+              <div class="slot-label">Full page</div>
+              <img
+                class="thumb"
+                data-lightbox
+                data-caption="Full page — HeaderBanner.tsx"
+                src="https://picsum.photos/id/1018/900/2400"
+                alt="Full page screenshot"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: small element -->
+        <div class="card">
+          <p class="card-title">SubmitButton.tsx</p>
+          <p class="card-path">src/components/submit-button.tsx:12</p>
+          <div class="screenshot-pair">
+            <div class="slot">
+              <div class="slot-label">Element</div>
+              <img
+                class="thumb"
+                data-lightbox
+                data-caption="Element — SubmitButton.tsx"
+                src="https://picsum.photos/id/201/400/120"
+                alt="Element screenshot"
+              />
+            </div>
+            <div class="slot">
+              <div class="slot-label">Full page</div>
+              <img
+                class="thumb"
+                data-lightbox
+                data-caption="Full page — SubmitButton.tsx"
+                src="https://picsum.photos/id/201/1400/3200"
+                alt="Full page screenshot"
+              />
+            </div>
+          </div>
+        </div>
+
+        <p class="hint">
+          Click any thumbnail. <kbd>Esc</kbd> closes.
+          <kbd>Click image</kbd> toggles 1:1.
+        </p>
+      </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" data-lightbox-root role="dialog" aria-modal="true">
+      <div class="lightbox-topbar">
+        <div class="lightbox-caption">
+          <span data-caption-text>Label</span>
+          <span class="zoom-badge" data-zoom-badge>FIT</span>
+        </div>
+        <button
+          class="lightbox-close"
+          data-lightbox-close
+          aria-label="Close"
+          title="Close (Esc)"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="lightbox-viewport" data-lightbox-viewport data-mode="fit">
+        <img class="lightbox-image" data-lightbox-image alt="" />
+      </div>
+
+      <div class="lightbox-hint">
+        <span>Click to toggle zoom</span>
+        <span>·</span>
+        <span><kbd>Esc</kbd> to close</span>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        const root = document.querySelector("[data-lightbox-root]");
+        const viewport = root.querySelector("[data-lightbox-viewport]");
+        const img = root.querySelector("[data-lightbox-image]");
+        const captionEl = root.querySelector("[data-caption-text]");
+        const zoomBadge = root.querySelector("[data-zoom-badge]");
+        const closeBtn = root.querySelector("[data-lightbox-close]");
+
+        let mode = "fit"; // "fit" | "actual"
+        let dragging = false;
+        let dragStart = { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 };
+
+        const open = (src, caption) => {
+          img.src = src;
+          captionEl.textContent = caption;
+          setMode("fit");
+          root.setAttribute("data-open", "true");
+          document.body.style.overflow = "hidden";
+        };
+
+        const close = () => {
+          root.removeAttribute("data-open");
+          document.body.style.overflow = "";
+          img.src = "";
+        };
+
+        const setMode = (next) => {
+          mode = next;
+          viewport.setAttribute("data-mode", next);
+          zoomBadge.textContent = next === "fit" ? "FIT" : "1:1";
+          if (next === "fit") {
+            viewport.scrollTo(0, 0);
+          }
+        };
+
+        // Open handlers — delegate on document
+        document.addEventListener("click", (e) => {
+          const target = e.target.closest("[data-lightbox]");
+          if (target) {
+            open(target.src, target.dataset.caption ?? "");
+          }
+        });
+
+        // Close handlers
+        closeBtn.addEventListener("click", close);
+        root.addEventListener("click", (e) => {
+          // Close only when clicking the backdrop (not image, not topbar)
+          if (e.target === root || e.target === viewport) {
+            close();
+          }
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (root.getAttribute("data-open") !== "true") return;
+          if (e.key === "Escape") close();
+          if (e.key === "1" || e.key === "0") {
+            setMode(mode === "fit" ? "actual" : "fit");
+          }
+        });
+
+        // Click image to toggle mode
+        img.addEventListener("click", (e) => {
+          e.stopPropagation();
+          setMode(mode === "fit" ? "actual" : "fit");
+        });
+
+        // Drag-to-pan when in actual-size mode
+        img.addEventListener("mousedown", (e) => {
+          if (mode !== "actual") return;
+          dragging = true;
+          viewport.setAttribute("data-dragging", "true");
+          dragStart = {
+            x: e.clientX,
+            y: e.clientY,
+            scrollLeft: viewport.scrollLeft,
+            scrollTop: viewport.scrollTop,
+          };
+          e.preventDefault();
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!dragging) return;
+          viewport.scrollLeft = dragStart.scrollLeft - (e.clientX - dragStart.x);
+          viewport.scrollTop = dragStart.scrollTop - (e.clientY - dragStart.y);
+        });
+
+        document.addEventListener("mouseup", () => {
+          if (!dragging) return;
+          dragging = false;
+          viewport.removeAttribute("data-dragging");
+        });
+      })();
+    </script>
+  </body>
+</html>
