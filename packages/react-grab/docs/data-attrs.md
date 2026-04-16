@@ -247,7 +247,7 @@ but not in code).
 | `pnpm arch:codegen` | ✅ Works, manual | Rebuilds inventory from scan |
 | `pnpm arch:lint` | ✅ Works, manual | Orphans, stale-tests, bare-verbs |
 | Pre-commit hook | ✅ Wired via `simple-git-hooks` | Runs `pnpm arch:lint` on every commit |
-| CI gate | ❌ Not wired (no remote yet) | — |
+| CI gate | ✅ Wired in `.github/workflows/code-quality.yml` (`arch-lint` job) | Runs `pnpm arch:lint` on push to main + all PRs |
 
 **Pre-commit enforcement:** the repo installs a pre-commit hook via
 [`simple-git-hooks`](https://github.com/toplenboren/simple-git-hooks).
@@ -263,6 +263,7 @@ see the error message. Common fixes:
 - Stale test → update the selector or remove the dead probe.
 - Bare verb → rename to a scoped form.
 
-**Future — CI gate:** once the repo has a remote, add a GitHub Actions
-step that runs `pnpm arch:lint` on PR. Mirrors the pre-commit layer for
-any contributor whose local hook isn't installed.
+**CI gate:** the `arch-lint` job in `.github/workflows/code-quality.yml`
+runs `pnpm arch:lint` on every push to `main` and every PR — the
+server-side mirror of the pre-commit hook. Catches any contributor
+whose local hook didn't install (fork, CI environment, skipped hook).

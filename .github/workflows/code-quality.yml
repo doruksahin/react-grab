@@ -52,3 +52,26 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+  arch-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Validate architecture.yml (paths + data_flows + data-attrs scoping)
+        run: pnpm arch:lint
