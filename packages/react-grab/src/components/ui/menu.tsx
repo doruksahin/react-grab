@@ -10,7 +10,9 @@ export const MenuSub = DropdownMenu.Sub;
 export const MenuRadioGroup = DropdownMenu.RadioGroup;
 export const MenuSeparator = DropdownMenu.Separator;
 
-export const MenuTrigger: Component<ComponentProps<typeof DropdownMenu.Trigger>> = (props) => {
+export const MenuTrigger: Component<
+  ComponentProps<typeof DropdownMenu.Trigger>
+> = (props) => {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
     <DropdownMenu.Trigger
@@ -25,7 +27,9 @@ export const MenuTrigger: Component<ComponentProps<typeof DropdownMenu.Trigger>>
   );
 };
 
-export const MenuContent: Component<ComponentProps<typeof DropdownMenu.Content>> = (props) => {
+export const MenuContent: Component<
+  ComponentProps<typeof DropdownMenu.Content>
+> = (props) => {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
     <DropdownMenu.Portal mount={useShadowMount()}>
@@ -42,7 +46,9 @@ export const MenuContent: Component<ComponentProps<typeof DropdownMenu.Content>>
   );
 };
 
-export const MenuItem: Component<ComponentProps<typeof DropdownMenu.Item>> = (props) => {
+export const MenuItem: Component<ComponentProps<typeof DropdownMenu.Item>> = (
+  props,
+) => {
   const [local, rest] = splitProps(props, ["class"]);
   return (
     <DropdownMenu.Item
@@ -55,7 +61,9 @@ export const MenuItem: Component<ComponentProps<typeof DropdownMenu.Item>> = (pr
   );
 };
 
-export const MenuSubTrigger: Component<ComponentProps<typeof DropdownMenu.SubTrigger>> = (props) => {
+export const MenuSubTrigger: Component<
+  ComponentProps<typeof DropdownMenu.SubTrigger>
+> = (props) => {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
     <DropdownMenu.SubTrigger
@@ -70,7 +78,9 @@ export const MenuSubTrigger: Component<ComponentProps<typeof DropdownMenu.SubTri
   );
 };
 
-export const MenuSubContent: Component<ComponentProps<typeof DropdownMenu.SubContent>> = (props) => {
+export const MenuSubContent: Component<
+  ComponentProps<typeof DropdownMenu.SubContent>
+> = (props) => {
   const [local, rest] = splitProps(props, ["class"]);
   return (
     <DropdownMenu.Portal mount={useShadowMount()}>
@@ -85,7 +95,9 @@ export const MenuSubContent: Component<ComponentProps<typeof DropdownMenu.SubCon
   );
 };
 
-export const MenuRadioItem: Component<ComponentProps<typeof DropdownMenu.RadioItem>> = (props) => {
+export const MenuRadioItem: Component<
+  ComponentProps<typeof DropdownMenu.RadioItem>
+> = (props) => {
   const [local, rest] = splitProps(props, ["class", "children"]);
   return (
     <DropdownMenu.RadioItem
@@ -97,7 +109,16 @@ export const MenuRadioItem: Component<ComponentProps<typeof DropdownMenu.RadioIt
     >
       <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
         <DropdownMenu.ItemIndicator>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </DropdownMenu.ItemIndicator>
