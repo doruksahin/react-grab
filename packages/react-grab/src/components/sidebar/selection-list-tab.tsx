@@ -8,6 +8,7 @@ import { IssueTypeIcon } from "./issue-type-icon.js";
 import { PriorityIcon } from "./priority-icon.js";
 import { UserAvatar } from "./UserAvatar.js";
 import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
+import { useImageLightbox } from "../../features/image-lightbox/index.js";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];
@@ -46,6 +47,8 @@ const formatDueDate = (dueDate: string): string =>
   });
 
 export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
+  const lightbox = useImageLightbox();
+
   const groupMap = createMemo(
     () => new Map(props.groups.map((g) => [g.id, g])),
   );
@@ -180,20 +183,34 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
               <Show when={(item.screenshotElement || item.screenshotFullPage) && props.syncServerUrl && props.syncWorkspace}>
                 <div class="flex gap-1.5 mt-1.5">
                   <Show when={item.screenshotElement}>
-                    <img
-                      src={screenshotUrl(props.syncServerUrl!, props.syncWorkspace!, item.id, "element")}
-                      alt="Element screenshot"
-                      class="w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04]"
-                      loading="lazy"
-                    />
+                    {(() => {
+                      const src = screenshotUrl(props.syncServerUrl!, props.syncWorkspace!, item.id, "element");
+                      return (
+                        <img
+                          data-react-grab-screenshot-thumb
+                          src={src}
+                          alt="Element screenshot"
+                          class="w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04] cursor-zoom-in hover:border-primary/60 transition-colors"
+                          loading="lazy"
+                          onClick={() => lightbox.open(src, "Element")}
+                        />
+                      );
+                    })()}
                   </Show>
                   <Show when={item.screenshotFullPage}>
-                    <img
-                      src={screenshotUrl(props.syncServerUrl!, props.syncWorkspace!, item.id, "full")}
-                      alt="Full page screenshot"
-                      class="w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04]"
-                      loading="lazy"
-                    />
+                    {(() => {
+                      const src = screenshotUrl(props.syncServerUrl!, props.syncWorkspace!, item.id, "full");
+                      return (
+                        <img
+                          data-react-grab-screenshot-thumb
+                          src={src}
+                          alt="Full page screenshot"
+                          class="w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04] cursor-zoom-in hover:border-primary/60 transition-colors"
+                          loading="lazy"
+                          onClick={() => lightbox.open(src, "Full page")}
+                        />
+                      );
+                    })()}
                   </Show>
                 </div>
               </Show>
