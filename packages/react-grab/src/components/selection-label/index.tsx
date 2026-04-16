@@ -580,7 +580,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     data-react-grab-ignore-events
                     data-react-grab-collapse-label
                     title="Collapse"
-                    class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer transition-colors"
+                    class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-popover-foreground opacity-60 hover:opacity-100 hover:bg-accent cursor-pointer transition-all ml-1"
                     onClick={(event) => {
                       event.stopImmediatePropagation();
                       props.onCollapse?.();
@@ -680,7 +680,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     data-react-grab-ignore-events
                     data-react-grab-collapse-label
                     title="Collapse"
-                    class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer transition-colors"
+                    class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-popover-foreground opacity-60 hover:opacity-100 hover:bg-accent cursor-pointer transition-all ml-1"
                     onClick={(event) => {
                       event.stopImmediatePropagation();
                       props.onCollapse?.();
