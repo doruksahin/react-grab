@@ -33,8 +33,11 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
       </button>
 
       <div
-        class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1.5 gap-1"
-        style={{ display: isOpen() ? undefined : "none" }}
+        class="flex flex-col w-[calc(100%+16px)] -mx-2 px-2 py-1.5 gap-1 overflow-hidden transition-[max-height,opacity] duration-200 ease-in-out"
+        style={{
+          "max-height": isOpen() ? "600px" : "0px",
+          opacity: isOpen() ? "1" : "0",
+        }}
       >
         <div class="mb-2">
           <JiraCommentEditor
