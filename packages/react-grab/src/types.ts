@@ -810,7 +810,6 @@ export interface SelectionLabelProps
   onDismiss?: () => void;
   onUndo?: () => void;
   onFollowUpSubmit?: (prompt: string) => void;
-  isDevMode?: boolean;
   isPendingDismiss?: boolean;
   selectionLabelShakeCount?: number;
   onConfirmDismiss?: () => void;

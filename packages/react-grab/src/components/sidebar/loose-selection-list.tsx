@@ -17,7 +17,6 @@ interface LooseSelectionListProps {
   scrollRoot: () => Element | null;
   onCreateTicket: (item: CommentItem) => void;
   onRemoveItem?: (itemId: string) => void;
-  isDevMode?: boolean;
 }
 
 /**
@@ -67,7 +66,6 @@ export const LooseSelectionList: Component<LooseSelectionListProps> = (props) =>
                 syncServerUrl={props.syncServerUrl}
                 syncWorkspace={props.syncWorkspace}
                 scrollRoot={props.scrollRoot}
-                isDevMode={props.isDevMode}
               />
             );
           }}

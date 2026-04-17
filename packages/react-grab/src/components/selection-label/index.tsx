@@ -45,6 +45,7 @@ import { CompletionView } from './completion-view.js';
 import { ArrowNavigationMenu } from './arrow-navigation-menu.js';
 import { SelectionCardBody } from '../sidebar/selection-card-body.js';
 import { DevInsights } from '../ui/dev-insights/index.js';
+import { useDevMode } from '../../features/dev-mode/index.js';
 
 interface LabelPosition {
   left: number;
@@ -72,6 +73,7 @@ interface PositionResult {
 }
 
 export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
+  const isDevMode = useDevMode();
   let containerRef: HTMLDivElement | undefined;
   let panelRef: HTMLDivElement | undefined;
   let inputRef: HTMLTextAreaElement | undefined;
@@ -809,7 +811,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   </div>
                 </Show>
               </BottomSection>
-              <Show when={props.isDevMode && props.tagName}>
+              <Show when={isDevMode() && props.tagName}>
                 <DevInsights>
                   <DevInsights.Field label="tag" value={props.tagName} color="green" />
                   <DevInsights.Field label="node" value={props.componentName} color="purple" />

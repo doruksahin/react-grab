@@ -1,6 +1,7 @@
 // packages/react-grab/src/components/sidebar/selection-card.tsx
 import { type Component, createMemo, Show } from "solid-js";
 import type { CommentItem } from "../../types";
+import { useDevMode } from "../../features/dev-mode/index.js";
 import {
   extractFilePath,
   relativeTime,
@@ -25,10 +26,10 @@ export interface SelectionCardProps {
   jiraFlaggedAt?: string | null;
   jiraFlaggedBy?: string | null;
   jiraFlaggedByAvatar?: string | null;
-  isDevMode?: boolean;
 }
 
 export const SelectionCard: Component<SelectionCardProps> = (props) => {
+  const isDevMode = useDevMode();
   const filePath = createMemo(() =>
     extractFilePath(props.item.content ?? ""),
   );
@@ -112,7 +113,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       </Show>
 
       {/* Dev Insights — unified technical metadata (visible in DEV mode only) */}
-      <Show when={props.isDevMode}>
+      <Show when={isDevMode()}>
         <DevInsights>
           <DevInsights.Field label="tag" value={props.item.tagName} color="green" />
           <DevInsights.Field label="node" value={props.item.componentName ?? props.item.elementName} color="purple" />

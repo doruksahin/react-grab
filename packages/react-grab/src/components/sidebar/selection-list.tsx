@@ -14,7 +14,6 @@ interface SelectionListProps {
   jiraFlaggedAt?: string | null;
   jiraFlaggedBy?: string | null;
   jiraFlaggedByAvatar?: string | null;
-  isDevMode?: boolean;
 }
 
 export const SelectionList: Component<SelectionListProps> = (props) => {
@@ -52,7 +51,6 @@ export const SelectionList: Component<SelectionListProps> = (props) => {
               jiraFlaggedAt={props.jiraFlaggedAt}
               jiraFlaggedBy={props.jiraFlaggedBy}
               jiraFlaggedByAvatar={props.jiraFlaggedByAvatar}
-              isDevMode={props.isDevMode}
             />
           )}
         </For>

@@ -192,10 +192,19 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
       aria-label={props.isDevMode ? "DEV mode active" : "Toggle DEV mode"}
       aria-pressed={Boolean(props.isDevMode)}
       class={cn(
-        "contain-layout flex items-center justify-center cursor-pointer interactive-scale outline-none",
-        isVertical() ? "my-0.5" : "mx-0.5",
+        "contain-layout flex items-center gap-1 cursor-pointer interactive-scale outline-none",
+        isVertical() ? "my-0.5 flex-col" : "mx-0.5",
       )}
     >
+      <span
+        class="text-[7px] font-extrabold tracking-wider leading-none"
+        classList={{
+          "text-muted-foreground/60": !props.isDevMode,
+          "text-sky-500": Boolean(props.isDevMode),
+        }}
+      >
+        DEV
+      </span>
       <ToggleSwitch isOn={Boolean(props.isDevMode)} size="sm" vertical={isVertical()} color="sky" />
     </button>
   );

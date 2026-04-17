@@ -66,7 +66,6 @@ export interface SidebarProps {
   /** Trigger JIRA status refresh for a specific group */
   onRefreshJiraStatus?: RefreshGroupStatusFn;
   commentEditorToolbarVisible?: boolean;
-  isDevMode?: boolean;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -333,7 +332,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     onToggleSelect={toggleSelect}
                     searchQuery={searchQuery()}
                     flaggedOnly={flaggedOnly()}
-                    isDevMode={props.isDevMode}
                     syncServerUrl={props.syncServerUrl}
                     syncWorkspace={props.syncWorkspace}
                     onSubmitJiraComment={props.onSubmitJiraComment}
@@ -358,7 +356,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 setGroupTicketDialog({ group, items })
               }
               onRemoveItem={props.onRemoveItem}
-              isDevMode={props.isDevMode}
             />
           </Show>
         </Show>
