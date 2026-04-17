@@ -73,6 +73,9 @@ const SelectionCardBodyLayout: Component<SelectionCardBodySlots> = (props) => {
       {props.dates}
       {props.screenshots}
       {props.meta}
+      <Show when={props.comments || props.footer}>
+        <hr class="border-border/40 mt-2.5 mb-1" />
+      </Show>
       {props.comments}
       {props.footer}
     </div>
