@@ -17,12 +17,12 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
 
   return (
     <div data-react-grab-comments-section data-react-grab-ignore-events>
-      <div class="border-t border-border/40 mt-2" />
+      <div class="bg-violet-500/[0.08] border border-violet-500/20 rounded-md mt-2 px-2.5 py-1.5 transition-colors hover:bg-violet-500/[0.12]">
       <CollapsibleCard
         variant="inline"
         defaultOpen={true}
         trigger={
-          <span>Comments <span data-react-grab-comments-count>({mergedComments().length})</span></span>
+          <span class="text-violet-400 font-semibold text-[11px] uppercase tracking-wide">Comments <span data-react-grab-comments-count>({mergedComments().length})</span></span>
         }
       >
         <div class="flex flex-col gap-1">
@@ -58,6 +58,7 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
           </Show>
         </div>
       </CollapsibleCard>
+      </div>
     </div>
   );
 };
