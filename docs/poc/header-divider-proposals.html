@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Header Divider Proposals</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a2e;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #e0e0e0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    padding: 40px;
+    justify-content: center;
+  }
+
+  h2 {
+    width: 100%;
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: -12px;
+    margin-top: 40px;
+  }
+  h2:first-of-type { margin-top: 0; }
+
+  .label {
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+    margin-top: 8px;
+    max-width: 260px;
+  }
+
+  .card {
+    width: 260px;
+    background: #1e1e2f;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 13px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+
+  /* Header */
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+  }
+  .card-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #f0f0f0;
+  }
+  .card-badge {
+    font-size: 11px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .card-badge svg { width: 12px; height: 12px; opacity: 0.5; }
+
+  /* Body */
+  .card-body { padding: 14px; }
+
+  .subheader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .subheader-text { color: #aaa; font-size: 12px; }
+  .status-badge {
+    font-size: 10px;
+    font-weight: 600;
+    color: #a0a0b8;
+    background: rgba(255,255,255,0.06);
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 8px;
+  }
+
+  .ticket-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .ticket-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #5b9bd5;
+    font-size: 12px;
+    text-decoration: none;
+  }
+  .ticket-icon {
+    width: 14px; height: 14px;
+    background: #2563eb;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ticket-icon svg { width: 10px; height: 10px; }
+  .drag-handle { color: #555; font-size: 14px; cursor: grab; }
+
+  .comments-toggle {
+    font-size: 12px;
+    color: #888;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 0;
+  }
+
+  .dev-insights {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #3b82f6;
+    background: rgba(59,130,246,0.08);
+    padding: 8px 14px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+  }
+  .dev-insights-dot {
+    width: 6px; height: 6px;
+    background: #3b82f6;
+    border-radius: 50%;
+  }
+
+  /* ==============================
+     DIVIDER STYLES
+     ============================== */
+  .divider-current { height: 1px; background: rgba(255,255,255,0.08); }
+  
+  .divider-accent {
+    height: 2px;
+    background: linear-gradient(90deg, #3b82f6 0%, #6366f1 50%, transparent 100%);
+    opacity: 0.6;
+  }
+
+  /* ==============================
+     NEW PROPOSALS (HIGH CONTRAST)
+     ============================== */
+  .proposal-i .card-header {
+    background: #252545;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    position: relative;
+    z-index: 2;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .proposal-i .card-body { background: #1a1a2e; }
+
+  .proposal-j .card-header { background: #1e1e2f; padding-bottom: 14px; }
+  .proposal-j .card-body {
+    background: #141424;
+    margin: 0 10px 10px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .proposal-k .card-header {
+    background: #2d2d4a;
+    border-bottom: 2px solid #3b82f6;
+    padding: 14px;
+  }
+  .proposal-k .card-title { color: #fff; font-weight: 700; }
+
+  /* ==============================
+     PROPOSAL L: Styled Collapsible Wrapper
+     ============================== */
+  .proposal-l .card-header {
+    background: #252545;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .proposal-l .comments-wrapper {
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .proposal-l .comments-wrapper:hover {
+    background: rgba(139, 92, 246, 0.12);
+  }
+  .proposal-l .comments-toggle {
+    color: #a78bfa;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0;
+  }
+  .proposal-l .comment-editor {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .proposal-l .comment-input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: #888;
+    font-size: 12px;
+    outline: none;
+  }
+  .proposal-l .comment-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #555;
+  }
+  .proposal-l .comment-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .proposal-l .comment-save-btn {
+    background: #fff;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 4px;
+    padding: 3px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .proposal-l .comment-item {
+    display: flex;
+    gap: 8px;
+    padding: 6px 0;
+  }
+  .proposal-l .comment-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e8a838;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #1a1a2e;
+    flex-shrink: 0;
+  }
+  .proposal-l .comment-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .proposal-l .comment-author {
+    font-size: 11px;
+    font-weight: 600;
+    color: #ccc;
+  }
+  .proposal-l .comment-date {
+    font-size: 10px;
+    color: #555;
+  }
+  .proposal-l .comment-text {
+    font-size: 12px;
+    color: #aaa;
+  }
+  .proposal-l .comment-reply {
+    font-size: 11px;
+    color: #555;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+
+<h2>High Contrast Proposals</h2>
+
+<!-- I -->
+<div style="display:flex; flex-direction:column; align-items:center;">
+  <div class="card proposal-i">
+    <div class="card-header">
+      <span class="card-title">TestCard</span>
+      <span class="card-badge">...</span>
+    </div>
+    <div class="card-body">...</div>
+    <div class="dev-insights">...</div>
+  </div>
+  <p class="label">I — Shadow Elevation (Header "above" body)</p>
+</div>
+
+<!-- J -->
+<div style="display:flex; flex-direction:column; align-items:center;">
+  <div class="card proposal-j">
+    <div class="card-header">
+      <span class="card-title">TestCard</span>
+      <span class="card-badge">...</span>
+    </div>
+    <div class="card-body">...</div>
+    <div class="dev-insights">...</div>
+  </div>
+  <p class="label">J — Inset Body (High Contrast/Recessed)</p>
+</div>
+
+<!-- K -->
+<div style="display:flex; flex-direction:column; align-items:center;">
+  <div class="card proposal-k">
+    <div class="card-header">
+      <span class="card-title">TestCard</span>
+      <span class="card-badge">...</span>
+    </div>
+    <div class="card-body">...</div>
+    <div class="dev-insights">...</div>
+  </div>
+  <p class="label">K — Solid Brand Block (Classic UI)</p>
+</div>
+
+<h2>Collapsible Wrapper Proposal</h2>
+
+<!-- L: Collapsed -->
+<div style="display:flex; flex-direction:column; align-items:center;">
+  <div class="card proposal-l">
+    <div class="card-header">
+      <span class="card-title">TestCard</span>
+      <span class="card-badge">...</span>
+    </div>
+    <div class="card-body">
+      <div class="subheader">
+        <span class="subheader-text">test1</span>
+        <span class="status-badge">TO DO</span>
+      </div>
+      <div class="meta-row">📅 1d ago → No due date</div>
+      <div class="ticket-row">...</div>
+      <div class="comments-wrapper">
+        <div class="comments-toggle">▷ COMMENTS (1)</div>
+      </div>
+    </div>
+    <div class="dev-insights">...</div>
+  </div>
+  <p class="label">L — Collapsed Comments</p>
+</div>
+
+<!-- L: Expanded -->
+<div style="display:flex; flex-direction:column; align-items:center;">
+  <div class="card proposal-l" style="width: 280px;">
+    <div class="card-header">
+      <span class="card-title">TestCard</span>
+      <span class="card-badge">...</span>
+    </div>
+    <div class="card-body">
+      <div class="subheader">
+        <span class="subheader-text">test1</span>
+        <span class="status-badge">TO DO</span>
+      </div>
+      <div class="meta-row">📅 1d ago → No due date</div>
+      <div class="ticket-row">...</div>
+      <div class="comments-wrapper">
+        <div class="comments-toggle">▽ COMMENTS (2)</div>
+        <div class="comment-editor">
+          <div class="comment-input">Add a comment...</div>
+          <div class="comment-toolbar">
+            <div class="comment-toolbar-left">
+              <span style="font-size:14px;">T</span>
+              <button class="comment-save-btn">Save</button>
+            </div>
+            <span>Tip: Type @ to mention</span>
+          </div>
+        </div>
+        <div style="border-top: 1px solid rgba(139,92,246,0.15); margin-top: 8px; padding-top: 8px;">
+          <div class="comment-item">
+            <div class="comment-avatar">AA</div>
+            <div class="comment-body">
+              <div><span class="comment-author">ADC bot admin</span> <span class="comment-date">1d ago</span></div>
+              <div class="comment-text">test2</div>
+              <div class="comment-reply">↩</div>
+            </div>
+          </div>
+          <div class="comment-item">
+            <div class="comment-avatar">AA</div>
+            <div class="comment-body">
+              <div><span class="comment-author">ADC bot admin</span> <span class="comment-date">1d ago</span></div>
+              <div class="comment-text">test</div>
+              <div class="comment-reply">↩</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dev-insights">...</div>
+  </div>
+  <p class="label">L — Expanded Comments (Purple Theme)</p>
+</div>
+
+<script>
+  const bodyContent = `
+    <div class="subheader">
+      <span class="subheader-text">test1</span>
+      <span class="status-badge">TO DO</span>
+    </div>
+    <div class="meta-row">📅 1d ago → No due date</div>
+    <div class="ticket-row">
+      <a class="ticket-link" href="#" style="color: #5b9bd5; text-decoration: none;">
+        <span class="ticket-icon" style="display:inline-flex; width: 14px; height: 14px; background: #2563eb; border-radius: 3px; align-items: center; justify-content: center; margin-right: 6px;">
+          <svg viewBox="0 0 24 24" fill="white" style="width:10px; height:10px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </span>
+        ATT-2899
+      </a>
+      <span class="drag-handle" style="color:#555;">≡</span>
+    </div>
+    <div class="comments-toggle" style="color:#888; font-size:12px;">▽ Comments (1)</div>
+  `;
+  const ticketRow = `
+    <a class="ticket-link" href="#" style="color: #5b9bd5; text-decoration: none;">
+      <span class="ticket-icon" style="display:inline-flex; width: 14px; height: 14px; background: #2563eb; border-radius: 3px; align-items: center; justify-content: center; margin-right: 6px;">
+        <svg viewBox="0 0 24 24" fill="white" style="width:10px; height:10px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </span>
+      ATT-2899
+    </a>
+    <span class="drag-handle" style="color:#555;">≡</span>
+  `;
+  const footerContent = `
+    <span>›</span>
+    <div style="width: 6px; height: 6px; background: #3b82f6; border-radius: 50%;"></div>
+    DEV INSIGHTS
+  `;
+  const badgeContent = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px; opacity:0.5;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    Ungrouped
+  `;
+
+  document.querySelectorAll('.card-body').forEach(b => { if(b.innerText === '...') b.innerHTML = bodyContent; });
+  document.querySelectorAll('.ticket-row').forEach(b => { if(b.innerText === '...') b.innerHTML = ticketRow; });
+  document.querySelectorAll('.dev-insights').forEach(b => { if(b.innerText === '...') b.innerHTML = footerContent; });
+  document.querySelectorAll('.card-badge').forEach(b => { if(b.innerText === '...') b.innerHTML = badgeContent; });
+</script>
+
+</body>
+</html>
