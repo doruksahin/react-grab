@@ -751,7 +751,7 @@ data_attrs:
     frozen-styles: {scope: reserved, src: 1, tests: 0}
     global-freeze: {scope: reserved, src: 1, tests: 5}
     ignore: {scope: reserved, src: 1, tests: 0}
-    ignore-events: {scope: reserved, src: 69, tests: 5}
+    ignore-events: {scope: reserved, src: 70, tests: 5}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 0}
     collapse-label: {scope: selection, src: 1, tests: 3}

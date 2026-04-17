@@ -75,12 +75,13 @@ export interface SelectionLabelHeaderProps {
   jiraFlaggedByAvatar?: string | null;
 }
 
-/** Context input — textarea + submit button */
+/** Context input — textarea + submit/abort buttons */
 export interface SelectionLabelContextInputProps {
   value?: string;
   onChange?: (value: string) => void;
   onSubmit?: () => void;
   onDismiss?: () => void;
+  onAbort?: () => void;
   placeholder?: string;
   disabled?: boolean;
 }
