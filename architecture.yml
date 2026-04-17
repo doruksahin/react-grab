@@ -400,6 +400,7 @@ features:
     description: TODO
     status: discovered
     files:
+      - packages/react-grab/src/features/dev-mode/dev-mode-context.tsx
       - packages/react-grab/src/features/dev-mode/index.ts
 
 data_flows:
@@ -551,7 +552,6 @@ data_attrs:
       owning_feature: selection-groups
       owns:
         - generation-input
-        - generation-submit
         - generation-abort
 
     completion:
@@ -590,6 +590,8 @@ data_attrs:
         - jira-form
         - jira-create
         - jira-dots
+        - create-ticket
+        - jira-ticket-link
 
     comments:
       description: JIRA comment authoring, display, mention picker, comment thread
@@ -610,7 +612,6 @@ data_attrs:
         - comments-section
         - comments-list
         - comments-count
-        - comments-collapse
         - comments-error
         # Actions
         - comment-submit
@@ -724,12 +725,13 @@ data_attrs:
     filter-clear: {scope: filter, src: 1, tests: 0}
     filter-row: {scope: filter, src: 5, tests: 2}
     generation-abort: {scope: generation, src: 1, tests: 1}
-    generation-input: {scope: generation, src: 2, tests: 1}
-    generation-submit: {scope: generation, src: 1, tests: 0}
+    generation-input: {scope: generation, src: 1, tests: 1}
+    create-ticket: {scope: jira, src: 1, tests: 0}
     jira-create: {scope: jira, src: 1, tests: 0}
     jira-dialog: {scope: jira, src: 1, tests: 0}
     jira-dots: {scope: jira, src: 1, tests: 0}
     jira-form: {scope: jira, src: 1, tests: 0}
+    jira-ticket-link: {scope: jira, src: 1, tests: 0}
     image-lightbox: {scope: lightbox, src: 1, tests: 3}
     lightbox-close: {scope: lightbox, src: 1, tests: 1}
     lightbox-viewport: {scope: lightbox, src: 1, tests: 2}
@@ -743,7 +745,7 @@ data_attrs:
     frozen-styles: {scope: reserved, src: 1, tests: 0}
     global-freeze: {scope: reserved, src: 1, tests: 5}
     ignore: {scope: reserved, src: 1, tests: 0}
-    ignore-events: {scope: reserved, src: 72, tests: 5}
+    ignore-events: {scope: reserved, src: 70, tests: 5}
     action-cycle-item: {scope: selection, src: 1, tests: 0}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 0}
