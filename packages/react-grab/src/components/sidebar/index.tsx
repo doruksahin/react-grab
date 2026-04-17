@@ -62,6 +62,7 @@ export interface SidebarProps {
   /** Trigger JIRA status refresh for a specific group */
   onRefreshJiraStatus?: RefreshGroupStatusFn;
   commentEditorToolbarVisible?: boolean;
+  isDevMode?: boolean;
 }
 
 export const Sidebar: Component<SidebarProps> = (props) => {
@@ -86,7 +87,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
 
   const [activeTab, setActiveTab] = createSignal<"groups" | "selections">("groups");
   const [showLegend, setShowLegend] = createSignal(false);
-  const [isDevMode, setIsDevMode] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = createSignal("");
@@ -194,8 +194,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           syncStatus={props.syncStatus}
           onClose={props.onClose}
           onInfoClick={() => setShowLegend(true)}
-          isDevMode={isDevMode()}
-          onToggleDevMode={() => setIsDevMode((prev) => !prev)}
         />
 
         <Show when={showLegend()}>
@@ -313,7 +311,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     onToggleSelect={toggleSelect}
                     searchQuery={searchQuery()}
                     flaggedOnly={flaggedOnly()}
-                    isDevMode={isDevMode()}
+                    isDevMode={props.isDevMode}
                     syncServerUrl={props.syncServerUrl}
                     syncWorkspace={props.syncWorkspace}
                     onSubmitJiraComment={props.onSubmitJiraComment}
@@ -338,6 +336,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 setGroupTicketDialog({ group, items })
               }
               onRemoveItem={props.onRemoveItem}
+              isDevMode={props.isDevMode}
             />
           </Show>
         </Show>

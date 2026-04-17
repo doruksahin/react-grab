@@ -58,6 +58,7 @@ import {
   getHitboxConstraintClass,
 } from "../../utils/toolbar-layout.js";
 import { ToolbarContent } from "./toolbar-content.js";
+import { ToggleSwitch } from "../ui/toggle-switch.jsx";
 import {
   nativeCancelAnimationFrame,
   nativeRequestAnimationFrame,
@@ -78,6 +79,8 @@ interface ToolbarProps {
   onToggle?: () => void;
   enabled?: boolean;
   onToggleEnabled?: () => void;
+  isDevMode?: boolean;
+  onToggleDevMode?: () => void;
   shakeCount?: number;
   onStateChange?: (state: ToolbarState) => void;
   onSubscribeToStateChanges?: (
@@ -198,6 +201,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         ratio: result.ratio,
         collapsed: isCollapsed(),
         enabled: props.enabled ?? true,
+        devMode: props.isDevMode ?? false,
         selectionsRevealed: props.selectionsRevealed ?? false,
       });
     },
@@ -600,202 +604,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     }, TOOLBAR_COLLAPSE_ANIMATION_DURATION_MS);
   });
 
-  const handleToggleEnabled = drag.createDragAwareHandler(() => {
-    const isCurrentlyEnabled = Boolean(props.enabled);
-    const edge = snapEdge();
-    const preTogglePosition = position();
-    const isVerticalEdge = edge === "left" || edge === "right";
-
-    const readExpandableDimension = () =>
-      isVerticalEdge ? lastKnownExpandableHeight : lastKnownExpandableWidth;
-
-    // HACK: Skip measuring during an active toggle animation — the CSS grid transition is
-    // mid-flight so getBoundingClientRect returns a partial value that contaminates
-    // lastKnownExpandableWidth and causes permanent position drift.
-    if (isCurrentlyEnabled && expandableButtonsRef && !isToggleAnimating()) {
-      measureExpandableDimension();
-    }
-    let expandableDimension = readExpandableDimension();
-    let shouldCompensatePosition = expandableDimension > 0;
-
-    let currentRenderedDimension = 0;
-    if (expandableButtonsRef) {
-      const expandableRect = expandableButtonsRef.getBoundingClientRect();
-      currentRenderedDimension = isVerticalEdge
-        ? expandableRect.height
-        : expandableRect.width;
-    }
-
-    // HACK: On first enable, expandable buttons are collapsed (0fr) so getBoundingClientRect
-    // returns 0. Temporarily force the relevant grid wrappers to 1fr without transitions to measure
-    // the real dimension synchronously, then restore. The browser never renders the intermediate state.
-    if (
-      !isCurrentlyEnabled &&
-      expandableDimension === 0 &&
-      expandableButtonsRef
-    ) {
-      const hasCommentItems = (props.commentItemCount ?? 0) > 0;
-      const expandedWrappers = Array.from(expandableButtonsRef.children).filter(
-        (child): child is HTMLElement => {
-          if (!(child instanceof HTMLElement)) return false;
-          if (child.querySelector("[data-react-grab-toolbar-comments]")) {
-            return hasCommentItems;
-          }
-          if (child.querySelector("[data-react-grab-toolbar-copy-all]")) {
-            return Boolean(props.isCommentsDropdownOpen);
-          }
-          return true;
-        },
-      );
-      const gridProperty = isVerticalEdge
-        ? "gridTemplateRows"
-        : "gridTemplateColumns";
-      for (const wrapper of expandedWrappers) {
-        wrapper.style.transition = "none";
-        wrapper.style[gridProperty] = "1fr";
-      }
-      void expandableButtonsRef.offsetWidth;
-      measureExpandableDimension();
-      expandableDimension = readExpandableDimension();
-      for (const wrapper of expandedWrappers) {
-        wrapper.style[gridProperty] = "";
-      }
-      void expandableButtonsRef.offsetWidth;
-      for (const wrapper of expandedWrappers) {
-        wrapper.style.transition = "";
-      }
-      shouldCompensatePosition = expandableDimension > 0;
-    }
-
-    if (shouldCompensatePosition) {
-      setIsRapidRetoggle(isToggleAnimating());
-      setIsToggleAnimating(true);
-    }
-
-    props.onToggleEnabled?.();
-
-    if (shouldCompensatePosition) {
-      const dimensionChange = isCurrentlyEnabled
-        ? -expandableDimension
-        : expandableDimension;
-
-      if (isVerticalEdge) {
-        expandedDimensions = {
-          width: expandedDimensions.width,
-          height: expandedDimensions.height + dimensionChange,
-        };
-      } else {
-        expandedDimensions = {
-          width: expandedDimensions.width + dimensionChange,
-          height: expandedDimensions.height,
-        };
-      }
-
-      const collapsedAxisPosition = isVerticalEdge
-        ? preTogglePosition.y + currentRenderedDimension
-        : preTogglePosition.x + currentRenderedDimension;
-
-      const computeClampedPosition = (expandDimension: number): Position => {
-        const viewport = getVisualViewport();
-        const targetAxisPosition = collapsedAxisPosition - expandDimension;
-        if (isVerticalEdge) {
-          const clampMin = viewport.offsetTop + TOOLBAR_SNAP_MARGIN_PX;
-          const clampMax =
-            viewport.offsetTop +
-            viewport.height -
-            expandedDimensions.height -
-            TOOLBAR_SNAP_MARGIN_PX;
-          return {
-            x: preTogglePosition.x,
-            y: clampToRange(targetAxisPosition, clampMin, clampMax),
-          };
-        }
-        const clampMin = viewport.offsetLeft + TOOLBAR_SNAP_MARGIN_PX;
-        const clampMax =
-          viewport.offsetLeft +
-          viewport.width -
-          expandedDimensions.width -
-          TOOLBAR_SNAP_MARGIN_PX;
-        return {
-          x: clampToRange(targetAxisPosition, clampMin, clampMax),
-          y: preTogglePosition.y,
-        };
-      };
-
-      if (toggleAnimationRafId !== undefined) {
-        nativeCancelAnimationFrame(toggleAnimationRafId);
-      }
-
-      if (isRapidRetoggle()) {
-        const finalExpandDimension = isCurrentlyEnabled
-          ? 0
-          : expandableDimension;
-        setPosition(computeClampedPosition(finalExpandDimension));
-        toggleAnimationRafId = undefined;
-      } else {
-        const animationStartTime = performance.now();
-        const syncPositionWithGrid = () => {
-          const elapsed = performance.now() - animationStartTime;
-          if (
-            elapsed >
-            TOOLBAR_COLLAPSE_ANIMATION_DURATION_MS + TOGGLE_ANIMATION_BUFFER_MS
-          ) {
-            toggleAnimationRafId = undefined;
-            return;
-          }
-          if (expandableButtonsRef) {
-            const currentExpandDimension = isVerticalEdge
-              ? expandableButtonsRef.getBoundingClientRect().height
-              : expandableButtonsRef.getBoundingClientRect().width;
-            setPosition(computeClampedPosition(currentExpandDimension));
-          }
-          toggleAnimationRafId =
-            nativeRequestAnimationFrame(syncPositionWithGrid);
-        };
-        toggleAnimationRafId =
-          nativeRequestAnimationFrame(syncPositionWithGrid);
-      }
-
-      clearTimeout(toggleAnimationTimeout);
-      toggleAnimationTimeout = setTimeout(() => {
-        if (toggleAnimationRafId !== undefined) {
-          nativeCancelAnimationFrame(toggleAnimationRafId);
-          toggleAnimationRafId = undefined;
-        }
-        // HACK: Under heavy system load the rAF loop may not have run enough
-        // frames to fully track the CSS grid transition. Snap to the final
-        // expected position so the toggle button never drifts.
-        const finalExpandDimension = isCurrentlyEnabled
-          ? 0
-          : expandableDimension;
-        setPosition(computeClampedPosition(finalExpandDimension));
-        setIsToggleAnimating(false);
-        setIsRapidRetoggle(false);
-        const newRatio = getRatioFromPosition(
-          edge,
-          position().x,
-          position().y,
-          expandedDimensions.width,
-          expandedDimensions.height,
-        );
-        setPositionRatio(newRatio);
-        saveAndNotify({
-          edge,
-          ratio: newRatio,
-          collapsed: isCollapsed(),
-          enabled: !isCurrentlyEnabled,
-          selectionsRevealed: props.selectionsRevealed ?? false,
-        });
-      }, TOOLBAR_COLLAPSE_ANIMATION_DURATION_MS);
-    } else {
-      saveAndNotify({
-        edge,
-        ratio: positionRatio(),
-        collapsed: isCollapsed(),
-        enabled: !isCurrentlyEnabled,
-        selectionsRevealed: props.selectionsRevealed ?? false,
-      });
-    }
+  const handleToggleDevMode = drag.createDragAwareHandler(() => {
+    props.onToggleDevMode?.();
   });
 
   const computeCollapsedPosition = (): Position =>
@@ -838,6 +648,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         ratio: newRatio,
         collapsed: isCollapsed(),
         enabled: props.enabled ?? true,
+        devMode: props.isDevMode ?? false,
         selectionsRevealed: props.selectionsRevealed ?? false,
       });
     }, TOOLBAR_FADE_IN_DELAY_MS);
@@ -1241,40 +1052,23 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             <TooltipTrigger
               as="button"
               data-react-grab-ignore-events
-              data-react-grab-toolbar-enabled
-              aria-label={
-                props.enabled ? "Disable React Grab" : "Enable React Grab"
-              }
-              aria-pressed={Boolean(props.enabled)}
+              data-react-grab-toolbar-devmode
+              aria-label={props.isDevMode ? "DEV mode active" : "Toggle DEV mode"}
+              aria-pressed={Boolean(props.isDevMode)}
               class={cn(
                 "contain-layout flex items-center justify-center cursor-pointer interactive-scale outline-none",
                 isVertical() ? "my-0.5" : "mx-0.5",
               )}
               onClick={(event: MouseEvent) => {
                 setIsToggleTooltipVisible(false);
-                handleToggleEnabled(event as MouseEvent & { currentTarget: HTMLButtonElement });
+                handleToggleDevMode(event as MouseEvent & { currentTarget: HTMLButtonElement });
               }}
               onMouseEnter={() => setIsToggleTooltipVisible(true)}
               onMouseLeave={() => setIsToggleTooltipVisible(false)}
             >
-              <div
-                class={cn(
-                  "relative rounded-full transition-colors",
-                  isVertical() ? "w-3.5 h-2.5" : "w-5 h-3",
-                  props.enabled ? "bg-popover-foreground" : "bg-muted-foreground",
-                )}
-              >
-                <div
-                  class={cn(
-                    "absolute top-0.5 rounded-full bg-popover transition-transform",
-                    isVertical() ? "w-1.5 h-1.5" : "w-2 h-2",
-                    !props.enabled && "left-0.5",
-                    props.enabled && (isVertical() ? "left-1.5" : "left-2.5"),
-                  )}
-                />
-              </div>
+              <ToggleSwitch isOn={Boolean(props.isDevMode)} size="sm" vertical={isVertical()} color="sky" />
             </TooltipTrigger>
-            <TooltipContent>{props.enabled ? "Disable" : "Enable"}</TooltipContent>
+            <TooltipContent>{props.isDevMode ? "DEV mode" : "DEV mode"}</TooltipContent>
           </Tooltip>
         }
       />

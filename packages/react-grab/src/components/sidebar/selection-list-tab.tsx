@@ -15,6 +15,7 @@ import type {
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { SelectionCardBody } from "./selection-card-body.js";
 import { SelectionCheckbox } from "../ui/selection-checkbox.js";
+import { DevInsights } from "../ui/dev-insights/index.js";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];
@@ -144,6 +145,21 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                   commentEditorToolbarVisible={props.commentEditorToolbarVisible}
                   onScreenshotClick={(src, label) => lightbox.open(src, label)}
                 />
+                <Show when={props.isDevMode}>
+                  <DevInsights>
+                    <DevInsights.Field label="tag" value={item.tagName} color="green" />
+                    <DevInsights.Field label="node" value={item.componentName ?? item.elementName} color="purple" />
+                    <DevInsights.Attributes content={item.content} />
+                    <Show when={item.elementSelectors?.[0]}>
+                      <DevInsights.Section label="selector">
+                        <span class="text-[9px] font-mono text-[#cbd5e1] break-all">{item.elementSelectors?.[0]}</span>
+                      </DevInsights.Section>
+                    </Show>
+                    <DevInsights.Section label="html">
+                      <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">{item.content}</pre>
+                    </DevInsights.Section>
+                  </DevInsights>
+                </Show>
               </div>
             </div>
           );

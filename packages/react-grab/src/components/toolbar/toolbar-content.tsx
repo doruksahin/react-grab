@@ -16,10 +16,12 @@ import {
 
 import type { SyncStatus } from "../../features/sync/types.js";
 import { SyncIndicator } from "../../features/sync/components/sync-indicator.jsx";
+import { ToggleSwitch } from "../ui/toggle-switch.jsx";
 
 export interface ToolbarContentProps {
   isActive?: boolean;
   enabled?: boolean;
+  isDevMode?: boolean;
   isCollapsed?: boolean;
   snapEdge?: "top" | "bottom" | "left" | "right";
   isShaking?: boolean;
@@ -186,30 +188,15 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
   const defaultToggleButton = () => (
     <button
       data-react-grab-ignore-events
-      data-react-grab-toolbar-enabled
-      aria-label={props.enabled ? "Disable React Grab" : "Enable React Grab"}
-      aria-pressed={Boolean(props.enabled)}
+      data-react-grab-toolbar-devmode
+      aria-label={props.isDevMode ? "DEV mode active" : "Toggle DEV mode"}
+      aria-pressed={Boolean(props.isDevMode)}
       class={cn(
         "contain-layout flex items-center justify-center cursor-pointer interactive-scale outline-none",
         isVertical() ? "my-0.5" : "mx-0.5",
       )}
     >
-      <div
-        class={cn(
-          "relative rounded-full transition-colors",
-          isVertical() ? "w-3.5 h-2.5" : "w-5 h-3",
-          props.enabled ? "bg-popover-foreground" : "bg-muted-foreground",
-        )}
-      >
-        <div
-          class={cn(
-            "absolute top-0.5 rounded-full bg-popover transition-transform",
-            isVertical() ? "w-1.5 h-1.5" : "w-2 h-2",
-            !props.enabled && "left-0.5",
-            props.enabled && (isVertical() ? "left-1.5" : "left-2.5"),
-          )}
-        />
-      </div>
+      <ToggleSwitch isOn={Boolean(props.isDevMode)} size="sm" vertical={isVertical()} color="sky" />
     </button>
   );
 
@@ -276,7 +263,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
               class={cn(
                 "grid",
                 gridTransitionClass(),
-                expandGridClass(Boolean(props.enabled)),
+                expandGridClass(true),
               )}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
@@ -288,7 +275,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
                 "grid",
                 gridTransitionClass(),
                 expandGridClass(
-                  Boolean(props.enabled) && Boolean(props.isCommentsExpanded),
+                  Boolean(props.isCommentsExpanded),
                   "pointer-events-none",
                 ),
               )}
@@ -315,7 +302,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
               class={cn(
                 "grid",
                 gridTransitionClass(),
-                expandGridClass(Boolean(props.enabled)),
+                expandGridClass(true),
               )}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
@@ -326,7 +313,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
               class={cn(
                 "grid",
                 gridTransitionClass(),
-                expandGridClass(Boolean(props.enabled)),
+                expandGridClass(true),
               )}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>

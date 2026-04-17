@@ -809,7 +809,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                   </div>
                 </Show>
               </BottomSection>
-              <Show when={props.tagName}>
+              <Show when={props.isDevMode && props.tagName}>
                 <DevInsights>
                   <DevInsights.Field label="tag" value={props.tagName} color="green" />
                   <DevInsights.Field label="node" value={props.componentName} color="purple" />

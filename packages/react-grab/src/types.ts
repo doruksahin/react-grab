@@ -412,6 +412,7 @@ export interface ToolbarState {
   ratio: number;
   collapsed: boolean;
   enabled: boolean;
+  devMode: boolean;
   defaultAction?: string;
   selectionsRevealed: boolean;
 }
@@ -431,6 +432,8 @@ export interface ReactGrabAPI {
   isActive: () => boolean;
   isEnabled: () => boolean;
   setEnabled: (enabled: boolean) => void;
+  isDevMode: () => boolean;
+  setDevMode: (devMode: boolean) => void;
   getToolbarState: () => ToolbarState | null;
   setToolbarState: (state: Partial<ToolbarState>) => void;
   onToolbarStateChange: (callback: (state: ToolbarState) => void) => () => void;
@@ -624,6 +627,8 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onToggleActive?: () => void;
   enabled?: boolean;
   onToggleEnabled?: () => void;
+  isDevMode?: boolean;
+  onToggleDevMode?: () => void;
   shakeCount?: number;
   onToolbarStateChange?: (state: ToolbarState) => void;
   onSubscribeToToolbarStateChanges?: (
@@ -805,6 +810,7 @@ export interface SelectionLabelProps
   onDismiss?: () => void;
   onUndo?: () => void;
   onFollowUpSubmit?: (prompt: string) => void;
+  isDevMode?: boolean;
   isPendingDismiss?: boolean;
   selectionLabelShakeCount?: number;
   onConfirmDismiss?: () => void;

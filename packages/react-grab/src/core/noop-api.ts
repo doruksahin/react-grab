@@ -10,6 +10,8 @@ export const createNoopApi = (): ReactGrabAPI => ({
   isActive: () => false,
   isEnabled: () => false,
   setEnabled: NOOP,
+  isDevMode: () => false,
+  setDevMode: NOOP,
   getToolbarState: () => null,
   setToolbarState: NOOP,
   onToolbarStateChange: () => NOOP,

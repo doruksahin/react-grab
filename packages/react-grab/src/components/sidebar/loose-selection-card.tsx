@@ -32,6 +32,7 @@ interface LooseSelectionCardProps {
   jiraFlaggedAt?: string | null;
   jiraFlaggedBy?: string | null;
   jiraFlaggedByAvatar?: string | null;
+  isDevMode?: boolean;
 }
 
 /**
@@ -131,6 +132,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             jiraFlaggedAt={props.jiraFlaggedAt}
             jiraFlaggedBy={props.jiraFlaggedBy}
             jiraFlaggedByAvatar={props.jiraFlaggedByAvatar}
+            isDevMode={props.isDevMode}
           />
         </div>
       </div>

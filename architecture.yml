@@ -488,7 +488,7 @@ data_attrs:
         - toolbar-collapse
         - toolbar-menu
         - toolbar-visibility
-        - toolbar-enabled
+        - toolbar-devmode
         - toolbar-comments
         - toolbar-copy-all
         - toolbar-dashboard
@@ -677,7 +677,6 @@ data_attrs:
     comment-thread: {scope: comments, src: 1, tests: 0}
     comment-time: {scope: comments, src: 1, tests: 0}
     comments-clear: {scope: comments, src: 1, tests: 1}
-    comments-collapse: {scope: comments, src: 1, tests: 0}
     comments-copy-all: {scope: comments, src: 1, tests: 2}
     comments-count: {scope: comments, src: 1, tests: 0}
     comments-dropdown: {scope: comments, src: 3, tests: 4}
@@ -738,13 +737,14 @@ data_attrs:
     frozen-styles: {scope: reserved, src: 1, tests: 0}
     global-freeze: {scope: reserved, src: 1, tests: 5}
     ignore: {scope: reserved, src: 1, tests: 0}
-    ignore-events: {scope: reserved, src: 73, tests: 5}
+    ignore-events: {scope: reserved, src: 72, tests: 5}
     action-cycle-item: {scope: selection, src: 1, tests: 0}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 0}
     collapse-label: {scope: selection, src: 2, tests: 3}
     collapsed-dot: {scope: selection, src: 1, tests: 5}
     collapsed-dot-preview: {scope: selection, src: 1, tests: 0}
+    dev-insights: {scope: selection, src: 1, tests: 0}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 3, tests: 2}
     selection-card: {scope: selection, src: 1, tests: 0}
@@ -777,10 +777,10 @@ data_attrs:
     ungrouped-section: {scope: sidebar, src: 1, tests: 2}
     toolbar: {scope: toolbar, src: 2, tests: 7}
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
-    toolbar-comments: {scope: toolbar, src: 4, tests: 6}
-    toolbar-copy-all: {scope: toolbar, src: 4, tests: 2}
+    toolbar-comments: {scope: toolbar, src: 3, tests: 6}
+    toolbar-copy-all: {scope: toolbar, src: 3, tests: 2}
     toolbar-dashboard: {scope: toolbar, src: 1, tests: 13}
-    toolbar-enabled: {scope: toolbar, src: 2, tests: 2}
+    toolbar-devmode: {scope: toolbar, src: 2, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 2, tests: 4}
     toolbar-visibility: {scope: toolbar, src: 1, tests: 0}

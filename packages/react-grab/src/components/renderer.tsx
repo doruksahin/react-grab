@@ -124,6 +124,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             <SelectionLabel
               tagName={session().tagName}
               componentName={session().componentName}
+              isDevMode={props.isDevMode}
               selectionBounds={session().selectionBounds[0]}
               mouseX={session().position.x}
               visible={true}
@@ -172,6 +173,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         <SelectionLabel
           tagName={props.selectionTagName}
           componentName={props.selectionComponentName}
+          isDevMode={props.isDevMode}
           elementsCount={props.selectionElementsCount}
           selectionBounds={props.selectionBounds}
           mouseX={props.mouseX}
@@ -246,6 +248,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           <SelectionLabel
             tagName={instance().tagName}
             componentName={instance().componentName}
+            isDevMode={props.isDevMode}
             content={instance().content}
             elementsCount={instance().elementsCount}
             selectionBounds={instance().selectionBounds}
@@ -351,6 +354,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onToggle={props.onToggleActive}
           enabled={props.enabled}
           onToggleEnabled={props.onToggleEnabled}
+          isDevMode={props.isDevMode}
+          onToggleDevMode={props.onToggleDevMode}
           shakeCount={props.shakeCount}
           onStateChange={props.onToolbarStateChange}
           onSubscribeToStateChanges={props.onSubscribeToToolbarStateChanges}
@@ -467,6 +472,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onSearchJiraUsers={props.onSearchJiraUsers}
           onRefreshJiraStatus={props.onRefreshJiraStatus}
           commentEditorToolbarVisible={props.commentEditorToolbarVisible}
+          isDevMode={props.isDevMode}
           onClose={() => {
             setSidebarOpen(false);
             setActiveDetailGroupId(null);

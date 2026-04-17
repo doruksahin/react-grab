@@ -24,6 +24,7 @@ interface GroupDetailViewProps {
     items: CommentItem[],
   ) => void;
   onRemoveItem?: (itemId: string) => void;
+  isDevMode?: boolean;
 }
 
 export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
@@ -56,6 +57,7 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
         jiraFlaggedAt={props.group.jiraFlaggedAt}
         jiraFlaggedBy={props.group.jiraFlaggedBy}
         jiraFlaggedByAvatar={props.group.jiraFlaggedByAvatar}
+        isDevMode={props.isDevMode}
       />
 
       {/* JIRA section — bottom of detail view */}

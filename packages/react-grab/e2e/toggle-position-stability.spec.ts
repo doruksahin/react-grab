@@ -12,7 +12,7 @@ const getToggleButtonCenter = async (reactGrab: ReactGrabPageObject) => {
     const root = shadowRoot.querySelector(`[${attrName}]`);
     if (!root) return null;
     const button = root.querySelector<HTMLButtonElement>(
-      "[data-react-grab-toolbar-enabled]",
+      "[data-react-grab-toolbar-devmode]",
     );
     if (!button) return null;
     const rect = button.getBoundingClientRect();

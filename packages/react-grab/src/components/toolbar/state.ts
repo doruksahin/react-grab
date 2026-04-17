@@ -32,6 +32,7 @@ export const loadToolbarState = (): ToolbarState | null => {
       collapsed:
         typeof record.collapsed === "boolean" ? record.collapsed : false,
       enabled: typeof record.enabled === "boolean" ? record.enabled : true,
+      devMode: typeof record.devMode === "boolean" ? record.devMode : false,
       defaultAction:
         typeof record.defaultAction === "string"
           ? record.defaultAction

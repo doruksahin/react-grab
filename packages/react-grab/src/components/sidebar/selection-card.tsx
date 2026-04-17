@@ -25,6 +25,7 @@ export interface SelectionCardProps {
   jiraFlaggedAt?: string | null;
   jiraFlaggedBy?: string | null;
   jiraFlaggedByAvatar?: string | null;
+  isDevMode?: boolean;
 }
 
 export const SelectionCard: Component<SelectionCardProps> = (props) => {
@@ -110,25 +111,27 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
         />
       </Show>
 
-      {/* Dev Insights — unified technical metadata */}
-      <DevInsights>
-        <DevInsights.Field label="tag" value={props.item.tagName} color="green" />
-        <DevInsights.Field label="node" value={props.item.componentName ?? props.item.elementName} color="purple" />
-        <DevInsights.Field
-          label="file"
-          value={filePath() ? `${filePath()!.path}${filePath()!.line !== null ? `:${filePath()!.line}` : ""}` : undefined}
-          color="amber"
-        />
-        <DevInsights.Attributes content={props.item.content} />
-        <Show when={props.item.elementSelectors?.[0]}>
-          <DevInsights.Section label="selector">
-            <span class="text-[9px] font-mono text-[#cbd5e1] break-all">{props.item.elementSelectors?.[0]}</span>
+      {/* Dev Insights — unified technical metadata (visible in DEV mode only) */}
+      <Show when={props.isDevMode}>
+        <DevInsights>
+          <DevInsights.Field label="tag" value={props.item.tagName} color="green" />
+          <DevInsights.Field label="node" value={props.item.componentName ?? props.item.elementName} color="purple" />
+          <DevInsights.Field
+            label="file"
+            value={filePath() ? `${filePath()!.path}${filePath()!.line !== null ? `:${filePath()!.line}` : ""}` : undefined}
+            color="amber"
+          />
+          <DevInsights.Attributes content={props.item.content} />
+          <Show when={props.item.elementSelectors?.[0]}>
+            <DevInsights.Section label="selector">
+              <span class="text-[9px] font-mono text-[#cbd5e1] break-all">{props.item.elementSelectors?.[0]}</span>
+            </DevInsights.Section>
+          </Show>
+          <DevInsights.Section label="html">
+            <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">{props.item.content}</pre>
           </DevInsights.Section>
-        </Show>
-        <DevInsights.Section label="html">
-          <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">{props.item.content}</pre>
-        </DevInsights.Section>
-      </DevInsights>
+        </DevInsights>
+      </Show>
     </div>
   );
 };

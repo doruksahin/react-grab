@@ -329,8 +329,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     );
 
     const savedToolbarState = loadToolbarState();
-    const [isEnabled, setIsEnabled] = createSignal(
-      savedToolbarState?.enabled ?? true,
+    const [isEnabled] = createSignal(true);
+    const [isDevMode, setIsDevMode] = createSignal(
+      savedToolbarState?.devMode ?? false,
     );
     const [toolbarShakeCount, setToolbarShakeCount] = createSignal(0);
     const [selectionLabelShakeCount, setSelectionLabelShakeCount] =
@@ -396,6 +397,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         ratio: currentState?.ratio ?? TOOLBAR_DEFAULT_POSITION_RATIO,
         collapsed: currentState?.collapsed ?? false,
         enabled: currentState?.enabled ?? true,
+        devMode: currentState?.devMode ?? false,
         defaultAction: currentState?.defaultAction ?? DEFAULT_ACTION_ID,
         selectionsRevealed: currentState?.selectionsRevealed ?? false,
         ...updates,
@@ -1936,13 +1938,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     };
 
     const handleToggleEnabled = () => {
-      const newEnabled = !isEnabled();
-      setIsEnabled(newEnabled);
-      updateToolbarState({ enabled: newEnabled });
-      if (!newEnabled) {
-        forceDeactivateAll();
-        dismissAllPopups();
-      }
+      // Kept for toolbar enabled prop (always true) — no-op
+    };
+
+    const handleToggleDevMode = () => {
+      const newDevMode = !isDevMode();
+      setIsDevMode(newDevMode);
+      updateToolbarState({ devMode: newDevMode });
     };
 
     const handlePointerMove = (clientX: number, clientY: number) => {
@@ -4463,6 +4465,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onToggleActive={handleToggleActive}
                 enabled={isEnabled()}
                 onToggleEnabled={handleToggleEnabled}
+                isDevMode={isDevMode()}
+                onToggleDevMode={handleToggleDevMode}
                 shakeCount={toolbarShakeCount()}
                 onToolbarStateChange={(state) => {
                   setCurrentToolbarState(state);
@@ -4679,12 +4683,14 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       comment: handleComment,
       isActive: () => isActivated(),
       isEnabled: () => isEnabled(),
-      setEnabled: (enabled: boolean) => {
-        if (enabled === isEnabled()) return;
-        setIsEnabled(enabled);
-        if (!enabled) {
-          forceDeactivateAll();
-        }
+      setEnabled: (_enabled: boolean) => {
+        // No-op — overlay is always enabled now
+      },
+      isDevMode: () => isDevMode(),
+      setDevMode: (devMode: boolean) => {
+        if (devMode === isDevMode()) return;
+        setIsDevMode(devMode);
+        updateToolbarState({ devMode });
       },
       getToolbarState: () => loadToolbarState(),
       setToolbarState: (state: Partial<ToolbarState>) => {
@@ -4697,6 +4703,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             TOOLBAR_DEFAULT_POSITION_RATIO,
           collapsed: state.collapsed ?? currentState?.collapsed ?? false,
           enabled: state.enabled ?? currentState?.enabled ?? true,
+          devMode: state.devMode ?? currentState?.devMode ?? false,
           defaultAction:
             state.defaultAction ??
             currentState?.defaultAction ??
@@ -4706,8 +4713,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         };
         saveToolbarState(newState);
         setCurrentToolbarState(newState);
-        if (state.enabled !== undefined && state.enabled !== isEnabled()) {
-          setIsEnabled(state.enabled);
+        if (state.devMode !== undefined && state.devMode !== isDevMode()) {
+          setIsDevMode(state.devMode);
         }
         toolbarStateChangeCallbacks.forEach((callback) => callback(newState));
       },
