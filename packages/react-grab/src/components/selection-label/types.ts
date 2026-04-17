@@ -2,11 +2,10 @@ import type { JSX } from "solid-js";
 import type {
   OverlayBounds,
   SelectionLabelStatus,
-  ActionCycleState,
   ArrowNavigationState,
 } from "../../types.js";
 
-/** Root shell — positioning + animation only */
+/** Root shell — positioning, pointer-events, animation, context provider */
 export interface SelectionLabelRootProps {
   selectionBounds?: OverlayBounds;
   mouseX?: number;
@@ -23,6 +22,35 @@ export interface SelectionLabelRootProps {
   onRemoveItem?: () => void;
   jiraTicketId?: string;
   jiraFlagged?: boolean;
+  /** Tag / component identity — used for position reset on element change */
+  tagName?: string;
+  componentName?: string;
+  /** Pointer-events: needed for shouldEnablePointerEvents */
+  onDismiss?: () => void;
+  onShowContextMenu?: () => void;
+  onAbort?: () => void;
+  onAcknowledgeError?: () => void;
+  onRetry?: () => void;
+  arrowNavigationState?: ArrowNavigationState;
+  inspectNavigationState?: ArrowNavigationState;
+  /** Global keydown: Enter to expand */
+  onToggleExpand?: () => void;
+  /** Hover tracking on the container */
+  onHoverChange?: (isHovered: boolean) => void;
+  /** Error state — affects panel visibility */
+  error?: string;
+  /** Pending abort — affects copying status check */
+  isPendingAbort?: boolean;
+  /** Has agent — affects completion view status text */
+  hasAgent?: boolean;
+  statusText?: string;
+  /** Completion view props forwarded by Root */
+  supportsUndo?: boolean;
+  supportsFollowUp?: boolean;
+  dismissButtonText?: string;
+  previousPrompt?: string;
+  onUndo?: () => void;
+  onFollowUpSubmit?: (prompt: string) => void;
   children: JSX.Element;
 }
 

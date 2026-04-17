@@ -546,6 +546,8 @@ data_attrs:
         - arrow-nav-index
         - selection-remove
         - dev-insights
+        - selection-header
+        - selection-content
 
     generation:
       description: Active generation flow inside a selection label (prompt textarea, submit, abort)
@@ -553,6 +555,8 @@ data_attrs:
       owns:
         - generation-input
         - generation-abort
+        - generation-submit
+        - context-input
 
     completion:
       description: Selection-label completion view — streaming result, follow-up, undo/dismiss/more-options
@@ -724,8 +728,10 @@ data_attrs:
     filter-badge: {scope: filter, src: 1, tests: 0}
     filter-clear: {scope: filter, src: 1, tests: 0}
     filter-row: {scope: filter, src: 5, tests: 2}
+    context-input: {scope: generation, src: 1, tests: 0}
     generation-abort: {scope: generation, src: 1, tests: 1}
-    generation-input: {scope: generation, src: 1, tests: 1}
+    generation-input: {scope: generation, src: 2, tests: 1}
+    generation-submit: {scope: generation, src: 1, tests: 0}
     create-ticket: {scope: jira, src: 1, tests: 0}
     jira-create: {scope: jira, src: 1, tests: 0}
     jira-dialog: {scope: jira, src: 1, tests: 0}
@@ -745,11 +751,10 @@ data_attrs:
     frozen-styles: {scope: reserved, src: 1, tests: 0}
     global-freeze: {scope: reserved, src: 1, tests: 5}
     ignore: {scope: reserved, src: 1, tests: 0}
-    ignore-events: {scope: reserved, src: 70, tests: 5}
-    action-cycle-item: {scope: selection, src: 1, tests: 0}
+    ignore-events: {scope: reserved, src: 69, tests: 5}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 0}
-    collapse-label: {scope: selection, src: 2, tests: 3}
+    collapse-label: {scope: selection, src: 1, tests: 3}
     collapsed-dot: {scope: selection, src: 1, tests: 5}
     collapsed-dot-preview: {scope: selection, src: 1, tests: 0}
     dev-insights: {scope: selection, src: 1, tests: 0}
@@ -757,6 +762,8 @@ data_attrs:
     screenshot-thumb: {scope: selection, src: 3, tests: 2}
     selection-card: {scope: selection, src: 2, tests: 0}
     selection-card-body: {scope: selection, src: 1, tests: 0}
+    selection-content: {scope: selection, src: 1, tests: 0}
+    selection-header: {scope: selection, src: 1, tests: 0}
     selection-label: {scope: selection, src: 1, tests: 11}
     selection-remove: {scope: selection, src: 1, tests: 0}
     status-badge: {scope: selection, src: 1, tests: 3}

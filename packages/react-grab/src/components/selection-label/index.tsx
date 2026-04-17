@@ -1,6 +1,5 @@
 import {
   Show,
-  For,
   createSignal,
   createEffect,
   createMemo,
@@ -9,42 +8,24 @@ import {
   onCleanup,
 } from 'solid-js';
 import type { Component } from 'solid-js';
-import type { ArrowPosition, SelectionLabelProps } from '../../types.js';
+import type { ArrowPosition } from '../../types.js';
+import type { SelectionLabelRootProps } from './types.js';
+import type { SelectionLabelContextValue } from './context.js';
 import {
-  IME_COMPOSING_KEY_CODE,
   VIEWPORT_MARGIN_PX,
   ARROW_CENTER_PERCENT,
   ARROW_LABEL_MARGIN_PX,
   LABEL_GAP_PX,
   SELECTION_LABEL_OFFSCREEN_PX,
-  TEXTAREA_MAX_HEIGHT_PX,
 } from '../../constants.js';
-import { autoResizeTextarea } from '../../utils/auto-resize-textarea.js';
 import { getArrowSize } from '../../utils/get-arrow-size.js';
 import { isKeyboardEventTriggeredByInput } from '../../utils/is-keyboard-event-triggered-by-input.js';
 import { cn } from '../../utils/cn.js';
-// getApiBaseUrl moved into jira-comments-section.tsx
-import { getTagDisplay } from '../../utils/get-tag-display.js';
-import { formatShortcut } from '../../utils/format-shortcut.js';
-import { IconReply } from '../icons/icon-reply.jsx';
-import { IconSubmit } from '../icons/icon-submit.jsx';
 import { RemoveSelectionButton } from '../remove-selection-button.jsx';
-import { CreateTicketButton } from './create-ticket-button.jsx';
-import { SelectionStatusBadge } from './status-badge.js';
-import { ActiveGroupPicker } from '../../features/selection-groups/components/active-group-picker.jsx';
-import { IconLoader } from '../icons/icon-loader.jsx';
-import { IconChevron } from '../icons/icon-chevron.jsx';
-import { FlagIndicator } from '../flag-indicator.js';
 import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-color.js';
 import { Arrow } from './arrow.js';
-import { TagBadge } from './tag-badge.js';
-import { BottomSection } from './bottom-section.js';
-import { DiscardPrompt } from './discard-prompt.js';
-import { ErrorView } from './error-view.js';
 import { CompletionView } from './completion-view.js';
-import { ArrowNavigationMenu } from './arrow-navigation-menu.js';
-import { SelectionCardBody } from '../sidebar/selection-card-body.js';
-import { DevInsights } from '../ui/dev-insights/index.js';
+import { SelectionLabelProvider } from './context.js';
 import { useDevMode } from '../../features/dev-mode/index.js';
 
 interface LabelPosition {
@@ -63,8 +44,6 @@ const DEFAULT_OFFSCREEN_POSITION: LabelPosition = {
   edgeOffsetX: 0,
 };
 
-// CommentBody moved to jira-comments-section.tsx
-
 interface PositionResult {
   position: LabelPosition;
   computedArrowPosition: ArrowPosition | null;
@@ -72,12 +51,10 @@ interface PositionResult {
   elementIdentity: string;
 }
 
-export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
+export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (props) => {
   const isDevMode = useDevMode();
   let containerRef: HTMLDivElement | undefined;
   let panelRef: HTMLDivElement | undefined;
-  let inputRef: HTMLTextAreaElement | undefined;
-  let isTagCurrentlyHovered = false;
 
   const [measuredWidth, setMeasuredWidth] = createSignal(0);
   const [measuredHeight, setMeasuredHeight] = createSignal(0);
@@ -109,16 +86,11 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
     }
     if (props.arrowNavigationState?.isVisible) return true;
     if (props.inspectNavigationState?.isVisible) return true;
-    // The × remove button needs clicks to land.
     if (props.onRemoveItem && !props.jiraTicketId) return true;
     return false;
   };
 
   let resizeObserver: ResizeObserver | undefined;
-
-  const handleTagHoverChange = (hovered: boolean) => {
-    isTagCurrentlyHovered = hovered;
-  };
 
   const handleViewportChange = () => {
     setViewportVersion((version) => version + 1);
@@ -150,7 +122,7 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
     resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const rect = entry.target.getBoundingClientRect();
-        if (entry.target === containerRef && !isTagCurrentlyHovered) {
+        if (entry.target === containerRef) {
           setMeasuredWidth(rect.width);
           setMeasuredHeight(rect.height);
         } else if (entry.target === panelRef) {
@@ -189,7 +161,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
   const elementIdentity = () =>
     `${props.tagName ?? ''}:${props.componentName ?? ''}`;
 
-  // Reset collapse state on new element selection
   const positionComputation = createMemo(
     (previousResult: PositionResult): PositionResult => {
       viewportVersion();
@@ -255,7 +226,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         : getArrowSize(panelWidth());
 
       // HACK: Use cursorX as anchor point, CSS transform handles centering via translateX(-50%)
-      // This avoids the flicker when content changes because centering doesn't depend on JS measurement
       const anchorX = cursorX;
       let edgeOffsetX = 0;
       const extraOffset = props.extraTopOffset ?? 0;
@@ -338,68 +308,16 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
     )
   );
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.isComposing || event.keyCode === IME_COMPOSING_KEY_CODE) {
-      return;
-    }
-
-    event.stopImmediatePropagation();
-
-    const isEnterWithoutShift = event.code === 'Enter' && !event.shiftKey;
-    const isEscape = event.code === 'Escape';
-
-    if (isEnterWithoutShift) {
-      event.preventDefault();
-      props.onSubmit?.();
-    } else if (isEscape) {
-      event.preventDefault();
-      props.onConfirmDismiss?.();
-    }
-  };
-
-  const handleInput = (event: InputEvent) => {
-    const inputTarget = event.target;
-    if (!(inputTarget instanceof HTMLTextAreaElement)) {
-      return;
-    }
-    autoResizeTextarea(inputTarget, TEXTAREA_MAX_HEIGHT_PX);
-    props.onInputChange?.(inputTarget.value);
-  };
-
-  const tagDisplayResult = () =>
-    getTagDisplay({
-      tagName: props.tagName,
-      componentName: props.componentName,
-      elementsCount: props.elementsCount,
-    });
-
-  const isArrowNavigationVisible = () =>
-    Boolean(props.arrowNavigationState?.isVisible);
-
-  const isInspectNavigationVisible = () =>
-    Boolean(props.inspectNavigationState?.isVisible);
-
-  const handleTagClick = (event: MouseEvent) => {
-    event.stopImmediatePropagation();
-    if (props.filePath && props.onOpen) {
-      props.onOpen();
-    }
-  };
-
-  const handleContainerPointerDown = (event: PointerEvent) => {
-    event.stopImmediatePropagation();
-    const isEditableInputVisible =
-      canInteract() &&
-      props.isPromptMode &&
-      !props.isPendingDismiss &&
-      props.onSubmit;
-    if (isEditableInputVisible && inputRef) {
-      inputRef.focus({ preventScroll: true });
-    }
-  };
-
   const shouldPersistDuringFade = () =>
     hadValidBounds() && (isCompletedStatus() || props.status === 'error');
+
+  const contextValue: SelectionLabelContextValue = {
+    status: () => props.status,
+    canInteract,
+    isPromptMode: () => Boolean(props.isPromptMode),
+    arrowPosition,
+    isDevMode,
+  };
 
   return (
     <Show
@@ -427,7 +345,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           'pointer-events': shouldEnablePointerEvents() ? 'auto' : 'none',
           opacity: props.status === 'fading' || isInternalFading() ? 0 : 1,
         }}
-        onPointerDown={handleContainerPointerDown}
         onClick={(event) => {
           event.stopImmediatePropagation();
         }}
@@ -464,7 +381,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
           ref={panelRef}
           class={cn(
             'relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]',
-            canInteract() && !props.isPromptMode ? 'w-[320px]' : 'w-fit',
             'bg-popover',
             props.jiraFlagged && FLAGGED_BORDER_CLASS,
             isShaking() && 'animate-shake'
@@ -485,302 +401,13 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
             </div>
           </Show>
 
-          <Show when={props.status === 'copying' && !props.isPendingAbort}>
-            <div
-              class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit max-w-[280px]"
-              classList={{
-                'min-w-[150px]': Boolean(props.hasAgent && props.inputValue),
-              }}
-            >
-              <div class="contain-layout shrink-0 flex items-center gap-1 py-1.5 px-2 w-full h-fit">
-                <IconLoader size={13} class="text-muted-foreground shrink-0" />
-                <span class="shimmer-text text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap">
-                  {props.statusText ?? 'Grabbing…'}
-                </span>
-              </div>
-              <Show when={props.hasAgent && props.inputValue}>
-                <BottomSection>
-                  <div class="shrink-0 flex justify-between items-end w-full min-h-4">
-                    <textarea
-                      ref={inputRef}
-                      data-react-grab-ignore-events
-                      class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 opacity-50 wrap-break-word overflow-y-auto"
-                      style={{
-                        'field-sizing': 'content',
-                        'min-height': '16px',
-                        'max-height': `${TEXTAREA_MAX_HEIGHT_PX}px`,
-                        'scrollbar-width': 'none',
-                      }}
-                      value={props.inputValue ?? ''}
-                      placeholder="Add context"
-                      rows={1}
-                      disabled
-                    />
-                    <Show when={props.onAbort}>
-                      <button
-                        data-react-grab-ignore-events
-                        data-react-grab-generation-abort
-                        class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale"
-                        onPointerDown={(event) => event.stopPropagation()}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          props.onAbort?.();
-                        }}
-                      >
-                        <div class="size-1.5 bg-popover rounded-[1px]" />
-                      </button>
-                    </Show>
-                  </div>
-                </BottomSection>
-              </Show>
-            </div>
-          </Show>
-
-          <Show when={props.status === 'copying' && props.isPendingAbort}>
-            <DiscardPrompt
-              onConfirm={props.onConfirmAbort}
-              onCancel={props.onCancelAbort}
-            />
-          </Show>
-
-          <Show when={canInteract() && !props.isPromptMode}>
-            <div
-              class="contain-layout shrink-0 flex flex-col items-stretch w-full max-h-[400px] overflow-y-auto overflow-x-hidden"
-              style={{ 'scrollbar-width': 'none' }}
-            >
-              <div
-                class="contain-layout shrink-0 flex items-center gap-1 w-full h-fit px-2"
-                classList={{
-                  'py-1.5':
-                    !isArrowNavigationVisible() &&
-                    !isInspectNavigationVisible(),
-                  'pt-1.5 pb-1':
-                    isArrowNavigationVisible() || isInspectNavigationVisible(),
-                }}
-              >
-                <Show when={props.jiraFlagged}>
-                  <FlagIndicator
-                    flaggedAt={props.jiraFlaggedAt}
-                    flaggedBy={props.jiraFlaggedBy}
-                    flaggedByAvatar={props.jiraFlaggedByAvatar}
-                  />
-                </Show>
-                <Show
-                  when={props.inputValue}
-                  fallback={
-                    <TagBadge
-                      tagName={tagDisplayResult().tagName}
-                      componentName={tagDisplayResult().componentName}
-                      isClickable={Boolean(props.filePath && props.onOpen)}
-                      onClick={handleTagClick}
-                      onHoverChange={handleTagHoverChange}
-                      shrink
-                      forceShowIcon={
-                        isArrowNavigationVisible() || isInspectNavigationVisible()
-                          ? Boolean(props.filePath && props.onOpen)
-                          : Boolean(props.isContextMenuOpen)
-                      }
-                    />
-                  }
-                >
-                  <span class="text-[13px] leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-popover-foreground">
-                    {props.inputValue}
-                  </span>
-                </Show>
-                <Show when={props.onCollapse}>
-                  <button
-                    data-react-grab-ignore-events
-                    data-react-grab-collapse-label
-                    title="Collapse"
-                    class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-popover-foreground opacity-60 hover:opacity-100 hover:bg-accent cursor-pointer transition-all ml-1"
-                    onClick={(event) => {
-                      event.stopImmediatePropagation();
-                      props.onCollapse?.();
-                    }}
-                    onPointerDown={(event) => event.stopImmediatePropagation()}
-                  >
-                    <IconChevron size={12} />
-                  </button>
-                </Show>
-              </div>
-              <Show when={props.arrowNavigationState?.isVisible}>
-                <ArrowNavigationMenu
-                  items={props.arrowNavigationState!.items}
-                  activeIndex={props.arrowNavigationState!.activeIndex}
-                  onSelect={(index) => props.onArrowNavigationSelect?.(index)}
-                />
-              </Show>
-              <Show
-                when={
-                  !isArrowNavigationVisible() &&
-                  isInspectNavigationVisible() &&
-                  props.inspectNavigationState
-                }
-              >
-                {(state) => (
-                  <ArrowNavigationMenu
-                    items={state().items}
-                    activeIndex={state().activeIndex}
-                    onSelect={(index) => props.onInspectSelect?.(index)}
-                  />
-                )}
-              </Show>
-              <Show
-                when={
-                  !isArrowNavigationVisible() &&
-                  !isInspectNavigationVisible() &&
-                  Boolean(props.actionCycleState?.isVisible)
-                }
-              >
-                <BottomSection>
-                  <div class="flex flex-col w-[calc(100%+16px)] -mx-2 -my-1.5">
-                    <For each={props.actionCycleState?.items ?? []}>
-                      {(item, itemIndex) => (
-                        <div
-                          data-react-grab-action-cycle-item={item.label.toLowerCase()}
-                          class="contain-layout flex items-center justify-between w-full px-2 py-1 transition-colors"
-                          classList={{
-                            'bg-accent':
-                              itemIndex() ===
-                              (props.actionCycleState?.activeIndex ?? 0),
-                            'rounded-b-[6px]':
-                              itemIndex() ===
-                              (props.actionCycleState?.items ?? []).length - 1,
-                          }}
-                        >
-                          <span class="text-[13px] leading-4 font-medium text-popover-foreground">
-                            {item.label}
-                          </span>
-                          <Show when={item.shortcut}>
-                            <span class="text-[11px] text-muted-foreground ml-4">
-                              {formatShortcut(item.shortcut!)}
-                            </span>
-                          </Show>
-                        </div>
-                      )}
-                    </For>
-                  </div>
-                </BottomSection>
-              </Show>
-            </div>
-          </Show>
-
-          <Show
-            when={
-              canInteract() && props.isPromptMode && !props.isPendingDismiss
-            }
-          >
-            <div class="contain-layout shrink-0 flex flex-col justify-center items-start min-w-[150px] max-w-[280px] gap-1">
-              <div class="contain-layout shrink-0 flex items-baseline gap-1 pt-1.5 pb-1 h-fit px-2 w-full">
-                <Show when={props.jiraFlagged}>
-                  <FlagIndicator
-                    flaggedAt={props.jiraFlaggedAt}
-                    flaggedBy={props.jiraFlaggedBy}
-                    flaggedByAvatar={props.jiraFlaggedByAvatar}
-                  />
-                </Show>
-                <Show
-                  when={props.inputValue}
-                  fallback={
-                    <TagBadge
-                      tagName={tagDisplayResult().tagName}
-                      componentName={tagDisplayResult().componentName}
-                      isClickable={Boolean(props.filePath && props.onOpen)}
-                      onClick={handleTagClick}
-                      onHoverChange={handleTagHoverChange}
-                      forceShowIcon
-                    />
-                  }
-                >
-                  <span class="text-[13px] leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-popover-foreground">
-                    {props.inputValue}
-                  </span>
-                </Show>
-                <Show when={props.onCollapse}>
-                  <button
-                    data-react-grab-ignore-events
-                    data-react-grab-collapse-label
-                    title="Collapse"
-                    class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-popover-foreground opacity-60 hover:opacity-100 hover:bg-accent cursor-pointer transition-all ml-1"
-                    onClick={(event) => {
-                      event.stopImmediatePropagation();
-                      props.onCollapse?.();
-                    }}
-                    onPointerDown={(event) => event.stopImmediatePropagation()}
-                  >
-                    <IconChevron size={12} />
-                  </button>
-                </Show>
-                <span class="flex-1" />
-                <ActiveGroupPicker
-                  groups={props.groups}
-                  activeGroupId={props.activeGroupId}
-                  onActiveGroupChange={props.onActiveGroupChange}
-                  onAddGroup={props.onAddGroup}
-                >
-                  <ActiveGroupPicker.Trigger />
-                  <ActiveGroupPicker.Content />
-                </ActiveGroupPicker>
-              </div>
-              <BottomSection>
-                <SelectionCardBody
-                  timestamp={props.timestamp}
-                  itemId={props.itemId}
-                  syncServerUrl={props.syncServerUrl}
-                  syncWorkspace={props.syncWorkspace}
-                  jiraTicketId={props.jiraTicketId}
-                  jiraUrl={props.jiraUrl}
-                  jiraStatus={props.groupStatus}
-                  jiraStatusCategory={props.jiraStatusCategory}
-                  jiraLabels={props.jiraLabels}
-                  jiraDueDate={props.jiraDueDate}
-                  jiraIssueType={props.jiraIssueType}
-                  jiraPriority={props.jiraPriority}
-                  jiraAssignee={props.jiraAssignee}
-                  jiraAssigneeAvatar={props.jiraAssigneeAvatar}
-                  jiraComments={props.jiraComments}
-                  onSubmitComment={props.onSubmitJiraComment}
-                  onSearchUsers={props.onSearchJiraUsers}
-                  onRefreshStatus={
-                    props.onRefreshJiraStatus
-                      ? () => props.onRefreshJiraStatus?.()
-                      : undefined
-                  }
-                  noTicketAction={
-                    canInteract() && props.onCreateTicket && !props.jiraTicketId
-                      ? <CreateTicketButton onClick={() => props.onCreateTicket?.()} class="w-full" />
-                      : undefined
-                  }
-                />
-              </BottomSection>
-              <Show when={isDevMode() && props.tagName}>
-                <DevInsights>
-                  <DevInsights.Field label="tag" value={props.tagName} color="green" />
-                  <DevInsights.Field label="node" value={props.componentName} color="purple" />
-                </DevInsights>
-              </Show>
-            </div>
-          </Show>
-
-          <Show when={props.isPendingDismiss}>
-            <DiscardPrompt
-              onConfirm={props.onConfirmDismiss}
-              onCancel={() => {
-                props.onCancelDismiss?.();
-                inputRef?.focus({ preventScroll: true });
-              }}
-            />
-          </Show>
-
-          <Show when={props.error}>
-            <ErrorView
-              error={props.error!}
-              onAcknowledge={props.onAcknowledgeError}
-              onRetry={props.onRetry}
-            />
-          </Show>
+          <SelectionLabelProvider value={contextValue}>
+            {props.children}
+          </SelectionLabelProvider>
         </div>
       </div>
     </Show>
   );
 };
+
+export { SelectionLabelRoot as SelectionLabel };
