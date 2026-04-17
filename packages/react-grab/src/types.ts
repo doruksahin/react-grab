@@ -765,6 +765,7 @@ export interface CompletionViewProps {
   onShowContextMenu?: () => void;
 }
 
+/** @deprecated Use narrow interfaces from `components/selection-label/types.ts` instead. */
 export interface SelectionLabelProps
   extends Pick<
     SelectionGroupsViewProps,

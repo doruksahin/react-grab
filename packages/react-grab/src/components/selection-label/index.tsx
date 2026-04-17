@@ -27,6 +27,10 @@ import { Arrow } from './arrow.js';
 import { CompletionView } from './completion-view.js';
 import { SelectionLabelProvider } from './context.js';
 import { useDevMode } from '../../features/dev-mode/index.js';
+import { SelectionLabelHeader } from './parts/header.js';
+import { SelectionLabelContent } from './parts/content.js';
+import { SelectionLabelContextInput } from './parts/context-input.js';
+import { DevInsightsSection } from './parts/dev-insights-section.js';
 
 interface LabelPosition {
   left: number;
@@ -410,4 +414,10 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (props) =>
   );
 };
 
-export { SelectionLabelRoot as SelectionLabel };
+export const SelectionLabel = Object.assign(SelectionLabelRoot, {
+  Root: SelectionLabelRoot,
+  Header: SelectionLabelHeader,
+  Content: SelectionLabelContent,
+  ContextInput: SelectionLabelContextInput,
+  DevInsights: DevInsightsSection,
+});
