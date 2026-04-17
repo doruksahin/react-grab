@@ -835,6 +835,10 @@ export interface SelectionLabelProps
   onCollapse?: () => void;
   /** True during the exit animation before the label is actually collapsed */
   isCollapsing?: boolean;
+  /** Extra pixels added to the label's top offset (e.g. to reserve space for the dot indicator above). */
+  extraTopOffset?: number;
+  /** Called when the label's vertical placement changes (flips above/below the selection). */
+  onPlacementChange?: (placement: "above" | "below") => void;
   /** Submit a JIRA comment for the current group's ticket */
   onSubmitJiraComment?: SubmitCommentFn;
   /** Search JIRA users for @mention autocomplete */

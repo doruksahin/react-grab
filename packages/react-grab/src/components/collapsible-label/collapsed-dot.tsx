@@ -1,16 +1,24 @@
 import { Show } from "solid-js";
-import type { Component } from "solid-js";
+import type { Component, ParentComponent } from "solid-js";
 import type { OverlayBounds } from "../../types.js";
+import { cn } from "../../utils/cn.js";
 
 const DOT_SIZE_PX = 10;
-const DOT_GAP_PX = 4;
+const DOT_GAP_PX = 6;
+const DOT_PADDING_PX = 6;
 const PREVIEW_MAX_LENGTH = 48;
+
+/** Total height of the dot-only button (no preview text). */
+export const DOT_BUTTON_HEIGHT_PX = DOT_SIZE_PX + DOT_PADDING_PX * 2;
+/** Vertical space the dot occupies below selection bounds (gap + button). */
+export const DOT_TOTAL_OFFSET_PX = DOT_GAP_PX + DOT_BUTTON_HEIGHT_PX;
 
 interface CollapsedDotProps {
   selectionBounds: OverlayBounds;
   onExpand: () => void;
   inputValue?: string;
   isExpanding?: boolean;
+  placement?: "above" | "below";
 }
 
 const toPreview = (value: string): string => {
@@ -19,12 +27,35 @@ const toPreview = (value: string): string => {
   return collapsed.slice(0, PREVIEW_MAX_LENGTH).trimEnd() + "…";
 };
 
+/* ── Slots ────────────────────────────────────────────────── */
+
+const DotIndicator: Component = () => (
+  <div
+    class="rounded-full bg-primary shrink-0"
+    style={{ width: `${DOT_SIZE_PX}px`, height: `${DOT_SIZE_PX}px` }}
+  />
+);
+
+const PreviewSlot: ParentComponent = (props) => (
+  <span
+    data-react-grab-collapsed-dot-preview
+    class="min-w-0 truncate text-[11px] leading-tight text-popover-foreground"
+  >
+    {props.children}
+  </span>
+);
+
+/* ── Shell ────────────────────────────────────────────────── */
+
 export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
   const position = () => {
     const bounds = props.selectionBounds;
+    const isAbove = props.placement === "above";
     return {
       left: bounds.x + bounds.width / 2,
-      top: bounds.y + bounds.height + DOT_GAP_PX,
+      top: isAbove
+        ? bounds.y - DOT_GAP_PX - DOT_BUTTON_HEIGHT_PX
+        : bounds.y + bounds.height + DOT_GAP_PX,
     };
   };
 
@@ -35,49 +66,44 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
     return preview.length > 0 ? preview : null;
   };
 
+  const hasPreview = () => Boolean(previewText());
+
   return (
-    <div
-      class={`fixed duration-150 ease-in ${props.isExpanding ? "animate-out fade-out-0 zoom-out-75 fill-mode-forwards" : "animate-in fade-in-0 zoom-in-75 ease-out"}`}
+    <button
+      type="button"
+      data-react-grab-ignore-events
+      data-react-grab-collapsed-dot
+      class={cn(
+        "fixed flex items-center rounded-full bg-popover border border-border shadow-md cursor-pointer",
+        "transition-all duration-150 ease-out hover:bg-accent hover:border-ring hover:shadow-lg hover:scale-105",
+        hasPreview() ? "justify-between gap-3 pl-3 pr-1.5 py-1" : "p-1.5",
+        props.isExpanding
+          ? "animate-out fade-out-0 zoom-out-75 fill-mode-forwards ease-in"
+          : "animate-in fade-in-0 zoom-in-75 ease-out",
+      )}
       style={{
         left: `${position().left}px`,
         top: `${position().top}px`,
         translate: "-50% 0",
         "z-index": "var(--z-overlay)",
-        "pointer-events": "none",
+        "pointer-events": "auto",
+        "max-width": "240px",
       }}
+      onClick={(event) => {
+        event.stopImmediatePropagation();
+        props.onExpand();
+      }}
+      onPointerDown={(event) => event.stopImmediatePropagation()}
     >
       <Show when={previewText()}>
         {(text) => (
-          <div
-            data-react-grab-ignore-events
-            data-react-grab-collapsed-dot-preview
-            class="absolute top-1/2 right-[calc(100%+6px)] -translate-y-1/2 px-2 py-1 rounded-full bg-popover/95 border border-border/60 shadow-sm backdrop-blur-sm max-w-[220px] whitespace-nowrap pointer-events-none text-[11px] text-popover-foreground truncate"
-          >
+          <PreviewSlot>
             {text()}
-          </div>
+          </PreviewSlot>
         )}
       </Show>
 
-      <button
-        type="button"
-        data-react-grab-ignore-events
-        data-react-grab-collapsed-dot
-        title="Expand"
-        class="pointer-events-auto flex items-center justify-center rounded-full bg-popover border border-border shadow-md cursor-pointer transition-all duration-150 ease-out hover:bg-accent hover:border-ring hover:shadow-lg hover:scale-110 p-[6px]"
-        onClick={(event) => {
-          event.stopImmediatePropagation();
-          props.onExpand();
-        }}
-        onPointerDown={(event) => event.stopImmediatePropagation()}
-      >
-        <div
-          class="rounded-full bg-primary"
-          style={{
-            width: `${DOT_SIZE_PX}px`,
-            height: `${DOT_SIZE_PX}px`,
-          }}
-        />
-      </button>
-    </div>
+      <DotIndicator />
+    </button>
   );
 };
