@@ -9,8 +9,6 @@ import type { SelectionLabelHeaderProps } from "../types.js";
 export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
   props,
 ) => {
-  let isTagCurrentlyHovered = false;
-
   const tagDisplayResult = () =>
     getTagDisplay({
       tagName: props.tagName,
@@ -23,10 +21,6 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
     if (props.filePath && props.onOpen) {
       props.onOpen();
     }
-  };
-
-  const handleTagHoverChange = (hovered: boolean) => {
-    isTagCurrentlyHovered = hovered;
   };
 
   return (
@@ -53,7 +47,6 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
             componentName={tagDisplayResult().componentName}
             isClickable={Boolean(props.filePath && props.onOpen)}
             onClick={handleTagClick}
-            onHoverChange={handleTagHoverChange}
             shrink={!props.trailing}
             forceShowIcon={
               props.trailing

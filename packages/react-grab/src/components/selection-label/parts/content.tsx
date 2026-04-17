@@ -1,9 +1,6 @@
-import type { Component, JSX } from "solid-js";
+import type { Component } from "solid-js";
+import type { SelectionLabelContentProps } from "../types.js";
 import { BottomSection } from "../bottom-section.js";
-
-interface SelectionLabelContentProps {
-  children: JSX.Element;
-}
 
 export const SelectionLabelContent: Component<SelectionLabelContentProps> = (
   props,

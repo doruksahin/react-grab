@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Show, onMount } from "solid-js";
 import type { Component } from "solid-js";
 import { autoResizeTextarea } from "../../../utils/auto-resize-textarea.js";
 import { IconSubmit } from "../../icons/icon-submit.js";
@@ -10,6 +10,12 @@ export const SelectionLabelContextInput: Component<
   SelectionLabelContextInputProps
 > = (props) => {
   let inputRef: HTMLTextAreaElement | undefined;
+
+  onMount(() => {
+    if (props.autoFocus && inputRef && !props.disabled) {
+      inputRef.focus({ preventScroll: true });
+    }
+  });
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.isComposing || event.keyCode === IME_COMPOSING_KEY_CODE) {
@@ -64,20 +70,6 @@ export const SelectionLabelContextInput: Component<
           disabled={props.disabled}
           readOnly={!props.onSubmit}
         />
-        <Show when={props.onAbort}>
-          <button
-            data-react-grab-ignore-events
-            data-react-grab-generation-abort
-            class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale"
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => {
-              event.stopPropagation();
-              props.onAbort?.();
-            }}
-          >
-            <div class="size-1.5 bg-popover rounded-[1px]" />
-          </button>
-        </Show>
         <Show when={props.onSubmit && !props.disabled}>
           <button
             data-react-grab-ignore-events

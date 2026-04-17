@@ -81,9 +81,9 @@ export interface SelectionLabelContextInputProps {
   onChange?: (value: string) => void;
   onSubmit?: () => void;
   onDismiss?: () => void;
-  onAbort?: () => void;
   placeholder?: string;
   disabled?: boolean;
+  autoFocus?: boolean;
 }
 
 /** Content wrapper — just children */
