@@ -15,6 +15,7 @@ import type {
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { SelectionCardBody } from "./selection-card-body.js";
 import { SelectionCheckbox } from "../ui/selection-checkbox.js";
+import { SelectionCard } from "../ui/selection-card.js";
 import { DevInsights } from "../ui/dev-insights/index.js";
 
 interface SelectionListTabProps {
@@ -74,7 +75,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
   };
 
   return (
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5">
       <Show when={filteredItems().length === 0}>
         <div class="py-8 text-center text-[12px] text-muted-foreground italic">
           No matching selections
@@ -107,61 +108,52 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
           };
 
           return (
-            <div
-              class="border-b border-border px-4 py-3 cursor-pointer hover:bg-foreground/[0.02]"
-              classList={{
-                "border-l-[3px] border-l-red-400 pl-[13px]": isFlagged(),
-                "bg-purple-400/[0.03] border-l-[3px] border-l-purple-400 pl-[13px]": isSelected() && !isFlagged(),
-              }}
-              style={{ position: "relative" }}
-            >
-              <div>
-                <SelectionCardBody
-                  leading={
-                    props.onToggleSelect
-                      ? <SelectionCheckbox checked={isSelected()} onToggle={() => props.onToggleSelect?.(item.id)} />
-                      : undefined
-                  }
-                  summary={summary()}
-                  timestamp={item.timestamp}
-                  itemId={item.id}
-                  hasElementScreenshot={Boolean(item.screenshotElement)}
-                  hasFullPageScreenshot={Boolean(item.screenshotFullPage)}
-                  syncServerUrl={props.syncServerUrl}
-                  syncWorkspace={props.syncWorkspace}
-                  jiraTicketId={group()?.jiraTicketId}
-                  jiraStatus={group()?.jiraStatus}
-                  jiraStatusCategory={group()?.jiraStatusCategory}
-                  jiraLabels={group()?.jiraLabels}
-                  jiraDueDate={group()?.jiraDueDate}
-                  jiraIssueType={group()?.jiraIssueType}
-                  jiraPriority={group()?.jiraPriority}
-                  jiraAssignee={group()?.jiraAssignee}
-                  jiraAssigneeAvatar={group()?.jiraAssigneeAvatar}
-                  jiraComments={group()?.jiraComments}
-                  onSubmitComment={boundCommentSubmit()}
-                  onSearchUsers={props.onSearchJiraUsers}
-                  onRefreshStatus={refreshStatus()}
-                  commentEditorToolbarVisible={props.commentEditorToolbarVisible}
-                  onScreenshotClick={(src, label) => lightbox.open(src, label)}
-                />
-                <Show when={props.isDevMode}>
-                  <DevInsights>
-                    <DevInsights.Field label="tag" value={item.tagName} color="green" />
-                    <DevInsights.Field label="node" value={item.componentName ?? item.elementName} color="purple" />
-                    <DevInsights.Attributes content={item.content} />
-                    <Show when={item.elementSelectors?.[0]}>
-                      <DevInsights.Section label="selector">
-                        <span class="text-[9px] font-mono text-[#cbd5e1] break-all">{item.elementSelectors?.[0]}</span>
-                      </DevInsights.Section>
-                    </Show>
-                    <DevInsights.Section label="html">
-                      <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">{item.content}</pre>
+            <SelectionCard flagged={isFlagged()} selected={isSelected()}>
+              <SelectionCardBody
+                leading={
+                  props.onToggleSelect
+                    ? <SelectionCheckbox checked={isSelected()} onToggle={() => props.onToggleSelect?.(item.id)} />
+                    : undefined
+                }
+                summary={summary()}
+                timestamp={item.timestamp}
+                itemId={item.id}
+                hasElementScreenshot={Boolean(item.screenshotElement)}
+                hasFullPageScreenshot={Boolean(item.screenshotFullPage)}
+                syncServerUrl={props.syncServerUrl}
+                syncWorkspace={props.syncWorkspace}
+                jiraTicketId={group()?.jiraTicketId}
+                jiraStatus={group()?.jiraStatus}
+                jiraStatusCategory={group()?.jiraStatusCategory}
+                jiraLabels={group()?.jiraLabels}
+                jiraDueDate={group()?.jiraDueDate}
+                jiraIssueType={group()?.jiraIssueType}
+                jiraPriority={group()?.jiraPriority}
+                jiraAssignee={group()?.jiraAssignee}
+                jiraAssigneeAvatar={group()?.jiraAssigneeAvatar}
+                jiraComments={group()?.jiraComments}
+                onSubmitComment={boundCommentSubmit()}
+                onSearchUsers={props.onSearchJiraUsers}
+                onRefreshStatus={refreshStatus()}
+                commentEditorToolbarVisible={props.commentEditorToolbarVisible}
+                onScreenshotClick={(src, label) => lightbox.open(src, label)}
+              />
+              <Show when={props.isDevMode}>
+                <DevInsights>
+                  <DevInsights.Field label="tag" value={item.tagName} color="green" />
+                  <DevInsights.Field label="node" value={item.componentName ?? item.elementName} color="purple" />
+                  <DevInsights.Attributes content={item.content} />
+                  <Show when={item.elementSelectors?.[0]}>
+                    <DevInsights.Section label="selector">
+                      <span class="text-[9px] font-mono text-[#cbd5e1] break-all">{item.elementSelectors?.[0]}</span>
                     </DevInsights.Section>
-                  </DevInsights>
-                </Show>
-              </div>
-            </div>
+                  </Show>
+                  <DevInsights.Section label="html">
+                    <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">{item.content}</pre>
+                  </DevInsights.Section>
+                </DevInsights>
+              </Show>
+            </SelectionCard>
           );
         }}
       </For>

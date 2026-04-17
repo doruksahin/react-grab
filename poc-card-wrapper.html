@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Selection Card Wrapper PoC</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a1a; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; gap: 32px; padding: 40px; }
+
+  .sidebar {
+    width: 380px;
+    background: #222;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #333;
+    font-size: 13px;
+    font-weight: 600;
+    color: #999;
+  }
+
+  /* ── Current (no wrapper) ── */
+  .card-current {
+    border-bottom: 1px solid #333;
+    padding: 12px 16px;
+    cursor: pointer;
+  }
+  .card-current:hover { background: rgba(255,255,255,0.02); }
+
+  /* ── Option A: Subtle inset card ── */
+  .card-list-a { padding: 6px 8px; display: flex; flex-direction: column; gap: 6px; }
+  .card-a {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .card-a:hover {
+    border-color: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* ── Option B: Stronger contrast card ── */
+  .card-list-b { padding: 6px 8px; display: flex; flex-direction: column; gap: 6px; }
+  .card-b {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .card-b:hover {
+    border-color: rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.35);
+  }
+
+  /* ── Option C: Minimal gap separator ── */
+  .card-list-c { display: flex; flex-direction: column; gap: 2px; background: rgba(0,0,0,0.3); }
+  .card-c {
+    background: #222;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .card-c:hover { background: rgba(255,255,255,0.03); }
+  .card-c:first-child { border-radius: 0; }
+
+  /* ── Shared card content styles ── */
+  .card-header { display: flex; align-items: center; gap: 8px; }
+  .checkbox { width: 14px; height: 14px; border: 1.5px solid #666; border-radius: 3px; flex-shrink: 0; }
+  .checkbox.checked { background: #7c3aed; border-color: #7c3aed; }
+  .summary { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  hr.divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 8px 0; }
+
+  .labels-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .labels { display: flex; gap: 4px; flex-wrap: wrap; }
+  .label-pill { font-size: 9px; font-weight: 500; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06); color: #999; }
+  .status-pill { font-size: 9px; text-transform: uppercase; font-weight: 500; padding: 2px 6px; border-radius: 4px; }
+  .status-todo { color: #999; background: rgba(255,255,255,0.06); }
+  .status-progress { color: #60a5fa; background: rgba(96,165,250,0.12); }
+  .status-done { color: #4ade80; background: rgba(74,222,128,0.12); }
+  .no-ticket { font-size: 9px; color: #666; font-style: italic; }
+
+  .date-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 10px; color: #888; }
+  .date-row svg { flex-shrink: 0; }
+
+  .meta-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+  .ticket-id { font-family: monospace; font-size: 10px; color: #888; }
+  .avatar { width: 20px; height: 20px; border-radius: 50%; background: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: #000; flex-shrink: 0; }
+  .assignee-name { font-size: 10px; color: #888; }
+  .spacer { flex: 1; }
+
+  .screenshots { display: flex; gap: 6px; margin-top: 6px; }
+  .thumb { width: 52px; height: 34px; background: rgba(255,255,255,0.04); border: 1px solid #333; border-radius: 4px; }
+
+  /* comments divider — now just a natural full-width border since card padding is on the wrapper */
+  .comments-divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 8px -16px 0; width: calc(100% + 32px); }
+  .comments-header { font-size: 11px; color: #999; margin-top: 8px; cursor: pointer; }
+  .comments-header:hover { color: #ccc; }
+
+  /* flagged / selected states */
+  .flagged { border-left: 3px solid #f87171 !important; padding-left: 13px; }
+  .selected-state { background: rgba(124,58,237,0.03); border-left: 3px solid #a78bfa !important; padding-left: 13px; }
+
+  h3 { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px 4px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════ -->
+<!-- CURRENT -->
+<!-- ════════════════════════════════════════ -->
+<div class="sidebar">
+  <div class="sidebar-header">Current (border-b, no wrapper)</div>
+
+  <div class="card-current">
+    <div class="card-header"><div class="checkbox"></div><div class="summary">hey</div></div>
+    <hr class="divider">
+    <div class="labels-row"><div class="labels"><div class="label-pill">test1</div></div><div class="status-pill status-todo">To Do</div></div>
+    <div class="date-row">
+      <svg width="12" height="12" viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"/></svg>
+      <span>1d ago</span><span style="color:#555">→</span><span>Apr 16, 2026</span>
+    </div>
+    <div class="screenshots"><div class="thumb"></div><div class="thumb"></div><div class="thumb"></div></div>
+    <div class="meta-row"><span class="ticket-id">ATT-2900</span><span class="spacer"></span><div class="avatar">AA</div><span class="assignee-name">ADC bot admin</span></div>
+    <hr class="divider" style="margin-top:8px">
+    <div class="comments-header">▸ Comments (0)</div>
+  </div>
+
+  <div class="card-current selected-state">
+    <div class="card-header"><div class="checkbox checked"></div><div class="summary">Button hover state broken</div></div>
+    <hr class="divider">
+    <div class="labels-row"><div class="labels"><div class="label-pill">bug</div><div class="label-pill">ui</div></div><div class="status-pill status-progress">In Progress</div></div>
+    <div class="date-row">
+      <svg width="12" height="12" viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"/></svg>
+      <span>3h ago</span><span style="color:#555">→</span><span>Apr 20, 2026</span>
+    </div>
+    <div class="meta-row"><span class="ticket-id">ATT-2901</span><span class="spacer"></span><div class="avatar">DK</div><span class="assignee-name">Doruk</span></div>
+    <hr class="divider" style="margin-top:8px">
+    <div class="comments-header">▸ Comments (3)</div>
+  </div>
+
+  <div class="card-current">
+    <div class="card-header"><div class="checkbox"></div><div class="summary">No ticket selection</div></div>
+    <hr class="divider">
+    <div class="labels-row"><div class="labels"></div><span class="no-ticket">no ticket</span></div>
+    <div class="meta-row"><span class="no-ticket">no ticket</span></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- OPTION A: Subtle inset -->
+<!-- ════════════════════════════════════════ -->
+<div class="sidebar">
+  <div class="sidebar-header">A — Subtle inset card</div>
+  <div class="card-list-a">
+
+    <div class="card-a">
+      <div class="card-header"><div class="checkbox"></div><div class="summary">hey</div></div>
+      <hr class="divider">
+      <div class="labels-row"><div class="labels"><div class="label-pill">test1</div></div><div class="status-pill status-todo">To Do</div></div>
+      <div class="date-row">
+        <svg width="12" height="12" viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"/></svg>
+        <span>1d ago</span><span style="color:#555">→</span><span>Apr 16, 2026</span>
+      </div>
+      <div class="screenshots"><div class="thumb"></div><div class="thumb"></div><div class="thumb"></div></div>
+      <div class="meta-row"><span class="ticket-id">ATT-2900</span><span class="spacer"></span><div class="avatar">AA</div><span class="assignee-name">ADC bot admin</span></div>
+      <hr class="divider" style="margin-top:8px">
+      <div class="comments-header">▸ Comments (0)</div>
+    </div>
+
+    <div class="card-a selected-state">
+      <div class="card-header"><div class="checkbox checked"></div><div class="summary">Button hover state broken</div></div>
+      <hr class="divider">
+      <div class="labels-row"><div class="labels"><div class="label-pill">bug</div><div class="label-pill">ui</div></div><div class="status-pill status-progress">In Progress</div></div>
+      <div class="date-row">
+        <svg width="12" height="12" viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"/></svg>
+        <span>3h ago</span><span style="color:#555">→</span><span>Apr 20, 2026</span>
+      </div>
+      <div class="meta-row"><span class="ticket-id">ATT-2901</span><span class="spacer"></span><div class="avatar">DK</div><span class="assignee-name">Doruk</span></div>
+      <hr class="divider" style="margin-top:8px">
+      <div class="comments-header">▸ Comments (3)</div>
+    </div>
+
+    <div class="card-a">
+      <div class="card-header"><div class="checkbox"></div><div class="summary">No ticket selection</div></div>
+      <hr class="divider">
+      <div class="labels-row"><div class="labels"></div><span class="no-ticket">no ticket</span></div>
+      <div class="meta-row"><span class="no-ticket">no ticket</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- OPTION B: Stronger contrast -->
+<!-- ════════════════════════════════════════ -->
+<div class="sidebar">
+  <div class="sidebar-header">B — Darker inset card</div>
+  <div class="card-list-b">
+
+    <div class="card-b">
+      <div class="card-header"><div class="checkbox"></div><div class="summary">hey</div></div>
+      <hr class="divider">
+      <div class="labels-row"><div class="labels"><div class="label-pill">test1</div></div><div class="status-pill status-todo">To Do</div></div>
+      <div class="date-row">
+        <svg width="12" height="12" viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"/></svg>
+        <span>1d ago</span><span style="color:#555">→</span><span>Apr 16, 2026</span>
+      </div>
+      <div class="screenshots"><div class="thumb"></div><div class="thumb"></div><div class="thumb"></div></div>
+      <div class="meta-row"><span class="ticket-id">ATT-2900</span><span class="spacer"></span><div class="avatar">AA</div><span class="assignee-name">ADC bot admin</span></div>
+      <hr class="divider" style="margin-top:8px">
+      <div class="comments-header">▸ Comments (0)</div>
+    </div>
+
+    <div class="card-b selected-state">
+      <div class="card-header"><div class="checkbox checked"></div><div class="summary">Button hover state broken</div></div>
+      <hr class="divider">
+      <div class="labels-row"><div class="labels"><div class="label-pill">bug</div><div class="label-pill">ui</div></div><div class="status-pill status-progress">In Progress</div></div>
+      <div class="date-row">
+        <svg width="12" height="12" viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"/></svg>
+        <span>3h ago</span><span style="color:#555">→</span><span>Apr 20, 2026</span>
+      </div>
+      <div class="meta-row"><span class="ticket-id">ATT-2901</span><span class="spacer"></span><div class="avatar">DK</div><span class="assignee-name">Doruk</span></div>
+      <hr class="divider" style="margin-top:8px">
+      <div class="comments-header">▸ Comments (3)</div>
+    </div>
+
+    <div class="card-b">
+      <div class="card-header"><div class="checkbox"></div><div class="summary">No ticket selection</div></div>
+      <hr class="divider">
+      <div class="labels-row"><div class="labels"></div><span class="no-ticket">no ticket</span></div>
+      <div class="meta-row"><span class="no-ticket">no ticket</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!-- OPTION C: Gap separator -->
+<!-- ════════════════════════════════════════ -->
+<div class="sidebar">
+  <div class="sidebar-header">C — Gap separator (no border)</div>
+  <div class="card-list-c">
+
+    <div class="card-c">
+      <div class="card-header"><div class="checkbox"></div><div class="summary">hey</div></div>
+      <hr class="divider">
+      <div class="labels-row"><div class="labels"><div class="label-pill">test1</div></div><div class="status-pill status-todo">To Do</div></div>
+      <div class="date-row">
+        <svg width="12" height="12" viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"/></svg>
+        <span>1d ago</span><span style="color:#555">→</span><span>Apr 16, 2026</span>
+      </div>
+      <div class="screenshots"><div class="thumb"></div><div class="thumb"></div><div class="thumb"></div></div>
+      <div class="meta-row"><span class="ticket-id">ATT-2900</span><span class="spacer"></span><div class="avatar">AA</div><span class="assignee-name">ADC bot admin</span></div>
+      <hr class="divider" style="margin-top:8px">
+      <div class="comments-header">▸ Comments (0)</div>
+    </div>
+
+    <div class="card-c selected-state">
+      <div class="card-header"><div class="checkbox checked"></div><div class="summary">Button hover state broken</div></div>
+      <hr class="divider">
+      <div class="labels-row"><div class="labels"><div class="label-pill">bug</div><div class="label-pill">ui</div></div><div class="status-pill status-progress">In Progress</div></div>
+      <div class="date-row">
+        <svg width="12" height="12" viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"/></svg>
+        <span>3h ago</span><span style="color:#555">→</span><span>Apr 20, 2026</span>
+      </div>
+      <div class="meta-row"><span class="ticket-id">ATT-2901</span><span class="spacer"></span><div class="avatar">DK</div><span class="assignee-name">Doruk</span></div>
+      <hr class="divider" style="margin-top:8px">
+      <div class="comments-header">▸ Comments (3)</div>
+    </div>
+
+    <div class="card-c">
+      <div class="card-header"><div class="checkbox"></div><div class="summary">No ticket selection</div></div>
+      <hr class="divider">
+      <div class="labels-row"><div class="labels"></div><span class="no-ticket">no ticket</span></div>
+      <div class="meta-row"><span class="no-ticket">no ticket</span></div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
