@@ -15,7 +15,6 @@ import type {
 import { formatShortcut } from "../../../utils/format-shortcut.js";
 import { SelectionLabelRoot } from "../index.js";
 import { SelectionLabelHeader } from "../parts/header.js";
-import { SelectionLabelContent } from "../parts/content.js";
 import { SelectionLabelContextInput } from "../parts/context-input.js";
 import { DevInsightsSection } from "../parts/dev-insights-section.js";
 import { CopyingState } from "../parts/copying-state.js";
@@ -243,7 +242,7 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
               </ActiveGroupPicker>
             }
           />
-          <SelectionLabelContent>
+          <BottomSection>
             <SelectionCardBody
               timestamp={props.timestamp}
               itemId={props.itemId}
@@ -278,14 +277,14 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
                   : undefined
               }
             />
-          </SelectionLabelContent>
-          <SelectionLabelContextInput
-            value={props.inputValue}
-            onChange={props.onInputChange}
-            onSubmit={props.onSubmit}
-            onDismiss={props.onConfirmDismiss}
-            autoFocus
-          />
+            <SelectionLabelContextInput
+              value={props.inputValue}
+              onChange={props.onInputChange}
+              onSubmit={props.onSubmit}
+              onDismiss={props.onConfirmDismiss}
+              autoFocus
+            />
+          </BottomSection>
           <DevInsightsSection
             tagName={props.tagName}
             componentName={props.componentName}

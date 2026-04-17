@@ -3,7 +3,6 @@ import type { Component } from "solid-js";
 import { autoResizeTextarea } from "../../../utils/auto-resize-textarea.js";
 import { IconSubmit } from "../../icons/icon-submit.js";
 import { IME_COMPOSING_KEY_CODE, TEXTAREA_MAX_HEIGHT_PX } from "../../../constants.js";
-import { BottomSection } from "../bottom-section.js";
 import type { SelectionLabelContextInputProps } from "../types.js";
 
 export const SelectionLabelContextInput: Component<
@@ -46,8 +45,7 @@ export const SelectionLabelContextInput: Component<
   };
 
   return (
-    <BottomSection>
-      <div data-react-grab-context-input class="shrink-0 flex justify-between items-end w-full min-h-4">
+    <div data-react-grab-context-input class="shrink-0 flex justify-between items-end w-full min-h-4">
         <textarea
           ref={inputRef}
           data-react-grab-ignore-events
@@ -84,7 +82,6 @@ export const SelectionLabelContextInput: Component<
             <IconSubmit size={10} class="text-popover" />
           </button>
         </Show>
-      </div>
-    </BottomSection>
+    </div>
   );
 };

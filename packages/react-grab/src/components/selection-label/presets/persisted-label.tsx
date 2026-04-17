@@ -13,6 +13,7 @@ import type {
 import { SelectionLabelRoot } from "../index.js";
 import { SelectionLabelHeader } from "../parts/header.js";
 import { SelectionLabelContent } from "../parts/content.js";
+import { DevInsightsSection } from "../parts/dev-insights-section.js";
 import { CopyingState } from "../parts/copying-state.js";
 import { ErrorView } from "../error-view.js";
 import { CreateTicketButton } from "../create-ticket-button.js";
@@ -153,6 +154,10 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
               }
             />
           </SelectionLabelContent>
+          <DevInsightsSection
+            tagName={props.tagName}
+            componentName={props.componentName}
+          />
         </div>
       </Show>
 
