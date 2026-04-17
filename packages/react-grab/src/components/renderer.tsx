@@ -10,7 +10,9 @@ import {
 import { openFile } from "../utils/open-file.js";
 import { isElementConnected } from "../utils/is-element-connected.js";
 import { OverlayCanvas } from "./overlay-canvas.js";
-import { SelectionLabel } from "./selection-label/index.js";
+import { AgentLabel } from "./selection-label/presets/agent-label.js";
+import { PrimaryLabel } from "./selection-label/presets/primary-label.js";
+import { PersistedLabel } from "./selection-label/presets/persisted-label.js";
 import { Toolbar } from "./toolbar/index.js";
 import { ContextMenu } from "./context-menu.js";
 import { ToolbarMenu } from "./toolbar/toolbar-menu.js";
@@ -122,13 +124,11 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       >
         {(session) => (
           <Show when={session().selectionBounds.length > 0}>
-            <SelectionLabel
+            <AgentLabel
               tagName={session().tagName}
               componentName={session().componentName}
               selectionBounds={session().selectionBounds[0]}
               mouseX={session().position.x}
-              visible={true}
-              hasAgent={true}
               status={getSessionStatus(session())}
               statusText={session().lastStatus || "Thinking…"}
               inputValue={session().context.prompt}
@@ -170,7 +170,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       </Index>
 
       <Show when={props.selectionLabelVisible && props.selectionBounds}>
-        <SelectionLabel
+        <PrimaryLabel
           tagName={props.selectionTagName}
           componentName={props.selectionComponentName}
           elementsCount={props.selectionElementsCount}
@@ -201,11 +201,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             }
           }}
           isContextMenuOpen={props.contextMenuPosition !== null}
-          // NOTE: full groups list (including synthetic) is required so
-          // the picker's business predicates can look up the active
-          // group for ticket-lock detection. `assignableGroupsFor`
-          // filters synthetic + ticketed groups out of the dropdown
-          // internally, so no synthetic group leaks into the UI.
           groups={props.groups ?? []}
           activeGroupId={props.activeGroupId}
           onActiveGroupChange={props.onActiveGroupChange}
@@ -243,16 +238,14 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             placement={collapsible.isCollapsed() ? "below" : labelPlacement()}
           />
           <Show when={!collapsible.isCollapsed()}>
-          <SelectionLabel
+          <PersistedLabel
             extraTopOffset={props.collapsibleLabelsDefault ? DOT_TOTAL_OFFSET_PX : 0}
             onPlacementChange={setLabelPlacement}
             tagName={instance().tagName}
             componentName={instance().componentName}
-            content={instance().content}
             elementsCount={instance().elementsCount}
             selectionBounds={instance().selectionBounds}
             mouseX={instance().mouseX}
-            visible={true}
             status={instance().status}
             statusText={instance().statusText}
             hasAgent={Boolean(instance().statusText)}
@@ -284,9 +277,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             hasFullPageScreenshot={instance().hasFullPageScreenshot}
             syncServerUrl={props.syncServerUrl}
             syncWorkspace={props.syncWorkspace}
-            // Full groups list — see note above. The picker needs
-            // synthetic groups visible at the business layer so
-            // ticket-lock on a loose-ticketed item resolves correctly.
             groups={props.groups ?? []}
             activeGroupId={instance().groupId}
             onActiveGroupChange={(groupId) => {
