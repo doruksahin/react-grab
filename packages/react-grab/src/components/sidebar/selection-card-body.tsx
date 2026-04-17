@@ -4,7 +4,7 @@ import type {
   SearchJiraUsersFn,
   SubmitCommentFn,
 } from "../../features/jira-comments/types.js";
-import { IssueTypeIcon } from "./issue-type-icon.jsx";
+import { JiraTicketLink } from "../ui/jira-ticket-link.jsx";
 import { PriorityIcon } from "./priority-icon.jsx";
 import { UserAvatar } from "./UserAvatar.jsx";
 import { CommentsSection } from "../jira-comments/comments-section.jsx";
@@ -23,11 +23,7 @@ const getStatusPillClass = (category?: string): string => {
   }
 };
 
-const getStatusDisplayText = (
-  ticketId?: string,
-  status?: string,
-): string => {
-  if (!ticketId) return "no ticket";
+const getStatusDisplayText = (status?: string): string => {
   return status ?? "To Do";
 };
 
@@ -43,17 +39,21 @@ interface SelectionCardBodySlots {
   leading?: JSX.Element;
   /** Summary text element — pass undefined when omitted so the header is hidden. */
   summary?: JSX.Element;
+  /** Element rendered between the header and the labels/status row (e.g. group picker). */
+  subheader?: JSX.Element;
   statusPill?: JSX.Element;
   labels?: JSX.Element;
   dates?: JSX.Element;
   screenshots?: JSX.Element;
   meta?: JSX.Element;
   comments?: JSX.Element;
+  /** Footer action rendered at the very bottom (e.g. Create Ticket button). */
+  footer?: JSX.Element;
 }
 
 const SelectionCardBodyLayout: Component<SelectionCardBodySlots> = (props) => {
   const hasHeader = () =>
-    props.leading !== undefined || props.summary !== undefined;
+    props.leading !== undefined || props.summary !== undefined || props.subheader !== undefined;
 
   return (
     <div data-react-grab-selection-card-body class="w-full">
@@ -61,6 +61,8 @@ const SelectionCardBodyLayout: Component<SelectionCardBodySlots> = (props) => {
         <div class="flex items-center gap-2">
           {props.leading}
           {props.summary}
+          <span class="flex-1" />
+          {props.subheader}
         </div>
         <hr class="border-border my-2" />
       </Show>
@@ -72,6 +74,7 @@ const SelectionCardBodyLayout: Component<SelectionCardBodySlots> = (props) => {
       {props.screenshots}
       {props.meta}
       {props.comments}
+      {props.footer}
     </div>
   );
 };
@@ -79,6 +82,7 @@ const SelectionCardBodyLayout: Component<SelectionCardBodySlots> = (props) => {
 export interface SelectionCardBodyProps {
   // Status pill (labels row, right-aligned)
   jiraTicketId?: string;
+  jiraUrl?: string;
   jiraStatus?: string;
   jiraStatusCategory?: string;
 
@@ -87,6 +91,9 @@ export interface SelectionCardBodyProps {
 
   // Summary row — omitted when not provided (e.g. inside the overlay label)
   summary?: string;
+
+  // Subheader — rendered between header and labels row (e.g. group picker)
+  subheader?: JSX.Element;
 
   // Labels row
   jiraLabels?: readonly string[];
@@ -120,6 +127,10 @@ export interface SelectionCardBodyProps {
   // sidebar wires this via useImageLightbox; the floating selection label
   // omits it so thumbnails remain inert.
   onScreenshotClick?: (src: string, label: string) => void;
+
+  // Slot rendered in the status pill area when no ticket exists.
+  // When undefined, nothing renders (replaces the old "no ticket" text).
+  noTicketAction?: JSX.Element;
 }
 
 export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
@@ -137,6 +148,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
   return (
     <SelectionCardBodyLayout
       leading={props.leading}
+      subheader={props.subheader}
       summary={
         props.summary
           ? (
@@ -147,18 +159,11 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
           : undefined
       }
       statusPill={
-        <Show
-          when={hasTicket()}
-          fallback={
-            <span class="text-[9px] uppercase font-medium text-muted-foreground italic">
-              no ticket
-            </span>
-          }
-        >
+        <Show when={hasTicket()}>
           <span
             class={`text-[9px] uppercase font-medium px-1.5 py-0.5 rounded ${getStatusPillClass(props.jiraStatusCategory)}`}
           >
-            {getStatusDisplayText(props.jiraTicketId, props.jiraStatus)}
+            {getStatusDisplayText(props.jiraStatus)}
           </span>
         </Show>
       }
@@ -261,19 +266,12 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       }
       meta={
         <div class="flex items-center gap-1.5 mt-1.5">
-          <IssueTypeIcon issueType={props.jiraIssueType ?? undefined} />
-
-          <Show
-            when={props.jiraTicketId}
-            fallback={
-              <span class="font-mono text-[10px] text-muted-foreground italic">
-                no ticket
-              </span>
-            }
-          >
-            <span class="font-mono text-[10px] text-muted-foreground">
-              {props.jiraTicketId}
-            </span>
+          <Show when={props.jiraTicketId}>
+            <JiraTicketLink
+              ticketId={props.jiraTicketId!}
+              url={props.jiraUrl}
+              issueType={props.jiraIssueType}
+            />
           </Show>
 
           <span class="flex-1" />
@@ -305,6 +303,12 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
               commentEditorToolbarVisible={props.commentEditorToolbarVisible}
             />
           )}
+        </Show>
+      }
+      footer={
+        <Show when={props.noTicketAction}>
+          <hr class="border-border mt-2 mb-1.5" />
+          {props.noTicketAction}
         </Show>
       }
     />

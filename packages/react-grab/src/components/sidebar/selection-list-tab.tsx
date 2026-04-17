@@ -117,24 +117,26 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
 
           return (
             <SelectionCard flagged={isFlagged()} selected={isSelected()}>
-              <ActiveGroupPicker
-                groups={props.groups}
-                activeGroupId={item.groupId}
-                onActiveGroupChange={(groupId) => props.onMoveItem?.(item.id, groupId)}
-                onAddGroup={props.onAddGroup}
-              >
-                <ActiveGroupPicker.Trigger />
-                <ActiveGroupPicker.Content />
-              </ActiveGroupPicker>
               <SelectionCardBody
                 leading={
                   props.onToggleSelect && checkable()
                     ? <SelectionCheckbox checked={isSelected()} onToggle={() => props.onToggleSelect?.(item.id)} />
                     : undefined
                 }
+                subheader={
+                  <ActiveGroupPicker
+                    groups={props.groups}
+                    activeGroupId={item.groupId}
+                    onActiveGroupChange={(groupId) => props.onMoveItem?.(item.id, groupId)}
+                    onAddGroup={props.onAddGroup}
+                  >
+                    <ActiveGroupPicker.Trigger />
+                    <ActiveGroupPicker.Content />
+                  </ActiveGroupPicker>
+                }
                 noTicketAction={
                   !group()?.jiraTicketId && props.onCreateTicket
-                    ? <CreateTicketButton onClick={() => props.onCreateTicket!(item)} />
+                    ? <CreateTicketButton onClick={() => props.onCreateTicket!(item)} class="w-full" />
                     : undefined
                 }
                 summary={summary()}
@@ -145,6 +147,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 syncServerUrl={props.syncServerUrl}
                 syncWorkspace={props.syncWorkspace}
                 jiraTicketId={group()?.jiraTicketId}
+                jiraUrl={group()?.jiraUrl}
                 jiraStatus={group()?.jiraStatus}
                 jiraStatusCategory={group()?.jiraStatusCategory}
                 jiraLabels={group()?.jiraLabels}

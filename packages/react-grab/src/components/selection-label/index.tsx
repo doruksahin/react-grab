@@ -258,7 +258,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
       // This avoids the flicker when content changes because centering doesn't depend on JS measurement
       const anchorX = cursorX;
       let edgeOffsetX = 0;
-      let positionTop = selectionBottom + actualArrowHeight + LABEL_GAP_PX;
+      const extraOffset = props.extraTopOffset ?? 0;
+      let positionTop = selectionBottom + actualArrowHeight + LABEL_GAP_PX + extraOffset;
 
       if (labelWidth > 0) {
         const labelLeft = anchorX - labelWidth / 2;
@@ -272,17 +273,21 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         }
       }
 
-      const totalHeightNeeded = labelHeight + actualArrowHeight + LABEL_GAP_PX;
+      const totalHeightNeeded = labelHeight + actualArrowHeight + LABEL_GAP_PX + extraOffset;
       const fitsBelow =
         positionTop + labelHeight <= viewportBottom - VIEWPORT_MARGIN_PX;
+      let placement: "above" | "below" = "below";
 
       if (!fitsBelow) {
         positionTop = selectionTop - totalHeightNeeded;
+        placement = "above";
       }
 
       if (positionTop < viewportTop + VIEWPORT_MARGIN_PX) {
         positionTop = viewportTop + VIEWPORT_MARGIN_PX;
       }
+
+      props.onPlacementChange?.(placement);
 
       const arrowLeftPercent = ARROW_CENTER_PERCENT;
       const labelHalfWidth = labelWidth / 2;
@@ -667,8 +672,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
               canInteract() && props.isPromptMode && !props.isPendingDismiss
             }
           >
-            <div class="contain-layout shrink-0 flex flex-col justify-center items-start w-fit h-fit min-w-[150px] max-w-[280px] gap-1">
-              <div class="contain-layout shrink-0 flex items-center gap-1 pt-1.5 pb-1 w-fit h-fit px-2 max-w-full">
+            <div class="contain-layout shrink-0 flex flex-col justify-center items-start min-w-[150px] max-w-[280px] gap-1">
+              <div class="contain-layout shrink-0 flex items-baseline gap-1 pt-1.5 pb-1 h-fit px-2 w-full">
                 <Show when={props.jiraFlagged}>
                   <FlagIndicator
                     flaggedAt={props.jiraFlaggedAt}
@@ -708,108 +713,49 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                     <IconChevron size={12} />
                   </button>
                 </Show>
+                <span class="flex-1" />
+                <ActiveGroupPicker
+                  groups={props.groups}
+                  activeGroupId={props.activeGroupId}
+                  onActiveGroupChange={props.onActiveGroupChange}
+                  onAddGroup={props.onAddGroup}
+                >
+                  <ActiveGroupPicker.Trigger />
+                  <ActiveGroupPicker.Content />
+                </ActiveGroupPicker>
               </div>
-              <ActiveGroupPicker
-                groups={props.groups}
-                activeGroupId={props.activeGroupId}
-                onActiveGroupChange={props.onActiveGroupChange}
-                onAddGroup={props.onAddGroup}
-              >
-                <ActiveGroupPicker.Trigger />
-                <ActiveGroupPicker.Content />
-              </ActiveGroupPicker>
-              <Show
-                when={
-                  canInteract() && props.onCreateTicket && !props.jiraTicketId
-                }
-              >
-                <CreateTicketButton onClick={() => props.onCreateTicket?.()} />
-              </Show>
               <BottomSection>
-                <Show when={props.jiraTicketId}>
-                  {(ticketId) => (
-                    <SelectionCardBody
-                      timestamp={props.timestamp}
-                      itemId={props.itemId}
-                      hasElementScreenshot={props.hasElementScreenshot}
-                      hasFullPageScreenshot={props.hasFullPageScreenshot}
-                      syncServerUrl={props.syncServerUrl}
-                      syncWorkspace={props.syncWorkspace}
-                      jiraTicketId={ticketId()}
-                      jiraStatus={props.groupStatus}
-                      jiraStatusCategory={props.jiraStatusCategory}
-                      jiraLabels={props.jiraLabels}
-                      jiraDueDate={props.jiraDueDate}
-                      jiraIssueType={props.jiraIssueType}
-                      jiraPriority={props.jiraPriority}
-                      jiraAssignee={props.jiraAssignee}
-                      jiraAssigneeAvatar={props.jiraAssigneeAvatar}
-                      jiraComments={props.jiraComments}
-                      onSubmitComment={props.onSubmitJiraComment}
-                      onSearchUsers={props.onSearchJiraUsers}
-                      onRefreshStatus={
-                        props.onRefreshJiraStatus
-                          ? () => props.onRefreshJiraStatus?.()
-                          : undefined
-                      }
-                    />
-                  )}
-                </Show>
-                <Show when={!props.jiraTicketId}>
-                  <Show when={props.replyToPrompt}>
-                    <div class="flex items-center gap-1 w-full mb-1 overflow-hidden">
-                      <IconReply
-                        size={10}
-                        class="text-muted-foreground shrink-0"
-                      />
-                      <span class="text-muted-foreground text-[11px] leading-3 font-medium truncate italic">
-                        {props.replyToPrompt}
-                      </span>
-                    </div>
-                  </Show>
-                  <div
-                    class="shrink-0 flex justify-between items-end w-full min-h-4"
-                    style={{
-                      'padding-left': props.replyToPrompt ? '14px' : '0',
-                    }}
-                  >
-                    <textarea
-                      ref={(element) => {
-                        inputRef = element;
-                        if (props.onSubmit) {
-                          queueMicrotask(() => {
-                            element.focus({ preventScroll: true });
-                            autoResizeTextarea(element, TEXTAREA_MAX_HEIGHT_PX);
-                          });
-                        }
-                      }}
-                      data-react-grab-ignore-events
-                      data-react-grab-generation-input
-                      class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
-                      style={{
-                        'field-sizing': 'content',
-                        'min-height': '16px',
-                        'max-height': `${TEXTAREA_MAX_HEIGHT_PX}px`,
-                        'scrollbar-width': 'none',
-                      }}
-                      value={props.inputValue ?? ''}
-                      onInput={handleInput}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Add context"
-                      rows={1}
-                      readOnly={!props.onSubmit}
-                    />
-                    <Show when={props.onSubmit}>
-                      <button
-                        data-react-grab-generation-submit
-                        class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale"
-                        onClick={() => props.onSubmit?.()}
-                      >
-                        <IconSubmit size={10} class="text-popover" />
-                      </button>
-                    </Show>
-                  </div>
-                </Show>
+                <SelectionCardBody
+                  timestamp={props.timestamp}
+                  itemId={props.itemId}
+                  hasElementScreenshot={props.hasElementScreenshot}
+                  hasFullPageScreenshot={props.hasFullPageScreenshot}
+                  syncServerUrl={props.syncServerUrl}
+                  syncWorkspace={props.syncWorkspace}
+                  jiraTicketId={props.jiraTicketId}
+                  jiraUrl={props.jiraUrl}
+                  jiraStatus={props.groupStatus}
+                  jiraStatusCategory={props.jiraStatusCategory}
+                  jiraLabels={props.jiraLabels}
+                  jiraDueDate={props.jiraDueDate}
+                  jiraIssueType={props.jiraIssueType}
+                  jiraPriority={props.jiraPriority}
+                  jiraAssignee={props.jiraAssignee}
+                  jiraAssigneeAvatar={props.jiraAssigneeAvatar}
+                  jiraComments={props.jiraComments}
+                  onSubmitComment={props.onSubmitJiraComment}
+                  onSearchUsers={props.onSearchJiraUsers}
+                  onRefreshStatus={
+                    props.onRefreshJiraStatus
+                      ? () => props.onRefreshJiraStatus?.()
+                      : undefined
+                  }
+                  noTicketAction={
+                    canInteract() && props.onCreateTicket && !props.jiraTicketId
+                      ? <CreateTicketButton onClick={() => props.onCreateTicket?.()} class="w-full" />
+                      : undefined
+                  }
+                />
               </BottomSection>
               <Show when={isDevMode() && props.tagName}>
                 <DevInsights>
