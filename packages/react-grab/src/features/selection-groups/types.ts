@@ -43,6 +43,7 @@ export interface SelectionGroupsAPI {
   handleRenameGroup: (groupId: string, name: string) => void;
   handleDeleteGroup: (groupId: string) => void;
   handleMoveItem: (itemId: string, groupId: string | null) => void;
+  handleMoveItems: (itemIds: Set<string>, groupId: string) => void;
   /** Remove a selection. Gated by ticket-lock — returns false if the
    *  selection is in a ticketed group. GCs empty synthetic groups. */
   handleRemoveItem: (itemId: string) => boolean;
@@ -64,6 +65,7 @@ export interface SelectionGroupsViewProps {
   onDeleteGroup?: (groupId: string) => void;
   onToggleGroupRevealed?: (groupId: string) => void;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
+  onMoveItems?: (itemIds: Set<string>, groupId: string) => void;
   /** Remove a selection permanently. No-op when the selection is
    *  locked by the ticket-lock rule. */
   onRemoveItem?: (itemId: string) => void;

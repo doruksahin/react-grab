@@ -18,6 +18,7 @@ import { CommentsDropdown } from "./comments-dropdown.js";
 import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
+import { DevModeProvider } from "../features/dev-mode/index.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
 import { useCollapsibleLabel } from "../features/collapsible-label/index.js";
@@ -79,7 +80,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   };
 
   return (
-    <>
+    <DevModeProvider isDevMode={Boolean(props.isDevMode)}>
       <OverlayCanvas
         selectionVisible={props.selectionVisible}
         selectionBounds={props.selectionBounds}
@@ -466,6 +467,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onFilterVisibilityChange={props.onFilterVisibilityChange}
           onCreateTicketForLooseItem={props.onCreateTicketForLooseItem}
           onRemoveItem={props.onRemoveItem}
+          onMoveItems={props.onMoveItems}
+          onAddGroup={props.onAddGroup}
           looseTicketDialog={props.looseTicketDialog}
           onLooseTicketDialogClose={props.onLooseTicketDialogClose}
           onSubmitJiraComment={props.onSubmitJiraComment}
@@ -480,6 +483,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           }}
         />
       </Show>
-    </>
+    </DevModeProvider>
   );
 };

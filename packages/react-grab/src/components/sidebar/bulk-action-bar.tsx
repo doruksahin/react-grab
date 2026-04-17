@@ -1,11 +1,10 @@
-import { type Component, Show } from "solid-js";
+import type { Component, JSX } from "solid-js";
 
 interface BulkActionBarProps {
   selectedCount: number;
-  onMoveToGroup?: () => void;
-  onCreateTicket?: () => void;
-  onDelete?: () => void;
   onClearSelection?: () => void;
+  /** Slot for action buttons rendered between count and close button */
+  actions?: JSX.Element;
 }
 
 export const BulkActionBar: Component<BulkActionBarProps> = (props) => {
@@ -19,32 +18,7 @@ export const BulkActionBar: Component<BulkActionBarProps> = (props) => {
       </span>
 
       <div class="flex items-center gap-2">
-        <Show when={props.onMoveToGroup}>
-          <button
-            class="px-3 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors bg-white/20 hover:bg-white/30"
-            onClick={() => props.onMoveToGroup?.()}
-          >
-            Move
-          </button>
-        </Show>
-
-        <Show when={props.onCreateTicket}>
-          <button
-            class="px-3 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors bg-white/20 hover:bg-white/30"
-            onClick={() => props.onCreateTicket?.()}
-          >
-            Create ticket
-          </button>
-        </Show>
-
-        <Show when={props.onDelete}>
-          <button
-            class="px-3 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors bg-red-500/30 hover:bg-red-500/50 text-red-100"
-            onClick={() => props.onDelete?.()}
-          >
-            Delete
-          </button>
-        </Show>
+        {props.actions}
 
         <span
           class="ml-2 text-white/60 hover:text-white cursor-pointer text-lg"

@@ -12,6 +12,13 @@ export const assignSelection = (
 ): CommentItem[] =>
   items.map((i) => (i.id === itemId ? { ...i, groupId } : i));
 
+export const bulkAssignSelections = (
+  items: CommentItem[],
+  itemIds: Set<string>,
+  groupId: string,
+): CommentItem[] =>
+  items.map((i) => (itemIds.has(i.id) ? { ...i, groupId } : i));
+
 export const unassignSelectionsInGroup = (
   items: CommentItem[],
   groupId: string,

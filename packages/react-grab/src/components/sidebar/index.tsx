@@ -34,6 +34,8 @@ import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 import { TabBar } from "./tab-bar.js";
 import { SelectionListTab } from "./selection-list-tab.js";
 import { BulkActionBar } from "./bulk-action-bar.js";
+import { BulkGroupPicker } from "./bulk-group-picker.js";
+import { assignableGroupsFor, isSelectionLocked } from "../../features/selection-groups/business/ticket-lock.js";
 import { ImageLightbox } from "../ui/image-lightbox.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { IconFlag } from "../icons/icon-flag.js";
@@ -52,6 +54,8 @@ export interface SidebarProps {
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   onRemoveItem?: (itemId: string) => void;
+  onMoveItems?: (itemIds: Set<string>, groupId: string) => void;
+  onAddGroup?: (name: string) => void;
   /** When set, opens the Jira create dialog for this loose item + its synthetic group. */
   looseTicketDialog?: { group: SelectionGroupWithJira; items: CommentItem[] } | null;
   onLooseTicketDialogClose?: () => void;
@@ -100,6 +104,24 @@ export const Sidebar: Component<SidebarProps> = (props) => {
       return next;
     });
   };
+
+  const bulkAssignableGroups = createMemo(() =>
+    assignableGroupsFor({ groupId: null }, props.groups),
+  );
+
+  // Prune checked selections that become ticketed (e.g. ticket assigned externally)
+  createEffect(() => {
+    const current = selectedIds();
+    if (current.size === 0) return;
+    const pruned = new Set(
+      [...current].filter((id) => {
+        const item = props.commentItems.find((i) => i.id === id);
+        return item && !isSelectionLocked({ groupId: item.groupId }, props.groups);
+      }),
+    );
+    if (pruned.size !== current.size) setSelectedIds(pruned);
+  });
+
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
     string | null
   >(null);
@@ -363,6 +385,16 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           <BulkActionBar
             selectedCount={selectedIds().size}
             onClearSelection={() => setSelectedIds(new Set())}
+            actions={
+              <BulkGroupPicker
+                groups={bulkAssignableGroups()}
+                onSelect={(groupId) => {
+                  props.onMoveItems?.(selectedIds(), groupId);
+                  setSelectedIds(new Set());
+                }}
+                onAddGroup={props.onAddGroup}
+              />
+            }
           />
         </Show>
 

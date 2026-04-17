@@ -13,10 +13,12 @@ import type {
   SubmitGroupCommentFn,
 } from "../../features/jira-comments/types.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
+import { isSelectionLocked } from "../../features/selection-groups/business/ticket-lock.js";
 import { SelectionCardBody } from "./selection-card-body.js";
 import { SelectionCheckbox } from "../ui/selection-checkbox.js";
 import { SelectionCard } from "../ui/selection-card.js";
 import { DevInsights } from "../ui/dev-insights/index.js";
+import { useDevMode } from "../../features/dev-mode/index.js";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];
@@ -26,7 +28,6 @@ interface SelectionListTabProps {
   onToggleSelect?: (id: string) => void;
   searchQuery?: string;
   flaggedOnly?: boolean;
-  isDevMode?: boolean;
   syncServerUrl?: string;
   syncWorkspace?: string;
   onSubmitJiraComment?: SubmitGroupCommentFn;
@@ -36,6 +37,7 @@ interface SelectionListTabProps {
 }
 
 export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
+  const isDevMode = useDevMode();
   const lightbox = useImageLightbox();
 
   const groupMap = createMemo(
@@ -75,7 +77,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
   };
 
   return (
-    <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5">
+    <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2.5">
       <Show when={filteredItems().length === 0}>
         <div class="py-8 text-center text-[12px] text-muted-foreground italic">
           No matching selections
@@ -85,6 +87,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
         {(item) => {
           const group = () => (item.groupId ? groupMap().get(item.groupId) : undefined);
           const isFlagged = () => group()?.jiraFlagged === true;
+          const checkable = () => !isSelectionLocked({ groupId: item.groupId }, props.groups);
           const isSelected = () => props.selectedIds?.has(item.id) === true;
           const summary = () =>
             item.commentText || item.componentName || item.tagName;
@@ -111,7 +114,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
             <SelectionCard flagged={isFlagged()} selected={isSelected()}>
               <SelectionCardBody
                 leading={
-                  props.onToggleSelect
+                  props.onToggleSelect && checkable()
                     ? <SelectionCheckbox checked={isSelected()} onToggle={() => props.onToggleSelect?.(item.id)} />
                     : undefined
                 }
@@ -138,7 +141,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 commentEditorToolbarVisible={props.commentEditorToolbarVisible}
                 onScreenshotClick={(src, label) => lightbox.open(src, label)}
               />
-              <Show when={props.isDevMode}>
+              <Show when={isDevMode()}>
                 <DevInsights>
                   <DevInsights.Field label="tag" value={item.tagName} color="green" />
                   <DevInsights.Field label="node" value={item.componentName ?? item.elementName} color="purple" />

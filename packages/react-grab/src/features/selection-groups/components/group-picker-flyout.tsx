@@ -13,6 +13,8 @@ interface GroupPickerFlyoutProps {
   onClose: () => void;
   /** If provided, renders a "New group..." inline input at the bottom. */
   onAddGroup?: (name: string) => void;
+  /** Opening direction. Defaults to "bottom" (drops down). */
+  placement?: "bottom" | "top";
 }
 
 export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
@@ -35,7 +37,11 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
   return (
     <div
       data-react-grab-ignore-events
-      class="absolute left-0 top-full mt-1 z-50 bg-white rounded-[10px] overflow-hidden w-[180px] [font-synthesis:none] [corner-shape:superellipse(1.25)] filter-[drop-shadow(0px_1px_2px_#51515140)]"
+      class="absolute left-0 z-50 bg-white rounded-[10px] overflow-hidden w-[180px] [font-synthesis:none] [corner-shape:superellipse(1.25)] filter-[drop-shadow(0px_1px_2px_#51515140)]"
+      classList={{
+        "top-full mt-1": props.placement !== "top",
+        "bottom-full mb-1": props.placement === "top",
+      }}
     >
       <div class="px-2 pt-1.5 pb-1">
         <span class="text-[11px] font-medium text-black/40">{header()}</span>

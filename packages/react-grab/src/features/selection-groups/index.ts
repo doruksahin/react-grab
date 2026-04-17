@@ -7,6 +7,7 @@ import type {
 import type { CommentItem } from "../../types.js";
 import {
   assignSelection,
+  bulkAssignSelections,
   unassignSelectionsInGroup,
 } from "./business/selection-assignment.js";
 import { ensureGroupForItem, gcEmptySyntheticGroups } from "./business/synthetic-group.js";
@@ -59,6 +60,12 @@ export function createSelectionGroups(
     reconcileSyntheticGroups(updated);
   };
 
+  const handleMoveItems = (itemIds: Set<string>, groupId: string) => {
+    const updated = bulkAssignSelections(deps.commentItems(), itemIds, groupId);
+    deps.persistCommentItems(updated);
+    reconcileSyntheticGroups(updated);
+  };
+
   const handleRemoveItem = (itemId: string): boolean => {
     const before = deps.commentItems();
     const item = before.find((i) => i.id === itemId);
@@ -89,6 +96,7 @@ export function createSelectionGroups(
     handleRenameGroup,
     handleDeleteGroup,
     handleMoveItem,
+    handleMoveItems,
     handleRemoveItem,
     ensureGroupForItem: handleEnsureGroupForItem,
   };

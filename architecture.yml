@@ -396,6 +396,11 @@ features:
       - packages/react-grab/src/features/image-lightbox/index.ts
       - packages/react-grab/src/features/image-lightbox/types.ts
       - packages/react-grab/src/features/image-lightbox/use-image-lightbox.ts
+  dev-mode:
+    description: TODO
+    status: discovered
+    files:
+      - packages/react-grab/src/features/dev-mode/index.ts
 
 data_flows:
   sync_layer:
@@ -506,6 +511,7 @@ data_attrs:
         - filter-chips
         - progress-bar
         - bulk-action-bar
+        - bulk-group-picker
         - jira-status-banner
         - empty-state
         - ungrouped-section
@@ -747,7 +753,7 @@ data_attrs:
     dev-insights: {scope: selection, src: 1, tests: 0}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 3, tests: 2}
-    selection-card: {scope: selection, src: 1, tests: 0}
+    selection-card: {scope: selection, src: 2, tests: 0}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-label: {scope: selection, src: 1, tests: 11}
     selection-remove: {scope: selection, src: 1, tests: 0}
@@ -756,6 +762,7 @@ data_attrs:
     active-group-picker: {scope: sidebar, src: 1, tests: 0}
     active-group-picker-locked: {scope: sidebar, src: 1, tests: 0}
     bulk-action-bar: {scope: sidebar, src: 1, tests: 0}
+    bulk-group-picker: {scope: sidebar, src: 1, tests: 0}
     detail-header: {scope: sidebar, src: 1, tests: 1}
     due-date-filter: {scope: sidebar, src: 1, tests: 2}
     empty-state: {scope: sidebar, src: 1, tests: 0}

@@ -4554,6 +4554,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                   if (itemId) selectionGroups.handleMoveItem(itemId, groupId);
                 }}
                 onMoveItem={selectionGroups.handleMoveItem}
+                onMoveItems={selectionGroups.handleMoveItems}
                 onRemoveItem={(itemId) => {
                   selectionGroups.handleRemoveItem(itemId);
                 }}
