@@ -463,7 +463,8 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
         <div
           ref={panelRef}
           class={cn(
-            'relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased w-fit h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]',
+            'relative contain-layout flex items-center gap-[5px] rounded-[10px] antialiased h-fit p-0 [font-synthesis:none] [corner-shape:superellipse(1.25)]',
+            canInteract() && !props.isPromptMode ? 'w-[320px]' : 'w-fit',
             'bg-popover',
             props.jiraFlagged && FLAGGED_BORDER_CLASS,
             isShaking() && 'animate-shake'
@@ -544,14 +545,11 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
 
           <Show when={canInteract() && !props.isPromptMode}>
             <div
-              class="contain-layout shrink-0 flex flex-col items-start w-fit h-fit"
-              classList={{
-                'min-w-[100px]':
-                  isArrowNavigationVisible() || isInspectNavigationVisible(),
-              }}
+              class="contain-layout shrink-0 flex flex-col items-stretch w-full max-h-[400px] overflow-y-auto overflow-x-hidden"
+              style={{ 'scrollbar-width': 'none' }}
             >
               <div
-                class="contain-layout shrink-0 flex items-center gap-1 w-fit h-fit px-2"
+                class="contain-layout shrink-0 flex items-center gap-1 w-full h-fit px-2"
                 classList={{
                   'py-1.5':
                     !isArrowNavigationVisible() &&
@@ -728,8 +726,6 @@ export const SelectionLabel: Component<SelectionLabelProps> = (props) => {
                 <SelectionCardBody
                   timestamp={props.timestamp}
                   itemId={props.itemId}
-                  hasElementScreenshot={props.hasElementScreenshot}
-                  hasFullPageScreenshot={props.hasFullPageScreenshot}
                   syncServerUrl={props.syncServerUrl}
                   syncWorkspace={props.syncWorkspace}
                   jiraTicketId={props.jiraTicketId}
