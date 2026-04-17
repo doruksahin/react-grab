@@ -14,7 +14,7 @@ export const BulkGroupPicker: Component<BulkGroupPickerProps> = (props) => {
   return (
     <div data-react-grab-bulk-group-picker class="relative">
       <button
-        class="px-3 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors bg-white/20 hover:bg-white/30"
+        class="px-3 py-1.5 text-[11px] font-semibold cursor-pointer transition-colors bg-bulk-bar-foreground/20 hover:bg-bulk-bar-foreground/30"
         onClick={(e) => {
           e.stopPropagation();
           setOpen((v) => !v);

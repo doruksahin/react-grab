@@ -37,20 +37,20 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
   return (
     <div
       data-react-grab-ignore-events
-      class="absolute left-0 z-50 bg-white rounded-[10px] overflow-hidden w-[180px] [font-synthesis:none] [corner-shape:superellipse(1.25)] filter-[drop-shadow(0px_1px_2px_#51515140)]"
+      class="absolute left-0 z-50 bg-popover text-popover-foreground rounded-[10px] overflow-hidden w-[180px] [font-synthesis:none] [corner-shape:superellipse(1.25)] shadow-md"
       classList={{
         "top-full mt-1": props.placement !== "top",
         "bottom-full mb-1": props.placement === "top",
       }}
     >
       <div class="px-2 pt-1.5 pb-1">
-        <span class="text-[11px] font-medium text-black/40">{header()}</span>
+        <span class="text-[11px] font-medium text-muted-foreground">{header()}</span>
       </div>
-      <div class="border-t border-[#D9D9D9] py-1">
+      <div class="border-t border-border py-1">
         {/* Ungrouped row — selecting it sets groupId to null */}
         <button
           data-react-grab-ignore-events
-          class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer text-left"
+          class="w-full flex items-center gap-2 px-2 py-1 hover:bg-accent cursor-pointer text-left"
           onClick={(e) => {
             e.stopPropagation();
             props.onSelect(null);
@@ -64,7 +64,7 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
               width="10"
               height="10"
               viewBox="0 0 16 16"
-              class="text-black/50 shrink-0"
+              class="text-muted-foreground shrink-0"
             >
               <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
             </svg>
@@ -72,8 +72,8 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
           <span
             class={
               props.activeGroupId == null
-                ? "text-[12px] font-medium text-black"
-                : "text-[12px] text-black/70"
+                ? "text-[12px] font-medium text-popover-foreground"
+                : "text-[12px] text-muted-foreground"
             }
           >
             Ungrouped
@@ -85,7 +85,7 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
             return (
               <button
                 data-react-grab-ignore-events
-                class="w-full flex items-center gap-2 px-2 py-1 hover:bg-black/[0.03] cursor-pointer text-left"
+                class="w-full flex items-center gap-2 px-2 py-1 hover:bg-accent cursor-pointer text-left"
                 onClick={(e) => {
                   e.stopPropagation();
                   props.onSelect(group.id);
@@ -99,7 +99,7 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
                     width="10"
                     height="10"
                     viewBox="0 0 16 16"
-                    class="text-black/50 shrink-0"
+                    class="text-muted-foreground shrink-0"
                   >
                     <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
                   </svg>
@@ -107,8 +107,8 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
                 <span
                   class={
                     isActive()
-                      ? "text-[12px] font-medium text-black"
-                      : "text-[12px] text-black/70"
+                      ? "text-[12px] font-medium text-popover-foreground"
+                      : "text-[12px] text-muted-foreground"
                   }
                 >
                   {group.name}
@@ -119,14 +119,14 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
         </For>
       </div>
       <Show when={props.onAddGroup}>
-        <div class="border-t border-[#D9D9D9] px-2 py-1.5">
+        <div class="border-t border-border px-2 py-1.5">
           <div class="flex items-center gap-1.5">
-            <svg width="10" height="10" viewBox="0 0 16 16" class="text-black/25 shrink-0"><path fill="currentColor" fill-rule="evenodd" d="M7.25 8.75V15h1.5V8.75H15v-1.5H8.75V1h-1.5v6.25H1v1.5z" clip-rule="evenodd" /></svg>
+            <svg width="10" height="10" viewBox="0 0 16 16" class="text-muted-foreground/50 shrink-0"><path fill="currentColor" fill-rule="evenodd" d="M7.25 8.75V15h1.5V8.75H15v-1.5H8.75V1h-1.5v6.25H1v1.5z" clip-rule="evenodd" /></svg>
             <input
               data-react-grab-ignore-events
               type="text"
               placeholder="New group..."
-              class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-black/25 text-black"
+              class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-muted-foreground/50 text-popover-foreground"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && e.currentTarget.value.trim()) {
                   props.onAddGroup?.(e.currentTarget.value.trim());

@@ -17,8 +17,10 @@ import { isSelectionLocked } from "../../features/selection-groups/business/tick
 import { SelectionCardBody } from "./selection-card-body.js";
 import { SelectionCheckbox } from "../ui/selection-checkbox.js";
 import { SelectionCard } from "../ui/selection-card.js";
+import { CreateTicketButton } from "../ui/create-ticket-button.js";
 import { DevInsights } from "../ui/dev-insights/index.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
+import { ActiveGroupPicker } from "../../features/selection-groups/components/active-group-picker.js";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];
@@ -34,6 +36,9 @@ interface SelectionListTabProps {
   onSearchJiraUsers?: SearchJiraUsersFn;
   onRefreshJiraStatus?: RefreshGroupStatusFn;
   commentEditorToolbarVisible?: boolean;
+  onCreateTicket?: (item: CommentItem) => void;
+  onMoveItem?: (itemId: string, groupId: string | null) => void;
+  onAddGroup?: (name: string) => void;
 }
 
 export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
@@ -112,10 +117,24 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
 
           return (
             <SelectionCard flagged={isFlagged()} selected={isSelected()}>
+              <ActiveGroupPicker
+                groups={props.groups}
+                activeGroupId={item.groupId}
+                onActiveGroupChange={(groupId) => props.onMoveItem?.(item.id, groupId)}
+                onAddGroup={props.onAddGroup}
+              >
+                <ActiveGroupPicker.Trigger />
+                <ActiveGroupPicker.Content />
+              </ActiveGroupPicker>
               <SelectionCardBody
                 leading={
                   props.onToggleSelect && checkable()
                     ? <SelectionCheckbox checked={isSelected()} onToggle={() => props.onToggleSelect?.(item.id)} />
+                    : undefined
+                }
+                noTicketAction={
+                  !group()?.jiraTicketId && props.onCreateTicket
+                    ? <CreateTicketButton onClick={() => props.onCreateTicket!(item)} />
                     : undefined
                 }
                 summary={summary()}

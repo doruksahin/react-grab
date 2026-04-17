@@ -54,6 +54,7 @@ export interface SidebarProps {
   onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   onRemoveItem?: (itemId: string) => void;
+  onMoveItem?: (itemId: string, groupId: string | null) => void;
   onMoveItems?: (itemIds: Set<string>, groupId: string) => void;
   onAddGroup?: (name: string) => void;
   /** When set, opens the Jira create dialog for this loose item + its synthetic group. */
@@ -338,6 +339,9 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     onSearchJiraUsers={props.onSearchJiraUsers}
                     onRefreshJiraStatus={props.onRefreshJiraStatus}
                     commentEditorToolbarVisible={props.commentEditorToolbarVisible}
+                    onCreateTicket={props.onCreateTicketForLooseItem}
+                    onMoveItem={props.onMoveItem}
+                    onAddGroup={props.onAddGroup}
                   />
                 </Show>
               </>

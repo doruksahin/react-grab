@@ -22,7 +22,7 @@ import { DevModeProvider } from "../features/dev-mode/index.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
 import { useCollapsibleLabel } from "../features/collapsible-label/index.js";
-import { CollapsedDot } from "./collapsible-label/collapsed-dot.js";
+import { CollapsedDot, DOT_TOTAL_OFFSET_PX } from "./collapsible-label/collapsed-dot.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
@@ -221,6 +221,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           });
           const [isLabelExiting, setIsLabelExiting] = createSignal(false);
           const [isDotExiting, setIsDotExiting] = createSignal(false);
+          const [labelPlacement, setLabelPlacement] = createSignal<"above" | "below">("below");
           const ANIM_MS = 150;
 
           const handleCollapse = () => {
@@ -233,18 +234,18 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           };
 
           return (
-          <Show
-            when={!collapsible.isCollapsed()}
-            fallback={
-              <CollapsedDot
-                selectionBounds={instance().selectionBounds}
-                onExpand={handleExpand}
-                inputValue={instance().inputValue}
-                isExpanding={isDotExiting()}
-              />
-            }
-          >
+          <>
+          <CollapsedDot
+            selectionBounds={instance().selectionBounds}
+            onExpand={collapsible.isCollapsed() ? handleExpand : handleCollapse}
+            inputValue={collapsible.isCollapsed() ? instance().inputValue : undefined}
+            isExpanding={isDotExiting()}
+            placement={collapsible.isCollapsed() ? "below" : labelPlacement()}
+          />
+          <Show when={!collapsible.isCollapsed()}>
           <SelectionLabel
+            extraTopOffset={props.collapsibleLabelsDefault ? DOT_TOTAL_OFFSET_PX : 0}
+            onPlacementChange={setLabelPlacement}
             tagName={instance().tagName}
             componentName={instance().componentName}
             content={instance().content}
@@ -337,11 +338,10 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
                 : undefined
             }
             isCollapsing={isLabelExiting()}
-            onCollapse={
-              props.collapsibleLabelsDefault ? handleCollapse : undefined
-            }
+            onCollapse={undefined}
           />
           </Show>
+          </>
         );}}
       </Index>
 
@@ -464,6 +464,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onFilterVisibilityChange={props.onFilterVisibilityChange}
           onCreateTicketForLooseItem={props.onCreateTicketForLooseItem}
           onRemoveItem={props.onRemoveItem}
+          onMoveItem={props.onMoveItem}
           onMoveItems={props.onMoveItems}
           onAddGroup={props.onAddGroup}
           looseTicketDialog={props.looseTicketDialog}
