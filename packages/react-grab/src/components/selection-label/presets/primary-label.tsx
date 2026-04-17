@@ -217,7 +217,7 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
       <Show
         when={canInteract() && props.isPromptMode && !props.isPendingDismiss}
       >
-        <div class="contain-layout shrink-0 flex flex-col justify-center items-start min-w-[150px] max-w-[280px] gap-1">
+        <div class="contain-layout shrink-0 flex flex-col justify-center items-start min-w-[150px] max-w-[280px]">
           <SelectionLabelHeader
             tagName={props.tagName}
             componentName={props.componentName}

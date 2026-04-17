@@ -26,7 +26,7 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
   return (
     <div
       data-react-grab-selection-header
-      class="contain-layout shrink-0 flex items-baseline gap-1 pt-1.5 pb-1 h-fit px-2 w-full bg-popover-foreground/[0.04]"
+      class="contain-layout shrink-0 flex items-baseline gap-1 pt-1.5 pb-1 h-fit px-2 w-full bg-[#252545] border-b border-white/10"
       classList={{
         "py-1.5": !props.compactPadding,
         "pt-1.5 pb-1": Boolean(props.compactPadding),
