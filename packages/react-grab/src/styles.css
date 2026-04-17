@@ -272,6 +272,32 @@
   --ring: oklch(0.556 0 0);
 }
 
+@keyframes collapsible-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--kb-collapsible-content-height);
+  }
+}
+
+@keyframes collapsible-up {
+  from {
+    height: var(--kb-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+.collapsible-card-body[data-expanded] {
+  animation: collapsible-down var(--transition-normal) ease-out;
+}
+
+.collapsible-card-body[data-closed] {
+  animation: collapsible-up var(--transition-normal) ease-out;
+}
+
 @keyframes shake {
   0%,
   100% {
