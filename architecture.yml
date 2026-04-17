@@ -728,9 +728,9 @@ data_attrs:
     filter-badge: {scope: filter, src: 1, tests: 0}
     filter-clear: {scope: filter, src: 1, tests: 0}
     filter-row: {scope: filter, src: 5, tests: 2}
-    context-input: {scope: generation, src: 1, tests: 0}
-    generation-abort: {scope: generation, src: 1, tests: 1}
-    generation-input: {scope: generation, src: 2, tests: 1}
+    context-input: {scope: generation, src: 2, tests: 0}
+    generation-abort: {scope: generation, src: 3, tests: 1}
+    generation-input: {scope: generation, src: 3, tests: 1}
     generation-submit: {scope: generation, src: 1, tests: 0}
     create-ticket: {scope: jira, src: 1, tests: 0}
     jira-create: {scope: jira, src: 1, tests: 0}
@@ -751,7 +751,8 @@ data_attrs:
     frozen-styles: {scope: reserved, src: 1, tests: 0}
     global-freeze: {scope: reserved, src: 1, tests: 5}
     ignore: {scope: reserved, src: 1, tests: 0}
-    ignore-events: {scope: reserved, src: 70, tests: 5}
+    ignore-events: {scope: reserved, src: 75, tests: 5}
+    action-cycle-item: {scope: selection, src: 1, tests: 0}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 0}
     collapse-label: {scope: selection, src: 1, tests: 3}
