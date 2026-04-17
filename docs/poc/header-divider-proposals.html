@@ -198,16 +198,19 @@
     border-bottom: 1px solid rgba(255,255,255,0.1);
   }
   .proposal-l .card-footer {
-    padding: 0 14px 10px;
-    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 10px 14px 0;
+  }
+  .proposal-l .card-footer .dev-insights {
+    border-top: none;
+    margin-top: 4px;
+    padding: 6px 0 8px;
+    background: transparent;
   }
   .proposal-l .comments-wrapper {
     background: rgba(139, 92, 246, 0.08);
     border: 1px solid rgba(139, 92, 246, 0.2);
     border-radius: 6px;
-    padding: 8px 10px;
-    margin-top: 10px;
-    cursor: pointer;
+    padding: 10px 12px;
     transition: background 0.2s;
   }
   .proposal-l .comments-wrapper:hover {
@@ -261,7 +264,10 @@
   .proposal-l .comment-item {
     display: flex;
     gap: 8px;
-    padding: 6px 0;
+    padding: 8px 0;
+  }
+  .proposal-l .comment-item + .comment-item {
+    border-top: 1px solid rgba(139,92,246,0.1);
   }
   .proposal-l .comment-avatar {
     width: 28px;
@@ -401,13 +407,13 @@
             <span>Tip: Type @ to mention</span>
           </div>
         </div>
-        <div style="border-top: 1px solid rgba(139,92,246,0.15); margin-top: 8px; padding-top: 8px;">
+        <div style="margin-top: 4px;">
           <div class="comment-item">
             <div class="comment-avatar">AA</div>
             <div class="comment-body">
               <div><span class="comment-author">ADC bot admin</span> <span class="comment-date">1d ago</span></div>
               <div class="comment-text">test2</div>
-              <div class="comment-reply">↩</div>
+              <div class="comment-reply">↪</div>
             </div>
           </div>
           <div class="comment-item">
@@ -415,7 +421,7 @@
             <div class="comment-body">
               <div><span class="comment-author">ADC bot admin</span> <span class="comment-date">1d ago</span></div>
               <div class="comment-text">test</div>
-              <div class="comment-reply">↩</div>
+              <div class="comment-reply">↪</div>
             </div>
           </div>
         </div>
