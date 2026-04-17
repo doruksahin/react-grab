@@ -3,7 +3,7 @@ import { type Component, Show } from 'solid-js';
 import type { CommentItem } from '../../types.js';
 import type { StatusColorConfig } from '../../features/sidebar/status-colors.js';
 import { SelectionCard } from './selection-card.jsx';
-import { Button } from '../ui/button.jsx';
+import { CreateTicketButton } from '../ui/create-ticket-button.jsx';
 import { RemoveSelectionButton } from '../remove-selection-button.jsx';
 import { FlagIndicator } from '../flag-indicator.js';
 import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-color.js';
@@ -74,13 +74,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             <Show
               when={hasTicket()}
               fallback={
-                <Button
-                  variant="outline"
-                  class="h-6 px-2 text-[10px] border-dashed"
-                  onClick={() => props.onCreateTicket(props.item)}
-                >
-                  + Create ticket
-                </Button>
+                <CreateTicketButton onClick={() => props.onCreateTicket(props.item)} />
               }
             >
               <div class="flex items-center gap-1">
