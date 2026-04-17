@@ -693,6 +693,41 @@ const JiraTestSection = () => {
   );
 };
 
+const LabelShowcaseSection = () => {
+  return (
+    <section className="space-y-4" data-testid="label-showcase-section">
+      <h1 className="text-xl font-bold">Label Showcase</h1>
+      <p className="text-sm text-gray-500">
+        Target elements for visual testing of all SelectionLabel presets and
+        states. Each card maps to a different fixture scenario.
+      </p>
+      <div className="grid grid-cols-3 gap-6">
+        <div
+          className="showcase-ticketed-comments rounded-lg border border-gray-200 bg-white p-6 min-h-[80px]"
+          data-testid="showcase-ticketed-comments"
+        >
+          <span className="font-semibold text-sm">Ticketed + Comments</span>
+          <p className="text-xs text-gray-400 mt-1">ATT-101, In Progress, 2 comments</p>
+        </div>
+        <div
+          className="showcase-ticketed-no-comments rounded-lg border border-gray-200 bg-white p-6 min-h-[80px]"
+          data-testid="showcase-ticketed-no-comments"
+        >
+          <span className="font-semibold text-sm">Ticketed, No Comments</span>
+          <p className="text-xs text-gray-400 mt-1">ATT-102, To Do</p>
+        </div>
+        <div
+          className="showcase-ungrouped rounded-lg border border-gray-200 bg-white p-6 min-h-[80px]"
+          data-testid="showcase-ungrouped"
+        >
+          <span className="font-semibold text-sm">Ungrouped (Loose)</span>
+          <p className="text-xs text-gray-400 mt-1">No ticket, open status</p>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const HiddenToggleSection = () => {
   const [isVisible, setIsVisible] = useState(true);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -760,6 +795,8 @@ export default function App() {
       <ModalDialogSection />
 
       <PointerUpModalSection />
+
+      <LabelShowcaseSection />
 
       <HiddenToggleSection />
 

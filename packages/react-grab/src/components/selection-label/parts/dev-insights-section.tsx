@@ -3,7 +3,7 @@ import type { Component } from "solid-js";
 import { DevInsights } from "../../ui/dev-insights/index.js";
 import { useSelectionLabelContext } from "../context.js";
 
-interface DevInsightsSectionProps {
+export interface DevInsightsSectionProps {
   tagName?: string;
   componentName?: string;
 }
