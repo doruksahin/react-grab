@@ -17,7 +17,7 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
 
   return (
     <div data-react-grab-comments-section data-react-grab-ignore-events>
-      <div class="border-t border-border/40 w-[calc(100%+16px)] -mx-2 mt-2" />
+      <div class="border-t border-border/40 mt-2" />
       <CollapsibleCard
         variant="inline"
         defaultOpen={true}
