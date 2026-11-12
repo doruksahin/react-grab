@@ -111,7 +111,7 @@ test.describe("Agent Integration", () => {
               if (!shadowRoot) return false;
               const root = shadowRoot.querySelector(`[${attrName}]`);
               return !!root?.querySelector("[data-react-grab-error]");
-            }, "data-react-grab");
+            }, "data-react-grab-product");
           },
           { timeout: 3000 },
         )
@@ -136,7 +136,7 @@ test.describe("Agent Integration", () => {
               return (
                 root?.textContent?.toLowerCase().includes("retry") ?? false
               );
-            }, "data-react-grab");
+            }, "data-react-grab-product");
           },
           { timeout: 2000 },
         )
@@ -186,7 +186,7 @@ test.describe("Agent Integration", () => {
                 text.includes("abort") ||
                 text.includes("stop")
               );
-            }, "data-react-grab");
+            }, "data-react-grab-product");
           },
           { timeout: 2000 },
         )
@@ -252,7 +252,7 @@ test.describe("Agent Integration", () => {
               if (!shadowRoot) return false;
               const root = shadowRoot.querySelector(`[${attrName}]`);
               return root?.textContent?.toLowerCase().includes("undo") ?? false;
-            }, "data-react-grab");
+            }, "data-react-grab-product");
           },
           { timeout: 2000 },
         )
@@ -296,7 +296,7 @@ test.describe("Agent Integration", () => {
         if (!shadowRoot) return false;
         const root = shadowRoot.querySelector(`[${attrName}]`);
         return root?.querySelector("textarea, input") !== null;
-      }, "data-react-grab");
+      }, "data-react-grab-product");
 
       expect(typeof hasFollowUpInput).toBe("boolean");
     });

@@ -8,11 +8,14 @@ import type { Page } from "@playwright/test";
  * persistent label instances start collapsed as a small dot. Clicking
  * the dot expands to the full SelectionLabel. A chevron button inside
  * the label header collapses it back to the dot.
+ *
+ * The April 17 renderer revision supersedes the chevron behavior above:
+ * the dot remains visible and toggles the label in both states.
  */
 
 test.use({ video: "on" });
 
-const ATTR = "data-react-grab";
+const ATTR = "data-react-grab-product";
 
 const countInShadow = async (page: Page, selector: string): Promise<number> => {
   return page.evaluate(
@@ -39,89 +42,122 @@ const clickInShadow = async (page: Page, selector: string): Promise<void> => {
 };
 
 test.describe("Collapsible Label", { tag: ["@SPEC-016"] }, () => {
-  test("flag off — labels render expanded (no dot, no collapse button)", {
-    annotation: { type: "ac", description: "SPEC-016 AC1-AC3" },
-  }, async ({
-    page,
-    reactGrab,
-  }) => {
-    await reactGrab.populate();
-    await expect
-      .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
-      .toBe(true);
+  test(
+    "expanded default — copying preserves saved labels and their toggle dots",
+    {
+      annotation: { type: "ac", description: "SPEC-016 AC1-AC3" },
+    },
+    async ({ page, reactGrab }) => {
+      await reactGrab.populate();
+      await expect
+        .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+        .toBe(true);
 
-    await reactGrab.activate();
-    await reactGrab.clickElement("nav.main-nav");
-    await page.waitForTimeout(1500);
+      const savedLabels = page.locator("[data-react-grab-selection-label]");
+      await expect(savedLabels).toHaveCount(2);
+      const savedLabelCount = await savedLabels.count();
 
-    await reactGrab.screenshot("flag-off-expanded", "page");
+      await reactGrab.activate();
+      await reactGrab.clickElement("nav.main-nav");
+      await page.waitForTimeout(1500);
 
-    const dotCount = await countInShadow(page, "[data-react-grab-collapsed-dot]");
-    const labelCount = await countInShadow(page, "[data-react-grab-selection-label]");
-    const collapseBtnCount = await countInShadow(page, "[data-react-grab-collapse-label]");
+      await reactGrab.screenshot("flag-off-expanded", "page");
 
-    expect(dotCount).toBe(0);
-    expect(labelCount).toBeGreaterThan(0);
-    expect(collapseBtnCount).toBe(0);
-  });
+      const dotCount = await countInShadow(
+        page,
+        "[data-react-grab-collapsed-dot]",
+      );
+      const labelCount = await countInShadow(
+        page,
+        "[data-react-grab-selection-label]",
+      );
+      const collapseBtnCount = await countInShadow(
+        page,
+        "[data-react-grab-collapse-label]",
+      );
 
-  test("flag on — labels start as dots, click to expand, click chevron to collapse", {
-    annotation: { type: "ac", description: "SPEC-016 AC6, AC11-AC14" },
-  }, async ({
-    page,
-    reactGrab,
-  }) => {
-    // Turn on the feature flag — reinitialize the overlay with collapsibleLabels enabled
-    await reactGrab.reinitialize({ collapsibleLabels: true });
-    await expect
-      .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
-      .toBe(true);
-    await reactGrab.populate();
+      expect(dotCount).toBe(savedLabelCount);
+      expect(labelCount).toBe(savedLabelCount);
+      expect(collapseBtnCount).toBe(0);
+    },
+  );
 
-    // Give overlay time to render after reinit
-    await page.waitForTimeout(500);
+  test(
+    "collapsed default — the persistent dot expands and collapses its label",
+    {
+      annotation: { type: "ac", description: "SPEC-016 AC6, AC11-AC14" },
+    },
+    async ({ page, reactGrab }) => {
+      // Turn on the feature flag — reinitialize the overlay with collapsibleLabels enabled
+      await reactGrab.reinitialize({ collapsibleLabels: true });
+      await expect
+        .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+        .toBe(true);
+      await reactGrab.populate();
 
-    // Activate via API (after reinit, __REACT_GRAB__ is fresh)
-    await page.evaluate(() => {
-      const api = (window as any).__REACT_GRAB__;
-      api?.activate();
-    });
-    await page.waitForTimeout(500);
+      // Give overlay time to render after reinit
+      await page.waitForTimeout(500);
 
-    await reactGrab.clickElement("nav.main-nav");
-    await page.waitForTimeout(1500);
+      // Activate via API (after reinit, __REACT_GRAB__ is fresh)
+      await reactGrab.activate();
+      await page.waitForTimeout(500);
 
-    // Initial state — all persistent labels should render as dots
-    await reactGrab.screenshot("1-collapsed-dot-initial", "page");
+      await reactGrab.clickElement("nav.main-nav");
+      await page.waitForTimeout(1500);
 
-    const initialDots = await countInShadow(page, "[data-react-grab-collapsed-dot]");
-    const initialLabels = await countInShadow(page, "[data-react-grab-selection-label]");
-    expect(initialDots).toBeGreaterThan(0);
-    expect(initialLabels).toBe(0);
+      // Initial state — all persistent labels should render as dots
+      await reactGrab.screenshot("1-collapsed-dot-initial", "page");
 
-    // Click one dot to expand it
-    await clickInShadow(page, "[data-react-grab-collapsed-dot]");
-    await page.waitForTimeout(500);
+      const initialDots = await countInShadow(
+        page,
+        "[data-react-grab-collapsed-dot]",
+      );
+      const initialLabels = await countInShadow(
+        page,
+        "[data-react-grab-selection-label]",
+      );
+      expect(initialDots).toBeGreaterThan(0);
+      expect(initialLabels).toBe(0);
 
-    await reactGrab.screenshot("2-expanded-after-dot-click", "page");
+      // Click one dot to expand it
+      await clickInShadow(page, "[data-react-grab-collapsed-dot]");
+      await page.waitForTimeout(500);
 
-    // After click: exactly one dot became a label; collapse button appears
-    const expandedDots = await countInShadow(page, "[data-react-grab-collapsed-dot]");
-    const expandedLabels = await countInShadow(page, "[data-react-grab-selection-label]");
-    const collapseBtns = await countInShadow(page, "[data-react-grab-collapse-label]");
-    expect(expandedDots).toBe(initialDots - 1);
-    expect(expandedLabels).toBe(1);
-    expect(collapseBtns).toBe(1);
+      await reactGrab.screenshot("2-expanded-after-dot-click", "page");
 
-    // Click the collapse chevron to collapse back to dot
-    await clickInShadow(page, "[data-react-grab-collapse-label]");
-    await page.waitForTimeout(500);
+      // The anchor remains while its label is expanded.
+      const expandedDots = await countInShadow(
+        page,
+        "[data-react-grab-collapsed-dot]",
+      );
+      const expandedLabels = await countInShadow(
+        page,
+        "[data-react-grab-selection-label]",
+      );
+      const collapseBtns = await countInShadow(
+        page,
+        "[data-react-grab-collapse-label]",
+      );
+      expect(expandedDots).toBe(initialDots);
+      expect(expandedLabels).toBe(1);
+      expect(collapseBtns).toBe(0);
 
-    await reactGrab.screenshot("3-collapsed-again-after-chevron", "page");
+      // Click the same anchor to collapse its label.
+      await clickInShadow(page, "[data-react-grab-collapsed-dot]");
+      await page.waitForTimeout(500);
 
-    const finalDots = await countInShadow(page, "[data-react-grab-collapsed-dot]");
-    const finalLabels = await countInShadow(page, "[data-react-grab-selection-label]");
-    expect(finalDots).toBe(initialDots);
-    expect(finalLabels).toBe(0);
-  });
+      await reactGrab.screenshot("3-collapsed-again-after-dot", "page");
+
+      const finalDots = await countInShadow(
+        page,
+        "[data-react-grab-collapsed-dot]",
+      );
+      const finalLabels = await countInShadow(
+        page,
+        "[data-react-grab-selection-label]",
+      );
+      expect(finalDots).toBe(initialDots);
+      expect(finalLabels).toBe(0);
+    },
+  );
 });

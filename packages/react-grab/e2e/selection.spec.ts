@@ -9,10 +9,10 @@ test.describe("Element Selection", () => {
     await reactGrab.waitForSelectionBox();
 
     const hasSelectionContent = await reactGrab.page.evaluate(() => {
-      const host = document.querySelector("[data-react-grab]");
+      const host = document.querySelector("[data-react-grab-product]");
       const shadowRoot = host?.shadowRoot;
       if (!shadowRoot) return false;
-      const root = shadowRoot.querySelector("[data-react-grab]");
+      const root = shadowRoot.querySelector("[data-react-grab-product]");
       return root !== null && root.innerHTML.length > 0;
     });
 
@@ -146,14 +146,16 @@ test.describe("Selection Bounds and Mutations", () => {
     reactGrab,
   }) => {
     await reactGrab.activate();
-    await reactGrab.hoverElement("li:first-child");
+    await reactGrab.hoverElement("[data-testid='main-title']");
     await reactGrab.waitForSelectionBox();
 
     const initialBounds = await reactGrab.getSelectionBoxBounds();
     expect(initialBounds).not.toBeNull();
 
     await reactGrab.page.evaluate(() => {
-      const element = document.querySelector("li:first-child") as HTMLElement;
+      const element = document.querySelector(
+        "[data-testid='main-title']",
+      ) as HTMLElement;
       if (element) {
         element.style.height = "200px";
       }

@@ -833,7 +833,7 @@ test.describe("Context Menu", () => {
           '[data-react-grab-menu-item="disabled action"]',
         );
         return button?.hasAttribute("disabled") ?? false;
-      }, "data-react-grab");
+      }, "data-react-grab-product");
       expect(isDisabled).toBe(true);
     });
 
@@ -860,7 +860,7 @@ test.describe("Context Menu", () => {
               enabled: (context: { element: Element }) => {
                 (window as { __enabledTagName?: string }).__enabledTagName =
                   context.element.tagName;
-                return context.element.tagName.toLowerCase() === "li";
+                return context.element.tagName.toLowerCase() === "span";
               },
               onAction: () => {},
             },
@@ -869,14 +869,14 @@ test.describe("Context Menu", () => {
       });
 
       await reactGrab.activate();
-      await reactGrab.hoverElement("li:first-child");
+      await reactGrab.hoverElement("li:first-child span");
       await reactGrab.waitForSelectionBox();
-      await reactGrab.rightClickElement("li:first-child");
+      await reactGrab.rightClickElement("li:first-child span");
 
       const enabledTagName = await reactGrab.page.evaluate(
         () => (window as { __enabledTagName?: string }).__enabledTagName,
       );
-      expect(enabledTagName).toBe("LI");
+      expect(enabledTagName).toBe("SPAN");
 
       const menuInfo = await reactGrab.getContextMenuInfo();
       const lowerMenuItems = menuInfo.menuItems.map((item: string) =>

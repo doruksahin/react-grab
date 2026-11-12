@@ -49,7 +49,10 @@ export interface SelectionGroupsAPI {
   handleRemoveItem: (itemId: string) => boolean;
   /** Guarantee the item has a group. Returns the groupId to assign.
    *  Uses activeGroupId when set, otherwise creates a synthetic group. */
-  ensureGroupForItem: (item: { componentName?: string; elementName: string }) => string;
+  ensureGroupForItem: (
+    item: { componentName?: string; elementName: string },
+    selectedGroupId?: string | null,
+  ) => string;
 }
 
 /**

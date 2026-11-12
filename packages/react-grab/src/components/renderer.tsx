@@ -1,4 +1,12 @@
-import { Show, Index, createSignal, createEffect, createRenderEffect, createMemo, onCleanup, on } from "solid-js";
+import {
+  Show,
+  Index,
+  createSignal,
+  createEffect,
+  createRenderEffect,
+  onCleanup,
+  on,
+} from "solid-js";
 import type { Component } from "solid-js";
 import type { AgentSession, ReactGrabRendererProps } from "../types.js";
 import {
@@ -22,31 +30,40 @@ import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
 import { DevModeProvider } from "../features/dev-mode/index.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
-import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
 import { useCollapsibleLabel } from "../features/collapsible-label/index.js";
-import { CollapsedDot, DOT_TOTAL_OFFSET_PX } from "./collapsible-label/collapsed-dot.js";
+import {
+  CollapsedDot,
+  DOT_TOTAL_OFFSET_PX,
+} from "./collapsible-label/collapsed-dot.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
-  const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<string | null>(null);
+  const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
+    string | null
+  >(null);
   let dashboardBtnRef: HTMLButtonElement | undefined;
-
-  // Picker surfaces (SelectionLabel) must never show synthetic groups in the
-  // group picker. CommentsDropdown receives the full list so isPresentedAsLoose
-  // can classify synthetic-grouped items as ungrouped.
-  const userFacingGroups = createMemo(() =>
-    filterUserFacingGroups(props.groups ?? []),
-  );
 
   // Performance instrumentation: bracket sidebar render time.
   // createRenderEffect fires before DOM mutations (marks the start of the render).
   // createEffect fires after DOM mutations (marks when sidebar is in the DOM).
-  createRenderEffect(on(() => sidebarOpen(), (isOpen) => {
-    if (isOpen) performance.mark("sidebar-open-start");
-  }, { defer: true }));
-  createEffect(on(() => sidebarOpen(), (isOpen) => {
-    if (isOpen) performance.mark("sidebar-open-end");
-  }, { defer: true }));
+  createRenderEffect(
+    on(
+      () => sidebarOpen(),
+      (isOpen) => {
+        if (isOpen) performance.mark("sidebar-open-start");
+      },
+      { defer: true },
+    ),
+  );
+  createEffect(
+    on(
+      () => sidebarOpen(),
+      (isOpen) => {
+        if (isOpen) performance.mark("sidebar-open-end");
+      },
+      { defer: true },
+    ),
+  );
 
   createEffect(() => {
     if (!sidebarOpen()) return;
@@ -216,123 +233,148 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           });
           const [isLabelExiting, setIsLabelExiting] = createSignal(false);
           const [isDotExiting, setIsDotExiting] = createSignal(false);
-          const [labelPlacement, setLabelPlacement] = createSignal<"above" | "below">("below");
+          const [labelPlacement, setLabelPlacement] = createSignal<
+            "above" | "below"
+          >("below");
           const ANIM_MS = 150;
 
           const handleCollapse = () => {
             setIsLabelExiting(true);
-            setTimeout(() => { collapsible.collapse(); setIsLabelExiting(false); }, ANIM_MS);
+            setTimeout(() => {
+              collapsible.collapse();
+              setIsLabelExiting(false);
+            }, ANIM_MS);
           };
           const handleExpand = () => {
             setIsDotExiting(true);
-            setTimeout(() => { collapsible.expand(); setIsDotExiting(false); }, ANIM_MS);
+            setTimeout(() => {
+              collapsible.expand();
+              setIsDotExiting(false);
+            }, ANIM_MS);
           };
 
           return (
-          <>
-          <CollapsedDot
-            selectionBounds={instance().selectionBounds}
-            onExpand={collapsible.isCollapsed() ? handleExpand : handleCollapse}
-            inputValue={collapsible.isCollapsed() ? instance().inputValue : undefined}
-            isExpanding={isDotExiting()}
-            placement={collapsible.isCollapsed() ? "below" : labelPlacement()}
-          />
-          <Show when={!collapsible.isCollapsed()}>
-          <PersistedLabel
-            extraTopOffset={props.collapsibleLabelsDefault ? DOT_TOTAL_OFFSET_PX : 0}
-            onPlacementChange={setLabelPlacement}
-            tagName={instance().tagName}
-            componentName={instance().componentName}
-            elementsCount={instance().elementsCount}
-            selectionBounds={instance().selectionBounds}
-            mouseX={instance().mouseX}
-            status={instance().status}
-            statusText={instance().statusText}
-            hasAgent={Boolean(instance().statusText)}
-            isPromptMode={instance().isPromptMode}
-            inputValue={instance().inputValue}
-            error={instance().error}
-            hideArrow={instance().hideArrow}
-            groupStatus={instance().groupStatus}
-            jiraTicketId={instance().jiraTicketId}
-            jiraUrl={instance().jiraUrl}
-            jiraStatusCategory={instance().jiraStatusCategory}
-            jiraAssignee={instance().jiraAssignee}
-            jiraReporter={instance().jiraReporter}
-            jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
-            jiraReporterAvatar={instance().jiraReporterAvatar}
-            jiraLabels={instance().jiraLabels}
-            jiraComments={instance().jiraComments}
-            jiraFlagged={instance().jiraFlagged}
-            jiraFlaggedAt={instance().jiraFlaggedAt}
-            jiraFlaggedBy={instance().jiraFlaggedBy}
-            jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
-            jiraPriority={instance().jiraPriority}
-            jiraIssueType={instance().jiraIssueType}
-            jiraDueDate={instance().jiraDueDate}
-            itemId={instance().itemId}
-            commentText={instance().commentText}
-            timestamp={instance().timestamp}
-            hasElementScreenshot={instance().hasElementScreenshot}
-            hasFullPageScreenshot={instance().hasFullPageScreenshot}
-            syncServerUrl={props.syncServerUrl}
-            syncWorkspace={props.syncWorkspace}
-            groups={props.groups ?? []}
-            activeGroupId={instance().groupId}
-            onActiveGroupChange={(groupId) => {
-              const itemId = instance().itemId;
-              if (!itemId) return;
-              props.onMoveItem?.(itemId, groupId ?? null);
-            }}
-            onAddGroup={props.onAddGroup}
-            onShowContextMenu={
-              (instance().status === "copied" || instance().status === "fading") &&
-              isElementConnected(instance().element)
-                ? () => props.onShowContextMenuInstance?.(instance().id)
-                : undefined
-            }
-            onHoverChange={(isHovered) =>
-              props.onLabelInstanceHoverChange?.(instance().id, isHovered)
-            }
-            onRemoveItem={
-              instance().itemId && props.onRemoveItem
-                ? () => {
-                    const itemId = instance().itemId;
-                    if (itemId) props.onRemoveItem?.(itemId);
+            <>
+              <CollapsedDot
+                selectionBounds={instance().selectionBounds}
+                onExpand={
+                  collapsible.isCollapsed() ? handleExpand : handleCollapse
+                }
+                inputValue={
+                  collapsible.isCollapsed() ? instance().inputValue : undefined
+                }
+                isExpanding={isDotExiting()}
+                placement={
+                  collapsible.isCollapsed() ? "below" : labelPlacement()
+                }
+              />
+              <Show when={!collapsible.isCollapsed()}>
+                <PersistedLabel
+                  extraTopOffset={
+                    props.collapsibleLabelsDefault ? DOT_TOTAL_OFFSET_PX : 0
                   }
-                : undefined
-            }
-            onCreateTicket={
-              instance().itemId && props.onCreateTicketForLooseItem
-                ? () => {
+                  onPlacementChange={setLabelPlacement}
+                  tagName={instance().tagName}
+                  componentName={instance().componentName}
+                  elementsCount={instance().elementsCount}
+                  selectionBounds={instance().selectionBounds}
+                  mouseX={instance().mouseX}
+                  status={instance().status}
+                  statusText={instance().statusText}
+                  hasAgent={Boolean(instance().statusText)}
+                  isPromptMode={instance().isPromptMode}
+                  inputValue={instance().inputValue}
+                  error={instance().error}
+                  hideArrow={instance().hideArrow}
+                  groupStatus={instance().groupStatus}
+                  jiraTicketId={instance().jiraTicketId}
+                  jiraUrl={instance().jiraUrl}
+                  jiraStatusCategory={instance().jiraStatusCategory}
+                  jiraAssignee={instance().jiraAssignee}
+                  jiraReporter={instance().jiraReporter}
+                  jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
+                  jiraReporterAvatar={instance().jiraReporterAvatar}
+                  jiraLabels={instance().jiraLabels}
+                  jiraComments={instance().jiraComments}
+                  jiraFlagged={instance().jiraFlagged}
+                  jiraFlaggedAt={instance().jiraFlaggedAt}
+                  jiraFlaggedBy={instance().jiraFlaggedBy}
+                  jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
+                  jiraPriority={instance().jiraPriority}
+                  jiraIssueType={instance().jiraIssueType}
+                  jiraDueDate={instance().jiraDueDate}
+                  itemId={instance().itemId}
+                  commentText={instance().commentText}
+                  timestamp={instance().timestamp}
+                  hasElementScreenshot={instance().hasElementScreenshot}
+                  hasFullPageScreenshot={instance().hasFullPageScreenshot}
+                  syncServerUrl={props.syncServerUrl}
+                  syncWorkspace={props.syncWorkspace}
+                  groups={props.groups ?? []}
+                  activeGroupId={instance().groupId}
+                  onActiveGroupChange={(groupId) => {
                     const itemId = instance().itemId;
                     if (!itemId) return;
-                    const item = (props.commentItems ?? []).find(
-                      (ci) => ci.id === itemId,
-                    );
-                    if (item) props.onCreateTicketForLooseItem?.(item);
+                    props.onMoveItem?.(itemId, groupId ?? null);
+                  }}
+                  onAddGroup={props.onAddGroup}
+                  onShowContextMenu={
+                    (instance().status === "copied" ||
+                      instance().status === "fading") &&
+                    isElementConnected(instance().element)
+                      ? () => props.onShowContextMenuInstance?.(instance().id)
+                      : undefined
                   }
-                : undefined
-            }
-            onSubmitJiraComment={
-              instance().groupId && props.onSubmitJiraComment
-                ? (md, mentions, parentId) =>
-                    props.onSubmitJiraComment!(instance().groupId!, md, mentions, parentId)
-                : undefined
-            }
-            onSearchJiraUsers={props.onSearchJiraUsers}
-            commentEditorToolbarVisible={props.commentEditorToolbarVisible}
-            onRefreshJiraStatus={
-              instance().groupId && props.onRefreshJiraStatus
-                ? () => props.onRefreshJiraStatus!(instance().groupId!)
-                : undefined
-            }
-            isCollapsing={isLabelExiting()}
-            onCollapse={undefined}
-          />
-          </Show>
-          </>
-        );}}
+                  onHoverChange={(isHovered) =>
+                    props.onLabelInstanceHoverChange?.(instance().id, isHovered)
+                  }
+                  onRemoveItem={
+                    instance().itemId && props.onRemoveItem
+                      ? () => {
+                          const itemId = instance().itemId;
+                          if (itemId) props.onRemoveItem?.(itemId);
+                        }
+                      : undefined
+                  }
+                  onCreateTicket={
+                    instance().itemId && props.onCreateTicketForLooseItem
+                      ? () => {
+                          const itemId = instance().itemId;
+                          if (!itemId) return;
+                          const item = (props.commentItems ?? []).find(
+                            (ci) => ci.id === itemId,
+                          );
+                          if (item) props.onCreateTicketForLooseItem?.(item);
+                        }
+                      : undefined
+                  }
+                  onSubmitJiraComment={
+                    instance().groupId && props.onSubmitJiraComment
+                      ? (md, mentions, parentId) =>
+                          props.onSubmitJiraComment!(
+                            instance().groupId!,
+                            md,
+                            mentions,
+                            parentId,
+                          )
+                      : undefined
+                  }
+                  onSearchJiraUsers={props.onSearchJiraUsers}
+                  commentEditorToolbarVisible={
+                    props.commentEditorToolbarVisible
+                  }
+                  onRefreshJiraStatus={
+                    instance().groupId && props.onRefreshJiraStatus
+                      ? () => props.onRefreshJiraStatus!(instance().groupId!)
+                      : undefined
+                  }
+                  isCollapsing={isLabelExiting()}
+                  onCollapse={undefined}
+                />
+              </Show>
+            </>
+          );
+        }}
       </Index>
 
       <Show when={props.toolbarVisible !== false}>
@@ -366,7 +408,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           syncWorkspace={props.syncWorkspace}
           sidebarOpen={sidebarOpen()}
           onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
-          onDashboardBtnRef={(el) => { dashboardBtnRef = el; }}
+          onDashboardBtnRef={(el) => {
+            dashboardBtnRef = el;
+          }}
         />
       </Show>
 
@@ -397,26 +441,26 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       />
 
       <CommentsDropdown
-          position={props.commentsDropdownPosition ?? null}
-          items={props.commentItems ?? []}
-          disconnectedItemIds={props.commentsDisconnectedItemIds}
-          groups={props.groups ?? []}
-          onSelectItem={props.onCommentItemSelect}
-          onItemHover={props.onCommentItemHover}
-          onCopyAll={props.onCommentsCopyAll}
-          onCopyAllHover={props.onCommentsCopyAllHover}
-          onClearAll={props.onCommentsClear}
-          onDismiss={props.onCommentsDismiss}
-          onDropdownHover={props.onCommentsDropdownHover}
-          onToggleItemRevealed={props.onToggleCommentItemRevealed}
-          onAddGroup={props.onAddGroup}
-          onRenameGroup={props.onRenameGroup}
-          onDeleteGroup={props.onDeleteGroup}
-          onToggleGroupRevealed={props.onToggleGroupRevealed}
-          onCopyGroup={props.onCopyGroup}
-          copyableCount={props.copyableCount}
-          onMoveItem={props.onMoveItem}
-        />
+        position={props.commentsDropdownPosition ?? null}
+        items={props.commentItems ?? []}
+        disconnectedItemIds={props.commentsDisconnectedItemIds}
+        groups={props.groups ?? []}
+        onSelectItem={props.onCommentItemSelect}
+        onItemHover={props.onCommentItemHover}
+        onCopyAll={props.onCommentsCopyAll}
+        onCopyAllHover={props.onCommentsCopyAllHover}
+        onClearAll={props.onCommentsClear}
+        onDismiss={props.onCommentsDismiss}
+        onDropdownHover={props.onCommentsDropdownHover}
+        onToggleItemRevealed={props.onToggleCommentItemRevealed}
+        onAddGroup={props.onAddGroup}
+        onRenameGroup={props.onRenameGroup}
+        onDeleteGroup={props.onDeleteGroup}
+        onToggleGroupRevealed={props.onToggleGroupRevealed}
+        onCopyGroup={props.onCopyGroup}
+        copyableCount={props.copyableCount}
+        onMoveItem={props.onMoveItem}
+      />
 
       {/* Single JIRA create-ticket dialog mount. Driven by the core's
           per-item orchestrator state — shared between the sidebar's

@@ -3,7 +3,7 @@ import { MOUNT_ROOT_RECHECK_DELAY_MS, Z_INDEX_HOST } from "../constants.js";
 import { setShadowMount } from "./shadow-context.js";
 import { syncColorScheme } from "./sync-color-scheme.js";
 
-const ATTRIBUTE_NAME = "data-react-grab";
+const ATTRIBUTE_NAME = "data-react-grab-product";
 
 const FONT_LINK_ID = "react-grab-fonts";
 const FONT_LINK_URL =
@@ -33,7 +33,6 @@ const loadFonts = () => {
   document.head.appendChild(link);
 };
 
-
 export const mountRoot = (cssText?: string): ShadowMountResult => {
   loadFonts();
 
@@ -51,6 +50,8 @@ export const mountRoot = (cssText?: string): ShadowMountResult => {
 
   const host = document.createElement("div");
   host.setAttribute(ATTRIBUTE_NAME, "true");
+  host.setAttribute("data-react-grab-ignore-events", "");
+  host.setAttribute("data-react-grab-ignore", "");
   host.style.zIndex = String(Z_INDEX_HOST);
   host.style.position = "fixed";
   host.style.inset = "0";

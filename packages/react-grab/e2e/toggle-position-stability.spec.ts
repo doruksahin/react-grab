@@ -17,7 +17,7 @@ const getToggleButtonCenter = async (reactGrab: ReactGrabPageObject) => {
     if (!button) return null;
     const rect = button.getBoundingClientRect();
     return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-  }, "data-react-grab");
+  }, "data-react-grab-product");
 };
 
 const seedToolbarEdge = async (

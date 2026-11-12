@@ -5,15 +5,26 @@ import type { SelectionGroup } from "../types.js";
 
 describe("membership", () => {
   it("belongsTo matches exact groupId", () => {
-    expect(belongsTo({ groupId: "g1" } as any, "g1")).toBe(true);
-    expect(belongsTo({ groupId: "g2" } as any, "g1")).toBe(false);
-    expect(belongsTo({ groupId: null } as any, "g1")).toBe(false);
+    expect(belongsTo({ groupId: "g1" }, "g1")).toBe(true);
+    expect(belongsTo({ groupId: "g2" }, "g1")).toBe(false);
+    expect(belongsTo({ groupId: null }, "g1")).toBe(false);
   });
 });
 
 describe("isPresentedAsLoose", () => {
-  const realGroup = { id: "g1", name: "Real", createdAt: 0, revealed: false } as SelectionGroup;
-  const synthGroup = { id: "g2", name: "Synth", createdAt: 0, revealed: false, synthetic: true } as SelectionGroup;
+  const realGroup = {
+    id: "g1",
+    name: "Real",
+    createdAt: 0,
+    revealed: false,
+  } as SelectionGroup;
+  const synthGroup = {
+    id: "g2",
+    name: "Synth",
+    createdAt: 0,
+    revealed: false,
+    synthetic: true,
+  } as SelectionGroup;
   const groups = [realGroup, synthGroup];
 
   it("is true when groupId is null (legacy data)", () => {

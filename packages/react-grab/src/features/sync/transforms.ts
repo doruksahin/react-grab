@@ -25,7 +25,7 @@ const groupIdFromWire = (id: string | null): string | null =>
 export const stripRevealedFromComments = (
   items: CommentItem[],
 ): Omit<CommentItem, "revealed">[] =>
-  items.map(({ revealed, ...rest }) => ({
+  items.map(({ revealed: _revealed, ...rest }) => ({
     ...rest,
     groupId: groupIdToWire(rest.groupId),
   })) as Omit<CommentItem, "revealed">[];
@@ -36,7 +36,7 @@ export const stripRevealedFromComments = (
 export const stripRevealedFromGroups = (
   groups: SelectionGroup[],
 ): Omit<SelectionGroup, "revealed">[] =>
-  groups.map(({ revealed, ...rest }) => rest);
+  groups.map(({ revealed: _revealed, ...rest }) => rest);
 
 /**
  * Save revealed states locally (localStorage) so they survive server round-trips.
@@ -50,7 +50,10 @@ export const saveLocalRevealedStates = (
     for (const item of items) {
       if (item.revealed) commentRevealed[item.id] = true;
     }
-    localStorage.setItem(REVEALED_COMMENTS_KEY, JSON.stringify(commentRevealed));
+    localStorage.setItem(
+      REVEALED_COMMENTS_KEY,
+      JSON.stringify(commentRevealed),
+    );
 
     const groupRevealed: Record<string, boolean> = {};
     for (const group of groups) {

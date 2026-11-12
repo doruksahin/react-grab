@@ -20,14 +20,20 @@ import { EmptyState } from "./empty-state.js";
 import { StatsBar } from "./stats-bar.js";
 import { FilterMenu } from "./filter-menu.js";
 import { FilterChips } from "./filter-chips.js";
-import { type FilterState, EMPTY_FILTER, isFilterActive, applyFilters, getDistinctAssignees, getDistinctReporters, getDistinctLabels } from "../../features/sidebar/filter-state.js";
+import {
+  type FilterState,
+  EMPTY_FILTER,
+  isFilterActive,
+  applyFilters,
+  getDistinctAssignees,
+  getDistinctReporters,
+  getDistinctLabels,
+} from "../../features/sidebar/filter-state.js";
 import { GroupList } from "./group-list.js";
 import { GroupDetailView } from "./group-detail-view.js";
 import { StatusLegend } from "./status-legend.js";
 import { groupComments } from "../../features/selection-groups/business/group-operations.js";
-import {
-  type GroupedEntry,
-} from "../../features/sidebar/index.js";
+import { type GroupedEntry } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
@@ -35,7 +41,10 @@ import { TabBar } from "./tab-bar.js";
 import { SelectionListTab } from "./selection-list-tab.js";
 import { BulkActionBar } from "./bulk-action-bar.js";
 import { BulkGroupPicker } from "./bulk-group-picker.js";
-import { assignableGroupsFor, isSelectionLocked } from "../../features/selection-groups/business/ticket-lock.js";
+import {
+  assignableGroupsFor,
+  isSelectionLocked,
+} from "../../features/selection-groups/business/ticket-lock.js";
 import { ImageLightbox } from "../ui/image-lightbox.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { IconFlag } from "../icons/icon-flag.js";
@@ -51,14 +60,20 @@ export interface SidebarProps {
   onActiveDetailGroupChange: (groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
   onTicketCreated?: TicketCreatedCallback;
-  onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
+  onFilterVisibilityChange?: (
+    visibleIds: Set<string>,
+    allGroupIds: string[],
+  ) => void;
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   onRemoveItem?: (itemId: string) => void;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
   onMoveItems?: (itemIds: Set<string>, groupId: string) => void;
   onAddGroup?: (name: string) => void;
   /** When set, opens the Jira create dialog for this loose item + its synthetic group. */
-  looseTicketDialog?: { group: SelectionGroupWithJira; items: CommentItem[] } | null;
+  looseTicketDialog?: {
+    group: SelectionGroupWithJira;
+    items: CommentItem[];
+  } | null;
   onLooseTicketDialogClose?: () => void;
   /** Submit a JIRA comment for a specific group */
   onSubmitJiraComment?: SubmitGroupCommentFn;
@@ -74,7 +89,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   let lastFocusedCard: HTMLElement | undefined;
   let detailViewRef: HTMLDivElement | undefined;
   let containerRef: HTMLDivElement | undefined;
-  let listScrollRef: HTMLDivElement | undefined;
 
   const lightbox = useImageLightbox();
 
@@ -89,7 +103,9 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     filterUserFacingGroups(props.groups),
   );
 
-  const [activeTab, setActiveTab] = createSignal<"groups" | "selections">("groups");
+  const [activeTab, setActiveTab] = createSignal<"groups" | "selections">(
+    "groups",
+  );
   const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
@@ -116,7 +132,9 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     const pruned = new Set(
       [...current].filter((id) => {
         const item = props.commentItems.find((i) => i.id === id);
-        return item && !isSelectionLocked({ groupId: item.groupId }, props.groups);
+        return (
+          item && !isSelectionLocked({ groupId: item.groupId }, props.groups)
+        );
       }),
     );
     if (pruned.size !== current.size) setSelectedIds(pruned);
@@ -132,9 +150,10 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // click-outside handler is installed *after* the click that opened it has
   // finished propagating. Eliminates the same-tick close that was breaking the
   // group flow before.
-  const [groupTicketDialog, setGroupTicketDialog] = createSignal<
-    { group: SelectionGroupWithJira; items: CommentItem[] } | null
-  >(null);
+  const [groupTicketDialog, setGroupTicketDialog] = createSignal<{
+    group: SelectionGroupWithJira;
+    items: CommentItem[];
+  } | null>(null);
 
   const activeGroup = createMemo(
     () => props.groups.find((g) => g.id === activeDetailGroupId()) ?? null,
@@ -203,209 +222,222 @@ export const Sidebar: Component<SidebarProps> = (props) => {
 
   return (
     <div
-      ref={(el) => { containerRef = el; }}
+      ref={(el) => {
+        containerRef = el;
+      }}
       data-react-grab-sidebar
-        data-react-grab-ignore-events
-        class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-card text-card-foreground animate-slide-in-left"
-        style={{ "z-index": "var(--z-sidebar)", "pointer-events": "auto", isolation: "isolate" }}
-        role="dialog"
-        aria-modal="true"
-        aria-label="React Grab Dashboard"
+      data-react-grab-ignore-events
+      class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-card text-card-foreground animate-slide-in-left"
+      style={{
+        "z-index": "var(--z-sidebar)",
+        "pointer-events": "auto",
+        isolation: "isolate",
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="React Grab Dashboard"
+    >
+      <SidebarHeader
+        syncStatus={props.syncStatus}
+        onClose={props.onClose}
+        onInfoClick={() => setShowLegend(true)}
+      />
+
+      <Show when={showLegend()}>
+        <StatusLegend onClose={() => setShowLegend(false)} />
+      </Show>
+
+      {/* Phase 1 sync error state — must remain intact */}
+      <Show
+        when={props.syncStatus !== "error"}
+        fallback={
+          <EmptyState
+            message="Could not connect to sync server."
+            action={{ label: "Retry", onClick: () => {} }}
+          />
+        }
       >
-        <SidebarHeader
-          syncStatus={props.syncStatus}
-          onClose={props.onClose}
-          onInfoClick={() => setShowLegend(true)}
-        />
-
-        <Show when={showLegend()}>
-          <StatusLegend onClose={() => setShowLegend(false)} />
-        </Show>
-
-        {/* Phase 1 sync error state — must remain intact */}
+        {/* Phase 2 navigation: list view vs detail view */}
         <Show
-          when={props.syncStatus !== "error"}
+          when={activeDetailGroupId() !== null && activeGroup() !== null}
           fallback={
-            <EmptyState
-              message="Could not connect to sync server."
-              action={{ label: "Retry", onClick: () => {} }}
-            />
-          }
-        >
-          {/* Phase 2 navigation: list view vs detail view */}
-          <Show
-            when={activeDetailGroupId() !== null && activeGroup() !== null}
-            fallback={
-              <>
-                <StatsBar groups={props.groups ?? []} commentItems={props.commentItems ?? []} />
-                <TabBar
-                  activeTab={activeTab()}
-                  onTabChange={setActiveTab}
-                  groupsCount={userFacingGroups().length}
-                  selectionsCount={(props.commentItems ?? []).length}
-                />
+            <>
+              <StatsBar
+                groups={props.groups ?? []}
+                commentItems={props.commentItems ?? []}
+              />
+              <TabBar
+                activeTab={activeTab()}
+                onTabChange={setActiveTab}
+                groupsCount={userFacingGroups().length}
+                selectionsCount={(props.commentItems ?? []).length}
+              />
 
-                <div
-                  data-react-grab-sidebar-search
-                  class="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-foreground/[0.01]"
-                >
-                  <input
-                    type="text"
-                    placeholder="Search selections..."
-                    class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-400 transition-colors"
-                    value={searchQuery()}
-                    onInput={(e) => setSearchQuery(e.currentTarget.value)}
-                    data-react-grab-ignore-events
-                  />
-                  <FilterMenu
-                    filter={filterState()}
-                    assignees={getDistinctAssignees(userFacingGroups())}
-                    reporters={getDistinctReporters(userFacingGroups())}
-                    labels={getDistinctLabels(userFacingGroups())}
-                    onFilterChange={setFilterState}
-                  />
-                  <button
-                    class="inline-flex items-center justify-center rounded-md border h-7 w-7 shrink-0 cursor-pointer transition-all"
-                    classList={{
-                      "border-red-400 bg-red-400/[0.08]": flaggedOnly(),
-                      "border-border bg-muted hover:border-foreground/20": !flaggedOnly(),
-                    }}
-                    onClick={() => setFlaggedOnly((prev) => !prev)}
-                    title="Flagged only"
-                  >
-                    <IconFlag size={14} class={flaggedOnly() ? "text-red-400" : "text-muted-foreground"} />
-                  </button>
-                </div>
-                <FilterChips
+              <div
+                data-react-grab-sidebar-search
+                class="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-foreground/[0.01]"
+              >
+                <input
+                  type="text"
+                  placeholder="Search selections..."
+                  class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-400 transition-colors"
+                  value={searchQuery()}
+                  onInput={(e) => setSearchQuery(e.currentTarget.value)}
+                  data-react-grab-ignore-events
+                />
+                <FilterMenu
                   filter={filterState()}
+                  assignees={getDistinctAssignees(userFacingGroups())}
+                  reporters={getDistinctReporters(userFacingGroups())}
+                  labels={getDistinctLabels(userFacingGroups())}
                   onFilterChange={setFilterState}
                 />
-
-                <Show when={activeTab() === "groups"}>
-                  <Show
-                    when={
-                      userFacingGroups().length > 0 ||
-                      props.commentItems.length > 0
+                <button
+                  class="inline-flex items-center justify-center rounded-md border h-7 w-7 shrink-0 cursor-pointer transition-all"
+                  classList={{
+                    "border-red-400 bg-red-400/[0.08]": flaggedOnly(),
+                    "border-border bg-muted hover:border-foreground/20":
+                      !flaggedOnly(),
+                  }}
+                  onClick={() => setFlaggedOnly((prev) => !prev)}
+                  title="Flagged only"
+                >
+                  <IconFlag
+                    size={14}
+                    class={
+                      flaggedOnly() ? "text-red-400" : "text-muted-foreground"
                     }
-                    fallback={
-                      <EmptyState
-                        message="No selections yet."
-                        submessage="Select elements on the page to get started."
-                      />
-                    }
-                  >
-                    <div
-                      ref={(el) => { listScrollRef = el; }}
-                      class="flex-1 overflow-y-auto"
-                    >
-                      <Show when={filteredGroups().length > 0}>
-                        <GroupList
-                          groupedItems={filteredGroups()}
-                          onGroupClick={(id: string, cardEl: HTMLElement) => {
-                            lastFocusedCard = cardEl;
-                            setActiveDetailGroupId(id);
-                          }}
-                        />
-                      </Show>
-
-                      {/* "No groups match" only makes sense when groups
-                          actually exist but are fully filtered out. */}
-                      <Show
-                        when={
-                          userFacingGroups().length > 0 &&
-                          filteredGroups().length === 0
-                        }
-                      >
-                        <EmptyState
-                          message={"No groups match the active filters."}
-                        />
-                      </Show>
-                    </div>
-                  </Show>
-                </Show>
-
-                <Show when={activeTab() === "selections"}>
-                  <SelectionListTab
-                    commentItems={props.commentItems ?? []}
-                    groups={props.groups ?? []}
-                    filter={filterState()}
-                    selectedIds={selectedIds()}
-                    onToggleSelect={toggleSelect}
-                    searchQuery={searchQuery()}
-                    flaggedOnly={flaggedOnly()}
-                    syncServerUrl={props.syncServerUrl}
-                    syncWorkspace={props.syncWorkspace}
-                    onSubmitJiraComment={props.onSubmitJiraComment}
-                    onSearchJiraUsers={props.onSearchJiraUsers}
-                    onRefreshJiraStatus={props.onRefreshJiraStatus}
-                    commentEditorToolbarVisible={props.commentEditorToolbarVisible}
-                    onCreateTicket={props.onCreateTicketForLooseItem}
-                    onMoveItem={props.onMoveItem}
-                    onAddGroup={props.onAddGroup}
                   />
-                </Show>
-              </>
-            }
-          >
-            <GroupDetailView
-              ref={(el: HTMLDivElement) => {
-                detailViewRef = el;
-              }}
-              group={activeGroup()!}
-              commentItems={props.commentItems}
-              syncServerUrl={props.syncServerUrl}
-              syncWorkspace={props.syncWorkspace}
-              onBack={() => setActiveDetailGroupId(null)}
-              onCreateTicket={(group, items) =>
-                setGroupTicketDialog({ group, items })
-              }
-              onRemoveItem={props.onRemoveItem}
-            />
-          </Show>
-        </Show>
-
-        <Show when={groupTicketDialog()}>
-          {(state) => (
-            <JiraCreateDialog
-              workspaceId={props.syncWorkspace ?? ""}
-              syncServerUrl={props.syncServerUrl}
-              groupId={state().group.id}
-              group={state().group}
-              commentItems={state().items}
-              jiraProjectKey={props.jiraProjectKey ?? ""}
-              onTicketCreated={(groupId, ticketId, ticketUrl) => {
-                props.onTicketCreated?.(groupId, ticketId, ticketUrl);
-                setGroupTicketDialog(null);
-              }}
-              onClose={() => setGroupTicketDialog(null)}
-            />
-          )}
-        </Show>
-
-        <Show when={selectedIds().size > 0}>
-          <BulkActionBar
-            selectedCount={selectedIds().size}
-            onClearSelection={() => setSelectedIds(new Set())}
-            actions={
-              <BulkGroupPicker
-                groups={bulkAssignableGroups()}
-                onSelect={(groupId) => {
-                  props.onMoveItems?.(selectedIds(), groupId);
-                  setSelectedIds(new Set());
-                }}
-                onAddGroup={props.onAddGroup}
+                </button>
+              </div>
+              <FilterChips
+                filter={filterState()}
+                onFilterChange={setFilterState}
               />
+
+              <Show when={activeTab() === "groups"}>
+                <Show
+                  when={
+                    userFacingGroups().length > 0 ||
+                    props.commentItems.length > 0
+                  }
+                  fallback={
+                    <EmptyState
+                      message="No selections yet."
+                      submessage="Select elements on the page to get started."
+                    />
+                  }
+                >
+                  <div class="flex-1 overflow-y-auto">
+                    <Show when={filteredGroups().length > 0}>
+                      <GroupList
+                        groupedItems={filteredGroups()}
+                        onGroupClick={(id: string, cardEl: HTMLElement) => {
+                          lastFocusedCard = cardEl;
+                          setActiveDetailGroupId(id);
+                        }}
+                      />
+                    </Show>
+
+                    {/* "No groups match" only makes sense when groups
+                          actually exist but are fully filtered out. */}
+                    <Show
+                      when={
+                        userFacingGroups().length > 0 &&
+                        filteredGroups().length === 0
+                      }
+                    >
+                      <EmptyState
+                        message={"No groups match the active filters."}
+                      />
+                    </Show>
+                  </div>
+                </Show>
+              </Show>
+
+              <Show when={activeTab() === "selections"}>
+                <SelectionListTab
+                  commentItems={props.commentItems ?? []}
+                  groups={props.groups ?? []}
+                  filter={filterState()}
+                  selectedIds={selectedIds()}
+                  onToggleSelect={toggleSelect}
+                  searchQuery={searchQuery()}
+                  flaggedOnly={flaggedOnly()}
+                  syncServerUrl={props.syncServerUrl}
+                  syncWorkspace={props.syncWorkspace}
+                  onSubmitJiraComment={props.onSubmitJiraComment}
+                  onSearchJiraUsers={props.onSearchJiraUsers}
+                  onRefreshJiraStatus={props.onRefreshJiraStatus}
+                  commentEditorToolbarVisible={
+                    props.commentEditorToolbarVisible
+                  }
+                  onCreateTicket={props.onCreateTicketForLooseItem}
+                  onMoveItem={props.onMoveItem}
+                  onAddGroup={props.onAddGroup}
+                />
+              </Show>
+            </>
+          }
+        >
+          <GroupDetailView
+            ref={(el: HTMLDivElement) => {
+              detailViewRef = el;
+            }}
+            group={activeGroup()!}
+            commentItems={props.commentItems}
+            syncServerUrl={props.syncServerUrl}
+            syncWorkspace={props.syncWorkspace}
+            onBack={() => setActiveDetailGroupId(null)}
+            onCreateTicket={(group, items) =>
+              setGroupTicketDialog({ group, items })
             }
+            onRemoveItem={props.onRemoveItem}
           />
         </Show>
+      </Show>
 
-        <ImageLightbox
-          open={lightbox.state().open}
-          src={lightbox.state().src}
-          caption={lightbox.state().caption}
-          onClose={lightbox.close}
+      <Show when={groupTicketDialog()}>
+        {(state) => (
+          <JiraCreateDialog
+            workspaceId={props.syncWorkspace ?? ""}
+            syncServerUrl={props.syncServerUrl}
+            groupId={state().group.id}
+            group={state().group}
+            commentItems={state().items}
+            jiraProjectKey={props.jiraProjectKey ?? ""}
+            onTicketCreated={(groupId, ticketId, ticketUrl) => {
+              props.onTicketCreated?.(groupId, ticketId, ticketUrl);
+              setGroupTicketDialog(null);
+            }}
+            onClose={() => setGroupTicketDialog(null)}
+          />
+        )}
+      </Show>
+
+      <Show when={selectedIds().size > 0}>
+        <BulkActionBar
+          selectedCount={selectedIds().size}
+          onClearSelection={() => setSelectedIds(new Set<string>())}
+          actions={
+            <BulkGroupPicker
+              groups={bulkAssignableGroups()}
+              onSelect={(groupId) => {
+                props.onMoveItems?.(selectedIds(), groupId);
+                setSelectedIds(new Set<string>());
+              }}
+              onAddGroup={props.onAddGroup}
+            />
+          }
         />
+      </Show>
 
+      <ImageLightbox
+        open={lightbox.state().open}
+        src={lightbox.state().src}
+        caption={lightbox.state().caption}
+        onClose={lightbox.close}
+      />
     </div>
   );
 };

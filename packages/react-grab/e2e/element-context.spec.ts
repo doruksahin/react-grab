@@ -5,6 +5,9 @@ test.describe("Element Context Fallback", () => {
     test("should include component names in clipboard for React elements", async ({
       reactGrab,
     }) => {
+      await reactGrab.page
+        .locator("[data-testid='todo-list'] h1")
+        .scrollIntoViewIfNeeded();
       await reactGrab.activate();
 
       await reactGrab.hoverElement("[data-testid='todo-list'] h1");
@@ -18,6 +21,9 @@ test.describe("Element Context Fallback", () => {
     test("should include HTML preview with tag and content", async ({
       reactGrab,
     }) => {
+      await reactGrab.page
+        .locator("[data-testid='main-title']")
+        .scrollIntoViewIfNeeded();
       await reactGrab.activate();
 
       await reactGrab.hoverElement("[data-testid='main-title']");
@@ -29,9 +35,12 @@ test.describe("Element Context Fallback", () => {
       expect(clipboard).toContain("React Grab");
     });
 
-    test("should include nested component names for deeply nested elements", async ({
+    test("should include the source owner and selector for deeply nested elements", async ({
       reactGrab,
     }) => {
+      await reactGrab.page
+        .locator("[data-testid='nested-button']")
+        .scrollIntoViewIfNeeded();
       await reactGrab.activate();
 
       await reactGrab.hoverElement("[data-testid='nested-button']");
@@ -39,7 +48,9 @@ test.describe("Element Context Fallback", () => {
       await reactGrab.clickElement("[data-testid='nested-button']");
 
       const clipboard = await reactGrab.getClipboardContent();
-      expect(clipboard).toContain("NestedCard");
+      expect(clipboard).toContain("DeeplyNested");
+      expect(clipboard).toContain("selector:");
+      expect(clipboard).toContain('data-testid="nested-button"');
     });
   });
 
@@ -52,9 +63,14 @@ test.describe("Element Context Fallback", () => {
         plainElement.id = "plain-dom-element";
         plainElement.className = "test-class";
         plainElement.textContent = "Plain DOM content";
+        plainElement.style.cssText =
+          "position:fixed;left:40%;top:40%;z-index:1000";
         document.body.appendChild(plainElement);
       });
 
+      await reactGrab.page
+        .locator("#plain-dom-element")
+        .scrollIntoViewIfNeeded();
       await reactGrab.activate();
 
       await reactGrab.hoverElement("#plain-dom-element");
@@ -66,7 +82,7 @@ test.describe("Element Context Fallback", () => {
       expect(clipboard).toContain("Plain DOM content");
     });
 
-    test("should include priority attrs for SVG elements", async ({
+    test("should include SVG identity and viewBox context", async ({
       reactGrab,
     }) => {
       await reactGrab.page.evaluate(() => {
@@ -83,6 +99,7 @@ test.describe("Element Context Fallback", () => {
         document.body.appendChild(svgElement);
       });
 
+      await reactGrab.page.locator("#test-svg-icon").scrollIntoViewIfNeeded();
       await reactGrab.activate();
 
       await reactGrab.hoverElement("#test-svg-icon");
@@ -94,7 +111,8 @@ test.describe("Element Context Fallback", () => {
       expect(clipboard).toContain('id="test-svg-icon"');
       expect(clipboard).toContain('class="icon-class"');
       expect(clipboard).toContain('aria-label="Close the modal dialog"');
-      expect(clipboard).not.toContain("viewBox");
+      expect(clipboard).toContain('viewBox="0 0 24 24"');
+      expect(clipboard).toContain("selector: #test-svg-icon");
     });
 
     test("should truncate long outerHTML to max length", async ({
@@ -108,6 +126,9 @@ test.describe("Element Context Fallback", () => {
         document.body.appendChild(longElement);
       });
 
+      await reactGrab.page
+        .locator("#long-dom-element")
+        .scrollIntoViewIfNeeded();
       await reactGrab.activate();
 
       await reactGrab.hoverElement("#long-dom-element");

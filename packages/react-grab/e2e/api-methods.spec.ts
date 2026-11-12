@@ -196,10 +196,10 @@ test.describe("API Methods", () => {
       await reactGrab.activate();
 
       const hasFilter = await reactGrab.page.evaluate(() => {
-        const host = document.querySelector("[data-react-grab]");
+        const host = document.querySelector("[data-react-grab-product]");
         const shadowRoot = host?.shadowRoot;
         const root = shadowRoot?.querySelector(
-          "[data-react-grab]",
+          "[data-react-grab-product]",
         ) as HTMLElement;
         return root?.style.filter?.includes("hue-rotate") ?? false;
       });
@@ -217,10 +217,10 @@ test.describe("API Methods", () => {
       await reactGrab.activate();
 
       const hasFilter = await reactGrab.page.evaluate(() => {
-        const host = document.querySelector("[data-react-grab]");
+        const host = document.querySelector("[data-react-grab-product]");
         const shadowRoot = host?.shadowRoot;
         const root = shadowRoot?.querySelector(
-          "[data-react-grab]",
+          "[data-react-grab-product]",
         ) as HTMLElement;
         return root?.style.filter?.includes("hue-rotate(45deg)") ?? false;
       });
@@ -253,7 +253,7 @@ test.describe("API Methods", () => {
       await reactGrab.page.waitForTimeout(100);
 
       const hostExists = await reactGrab.page.evaluate(() => {
-        return document.querySelector("[data-react-grab]") !== null;
+        return document.querySelector("[data-react-grab-product]") !== null;
       });
 
       expect(hostExists).toBe(true);
@@ -377,7 +377,7 @@ test.describe("API Methods", () => {
       });
 
       const hasAgent = await reactGrab.page.evaluate(() => {
-        const host = document.querySelector("[data-react-grab]");
+        const host = document.querySelector("[data-react-grab-product]");
         return host !== null;
       });
 
@@ -423,10 +423,10 @@ test.describe("API Methods", () => {
       await reactGrab.activate();
 
       const hasFilter = await reactGrab.page.evaluate(() => {
-        const host = document.querySelector("[data-react-grab]");
+        const host = document.querySelector("[data-react-grab-product]");
         const shadowRoot = host?.shadowRoot;
         const root = shadowRoot?.querySelector(
-          "[data-react-grab]",
+          "[data-react-grab-product]",
         ) as HTMLElement;
         return root?.style.filter?.includes("hue-rotate(120deg)") ?? false;
       });

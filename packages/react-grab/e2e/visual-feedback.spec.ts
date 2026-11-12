@@ -4,10 +4,12 @@ test.describe("Visual Feedback", () => {
   test.describe("Selection Box", () => {
     test("selection box should match element bounds", async ({ reactGrab }) => {
       await reactGrab.activate();
-      await reactGrab.hoverElement("li:first-child");
+      await reactGrab.hoverElement("li:first-child span");
       await reactGrab.waitForSelectionBox();
 
-      const elementBounds = await reactGrab.getElementBounds("li:first-child");
+      const elementBounds = await reactGrab.getElementBounds(
+        "li:first-child span",
+      );
       const selectionBounds = await reactGrab.getSelectionBoxBounds();
 
       if (elementBounds && selectionBounds) {

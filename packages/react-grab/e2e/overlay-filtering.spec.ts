@@ -16,7 +16,9 @@ test.describe("Overlay Filtering", () => {
           }
         ).__REACT_GRAB__;
         const state = api?.getState();
-        return state?.targetElement?.hasAttribute("data-react-grab") ?? false;
+        return (
+          state?.targetElement?.hasAttribute("data-react-grab-product") ?? false
+        );
       });
 
       expect(selectedElement).toBe(false);
@@ -43,7 +45,7 @@ test.describe("Overlay Filtering", () => {
 
         const rootNode = target.getRootNode();
         if (rootNode instanceof ShadowRoot) {
-          return rootNode.host.hasAttribute("data-react-grab");
+          return rootNode.host.hasAttribute("data-react-grab-product");
         }
         return false;
       });
@@ -70,7 +72,7 @@ test.describe("Overlay Filtering", () => {
         return state?.targetElement?.tagName?.toLowerCase() ?? null;
       });
 
-      expect(tagName).toBe("li");
+      expect(tagName).toBe("span");
     });
   });
 
@@ -123,7 +125,7 @@ test.describe("Overlay Filtering", () => {
       reactGrab,
     }) => {
       const shadowHostExists = await reactGrab.page.evaluate(() => {
-        const host = document.querySelector("[data-react-grab]");
+        const host = document.querySelector("[data-react-grab-product]");
         return host !== null && host.shadowRoot !== null;
       });
 
@@ -132,7 +134,7 @@ test.describe("Overlay Filtering", () => {
       await reactGrab.activate();
 
       const isReactGrabHostFiltered = await reactGrab.page.evaluate(() => {
-        const host = document.querySelector("[data-react-grab]");
+        const host = document.querySelector("[data-react-grab-product]");
         if (!host) return false;
 
         const api = (
@@ -153,8 +155,8 @@ test.describe("Overlay Filtering", () => {
       reactGrab,
     }) => {
       const hostHasAttribute = await reactGrab.page.evaluate(() => {
-        const host = document.querySelector("[data-react-grab]");
-        return host?.hasAttribute("data-react-grab") ?? false;
+        const host = document.querySelector("[data-react-grab-product]");
+        return host?.hasAttribute("data-react-grab-product") ?? false;
       });
 
       expect(hostHasAttribute).toBe(true);

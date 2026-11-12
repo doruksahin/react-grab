@@ -63,6 +63,7 @@ const DEFAULT_OPTIONS: Options = {
     "clsx",
     "solid-js",
     "bippy",
+    "react-grab-upstream",
     /^@kobalte\//,
     "solid-focus-trap",
   ],

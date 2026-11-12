@@ -129,7 +129,7 @@ test.describe("Agent Resume Race", () => {
               return root.querySelector(discardYesSelector) !== null;
             },
             {
-              attributeName: "data-react-grab",
+              attributeName: "data-react-grab-product",
               discardYesSelector: "[data-react-grab-discard-yes]",
             },
           ),

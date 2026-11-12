@@ -4,7 +4,7 @@ const noopAnimationFrame = (_callback: FrameRequestCallback): number => 0;
 const noopCancelFrame = (_id: number): void => {};
 
 // HACK: Read from Window.prototype to bypass any monkey-patching on the window
-// instance (e.g., the rAF wrapper installed by freeze-animations.ts). Assigning
+// instance (e.g., the upstream animation runtime). Assigning
 // to window.requestAnimationFrame creates an own property that shadows the
 // prototype, but the native implementation remains on Window.prototype.
 export const nativeRequestAnimationFrame: typeof requestAnimationFrame =

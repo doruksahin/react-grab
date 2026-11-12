@@ -12,7 +12,7 @@ import * as fixtures from "../mocks/fixtures.js";
 test.use({ video: "on" });
 
 test.describe("JIRA comment write-back (PoC)", { tag: ["@SPEC-013"] }, () => {
-  test.beforeEach(async ({ reactGrab, mockServer }) => {
+  test.beforeEach(async ({ reactGrab, mockServer: _mockServer }) => {
     // mockServer routes registered during fixture setup. Now trigger initSync.
     await reactGrab.triggerInitSync();
 
@@ -38,9 +38,7 @@ test.describe("JIRA comment write-back (PoC)", { tag: ["@SPEC-013"] }, () => {
     expect(commentRequests[0].url).toContain(
       "/workspaces/test-workspace/comments",
     );
-    expect(groupRequests[0].url).toContain(
-      "/workspaces/test-workspace/groups",
-    );
+    expect(groupRequests[0].url).toContain("/workspaces/test-workspace/groups");
 
     await reactGrab.screenshot("page-loaded", "page");
   });
@@ -94,9 +92,7 @@ test.describe("JIRA comment write-back (PoC)", { tag: ["@SPEC-013"] }, () => {
     // This does NOT trigger the @mention UI — it just proves the override
     // mechanism works.
     const filteredResult = await page.evaluate(async () => {
-      const res = await fetch(
-        "http://localhost:9999/jira/users?query=ali",
-      );
+      const res = await fetch("http://localhost:9999/jira/users?query=ali");
       return res.json();
     });
 
@@ -105,9 +101,7 @@ test.describe("JIRA comment write-back (PoC)", { tag: ["@SPEC-013"] }, () => {
 
     // Verify an empty query returns all users
     const allResult = await page.evaluate(async () => {
-      const res = await fetch(
-        "http://localhost:9999/jira/users?query=",
-      );
+      const res = await fetch("http://localhost:9999/jira/users?query=");
       return res.json();
     });
 

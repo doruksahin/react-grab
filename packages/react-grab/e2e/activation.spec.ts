@@ -64,8 +64,10 @@ test.describe("Activation Flows", () => {
     await reactGrab.activate();
 
     const hostExists = await reactGrab.page.evaluate(() => {
-      const host = document.querySelector("[data-react-grab]");
-      return host !== null && host.getAttribute("data-react-grab") === "true";
+      const host = document.querySelector("[data-react-grab-product]");
+      return (
+        host !== null && host.getAttribute("data-react-grab-product") === "true"
+      );
     });
     expect(hostExists).toBe(true);
   });
@@ -74,7 +76,7 @@ test.describe("Activation Flows", () => {
     await reactGrab.activate();
 
     const hasShadowRoot = await reactGrab.page.evaluate(() => {
-      const host = document.querySelector("[data-react-grab]");
+      const host = document.querySelector("[data-react-grab-product]");
       return host?.shadowRoot !== null;
     });
 

@@ -143,10 +143,10 @@ test.describe("Drag Selection", () => {
     );
 
     const hasContent = await reactGrab.page.evaluate(() => {
-      const host = document.querySelector("[data-react-grab]");
+      const host = document.querySelector("[data-react-grab-product]");
       const shadowRoot = host?.shadowRoot;
       if (!shadowRoot) return false;
-      const root = shadowRoot.querySelector("[data-react-grab]");
+      const root = shadowRoot.querySelector("[data-react-grab-product]");
       return root !== null && root.innerHTML.length > 0;
     });
 

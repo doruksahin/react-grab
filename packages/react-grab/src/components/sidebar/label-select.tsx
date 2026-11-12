@@ -52,7 +52,6 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
     <Combobox<string>
       multiple
       value={EMPTY}
-      inputValue={inputValue()}
       onInputChange={setInputValue}
       onChange={(values: string[]) => {
         // Kobalte always fires with [toggledItem] since it sees value=[] each time
@@ -67,10 +66,15 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
           item={itemProps.item}
           class="relative flex w-full cursor-default select-none items-center justify-between rounded-sm py-1.5 px-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
         >
-          <Combobox.ItemLabel class="text-[12px]">{itemProps.item.rawValue}</Combobox.ItemLabel>
+          <Combobox.ItemLabel class="text-[12px]">
+            {itemProps.item.rawValue}
+          </Combobox.ItemLabel>
           <Show when={selected().includes(itemProps.item.rawValue)}>
             <svg width="12" height="12" viewBox="0 0 16 16">
-              <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
+              <path
+                fill="currentColor"
+                d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z"
+              />
             </svg>
           </Show>
         </Combobox.Item>
@@ -103,7 +107,9 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
               ref={inputRef}
               class="flex-1 min-w-[80px] text-[12px]"
               style={{ "pointer-events": "auto" }}
-              placeholder={selected().length === 0 ? "Search or type a label…" : ""}
+              placeholder={
+                selected().length === 0 ? "Search or type a label…" : ""
+              }
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
@@ -117,7 +123,10 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
             >
               <Combobox.Icon class="flex items-center justify-center">
                 <svg width="12" height="12" viewBox="0 0 16 16">
-                  <path fill="currentColor" d="m14.53 6.03-6 6a.75.75 0 0 1-1.004.052l-.056-.052-6-6 1.06-1.06L8 10.44l5.47-5.47z" />
+                  <path
+                    fill="currentColor"
+                    d="m14.53 6.03-6 6a.75.75 0 0 1-1.004.052l-.056-.052-6-6 1.06-1.06L8 10.44l5.47-5.47z"
+                  />
                 </svg>
               </Combobox.Icon>
             </Combobox.Trigger>

@@ -1,13 +1,13 @@
 // packages/react-grab/src/components/sidebar/selection-card.tsx
 import { type Component, createMemo, Show } from "solid-js";
-import type { CommentItem } from "../../types";
+import type { CommentItem } from "../../types.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
 import {
   extractFilePath,
   relativeTime,
   screenshotUrl,
-} from "../../features/sidebar";
-import { ScreenshotPair } from "./screenshot-pair";
+} from "../../features/sidebar/index.js";
+import { ScreenshotPair } from "./screenshot-pair.js";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 import { FlagIndicator } from "../flag-indicator.js";
 import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";
@@ -30,14 +30,10 @@ export interface SelectionCardProps {
 
 export const SelectionCard: Component<SelectionCardProps> = (props) => {
   const isDevMode = useDevMode();
-  const filePath = createMemo(() =>
-    extractFilePath(props.item.content ?? ""),
-  );
+  const filePath = createMemo(() => extractFilePath(props.item.content ?? ""));
 
   const elementSrc = createMemo(() =>
-    props.syncServerUrl &&
-    props.syncWorkspace &&
-    props.item.screenshotElement
+    props.syncServerUrl && props.syncWorkspace && props.item.screenshotElement
       ? screenshotUrl(
           props.syncServerUrl,
           props.syncWorkspace,
@@ -48,9 +44,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
   );
 
   const fullPageSrc = createMemo(() =>
-    props.syncServerUrl &&
-    props.syncWorkspace &&
-    props.item.screenshotFullPage
+    props.syncServerUrl && props.syncWorkspace && props.item.screenshotFullPage
       ? screenshotUrl(
           props.syncServerUrl,
           props.syncWorkspace,
@@ -65,7 +59,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       data-react-grab-selection-card
       class={cn(
         "bg-muted rounded-lg p-3 mb-1.5 border border-border",
-        props.jiraFlagged && FLAGGED_BORDER_CLASS
+        props.jiraFlagged && FLAGGED_BORDER_CLASS,
       )}
       style={{ "pointer-events": "auto" }}
     >
@@ -100,7 +94,9 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
 
       {/* Row 2: comment text */}
       <Show when={props.item.commentText}>
-        <p class="text-[11px] text-foreground mb-1.5">{props.item.commentText}</p>
+        <p class="text-[11px] text-foreground mb-1.5">
+          {props.item.commentText}
+        </p>
       </Show>
 
       {/* Screenshots — hidden entirely when both are absent (A-018) */}
@@ -115,21 +111,37 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       {/* Dev Insights — unified technical metadata (visible in DEV mode only) */}
       <Show when={isDevMode()}>
         <DevInsights>
-          <DevInsights.Field label="tag" value={props.item.tagName} color="green" />
-          <DevInsights.Field label="node" value={props.item.componentName ?? props.item.elementName} color="purple" />
+          <DevInsights.Field
+            label="tag"
+            value={props.item.tagName}
+            color="green"
+          />
+          <DevInsights.Field
+            label="node"
+            value={props.item.componentName ?? props.item.elementName}
+            color="purple"
+          />
           <DevInsights.Field
             label="file"
-            value={filePath() ? `${filePath()!.path}${filePath()!.line !== null ? `:${filePath()!.line}` : ""}` : undefined}
+            value={
+              filePath()
+                ? `${filePath()!.path}${filePath()!.line !== null ? `:${filePath()!.line}` : ""}`
+                : undefined
+            }
             color="amber"
           />
           <DevInsights.Attributes content={props.item.content} />
           <Show when={props.item.elementSelectors?.[0]}>
             <DevInsights.Section label="selector">
-              <span class="text-[9px] font-mono text-[#cbd5e1] break-all">{props.item.elementSelectors?.[0]}</span>
+              <span class="text-[9px] font-mono text-[#cbd5e1] break-all">
+                {props.item.elementSelectors?.[0]}
+              </span>
             </DevInsights.Section>
           </Show>
           <DevInsights.Section label="html">
-            <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">{props.item.content}</pre>
+            <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
+              {props.item.content}
+            </pre>
           </DevInsights.Section>
         </DevInsights>
       </Show>

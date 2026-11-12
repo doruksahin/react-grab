@@ -1,8 +1,28 @@
-import { test as base, expect, Page, Locator, type TestInfo } from "@playwright/test";
+import type { CommentItem, Options } from "../src/types.js";
+import type { SelectionGroupWithJira } from "../src/features/sidebar/jira-types.js";
+import type { init, initSync, populateSync } from "../src/core/index.js";
+
+declare global {
+  interface Window {
+    initReactGrab: typeof init;
+    __reactGrabSync: {
+      populate: typeof populateSync;
+      initSync: typeof initSync;
+    };
+  }
+}
+
+import {
+  test as base,
+  expect,
+  Page,
+  Locator,
+  type TestInfo,
+} from "@playwright/test";
 import { mockSyncServer, type MockServerHandle } from "./mocks/routes.js";
 import * as mockFixtures from "./mocks/fixtures.js";
 
-const ATTRIBUTE_NAME = "data-react-grab";
+const ATTRIBUTE_NAME = "data-react-grab-product";
 const DEFAULT_KEY_HOLD_DURATION_MS = 200;
 const ACTIVATION_BUFFER_MS = 200;
 const PAGE_SETUP_MAX_ATTEMPTS = 2;
@@ -195,7 +215,7 @@ export interface ReactGrabPageObject {
   registerCommentAction: () => Promise<void>;
   setAgent: (options: Record<string, unknown>) => Promise<void>;
   updateOptions: (options: Record<string, unknown>) => Promise<void>;
-  reinitialize: (options?: Record<string, unknown>) => Promise<void>;
+  reinitialize: (options?: Options) => Promise<void>;
 
   setupMockAgent: (options?: {
     delay?: number;
@@ -243,23 +263,22 @@ export interface ReactGrabPageObject {
   >;
   clearCallbackHistory: () => Promise<void>;
   waitForCallback: (name: string, timeout?: number) => Promise<unknown[]>;
+  populate: (overrides?: Partial<SeedPayload>) => Promise<void>;
+  triggerInitSync: (config?: Partial<SyncConnectionConfig>) => Promise<void>;
   /** Take a screenshot and attach it to the Playwright HTML report. */
-  screenshot: (
-    name: string,
-    target?: "overlay" | "page",
-  ) => Promise<void>;
+  screenshot: (name: string, target?: "overlay" | "page") => Promise<void>;
 }
 
-interface SeedPayload {
+interface SyncConnectionConfig {
+  enabled?: boolean;
   workspace: string;
   serverUrl: string;
   jiraProjectKey: string;
-  groups: any[];
-  comments: any[];
 }
 
-interface SyncDataHandle {
-  seed: (overrides: Partial<SeedPayload>) => void;
+interface SeedPayload extends SyncConnectionConfig {
+  groups: SelectionGroupWithJira[];
+  comments: CommentItem[];
 }
 
 const DEFAULT_SEED: SeedPayload = {
@@ -331,20 +350,51 @@ const createReactGrabPageObject = (
     await waitForActive(false);
   };
 
+  const getTextPosition = (element: Locator) =>
+    element.evaluate((target) => {
+      const textNode = Array.from(target.childNodes).find(
+        (node) =>
+          node.nodeType === Node.TEXT_NODE && Boolean(node.textContent?.trim()),
+      );
+      const inlineChild =
+        target.childElementCount === 1 &&
+        target.firstElementChild?.matches("span,b,strong,i,em,code")
+          ? target.firstElementChild
+          : undefined;
+      const textTarget = textNode ?? inlineChild;
+      if (!textTarget) return undefined;
+      const range = document.createRange();
+      range.selectNodeContents(textTarget);
+      const textBounds = range.getClientRects()[0];
+      if (!textBounds || !textBounds.width || !textBounds.height)
+        return undefined;
+      const bounds = target.getBoundingClientRect();
+      return {
+        x: textBounds.left + textBounds.width / 2 - bounds.left,
+        y: textBounds.top + textBounds.height / 2 - bounds.top,
+      };
+    });
+
   const hoverElement = async (selector: string) => {
     const element = page.locator(selector).first();
-    await element.hover({ force: true });
+    await element.hover({
+      force: true,
+      position: await getTextPosition(element),
+    });
     await page.waitForTimeout(250);
   };
 
   const clickElement = async (selector: string) => {
     const element = page.locator(selector).first();
-    await element.click({ force: true });
+    await element.click({
+      force: true,
+      position: await getTextPosition(element),
+    });
   };
 
   const dragSelect = async (startSelector: string, endSelector: string) => {
     const startElement = page.locator(startSelector).first();
-    const endElement = page.locator(endSelector).last();
+    const endElement = page.locator(endSelector).first();
 
     const startBox = await startElement.boundingBox();
     const endBox = await endElement.boundingBox();
@@ -500,7 +550,11 @@ const createReactGrabPageObject = (
 
   const rightClickElement = async (selector: string) => {
     const element = page.locator(selector).first();
-    await element.click({ button: "right", force: true });
+    await element.click({
+      button: "right",
+      force: true,
+      position: await getTextPosition(element),
+    });
     const isActive = await isOverlayVisible();
     if (isActive) {
       await waitForContextMenu(true);
@@ -983,21 +1037,9 @@ const createReactGrabPageObject = (
   };
 
   const rightClickToolbarToggle = async () => {
-    await page.evaluate((attrName) => {
-      const host = document.querySelector(`[${attrName}]`);
-      const shadowRoot = host?.shadowRoot;
-      if (!shadowRoot) return;
-      const root = shadowRoot.querySelector(`[${attrName}]`);
-      if (!root) return;
-      const toggleButton = root.querySelector<HTMLElement>(
-        "[data-react-grab-toolbar-toggle]",
-      );
-      if (!toggleButton) return;
-      toggleButton.dispatchEvent(
-        new MouseEvent("contextmenu", { bubbles: true, cancelable: true }),
-      );
-    }, ATTRIBUTE_NAME);
-    await page.waitForTimeout(200);
+    await page
+      .locator("[data-react-grab-toolbar-toggle]")
+      .click({ button: "right" });
   };
 
   const isToolbarMenuVisible = async (): Promise<boolean> => {
@@ -1038,9 +1080,7 @@ const createReactGrabPageObject = (
         const items = dropdown.querySelectorAll<HTMLButtonElement>(
           "[data-react-grab-menu-item]",
         );
-        return Array.from(items).map(
-          (item) => item.textContent?.trim() ?? "",
-        );
+        return Array.from(items).map((item) => item.textContent?.trim() ?? "");
       }
       return [];
     }, ATTRIBUTE_NAME);
@@ -1189,33 +1229,7 @@ const createReactGrabPageObject = (
   };
 
   const hoverCommentItem = async (index: number) => {
-    const itemRect = await page.evaluate(
-      ({ attrName, itemIndex }) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const shadowRoot = host?.shadowRoot;
-        if (!shadowRoot) return null;
-        const root = shadowRoot.querySelector(`[${attrName}]`);
-        if (!root) return null;
-        const items = root.querySelectorAll("[data-react-grab-comment-item]");
-        const button = items[itemIndex];
-        if (!button) return null;
-        const rect = button.getBoundingClientRect();
-        return {
-          x: rect.x,
-          y: rect.y,
-          width: rect.width,
-          height: rect.height,
-        };
-      },
-      { attrName: ATTRIBUTE_NAME, itemIndex: index },
-    );
-    if (itemRect) {
-      await page.mouse.move(
-        itemRect.x + itemRect.width / 2,
-        itemRect.y + itemRect.height / 2,
-      );
-      await page.waitForTimeout(100);
-    }
+    await page.locator("[data-react-grab-comment-item]").nth(index).hover();
   };
 
   const hoverCommentsButton = async () => {
@@ -1712,9 +1726,7 @@ const createReactGrabPageObject = (
             id: "comment-action",
             label: "Edit",
             shortcut: "Enter",
-            onAction: (context: {
-              enterPromptMode?: () => void;
-            }) => {
+            onAction: (context: { enterPromptMode?: () => void }) => {
               context.enterPromptMode?.();
             },
           },
@@ -1820,26 +1832,11 @@ const createReactGrabPageObject = (
     }, options);
   };
 
-  const reinitialize = async (options?: Record<string, unknown>) => {
+  const reinitialize = async (options?: Options) => {
     await page.evaluate((opts) => {
-      const existingApi = (
-        window as { __REACT_GRAB__?: { dispose: () => void } }
-      ).__REACT_GRAB__;
-      existingApi?.dispose();
-
-      const initFn = (
-        window as { initReactGrab?: (o?: Record<string, unknown>) => void }
-      ).initReactGrab;
-      initFn?.(opts);
+      window.__REACT_GRAB__?.dispose();
+      window.__REACT_GRAB__ = window.initReactGrab(opts);
     }, options);
-    await page.waitForFunction(
-      () => {
-        const api = (window as { __REACT_GRAB__?: unknown }).__REACT_GRAB__;
-        return api !== undefined;
-      },
-      undefined,
-      { timeout: 5000 },
-    );
   };
 
   const setupMockAgent = async (options?: {
@@ -2523,24 +2520,21 @@ const createReactGrabPageObject = (
     populate: async (overrides?: Partial<SeedPayload>) => {
       const data = { ...DEFAULT_SEED, ...overrides };
       await page.evaluate((d) => {
-        (window as any).__reactGrabSync.populate(d);
+        window.__reactGrabSync.populate(d);
       }, data);
     },
 
     /** Trigger initSync manually. For HTTP behavior tests — call AFTER mockServer routes are registered. */
-    triggerInitSync: async (config?: Partial<{
-      serverUrl: string;
-      workspace: string;
-      jiraProjectKey: string;
-    }>) => {
+    triggerInitSync: async (config?: Partial<SyncConnectionConfig>) => {
       await page.evaluate((cfg) => {
-        return (window as any).__reactGrabSync.initSync({
-          enabled: true,
+        return window.__reactGrabSync.initSync({
+          enabled: cfg.enabled ?? true,
           serverUrl: cfg.serverUrl ?? "http://localhost:9999",
           workspace: cfg.workspace ?? "test-workspace",
           jiraProjectKey: cfg.jiraProjectKey ?? "ATT",
           syncRevealedState: true,
-          onSyncError: (err: Error) => console.warn("[e2e] sync error:", err.message),
+          onSyncError: (err: Error) =>
+            console.warn("[e2e] sync error:", err.message),
         });
       }, config ?? {});
     },
@@ -2555,10 +2549,13 @@ export const test = base.extend<{
   // Registers page.route() handlers for all 15 sync-server endpoints.
   // MUST be declared in beforeEach (not just test body) for HTTP tests so
   // routes are registered before reactGrab navigates.
-  mockServer: [async ({ page }, use) => {
-    const handle = await mockSyncServer(page);
-    await use(handle);
-  }, { auto: false }],
+  mockServer: [
+    async ({ page }, use) => {
+      const handle = await mockSyncServer(page);
+      await use(handle);
+    },
+    { auto: false },
+  ],
 
   // Always created. Navigates, waits for API, exposes populate() on page object.
   reactGrab: async ({ page }, use, testInfo) => {

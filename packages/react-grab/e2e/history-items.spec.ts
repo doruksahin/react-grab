@@ -171,6 +171,9 @@ test.describe("Comment Items", () => {
       await copyElement(reactGrab, "li:first-child");
       await copyElement(reactGrab, "li:last-child");
 
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.page.evaluate(() => navigator.clipboard.writeText(""));
 
       await reactGrab.clickCommentsButton();
@@ -418,7 +421,7 @@ test.describe("Comment Items", () => {
             "[data-react-grab-toolbar-comments]",
           )
           ?.click();
-      }, "data-react-grab");
+      }, "data-react-grab-product");
       await reactGrab.page.waitForTimeout(200);
 
       const grabbedBoxesAfter = await reactGrab.getGrabbedBoxInfo();
@@ -520,7 +523,7 @@ test.describe("Comment Items", () => {
         if (!button) return null;
         const rect = button.getBoundingClientRect();
         return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-      }, "data-react-grab");
+      }, "data-react-grab-product");
 
       expect(commentsButtonRect).not.toBeNull();
       await reactGrab.page.mouse.click(
@@ -675,7 +678,7 @@ test.describe("Comment Items", () => {
             "[data-react-grab-toolbar-comments]",
           )
           ?.click();
-      }, "data-react-grab");
+      }, "data-react-grab-product");
       await reactGrab.page.waitForTimeout(300);
 
       await reactGrab.page.mouse.move(0, 0);

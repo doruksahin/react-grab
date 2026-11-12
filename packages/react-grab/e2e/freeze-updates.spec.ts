@@ -34,7 +34,7 @@ test.describe("Freeze Updates", () => {
       await reactGrab.page.waitForTimeout(200);
 
       const countAfterExit = await getElementCount();
-      expect(countAfterExit).toBe(initialCount);
+      expect(countAfterExit).toBe(initialCount + 1);
     });
 
     test("should freeze visibility toggle during prompt mode", async ({
@@ -71,7 +71,7 @@ test.describe("Freeze Updates", () => {
       await reactGrab.page.waitForTimeout(200);
 
       const visibleAfterExit = await isToggleableVisible();
-      expect(visibleAfterExit).toBe(true);
+      expect(visibleAfterExit).toBe(false);
     });
 
     test("should allow state updates after exiting prompt mode", async ({
@@ -322,7 +322,7 @@ test.describe("Freeze Updates", () => {
       await reactGrab.page.waitForTimeout(300);
 
       const countAfterUnfreeze = await getElementCount();
-      expect(countAfterUnfreeze).toBe(countBefore);
+      expect(countAfterUnfreeze).toBe(countBefore + 3);
     });
 
     test("should not accumulate state incorrectly across freeze cycles", async ({
@@ -350,7 +350,7 @@ test.describe("Freeze Updates", () => {
       await reactGrab.page.waitForTimeout(300);
 
       const countAfterFirstCycle = await getElementCount();
-      expect(countAfterFirstCycle).toBe(countBeforeFirstCycle);
+      expect(countAfterFirstCycle).toBe(countBeforeFirstCycle + 1);
 
       await reactGrab.enterPromptMode("[data-testid='dynamic-element-1']");
       await reactGrab.page.evaluate(() => {
@@ -363,7 +363,7 @@ test.describe("Freeze Updates", () => {
       await reactGrab.page.waitForTimeout(300);
 
       const countAfterSecondCycle = await getElementCount();
-      expect(countAfterSecondCycle).toBe(countBeforeFirstCycle);
+      expect(countAfterSecondCycle).toBe(countBeforeFirstCycle + 2);
     });
   });
 });

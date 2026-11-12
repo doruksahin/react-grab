@@ -19,7 +19,14 @@ import { describe, expect, it } from "vitest";
 import { render, cleanup } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { afterEach } from "vitest";
-import { Menu, MenuContent, MenuSub, MenuSubContent, MenuSubTrigger, MenuTrigger } from "./menu.js";
+import {
+  Menu,
+  MenuContent,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
+  MenuTrigger,
+} from "./menu.js";
 
 afterEach(cleanup);
 
@@ -67,7 +74,9 @@ describe("MenuSub — SubMenuContext coordination", () => {
   it("multiple MenuSub instances inside one Menu render without conflict", () => {
     // Two subs in the same Menu must not share IDs or crash
     const { container } = renderTwoSubMenus();
-    expect(container.querySelectorAll("[data-testid='sub-a-trigger']").length).toBe(0);
+    expect(
+      container.querySelectorAll("[data-testid='sub-a-trigger']").length,
+    ).toBe(0);
     // Content is not yet mounted (parent menu is closed) — no error means IDs are independent
     expect(container).toBeTruthy();
   });
@@ -75,7 +84,6 @@ describe("MenuSub — SubMenuContext coordination", () => {
   it("sub-triggers render with correct role inside MenuContent", () => {
     // Kobalte renders SubTrigger as a menuitem — confirm it is in the DOM
     const { container } = renderTwoSubMenus();
-    const triggers = container.querySelectorAll("[data-testid]");
     // Triggers are not visible until parent menu opens; they exist in DOM
     // (Kobalte renders menu content conditionally based on parent open state)
     // Confirm the tree itself renders without errors

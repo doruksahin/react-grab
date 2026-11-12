@@ -66,6 +66,9 @@ test.describe("Toolbar Copy All Button", () => {
       await reactGrab.page.evaluate(() => navigator.clipboard.writeText(""));
 
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       const clipboardContent = await reactGrab.getClipboardContent();
@@ -78,6 +81,9 @@ test.describe("Toolbar Copy All Button", () => {
     }) => {
       await copyElement(reactGrab, "li:first-child");
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -92,6 +98,9 @@ test.describe("Clear History Prompt", () => {
     test("should appear after toolbar copy all", async ({ reactGrab }) => {
       await copyElement(reactGrab, "li:first-child");
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -104,6 +113,9 @@ test.describe("Clear History Prompt", () => {
     }) => {
       await copyElement(reactGrab, "li:first-child");
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickCommentsCopyAll();
 
       await expect
@@ -120,6 +132,9 @@ test.describe("Clear History Prompt", () => {
       await copyElement(reactGrab, "li:last-child");
 
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -140,6 +155,9 @@ test.describe("Clear History Prompt", () => {
       await copyElement(reactGrab, "li:first-child");
 
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -164,6 +182,9 @@ test.describe("Clear History Prompt", () => {
       await copyElement(reactGrab, "li:first-child");
 
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -183,6 +204,9 @@ test.describe("Clear History Prompt", () => {
       await copyElement(reactGrab, "li:first-child");
 
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -198,6 +222,12 @@ test.describe("Clear History Prompt", () => {
       await copyElement(reactGrab, "li:last-child");
 
       await reactGrab.clickCommentsButton();
+      await expect(
+        reactGrab.page.getByRole("button", {
+          name: "Hide all selections",
+          exact: true,
+        }),
+      ).toBeVisible();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -217,6 +247,9 @@ test.describe("Clear History Prompt", () => {
       await copyElement(reactGrab, "li:first-child");
 
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -241,6 +274,9 @@ test.describe("Clear History Prompt", () => {
       await copyElement(reactGrab, "li:first-child");
 
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -265,6 +301,9 @@ test.describe("Clear History Prompt", () => {
       await copyElement(reactGrab, "li:first-child");
 
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -281,22 +320,29 @@ test.describe("Clear History Prompt", () => {
         .toBe(false);
     });
 
-    test("should dismiss when toolbar is disabled", async ({ reactGrab }) => {
+    test("DEV mode toggle should preserve the pending clear confirmation", async ({
+      reactGrab,
+    }) => {
       await copyElement(reactGrab, "li:first-child");
 
       await reactGrab.clickCommentsButton();
+      await reactGrab.page
+        .getByRole("button", { name: "Reveal all selections", exact: true })
+        .click();
       await reactGrab.clickToolbarCopyAll();
 
       await expect
         .poll(() => reactGrab.isClearCommentsPromptVisible(), { timeout: 2000 })
         .toBe(true);
 
-      await reactGrab.clickToolbarEnabled();
+      await reactGrab.page
+        .getByRole("button", { name: "Toggle DEV mode", exact: true })
+        .click();
       await reactGrab.page.waitForTimeout(200);
 
       await expect
         .poll(() => reactGrab.isClearCommentsPromptVisible(), { timeout: 2000 })
-        .toBe(false);
+        .toBe(true);
     });
   });
 });

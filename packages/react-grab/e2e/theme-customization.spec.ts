@@ -12,7 +12,7 @@ test.describe("Theme Customization", () => {
         if (!shadowRoot) return false;
         const root = shadowRoot.querySelector(`[${attrName}]`) as HTMLElement;
         return root?.style.filter?.includes("hue-rotate") ?? false;
-      }, "data-react-grab");
+      }, "data-react-grab-product");
 
       expect(hasFilter).toBe(true);
     });
@@ -27,7 +27,7 @@ test.describe("Theme Customization", () => {
         if (!shadowRoot) return null;
         const root = shadowRoot.querySelector(`[${attrName}]`) as HTMLElement;
         return root?.style.filter;
-      }, "data-react-grab");
+      }, "data-react-grab-product");
 
       expect(filterValue).toContain("hue-rotate(90deg)");
     });
@@ -42,7 +42,7 @@ test.describe("Theme Customization", () => {
         if (!shadowRoot) return "";
         const root = shadowRoot.querySelector(`[${attrName}]`) as HTMLElement;
         return root?.style.filter ?? "";
-      }, "data-react-grab");
+      }, "data-react-grab-product");
 
       expect(filterValue).toBe("");
     });
@@ -162,10 +162,7 @@ test.describe("Theme Customization", () => {
 
   test.describe("Toolbar", () => {
     test("should show toolbar by default", async ({ reactGrab }) => {
-      await reactGrab.page.waitForTimeout(600);
-
-      const isVisible = await reactGrab.isToolbarVisible();
-      expect(isVisible).toBe(true);
+      await expect.poll(() => reactGrab.isToolbarVisible()).toBe(true);
     });
 
     test("should hide toolbar when disabled", async ({ reactGrab }) => {
@@ -203,10 +200,10 @@ test.describe("Theme Customization", () => {
       await reactGrab.activate();
 
       const hasFilter = await reactGrab.page.evaluate(() => {
-        const host = document.querySelector("[data-react-grab]");
+        const host = document.querySelector("[data-react-grab-product]");
         const shadowRoot = host?.shadowRoot;
         const root = shadowRoot?.querySelector(
-          "[data-react-grab]",
+          "[data-react-grab-product]",
         ) as HTMLElement;
         return root?.style.filter?.includes("hue-rotate(120deg)") ?? false;
       });

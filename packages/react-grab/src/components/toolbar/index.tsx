@@ -29,7 +29,6 @@ import {
   TOOLBAR_COLLAPSED_SHORT_PX,
   TOOLBAR_COLLAPSED_LONG_PX,
   TOOLBAR_COLLAPSE_ANIMATION_DURATION_MS,
-  TOGGLE_ANIMATION_BUFFER_MS,
   TOOLBAR_DEFAULT_WIDTH_PX,
   TOOLBAR_DEFAULT_HEIGHT_PX,
   TOOLBAR_DEFAULT_POSITION_RATIO,
@@ -42,15 +41,11 @@ import {
   SELECTION_HINT_COUNT,
   SELECTION_HINT_CYCLE_INTERVAL_MS,
 } from "../../constants.js";
-import { freezeUpdates } from "../../utils/freeze-updates.js";
 import {
-  freezeGlobalAnimations,
-  unfreezeGlobalAnimations,
-} from "../../utils/freeze-animations.js";
-import {
-  freezePseudoStates,
-  unfreezePseudoStates,
-} from "../../utils/freeze-pseudo-states.js";
+  freeze,
+  unfreeze,
+  isFreezeActive,
+} from "react-grab-upstream/primitives";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip.js";
 import { Kbd } from "../kbd.jsx";
 import {
@@ -59,10 +54,7 @@ import {
 } from "../../utils/toolbar-layout.js";
 import { ToolbarContent } from "./toolbar-content.js";
 import { ToggleSwitch } from "../ui/toggle-switch.jsx";
-import {
-  nativeCancelAnimationFrame,
-  nativeRequestAnimationFrame,
-} from "../../utils/native-raf.js";
+import { nativeRequestAnimationFrame } from "../../utils/native-raf.js";
 import { getVisualViewport } from "../../utils/get-visual-viewport.js";
 import {
   calculateExpandedPositionFromCollapsed,
@@ -116,10 +108,12 @@ interface FreezeHandlersOptions {
 
 export const Toolbar: Component<ToolbarProps> = (props) => {
   let containerRef: HTMLDivElement | undefined;
-  let expandableButtonsRef: HTMLDivElement | undefined;
-  let unfreezeUpdatesCallback: (() => void) | null = null;
-  let lastKnownExpandableWidth = 0;
-  let lastKnownExpandableHeight = 0;
+  let ownsToolbarFreeze = false;
+  const releaseToolbarFreeze = () => {
+    if (!ownsToolbarFreeze) return;
+    ownsToolbarFreeze = false;
+    unfreeze();
+  };
 
   const safePolygonTracker = createSafePolygonTracker();
 
@@ -167,8 +161,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
   const [isToggleTooltipVisible, setIsToggleTooltipVisible] =
     createSignal(false);
   const [isShakeTooltipVisible, setIsShakeTooltipVisible] = createSignal(false);
-  const [isToggleAnimating, setIsToggleAnimating] = createSignal(false);
-  const [isRapidRetoggle, setIsRapidRetoggle] = createSignal(false);
   const [isCommentsTooltipVisible, setIsCommentsTooltipVisible] =
     createSignal(false);
   const [isCopyAllTooltipVisible, setIsCopyAllTooltipVisible] =
@@ -181,12 +173,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     isCollapsed,
     getExpandedDimensions: () => expandedDimensions,
     onDragStart: () => {
-      if (unfreezeUpdatesCallback) {
-        unfreezeUpdatesCallback();
-        unfreezeUpdatesCallback = null;
-        unfreezeGlobalAnimations();
-        unfreezePseudoStates();
-      }
+      if (!props.isActive && !props.isContextMenuOpen) releaseToolbarFreeze();
     },
     onPositionUpdate: (newPosition) => setPosition(newPosition),
     onSnapEdgeChange: (edge, ratio) => {
@@ -204,11 +191,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         devMode: props.isDevMode ?? false,
         selectionsRevealed: props.selectionsRevealed ?? false,
       });
-    },
-    onSnapAnimationEnd: () => {
-      if (props.enabled) {
-        measureExpandableDimension();
-      }
     },
   });
 
@@ -241,20 +223,12 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
   const commentsIconClass = () =>
     cn(
       "transition-colors",
-      props.isCommentsPinned ? "text-muted-foreground" : "text-muted-foreground",
+      props.isCommentsPinned
+        ? "text-muted-foreground"
+        : "text-muted-foreground",
     );
 
   const isVertical = () => snapEdge() === "left" || snapEdge() === "right";
-
-  const measureExpandableDimension = () => {
-    if (!expandableButtonsRef) return;
-    const rect = expandableButtonsRef.getBoundingClientRect();
-    if (isVertical()) {
-      lastKnownExpandableHeight = rect.height;
-    } else {
-      lastKnownExpandableWidth = rect.width;
-    }
-  };
 
   const isTooltipAllowed = () =>
     !isCollapsed() &&
@@ -305,11 +279,13 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       setTooltipVisible(true);
       if (
         options?.shouldFreezeInteractions !== false &&
-        !unfreezeUpdatesCallback
+        !props.isActive &&
+        !props.isContextMenuOpen &&
+        !ownsToolbarFreeze &&
+        !isFreezeActive()
       ) {
-        unfreezeUpdatesCallback = freezeUpdates();
-        freezeGlobalAnimations();
-        freezePseudoStates();
+        freeze();
+        ownsToolbarFreeze = true;
       }
       options?.onHoverChange?.(true);
     },
@@ -320,10 +296,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         !props.isActive &&
         !props.isContextMenuOpen
       ) {
-        unfreezeUpdatesCallback?.();
-        unfreezeUpdatesCallback = null;
-        unfreezeGlobalAnimations();
-        unfreezePseudoStates();
+        releaseToolbarFreeze();
       }
 
       const targetRects = options?.safePolygonTargets?.();
@@ -384,10 +357,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     on(
       () => [props.isActive, props.isContextMenuOpen] as const,
       ([isActive, isContextMenuOpen]) => {
-        if (!isActive && !isContextMenuOpen && unfreezeUpdatesCallback) {
-          unfreezeUpdatesCallback();
-          unfreezeUpdatesCallback = null;
-        }
+        if (!isActive && !isContextMenuOpen) releaseToolbarFreeze();
       },
     ),
   );
@@ -447,6 +417,15 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       rect.height,
     );
     setPositionRatio(newRatio);
+    saveAndNotify({
+      ...loadToolbarState(),
+      edge,
+      ratio: newRatio,
+      collapsed: isCollapsed(),
+      enabled: props.enabled ?? true,
+      devMode: props.isDevMode ?? false,
+      selectionsRevealed: props.selectionsRevealed ?? false,
+    });
 
     const didPositionChange =
       clampedX !== currentPos.x || clampedY !== currentPos.y;
@@ -501,7 +480,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           clearTimeout(commentItemCountTimeout);
         }
         commentItemCountTimeout = setTimeout(() => {
-          measureExpandableDimension();
           reclampToolbarToViewport();
         }, TOOLBAR_COLLAPSE_ANIMATION_DURATION_MS);
         onCleanup(() => {
@@ -584,6 +562,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       ratio: newRatio,
       collapsed: !wasCollapsed,
       enabled: props.enabled ?? true,
+      devMode: props.isDevMode ?? false,
       selectionsRevealed: props.selectionsRevealed ?? false,
     });
 
@@ -618,8 +597,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
 
   let resizeTimeout: ReturnType<typeof setTimeout> | undefined;
   let collapseAnimationTimeout: ReturnType<typeof setTimeout> | undefined;
-  let toggleAnimationTimeout: ReturnType<typeof setTimeout> | undefined;
-  let toggleAnimationRafId: number | undefined;
   let commentItemCountTimeout: ReturnType<typeof setTimeout> | undefined;
 
   const handleResize = () => {
@@ -714,14 +691,10 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       setPosition(defaultPosition);
     }
 
-    if (props.enabled) {
-      measureExpandableDimension();
-    }
-
     if (props.onSubscribeToStateChanges) {
       const unsubscribe = props.onSubscribeToStateChanges(
         (state: ToolbarState) => {
-          if (isCollapseAnimating() || isToggleAnimating()) return;
+          if (isCollapseAnimating()) return;
 
           const rect = containerRef?.getBoundingClientRect();
           if (!rect) return;
@@ -786,12 +759,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     clearTimeout(resizeTimeout);
     clearTimeout(collapseAnimationTimeout);
     clearShakeTooltipTimeout();
-    clearTimeout(toggleAnimationTimeout);
     clearTimeout(commentItemCountTimeout);
-    if (toggleAnimationRafId !== undefined) {
-      nativeCancelAnimationFrame(toggleAnimationRafId);
-    }
-    unfreezeUpdatesCallback?.();
+    releaseToolbarFreeze();
     safePolygonTracker.stop();
   });
 
@@ -819,9 +788,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     }
     if (isCollapseAnimating()) {
       return "transition-[transform,opacity] duration-150 ease-out";
-    }
-    if (isToggleAnimating()) {
-      return "transition-opacity duration-150 ease-out";
     }
     return "transition-opacity duration-300 ease-out";
   };
@@ -887,13 +853,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         isCommentsExpanded={(props.commentItemCount ?? 0) > 0}
         isCopyAllExpanded={Boolean(props.isCommentsDropdownOpen)}
         isCommentsPinned={props.isCommentsPinned}
-        disableGridTransitions={isRapidRetoggle()}
         transformOrigin={getTransformOrigin()}
         onAnimationEnd={() => setIsShaking(false)}
         onCollapseClick={handleToggleCollapse}
-        onExpandableButtonsRef={(element) => {
-          expandableButtonsRef = element;
-        }}
         onPanelClick={(event) => {
           if (isCollapsed()) {
             event.stopPropagation();
@@ -908,6 +870,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               ratio: newRatio,
               collapsed: false,
               enabled: props.enabled ?? true,
+              devMode: props.isDevMode ?? false,
               selectionsRevealed: props.selectionsRevealed ?? false,
             });
             if (collapseAnimationTimeout) {
@@ -919,7 +882,10 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           }
         }}
         selectButton={
-          <Tooltip open={isSelectTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+          <Tooltip
+            open={isSelectTooltipVisible() && isTooltipAllowed()}
+            placement={tooltipPosition()}
+          >
             <TooltipTrigger
               as="button"
               data-react-grab-ignore-events
@@ -935,7 +901,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               )}
               onClick={(event: MouseEvent) => {
                 setIsSelectTooltipVisible(false);
-                handleToggle(event as MouseEvent & { currentTarget: HTMLButtonElement });
+                handleToggle(
+                  event as MouseEvent & { currentTarget: HTMLButtonElement },
+                );
               }}
               onContextMenu={(event: MouseEvent) => {
                 event.preventDefault();
@@ -949,7 +917,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 size={14}
                 class={cn(
                   "transition-colors",
-                  props.isActive ? "text-popover-foreground" : "text-muted-foreground",
+                  props.isActive
+                    ? "text-popover-foreground"
+                    : "text-muted-foreground",
                 )}
               />
             </TooltipTrigger>
@@ -959,7 +929,10 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           </Tooltip>
         }
         commentsButton={
-          <Tooltip open={isCommentsTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+          <Tooltip
+            open={isCommentsTooltipVisible() && isTooltipAllowed()}
+            placement={tooltipPosition()}
+          >
             <TooltipTrigger
               as="button"
               data-react-grab-ignore-events
@@ -978,7 +951,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               )}
               onClick={(event: MouseEvent) => {
                 setIsCommentsTooltipVisible(false);
-                handleComments(event as MouseEvent & { currentTarget: HTMLButtonElement });
+                handleComments(
+                  event as MouseEvent & { currentTarget: HTMLButtonElement },
+                );
               }}
               {...createFreezeHandlers(
                 (visible) => {
@@ -1015,7 +990,10 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
           </Tooltip>
         }
         copyAllButton={
-          <Tooltip open={isCopyAllTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+          <Tooltip
+            open={isCopyAllTooltipVisible() && isTooltipAllowed()}
+            placement={tooltipPosition()}
+          >
             <TooltipTrigger
               as="button"
               data-react-grab-ignore-events
@@ -1028,7 +1006,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               )}
               onClick={(event: MouseEvent) => {
                 setIsCopyAllTooltipVisible(false);
-                handleCopyAll(event as MouseEvent & { currentTarget: HTMLButtonElement });
+                handleCopyAll(
+                  event as MouseEvent & { currentTarget: HTMLButtonElement },
+                );
               }}
               {...createFreezeHandlers(setIsCopyAllTooltipVisible, {
                 onHoverChange: (isHovered) => props.onCopyAllHover?.(isHovered),
@@ -1042,18 +1022,26 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                     : null,
               })}
             >
-              <IconCopy size={14} class="text-muted-foreground transition-colors" />
+              <IconCopy
+                size={14}
+                class="text-muted-foreground transition-colors"
+              />
             </TooltipTrigger>
             <TooltipContent>Copy all</TooltipContent>
           </Tooltip>
         }
         toggleButton={
-          <Tooltip open={isToggleTooltipVisible() && isTooltipAllowed()} placement={tooltipPosition()}>
+          <Tooltip
+            open={isToggleTooltipVisible() && isTooltipAllowed()}
+            placement={tooltipPosition()}
+          >
             <TooltipTrigger
               as="button"
               data-react-grab-ignore-events
               data-react-grab-toolbar-devmode
-              aria-label={props.isDevMode ? "DEV mode active" : "Toggle DEV mode"}
+              aria-label={
+                props.isDevMode ? "DEV mode active" : "Toggle DEV mode"
+              }
               aria-pressed={Boolean(props.isDevMode)}
               class={cn(
                 "contain-layout flex items-center gap-1 cursor-pointer interactive-scale outline-none",
@@ -1061,7 +1049,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               )}
               onClick={(event: MouseEvent) => {
                 setIsToggleTooltipVisible(false);
-                handleToggleDevMode(event as MouseEvent & { currentTarget: HTMLButtonElement });
+                handleToggleDevMode(
+                  event as MouseEvent & { currentTarget: HTMLButtonElement },
+                );
               }}
               onMouseEnter={() => setIsToggleTooltipVisible(true)}
               onMouseLeave={() => setIsToggleTooltipVisible(false)}
@@ -1075,9 +1065,16 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               >
                 DEV
               </span>
-              <ToggleSwitch isOn={Boolean(props.isDevMode)} size="sm" vertical={isVertical()} color="sky" />
+              <ToggleSwitch
+                isOn={Boolean(props.isDevMode)}
+                size="sm"
+                vertical={isVertical()}
+                color="sky"
+              />
             </TooltipTrigger>
-            <TooltipContent>{props.isDevMode ? "DEV mode" : "DEV mode"}</TooltipContent>
+            <TooltipContent>
+              {props.isDevMode ? "DEV mode" : "DEV mode"}
+            </TooltipContent>
           </Tooltip>
         }
       />
@@ -1108,24 +1105,14 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             </span>
           </Show>
           <Show when={selectionHintIndex() === 1}>
-            <span
-              class={cn(
-                "flex items-center gap-1",
-                HINT_FLIP_IN_ANIMATION,
-              )}
-            >
+            <span class={cn("flex items-center gap-1", HINT_FLIP_IN_ANIMATION)}>
               <Kbd>↑</Kbd>
               <Kbd>↓</Kbd>
               to fine-tune target
             </span>
           </Show>
           <Show when={selectionHintIndex() === 2}>
-            <span
-              class={cn(
-                "flex items-center gap-1",
-                HINT_FLIP_IN_ANIMATION,
-              )}
-            >
+            <span class={cn("flex items-center gap-1", HINT_FLIP_IN_ANIMATION)}>
               <Kbd>esc</Kbd>
               to cancel
             </span>

@@ -10,7 +10,10 @@ import {
   bulkAssignSelections,
   unassignSelectionsInGroup,
 } from "./business/selection-assignment.js";
-import { ensureGroupForItem, gcEmptySyntheticGroups } from "./business/synthetic-group.js";
+import {
+  ensureGroupForItem,
+  gcEmptySyntheticGroups,
+} from "./business/synthetic-group.js";
 import { canRemoveSelection } from "./business/ticket-lock.js";
 import { generateId } from "../../utils/generate-id.js";
 
@@ -78,8 +81,11 @@ export function createSelectionGroups(
     return true;
   };
 
-  const handleEnsureGroupForItem = (item: { componentName?: string; elementName: string }): string => {
-    const result = ensureGroupForItem(item, activeGroupId(), deps.groups());
+  const handleEnsureGroupForItem = (
+    item: { componentName?: string; elementName: string },
+    selectedGroupId = activeGroupId(),
+  ): string => {
+    const result = ensureGroupForItem(item, selectedGroupId, deps.groups());
     if (result.groups !== deps.groups()) {
       deps.persistGroups(result.groups);
     }
@@ -88,7 +94,10 @@ export function createSelectionGroups(
 
   return {
     groups: deps.groups,
-    setGroups: (groups) => deps.persistGroups(typeof groups === "function" ? groups(deps.groups()) : groups),
+    setGroups: (groups) =>
+      deps.persistGroups(
+        typeof groups === "function" ? groups(deps.groups()) : groups,
+      ),
     persistGroups: deps.persistGroups,
     activeGroupId,
     setActiveGroupId,

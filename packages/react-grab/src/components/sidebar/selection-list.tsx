@@ -1,7 +1,7 @@
 import { type Component, For, Show } from "solid-js";
-import type { CommentItem } from "../../types";
-import { SelectionCard } from "./selection-card";
-import { EmptyState } from "./empty-state";
+import type { CommentItem } from "../../types.js";
+import { SelectionCard } from "./selection-card.js";
+import { EmptyState } from "./empty-state.js";
 
 interface SelectionListProps {
   items: CommentItem[];

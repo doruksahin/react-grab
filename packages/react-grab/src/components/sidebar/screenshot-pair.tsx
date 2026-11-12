@@ -1,6 +1,6 @@
 // packages/react-grab/src/components/sidebar/screenshot-pair.tsx
 import { type Component, Show } from "solid-js";
-import { useLazyVisible } from "../../features/sidebar";
+import { useLazyVisible } from "../../features/sidebar/index.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 
 interface ScreenshotPairProps {
@@ -54,7 +54,11 @@ const ScreenshotSlot: Component<{
 
 export const ScreenshotPair: Component<ScreenshotPairProps> = (props) => {
   return (
-    <div data-react-grab-screenshot-pair class="flex gap-2 mt-1.5" style={{ "pointer-events": "auto" }}>
+    <div
+      data-react-grab-screenshot-pair
+      class="flex gap-2 mt-1.5"
+      style={{ "pointer-events": "auto" }}
+    >
       <ScreenshotSlot
         src={props.elementSrc}
         label="Element"

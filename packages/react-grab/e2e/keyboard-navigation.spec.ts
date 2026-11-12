@@ -75,29 +75,33 @@ test.describe("Keyboard Navigation", () => {
   test("should copy element after keyboard navigation with click", async ({
     reactGrab,
   }) => {
+    await reactGrab.page.evaluate(() => navigator.clipboard.writeText(""));
     await reactGrab.activate();
     await reactGrab.hoverElement("[data-testid='todo-list'] li:first-child");
     await reactGrab.waitForSelectionBox();
 
     await reactGrab.page.keyboard.press("ArrowDown");
+    const selectedText = await reactGrab.page.evaluate(
+      () => window.__REACT_GRAB__?.getState().targetElement?.textContent,
+    );
+    expect(selectedText).toBeTruthy();
     await reactGrab.waitForSelectionBox();
 
-    const secondItem = reactGrab.page.locator(
-      "[data-testid='todo-list'] li:nth-child(2)",
+    const box = await reactGrab.getSelectionBoxBounds();
+    if (!box) throw new Error("Keyboard selection has no bounds");
+    await reactGrab.page.mouse.click(
+      box.x + box.width / 2,
+      box.y + box.height / 2,
     );
-    const box = await secondItem.boundingBox();
-    if (box) {
-      await reactGrab.page.mouse.click(box.x + 10, box.y + 10);
-    }
-    await reactGrab.page.waitForTimeout(500);
-
-    const clipboardContent = await reactGrab.getClipboardContent();
-    expect(clipboardContent).toBeTruthy();
+    await expect
+      .poll(() => reactGrab.getClipboardContent())
+      .toContain(selectedText);
   });
 
   test("should copy keyboard-selected element when clicking after mouse movement", async ({
     reactGrab,
   }) => {
+    await reactGrab.page.evaluate(() => navigator.clipboard.writeText(""));
     await reactGrab.activate();
     await reactGrab.hoverElement("[data-testid='todo-list'] li:first-child");
     await reactGrab.waitForSelectionBox();
@@ -106,6 +110,10 @@ test.describe("Keyboard Navigation", () => {
     expect(initialBounds).not.toBeNull();
 
     await reactGrab.page.keyboard.press("ArrowUp");
+    const selectedText = await reactGrab.page.evaluate(
+      () => window.__REACT_GRAB__?.getState().targetElement?.textContent,
+    );
+    expect(selectedText).toBeTruthy();
     await reactGrab.waitForSelectionBox();
 
     const selectionBoundsAfterArrow = await reactGrab.getSelectionBoxBounds();
@@ -118,10 +126,9 @@ test.describe("Keyboard Navigation", () => {
       selectionBoundsAfterArrow!.x + selectionBoundsAfterArrow!.width / 2,
       selectionBoundsAfterArrow!.y + selectionBoundsAfterArrow!.height / 2,
     );
-    await reactGrab.page.waitForTimeout(500);
-
-    const clipboardContent = await reactGrab.getClipboardContent();
-    expect(clipboardContent).toBeTruthy();
+    await expect
+      .poll(() => reactGrab.getClipboardContent())
+      .toContain(selectedText);
   });
 
   test("should freeze selection when navigating with arrow keys", async ({
@@ -242,7 +249,9 @@ test.describe("ArrowUp Vertical Traversal", () => {
     reactGrab,
   }) => {
     await reactGrab.activate();
-    await reactGrab.hoverElement("[data-testid='todo-list'] li:first-child");
+    await reactGrab.hoverElement(
+      "[data-testid='todo-list'] li:first-child span",
+    );
     await reactGrab.waitForSelectionBox();
 
     const initialLabel = await reactGrab.getSelectionLabelInfo();
@@ -252,8 +261,8 @@ test.describe("ArrowUp Vertical Traversal", () => {
 
     const afterUpLabel = await reactGrab.getSelectionLabelInfo();
 
-    expect(initialLabel.tagName).toBe("li");
-    expect(afterUpLabel.tagName).not.toBe("li");
+    expect(initialLabel.tagName).toBe("span");
+    expect(afterUpLabel.tagName).not.toBe("span");
     expect(afterUpLabel.isVisible).toBe(true);
   });
 
@@ -339,5 +348,120 @@ test.describe("ArrowUp Vertical Traversal", () => {
     expect(afterDownBounds).not.toBeNull();
     expect(afterDownBounds!.width).toBeGreaterThan(0);
     expect(afterDownBounds!.height).toBeGreaterThan(0);
+  });
+});
+
+test.describe("Product hierarchy menu", () => {
+  test.beforeEach(async ({ reactGrab }) => {
+    await reactGrab.page.evaluate(() => {
+      document.body.dataset.copiedTag = "";
+      window.__REACT_GRAB__?.registerPlugin({
+        name: "hierarchy-contract",
+        hooks: {
+          onBeforeCopy: (elements) => {
+            document.body.dataset.copiedTag = elements[0]?.tagName ?? "";
+          },
+        },
+      });
+    });
+    await reactGrab.activate();
+    await reactGrab.hoverElement('[data-testid="todo-list"] li:first-child');
+    await reactGrab.waitForSelectionBox();
+  });
+
+  test("menu selection drives the element copied by the engine", async ({
+    reactGrab,
+  }) => {
+    await reactGrab.page.keyboard.press("ArrowUp");
+    const parentRow = reactGrab.page.locator(
+      '[data-react-grab-arrow-nav-item="ul"]',
+    );
+    await expect(parentRow).toBeVisible();
+    await parentRow.click();
+    await expect
+      .poll(() =>
+        reactGrab.page.evaluate(
+          () => window.__REACT_GRAB__?.getState().targetElement?.tagName,
+        ),
+      )
+      .toBe("UL");
+    const bounds = await reactGrab.page
+      .locator('[data-testid="todo-list"] li:first-child')
+      .boundingBox();
+    if (!bounds) throw new Error("Selected list is not visible");
+    await reactGrab.page.mouse.click(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+    );
+    await expect(reactGrab.page.locator("body")).toHaveAttribute(
+      "data-copied-tag",
+      "UL",
+    );
+  });
+
+  test("keyboard navigation continues from the menu-selected element", async ({
+    reactGrab,
+  }) => {
+    await reactGrab.page.keyboard.press("ArrowUp");
+    const parentRow = reactGrab.page.locator(
+      '[data-react-grab-arrow-nav-item="ul"]',
+    );
+    await expect(parentRow).toBeVisible();
+    await parentRow.click();
+    await reactGrab.page.keyboard.press("ArrowUp");
+    await expect
+      .poll(() =>
+        reactGrab.page.evaluate(() =>
+          window.__REACT_GRAB__
+            ?.getState()
+            .targetElement?.getAttribute("data-testid"),
+        ),
+      )
+      .toBe("todo-list");
+    await reactGrab.page.keyboard.press("Escape");
+    await expect(
+      reactGrab.page.locator("[data-react-grab-arrow-nav-item]"),
+    ).toHaveCount(0);
+  });
+
+  test("menu selection clears previous keyboard history", async ({
+    reactGrab,
+  }) => {
+    await reactGrab.page.keyboard.press("ArrowUp");
+    const parentRow = reactGrab.page.locator(
+      '[data-react-grab-arrow-nav-item="ul"]',
+    );
+    await expect(parentRow).toBeVisible();
+    await parentRow.click();
+    await reactGrab.page.keyboard.press("ArrowDown");
+    await expect
+      .poll(() =>
+        reactGrab.page.evaluate(
+          () => window.__REACT_GRAB__?.getState().targetElement?.tagName,
+        ),
+      )
+      .toMatch(/^(UL|LI)$/);
+  });
+
+  test("Shift shows inspect ancestors and release closes them without copying", async ({
+    reactGrab,
+  }) => {
+    await reactGrab.page.keyboard.down("Shift");
+    await expect(
+      reactGrab.page.locator('[data-react-grab-arrow-nav-item="ul"]'),
+    ).toBeVisible();
+    await reactGrab.page.keyboard.up("Shift");
+    await expect(
+      reactGrab.page.locator("[data-react-grab-arrow-nav-item]"),
+    ).toHaveCount(0);
+    await expect(reactGrab.page.locator("body")).toHaveAttribute(
+      "data-copied-tag",
+      "",
+    );
+    await expect
+      .poll(() =>
+        reactGrab.page.evaluate(() => window.__REACT_GRAB__?.isActive()),
+      )
+      .toBe(true);
   });
 });

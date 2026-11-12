@@ -1,3 +1,4 @@
+import type { SelectionGroupWithJira } from "../../src/features/sidebar/jira-types.js";
 import { test, expect } from "../fixtures.js";
 
 /**
@@ -7,7 +8,7 @@ import { test, expect } from "../fixtures.js";
  * No HTTP — the filter is pure client-side over the already-loaded store.
  */
 
-const ATTR = "data-react-grab";
+const ATTR = "data-react-grab-product";
 
 // ---------------------------------------------------------------------------
 // Shadow DOM helpers
@@ -236,7 +237,7 @@ const makeGroup = (
   id: string,
   name: string,
   due: string | null,
-): Record<string, unknown> => ({
+): SelectionGroupWithJira => ({
   id,
   name,
   createdAt: Date.now(),
@@ -248,8 +249,8 @@ const makeGroup = (
   jiraStatusCategory: "In Progress",
   jiraAssignee: "Alice Cooper",
   jiraReporter: "Bob Martinez",
-  jiraAssigneeAvatar: null,
-  jiraReporterAvatar: null,
+  jiraAssigneeAvatar: undefined,
+  jiraReporterAvatar: undefined,
   jiraLabels: [],
   jiraComments: [],
   jiraResolved: false,
@@ -435,7 +436,9 @@ test.describe("Due date filter (SPEC-018)", { tag: ["@SPEC-018"] }, () => {
 
     // Parent menu must still be open — at least the due-date sub-trigger is visible.
     await expect
-      .poll(() => boundingCentreOfFilterRow(page, "due-date"), { timeout: 3000 })
+      .poll(() => boundingCentreOfFilterRow(page, "due-date"), {
+        timeout: 3000,
+      })
       .not.toBeNull();
 
     await page.keyboard.press("Escape");

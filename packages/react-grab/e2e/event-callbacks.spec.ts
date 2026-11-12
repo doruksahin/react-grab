@@ -128,7 +128,7 @@ test.describe("Event Callbacks", () => {
       await reactGrab.page.waitForTimeout(100);
       await reactGrab.hoverElement("li:first-child");
       await reactGrab.page.waitForTimeout(100);
-      await reactGrab.hoverElement("ul");
+      await reactGrab.hoverElement("[data-testid='nested-button']");
       await reactGrab.page.waitForTimeout(100);
 
       const history = await reactGrab.getCallbackHistory();

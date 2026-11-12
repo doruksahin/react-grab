@@ -1,34 +1,15 @@
 import {
-  freezeAnimations,
-  freezeGlobalAnimations,
-  unfreezeGlobalAnimations,
-} from "./utils/freeze-animations.js";
-import { freezePseudoStates } from "./utils/freeze-pseudo-states.js";
-import { freezeUpdates } from "./utils/freeze-updates.js";
-import { unfreezePseudoStates } from "./utils/freeze-pseudo-states.js";
-import {
-  getComponentDisplayName,
-  getHTMLPreview,
-  getStack,
-  getStackContext,
-} from "./core/context.js";
-import { Fiber, getFiberFromHostInstance } from "bippy";
-import type { StackFrame } from "bippy/source";
-export type { StackFrame };
-import { createElementSelector } from "./utils/create-element-selector.js";
-import { extractElementCss } from "./utils/extract-element-css.js";
+  getElementContext as getUpstreamElementContext,
+  freeze as freezeUpstream,
+  unfreeze as unfreezeUpstream,
+  isFreezeActive as isUpstreamFreezeActive,
+} from "react-grab-upstream/primitives";
+import type { ReactGrabElementContext } from "react-grab-upstream/primitives";
+export type {
+  ReactGrabElementContext,
+  StackFrame,
+} from "react-grab-upstream/primitives";
 import { openFile as openFileAsync } from "./utils/open-file.js";
-
-export interface ReactGrabElementContext {
-  element: Element;
-  htmlPreview: string;
-  stackString: string;
-  stack: StackFrame[];
-  componentName: string | null;
-  fiber: Fiber | null;
-  selector: string | null;
-  styles: string;
-}
 
 /**
  * Gathers comprehensive context for a DOM element, including its React fiber,
@@ -41,31 +22,9 @@ export interface ReactGrabElementContext {
  * console.log(context.stackString);   // "\n  in SubmitButton (at Button.tsx:12:5)"
  * console.log(context.stack[0]);      // { functionName: "SubmitButton", fileName: "Button.tsx", lineNumber: 12, columnNumber: 5 }
  */
-export const getElementContext = async (
+export const getElementContext = (
   element: Element,
-): Promise<ReactGrabElementContext> => {
-  const stack = (await getStack(element)) ?? [];
-  const stackString = await getStackContext(element);
-  const htmlPreview = getHTMLPreview(element);
-  const componentName = getComponentDisplayName(element);
-  const fiber = getFiberFromHostInstance(element);
-  const selector = createElementSelector(element);
-  const styles = extractElementCss(element);
-
-  return {
-    element,
-    htmlPreview,
-    stackString,
-    stack,
-    componentName,
-    fiber,
-    selector,
-    styles,
-  };
-};
-
-const freezeCleanupFns = new Set<() => void>();
-let _isFreezeActive = false;
+): Promise<ReactGrabElementContext> => getUpstreamElementContext(element);
 
 /**
  * Freezes the page by halting React updates, pausing CSS/JS animations,
@@ -75,13 +34,7 @@ let _isFreezeActive = false;
  * freeze(); // freezes the entire page
  * freeze([document.querySelector('.modal')!]); // freezes only the modal subtree
  */
-export const freeze = (elements?: Element[]): void => {
-  _isFreezeActive = true;
-  freezeCleanupFns.add(freezeUpdates());
-  freezeCleanupFns.add(freezeAnimations(elements ?? [document.body]));
-  freezeGlobalAnimations();
-  freezePseudoStates();
-};
+export const freeze = (elements?: Element[]): void => freezeUpstream(elements);
 
 /**
  * Restores normal page behavior by re-enabling React updates, resuming
@@ -92,16 +45,7 @@ export const freeze = (elements?: Element[]): void => {
  * // ... capture a snapshot ...
  * unfreeze(); // page resumes normal behavior
  */
-export const unfreeze = (): void => {
-  _isFreezeActive = false;
-  for (const cleanup of Array.from(freezeCleanupFns)) {
-    cleanup();
-  }
-  freezeCleanupFns.clear();
-  freezeAnimations([]);
-  unfreezeGlobalAnimations();
-  unfreezePseudoStates();
-};
+export const unfreeze = (): void => unfreezeUpstream();
 
 /**
  * Returns whether the page is currently in a frozen state.
@@ -111,9 +55,7 @@ export const unfreeze = (): void => {
  *   console.log('Page is frozen, skipping update');
  * }
  */
-export const isFreezeActive = (): boolean => {
-  return _isFreezeActive;
-};
+export const isFreezeActive = (): boolean => isUpstreamFreezeActive();
 
 /**
  * Opens the source file at the given path in the user's editor.

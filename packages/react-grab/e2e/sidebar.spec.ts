@@ -1,6 +1,7 @@
+import { openGroupDetail } from "./open-group-detail.js";
 import { test, expect } from "./fixtures.js";
 
-const ATTR = "data-react-grab";
+const ATTR = "data-react-grab-product";
 
 /** Click a button inside the shadow root by selector. */
 const clickShadowButton = async (
@@ -38,7 +39,6 @@ const isSidebarVisible = async (
     return sidebar !== null;
   }, ATTR);
 };
-
 
 test.describe("Sidebar", () => {
   test.beforeEach(async ({ reactGrab }) => {
@@ -125,7 +125,10 @@ test.describe("Sidebar", () => {
     }, ATTR);
 
     // If the e2e fixture already has groups we cannot test the empty state — skip.
-    test.skip(groupCount > 0, "Skipping: e2e app has pre-existing groups; empty state cannot be shown");
+    test.skip(
+      groupCount > 0,
+      "Skipping: e2e app has pre-existing groups; empty state cannot be shown",
+    );
 
     // This test assumes the e2e app has no pre-existing groups.
     // The empty state message "No selections yet" must appear when there are no groups.
@@ -152,80 +155,22 @@ test.describe("Sidebar", () => {
       .toBe(true);
   });
 
-  test("filter tabs are interactive", async ({ reactGrab }) => {
+  test("status filter selection adds and removes a filter chip", async ({
+    reactGrab,
+  }) => {
     const { page } = reactGrab;
-
     await clickShadowButton(page, "[data-react-grab-toolbar-dashboard]");
-    await expect
-      .poll(() => isSidebarVisible(page), { timeout: 3000 })
-      .toBe(true);
-
-    // Verify All and Open tabs are present
-    const tabLabels = await page.evaluate((attrName) => {
-      const host = document.querySelector(`[${attrName}]`);
-      const shadowRoot = host?.shadowRoot;
-      if (!shadowRoot) return [];
-      const root = shadowRoot.querySelector(`[${attrName}]`);
-      if (!root) return [];
-      const sidebar = root.querySelector(
-        "[role='dialog'][aria-label='React Grab Dashboard']",
-      );
-      if (!sidebar) return [];
-      return Array.from(sidebar.querySelectorAll("button")).map(
-        (btn) => btn.textContent?.trim() ?? "",
-      );
-    }, ATTR);
-
-    expect(tabLabels).toContain("All");
-    expect(tabLabels).toContain("Open");
-
-    // Click the Open tab and verify it receives the active styling
-    const openTabActive = await page.evaluate((attrName) => {
-      const host = document.querySelector(`[${attrName}]`);
-      const shadowRoot = host?.shadowRoot;
-      if (!shadowRoot) return false;
-      const root = shadowRoot.querySelector(`[${attrName}]`);
-      if (!root) return false;
-      const sidebar = root.querySelector(
-        "[role='dialog'][aria-label='React Grab Dashboard']",
-      );
-      if (!sidebar) return false;
-      const openBtn = Array.from(
-        sidebar.querySelectorAll<HTMLButtonElement>("button"),
-      ).find((btn) => btn.textContent?.trim() === "Open");
-      if (!openBtn) return false;
-      openBtn.click();
-      return true;
-    }, ATTR);
-
-    expect(openTabActive).toBe(true);
-
-    // Wait for React state update to propagate after the click
-    await page.waitForTimeout(100);
-
-    // After clicking Open, the active class (pink background) should be applied to that tab
-    const openTabHasActiveClass = await page.evaluate((attrName) => {
-      const host = document.querySelector(`[${attrName}]`);
-      const shadowRoot = host?.shadowRoot;
-      if (!shadowRoot) return false;
-      const root = shadowRoot.querySelector(`[${attrName}]`);
-      if (!root) return false;
-      const sidebar = root.querySelector(
-        "[role='dialog'][aria-label='React Grab Dashboard']",
-      );
-      if (!sidebar) return false;
-      const openBtn = Array.from(
-        sidebar.querySelectorAll<HTMLButtonElement>("button"),
-      ).find((btn) => btn.textContent?.trim() === "Open");
-      if (!openBtn) return false;
-      // The active tab gets the pink background class
-      return openBtn.className.includes("bg-[var(--color-grab-pink)]");
-    }, ATTR);
-
-    expect(openTabHasActiveClass).toBe(true);
+    await page.getByRole("button", { name: "Filter", exact: true }).click();
+    await page.locator('[data-react-grab-filter-row="status"]').hover();
+    await page
+      .getByRole("menuitemradio", { name: "In Progress", exact: true })
+      .click();
+    const chips = page.locator("[data-react-grab-filter-chips]");
+    await expect(chips).toContainText("Status: In Progress");
+    await chips.getByRole("button").click();
+    await expect(chips).toHaveCount(0);
   });
 });
-
 
 // ---- helpers for Group Detail View tests ----
 
@@ -386,6 +331,7 @@ test.describe("Sidebar — Group Detail View", () => {
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
       .toBe(true);
+    await reactGrab.triggerInitSync({ enabled: false });
     // Open sidebar
     await clickShadowButton(page, "[data-react-grab-toolbar-dashboard]");
     await expect
@@ -414,24 +360,7 @@ test.describe("Sidebar — Group Detail View", () => {
     expect(groupCardVisible).toBe(true);
 
     // Click the group card
-    await page.evaluate(
-      ({ attrName, groupName }) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const sidebar = root?.querySelector(
-          "[role='dialog'][aria-label='React Grab Dashboard']",
-        );
-        if (!sidebar) return;
-        const cards = Array.from(
-          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
-        );
-        const card = cards.find((c) =>
-          c.textContent?.includes(groupName),
-        ) as HTMLElement | undefined;
-        card?.click();
-      },
-      { attrName: ATTR, groupName: TEST_GROUP.name },
-    );
+    await openGroupDetail(page, TEST_GROUP.name);
 
     // Detail view should now be visible
     await expect
@@ -441,19 +370,7 @@ test.describe("Sidebar — Group Detail View", () => {
 
   test("detail view shows the group name in the header", async ({ page }) => {
     // Navigate to detail
-    await page.evaluate(
-      ({ attrName, groupName }) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const sidebar = root?.querySelector("[role='dialog']");
-        if (!sidebar) return;
-        const card = Array.from(
-          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
-        ).find((c) => c.textContent?.includes(groupName));
-        card?.click();
-      },
-      { attrName: ATTR, groupName: TEST_GROUP.name },
-    );
+    await openGroupDetail(page, TEST_GROUP.name);
 
     await expect
       .poll(() => isDetailViewVisible(page), { timeout: 3000 })
@@ -464,7 +381,9 @@ test.describe("Sidebar — Group Detail View", () => {
       ({ attrName, groupName }) => {
         const host = document.querySelector(`[${attrName}]`);
         const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const detail = root?.querySelector("[role='region'][aria-label^='Detail:']");
+        const detail = root?.querySelector(
+          "[role='region'][aria-label^='Detail:']",
+        );
         return detail
           ? Array.from(detail.querySelectorAll(".font-semibold")).some(
               (el) => el.textContent?.trim() === groupName,
@@ -478,19 +397,7 @@ test.describe("Sidebar — Group Detail View", () => {
 
   test("back button returns to the groups list", async ({ page }) => {
     // Navigate to detail
-    await page.evaluate(
-      ({ attrName, groupName }) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const sidebar = root?.querySelector("[role='dialog']");
-        if (!sidebar) return;
-        const card = Array.from(
-          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
-        ).find((c) => c.textContent?.includes(groupName));
-        card?.click();
-      },
-      { attrName: ATTR, groupName: TEST_GROUP.name },
-    );
+    await openGroupDetail(page, TEST_GROUP.name);
 
     await expect
       .poll(() => isDetailViewVisible(page), { timeout: 3000 })
@@ -519,19 +426,7 @@ test.describe("Sidebar — Group Detail View", () => {
     page,
   }) => {
     // Navigate to detail
-    await page.evaluate(
-      ({ attrName, groupName }) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const sidebar = root?.querySelector("[role='dialog']");
-        if (!sidebar) return;
-        const card = Array.from(
-          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
-        ).find((c) => c.textContent?.includes(groupName));
-        card?.click();
-      },
-      { attrName: ATTR, groupName: TEST_GROUP.name },
-    );
+    await openGroupDetail(page, TEST_GROUP.name);
 
     await expect
       .poll(() => isDetailViewVisible(page), { timeout: 3000 })
@@ -560,19 +455,7 @@ test.describe("Sidebar — Group Detail View", () => {
 
   test("detail view shows selection comment text", async ({ page }) => {
     // Navigate to detail
-    await page.evaluate(
-      ({ attrName, groupName }) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const sidebar = root?.querySelector("[role='dialog']");
-        if (!sidebar) return;
-        const card = Array.from(
-          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
-        ).find((c) => c.textContent?.includes(groupName));
-        card?.click();
-      },
-      { attrName: ATTR, groupName: TEST_GROUP.name },
-    );
+    await openGroupDetail(page, TEST_GROUP.name);
 
     await expect
       .poll(() => isDetailViewVisible(page), { timeout: 3000 })
@@ -583,7 +466,9 @@ test.describe("Sidebar — Group Detail View", () => {
       ({ attrName, commentText }) => {
         const host = document.querySelector(`[${attrName}]`);
         const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const detail = root?.querySelector("[role='region'][aria-label^='Detail:']");
+        const detail = root?.querySelector(
+          "[role='region'][aria-label^='Detail:']",
+        );
         if (!detail) return false;
         return Array.from(detail.querySelectorAll("p")).some((p) =>
           p.textContent?.includes(commentText),
@@ -596,19 +481,7 @@ test.describe("Sidebar — Group Detail View", () => {
 
   test("raw HTML details element is collapsed by default", async ({ page }) => {
     // Navigate to detail
-    await page.evaluate(
-      ({ attrName, groupName }) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const sidebar = root?.querySelector("[role='dialog']");
-        if (!sidebar) return;
-        const card = Array.from(
-          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
-        ).find((c) => c.textContent?.includes(groupName));
-        card?.click();
-      },
-      { attrName: ATTR, groupName: TEST_GROUP.name },
-    );
+    await openGroupDetail(page, TEST_GROUP.name);
 
     await expect
       .poll(() => isDetailViewVisible(page), { timeout: 3000 })
@@ -618,7 +491,9 @@ test.describe("Sidebar — Group Detail View", () => {
     const isOpen = await page.evaluate((attrName) => {
       const host = document.querySelector(`[${attrName}]`);
       const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-      const detail = root?.querySelector("[role='region'][aria-label^='Detail:']");
+      const detail = root?.querySelector(
+        "[role='region'][aria-label^='Detail:']",
+      );
       const detailsEl = detail?.querySelector("details");
       return detailsEl?.open ?? false;
     }, ATTR);
@@ -626,7 +501,7 @@ test.describe("Sidebar — Group Detail View", () => {
     expect(isOpen).toBe(false);
   });
 
-  test("sync error state still renders when syncStatus is error", async ({
+  test("local sync state keeps sidebar navigation available", async ({
     page,
   }) => {
     // This test verifies Phase 1 regression: the error state inside Sidebar
@@ -639,8 +514,8 @@ test.describe("Sidebar — Group Detail View", () => {
       const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
       const sidebar = root?.querySelector("[role='dialog']");
       if (!sidebar) return false;
-      return Array.from(sidebar.querySelectorAll("button")).some((b) =>
-        b.textContent?.trim() === "All",
+      return Array.from(sidebar.querySelectorAll("button")).some(
+        (b) => b.textContent?.trim() === "Filter",
       );
     }, ATTR);
     // Filter tabs are present — sync error state did not incorrectly appear
@@ -669,6 +544,7 @@ test.describe("Sidebar — JIRA integration", () => {
     await expect
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
       .toBe(true);
+    await reactGrab.triggerInitSync({ enabled: false });
     // Open sidebar
     await clickShadowButton(page, "[data-react-grab-toolbar-dashboard]");
     await expect
@@ -683,19 +559,7 @@ test.describe("Sidebar — JIRA integration", () => {
     await setupJiraMocks(page);
 
     // Navigate to detail view — click the group card by name
-    await page.evaluate(
-      ({ attrName, groupName }) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const sidebar = root?.querySelector("[role='dialog']");
-        if (!sidebar) return;
-        const card = Array.from(
-          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
-        ).find((c) => c.textContent?.includes(groupName));
-        card?.click();
-      },
-      { attrName: ATTR, groupName: TEST_GROUP.name },
-    );
+    await openGroupDetail(page, TEST_GROUP.name);
 
     await expect
       .poll(() => isDetailViewVisible(page), { timeout: 3000 })
@@ -713,19 +577,7 @@ test.describe("Sidebar — JIRA integration", () => {
     await setupJiraMocks(page);
 
     // Navigate into detail
-    await page.evaluate(
-      ({ attrName, groupName }) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const sidebar = root?.querySelector("[role='dialog']");
-        if (!sidebar) return;
-        const card = Array.from(
-          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
-        ).find((c) => c.textContent?.includes(groupName));
-        card?.click();
-      },
-      { attrName: ATTR, groupName: TEST_GROUP.name },
-    );
+    await openGroupDetail(page, TEST_GROUP.name);
 
     await expect
       .poll(() => isDetailViewVisible(page), { timeout: 3000 })
@@ -736,9 +588,7 @@ test.describe("Sidebar — JIRA integration", () => {
       const host = document.querySelector(`[${attrName}]`);
       const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
       root
-        ?.querySelector<HTMLButtonElement>(
-          "[data-testid='jira-create-button']",
-        )
+        ?.querySelector<HTMLButtonElement>("[data-testid='jira-create-button']")
         ?.click();
     }, ATTR);
 
@@ -761,19 +611,7 @@ test.describe("Sidebar — JIRA integration", () => {
   }) => {
     await setupJiraMocks(page);
 
-    await page.evaluate(
-      ({ attrName, groupName }) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-        const sidebar = root?.querySelector("[role='dialog']");
-        if (!sidebar) return;
-        const card = Array.from(
-          sidebar.querySelectorAll<HTMLElement>(".cursor-pointer"),
-        ).find((c) => c.textContent?.includes(groupName));
-        card?.click();
-      },
-      { attrName: ATTR, groupName: TEST_GROUP.name },
-    );
+    await openGroupDetail(page, TEST_GROUP.name);
 
     await expect
       .poll(() => isDetailViewVisible(page), { timeout: 3000 })
@@ -802,9 +640,26 @@ test.describe("Sidebar — JIRA integration", () => {
 
   test("group card shows assignee avatar img and reporter initials after status poll", async ({
     page,
-    reactGrab: _reactGrab,
+    reactGrab,
+    mockServer,
   }) => {
-    await setupJiraMocks(page);
+    mockServer.override("listGroups", [
+      { ...TEST_GROUP, jiraTicketId: "ATT-42" },
+    ]);
+    mockServer.override("listComments", [TEST_COMMENT]);
+    mockServer.override("getJiraTicketStatus", {
+      status: "In Progress",
+      statusCategory: "indeterminate",
+      assignee: "Jane Doe",
+      reporter: "John Smith",
+      assigneeAvatar: "https://example.com/avatar-jane.png",
+      reporterAvatar: null,
+      labels: [],
+    });
+    await reactGrab.triggerInitSync();
+    await expect
+      .poll(() => mockServer.requests("getJiraTicketStatus").length)
+      .toBeGreaterThan(0);
 
     // Assignee avatar: URL provided → img renders
     // Poll inside the shadow root since waitForSelector cannot pierce shadow DOM

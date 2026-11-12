@@ -1,8 +1,5 @@
 import type { DragRect, Rect } from "../types.js";
-import {
-  suspendPointerEventsFreeze,
-  resumePointerEventsFreeze,
-} from "./freeze-pseudo-states.js";
+import { getElementsAtPoint } from "react-grab-upstream/primitives";
 import {
   DRAG_SELECTION_COVERAGE_THRESHOLD,
   DRAG_SELECTION_SAMPLE_SPACING_PX,
@@ -153,16 +150,11 @@ const filterElementsInDrag = (
   const candidates = new Set<Element>();
   const samplePoints = createSamplePoints(dragRect);
 
-  suspendPointerEventsFreeze();
-  try {
-    for (const point of samplePoints) {
-      const elementsAtPoint = document.elementsFromPoint(point.x, point.y);
-      for (const candidateElement of elementsAtPoint) {
-        candidates.add(candidateElement);
-      }
-    }
-  } finally {
-    resumePointerEventsFreeze();
+  for (const point of samplePoints) {
+    const elements = getElementsAtPoint(point.x, point.y, {
+      filter: isValidGrabbableElement,
+    });
+    for (const element of elements) candidates.add(element);
   }
 
   const matchingElements: Element[] = [];
@@ -171,8 +163,6 @@ const filterElementsInDrag = (
     if (!shouldCheckCoverage) {
       if (isRootElement(candidateElement)) continue;
     }
-
-    if (!isValidGrabbableElement(candidateElement)) continue;
 
     const elementRect = candidateElement.getBoundingClientRect();
     if (elementRect.width <= 0 || elementRect.height <= 0) continue;

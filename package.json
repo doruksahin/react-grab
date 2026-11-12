@@ -28,9 +28,6 @@
     "release": "pnpm build && changeset publish",
     "prepare": "simple-git-hooks || true"
   },
-  "simple-git-hooks": {
-    "pre-commit": "pnpm arch:lint"
-  },
   "devDependencies": {
     "@changesets/cli": "^2.27.10",
     "@types/js-yaml": "^4.0.9",
@@ -44,6 +41,9 @@
     "typescript": "^5.9.3",
     "yaml": "^2.8.3"
   },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm arch:lint"
+  },
   "engines": {
     "node": ">=18",
     "pnpm": ">=8"
@@ -56,6 +56,9 @@
       "sharp",
       "spawn-sync",
       "unrs-resolver"
-    ]
+    ],
+    "patchedDependencies": {
+      "react-grab@0.2.0": "patches/react-grab@0.2.0.patch"
+    }
   }
 }

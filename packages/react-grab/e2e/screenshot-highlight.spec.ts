@@ -39,7 +39,7 @@ test.describe("Screenshot Element Highlighting", () => {
 
       expect(result).not.toBeNull();
       expect(result!.position).toBe("absolute");
-      expect(result!.border).toBe("3px solid #f59e0b");
+      expect(result!.border).toBe("3px solid rgb(245, 158, 11)");
       expect(result!.background).toBe("rgba(245, 158, 11, 0.15)");
       expect(result!.pointerEvents).toBe("none");
       expect(result!.zIndex).toBe("999999");

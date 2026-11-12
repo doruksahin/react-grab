@@ -335,7 +335,7 @@ test.describe("Open File", () => {
             return;
           }
         }
-      }, "data-react-grab");
+      }, "data-react-grab-product");
 
       await reactGrab.page.waitForTimeout(200);
 

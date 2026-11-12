@@ -46,12 +46,11 @@ const emptyFilter = (): FilterState => ({
 });
 
 const ChevronRight = () => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 16 16"
-  >
-    <path fill="currentColor" d="m6.03 1.47 6 6a.75.75 0 0 1 .052 1.004l-.052.056-6 6-1.06-1.06L10.44 8 4.97 2.53z" />
+  <svg width="12" height="12" viewBox="0 0 16 16">
+    <path
+      fill="currentColor"
+      d="m6.03 1.47 6 6a.75.75 0 0 1 .052 1.004l-.052.056-6 6-1.06-1.06L10.44 8 4.97 2.53z"
+    />
   </svg>
 );
 
@@ -116,7 +115,7 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
 
   return (
     <>
-      <Menu>
+      <Menu modal={false}>
         <MenuTrigger
           aria-label="Filter"
           classList={{ "border-primary/50": activeCount() > 0 }}
@@ -192,12 +191,13 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
           <MenuSub>
             <MenuSubTrigger data-react-grab-filter-row="assignee">
               <span class="flex items-center gap-2">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 16 16"
-                >
-                  <path fill="currentColor" fill-rule="evenodd" d="M8 1.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4 4a4 4 0 1 1 8 0 4 4 0 0 1-8 0m-2 9a3.75 3.75 0 0 1 3.75-3.75h4.5A3.75 3.75 0 0 1 14 13v2h-1.5v-2a2.25 2.25 0 0 0-2.25-2.25h-4.5A2.25 2.25 0 0 0 3.5 13v2H2z" clip-rule="evenodd" />
+                <svg width="12" height="12" viewBox="0 0 16 16">
+                  <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M8 1.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4 4a4 4 0 1 1 8 0 4 4 0 0 1-8 0m-2 9a3.75 3.75 0 0 1 3.75-3.75h4.5A3.75 3.75 0 0 1 14 13v2h-1.5v-2a2.25 2.25 0 0 0-2.25-2.25h-4.5A2.25 2.25 0 0 0 3.5 13v2H2z"
+                    clip-rule="evenodd"
+                  />
                 </svg>
                 <span class="font-medium">Assignee</span>
               </span>
@@ -225,12 +225,13 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
           <MenuSub>
             <MenuSubTrigger data-react-grab-filter-row="reporter">
               <span class="flex items-center gap-2">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 16 16"
-                >
-                  <path fill="currentColor" fill-rule="evenodd" d="M8 1.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4 4a4 4 0 1 1 8 0 4 4 0 0 1-8 0m-2 9a3.75 3.75 0 0 1 3.75-3.75h4.5A3.75 3.75 0 0 1 14 13v2h-1.5v-2a2.25 2.25 0 0 0-2.25-2.25h-4.5A2.25 2.25 0 0 0 3.5 13v2H2z" clip-rule="evenodd" />
+                <svg width="12" height="12" viewBox="0 0 16 16">
+                  <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M8 1.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4 4a4 4 0 1 1 8 0 4 4 0 0 1-8 0m-2 9a3.75 3.75 0 0 1 3.75-3.75h4.5A3.75 3.75 0 0 1 14 13v2h-1.5v-2a2.25 2.25 0 0 0-2.25-2.25h-4.5A2.25 2.25 0 0 0 3.5 13v2H2z"
+                    clip-rule="evenodd"
+                  />
                 </svg>
                 <span class="font-medium">Reporter</span>
               </span>
@@ -259,13 +260,17 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
             <MenuSub>
               <MenuSubTrigger data-react-grab-filter-row="label">
                 <span class="flex items-center gap-2">
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 16 16"
-                  >
-                    <path fill="currentColor" d="M11 4a1 1 0 1 0 0 2 1 1 0 0 0 0-2" />
-                    <path fill="currentColor" fill-rule="evenodd" d="M9.286 1a3.25 3.25 0 0 0-2.299.952L1.604 7.336a2 2 0 0 0 0 2.828l4.232 4.232a2 2 0 0 0 2.828 0l5.384-5.383A3.25 3.25 0 0 0 15 6.714V3a2 2 0 0 0-2-2zM8.048 3.013A1.75 1.75 0 0 1 9.286 2.5H13a.5.5 0 0 1 .5.5v3.714c0 .465-.184.91-.513 1.238l-5.383 5.384a.5.5 0 0 1-.708 0L2.664 9.104a.5.5 0 0 1 0-.708z" clip-rule="evenodd" />
+                  <svg width="12" height="12" viewBox="0 0 16 16">
+                    <path
+                      fill="currentColor"
+                      d="M11 4a1 1 0 1 0 0 2 1 1 0 0 0 0-2"
+                    />
+                    <path
+                      fill="currentColor"
+                      fill-rule="evenodd"
+                      d="M9.286 1a3.25 3.25 0 0 0-2.299.952L1.604 7.336a2 2 0 0 0 0 2.828l4.232 4.232a2 2 0 0 0 2.828 0l5.384-5.383A3.25 3.25 0 0 0 15 6.714V3a2 2 0 0 0-2-2zM8.048 3.013A1.75 1.75 0 0 1 9.286 2.5H13a.5.5 0 0 1 .5.5v3.714c0 .465-.184.91-.513 1.238l-5.383 5.384a.5.5 0 0 1-.708 0L2.664 9.104a.5.5 0 0 1 0-.708z"
+                      clip-rule="evenodd"
+                    />
                   </svg>
                   <span class="font-medium">Label</span>
                 </span>
@@ -299,12 +304,13 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
               data-react-grab-due-date-filter
             >
               <span class="flex items-center gap-2">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 16 16"
-                >
-                  <path fill="currentColor" fill-rule="evenodd" d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z" clip-rule="evenodd" />
+                <svg width="12" height="12" viewBox="0 0 16 16">
+                  <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"
+                    clip-rule="evenodd"
+                  />
                 </svg>
                 <span class="font-medium">Due date</span>
               </span>
@@ -349,4 +355,4 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
       </Show>
     </>
   );
-}
+};

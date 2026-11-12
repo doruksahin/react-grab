@@ -26,7 +26,6 @@ interface ToolbarDragConfig {
     position: Position;
     expandedDimensions: { width: number; height: number };
   }) => void;
-  onSnapAnimationEnd: () => void;
 }
 
 interface ToolbarDragResult {
@@ -144,7 +143,6 @@ export const createToolbarDrag = (
 
         snapAnimationTimeout = setTimeout(() => {
           setIsSnapping(false);
-          config.onSnapAnimationEnd();
         }, TOOLBAR_SNAP_ANIMATION_DURATION_MS);
       });
     });

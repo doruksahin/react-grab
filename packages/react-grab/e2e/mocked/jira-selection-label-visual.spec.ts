@@ -13,7 +13,7 @@ import { test, expect } from "../fixtures.js";
 
 test.use({ video: "on" });
 
-const ATTR = "data-react-grab";
+const ATTR = "data-react-grab-product";
 
 // ---------------------------------------------------------------------------
 // Shadow DOM helpers
@@ -34,104 +34,92 @@ const shadowSelectorExists = async (
   );
 };
 
-/** Dump visible text content from a shadow root container for debugging. */
-const getShadowTextContent = async (
-  page: import("@playwright/test").Page,
-  containerSelector: string,
-): Promise<string | null> => {
-  return page.evaluate(
-    ({ attrName, sel }) => {
-      const host = document.querySelector(`[${attrName}]`);
-      const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-      const container = root?.querySelector(sel);
-      return container?.textContent ?? null;
-    },
-    { attrName: ATTR, sel: containerSelector },
-  );
-};
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
-test.describe("JIRA Selection Label — Visual Verification", { tag: ["@SPEC-010"] }, () => {
-  test.beforeEach(async ({ reactGrab }) => {
-    await reactGrab.populate();
-    await expect
-      .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
-      .toBe(true);
-  });
+test.describe(
+  "JIRA Selection Label — Visual Verification",
+  { tag: ["@SPEC-010"] },
+  () => {
+    test.beforeEach(async ({ reactGrab }) => {
+      await reactGrab.populate();
+      await expect
+        .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+        .toBe(true);
+    });
 
-  test("selection label appears when clicking nav element", async ({
-    page,
-    reactGrab,
-  }) => {
-    // Activate overlay
-    await reactGrab.activate();
-    await reactGrab.screenshot("overlay-activated", "page");
-
-    // Click the nav.main-nav element (fixture sel-1, ATT-101)
-    await reactGrab.clickElement("nav.main-nav");
-
-    // Wait a moment for selection label to appear
-    await page.waitForTimeout(1000);
-    await reactGrab.screenshot("nav-clicked", "page");
-
-    // Check if selection label appeared in shadow DOM
-    const labelVisible = await shadowSelectorExists(
+    test("selection label appears when clicking nav element", async ({
       page,
-      "[data-react-grab-selection-label]",
-    );
+      reactGrab,
+    }) => {
+      // Activate overlay
+      await reactGrab.activate();
+      await reactGrab.screenshot("overlay-activated", "page");
 
-    if (labelVisible) {
-      await reactGrab.screenshot("selection-label-visible", "page");
+      // Click the nav.main-nav element (fixture sel-1, ATT-101)
+      await reactGrab.clickElement("nav.main-nav");
 
-      // Wait for JIRA status to load
-      await page.waitForTimeout(2000);
-      await reactGrab.screenshot("selection-label-with-jira", "page");
+      // Wait a moment for selection label to appear
+      await page.waitForTimeout(1000);
+      await reactGrab.screenshot("nav-clicked", "page");
 
-      // Check for comment composer
-      const hasComposer = await shadowSelectorExists(
+      // Check if selection label appeared in shadow DOM
+      const labelVisible = await shadowSelectorExists(
         page,
-        "[data-react-grab-comment-composer]",
+        "[data-react-grab-selection-label]",
       );
 
-      if (hasComposer) {
-        await reactGrab.screenshot("comment-editor-visible", "page");
+      if (labelVisible) {
+        await reactGrab.screenshot("selection-label-visible", "page");
+
+        // Wait for JIRA status to load
+        await page.waitForTimeout(2000);
+        await reactGrab.screenshot("selection-label-with-jira", "page");
+
+        // Check for comment composer
+        const hasComposer = await shadowSelectorExists(
+          page,
+          "[data-react-grab-comment-composer]",
+        );
+
+        if (hasComposer) {
+          await reactGrab.screenshot("comment-editor-visible", "page");
+        }
       }
-    }
-  });
+    });
 
-  test("selection label for header element (no comments)", async ({
-    page,
-    reactGrab,
-  }) => {
-    await reactGrab.activate();
+    test("selection label for header element (no comments)", async ({
+      page,
+      reactGrab,
+    }) => {
+      await reactGrab.activate();
 
-    // Click the header.top-bar element (fixture sel-2, ATT-102, no comments)
-    await reactGrab.clickElement("header.top-bar");
-    await page.waitForTimeout(1000);
-    await reactGrab.screenshot("header-clicked", "page");
+      // Click the header.top-bar element (fixture sel-2, ATT-102, no comments)
+      await reactGrab.clickElement("header.top-bar");
+      await page.waitForTimeout(1000);
+      await reactGrab.screenshot("header-clicked", "page");
 
-    // Wait for any JIRA data to load
-    await page.waitForTimeout(2000);
-    await reactGrab.screenshot("header-selection-label", "page");
-  });
+      // Wait for any JIRA data to load
+      await page.waitForTimeout(2000);
+      await reactGrab.screenshot("header-selection-label", "page");
+    });
 
-  test("hover reveals selection box before click", async ({
-    page,
-    reactGrab,
-  }) => {
-    await reactGrab.activate();
+    test("hover reveals selection box before click", async ({
+      page,
+      reactGrab,
+    }) => {
+      await reactGrab.activate();
 
-    // Hover the nav element first (should show selection box highlight)
-    await reactGrab.hoverElement("nav.main-nav");
-    await page.waitForTimeout(500);
-    await reactGrab.screenshot("nav-hover-highlight", "page");
+      // Hover the nav element first (should show selection box highlight)
+      await reactGrab.hoverElement("nav.main-nav");
+      await page.waitForTimeout(500);
+      await reactGrab.screenshot("nav-hover-highlight", "page");
 
-    // Now hover the header
-    await reactGrab.hoverElement("header.top-bar");
-    await page.waitForTimeout(500);
-    await reactGrab.screenshot("header-hover-highlight", "page");
-  });
-});
+      // Now hover the header
+      await reactGrab.hoverElement("header.top-bar");
+      await page.waitForTimeout(500);
+      await reactGrab.screenshot("header-hover-highlight", "page");
+    });
+  },
+);

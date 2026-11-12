@@ -1,73 +1,33 @@
 import { test, expect } from "./fixtures.js";
 import type { ReactGrabPageObject } from "./fixtures.js";
 
-const ATTR = "data-react-grab";
-
-const GROUPS_KEY = "react-grab-selection-groups";
-const COMMENT_ITEMS_KEY = "react-grab-comment-items";
-
-/** Set up pre-fabricated localStorage state with a comment item in a group with given JIRA state. */
-const seedJiraState = async (
-  reactGrab: ReactGrabPageObject,
-  opts: { jiraTicketId?: string; jiraResolved?: boolean },
-) => {
-  const { page } = reactGrab;
-  const DEFAULT_GROUP_ID = "default";
-
-  await page.evaluate(
-    ({ groupsKey, itemsKey, groupId, jiraTicketId, jiraResolved }) => {
-      const group = {
-        id: groupId,
-        name: "Default",
-        createdAt: 0,
-        revealed: true,
-        jiraTicketId,
-      };
-      localStorage.setItem(groupsKey, JSON.stringify([group]));
-
-      const item = {
-        id: "test-item-1",
-        groupId,
-        tagName: "li",
-        elementName: "li",
-        content: "test content",
-        revealed: true,
+const seedJiraState = async (reactGrab: ReactGrabPageObject) => {
+  await reactGrab.populate({
+    groups: [
+      {
+        id: "ticketed-group",
+        name: "Ticketed",
         createdAt: Date.now(),
-      };
-      localStorage.setItem(itemsKey, JSON.stringify([item]));
-
-      // Mark jiraResolved in the group — this lives only in sidebar's local signal,
-      // but we can simulate it via a storage event.
-      if (jiraResolved) {
-        (window as unknown as Record<string, unknown>).__REACT_GRAB_JIRA_RESOLVED_TEST__ =
-          true;
-      }
-    },
-    {
-      groupsKey: GROUPS_KEY,
-      itemsKey: COMMENT_ITEMS_KEY,
-      groupId: DEFAULT_GROUP_ID,
-      jiraTicketId: opts.jiraTicketId,
-      jiraResolved: opts.jiraResolved ?? false,
-    },
-  );
-};
-
-/** Read the status badge from the shadow DOM label instances. Returns the badge value or null. */
-const getStatusBadge = async (
-  page: import("@playwright/test").Page,
-): Promise<string | null> => {
-  return page.evaluate((attrName) => {
-    const host = document.querySelector(`[${attrName}]`);
-    const shadowRoot = host?.shadowRoot;
-    if (!shadowRoot) return null;
-    const root = shadowRoot.querySelector(`[${attrName}]`);
-    if (!root) return null;
-    const badge = root.querySelector<HTMLElement>(
-      "[data-react-grab-status-badge]",
-    );
-    return badge?.getAttribute("data-react-grab-status-badge") ?? null;
-  }, ATTR);
+        jiraTicketId: "PROJ-123",
+        jiraStatus: "In Progress",
+        jiraStatusCategory: "indeterminate",
+        jiraUrl: "https://example.test/browse/PROJ-123",
+      },
+    ],
+    comments: [
+      {
+        id: "test-item-1",
+        groupId: "ticketed-group",
+        tagName: "h1",
+        elementName: "h1",
+        content: "test content",
+        revealed: false,
+        timestamp: Date.now(),
+        elementSelectors: ['[data-testid="main-title"]'],
+        previewBounds: [],
+      },
+    ],
+  });
 };
 
 /** Copy element and wait for comment item to appear. */
@@ -87,7 +47,7 @@ const copyElement = async (
 
 test.describe("Selection Status Colors", () => {
   test.describe("Open group (no JIRA ticket)", () => {
-    test("hover preview label shows no status badge for open groups", async ({
+    test("hover preview label shows no ticket link for open groups", async ({
       reactGrab,
     }) => {
       await expect
@@ -105,21 +65,23 @@ test.describe("Selection Status Colors", () => {
       await reactGrab.hoverCommentItem(0);
       await reactGrab.page.waitForTimeout(200);
 
-      const badge = await getStatusBadge(reactGrab.page);
-      expect(badge).toBeNull();
+      const label = reactGrab.page
+        .locator("[data-react-grab-selection-label]")
+        .filter({ hasText: "test comment" });
+      await expect(label).toBeVisible();
+      await expect(label.getByRole("link")).toHaveCount(0);
     });
   });
 
   test.describe("Ticketed group (has JIRA ticket ID)", () => {
     test.beforeEach(async ({ reactGrab }) => {
-      await seedJiraState(reactGrab, { jiraTicketId: "PROJ-123" });
-      await reactGrab.reinitialize();
+      await seedJiraState(reactGrab);
       await expect
         .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
         .toBe(true);
     });
 
-    test("hover preview label shows yellow ticket badge for ticketed group", async ({
+    test("hover preview label shows the Jira status for ticketed group", async ({
       reactGrab,
     }) => {
       const { page } = reactGrab;
@@ -133,11 +95,14 @@ test.describe("Selection Status Colors", () => {
       await reactGrab.hoverCommentItem(0);
       await page.waitForTimeout(300);
 
-      const badge = await getStatusBadge(page);
-      expect(badge).toBe("ticketed");
+      const status = page
+        .locator("[data-react-grab-selection-label]")
+        .getByText("In Progress", { exact: true });
+      await expect(status).toBeVisible();
+      await expect(status).toHaveClass(/text-blue-400/);
     });
 
-    test("ticketed badge tooltip shows ticket ID", async ({ reactGrab }) => {
+    test("ticketed preview links to the Jira ticket", async ({ reactGrab }) => {
       const { page } = reactGrab;
 
       await reactGrab.clickCommentsButton();
@@ -148,20 +113,14 @@ test.describe("Selection Status Colors", () => {
       await reactGrab.hoverCommentItem(0);
       await page.waitForTimeout(300);
 
-      const title = await page.evaluate((attrName) => {
-        const host = document.querySelector(`[${attrName}]`);
-        const shadowRoot = host?.shadowRoot;
-        if (!shadowRoot) return null;
-        const root = shadowRoot.querySelector(`[${attrName}]`);
-        if (!root) return null;
-        const badge = root.querySelector<HTMLElement>(
-          "[data-react-grab-status-badge]",
-        );
-        return badge?.getAttribute("title") ?? null;
-      }, ATTR);
-
-      expect(title).toContain("PROJ-123");
-      expect(title).toContain("Ticketed");
+      const ticket = page
+        .locator("[data-react-grab-selection-label]")
+        .getByRole("link", { name: "PROJ-123", exact: true });
+      await expect(ticket).toBeVisible();
+      await expect(ticket).toHaveAttribute(
+        "href",
+        "https://example.test/browse/PROJ-123",
+      );
     });
   });
 });

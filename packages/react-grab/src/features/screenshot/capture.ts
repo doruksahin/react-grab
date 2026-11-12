@@ -61,7 +61,7 @@ export function drawHighlightOnCanvas(
  */
 export async function capturePageCanvas(
   config: ScreenshotConfig,
-  element: Element,
+  _element: Element,
 ): Promise<HTMLCanvasElement | null> {
   const resolved = resolveConfig(config);
   try {

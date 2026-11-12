@@ -133,7 +133,7 @@ test.describe("Toolbar", () => {
         );
         const innerDiv = toolbar?.querySelector("div");
         innerDiv?.click();
-      }, "data-react-grab");
+      }, "data-react-grab-product");
 
       await expect
         .poll(() => reactGrab.isToolbarCollapsed(), { timeout: 2000 })
@@ -617,7 +617,7 @@ test.describe("Toolbar", () => {
         );
         const innerDiv = toolbar?.querySelector("div");
         innerDiv?.click();
-      }, "data-react-grab");
+      }, "data-react-grab-product");
 
       await expect
         .poll(() => reactGrab.isToolbarCollapsed(), { timeout: 2000 })

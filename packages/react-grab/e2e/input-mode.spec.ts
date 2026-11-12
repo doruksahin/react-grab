@@ -45,7 +45,7 @@ test.describe("Input Mode", () => {
           document.activeElement === textarea ||
           shadowRoot.activeElement === textarea
         );
-      }, "data-react-grab");
+      }, "data-react-grab-product");
 
       expect(isFocused).toBe(true);
     });
@@ -61,7 +61,7 @@ test.describe("Input Mode", () => {
         const root = shadowRoot.querySelector(`[${attrName}]`);
         if (!root) return false;
         return root.querySelector("textarea") !== null;
-      }, "data-react-grab");
+      }, "data-react-grab-product");
 
       expect(hasTextarea).toBe(true);
     });

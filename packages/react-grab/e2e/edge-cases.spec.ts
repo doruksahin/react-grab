@@ -251,7 +251,7 @@ test.describe("Edge Cases", () => {
       await reactGrab.page.waitForTimeout(200);
 
       const hostCount = await reactGrab.page.evaluate(() => {
-        return document.querySelectorAll("[data-react-grab]").length;
+        return document.querySelectorAll("[data-react-grab-product]").length;
       });
       expect(hostCount).toBe(1);
     });

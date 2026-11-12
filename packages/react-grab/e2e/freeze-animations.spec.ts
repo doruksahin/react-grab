@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "./fixtures.js";
 
-const ATTRIBUTE_NAME = "data-react-grab";
+const ATTRIBUTE_NAME = "data-react-grab-product";
 
 const simulateGsapPresence = (page: Page): Promise<void> =>
   page.evaluate(() => {
@@ -102,28 +102,34 @@ test.describe("Freeze Animations", () => {
       expect(pausedPageAnimationCount).toBe(0);
     });
 
-    test("should not leave global freeze style element in document after deactivation", async ({
+    test("should restore CSS animation playback after deactivation", async ({
       reactGrab,
     }) => {
       await reactGrab.activate();
       await reactGrab.page.waitForTimeout(100);
 
-      const hasFreezeStyleDuring = await reactGrab.page.evaluate(() => {
-        return (
-          document.querySelector("[data-react-grab-global-freeze]") !== null
-        );
-      });
-      expect(hasFreezeStyleDuring).toBe(true);
+      await expect
+        .poll(() =>
+          reactGrab.page
+            .getByTestId("animated-pulse")
+            .evaluate((element) =>
+              element.getAnimations().map((animation) => animation.playState),
+            ),
+        )
+        .toEqual(["paused"]);
 
       await reactGrab.deactivate();
       await reactGrab.page.waitForTimeout(100);
 
-      const hasFreezeStyleAfter = await reactGrab.page.evaluate(() => {
-        return (
-          document.querySelector("[data-react-grab-global-freeze]") !== null
-        );
-      });
-      expect(hasFreezeStyleAfter).toBe(false);
+      await expect
+        .poll(() =>
+          reactGrab.page
+            .getByTestId("animated-pulse")
+            .evaluate((element) =>
+              element.getAnimations().map((animation) => animation.playState),
+            ),
+        )
+        .toEqual(["running"]);
     });
   });
 
@@ -240,12 +246,15 @@ test.describe("Freeze Animations", () => {
         await reactGrab.page.waitForTimeout(50);
       }
 
-      const hasFreezeStyle = await reactGrab.page.evaluate(() => {
-        return (
-          document.querySelector("[data-react-grab-global-freeze]") !== null
-        );
-      });
-      expect(hasFreezeStyle).toBe(false);
+      await expect
+        .poll(() =>
+          reactGrab.page
+            .getByTestId("animated-pulse")
+            .evaluate((element) =>
+              element.getAnimations().map((animation) => animation.playState),
+            ),
+        )
+        .toEqual(["running"]);
 
       const toolbarVisible = await reactGrab.isToolbarVisible();
       expect(toolbarVisible).toBe(true);
@@ -297,7 +306,7 @@ test.describe("Freeze Animations", () => {
       await reactGrab.deactivate();
     });
 
-    test("should not leave stale freeze styles after toolbar hover cycle", async ({
+    test("should restore CSS animation playback after selection", async ({
       reactGrab,
     }) => {
       await reactGrab.activate();
@@ -308,17 +317,20 @@ test.describe("Freeze Animations", () => {
       await reactGrab.deactivate();
       await reactGrab.page.waitForTimeout(200);
 
-      const hasFreezeStyle = await reactGrab.page.evaluate(() => {
-        return (
-          document.querySelector("[data-react-grab-global-freeze]") !== null
-        );
-      });
-      expect(hasFreezeStyle).toBe(false);
+      await expect
+        .poll(() =>
+          reactGrab.page
+            .getByTestId("animated-pulse")
+            .evaluate((element) =>
+              element.getAnimations().map((animation) => animation.playState),
+            ),
+        )
+        .toEqual(["running"]);
     });
   });
 
   test.describe("Toolbar Hover Freeze", () => {
-    test("should clean up freeze styles after toolbar hover cycle", async ({
+    test("should restore CSS animation playback after toolbar hover", async ({
       reactGrab,
     }) => {
       await expect
@@ -338,12 +350,15 @@ test.describe("Freeze Animations", () => {
       await reactGrab.page.mouse.move(0, 0);
       await reactGrab.page.waitForTimeout(200);
 
-      const hasFreezeStyle = await reactGrab.page.evaluate(() => {
-        return (
-          document.querySelector("[data-react-grab-global-freeze]") !== null
-        );
-      });
-      expect(hasFreezeStyle).toBe(false);
+      await expect
+        .poll(() =>
+          reactGrab.page
+            .getByTestId("animated-pulse")
+            .evaluate((element) =>
+              element.getAnimations().map((animation) => animation.playState),
+            ),
+        )
+        .toEqual(["running"]);
     });
   });
 

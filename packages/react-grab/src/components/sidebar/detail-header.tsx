@@ -1,6 +1,9 @@
 import { type Component, Show, For } from "solid-js";
-import type { SelectionGroup } from "../../features/selection-groups/types";
-import { getStatusLabel, getStatusColor } from "../../features/sidebar/status-colors.js";
+import type { SelectionGroup } from "../../features/selection-groups/types.js";
+import {
+  getStatusLabel,
+  getStatusColor,
+} from "../../features/sidebar/status-colors.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { UserAvatar } from "./UserAvatar.js";
 

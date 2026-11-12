@@ -1,4 +1,7 @@
-import { overlayColor, activeGroupOverlayColor } from "./utils/overlay-color.js";
+import {
+  overlayColor,
+  activeGroupOverlayColor,
+} from "./utils/overlay-color.js";
 
 export const APP_NAME = "UI Ticket Manager";
 
@@ -71,7 +74,7 @@ export const ACTIVE_GROUP_FILL_COLOR = activeGroupOverlayColor(0.12);
 export const ACTIVE_GROUP_STROKE_WIDTH = 2;
 export const ACTIVE_GROUP_SHADOW_PASSES = [
   { blur: 20, alpha: 0.35 }, // outer glow
-  { blur: 6, alpha: 0.7 },   // core glow
+  { blur: 6, alpha: 0.7 }, // core glow
 ] as const;
 
 export const ARROW_HEIGHT_PX = 8;
@@ -107,14 +110,6 @@ export const ARROW_KEYS = new Set([
   "ArrowRight",
 ]);
 
-export const FROZEN_ELEMENT_ATTRIBUTE = "data-react-grab-frozen";
-
-export const USER_IGNORE_ATTRIBUTE = "data-react-grab-ignore";
-
-export const VIEWPORT_COVERAGE_THRESHOLD = 0.9;
-export const OVERLAY_Z_INDEX_THRESHOLD = 1000;
-export const DEV_TOOLS_OVERLAY_Z_INDEX_THRESHOLD = 2147483600;
-
 export const TOOLBAR_SNAP_MARGIN_PX = 16;
 export const TOOLBAR_FADE_IN_DELAY_MS = 500;
 export const TOOLBAR_SNAP_ANIMATION_DURATION_MS = 300;
@@ -146,16 +141,10 @@ export const DRAG_SELECTION_MAX_SAMPLES_PER_AXIS = 20;
 export const DRAG_SELECTION_MAX_TOTAL_SAMPLE_POINTS = 100;
 export const DRAG_SELECTION_EDGE_INSET_PX = 1;
 
-export const MAX_ARROW_NAVIGATION_HISTORY = 50;
 export const MAX_MEMORY_SESSIONS = 50;
 
 export const MAX_TRANSFORM_ANCESTOR_DEPTH = 6;
 export const TRANSFORM_EARLY_BAIL_DEPTH = 3;
-
-export const ELEMENT_POSITION_CACHE_DISTANCE_THRESHOLD_PX = 2;
-export const ELEMENT_POSITION_THROTTLE_MS = 16;
-export const POINTER_EVENTS_RESUME_DEBOUNCE_MS = 100;
-export const VISIBILITY_CACHE_TTL_MS = 50;
 
 export const ZOOM_DETECTION_THRESHOLD = 0.01;
 
