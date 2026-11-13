@@ -10,6 +10,7 @@ import { UserAvatar } from "./UserAvatar.jsx";
 import { CommentsSection } from "../jira-comments/comments-section.jsx";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
 import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
+import { ScreenshotThumb } from "./screenshot-thumb.js";
 
 const getStatusPillClass = (category?: string): string => {
   switch (category) {
@@ -53,7 +54,9 @@ interface SelectionCardBodySlots {
 
 const SelectionCardBodyLayout: Component<SelectionCardBodySlots> = (props) => {
   const hasHeader = () =>
-    props.leading !== undefined || props.summary !== undefined || props.subheader !== undefined;
+    props.leading !== undefined ||
+    props.summary !== undefined ||
+    props.subheader !== undefined;
 
   return (
     <div data-react-grab-selection-card-body class="w-full">
@@ -153,13 +156,11 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       leading={props.leading}
       subheader={props.subheader}
       summary={
-        props.summary
-          ? (
-              <div class="text-[12px] font-medium text-foreground truncate">
-                {props.summary}
-              </div>
-            )
-          : undefined
+        props.summary ? (
+          <div class="text-[12px] font-medium text-foreground truncate">
+            {props.summary}
+          </div>
+        ) : undefined
       }
       statusPill={
         <Show when={hasTicket()}>
@@ -182,15 +183,18 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
         </Show>
       }
       dates={
-        <Show when={props.timestamp !== undefined ? props.timestamp : undefined}>
+        <Show
+          when={props.timestamp !== undefined ? props.timestamp : undefined}
+        >
           {(timestamp) => (
             <div class="flex items-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 16 16"
-              >
-                <path fill="currentColor" fill-rule="evenodd" d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z" clip-rule="evenodd" />
+              <svg width="12" height="12" viewBox="0 0 16 16">
+                <path
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                  d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"
+                  clip-rule="evenodd"
+                />
               </svg>
               <span>{relativeTime(timestamp())}</span>
               <span class="text-muted-foreground/50">{"\u2192"}</span>
@@ -215,52 +219,30 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
             return (
               <div class="flex gap-1.5 mt-1.5">
                 <Show when={props.hasElementScreenshot}>
-                  {(() => {
-                    const src = screenshotUrl(
+                  <ScreenshotThumb
+                    src={screenshotUrl(
                       ctx().serverUrl,
                       ctx().workspace,
                       ctx().itemId,
                       "element",
-                    );
-                    return (
-                      <img
-                        data-react-grab-screenshot-thumb
-                        src={src}
-                        alt="Element screenshot"
-                        class={thumbClass()}
-                        loading="lazy"
-                        onClick={
-                          clickable()
-                            ? () => props.onScreenshotClick?.(src, "Element")
-                            : undefined
-                        }
-                      />
-                    );
-                  })()}
+                    )}
+                    label="Element"
+                    class={thumbClass()}
+                    onOpen={clickable() ? props.onScreenshotClick : undefined}
+                  />
                 </Show>
                 <Show when={props.hasFullPageScreenshot}>
-                  {(() => {
-                    const src = screenshotUrl(
+                  <ScreenshotThumb
+                    src={screenshotUrl(
                       ctx().serverUrl,
                       ctx().workspace,
                       ctx().itemId,
                       "full",
-                    );
-                    return (
-                      <img
-                        data-react-grab-screenshot-thumb
-                        src={src}
-                        alt="Full page screenshot"
-                        class={thumbClass()}
-                        loading="lazy"
-                        onClick={
-                          clickable()
-                            ? () => props.onScreenshotClick?.(src, "Full page")
-                            : undefined
-                        }
-                      />
-                    );
-                  })()}
+                    )}
+                    label="Full page"
+                    class={thumbClass()}
+                    onOpen={clickable() ? props.onScreenshotClick : undefined}
+                  />
                 </Show>
               </div>
             );

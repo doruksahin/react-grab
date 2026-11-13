@@ -1,6 +1,9 @@
 import type { MiddlewareHandler } from "hono";
-import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import {
+  corsForCallers,
+  requireApiToken,
+} from "./middleware/access-control.js";
 import { swaggerUI } from "@hono/swagger-ui";
 import { createRouter } from "./lib/create-router.js";
 import { commentsRoutes } from "./routes/comments.js";
@@ -18,8 +21,13 @@ interface CreateAppOptions {
 export function createApp(options?: CreateAppOptions) {
   const app = createRouter();
 
-  app.use("*", cors());
+  app.use("*", corsForCallers);
   app.use("*", logger());
+
+  // Everything that reads or writes data needs the API token (ADR-0020).
+  // /health, /doc and /ui stay public.
+  app.use("/workspaces/*", requireApiToken);
+  app.use("/jira/*", requireApiToken);
 
   if (options?.middleware) {
     for (const mw of options.middleware) {

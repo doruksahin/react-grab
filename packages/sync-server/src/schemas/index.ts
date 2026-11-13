@@ -4,7 +4,14 @@ export {
   StatusResponse,
   ErrorResponse,
 } from "./common.js";
-export { JiraEnvSchema, parseJiraEnv, type JiraEnv } from "./env.js";
+export {
+  JiraEnvSchema,
+  parseJiraEnv,
+  type JiraEnv,
+  AuthEnvSchema,
+  parseAuthEnv,
+  type AuthEnv,
+} from "./env.js";
 export { CommentItem, CommentItemArray, SelectionStatus } from "./comment.js";
 export {
   SelectionGroup,

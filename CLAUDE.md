@@ -207,19 +207,31 @@ See `packages/dashboard/CLAUDE.md` for dashboard-specific patterns.
 
 ## Environment variables
 
-JIRA credentials go in `packages/sync-server/.dev.vars` (gitignored):
+Sync-server secrets go in `packages/sync-server/.dev.vars` (gitignored). Copy `.dev.vars.example`, which lists every value, and see ADR-0018 and ADR-0020:
 
 ```dotenv
-JIRA_EMAIL=you@adcreative.ai
-JIRA_API_TOKEN=<token>
+JIRA_EMAIL=you@yourcompany.com
+JIRA_API_TOKEN=<atlassian token>
+SYNC_API_TOKEN=<32+ random characters, e.g. openssl rand -base64 32>
 ```
+
+The sync server refuses every data request without `SYNC_API_TOKEN` (ADR-0020). Each caller needs the same value:
+
+| Caller | Where the token goes |
+|---|---|
+| Overlay in AdCreative-Frontend-V2 | `VITE_REACT_GRAB_SYNC_TOKEN` in its `.env.local`, passed as `initSync({ apiToken })` |
+| Dashboard | `SYNC_API_TOKEN` in `packages/dashboard/.env.local` (the dev proxy adds it) |
+| Deployed Worker | `wrangler secret put SYNC_API_TOKEN` |
 
 AdCreative frontend needs in its `.env.local`:
 
 ```dotenv
 VITE_REACT_GRAB_SYNC_URL=http://localhost:8787
 VITE_REACT_GRAB_SYNC_WORKSPACE=<name>-workspace
+VITE_REACT_GRAB_SYNC_TOKEN=<same value as SYNC_API_TOKEN>
 ```
+
+`initSync()` throws if sync is enabled without `apiToken`. It runs only in development builds, so the token never ships in a production bundle.
 
 ## Local dev (full stack)
 

@@ -44,6 +44,48 @@ const openTicketDialog = async (page: Page) => {
     .click();
 };
 
+test.describe("Authenticated screenshots", { tag: ["@ADR-0020"] }, () => {
+  test("a screenshot is fetched with the token and shown from a blob URL", async ({
+    page,
+    reactGrab,
+    mockServer,
+  }) => {
+    // Regression guard: persisting from inside an effect once looped forever
+    // ("Maximum call stack size exceeded") without failing any test.
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+
+    const [first] = fixtures.comments;
+    mockServer.override("listComments", [
+      {
+        ...first,
+        screenshotElement: `screenshots/${first.id}/element.png`,
+        screenshotFullPage: `screenshots/${first.id}/full.png`,
+      },
+    ]);
+    await reactGrab.triggerInitSync();
+    await expect
+      .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+      .toBe(true);
+
+    const dashboard = page.getByRole("dialog", {
+      name: "React Grab Dashboard",
+    });
+    await page.locator("[data-react-grab-toolbar-dashboard]").click();
+    await dashboard.getByRole("button", { name: /^Selections/ }).click();
+
+    const thumb = page.locator("[data-react-grab-screenshot-thumb]").first();
+    await expect(thumb).toHaveAttribute("src", /^blob:/, { timeout: 5000 });
+
+    const fetched = mockServer.requests("getScreenshot");
+    expect(fetched.length).toBeGreaterThan(0);
+    for (const request of fetched) {
+      expect(request.authorization).toBe(`Bearer ${fixtures.TEST_API_TOKEN}`);
+    }
+    expect(pageErrors).toEqual([]);
+  });
+});
+
 test.describe("Per-item writes", { tag: ["@ADR-0019", "@SPEC-014"] }, () => {
   test.beforeEach(async ({ reactGrab, mockServer: _mockServer }) => {
     await reactGrab.triggerInitSync();
@@ -119,6 +161,39 @@ test.describe("Per-item writes", { tag: ["@ADR-0019", "@SPEC-014"] }, () => {
       expect(deletedUrls.some((url) => url.endsWith(`/comments/${id}`))).toBe(
         true,
       );
+    }
+  });
+
+  test("every request to the sync server carries the API token", async ({
+    page,
+    reactGrab,
+    mockServer,
+  }) => {
+    await addComment(reactGrab);
+    await openTicketDialog(page);
+    const form = page.locator("[data-react-grab-jira-form]");
+    await form.getByRole("button", { name: "Create Ticket" }).click();
+    await expect(form.locator("[data-react-grab-jira-success]")).toBeVisible({
+      timeout: 5000,
+    });
+
+    const endpoints = [
+      "listComments",
+      "listGroups",
+      "upsertComment",
+      "upsertGroup",
+      "listJiraIssueTypes",
+      "listJiraPriorities",
+      "createJiraTicket",
+    ] as const;
+    for (const endpoint of endpoints) {
+      const requests = mockServer.requests(endpoint);
+      expect(requests.length, `${endpoint} was called`).toBeGreaterThan(0);
+      for (const request of requests) {
+        expect(request.authorization, `${endpoint} sent the token`).toBe(
+          `Bearer ${fixtures.TEST_API_TOKEN}`,
+        );
+      }
     }
   });
 

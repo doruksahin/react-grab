@@ -7,7 +7,7 @@ import {
   toGroupWire,
   saveLocalRevealedStates,
 } from "./transforms.js";
-import { setApiBaseUrl } from "../../generated/custom-fetch.js";
+import { setApiBaseUrl, setApiToken } from "../../generated/custom-fetch.js";
 import { getJiraTicketStatus } from "../../generated/sync-api.js";
 import { migrateLegacyDefaultGroup } from "../../utils/migrate-legacy-groups.js";
 import { logRecoverableError } from "../../utils/log-recoverable-error.js";
@@ -204,9 +204,16 @@ export const createSyncLayer = () => {
       );
     }
 
+    if (config.enabled && !config.apiToken) {
+      throw new Error(
+        "react-grab: SyncConfig.apiToken is required when sync is enabled — the sync server refuses requests without it (ADR-0020)",
+      );
+    }
+
     if (config.serverUrl) {
       setApiBaseUrl(config.serverUrl);
     }
+    setApiToken(config.apiToken ?? "");
     syncRevealedState = config.syncRevealedState;
 
     batch(() => {

@@ -9,6 +9,8 @@ export interface CapturedRequest {
   url: string;
   method: string;
   body: unknown;
+  /** The request's Authorization header, if any (ADR-0020). */
+  authorization: string | undefined;
   timestamp: number;
 }
 
@@ -149,6 +151,7 @@ function captureRequest(request: Request): CapturedRequest {
     url: request.url(),
     method: request.method(),
     body,
+    authorization: request.headers()["authorization"],
     timestamp: Date.now(),
   };
 }

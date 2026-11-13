@@ -36,6 +36,10 @@ src/api/
   model/                        — generated request/response types
 ```
 
+## Talking to the sync server
+
+The dev server proxies `/workspaces`, `/jira` and `/health` to the sync server (`VITE_SYNC_SERVER_URL`, default `http://localhost:8787`). The sync server requires a bearer token (ADR-0020); the proxy adds it from `SYNC_API_TOKEN`, so put that in the gitignored `.env.local` (or `.env.prod.local` for `pnpm dev:prod`). It deliberately has no `VITE_` prefix, so it never reaches browser code — and `<img>` screenshot requests carry it too, because they go through the same proxy.
+
 ## MSW mocking
 
 Mock handlers are auto-generated alongside the API client. Use for dev without a running sync-server:

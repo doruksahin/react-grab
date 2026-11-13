@@ -37,6 +37,13 @@ export interface SyncConfig {
   serverUrl: string;
   workspace: string;
   jiraProjectKey: string;
+  /**
+   * Bearer token the sync server requires on every request (ADR-0020).
+   * Required when `enabled` is true. Read it from the host app's own env
+   * (for example `VITE_REACT_GRAB_SYNC_TOKEN`); `initSync()` runs only in
+   * development builds, so it never ships in a production bundle.
+   */
+  apiToken?: string;
   syncRevealedState: boolean;
   onSyncError: (error: Error) => void;
   /** Options forwarded to init() — use this to set screenshot config etc. */

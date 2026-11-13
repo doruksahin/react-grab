@@ -288,6 +288,13 @@ export const jiraStatusByGroup: Record<string, GetJiraTicketStatus200> = {
 };
 
 /**
+ * The API token `triggerInitSync()` gives the overlay by default (ADR-0020).
+ * The mock server records each request's Authorization header so tests can
+ * assert the overlay always sends it.
+ */
+export const TEST_API_TOKEN = "e2e-sync-token-0123456789abcdef0123";
+
+/**
  * Default response for every per-item write: PUT and DELETE on
  * /workspaces/:id/comments/:commentId and /workspaces/:id/groups/:groupId.
  * There is no whole-list write any more (ADR-0019).

@@ -19,6 +19,7 @@ import {
   upsertGroup as putGroup,
   deleteGroup as removeGroup,
 } from "../../generated/sync-api.js";
+import { apiAuthHeaders } from "../../generated/custom-fetch.js";
 
 const expectOk = (operation: string, status: number) => {
   if (status < 200 || status >= 300) {
@@ -38,7 +39,9 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
   return {
     loadComments: async (): Promise<CommentItem[]> => {
       try {
-        const response = await fetch(`${baseUrl}/comments`);
+        const response = await fetch(`${baseUrl}/comments`, {
+          headers: apiAuthHeaders(),
+        });
         if (!response.ok) {
           throw new Error(`GET /comments failed: ${response.status}`);
         }
@@ -83,7 +86,9 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
 
     loadGroups: async (): Promise<SelectionGroup[]> => {
       try {
-        const response = await fetch(`${baseUrl}/groups`);
+        const response = await fetch(`${baseUrl}/groups`, {
+          headers: apiAuthHeaders(),
+        });
         if (!response.ok) {
           throw new Error(`GET /groups failed: ${response.status}`);
         }
@@ -132,7 +137,7 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
           {
             method: "PUT",
             body: blob,
-            headers: { "Content-Type": blob.type },
+            headers: { "Content-Type": blob.type, ...apiAuthHeaders() },
           },
         );
         if (!response.ok) {

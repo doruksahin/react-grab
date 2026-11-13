@@ -19,3 +19,4 @@
 | ADR-0015 | ADR-0015 Due date filter — preset Select over client-side loaded groups | accepted | 2026-04-16 |  |
 | ADR-0018 | ADR-0018 Validate Worker configuration with a Zod schema, not an env library | accepted | 2026-11-13 |  |
 | ADR-0019 | ADR-0019 Write comments and groups one item at a time | accepted | 2026-11-13 |  |
+| ADR-0020 | ADR-0020 Protect the sync server with a bearer token and an origin allowlist | accepted | 2026-11-13 |  |

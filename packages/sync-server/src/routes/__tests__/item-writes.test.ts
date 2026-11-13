@@ -3,10 +3,12 @@ import { drizzle } from "drizzle-orm/d1";
 import { beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
 import { D1SyncRepository } from "../../repositories/d1.repo.js";
+import { authorized } from "../../test/api-token.js";
 
 /**
  * The HTTP contract from ADR-0019, exercised through the deployed Worker's
- * own entry point. No request here reaches Jira.
+ * own entry point. Every request carries the API token (ADR-0020). No request
+ * here reaches Jira.
  */
 
 // Storage is isolated per file, not per test: one workspace per test.
@@ -20,9 +22,11 @@ beforeEach(() => {
 
 const json = (method: string, body: unknown): RequestInit => ({
   method,
-  headers: { "content-type": "application/json" },
+  headers: authorized({ "content-type": "application/json" }),
   body: JSON.stringify(body),
 });
+
+const get = (url: string) => SELF.fetch(url, { headers: authorized() });
 
 const sampleComment = {
   id: "c-1",
@@ -41,7 +45,7 @@ describe("per-item routes", () => {
     );
     expect(response.status).toBe(200);
 
-    const listed = await SELF.fetch(`${BASE}/comments`);
+    const listed = await get(`${BASE}/comments`);
     expect(await listed.json()).toHaveLength(1);
   });
 
@@ -57,10 +61,11 @@ describe("per-item routes", () => {
     await SELF.fetch(`${BASE}/comments/c-1`, json("PUT", sampleComment));
     const response = await SELF.fetch(`${BASE}/comments/c-1`, {
       method: "DELETE",
+      headers: authorized(),
     });
     expect(response.status).toBe(200);
 
-    const listed = await SELF.fetch(`${BASE}/comments`);
+    const listed = await get(`${BASE}/comments`);
     expect(await listed.json()).toEqual([]);
   });
 

@@ -56,3 +56,40 @@ export const parseJiraEnv = (env: unknown): JiraEnv => {
       "See packages/sync-server/.dev.vars.example and ADR-0018.",
   );
 };
+
+/**
+ * Access-control configuration (ADR-0020).
+ *
+ *   SYNC_API_TOKEN  — the bearer token every API request must carry.
+ *                     Secret: `wrangler secret put` in production,
+ *                     `.dev.vars` locally. At least 32 characters so it
+ *                     cannot be guessed.
+ *   ALLOWED_ORIGINS — optional, comma-separated origins allowed to call the
+ *                     API from a browser, on top of local dev servers.
+ *                     Not secret: `[vars]` in wrangler.toml.
+ */
+export const AuthEnvSchema = z.object({
+  SYNC_API_TOKEN: z
+    .string()
+    .min(
+      32,
+      "is missing or shorter than 32 characters — run `wrangler secret put SYNC_API_TOKEN` with a random value, or add it to .dev.vars for local dev",
+    ),
+  ALLOWED_ORIGINS: z.string().optional(),
+});
+
+export type AuthEnv = z.infer<typeof AuthEnvSchema>;
+
+/** Validates the access-control configuration. Fails closed: no token, no API. */
+export const parseAuthEnv = (env: unknown): AuthEnv => {
+  const result = AuthEnvSchema.safeParse(env);
+  if (result.success) return result.data;
+
+  const problems = result.error.issues
+    .map((issue) => `  ${issue.path.join(".")} ${issue.message}`)
+    .join("\n");
+  throw new Error(
+    `Access control is not configured correctly:\n${problems}\n` +
+      "See packages/sync-server/.dev.vars.example and ADR-0020.",
+  );
+};

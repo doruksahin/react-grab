@@ -182,6 +182,7 @@ features:
       - packages/react-grab/src/features/screenshot/capture.ts
       - packages/react-grab/src/features/screenshot/index.ts
       - packages/react-grab/src/features/screenshot/orchestrate.ts
+      - packages/react-grab/src/features/screenshot/use-authenticated-image-url.ts
       - packages/sync-server/src/repositories/r2.store.ts
       - packages/sync-server/src/routes/screenshots.ts
 
@@ -736,10 +737,10 @@ data_attrs:
     jira-dialog: { scope: jira, src: 1, tests: 0 }
     jira-dots: { scope: jira, src: 1, tests: 0 }
     jira-error: { scope: jira, src: 1, tests: 2 }
-    jira-form: { scope: jira, src: 1, tests: 3 }
+    jira-form: { scope: jira, src: 1, tests: 4 }
     jira-open-ticket: { scope: jira, src: 1, tests: 0 }
     jira-required: { scope: jira, src: 2, tests: 3 }
-    jira-success: { scope: jira, src: 1, tests: 3 }
+    jira-success: { scope: jira, src: 1, tests: 4 }
     jira-ticket-link: { scope: jira, src: 1, tests: 0 }
     image-lightbox: { scope: lightbox, src: 1, tests: 3 }
     lightbox-close: { scope: lightbox, src: 1, tests: 1 }
@@ -760,7 +761,7 @@ data_attrs:
     collapsed-dot-preview: { scope: selection, src: 1, tests: 0 }
     dev-insights: { scope: selection, src: 1, tests: 0 }
     screenshot-pair: { scope: selection, src: 1, tests: 0 }
-    screenshot-thumb: { scope: selection, src: 3, tests: 1 }
+    screenshot-thumb: { scope: selection, src: 2, tests: 2 }
     selection-card: { scope: selection, src: 2, tests: 3 }
     selection-card-body: { scope: selection, src: 1, tests: 0 }
     selection-content: { scope: selection, src: 1, tests: 0 }
@@ -795,7 +796,7 @@ data_attrs:
     toolbar-collapse: { scope: toolbar, src: 1, tests: 1 }
     toolbar-comments: { scope: toolbar, src: 3, tests: 6 }
     toolbar-copy-all: { scope: toolbar, src: 3, tests: 2 }
-    toolbar-dashboard: { scope: toolbar, src: 1, tests: 15 }
+    toolbar-dashboard: { scope: toolbar, src: 1, tests: 16 }
     toolbar-devmode: { scope: toolbar, src: 2, tests: 2 }
     toolbar-menu: { scope: toolbar, src: 1, tests: 3 }
     toolbar-toggle: { scope: toolbar, src: 2, tests: 4 }
@@ -967,4 +968,8 @@ decree:
     ADR-0019:
       title: Write comments and groups one item at a time
       file: decree/adr/0019-per-item-writes-for-comments-and-groups.md
+      status: accepted
+    ADR-0020:
+      title: Protect the sync server with a bearer token and an origin allowlist
+      file: decree/adr/0020-bearer-token-and-origin-allowlist-for-the-sync-server.md
       status: accepted

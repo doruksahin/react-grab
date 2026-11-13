@@ -17,3 +17,14 @@ JIRA_API_TOKEN=
 
 # Optional: override the Jira site from wrangler.toml for local work.
 # JIRA_BASE_URL=https://yourcompany.atlassian.net
+
+# Bearer token every API request must carry (ADR-0020). At least 32 random
+# characters, for example: openssl rand -base64 32
+# Give the same value to the overlay (initSync apiToken, via the host app's
+# VITE_REACT_GRAB_SYNC_TOKEN) and to the dashboard (SYNC_API_TOKEN in
+# packages/dashboard/.env.local). In production: wrangler secret put SYNC_API_TOKEN
+SYNC_API_TOKEN=
+
+# Optional: extra browser origins allowed to call the API, comma-separated.
+# Local dev servers (localhost, 127.0.0.1) are always allowed.
+# ALLOWED_ORIGINS=https://staging.example.com
