@@ -207,35 +207,34 @@ See `packages/dashboard/CLAUDE.md` for dashboard-specific patterns.
 
 ## Environment variables
 
-Sync-server secrets go in `packages/sync-server/.dev.vars` (gitignored). Copy `.dev.vars.example`, which lists every value, and see ADR-0018 and ADR-0020:
+There is one backend: the deployed Worker at `https://react-grab-sync-server.doruksahin98.workers.dev`. Local development uses it too — there is no separate local backend to keep in sync. Run `pnpm sync:dev` (:8787) only while changing the sync server's own code.
 
-```dotenv
-JIRA_EMAIL=you@yourcompany.com
-JIRA_API_TOKEN=<atlassian token>
-SYNC_API_TOKEN=<32+ random characters, e.g. openssl rand -base64 32>
+Every caller sends the same `SYNC_API_TOKEN` (ADR-0020). The value lives in Cloudflare and in the deployer's macOS Keychain:
+
+```bash
+security find-generic-password -s react-grab-sync-prod -a SYNC_API_TOKEN -w
 ```
-
-The sync server refuses every data request without `SYNC_API_TOKEN` (ADR-0020). Each caller needs the same value:
 
 | Caller | Where the token goes |
 |---|---|
-| Overlay in AdCreative-Frontend-V2 | `VITE_REACT_GRAB_SYNC_TOKEN` in its `.env.local`, passed as `initSync({ apiToken })` |
-| Dashboard | `SYNC_API_TOKEN` in `packages/dashboard/.env.local` (the dev proxy adds it) |
-| Deployed Worker | `wrangler secret put SYNC_API_TOKEN` |
+| Overlay in the host app | `initSync({ serverUrl, apiToken })` — usually from the host's gitignored `.env.local` |
+| Dashboard | `SYNC_API_TOKEN` in `packages/dashboard/.env.local` (the dev proxy adds it; it already targets the Worker) |
+| Deployed Worker | `wrangler secret put SYNC_API_TOKEN` (set) |
+| `pnpm sync:dev`, when changing the server | `packages/sync-server/.dev.vars` — copy `.dev.vars.example`; also needs `JIRA_EMAIL` and `JIRA_API_TOKEN` (ADR-0018) |
 
-AdCreative frontend needs in its `.env.local`:
+A host app's `.env.local`, for example:
 
 ```dotenv
-VITE_REACT_GRAB_SYNC_URL=http://localhost:8787
+VITE_REACT_GRAB_SYNC_URL=https://react-grab-sync-server.doruksahin98.workers.dev
 VITE_REACT_GRAB_SYNC_WORKSPACE=<name>-workspace
-VITE_REACT_GRAB_SYNC_TOKEN=<same value as SYNC_API_TOKEN>
+VITE_REACT_GRAB_SYNC_TOKEN=<SYNC_API_TOKEN>
 ```
 
-`initSync()` throws if sync is enabled without `apiToken`. It runs only in development builds, so the token never ships in a production bundle.
+`initSync()` throws if sync is enabled without `apiToken`. It runs only in development builds, so the token never ships in a production bundle. A host app served from anything other than localhost must be added to the Worker's `ALLOWED_ORIGINS`.
 
-## Local dev (full stack)
+## Local dev
 
-Three terminals: `pnpm dev` (library watch), `pnpm sync:dev` (sync server on :8787), and `pnpm dev` in AdCreative-Frontend-V2. The symlink in AdCreative's `node_modules/react-grab` points to `../../react-grab/packages/react-grab` — Vite HMR picks up changes automatically.
+Two terminals: `pnpm dev` (library watch) and the host app's dev server. A host app that links `node_modules/react-grab` to `packages/react-grab` picks up changes through Vite HMR. Add `pnpm sync:dev` as a third only when working on the sync server, and point `serverUrl` at `http://localhost:8787` while you do.
 
 ### Watch modes
 

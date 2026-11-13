@@ -77,7 +77,8 @@ td:first-child { white-space: nowrap; }
 
   <section>
     <span class="eyebrow">Start here</span>
-    <h2>Local and production hold the same values in different places</h2>
+    <h2>Where the server reads its values</h2>
+    <p class="lede">Day to day there is one backend: the deployed Worker, used from local machines too. The left column only matters while you run <code>pnpm sync:dev</code> to change the server itself.</p>
     <figure>
       <svg viewBox="0 0 720 372" role="img" aria-label="Local development reads the Jira site from wrangler.toml and the Jira account, Jira token and sync API token from the gitignored .dev.vars file. Production reads the same site from the same committed file, but the three secrets from Cloudflare's encrypted secret store. Both paths end at the same validation step.">
         <defs>
@@ -252,12 +253,12 @@ td:first-child { white-space: nowrap; }
         <div class="where">JS only, 15–20s a rebuild. Use <code>pnpm dev:full</code> when changing public types.</div>
       </div>
       <div class="card">
-        <div class="want">Terminal 2 — sync server</div>
+        <div class="want">Only when changing the server</div>
         <div class="cmd"><code>pnpm sync:dev</code><button type="button" data-copy="pnpm sync:dev">Copy</button></div>
-        <div class="where">Worker on :8787. Swagger at <code>/swagger</code>, health at <code>/health</code>.</div>
+        <div class="where">Everything else uses the deployed Worker, locally too. Run this on :8787 only to test server code, and point <code>serverUrl</code> at it meanwhile.</div>
       </div>
       <div class="card">
-        <div class="want">Terminal 3 — host app</div>
+        <div class="want">Terminal 2 — host app</div>
         <div class="cmd"><code>pnpm dev</code><button type="button" data-copy="pnpm dev">Copy</button></div>
         <div class="where">In AdCreative-Frontend-V2, whose <span class="path">node_modules/react-grab</span> symlinks here.</div>
       </div>
