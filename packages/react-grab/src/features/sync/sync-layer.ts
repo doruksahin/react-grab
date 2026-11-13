@@ -1,4 +1,4 @@
-import { batch } from "solid-js";
+import { batch, untrack } from "solid-js";
 import { createSyncStore } from "./store/sync-store.js";
 import { createHttpAdapter } from "./adapter.js";
 import { itemChanges } from "./business/item-changes.js";
@@ -89,7 +89,17 @@ export const createSyncLayer = () => {
   // goes to the server is only what changed relative to this client's own
   // previous state, one item per request (ADR-0019). Changes are computed
   // before the store is updated, so the "before" is never the new state.
-  const persistComments = (items: CommentItem[]): CommentItem[] => {
+  //
+  // Both run untracked. Comparing reads every field of every stored item; a
+  // caller that persists from inside an effect would otherwise subscribe to
+  // all of them, and the write would re-run that effect — an infinite loop.
+  const persistComments = (items: CommentItem[]): CommentItem[] =>
+    untrack(() => persistCommentsNow(items));
+
+  const persistGroups = (groups: SelectionGroup[]): SelectionGroup[] =>
+    untrack(() => persistGroupsNow(groups));
+
+  const persistCommentsNow = (items: CommentItem[]): CommentItem[] => {
     const adapter = adapterRef;
     if (!adapter) {
       const toStore = trimToSizeLimit(items);
@@ -114,7 +124,7 @@ export const createSyncLayer = () => {
     return items;
   };
 
-  const persistGroups = (groups: SelectionGroup[]): SelectionGroup[] => {
+  const persistGroupsNow = (groups: SelectionGroup[]): SelectionGroup[] => {
     const adapter = adapterRef;
     if (!adapter) {
       storeHandle.setGroups(groups);
