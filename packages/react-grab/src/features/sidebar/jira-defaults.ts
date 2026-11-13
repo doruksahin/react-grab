@@ -14,6 +14,17 @@ export function defaultSummary(group: SelectionGroup): string {
 }
 
 /**
+ * Markdown link to the page a selection was made on. The title falls back
+ * to the URL; brackets in the title and parentheses in the URL are escaped
+ * so they cannot end the link early.
+ */
+function renderPageLink(pageUrl: string, pageTitle?: string): string {
+  const text = (pageTitle || pageUrl).replace(/[\\[\]]/g, "\\$&");
+  const href = pageUrl.replace(/\(/g, "%28").replace(/\)/g, "%29");
+  return `[${text}](${href})`;
+}
+
+/**
  * Builds the markdown block for a single selection: heading, optional
  * comment, file path, selector, raw HTML code block. Pure — consumes
  * the same fields `SelectionCard` displays in the sidebar.
@@ -27,6 +38,10 @@ function renderSelection(item: CommentItem, index: number): string {
   if (item.commentText) {
     lines.push(`> ${item.commentText}`);
     lines.push("");
+  }
+
+  if (item.pageUrl) {
+    lines.push(`- **Page:** ${renderPageLink(item.pageUrl, item.pageTitle)}`);
   }
 
   const filePath = extractFilePath(item.content ?? "");

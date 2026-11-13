@@ -1,0 +1,261 @@
+<title>React Grab Story Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a story map. Journey steps run left to right as columns; scenario cards stack under each step; gaps follow as a ranked list. */
+:root {
+  --bg: #f3f4f1;
+  --surface: #ffffff;
+  --ink: #1d2320;
+  --muted: #5d6662;
+  --line: #d9ddd8;
+  --accent: #2f5bd3;
+  --covered: #1f7a4d;   --covered-bg: #e3f2ea;
+  --untested: #8a6200;  --untested-bg: #fbf0d3;
+  --nodesign: #4a5ab0;  --nodesign-bg: #e7eafb;
+  --partial: #b2531a;   --partial-bg: #fbe6d8;
+  --missing: #b4232f;   --missing-bg: #fadfe1;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141816; --surface: #1d2220; --ink: #e8ece9; --muted: #9aa49f; --line: #2f3633; --accent: #8aa8ff;
+    --covered: #6fd3a0; --covered-bg: #17362a;
+    --untested: #f0c15c; --untested-bg: #3a2f12;
+    --nodesign: #a8b4ff; --nodesign-bg: #252b4a;
+    --partial: #f3a06c; --partial-bg: #3d2416;
+    --missing: #ff8a93; --missing-bg: #42191d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141816; --surface: #1d2220; --ink: #e8ece9; --muted: #9aa49f; --line: #2f3633; --accent: #8aa8ff;
+  --covered: #6fd3a0; --covered-bg: #17362a;
+  --untested: #f0c15c; --untested-bg: #3a2f12;
+  --nodesign: #a8b4ff; --nodesign-bg: #252b4a;
+  --partial: #f3a06c; --partial-bg: #3d2416;
+  --missing: #ff8a93; --missing-bg: #42191d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1440px; margin: 0 auto; padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 32px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 22px; font-weight: 600; }
+.lede { max-width: 68ch; color: var(--muted); margin: 8px 0 0; }
+.meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 10px; }
+.summary { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: 500 13px var(--font-body); cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.chip:focus-visible, .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.personas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.persona { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; min-width: 0; }
+.persona b { font-family: var(--font-mono); font-size: 12px; color: var(--accent); font-weight: 500; }
+.persona span { font-weight: 600; }
+.persona q { color: var(--muted); font-size: 14px; }
+.map-scroll { overflow-x: auto; padding-bottom: 8px; }
+.map { display: grid; grid-template-columns: repeat(8, minmax(200px, 1fr)); gap: 12px; min-width: 1680px; }
+.col { display: grid; align-content: start; gap: 8px; min-width: 0; }
+.step { background: var(--ink); color: var(--bg); border-radius: 6px; padding: 10px 12px; display: grid; gap: 2px; }
+.step .no { font-family: var(--font-mono); font-size: 11px; opacity: .7; }
+.step .name { font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+.step .who { font-family: var(--font-mono); font-size: 11px; opacity: .7; }
+.card { background: var(--card-bg); border: 1px solid transparent; border-radius: 6px; padding: 10px 12px; display: grid; gap: 6px; min-width: 0; }
+.card .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.card .id { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.card .status { font: 600 11px var(--font-body); letter-spacing: .04em; text-transform: uppercase; color: var(--card-fg); }
+.card .title { font-weight: 500; font-size: 14px; line-height: 1.35; }
+.card dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; font-size: 12px; color: var(--muted); }
+.card dt { font-family: var(--font-mono); }
+.card dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.card.dim { opacity: .25; }
+.s-covered  { --card-bg: var(--covered-bg);  --card-fg: var(--covered); }
+.s-untested { --card-bg: var(--untested-bg); --card-fg: var(--untested); }
+.s-nodesign { --card-bg: var(--nodesign-bg); --card-fg: var(--nodesign); }
+.s-partial  { --card-bg: var(--partial-bg);  --card-fg: var(--partial); }
+.s-missing  { --card-bg: var(--missing-bg);  --card-fg: var(--missing); }
+.gaps { display: grid; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.gap { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; padding: 14px 16px; border-top: 1px solid var(--line); align-items: start; }
+.gap:first-child { border-top: 0; }
+.gap .rank { font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.gap .body { min-width: 0; display: grid; gap: 4px; }
+.gap .what { font-weight: 600; }
+.gap .why { color: var(--muted); font-size: 14px; }
+.gap .refs { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.effort { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; white-space: nowrap; }
+.legend-note { color: var(--muted); font-size: 13px; max-width: 80ch; }
+.foot { color: var(--muted); font-size: 13px; }
+.foot code { font-family: var(--font-mono); font-size: 12px; }
+@media (max-width: 640px) {
+  h1 { font-size: 28px; }
+  .gap { grid-template-columns: 28px 1fr; }
+  .gap .effort { grid-column: 2; justify-self: start; }
+}
+@media (prefers-reduced-motion: no-preference) { .card { transition: opacity .15s ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>React Grab story map</h1>
+    <p class="lede">Every scenario of the select → comment → group → Jira → fix loop, checked against three sources: the Penpot prototype, the code, and the Playwright tests. Click a status to see only those cards.</p>
+    <p class="meta">Snapshot 2026-11-13 · code HEAD 40aeb71c + RG-1 · Penpot file “React Grab · Custom UI &amp; States” · source of truth: docs/scenarios/journey/</p>
+  </header>
+
+  <section aria-label="Status filter" class="summary" id="summary"></section>
+
+  <section aria-labelledby="personas-h" style="display:grid;gap:12px">
+    <h2 id="personas-h">Who the loop serves</h2>
+    <div class="personas">
+      <div class="persona"><b>P1</b><span>Reporter: developer, QA or designer</span><q>I pointed at the problem and said what is wrong. I did not write a ticket by hand.</q></div>
+      <div class="persona"><b>P2</b><span>Triage owner: PM or lead</span><q>I see all feedback in groups, and I turn a group into one good ticket.</q></div>
+      <div class="persona"><b>P3</b><span>Assignee: developer with the ticket</span><q>The ticket tells me which component, which file and where on the page.</q></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="map-h" style="display:grid;gap:12px">
+    <h2 id="map-h">The map</h2>
+    <p class="legend-note"><b>Covered</b> means designed, built and covered by an e2e test. <b>Built, no test</b> has code but no e2e test. <b>Built, no design</b> is tested code that has no Penpot board. <b>Partial</b> and <b>Missing</b> describe the code.</p>
+    <div class="map-scroll"><div class="map" id="map"></div></div>
+  </section>
+
+  <section aria-labelledby="gaps-h" style="display:grid;gap:12px">
+    <h2 id="gaps-h">What to fix first</h2>
+    <p class="legend-note">Ranked by impact on the core promise (“select, comment, create, and the ticket has everything”) against effort. Effort is a first guess: S is under a day, M a few days, L a week or more.</p>
+    <div class="gaps" id="gaps"></div>
+  </section>
+
+  <p class="foot">Edit <code>docs/scenarios/journey/scenarios.md</code> first, then this page. Method: user story mapping (Jeff Patton) with Given / When / Then scenarios (Cucumber Gherkin).</p>
+</div>
+
+<script>
+const STATUS = {
+  covered:  { label: "Covered" },
+  untested: { label: "Built, no test" },
+  nodesign: { label: "Built, no design" },
+  partial:  { label: "Partial" },
+  missing:  { label: "Missing" },
+};
+const STEPS = [
+  { no: 1, name: "Select an element", who: "P1" },
+  { no: 2, name: "Comment on it", who: "P1" },
+  { no: 3, name: "Group it", who: "P1 · P2" },
+  { no: 4, name: "Review in sidebar", who: "P2" },
+  { no: 5, name: "Create Jira ticket", who: "P2" },
+  { no: 6, name: "Track the ticket", who: "P1 · P2" },
+  { no: 7, name: "Discuss on ticket", who: "P2 · P3" },
+  { no: 8, name: "Act on the ticket", who: "P3" },
+];
+const S = [
+  ["S1.1","Activate select mode","covered","flow P07","done","e2e"],
+  ["S1.2","Capture one element","covered","flow P07","done","e2e"],
+  ["S1.3","Capture several by dragging","nodesign","none","done","e2e"],
+  ["S1.4","Copy context to clipboard","covered","static P01","done","e2e (no error case)"],
+  ["S2.1","Write and save a comment","covered","flow P07","done","e2e"],
+  ["S2.2","Edit a saved comment","nodesign","none","done","e2e"],
+  ["S2.3","Comment survives a reload","untested","none","done","none"],
+  ["S2.4","Remove one comment","untested","flow P05","done","none"],
+  ["S2.5","Undo a removal","missing","stub P05","missing","none"],
+  ["S2.6","Linked comment cannot be removed","untested","none","done","none"],
+  ["S3.1","Create a group","untested","flow P05","done","unit"],
+  ["S3.2","Move a comment to a group","untested","flow P05","done","unit"],
+  ["S3.3","Rename a group","untested","none","done","none"],
+  ["S3.4","Delete a group","untested","none","done","none"],
+  ["S3.5","Group menu stays on screen at edges","partial","flow P06","partial","none"],
+  ["S3.6","Linked comment's group is locked","untested","note P05","done","unit"],
+  ["S3.7","Take a comment out before Jira","untested","flow P07","done","none"],
+  ["S4.1","Open sidebar, see groups","covered","static P03","done","e2e"],
+  ["S4.2","Filter by status, due date, flag","covered","static P03","done","e2e (due date)"],
+  ["S4.3","Search selections","untested","none","done","none"],
+  ["S4.4","Move several selections at once","untested","static P03","done","none"],
+  ["S4.5","Open a group's detail","covered","static P03","done","e2e"],
+  ["S4.6","Sync server unreachable","partial","static P03","Retry does nothing","none"],
+  ["S4.7","Sidebar does not hide the label","partial","flow P06","partial","none"],
+  ["S5.1","Create a ticket from a group","untested","flow P07","done","none"],
+  ["S5.2","Several selections, one ticket","untested","flow P07","done","none"],
+  ["S5.3","Required fields block submit","partial","none","partial","none"],
+  ["S5.4","Submit fails, form kept, retry","partial","flow P07","no Retry","none"],
+  ["S5.5","Submit succeeds, key shown","partial","flow P07","no success state","none"],
+  ["S5.6","Description has what P3 needs","nodesign","none","done (RG-1)","e2e + unit"],
+  ["S5.7","Screenshots attached","untested","none","done","none"],
+  ["S5.8","Ticket for one ungrouped comment","covered","flow P05","done","e2e"],
+  ["S6.1","Status colors","covered","static P01","done","e2e"],
+  ["S6.2","Status refreshes without reload","nodesign","none","done","e2e"],
+  ["S6.3","Assignee and reporter avatars","covered","static","done","e2e"],
+  ["S6.4","Flag or unflag as blocked","partial","static P01","read only","none"],
+  ["S6.5","Due date on cards","covered","static","done","e2e"],
+  ["S7.1","Read the Jira thread","covered","static P04","done","e2e"],
+  ["S7.2","Write a comment to Jira","covered","static P04","done","e2e"],
+  ["S7.3","Reply to a comment","covered","static P04","done","e2e"],
+  ["S7.4","Mention and attach image","covered","static P04","done","e2e"],
+  ["S7.5","Posting a comment fails","nodesign","none","done","e2e"],
+  ["S8.1","Find the page from the ticket","nodesign","none","done (RG-1)","e2e"],
+  ["S8.2","Open app with selection revealed","missing","none","missing","in-app only"],
+  ["S8.3","Jump to the source file","partial","none","file:line only","none"],
+];
+const GAPS = [
+  ["Done (RG-1): tickets link to the page", "Each comment now stores its page URL and title, and the ticket description links every selection to its page.", "S5.6 · S8.1", "done"],
+  ["Jira create has no success state, no Retry, no test", "The demo's main moment is untested. Penpot already designs the failed and sent states.", "S5.3 · S5.4 · S5.5", "M"],
+  ["Group menu is clipped near screen edges", "Visible on real host apps. Penpot measures 189 px clipped on the right and 113 px at the bottom, and designs the fix.", "S3.5", "S"],
+  ["Retry does nothing when the sync server is down", "A dead button in an error state erodes trust.", "S4.6", "S"],
+  ["No undo after removing a comment", "Removal is easy to do by mistake and cannot be reverted.", "S2.5", "M"],
+  ["Flag cannot be toggled back to Jira", "P2 has to leave the app to mark work as blocked.", "S6.4", "M"],
+  ["No link from the ticket that reveals the selection", "Strongest differentiator for P3. Needs the page link first.", "S8.2", "L"],
+];
+
+const cards = [];
+const map = document.getElementById("map");
+for (const step of STEPS) {
+  const col = document.createElement("div");
+  col.className = "col";
+  col.innerHTML = `<div class="step"><span class="no">STEP ${step.no}</span><span class="name">${step.name}</span><span class="who">${step.who}</span></div>`;
+  for (const [id, title, status, design, code, test] of S.filter(s => s[0].startsWith(`S${step.no}.`))) {
+    const card = document.createElement("article");
+    card.className = `card s-${status}`;
+    card.dataset.status = status;
+    card.innerHTML = `<div class="top"><span class="id">${id}</span><span class="status">${STATUS[status].label}</span></div>
+      <div class="title">${title}</div>
+      <dl><dt>design</dt><dd>${design}</dd><dt>code</dt><dd>${code}</dd><dt>test</dt><dd>${test}</dd></dl>`;
+    col.appendChild(card);
+    cards.push(card);
+  }
+  map.appendChild(col);
+}
+
+const summary = document.getElementById("summary");
+let active = null;
+const chipFor = (key, label, count, color) => {
+  const btn = document.createElement("button");
+  btn.className = "chip";
+  btn.type = "button";
+  btn.id = `filter-${key}`;
+  btn.setAttribute("aria-pressed", "false");
+  btn.innerHTML = `${color ? `<span class="dot" style="background:var(--${color})"></span>` : ""}${label} <span class="n">${count}</span>`;
+  btn.addEventListener("click", () => {
+    active = active === key || key === "all" ? null : key;
+    for (const chip of summary.querySelectorAll(".chip")) {
+      chip.setAttribute("aria-pressed", String(chip.id === `filter-${active ?? "all"}`));
+    }
+    for (const card of cards) card.classList.toggle("dim", Boolean(active) && card.dataset.status !== active);
+  });
+  return btn;
+};
+summary.appendChild(chipFor("all", "All scenarios", S.length));
+for (const key of Object.keys(STATUS)) {
+  summary.appendChild(chipFor(key, STATUS[key].label, S.filter(s => s[2] === key).length, key));
+}
+summary.querySelector("#filter-all").setAttribute("aria-pressed", "true");
+
+const gaps = document.getElementById("gaps");
+GAPS.forEach(([what, why, refs, effort], index) => {
+  const row = document.createElement("div");
+  row.className = "gap";
+  row.innerHTML = `<span class="rank">${index + 1}</span><div class="body"><span class="what">${what}</span><span class="why">${why}</span><span class="refs">${refs}</span></div><span class="effort">${effort === "done" ? "done" : `effort ${effort}`}</span>`;
+  gaps.appendChild(row);
+});
+</script>

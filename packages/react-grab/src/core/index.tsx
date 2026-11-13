@@ -96,6 +96,7 @@ import {
   invalidateBoundsCache,
 } from "../utils/create-element-bounds.js";
 import { createElementSelector } from "../utils/create-element-selector.js";
+import { getPageContext } from "../utils/get-page-context.js";
 import { generateId } from "../utils/generate-id.js";
 import { generateSnippet } from "../utils/generate-snippet.js";
 import { getAncestorElements } from "../utils/get-ancestor-elements.js";
@@ -802,6 +803,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         commentText: extraPrompt,
         timestamp: Date.now(),
         revealed: visibility.selectionsRevealed(),
+        ...getPageContext(),
       };
       const groupId = selectionGroups.ensureGroupForItem(
         itemSeed,
