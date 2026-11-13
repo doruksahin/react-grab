@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: a task-oriented reference. "I want to change X" leads, the rest is lookup. */
+/* Layout: diagrams carry the explanation, tables carry the lookup. */
 :root {
   --bg: #f4f3f0;
   --surface: #ffffff;
@@ -15,7 +15,6 @@
   --accent-bg: #e2efe9;
   --warn: #9a5a12;
   --warn-bg: #fbeedb;
-  --danger: #a3302c;
   --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -23,50 +22,41 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #13100e; --surface: #1e1b19; --sunken: #171412; --ink: #ece9e4; --muted: #9d9790;
-    --line: #322d29; --accent: #6fd3a0; --accent-bg: #16342a;
-    --warn: #f0bd6e; --warn-bg: #352713; --danger: #ff8f88;
+    --line: #322d29; --accent: #6fd3a0; --accent-bg: #16342a; --warn: #f0bd6e; --warn-bg: #352713;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #13100e; --surface: #1e1b19; --sunken: #171412; --ink: #ece9e4; --muted: #9d9790;
-  --line: #322d29; --accent: #6fd3a0; --accent-bg: #16342a;
-  --warn: #f0bd6e; --warn-bg: #352713; --danger: #ff8f88;
+  --line: #322d29; --accent: #6fd3a0; --accent-bg: #16342a; --warn: #f0bd6e; --warn-bg: #352713;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
 .wrap { max-width: 1060px; margin: 0 auto; padding-block: 36px 72px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid; gap: 40px; }
-h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+  display: grid; gap: 44px; }
+h1, h2 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
 h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.015em; }
 h2 { font-size: 21px; font-weight: 600; }
-h3 { font-size: 15px; font-weight: 600; }
-.lede { color: var(--muted); max-width: 64ch; margin: 10px 0 0; }
+.lede { color: var(--muted); max-width: 66ch; margin: 10px 0 0; }
 .meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 12px; }
 section { display: grid; gap: 14px; }
 .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; min-width: 0; }
+figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 14px; display: grid; gap: 12px; }
+figure svg { width: 100%; max-width: 100%; height: auto; display: block; color: var(--ink); }
+figcaption { font-size: 13.5px; color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 15px 17px; display: grid; gap: 9px; min-width: 0; }
 .card .want { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
-.card .where { font-size: 13px; color: var(--muted); }
-dl.kv { margin: 0; display: grid; gap: 8px; }
-dl.kv > div { display: grid; gap: 3px; min-width: 0; }
-dl.kv dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
-dl.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
+.card .where { font-size: 13.5px; color: var(--muted); }
 code, .path { font-family: var(--font-mono); font-size: 12.5px; background: var(--sunken); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
 .cmd { display: flex; gap: 8px; align-items: flex-start; background: var(--sunken); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; min-width: 0; }
 .cmd code { background: none; padding: 0; flex: 1; min-width: 0; line-height: 1.5; }
 .cmd button { font-family: var(--font-body); font-size: 11px; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 5px; padding: 2px 7px; cursor: pointer; flex-shrink: 0; }
 .cmd button:hover { color: var(--ink); border-color: var(--muted); }
 .cmd button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.rows { display: grid; gap: 10px; }
-.row { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 13px 16px; }
-.row .label { font-weight: 600; font-size: 14px; }
-.row .label span { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 2px; }
-.row .body { display: grid; gap: 8px; min-width: 0; font-size: 14px; }
-.note { border-left: 3px solid var(--accent); background: var(--accent-bg); color: var(--ink); border-radius: 0; padding: 12px 15px; font-size: 14px; }
+.note { border-left: 3px solid var(--accent); background: var(--accent-bg); padding: 13px 16px; font-size: 14px; }
 .note.warn { border-left-color: var(--warn); background: var(--warn-bg); }
 .note b { font-weight: 600; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -75,81 +65,177 @@ th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .05em; text
 td:first-child { white-space: nowrap; }
 .scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
 .foot { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
-@media (max-width: 620px) {
-  h1 { font-size: 29px; }
-  .row { grid-template-columns: 1fr; gap: 8px; }
-  td:first-child { white-space: normal; }
-}
+@media (max-width: 620px) { h1 { font-size: 29px; } td:first-child { white-space: normal; } }
 </style>
 
 <div class="wrap">
   <header>
     <h1>React Grab cheatsheet</h1>
-    <p class="lede">What to touch when something needs to change, and what to run afterwards. Written against the repository, not from memory.</p>
+    <p class="lede">Where configuration lives, what to change, and what to run. Checked against the repository on the date below, not written from memory.</p>
     <p class="meta">13 Nov 2026 · branch claude/penpot-mcp-access-70fbd6 · paths are repo-relative</p>
   </header>
 
   <section>
-    <span class="eyebrow">The one people ask for</span>
-    <h2>Changing the Jira connection</h2>
-    <p class="lede">Four separate things decide where a ticket ends up. They live in three different places, so change the right one.</p>
+    <span class="eyebrow">Start here</span>
+    <h2>Local and production hold the same three values in different places</h2>
+    <figure>
+      <svg viewBox="0 0 720 372" role="img" aria-label="Local development reads the Jira site from wrangler.toml and the account and token from the gitignored .dev.vars file. Production reads the same site from the same committed file, but the account and token from Cloudflare's encrypted secret store. Both paths end at the same validation step.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M1 1 L9 5 L1 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
 
-    <div class="rows">
-      <div class="row">
-        <div class="label">Which Jira site<span>the company's Atlassian instance</span></div>
-        <div class="body">
-          <div><code>JIRA_BASE_URL</code> under <code>[vars]</code> in <span class="path">packages/sync-server/wrangler.toml</span>. Not a secret, committed.</div>
-          <div class="cmd"><code>pnpm sync:dev</code><button type="button" data-copy="pnpm sync:dev">Copy</button></div>
-          <div class="where">Restart the sync server after editing. For the deployed Worker, redeploy.</div>
-        </div>
+        <text x="10" y="14" font-family="monospace" font-size="11" fill="currentColor" opacity=".65">LOCAL — pnpm sync:dev</text>
+        <rect x="8" y="26" width="312" height="46" rx="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".85"/>
+        <text x="22" y="46" font-size="12.5" fill="currentColor">wrangler.toml → [vars]</text>
+        <text x="22" y="62" font-size="11" fill="currentColor" opacity=".6">committed to git</text>
+        <line x1="164" y1="72" x2="164" y2="116" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"/>
+        <text x="172" y="98" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">JIRA_BASE_URL</text>
+
+        <rect x="8" y="116" width="312" height="46" rx="8" fill="none" stroke="#1f6f55" stroke-width="1.8"/>
+        <text x="22" y="136" font-size="12.5" fill="currentColor">.dev.vars</text>
+        <text x="22" y="152" font-size="11" fill="currentColor" opacity=".6">gitignored · copy from .dev.vars.example</text>
+        <line x1="164" y1="162" x2="164" y2="206" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"/>
+        <text x="172" y="188" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">JIRA_EMAIL · JIRA_API_TOKEN</text>
+
+        <rect x="8" y="206" width="312" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".85"/>
+        <text x="22" y="228" font-size="12.5" fill="currentColor">Worker on localhost:8787</text>
+        <text x="22" y="244" font-size="11" fill="currentColor" opacity=".6">wrangler dev · local D1 and R2</text>
+
+        <text x="400" y="14" font-family="monospace" font-size="11" fill="currentColor" opacity=".65">PRODUCTION — deployed Worker</text>
+        <rect x="398" y="26" width="312" height="46" rx="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".85"/>
+        <text x="412" y="46" font-size="12.5" fill="currentColor">wrangler.toml → [vars]</text>
+        <text x="412" y="62" font-size="11" fill="currentColor" opacity=".6">the same committed file</text>
+        <line x1="554" y1="72" x2="554" y2="116" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"/>
+        <text x="562" y="98" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">JIRA_BASE_URL</text>
+
+        <rect x="398" y="116" width="312" height="46" rx="8" fill="none" stroke="#1f6f55" stroke-width="1.8"/>
+        <text x="412" y="136" font-size="12.5" fill="currentColor">Cloudflare secret store</text>
+        <text x="412" y="152" font-size="11" fill="currentColor" opacity=".6">wrangler secret put · encrypted, never in git</text>
+        <line x1="554" y1="162" x2="554" y2="206" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"/>
+        <text x="562" y="188" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">JIRA_EMAIL · JIRA_API_TOKEN</text>
+
+        <rect x="398" y="206" width="312" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".85"/>
+        <text x="412" y="228" font-size="12.5" fill="currentColor">Worker on workers.dev</text>
+        <text x="412" y="244" font-size="11" fill="currentColor" opacity=".6">react-grab-sync-server</text>
+
+        <line x1="164" y1="256" x2="164" y2="296" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"/>
+        <line x1="554" y1="256" x2="554" y2="296" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"/>
+        <rect x="8" y="296" width="702" height="54" rx="8" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity=".7"/>
+        <text x="359" y="318" font-size="12.5" text-anchor="middle" fill="currentColor">Both end here: src/schemas/env.ts validates on the first request</text>
+        <text x="359" y="336" font-size="11" text-anchor="middle" fill="currentColor" opacity=".6">a missing or malformed value names every problem at once, instead of a Jira 401 later</text>
+      </svg>
+      <figcaption>The committed file is identical in both columns. Only the middle box changes — and that is the box that holds the secret.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <span class="eyebrow">The question people actually ask</span>
+    <h2>Four things decide where a ticket lands</h2>
+    <figure>
+      <svg viewBox="0 0 720 292" role="img" aria-label="The Jira site, account and token come from the sync-server package in this repository. The project key comes from the host application in a different repository. All four together determine which ticket is created, where, and by whom.">
+        <defs>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M1 1 L9 5 L1 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <text x="0" y="14" font-family="monospace" font-size="11" fill="currentColor" opacity=".65">THIS REPOSITORY — packages/sync-server</text>
+        <rect x="0" y="24" width="248" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".85"/>
+        <text x="14" y="44" font-size="12.5" fill="currentColor">wrangler.toml → [vars]</text>
+        <text x="14" y="59" font-size="10.5" fill="currentColor" opacity=".6">which Jira site</text>
+
+        <rect x="0" y="80" width="248" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".85"/>
+        <text x="14" y="100" font-size="12.5" fill="currentColor">.dev.vars → JIRA_EMAIL</text>
+        <text x="14" y="115" font-size="10.5" fill="currentColor" opacity=".6">who the ticket is created as</text>
+
+        <rect x="0" y="136" width="248" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".85"/>
+        <text x="14" y="156" font-size="12.5" fill="currentColor">.dev.vars → JIRA_API_TOKEN</text>
+        <text x="14" y="171" font-size="10.5" fill="currentColor" opacity=".6">that account's credential</text>
+
+        <text x="0" y="212" font-family="monospace" font-size="11" fill="#1f6f55">ANOTHER REPOSITORY — the host app</text>
+        <rect x="0" y="222" width="248" height="44" rx="8" fill="none" stroke="#1f6f55" stroke-width="1.8"/>
+        <text x="14" y="242" font-size="12.5" fill="currentColor">initSync({ jiraProjectKey })</text>
+        <text x="14" y="257" font-size="10.5" fill="currentColor" opacity=".6">which Jira project</text>
+
+        <line x1="248" y1="46" x2="430" y2="46" stroke="currentColor" stroke-width="1" opacity=".55"/>
+        <line x1="248" y1="102" x2="430" y2="102" stroke="currentColor" stroke-width="1" opacity=".55"/>
+        <line x1="248" y1="158" x2="430" y2="158" stroke="currentColor" stroke-width="1" opacity=".55"/>
+        <line x1="248" y1="244" x2="430" y2="244" stroke="#1f6f55" stroke-width="1.4"/>
+        <line x1="430" y1="46" x2="430" y2="244" stroke="currentColor" stroke-width="1" opacity=".55"/>
+        <line x1="430" y1="145" x2="474" y2="145" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar2)"/>
+
+        <rect x="474" y="100" width="246" height="90" rx="8" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <text x="597" y="128" font-size="13" text-anchor="middle" fill="currentColor">The Jira ticket</text>
+        <text x="597" y="148" font-size="11" text-anchor="middle" fill="currentColor" opacity=".65">site + project decide where</text>
+        <text x="597" y="166" font-size="11" text-anchor="middle" fill="currentColor" opacity=".65">email decides who filed it</text>
+      </svg>
+      <figcaption>Three of the four live here. The project key lives in the app that calls <code>initSync</code>, which is a different repository — the usual reason a ticket turns up somewhere unexpected.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <span class="eyebrow">Cloudflare</span>
+    <h2>Which account, which project</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Resource</th><th>Name in the repository</th><th>Declared in</th></tr></thead>
+      <tbody>
+        <tr><td>Worker (the project)</td><td><code>react-grab-sync-server</code></td><td><span class="path">packages/sync-server/wrangler.toml</span></td></tr>
+        <tr><td>D1 database</td><td><code>react-grab-sync</code> · id <code>6f0223f9-025b-481a-a2e3-3d1e77c46904</code></td><td>same file</td></tr>
+        <tr><td>R2 bucket</td><td><code>react-grab-screenshots</code></td><td>same file</td></tr>
+        <tr><td>Public URL</td><td><code>react-grab-sync-server.&lt;subdomain&gt;.workers.dev</code></td><td><code>workers_dev = true</code></td></tr>
+        <tr><td><b>Account</b></td><td><b>not recorded anywhere</b></td><td>—</td></tr>
+      </tbody>
+    </table></div>
+    <div class="note warn">
+      <b>The account is the one thing the repository does not say.</b> There is no <code>account_id</code> in <span class="path">wrangler.toml</span>, no Cloudflare credentials in CI, and <code>wrangler whoami</code> on this machine reports not logged in — so nothing here has ever been deployed from this checkout. The D1 id above is real, so the database exists in <i>someone's</i> account; which one has to be found, not read.
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="want">Find out which account</div>
+        <div class="cmd"><code>pnpm --filter @react-grab/sync-server exec wrangler login</code><button type="button" data-copy="pnpm --filter @react-grab/sync-server exec wrangler login">Copy</button></div>
+        <div class="cmd"><code>pnpm --filter @react-grab/sync-server exec wrangler whoami</code><button type="button" data-copy="pnpm --filter @react-grab/sync-server exec wrangler whoami">Copy</button></div>
+        <div class="where">Prints the email and every account id that login can reach.</div>
       </div>
-
-      <div class="row">
-        <div class="label">Which account<span>tickets are created as this user</span></div>
-        <div class="body">
-          <div><code>JIRA_EMAIL</code> in <span class="path">packages/sync-server/.dev.vars</span> for local work. In production set it on the deployed Worker, never in a committed file.</div>
-          <div class="where">Copy <span class="path">.dev.vars.example</span> to <span class="path">.dev.vars</span> if you do not have one. It is gitignored.</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="label">The API token<span>secret</span></div>
-        <div class="body">
-          <div><code>JIRA_API_TOKEN</code> in <span class="path">.dev.vars</span> locally. Create one at <a href="https://id.atlassian.com/manage-profile/security/api-tokens">id.atlassian.com</a>.</div>
-          <div class="cmd"><code>pnpm --filter @react-grab/sync-server exec wrangler secret put JIRA_API_TOKEN</code><button type="button" data-copy="pnpm --filter @react-grab/sync-server exec wrangler secret put JIRA_API_TOKEN">Copy</button></div>
-          <div class="where">That is the production route. The token is stored encrypted by Cloudflare and never enters git.</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="label">Which project<span>which Jira project the ticket is filed in</span></div>
-        <div class="body">
-          <div>Not server-side at all. The host application passes it: <code>initSync({ jiraProjectKey: "ATT" })</code>. It travels to the create dialog and to the issue-type, priority and label lookups.</div>
-          <div class="where">Change it where the host app calls <code>initSync</code>, then restart that app. In this repo nothing calls <code>initSync</code> outside the test harness, so the only live caller is AdCreative-Frontend-V2.</div>
-        </div>
+      <div class="card">
+        <div class="want">Then pin it</div>
+        <div class="where">Add <code>account_id = "…"</code> to <span class="path">wrangler.toml</span>. It is not a secret, and pinning it is what stops a deploy landing in the wrong account when someone's login can see several.</div>
       </div>
     </div>
+  </section>
 
+  <section>
+    <span class="eyebrow">Changing things</span>
+    <h2>What to edit, then what to run</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>To change</th><th>Edit</th><th>Then</th></tr></thead>
+      <tbody>
+        <tr><td>Which Jira site</td><td><code>JIRA_BASE_URL</code> in <span class="path">wrangler.toml</span></td><td>restart <code>pnpm sync:dev</code>; redeploy for production</td></tr>
+        <tr><td>Which account files tickets</td><td><code>JIRA_EMAIL</code> in <span class="path">.dev.vars</span></td><td>restart <code>pnpm sync:dev</code></td></tr>
+        <tr><td>The API token</td><td><code>JIRA_API_TOKEN</code> in <span class="path">.dev.vars</span></td><td>restart; in production <code>wrangler secret put</code></td></tr>
+        <tr><td>Which Jira project</td><td><code>jiraProjectKey</code> where the host app calls <code>initSync</code></td><td>restart the host app</td></tr>
+      </tbody>
+    </table></div>
     <div class="note">
-      <b>Get it wrong and it says so.</b> The three server values are validated by <span class="path">packages/sync-server/src/schemas/env.ts</span> on the first request. A missing or malformed value fails with every problem named at once, instead of an opaque Jira 401 later. ADR-0018 explains why this is a plain Zod schema and not an env library.
+      <b>No <span class="path">.dev.vars</span> yet?</b> Copy <span class="path">packages/sync-server/.dev.vars.example</span> to <span class="path">.dev.vars</span> and fill it in. Create an Atlassian token at <a href="https://id.atlassian.com/manage-profile/security/api-tokens">id.atlassian.com</a>. The file is gitignored; the example is not.
     </div>
   </section>
 
   <section>
     <span class="eyebrow">Daily</span>
     <h2>Running the stack</h2>
-    <p class="lede">Three terminals. The first build must finish before the host app starts, or its TypeScript cannot resolve <code>react-grab</code>.</p>
     <div class="cards">
       <div class="card">
         <div class="want">First run, once</div>
         <div class="cmd"><code>pnpm install &amp;&amp; pnpm build</code><button type="button" data-copy="pnpm install && pnpm build">Copy</button></div>
         <div class="cmd"><code>pnpm --filter @react-grab/sync-server db:migrate:local</code><button type="button" data-copy="pnpm --filter @react-grab/sync-server db:migrate:local">Copy</button></div>
-        <div class="where">The build writes the type definitions that watch mode then preserves.</div>
+        <div class="where">The build writes the type definitions that watch mode then preserves. Without it the host app cannot resolve <code>react-grab</code> types.</div>
       </div>
       <div class="card">
         <div class="want">Terminal 1 — library</div>
         <div class="cmd"><code>pnpm dev</code><button type="button" data-copy="pnpm dev">Copy</button></div>
-        <div class="where">JS only, about 15–20s a rebuild. Use <code>pnpm dev:full</code> when you are changing public types and need the IDE to follow.</div>
+        <div class="where">JS only, 15–20s a rebuild. Use <code>pnpm dev:full</code> when changing public types.</div>
       </div>
       <div class="card">
         <div class="want">Terminal 2 — sync server</div>
@@ -159,7 +245,7 @@ td:first-child { white-space: nowrap; }
       <div class="card">
         <div class="want">Terminal 3 — host app</div>
         <div class="cmd"><code>pnpm dev</code><button type="button" data-copy="pnpm dev">Copy</button></div>
-        <div class="where">In AdCreative-Frontend-V2. Its <span class="path">node_modules/react-grab</span> is a symlink here, so Vite HMR picks changes up.</div>
+        <div class="where">In AdCreative-Frontend-V2, whose <span class="path">node_modules/react-grab</span> symlinks here.</div>
       </div>
     </div>
   </section>
@@ -174,13 +260,13 @@ td:first-child { white-space: nowrap; }
         <tr><td>Test one scenario</td><td><code>pnpm --filter react-grab exec playwright test --project=chromium --grep @S5.4</code></td></tr>
         <tr><td>Debug a test visually</td><td><code>pnpm --filter react-grab test:e2e:ui</code></td></tr>
         <tr><td>Unit tests</td><td><code>pnpm --filter react-grab exec vitest run</code></td></tr>
-        <tr><td>After changing a server schema</td><td><code>pnpm --filter @react-grab/sync-server export-spec &amp;&amp; pnpm --filter react-grab codegen</code></td></tr>
-        <tr><td>After adding a file or a data attribute</td><td><code>pnpm arch:codegen &amp;&amp; pnpm arch:lint</code></td></tr>
+        <tr><td>After a server schema change</td><td><code>pnpm --filter @react-grab/sync-server export-spec &amp;&amp; pnpm --filter react-grab codegen</code></td></tr>
+        <tr><td>After adding a file or data attribute</td><td><code>pnpm arch:codegen &amp;&amp; pnpm arch:lint</code></td></tr>
         <tr><td>Before a commit</td><td><code>pnpm typecheck &amp;&amp; pnpm lint</code></td></tr>
       </tbody>
     </table></div>
     <div class="note warn">
-      <b>Never run the whole E2E suite locally.</b> It is 580+ tests and over four minutes. Always target a file or a <code>--grep</code> tag. The pre-commit hook runs <code>arch:lint</code>, which needs <span class="path">packages/sync-server/openapi.json</span> to exist — if it fails there, run <code>export-spec</code> once.
+      <b>Never run the whole E2E suite locally.</b> 580+ tests, over four minutes. Target a file or a <code>--grep</code> tag. The pre-commit hook runs <code>arch:lint</code>, which needs <span class="path">packages/sync-server/openapi.json</span> to exist — if it fails there, run <code>export-spec</code> once.
     </div>
   </section>
 
@@ -190,13 +276,13 @@ td:first-child { white-space: nowrap; }
     <div class="scroll"><table>
       <thead><tr><th>Looking for</th><th>Path</th></tr></thead>
       <tbody>
-        <tr><td>The map of everything</td><td><span class="path">architecture.yml</span> — read it first, it indexes features, data flows and attributes</td></tr>
-        <tr><td>Why a decision was made</td><td><span class="path">decree/adr/</span>, with requirements in <span class="path">decree/prd/</span> and designs in <span class="path">decree/spec/</span></td></tr>
-        <tr><td>What the product should do</td><td><span class="path">docs/scenarios/journey/</span> — 45 scenarios, each with design, code and test status</td></tr>
+        <tr><td>The map of everything</td><td><span class="path">architecture.yml</span> — read it first; it indexes features, data flows and attributes</td></tr>
+        <tr><td>Why a decision was made</td><td><span class="path">decree/adr/</span> · requirements in <span class="path">decree/prd/</span> · designs in <span class="path">decree/spec/</span></td></tr>
+        <tr><td>What the product should do</td><td><span class="path">docs/scenarios/journey/</span> — 45 scenarios with design, code and test status</td></tr>
+        <tr><td>Worker configuration</td><td><span class="path">packages/sync-server/src/schemas/env.ts</span> · ADR-0018</td></tr>
         <tr><td>Jira integration, server side</td><td><span class="path">packages/sync-server/src/services/jira.service.ts</span></td></tr>
         <tr><td>Jira create dialog</td><td><span class="path">packages/react-grab/src/components/sidebar/jira-create-form.tsx</span></td></tr>
         <tr><td>Ticket description text</td><td><span class="path">packages/react-grab/src/features/sidebar/jira-defaults.ts</span></td></tr>
-        <tr><td>Worker configuration</td><td><span class="path">packages/sync-server/src/schemas/env.ts</span></td></tr>
         <tr><td>Mock data for tests</td><td><span class="path">packages/react-grab/e2e/mocks/fixtures.ts</span></td></tr>
       </tbody>
     </table></div>
@@ -208,26 +294,26 @@ td:first-child { white-space: nowrap; }
     <div class="cards">
       <div class="card">
         <div class="want">Two builds racing</div>
-        <div class="where">Never run <code>pnpm build</code> while <code>pnpm dev</code> is watching in another terminal. Two tsup processes on one <span class="path">dist/</span> corrupt the output and wedge the watcher. Stop the watcher first.</div>
+        <div class="where">Never run <code>pnpm build</code> while <code>pnpm dev</code> is watching elsewhere. Two tsup processes on one <span class="path">dist/</span> corrupt the output and wedge the watcher. Stop the watcher first.</div>
       </div>
       <div class="card">
         <div class="want">Failed to resolve entry for "react-grab"</div>
-        <div class="where">The host app started while tsup was mid-rebuild and cached the failure.</div>
+        <div class="where">The host app started mid-rebuild and cached the failure.</div>
         <div class="cmd"><code>rm -rf node_modules/.vite</code><button type="button" data-copy="rm -rf node_modules/.vite">Copy</button></div>
         <div class="where">Run it in the host app, then restart its Vite.</div>
       </div>
       <div class="card">
-        <div class="want">Jira calls return 401</div>
-        <div class="where">Check the account and token in <span class="path">.dev.vars</span>, then restart <code>pnpm sync:dev</code>. Since ADR-0018 an empty value fails loudly on the first request instead, so a 401 now points at a wrong value rather than a missing one.</div>
+        <div class="want">Jira returns 401</div>
+        <div class="where">A wrong value, not a missing one — since ADR-0018 an empty value fails loudly on the first request instead. Check the account and token in <span class="path">.dev.vars</span>, then restart <code>pnpm sync:dev</code>.</div>
       </div>
       <div class="card">
         <div class="want">Tickets land in the wrong place</div>
-        <div class="where">Site is <code>JIRA_BASE_URL</code> in <span class="path">wrangler.toml</span>; project is <code>jiraProjectKey</code> from the host app. They are set in different repositories, which is the usual cause of confusion.</div>
+        <div class="where">Site and project are set in different repositories. Read the second diagram again — that is almost always the cause.</div>
       </div>
     </div>
   </section>
 
-  <p class="foot">Source of truth is the repository. Where this page and the code disagree, the code is right — and the page is wrong, so fix it at <span class="path">docs/react-grab-cheatsheet.html</span>.</p>
+  <p class="foot">The repository is the source of truth. Where this page and the code disagree, the code is right and this page is stale — fix it at <span class="path">docs/react-grab-cheatsheet.html</span>.</p>
 </div>
 
 <script>
