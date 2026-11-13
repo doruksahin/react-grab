@@ -18,23 +18,31 @@ import type {
 } from 'msw';
 
 import type {
+  AddJiraComment200,
   CreateJiraTicket200,
   GetJiraTicketStatus200,
   ListJiraIssueTypes200Item,
   ListJiraPriorities200Item,
-  ListJiraProjects200Item
+  ListJiraProjects200Item,
+  SearchJiraUsers200Item
 } from '../../model';
 
 
 export const getCreateJiraTicketResponseMock = (overrideResponse: Partial<Extract<CreateJiraTicket200, object>> = {}): CreateJiraTicket200 => ({jiraTicketId: faker.string.alpha({length: {min: 10, max: 20}}), jiraUrl: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
 
-export const getGetJiraTicketStatusResponseMock = (overrideResponse: Partial<Extract<GetJiraTicketStatus200, object>> = {}): GetJiraTicketStatus200 => ({status: faker.string.alpha({length: {min: 10, max: 20}}), statusCategory: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
+export const getGetJiraTicketStatusResponseMock = (overrideResponse: Partial<Extract<GetJiraTicketStatus200, object>> = {}): GetJiraTicketStatus200 => ({status: faker.string.alpha({length: {min: 10, max: 20}}), statusCategory: faker.string.alpha({length: {min: 10, max: 20}}), assignee: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), reporter: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), assigneeAvatar: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), reporterAvatar: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), jiraUrl: faker.string.alpha({length: {min: 10, max: 20}}), labels: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), comments: Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), parentId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), author: faker.string.alpha({length: {min: 10, max: 20}}), authorAvatar: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), body: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.string.alpha({length: {min: 10, max: 20}})})), flagged: faker.datatype.boolean(), flaggedAt: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), flaggedBy: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), flaggedByAvatar: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), priority: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), issueType: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), dueDate: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null]), ...overrideResponse})
+
+export const getAddJiraCommentResponseMock = (overrideResponse: Partial<Extract<AddJiraComment200, object>> = {}): AddJiraComment200 => ({id: faker.string.alpha({length: {min: 10, max: 20}}), created: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
 
 export const getListJiraProjectsResponseMock = (): ListJiraProjects200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({key: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}})})))
 
 export const getListJiraIssueTypesResponseMock = (): ListJiraIssueTypes200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}})})))
 
 export const getListJiraPrioritiesResponseMock = (): ListJiraPriorities200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}})})))
+
+export const getListJiraLabelsResponseMock = (): string[] => (Array.from({length: faker.number.int({min: 1, max: 10})}, () => faker.word.sample()))
+
+export const getSearchJiraUsersResponseMock = (): SearchJiraUsers200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({accountId: faker.string.alpha({length: {min: 10, max: 20}}), displayName: faker.string.alpha({length: {min: 10, max: 20}}), avatarUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null])})))
 
 
 export const getCreateJiraTicketMockHandler = (overrideResponse?: CreateJiraTicket200 | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CreateJiraTicket200> | CreateJiraTicket200), options?: RequestHandlerOptions) => {
@@ -56,6 +64,18 @@ export const getGetJiraTicketStatusMockHandler = (overrideResponse?: GetJiraTick
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getGetJiraTicketStatusResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getAddJiraCommentMockHandler = (overrideResponse?: AddJiraComment200 | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<AddJiraComment200> | AddJiraComment200), options?: RequestHandlerOptions) => {
+  return http.post('*/workspaces/:id/groups/:groupId/jira-comment', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getAddJiraCommentResponseMock(),
       { status: 200
       })
   }, options)
@@ -96,10 +116,37 @@ export const getListJiraPrioritiesMockHandler = (overrideResponse?: ListJiraPrio
       })
   }, options)
 }
+
+export const getListJiraLabelsMockHandler = (overrideResponse?: string[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<string[]> | string[]), options?: RequestHandlerOptions) => {
+  return http.get('*/jira/labels', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getListJiraLabelsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getSearchJiraUsersMockHandler = (overrideResponse?: SearchJiraUsers200Item[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SearchJiraUsers200Item[]> | SearchJiraUsers200Item[]), options?: RequestHandlerOptions) => {
+  return http.get('*/jira/users', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getSearchJiraUsersResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
 export const getJiraMock = () => [
   getCreateJiraTicketMockHandler(),
   getGetJiraTicketStatusMockHandler(),
+  getAddJiraCommentMockHandler(),
   getListJiraProjectsMockHandler(),
   getListJiraIssueTypesMockHandler(),
-  getListJiraPrioritiesMockHandler()
+  getListJiraPrioritiesMockHandler(),
+  getListJiraLabelsMockHandler(),
+  getSearchJiraUsersMockHandler()
 ]

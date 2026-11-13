@@ -28,10 +28,11 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  DeleteComment200,
   ListComments200Item,
-  PersistComments200,
-  PersistComments400,
-  PersistCommentsBodyItem
+  UpsertComment200,
+  UpsertComment400,
+  UpsertCommentBody
 } from '../../model';
 
 
@@ -208,62 +209,64 @@ export function useListCommentsSuspense<TData = Awaited<ReturnType<typeof listCo
 
 
 /**
- * @summary Replace all comments in a workspace
+ * @summary Create or replace one comment
  */
-export type persistCommentsResponse200 = {
-  data: PersistComments200
+export type upsertCommentResponse200 = {
+  data: UpsertComment200
   status: 200
 }
 
-export type persistCommentsResponse400 = {
-  data: PersistComments400
+export type upsertCommentResponse400 = {
+  data: UpsertComment400
   status: 400
 }
 
-export type persistCommentsResponseSuccess = (persistCommentsResponse200) & {
+export type upsertCommentResponseSuccess = (upsertCommentResponse200) & {
   headers: Headers;
 };
-export type persistCommentsResponseError = (persistCommentsResponse400) & {
+export type upsertCommentResponseError = (upsertCommentResponse400) & {
   headers: Headers;
 };
 
-export type persistCommentsResponse = (persistCommentsResponseSuccess | persistCommentsResponseError)
+export type upsertCommentResponse = (upsertCommentResponseSuccess | upsertCommentResponseError)
 
-export const getPersistCommentsUrl = (id: string,) => {
+export const getUpsertCommentUrl = (id: string,
+    commentId: string,) => {
 
 
 
 
-  return `/workspaces/${id}/comments`
+  return `/workspaces/${id}/comments/${commentId}`
 }
 
-export const persistComments = async (id: string,
-    persistCommentsBodyItem: PersistCommentsBodyItem[], options?: RequestInit): Promise<persistCommentsResponse> => {
+export const upsertComment = async (id: string,
+    commentId: string,
+    upsertCommentBody: UpsertCommentBody, options?: RequestInit): Promise<upsertCommentResponse> => {
 
-  const res = await fetch(getPersistCommentsUrl(id),
+  const res = await fetch(getUpsertCommentUrl(id,commentId),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      persistCommentsBodyItem,)
+      upsertCommentBody,)
   }
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: persistCommentsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as persistCommentsResponse
+  const data: upsertCommentResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as upsertCommentResponse
 }
 
 
 
 
-export const getPersistCommentsMutationOptions = <TError = PersistComments400,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof persistComments>>, TError,{id: string;data: PersistCommentsBodyItem[]}, TContext>, fetch?: RequestInit}
-): UseMutationOptions<Awaited<ReturnType<typeof persistComments>>, TError,{id: string;data: PersistCommentsBodyItem[]}, TContext> => {
+export const getUpsertCommentMutationOptions = <TError = UpsertComment400,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertComment>>, TError,{id: string;commentId: string;data: UpsertCommentBody}, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof upsertComment>>, TError,{id: string;commentId: string;data: UpsertCommentBody}, TContext> => {
 
-const mutationKey = ['persistComments'];
+const mutationKey = ['upsertComment'];
 const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -273,10 +276,10 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof persistComments>>, {id: string;data: PersistCommentsBodyItem[]}> = (props) => {
-          const {id,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertComment>>, {id: string;commentId: string;data: UpsertCommentBody}> = (props) => {
+          const {id,commentId,data} = props ?? {};
 
-          return  persistComments(id,data,fetchOptions)
+          return  upsertComment(id,commentId,data,fetchOptions)
         }
 
 
@@ -286,20 +289,109 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type PersistCommentsMutationResult = NonNullable<Awaited<ReturnType<typeof persistComments>>>
-    export type PersistCommentsMutationBody = PersistCommentsBodyItem[]
-    export type PersistCommentsMutationError = PersistComments400
+    export type UpsertCommentMutationResult = NonNullable<Awaited<ReturnType<typeof upsertComment>>>
+    export type UpsertCommentMutationBody = UpsertCommentBody
+    export type UpsertCommentMutationError = UpsertComment400
 
     /**
- * @summary Replace all comments in a workspace
+ * @summary Create or replace one comment
  */
-export const usePersistComments = <TError = PersistComments400,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof persistComments>>, TError,{id: string;data: PersistCommentsBodyItem[]}, TContext>, fetch?: RequestInit}
+export const useUpsertComment = <TError = UpsertComment400,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertComment>>, TError,{id: string;commentId: string;data: UpsertCommentBody}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof persistComments>>,
+        Awaited<ReturnType<typeof upsertComment>>,
         TError,
-        {id: string;data: PersistCommentsBodyItem[]},
+        {id: string;commentId: string;data: UpsertCommentBody},
         TContext
       > => {
-      return useMutation(getPersistCommentsMutationOptions(options), queryClient);
+      return useMutation(getUpsertCommentMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Delete one comment
+ */
+export type deleteCommentResponse200 = {
+  data: DeleteComment200
+  status: 200
+}
+
+export type deleteCommentResponseSuccess = (deleteCommentResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteCommentResponse = (deleteCommentResponseSuccess)
+
+export const getDeleteCommentUrl = (id: string,
+    commentId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/comments/${commentId}`
+}
+
+export const deleteComment = async (id: string,
+    commentId: string, options?: RequestInit): Promise<deleteCommentResponse> => {
+
+  const res = await fetch(getDeleteCommentUrl(id,commentId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: deleteCommentResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as deleteCommentResponse
+}
+
+
+
+
+export const getDeleteCommentMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{id: string;commentId: string}, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{id: string;commentId: string}, TContext> => {
+
+const mutationKey = ['deleteComment'];
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteComment>>, {id: string;commentId: string}> = (props) => {
+          const {id,commentId} = props ?? {};
+
+          return  deleteComment(id,commentId,fetchOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCommentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteComment>>>
+
+    export type DeleteCommentMutationError = unknown
+
+    /**
+ * @summary Delete one comment
+ */
+export const useDeleteComment = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{id: string;commentId: string}, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteComment>>,
+        TError,
+        {id: string;commentId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteCommentMutationOptions(options), queryClient);
     }

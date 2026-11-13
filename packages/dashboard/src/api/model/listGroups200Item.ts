@@ -15,4 +15,5 @@ export type ListGroups200Item = {
   /** Lifecycle status of a group */
   status?: ListGroups200ItemStatus;
   jiraTicketId?: string;
+  synthetic?: boolean;
 };

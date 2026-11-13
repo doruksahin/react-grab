@@ -22,8 +22,8 @@ interface CreateTicketBody {
   description?: string;
 }
 
-const isPersistedCommentArray = (body: unknown): body is PersistedComment[] =>
-  Array.isArray(body);
+const isPersistedComment = (body: unknown): body is PersistedComment =>
+  typeof body === "object" && body !== null && !Array.isArray(body);
 
 const isCreateTicketBody = (body: unknown): body is CreateTicketBody =>
   typeof body === "object" && body !== null;
@@ -53,10 +53,9 @@ test.describe(
 
         const findSavedComment = () =>
           mockServer
-            .requests("persistComments")
+            .requests("upsertComment")
             .map((request) => request.body)
-            .filter(isPersistedCommentArray)
-            .flat()
+            .filter(isPersistedComment)
             .find((comment) => comment.commentText === COMMENT_TEXT);
 
         await expect

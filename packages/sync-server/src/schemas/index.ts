@@ -1,7 +1,17 @@
-export { WorkspaceIdParam, StatusResponse, ErrorResponse } from "./common.js";
+export {
+  WorkspaceIdParam,
+  CommentIdParam,
+  StatusResponse,
+  ErrorResponse,
+} from "./common.js";
 export { JiraEnvSchema, parseJiraEnv, type JiraEnv } from "./env.js";
 export { CommentItem, CommentItemArray, SelectionStatus } from "./comment.js";
-export { SelectionGroup, SelectionGroupArray, GroupStatus } from "./group.js";
+export {
+  SelectionGroup,
+  SelectionGroupArray,
+  SelectionGroupWrite,
+  GroupStatus,
+} from "./group.js";
 export {
   CreateJiraTicketRequest,
   CreateJiraTicketResponse,

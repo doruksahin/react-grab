@@ -21,9 +21,11 @@ export type RouteHandler =
 export interface MockOverrides {
   health: RouteHandler;
   listComments: RouteHandler;
-  persistComments: RouteHandler;
+  upsertComment: RouteHandler;
+  deleteComment: RouteHandler;
   listGroups: RouteHandler;
-  persistGroups: RouteHandler;
+  upsertGroup: RouteHandler;
+  deleteGroup: RouteHandler;
   getScreenshot: RouteHandler;
   uploadScreenshot: RouteHandler;
   createJiraTicket: RouteHandler;
@@ -58,9 +60,11 @@ interface EndpointDef {
 const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
   health: { pattern: "**/health", method: "GET" },
   listComments: { pattern: "**/workspaces/*/comments", method: "GET" },
-  persistComments: { pattern: "**/workspaces/*/comments", method: "PUT" },
+  upsertComment: { pattern: "**/workspaces/*/comments/*", method: "PUT" },
+  deleteComment: { pattern: "**/workspaces/*/comments/*", method: "DELETE" },
   listGroups: { pattern: "**/workspaces/*/groups", method: "GET" },
-  persistGroups: { pattern: "**/workspaces/*/groups", method: "PUT" },
+  upsertGroup: { pattern: "**/workspaces/*/groups/*", method: "PUT" },
+  deleteGroup: { pattern: "**/workspaces/*/groups/*", method: "DELETE" },
   getScreenshot: {
     pattern: "**/workspaces/*/screenshots/*/*",
     method: "GET",
@@ -97,11 +101,13 @@ const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
 const DEFAULT_FIXTURES: Record<keyof MockOverrides, unknown> = {
   health: fixtures.healthCheck,
   listComments: fixtures.comments,
-  persistComments: fixtures.persistCommentsResponse,
+  upsertComment: fixtures.itemWriteResponse,
+  deleteComment: fixtures.itemWriteResponse,
   listGroups: fixtures.groups,
-  persistGroups: fixtures.persistGroupsResponse,
+  upsertGroup: fixtures.itemWriteResponse,
+  deleteGroup: fixtures.itemWriteResponse,
   getScreenshot: fixtures.screenshotFull,
-  uploadScreenshot: fixtures.persistGroupsResponse,
+  uploadScreenshot: fixtures.uploadScreenshotResponse,
   createJiraTicket: fixtures.createJiraTicketResponse,
   getJiraTicketStatus: null, // handled by group-specific logic below
   addJiraComment: fixtures.addJiraCommentResponse,

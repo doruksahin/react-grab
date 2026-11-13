@@ -9,12 +9,17 @@ import type { SelectionGroup } from "../selection-groups/types.js";
 export interface StorageAdapter {
   /** Load all comments. Called once at init. */
   loadComments: () => Promise<CommentItem[]>;
-  /** Persist the full comments array. Called on every mutation. */
-  persistComments: (items: CommentItem[]) => Promise<CommentItem[]>;
+  /**
+   * Write one comment. There is no whole-list write: a client can only send
+   * what it changed, so it cannot erase other people's comments (ADR-0019).
+   */
+  upsertComment: (item: CommentItem) => Promise<void>;
+  deleteComment: (commentId: string) => Promise<void>;
   /** Load all groups. Called once at init. */
   loadGroups: () => Promise<SelectionGroup[]>;
-  /** Persist the full groups array. Called on every mutation. */
-  persistGroups: (groups: SelectionGroup[]) => Promise<SelectionGroup[]>;
+  /** Write one group's client-owned fields; the server owns its ticket fields. */
+  upsertGroup: (group: SelectionGroup) => Promise<void>;
+  deleteGroup: (groupId: string) => Promise<void>;
   /** Upload a screenshot blob. Returns the storage key/URL. Optional. */
   uploadScreenshot?: (
     selectionId: string,

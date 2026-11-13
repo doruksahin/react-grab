@@ -1,7 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "../db/schema.js";
-import type { Comment, Group, SyncRepository } from "./types.js";
+import type { Comment, Group, GroupWrite, SyncRepository } from "./types.js";
 
 type Database = DrizzleD1Database<typeof schema>;
 
@@ -17,18 +17,45 @@ export class D1SyncRepository implements SyncRepository {
     return rows.map(rowToComment);
   }
 
-  async persistComments(
-    workspaceId: string,
-    items: Comment[],
-  ): Promise<void> {
-    await this.db.batch([
-      this.db
-        .delete(schema.comments)
-        .where(eq(schema.comments.workspaceId, workspaceId)),
-      ...items.map((item) =>
-        this.db.insert(schema.comments).values({ ...item, workspaceId }),
-      ),
-    ]);
+  async upsertComment(workspaceId: string, item: Comment): Promise<void> {
+    // PUT semantics: the stored comment becomes exactly what was sent, so an
+    // optional field the client left out is cleared rather than kept.
+    await this.db
+      .insert(schema.comments)
+      .values({ ...item, workspaceId })
+      .onConflictDoUpdate({
+        target: [schema.comments.id, schema.comments.workspaceId],
+        set: {
+          groupId: item.groupId,
+          content: item.content,
+          elementName: item.elementName,
+          tagName: item.tagName,
+          componentName: item.componentName ?? null,
+          elementsCount: item.elementsCount ?? null,
+          elementSelectors: item.elementSelectors ?? null,
+          commentText: item.commentText ?? null,
+          timestamp: item.timestamp,
+          revealed: item.revealed ?? null,
+          status: item.status ?? null,
+          pageUrl: item.pageUrl ?? null,
+          pageTitle: item.pageTitle ?? null,
+          screenshotFullPage: item.screenshotFullPage ?? null,
+          screenshotElement: item.screenshotElement ?? null,
+          jiraTicketId: item.jiraTicketId ?? null,
+          capturedBy: item.capturedBy ?? null,
+        },
+      });
+  }
+
+  async deleteComment(workspaceId: string, commentId: string): Promise<void> {
+    await this.db
+      .delete(schema.comments)
+      .where(
+        and(
+          eq(schema.comments.id, commentId),
+          eq(schema.comments.workspaceId, workspaceId),
+        ),
+      );
   }
 
   async listGroups(workspaceId: string): Promise<Group[]> {
@@ -40,34 +67,42 @@ export class D1SyncRepository implements SyncRepository {
     return rows.map(rowToGroup);
   }
 
-  async persistGroups(
-    workspaceId: string,
-    items: Group[],
-  ): Promise<void> {
-    // Full-replace semantics to match the OpenAPI "Replace all groups"
-    // contract. This is what makes synthetic-group GC work: when the
-    // client drops an empty synthetic group from its list and PUTs,
-    // the row is removed from D1. Upsert-only can't express deletion.
-    //
-    // status and jiraTicketId are sent by the client (it owns the
-    // authoritative state after onTicketCreated fires), so a wipe +
-    // reinsert preserves them.
-    const deleteStmt = this.db
-      .delete(schema.groups)
-      .where(eq(schema.groups.workspaceId, workspaceId));
-    if (items.length === 0) {
-      await deleteStmt;
-      return;
-    }
-    await this.db.batch([
-      deleteStmt,
-      ...items.map((item) =>
-        this.db.insert(schema.groups).values({ ...item, workspaceId }),
-      ),
-    ]);
+  async upsertGroup(workspaceId: string, item: GroupWrite): Promise<void> {
+    // Only client-owned columns are written. status and jiraTicketId belong
+    // to the server (set by updateGroupJira when a ticket is created), so an
+    // update from a client that has not seen the ticket cannot erase it —
+    // which is what let a second, duplicate Jira ticket through (ADR-0019).
+    const { id, name, createdAt, revealed, synthetic } = item;
+    await this.db
+      .insert(schema.groups)
+      .values({ id, workspaceId, name, createdAt, revealed, synthetic })
+      .onConflictDoUpdate({
+        target: [schema.groups.id, schema.groups.workspaceId],
+        set: {
+          name,
+          createdAt,
+          revealed: revealed ?? null,
+          synthetic: synthetic ?? null,
+        },
+      });
   }
 
-  async updateGroupJira(workspaceId: string, groupId: string, jiraTicketId: string): Promise<void> {
+  async deleteGroup(workspaceId: string, groupId: string): Promise<void> {
+    await this.db
+      .delete(schema.groups)
+      .where(
+        and(
+          eq(schema.groups.id, groupId),
+          eq(schema.groups.workspaceId, workspaceId),
+        ),
+      );
+  }
+
+  async updateGroupJira(
+    workspaceId: string,
+    groupId: string,
+    jiraTicketId: string,
+  ): Promise<void> {
     await this.db
       .update(schema.groups)
       .set({ jiraTicketId, status: "ticketed" })
@@ -82,9 +117,7 @@ export class D1SyncRepository implements SyncRepository {
 
 // ── Row mappers (null → undefined for optional Zod fields) ──────────
 
-function rowToComment(
-  row: typeof schema.comments.$inferSelect,
-): Comment {
+function rowToComment(row: typeof schema.comments.$inferSelect): Comment {
   const { workspaceId, ...rest } = row;
   return {
     ...rest,
@@ -104,9 +137,7 @@ function rowToComment(
   };
 }
 
-function rowToGroup(
-  row: typeof schema.groups.$inferSelect,
-): Group {
+function rowToGroup(row: typeof schema.groups.$inferSelect): Group {
   const { workspaceId, ...rest } = row;
   return {
     ...rest,

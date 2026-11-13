@@ -287,11 +287,15 @@ export const jiraStatusByGroup: Record<string, GetJiraTicketStatus200> = {
   "grp-2": jiraTicketStatusATT102,
 };
 
-/** Default response for PUT /workspaces/:id/comments */
-export const persistCommentsResponse = { ok: true } as const;
+/**
+ * Default response for every per-item write: PUT and DELETE on
+ * /workspaces/:id/comments/:commentId and /workspaces/:id/groups/:groupId.
+ * There is no whole-list write any more (ADR-0019).
+ */
+export const itemWriteResponse = { status: "ok" } as const;
 
-/** Default response for PUT /workspaces/:id/groups */
-export const persistGroupsResponse = { ok: true } as const;
+/** Default response for PUT /workspaces/:id/screenshots/:id/:kind. */
+export const uploadScreenshotResponse = { ok: true } as const;
 
 // ---------------------------------------------------------------------------
 // 6. Create JIRA ticket — POST /api/workspaces/:id/jira/ticket
@@ -395,8 +399,8 @@ export const allFixtures = {
   jiraLabels,
   screenshotFull,
   screenshotElement,
-  persistCommentsResponse,
-  persistGroupsResponse,
+  itemWriteResponse,
+  uploadScreenshotResponse,
 } as const;
 
 // ---------------------------------------------------------------------------

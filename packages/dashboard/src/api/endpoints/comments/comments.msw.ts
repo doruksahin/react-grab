@@ -18,14 +18,17 @@ import type {
 } from 'msw';
 
 import type {
+  DeleteComment200,
   ListComments200Item,
-  PersistComments200
+  UpsertComment200
 } from '../../model';
 
 
 export const getListCommentsResponseMock = (): ListComments200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), groupId: faker.string.alpha({length: {min: 10, max: 20}}), content: faker.string.alpha({length: {min: 10, max: 20}}), elementName: faker.string.alpha({length: {min: 10, max: 20}}), tagName: faker.string.alpha({length: {min: 10, max: 20}}), componentName: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), elementsCount: faker.helpers.arrayElement([faker.number.int(), undefined]), elementSelectors: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), undefined]), commentText: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), timestamp: faker.number.float({fractionDigits: 2}), revealed: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), status: faker.helpers.arrayElement([faker.helpers.arrayElement(['open','ticketed','resolved'] as const), undefined]), pageUrl: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), pageTitle: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), screenshotFullPage: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), screenshotElement: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), jiraTicketId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), capturedBy: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined])})))
 
-export const getPersistCommentsResponseMock = (overrideResponse: Partial<Extract<PersistComments200, object>> = {}): PersistComments200 => ({status: faker.helpers.arrayElement(['ok'] as const), ...overrideResponse})
+export const getUpsertCommentResponseMock = (overrideResponse: Partial<Extract<UpsertComment200, object>> = {}): UpsertComment200 => ({status: faker.helpers.arrayElement(['ok'] as const), ...overrideResponse})
+
+export const getDeleteCommentResponseMock = (overrideResponse: Partial<Extract<DeleteComment200, object>> = {}): DeleteComment200 => ({status: faker.helpers.arrayElement(['ok'] as const), ...overrideResponse})
 
 
 export const getListCommentsMockHandler = (overrideResponse?: ListComments200Item[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<ListComments200Item[]> | ListComments200Item[]), options?: RequestHandlerOptions) => {
@@ -40,18 +43,31 @@ export const getListCommentsMockHandler = (overrideResponse?: ListComments200Ite
   }, options)
 }
 
-export const getPersistCommentsMockHandler = (overrideResponse?: PersistComments200 | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<PersistComments200> | PersistComments200), options?: RequestHandlerOptions) => {
-  return http.put('*/workspaces/:id/comments', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+export const getUpsertCommentMockHandler = (overrideResponse?: UpsertComment200 | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<UpsertComment200> | UpsertComment200), options?: RequestHandlerOptions) => {
+  return http.put('*/workspaces/:id/comments/:commentId', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPersistCommentsResponseMock(),
+    : getUpsertCommentResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getDeleteCommentMockHandler = (overrideResponse?: DeleteComment200 | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<DeleteComment200> | DeleteComment200), options?: RequestHandlerOptions) => {
+  return http.delete('*/workspaces/:id/comments/:commentId', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getDeleteCommentResponseMock(),
       { status: 200
       })
   }, options)
 }
 export const getCommentsMock = () => [
   getListCommentsMockHandler(),
-  getPersistCommentsMockHandler()
+  getUpsertCommentMockHandler(),
+  getDeleteCommentMockHandler()
 ]

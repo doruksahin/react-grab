@@ -12,4 +12,5 @@ export type CreateJiraTicketBody = {
   priority: string;
   summary: string;
   description: string;
+  labels?: string[];
 };

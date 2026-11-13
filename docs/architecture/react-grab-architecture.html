@@ -146,9 +146,9 @@ sequenceDiagram
   participant R as R2
   U->>O: select element, type comment, Enter
   O->>O: build CommentItem with pageUrl, pageTitle, selectors
-  O->>W: PUT /workspaces/:id/comments  (the whole array)
-  W->>D: DELETE every comment in the workspace
-  W->>D: INSERT each comment from the request
+  O->>O: compare with this tab's previous list, keep what changed
+  O->>W: PUT /workspaces/:id/comments/:commentId  (one comment)
+  W->>D: insert, or replace that one row
   W-->>O: 200
   par fire and forget
     O->>O: capture element and full-page screenshots
@@ -158,9 +158,9 @@ sequenceDiagram
     W->>R: put object
   end
 </pre></div>
-      <figcaption>Steps 4 and 5 run in one D1 batch. The server does not merge — it replaces the workspace's comments with whatever this client sent.</figcaption>
+      <figcaption>Step 3 is the change from ADR-0019. The tab sends only the comments it changed, one request each, so it cannot reach comments it never saw.</figcaption>
     </figure>
-    <div class="read risk"><b>Architect's read: lost updates.</b> Two people on the same workspace each hold a copy of the comment list. Whoever saves second deletes the first person's new comment, because their copy never contained it. Nothing on the server can detect this — there is no version, no timestamp check, no per-item write. It is invisible with one user and guaranteed with two.</div>
+    <div class="read"><b>Architect's read: lost updates, fixed.</b> Until ADR-0019 a save sent the whole list and the server deleted every comment before inserting the tab's copy, so whoever saved second erased the first person's new comment. Each write now targets one comment. What remains is narrower: two people editing the <i>same</i> comment at once, where the last write wins.</div>
   </section>
 
   <section>
@@ -235,13 +235,63 @@ sequenceDiagram
   </section>
 
   <section>
+    <span class="eyebrow">Decided and shipped · ADR-0019</span>
+    <h2>Lost updates, and why they could duplicate a Jira ticket</h2>
+    <p class="lede">Clients load comments and groups once at start-up. They used to save by sending the whole list, which the server wrote over everything it had. The sharpest consequence was not a lost comment but a lost ticket link, which disarmed the guard that prevents duplicate tickets.</p>
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant A as Tab A
+  participant B as Tab B
+  participant W as sync-server
+  participant J as Jira
+  A->>W: GET groups  (G has no ticket)
+  B->>W: GET groups  (G has no ticket)
+  A->>W: POST groups/G/jira-ticket
+  W->>J: create issue
+  J-->>W: UI-128
+  W->>W: G.jiraTicketId = UI-128
+  B->>W: PUT groups  (whole list, G still without a ticket)
+  W->>W: delete every group, insert B's copy
+  Note over W: UI-128 is no longer linked to G
+  A->>W: POST groups/G/jira-ticket  (a retry, or someone else)
+  W->>J: create issue
+  J-->>W: UI-129, a duplicate
+</pre></div>
+      <figcaption>Before. Step 8 is B saving an unrelated change; its stale copy of G erases the link that step 6 wrote, so the guard at step 11 lets a second ticket through.</figcaption>
+    </figure>
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant A as Tab A
+  participant B as Tab B
+  participant W as sync-server
+  participant J as Jira
+  A->>W: POST groups/G/jira-ticket
+  W->>J: create issue
+  J-->>W: UI-128
+  W->>W: G.jiraTicketId = UI-128
+  B->>W: PUT groups/H  (only the group B changed)
+  W->>W: replace H, nothing else
+  Note over W: G keeps UI-128, and no client can write jiraTicketId at all
+  A->>W: POST groups/G/jira-ticket  (a retry)
+  W-->>A: UI-128, the guard holds
+</pre></div>
+      <figcaption>Now. Each write targets one item, so B's save cannot reach G, and the ticket fields are server-owned: absent from the client's write type, stripped by the server schema, and never written by the repository.</figcaption>
+    </figure>
+    <div class="read"><b>Why this and not <code>If-Match</code> on the whole list.</b> A version check on the list is the textbook lost-update guard, but every rejected save would need the client to refetch, merge and retry — the merge is the custom logic we would then own. Per-item writes remove the conflict for different items outright; <code>If-Match</code> stays in reserve for the rare case of two people editing the same item. Full reasoning in <code>decree/adr/0019-per-item-writes-for-comments-and-groups.md</code>.</div>
+  </section>
+
+  <section>
     <span class="eyebrow">6 · Register</span>
     <h2>Risks, ranked</h2>
     <div class="scroll"><table>
       <thead><tr><th>Severity</th><th>Risk</th><th>Evidence</th><th>Direction</th></tr></thead>
       <tbody>
         <tr><td><span class="sev high">high</span></td><td>No authentication and wildcard CORS on every route</td><td><code>middleware/</code> holds only <code>inject-repos.ts</code>; <code>app.ts</code> calls <code>cors()</code> with no origin</td><td>Auth gate before storage, origin allowlist — ADR first</td></tr>
-        <tr><td><span class="sev high">high</span></td><td>Comment saves replace the whole workspace, so concurrent writers lose each other's comments</td><td><code>d1.repo.ts</code> <code>persistComments</code>: delete all, then insert</td><td>Per-item writes, or a version check that rejects stale saves</td></tr>
+        <tr><td><span class="sev low">fixed</span></td><td>Comment and group saves replaced the whole workspace, so concurrent writers lost each other's changes — including ticket links, which let a duplicate ticket through</td><td>Was <code>persistComments</code> / <code>persistGroups</code>: delete all, then insert</td><td>ADR-0019: one resource per item, ticket fields server-owned. Same-item edits remain last-write-wins.</td></tr>
         <tr><td><span class="sev med">medium</span></td><td>Client chooses the Jira project and nothing checks it</td><td><code>projectKey: z.string()</code> flows into <code>createIssue</code></td><td>Revisit once the gate exists; SPEC-009 explains today's design</td></tr>
         <tr><td><span class="sev med">medium</span></td><td>Production cannot reach Jira and is far behind</td><td><code>secret list</code> returns <code>[]</code>; last deploy 31 Mar, 759 commits ago</td><td>Decide the account first, then set secrets and redeploy</td></tr>
         <tr><td><span class="sev med">medium</span></td><td>Backend lives in a personal Cloudflare account</td><td><code>wrangler whoami</code>: one account, Doruksahin98</td><td>Move to a company account before anyone depends on it</td></tr>

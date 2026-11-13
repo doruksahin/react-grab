@@ -57,16 +57,16 @@ export type ListComments200Item = {
 /**
  * Lifecycle status of a selection
  */
-export type PersistCommentsBodyItemStatus = typeof PersistCommentsBodyItemStatus[keyof typeof PersistCommentsBodyItemStatus];
+export type UpsertCommentBodyStatus = typeof UpsertCommentBodyStatus[keyof typeof UpsertCommentBodyStatus];
 
 
-export const PersistCommentsBodyItemStatus = {
+export const UpsertCommentBodyStatus = {
   open: 'open',
   ticketed: 'ticketed',
   resolved: 'resolved',
 } as const;
 
-export type PersistCommentsBodyItem = {
+export type UpsertCommentBody = {
   id: string;
   groupId: string;
   /** Element HTML snapshot */
@@ -80,7 +80,7 @@ export type PersistCommentsBodyItem = {
   timestamp: number;
   revealed?: boolean;
   /** Lifecycle status of a selection */
-  status?: PersistCommentsBodyItemStatus;
+  status?: UpsertCommentBodyStatus;
   pageUrl?: string;
   pageTitle?: string;
   /** R2 key for full-page screenshot */
@@ -91,19 +91,30 @@ export type PersistCommentsBodyItem = {
   capturedBy?: string;
 };
 
-export type PersistComments200Status = typeof PersistComments200Status[keyof typeof PersistComments200Status];
+export type UpsertComment200Status = typeof UpsertComment200Status[keyof typeof UpsertComment200Status];
 
 
-export const PersistComments200Status = {
+export const UpsertComment200Status = {
   ok: 'ok',
 } as const;
 
-export type PersistComments200 = {
-  status: PersistComments200Status;
+export type UpsertComment200 = {
+  status: UpsertComment200Status;
 };
 
-export type PersistComments400 = {
+export type UpsertComment400 = {
   error: string;
+};
+
+export type DeleteComment200Status = typeof DeleteComment200Status[keyof typeof DeleteComment200Status];
+
+
+export const DeleteComment200Status = {
+  ok: 'ok',
+} as const;
+
+export type DeleteComment200 = {
+  status: DeleteComment200Status;
 };
 
 /**
@@ -129,42 +140,38 @@ export type ListGroups200Item = {
   synthetic?: boolean;
 };
 
-/**
- * Lifecycle status of a group
- */
-export type PersistGroupsBodyItemStatus = typeof PersistGroupsBodyItemStatus[keyof typeof PersistGroupsBodyItemStatus];
-
-
-export const PersistGroupsBodyItemStatus = {
-  open: 'open',
-  ticketed: 'ticketed',
-  resolved: 'resolved',
-} as const;
-
-export type PersistGroupsBodyItem = {
+export type UpsertGroupBody = {
   id: string;
   name: string;
   createdAt: number;
   revealed?: boolean;
-  /** Lifecycle status of a group */
-  status?: PersistGroupsBodyItemStatus;
-  jiraTicketId?: string;
   synthetic?: boolean;
 };
 
-export type PersistGroups200Status = typeof PersistGroups200Status[keyof typeof PersistGroups200Status];
+export type UpsertGroup200Status = typeof UpsertGroup200Status[keyof typeof UpsertGroup200Status];
 
 
-export const PersistGroups200Status = {
+export const UpsertGroup200Status = {
   ok: 'ok',
 } as const;
 
-export type PersistGroups200 = {
-  status: PersistGroups200Status;
+export type UpsertGroup200 = {
+  status: UpsertGroup200Status;
 };
 
-export type PersistGroups400 = {
+export type UpsertGroup400 = {
   error: string;
+};
+
+export type DeleteGroup200Status = typeof DeleteGroup200Status[keyof typeof DeleteGroup200Status];
+
+
+export const DeleteGroup200Status = {
+  ok: 'ok',
+} as const;
+
+export type DeleteGroup200 = {
+  status: DeleteGroup200Status;
 };
 
 export type UploadScreenshot200 = {
@@ -412,45 +419,85 @@ export const listComments = async (id: string, options?: RequestInit): Promise<l
 
 
 /**
- * @summary Replace all comments in a workspace
+ * @summary Create or replace one comment
  */
-export type persistCommentsResponse200 = {
-  data: PersistComments200
+export type upsertCommentResponse200 = {
+  data: UpsertComment200
   status: 200
 }
 
-export type persistCommentsResponse400 = {
-  data: PersistComments400
+export type upsertCommentResponse400 = {
+  data: UpsertComment400
   status: 400
 }
 
-export type persistCommentsResponseSuccess = (persistCommentsResponse200) & {
+export type upsertCommentResponseSuccess = (upsertCommentResponse200) & {
   headers: Headers;
 };
-export type persistCommentsResponseError = (persistCommentsResponse400) & {
+export type upsertCommentResponseError = (upsertCommentResponse400) & {
   headers: Headers;
 };
 
-export type persistCommentsResponse = (persistCommentsResponseSuccess | persistCommentsResponseError)
+export type upsertCommentResponse = (upsertCommentResponseSuccess | upsertCommentResponseError)
 
-export const getPersistCommentsUrl = (id: string,) => {
+export const getUpsertCommentUrl = (id: string,
+    commentId: string,) => {
 
 
 
 
-  return `/workspaces/${id}/comments`
+  return `/workspaces/${id}/comments/${commentId}`
 }
 
-export const persistComments = async (id: string,
-    persistCommentsBodyItem: PersistCommentsBodyItem[], options?: RequestInit): Promise<persistCommentsResponse> => {
+export const upsertComment = async (id: string,
+    commentId: string,
+    upsertCommentBody: UpsertCommentBody, options?: RequestInit): Promise<upsertCommentResponse> => {
 
-  return customFetch<persistCommentsResponse>(getPersistCommentsUrl(id),
+  return customFetch<upsertCommentResponse>(getUpsertCommentUrl(id,commentId),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      persistCommentsBodyItem,)
+      upsertCommentBody,)
+  }
+);}
+
+
+
+/**
+ * @summary Delete one comment
+ */
+export type deleteCommentResponse200 = {
+  data: DeleteComment200
+  status: 200
+}
+
+export type deleteCommentResponseSuccess = (deleteCommentResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteCommentResponse = (deleteCommentResponseSuccess)
+
+export const getDeleteCommentUrl = (id: string,
+    commentId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/comments/${commentId}`
+}
+
+export const deleteComment = async (id: string,
+    commentId: string, options?: RequestInit): Promise<deleteCommentResponse> => {
+
+  return customFetch<deleteCommentResponse>(getDeleteCommentUrl(id,commentId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
   }
 );}
 
@@ -493,45 +540,85 @@ export const listGroups = async (id: string, options?: RequestInit): Promise<lis
 
 
 /**
- * @summary Replace all groups in a workspace
+ * @summary Create or replace one group
  */
-export type persistGroupsResponse200 = {
-  data: PersistGroups200
+export type upsertGroupResponse200 = {
+  data: UpsertGroup200
   status: 200
 }
 
-export type persistGroupsResponse400 = {
-  data: PersistGroups400
+export type upsertGroupResponse400 = {
+  data: UpsertGroup400
   status: 400
 }
 
-export type persistGroupsResponseSuccess = (persistGroupsResponse200) & {
+export type upsertGroupResponseSuccess = (upsertGroupResponse200) & {
   headers: Headers;
 };
-export type persistGroupsResponseError = (persistGroupsResponse400) & {
+export type upsertGroupResponseError = (upsertGroupResponse400) & {
   headers: Headers;
 };
 
-export type persistGroupsResponse = (persistGroupsResponseSuccess | persistGroupsResponseError)
+export type upsertGroupResponse = (upsertGroupResponseSuccess | upsertGroupResponseError)
 
-export const getPersistGroupsUrl = (id: string,) => {
+export const getUpsertGroupUrl = (id: string,
+    groupId: string,) => {
 
 
 
 
-  return `/workspaces/${id}/groups`
+  return `/workspaces/${id}/groups/${groupId}`
 }
 
-export const persistGroups = async (id: string,
-    persistGroupsBodyItem: PersistGroupsBodyItem[], options?: RequestInit): Promise<persistGroupsResponse> => {
+export const upsertGroup = async (id: string,
+    groupId: string,
+    upsertGroupBody: UpsertGroupBody, options?: RequestInit): Promise<upsertGroupResponse> => {
 
-  return customFetch<persistGroupsResponse>(getPersistGroupsUrl(id),
+  return customFetch<upsertGroupResponse>(getUpsertGroupUrl(id,groupId),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      persistGroupsBodyItem,)
+      upsertGroupBody,)
+  }
+);}
+
+
+
+/**
+ * @summary Delete one group
+ */
+export type deleteGroupResponse200 = {
+  data: DeleteGroup200
+  status: 200
+}
+
+export type deleteGroupResponseSuccess = (deleteGroupResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteGroupResponse = (deleteGroupResponseSuccess)
+
+export const getDeleteGroupUrl = (id: string,
+    groupId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/groups/${groupId}`
+}
+
+export const deleteGroup = async (id: string,
+    groupId: string, options?: RequestInit): Promise<deleteGroupResponse> => {
+
+  return customFetch<deleteGroupResponse>(getDeleteGroupUrl(id,groupId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
   }
 );}
 

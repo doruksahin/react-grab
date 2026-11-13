@@ -74,6 +74,14 @@ pnpm --filter @react-grab/sync-server db:reset:local
 
 All three are described by `src/schemas/env.ts` — the sixth schema in that folder — and validated by `parseJiraEnv()` in `middleware/inject-repos.ts`, the one place the configuration is read. A missing or malformed value fails the first request with every problem named, instead of an opaque Jira 401 later. See ADR-0018 for why this is a Zod schema rather than an env library.
 
+## Writes are per item
+
+Comments and groups are written one item at a time — `PUT`/`DELETE` on `/workspaces/{id}/comments/{commentId}` and `/workspaces/{id}/groups/{groupId}`. There is no route that replaces a whole workspace's list, and none should be added: that is what let a stale client erase other people's comments and the server's ticket links (ADR-0019). A group's `status` and `jiraTicketId` are server-owned — set only by `updateGroupJira` — and are absent from the group write schema.
+
+## Tests
+
+`pnpm --filter @react-grab/sync-server exec vitest run`. Tests run inside workerd through Cloudflare's `@cloudflare/vitest-plugin`, against real D1: `vitest.config.ts` reads the drizzle migrations and `src/test/apply-migrations.ts` applies them. Storage is isolated per test file, not per test, so give each test its own workspace id. Route tests call the Worker through `SELF.fetch`; the config supplies fake Jira credentials so the env schema passes, and no test reaches Jira.
+
 ## Dev server
 
 ```bash

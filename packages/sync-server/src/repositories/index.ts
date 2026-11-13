@@ -1,6 +1,7 @@
 export type {
   Comment,
   Group,
+  GroupWrite,
   ScreenshotStore,
   SyncRepository,
 } from "./types.js";
