@@ -110,6 +110,7 @@
     "@kobalte/core": "^0.13.11",
     "@medv/finder": "^4.0.2",
     "@react-grab/cli": "workspace:*",
+    "@rrweb/record": "2.2.2",
     "@tiptap/core": "^3.22.3",
     "@tiptap/extension-color": "^3.22.3",
     "@tiptap/extension-image": "^3.22.3",

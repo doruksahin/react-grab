@@ -30,6 +30,7 @@ export interface MockOverrides {
   deleteGroup: RouteHandler;
   getScreenshot: RouteHandler;
   uploadScreenshot: RouteHandler;
+  uploadRecording: RouteHandler;
   createJiraTicket: RouteHandler;
   getJiraTicketStatus: RouteHandler;
   addJiraComment: RouteHandler;
@@ -77,6 +78,10 @@ const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
     method: "PUT",
     binary: true,
   },
+  uploadRecording: {
+    pattern: "**/workspaces/*/recordings/*",
+    method: "PUT",
+  },
   createJiraTicket: {
     pattern: "**/workspaces/*/groups/*/jira-ticket",
     method: "POST",
@@ -110,6 +115,7 @@ const DEFAULT_FIXTURES: Record<keyof MockOverrides, unknown> = {
   deleteGroup: fixtures.itemWriteResponse,
   getScreenshot: fixtures.screenshotFull,
   uploadScreenshot: fixtures.uploadScreenshotResponse,
+  uploadRecording: fixtures.uploadRecordingResponse,
   createJiraTicket: fixtures.createJiraTicketResponse,
   getJiraTicketStatus: null, // handled by group-specific logic below
   addJiraComment: fixtures.addJiraCommentResponse,

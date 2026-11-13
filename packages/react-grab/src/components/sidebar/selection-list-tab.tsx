@@ -55,7 +55,11 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
     const query = props.searchQuery?.toLowerCase();
     if (query) {
       items = items.filter((item) => {
-        const text = (item.commentText ?? item.componentName ?? item.tagName).toLowerCase();
+        const text = (
+          item.commentText ??
+          item.componentName ??
+          item.tagName
+        ).toLowerCase();
         return text.includes(query);
       });
     }
@@ -90,9 +94,11 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
       </Show>
       <For each={filteredItems()}>
         {(item) => {
-          const group = () => (item.groupId ? groupMap().get(item.groupId) : undefined);
+          const group = () =>
+            item.groupId ? groupMap().get(item.groupId) : undefined;
           const isFlagged = () => group()?.jiraFlagged === true;
-          const checkable = () => !isSelectionLocked({ groupId: item.groupId }, props.groups);
+          const checkable = () =>
+            !isSelectionLocked({ groupId: item.groupId }, props.groups);
           const isSelected = () => props.selectedIds?.has(item.id) === true;
           const summary = () =>
             item.commentText || item.componentName || item.tagName;
@@ -119,15 +125,20 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
             <SelectionCard flagged={isFlagged()} selected={isSelected()}>
               <SelectionCardBody
                 leading={
-                  props.onToggleSelect && checkable()
-                    ? <SelectionCheckbox checked={isSelected()} onToggle={() => props.onToggleSelect?.(item.id)} />
-                    : undefined
+                  props.onToggleSelect && checkable() ? (
+                    <SelectionCheckbox
+                      checked={isSelected()}
+                      onToggle={() => props.onToggleSelect?.(item.id)}
+                    />
+                  ) : undefined
                 }
                 subheader={
                   <ActiveGroupPicker
                     groups={props.groups}
                     activeGroupId={item.groupId}
-                    onActiveGroupChange={(groupId) => props.onMoveItem?.(item.id, groupId)}
+                    onActiveGroupChange={(groupId) =>
+                      props.onMoveItem?.(item.id, groupId)
+                    }
                     onAddGroup={props.onAddGroup}
                   >
                     <ActiveGroupPicker.Trigger />
@@ -135,15 +146,19 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                   </ActiveGroupPicker>
                 }
                 noTicketAction={
-                  !group()?.jiraTicketId && props.onCreateTicket
-                    ? <CreateTicketButton onClick={() => props.onCreateTicket!(item)} class="w-full" />
-                    : undefined
+                  !group()?.jiraTicketId && props.onCreateTicket ? (
+                    <CreateTicketButton
+                      onClick={() => props.onCreateTicket!(item)}
+                      class="w-full"
+                    />
+                  ) : undefined
                 }
                 summary={summary()}
                 timestamp={item.timestamp}
                 itemId={item.id}
                 hasElementScreenshot={Boolean(item.screenshotElement)}
                 hasFullPageScreenshot={Boolean(item.screenshotFullPage)}
+                recordingUrl={item.recordingUrl}
                 syncServerUrl={props.syncServerUrl}
                 syncWorkspace={props.syncWorkspace}
                 jiraTicketId={group()?.jiraTicketId}
@@ -165,16 +180,28 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
               />
               <Show when={isDevMode()}>
                 <DevInsights>
-                  <DevInsights.Field label="tag" value={item.tagName} color="green" />
-                  <DevInsights.Field label="node" value={item.componentName ?? item.elementName} color="purple" />
+                  <DevInsights.Field
+                    label="tag"
+                    value={item.tagName}
+                    color="green"
+                  />
+                  <DevInsights.Field
+                    label="node"
+                    value={item.componentName ?? item.elementName}
+                    color="purple"
+                  />
                   <DevInsights.Attributes content={item.content} />
                   <Show when={item.elementSelectors?.[0]}>
                     <DevInsights.Section label="selector">
-                      <span class="text-[9px] font-mono text-[#cbd5e1] break-all">{item.elementSelectors?.[0]}</span>
+                      <span class="text-[9px] font-mono text-[#cbd5e1] break-all">
+                        {item.elementSelectors?.[0]}
+                      </span>
                     </DevInsights.Section>
                   </Show>
                   <DevInsights.Section label="html">
-                    <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">{item.content}</pre>
+                    <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
+                      {item.content}
+                    </pre>
                   </DevInsights.Section>
                 </DevInsights>
               </Show>

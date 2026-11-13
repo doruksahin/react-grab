@@ -6,6 +6,7 @@ import {
   CommentItemSchema,
   SelectionGroupSchema,
   UploadResultSchema,
+  RecordingUploadResultSchema,
 } from "./schemas.js";
 import {
   toCommentWire,
@@ -146,6 +147,33 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
         const raw = await response.json();
         const result = UploadResultSchema.parse(raw);
         return result.key;
+      } catch (error) {
+        return handleError(error);
+      }
+    },
+
+    // Raw fetch like uploadScreenshot: the generated client JSON-encodes bodies.
+    uploadRecording: async (
+      commentId: string,
+      gzipBlob: Blob,
+    ): Promise<string> => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/recordings/${encodeURIComponent(commentId)}`,
+          {
+            method: "PUT",
+            body: gzipBlob,
+            headers: {
+              "Content-Type": "application/gzip",
+              ...apiAuthHeaders(),
+            },
+          },
+        );
+        if (!response.ok) {
+          throw new Error(`PUT /recordings failed: ${response.status}`);
+        }
+        return RecordingUploadResultSchema.parse(await response.json())
+          .recordingUrl;
       } catch (error) {
         return handleError(error);
       }

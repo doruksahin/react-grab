@@ -11,6 +11,10 @@ import { groupsRoutes } from "./routes/groups.js";
 import { healthRoutes } from "./routes/health.js";
 import { screenshotsRoutes } from "./routes/screenshots.js";
 import { jiraRoutes } from "./routes/jira.js";
+import {
+  recordingShareRoutes,
+  recordingUploadRoutes,
+} from "./routes/recordings.js";
 import { DOC_CONFIG } from "./lib/doc-config.js";
 
 interface CreateAppOptions {
@@ -34,6 +38,8 @@ export function createApp(options?: CreateAppOptions) {
   for (const mw of options?.middleware ?? []) {
     app.use("/workspaces/*", mw);
     app.use("/jira/*", mw);
+    // Recording links: storage, but no token; the share id is the credential (ADR-0021).
+    app.use("/r/*", mw);
   }
 
   app.route("/", healthRoutes);
@@ -41,6 +47,8 @@ export function createApp(options?: CreateAppOptions) {
   app.route("/", groupsRoutes);
   app.route("/", screenshotsRoutes);
   app.route("/", jiraRoutes);
+  app.route("/", recordingUploadRoutes);
+  app.route("/", recordingShareRoutes);
 
   app.doc("/doc", DOC_CONFIG);
   app.get("/ui", swaggerUI({ url: "/doc" }));

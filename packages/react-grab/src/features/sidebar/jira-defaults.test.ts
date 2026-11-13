@@ -100,3 +100,23 @@ describe("defaultDescription page link (S5.6)", () => {
     expect(description).toContain("[Page B](https://app.example.com/b)");
   });
 });
+
+describe("defaultDescription recording link (SPEC-020)", () => {
+  it("links the recording of how the user got there", () => {
+    const description = defaultDescription(group, [
+      makeItem({
+        recordingUrl:
+          "https://sync.example.com/r/6f1c2d3e-4a5b-4c6d-8e7f-001122334455",
+      }),
+    ]);
+    expect(description).toContain(
+      "- **Recording:** [Watch how we got here](https://sync.example.com/r/6f1c2d3e-4a5b-4c6d-8e7f-001122334455)",
+    );
+  });
+
+  it("adds no recording line when there is no recording", () => {
+    expect(defaultDescription(group, [makeItem()])).not.toContain(
+      "**Recording:**",
+    );
+  });
+});

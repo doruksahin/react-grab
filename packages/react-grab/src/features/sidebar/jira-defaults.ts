@@ -14,14 +14,13 @@ export function defaultSummary(group: SelectionGroup): string {
 }
 
 /**
- * Markdown link to the page a selection was made on. The title falls back
- * to the URL; brackets in the title and parentheses in the URL are escaped
- * so they cannot end the link early.
+ * Markdown link. The text falls back to the URL; brackets in the text and
+ * parentheses in the URL are escaped so they cannot end the link early.
  */
-function renderPageLink(pageUrl: string, pageTitle?: string): string {
-  const text = (pageTitle || pageUrl).replace(/[\\[\]]/g, "\\$&");
-  const href = pageUrl.replace(/\(/g, "%28").replace(/\)/g, "%29");
-  return `[${text}](${href})`;
+function renderMarkdownLink(url: string, text?: string): string {
+  const label = (text || url).replace(/[\\[\]]/g, "\\$&");
+  const href = url.replace(/\(/g, "%28").replace(/\)/g, "%29");
+  return `[${label}](${href})`;
 }
 
 /**
@@ -41,7 +40,15 @@ function renderSelection(item: CommentItem, index: number): string {
   }
 
   if (item.pageUrl) {
-    lines.push(`- **Page:** ${renderPageLink(item.pageUrl, item.pageTitle)}`);
+    lines.push(
+      `- **Page:** ${renderMarkdownLink(item.pageUrl, item.pageTitle)}`,
+    );
+  }
+
+  if (item.recordingUrl) {
+    lines.push(
+      `- **Recording:** ${renderMarkdownLink(item.recordingUrl, "Watch how we got here")}`,
+    );
   }
 
   const filePath = extractFilePath(item.content ?? "");

@@ -116,6 +116,9 @@ export interface SelectionCardBodyProps {
   syncServerUrl?: string;
   syncWorkspace?: string;
 
+  // Link to the replay of how the user got here (SPEC-020)
+  recordingUrl?: string;
+
   // Bottom meta row
   jiraIssueType?: string | null;
   jiraPriority?: string | null;
@@ -209,45 +212,60 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
         </Show>
       }
       screenshots={
-        <Show when={screenshotContext()}>
-          {(ctx) => {
-            const clickable = () => Boolean(props.onScreenshotClick);
-            const thumbClass = () =>
-              clickable()
-                ? "w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04] cursor-zoom-in hover:border-primary/60 transition-colors"
-                : "w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04]";
-            return (
-              <div class="flex gap-1.5 mt-1.5">
-                <Show when={props.hasElementScreenshot}>
-                  <ScreenshotThumb
-                    src={screenshotUrl(
-                      ctx().serverUrl,
-                      ctx().workspace,
-                      ctx().itemId,
-                      "element",
-                    )}
-                    label="Element"
-                    class={thumbClass()}
-                    onOpen={clickable() ? props.onScreenshotClick : undefined}
-                  />
-                </Show>
-                <Show when={props.hasFullPageScreenshot}>
-                  <ScreenshotThumb
-                    src={screenshotUrl(
-                      ctx().serverUrl,
-                      ctx().workspace,
-                      ctx().itemId,
-                      "full",
-                    )}
-                    label="Full page"
-                    class={thumbClass()}
-                    onOpen={clickable() ? props.onScreenshotClick : undefined}
-                  />
-                </Show>
-              </div>
-            );
-          }}
-        </Show>
+        <>
+          <Show when={screenshotContext()}>
+            {(ctx) => {
+              const clickable = () => Boolean(props.onScreenshotClick);
+              const thumbClass = () =>
+                clickable()
+                  ? "w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04] cursor-zoom-in hover:border-primary/60 transition-colors"
+                  : "w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04]";
+              return (
+                <div class="flex gap-1.5 mt-1.5">
+                  <Show when={props.hasElementScreenshot}>
+                    <ScreenshotThumb
+                      src={screenshotUrl(
+                        ctx().serverUrl,
+                        ctx().workspace,
+                        ctx().itemId,
+                        "element",
+                      )}
+                      label="Element"
+                      class={thumbClass()}
+                      onOpen={clickable() ? props.onScreenshotClick : undefined}
+                    />
+                  </Show>
+                  <Show when={props.hasFullPageScreenshot}>
+                    <ScreenshotThumb
+                      src={screenshotUrl(
+                        ctx().serverUrl,
+                        ctx().workspace,
+                        ctx().itemId,
+                        "full",
+                      )}
+                      label="Full page"
+                      class={thumbClass()}
+                      onOpen={clickable() ? props.onScreenshotClick : undefined}
+                    />
+                  </Show>
+                </div>
+              );
+            }}
+          </Show>
+          <Show when={props.recordingUrl}>
+            {(recordingUrl) => (
+              <a
+                data-react-grab-recording-link
+                href={recordingUrl()}
+                target="_blank"
+                rel="noreferrer"
+                class="inline-flex items-center gap-1 mt-1.5 text-[10px] text-primary hover:underline"
+              >
+                Watch how we got here {"\u2197"}
+              </a>
+            )}
+          </Show>
+        </>
       }
       meta={
         <div class="flex items-center gap-1.5 mt-1.5">

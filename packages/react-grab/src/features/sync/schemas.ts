@@ -16,6 +16,7 @@ export const CommentItemSchema = z.object({
   pageTitle: z.string().optional(),
   screenshotFullPage: z.string().optional(),
   screenshotElement: z.string().optional(),
+  recordingUrl: z.string().optional(),
   jiraTicketId: z.string().optional(),
   capturedBy: z.string().optional(),
   revealed: z.boolean().optional(),
@@ -37,4 +38,8 @@ export const SelectionGroupSchema = z.object({
 
 export const UploadResultSchema = z.object({
   key: z.string(),
+});
+
+export const RecordingUploadResultSchema = z.object({
+  recordingUrl: z.string().url(),
 });

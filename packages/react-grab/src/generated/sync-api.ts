@@ -50,6 +50,8 @@ export type ListComments200Item = {
   screenshotFullPage?: string;
   /** R2 key for element screenshot */
   screenshotElement?: string;
+  /** Link to the replay of how the user got here (SPEC-020) */
+  recordingUrl?: string;
   jiraTicketId?: string;
   capturedBy?: string;
 };
@@ -87,6 +89,8 @@ export type UpsertCommentBody = {
   screenshotFullPage?: string;
   /** R2 key for element screenshot */
   screenshotElement?: string;
+  /** Link to the replay of how the user got here (SPEC-020) */
+  recordingUrl?: string;
   jiraTicketId?: string;
   capturedBy?: string;
 };
@@ -343,6 +347,25 @@ export type SearchJiraUsers200Item = {
 };
 
 export type SearchJiraUsers500 = {
+  error: string;
+};
+
+export type UploadRecording200 = {
+  recordingUrl: string;
+};
+
+export type UploadRecording415 = {
+  error: string;
+};
+
+export type GetRecordingShareParams = {
+/**
+ * Present: return the gzip events instead of the page
+ */
+events?: string;
+};
+
+export type GetRecordingShare404 = {
   error: string;
 };
 
@@ -1090,6 +1113,105 @@ export const getSearchJiraUsersUrl = (params: SearchJiraUsersParams,) => {
 export const searchJiraUsers = async (params: SearchJiraUsersParams, options?: RequestInit): Promise<searchJiraUsersResponse> => {
 
   return customFetch<searchJiraUsersResponse>(getSearchJiraUsersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+/**
+ * @summary Upload the recording that led to a comment
+ */
+export type uploadRecordingResponse200 = {
+  data: UploadRecording200
+  status: 200
+}
+
+export type uploadRecordingResponse415 = {
+  data: UploadRecording415
+  status: 415
+}
+
+export type uploadRecordingResponseSuccess = (uploadRecordingResponse200) & {
+  headers: Headers;
+};
+export type uploadRecordingResponseError = (uploadRecordingResponse415) & {
+  headers: Headers;
+};
+
+export type uploadRecordingResponse = (uploadRecordingResponseSuccess | uploadRecordingResponseError)
+
+export const getUploadRecordingUrl = (id: string,
+    commentId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/recordings/${commentId}`
+}
+
+export const uploadRecording = async (id: string,
+    commentId: string,
+    uploadRecordingBody: Blob, options?: RequestInit): Promise<uploadRecordingResponse> => {
+
+  return customFetch<uploadRecordingResponse>(getUploadRecordingUrl(id,commentId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/gzip', ...options?.headers },
+    body: JSON.stringify(
+      uploadRecordingBody,)
+  }
+);}
+
+
+
+/**
+ * @summary Watch a recording (public, the link is the credential)
+ */
+export type getRecordingShareResponse200 = {
+  data: void
+  status: 200
+}
+
+export type getRecordingShareResponse404 = {
+  data: GetRecordingShare404
+  status: 404
+}
+
+export type getRecordingShareResponseSuccess = (getRecordingShareResponse200) & {
+  headers: Headers;
+};
+export type getRecordingShareResponseError = (getRecordingShareResponse404) & {
+  headers: Headers;
+};
+
+export type getRecordingShareResponse = (getRecordingShareResponseSuccess | getRecordingShareResponseError)
+
+export const getGetRecordingShareUrl = (shareId: string,
+    params?: GetRecordingShareParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/r/${shareId}?${stringifiedParams}` : `/r/${shareId}`
+}
+
+export const getRecordingShare = async (shareId: string,
+    params?: GetRecordingShareParams, options?: RequestInit): Promise<getRecordingShareResponse> => {
+
+  return customFetch<getRecordingShareResponse>(getGetRecordingShareUrl(shareId,params),
   {
     ...options,
     method: 'GET'

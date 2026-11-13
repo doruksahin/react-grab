@@ -304,6 +304,11 @@ export const itemWriteResponse = { status: "ok" } as const;
 /** Default response for PUT /workspaces/:id/screenshots/:id/:kind. */
 export const uploadScreenshotResponse = { ok: true } as const;
 
+/** Default response for PUT /workspaces/:id/recordings/:commentId (SPEC-020). */
+export const RECORDING_URL =
+  "http://localhost:9999/r/6f1c2d3e-4a5b-4c6d-8e7f-001122334455";
+export const uploadRecordingResponse = { recordingUrl: RECORDING_URL } as const;
+
 // ---------------------------------------------------------------------------
 // 6. Create JIRA ticket — POST /api/workspaces/:id/jira/ticket
 // ---------------------------------------------------------------------------
@@ -408,6 +413,7 @@ export const allFixtures = {
   screenshotElement,
   itemWriteResponse,
   uploadScreenshotResponse,
+  uploadRecordingResponse,
 } as const;
 
 // ---------------------------------------------------------------------------

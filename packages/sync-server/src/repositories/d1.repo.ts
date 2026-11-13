@@ -41,6 +41,7 @@ export class D1SyncRepository implements SyncRepository {
           pageTitle: item.pageTitle ?? null,
           screenshotFullPage: item.screenshotFullPage ?? null,
           screenshotElement: item.screenshotElement ?? null,
+          recordingUrl: item.recordingUrl ?? null,
           jiraTicketId: item.jiraTicketId ?? null,
           capturedBy: item.capturedBy ?? null,
         },
@@ -132,6 +133,7 @@ function rowToComment(row: typeof schema.comments.$inferSelect): Comment {
     pageTitle: rest.pageTitle ?? undefined,
     screenshotFullPage: rest.screenshotFullPage ?? undefined,
     screenshotElement: rest.screenshotElement ?? undefined,
+    recordingUrl: rest.recordingUrl ?? undefined,
     jiraTicketId: rest.jiraTicketId ?? undefined,
     capturedBy: rest.capturedBy ?? undefined,
   };

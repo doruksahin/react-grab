@@ -1,0 +1,1 @@
+ALTER TABLE `comments` ADD `recording_url` text;

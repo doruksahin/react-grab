@@ -26,6 +26,8 @@ export interface StorageAdapter {
     type: "full" | "element",
     blob: Blob,
   ) => Promise<string>;
+  /** Upload a gzip session recording (SPEC-020). Returns the link to watch it. Optional. */
+  uploadRecording?: (commentId: string, gzipBlob: Blob) => Promise<string>;
 }
 
 /**
