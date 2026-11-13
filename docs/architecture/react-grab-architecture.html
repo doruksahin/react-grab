@@ -72,7 +72,7 @@ th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .05em; text
   <header>
     <h1>React Grab architecture</h1>
     <p class="lede">The system as it runs today, one flow at a time, with the places it breaks marked on the flow itself. Every arrow below was traced in the code on the date given; nothing is drawn from intent.</p>
-    <p class="meta">13 Nov 2026 · branch claude/penpot-mcp-access-70fbd6 · HEAD 5de0da52</p>
+    <p class="meta">13 Nov 2026 · branch claude/penpot-mcp-access-70fbd6 · HEAD 5618ed98</p>
   </header>
 
   <section>
@@ -82,10 +82,10 @@ th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .05em; text
     <figure>
       <div class="diagram"><pre class="mermaid">
 flowchart LR
-  subgraph browser["Browser · AdCreative-Frontend-V2"]
-    host["Host app"] -- "initSync(serverUrl, workspace, jiraProjectKey)" --> overlay["react-grab overlay · Solid in shadow DOM"]
+  subgraph browser["Browser · host app"]
+    host["Host app"] -- "initSync(serverUrl, apiToken, workspace, jiraProjectKey)" --> overlay["react-grab overlay · Solid in shadow DOM"]
   end
-  subgraph cf["Cloudflare · personal account Doruksahin98"]
+  subgraph cf["Cloudflare · personal account"]
     worker["sync-server Worker · Hono"]
     d1[("D1 · comments, groups")]
     r2[("R2 · screenshots")]
@@ -93,10 +93,10 @@ flowchart LR
     worker --> r2
   end
   jira["Jira Cloud · JIRA_BASE_URL"]
-  overlay -- "HTTPS · no auth · CORS *" --> worker
+  overlay -- "HTTPS · Bearer SYNC_API_TOKEN · CORS allowlist" --> worker
   worker -- "Basic auth · JIRA_EMAIL + JIRA_API_TOKEN" --> jira
 </pre></div>
-      <figcaption>The browser-to-Worker edge carries no credential at all. The Worker-to-Jira edge carries the only credential in the system.</figcaption>
+      <figcaption>Two edges, two credentials. The browser sends the shared sync token on every data request (ADR-0020); only the Worker holds the Jira credential. Local development uses this same deployed Worker — there is no second backend.</figcaption>
     </figure>
   </section>
 
@@ -112,7 +112,7 @@ sequenceDiagram
   participant W as sync-server
   participant D as D1
   participant J as Jira
-  H->>O: initSync(serverUrl, workspace, jiraProjectKey)
+  H->>O: initSync(serverUrl, apiToken, workspace, jiraProjectKey)
   O->>W: GET /workspaces/:id/comments
   W->>D: select comments where workspace
   D-->>W: rows
@@ -202,36 +202,40 @@ sequenceDiagram
 </pre></div>
       <figcaption>The idempotency guard (step 9) makes a retry safe: a second POST for the same group returns the first ticket instead of creating a duplicate. That is what made RG-2's Retry button safe to add.</figcaption>
     </figure>
-    <div class="read risk"><b>Architect's read.</b> Step 11 files into whatever project the request names. The server validates that it is a string and nothing else, and the token can write to every project its account can reach. On its own this is a medium issue; it matters less than the next section, because without a caller check anyone can send this request.</div>
+    <div class="read warn"><b>Architect's read.</b> Step 11 files into whatever project the request names. The server validates that it is a string and nothing else, and the Jira credential can write to every project its account can reach. Since ADR-0020 only callers holding the sync token can send this request, so this is a trust-the-team issue, not an open door.</div>
   </section>
 
   <section>
-    <span class="eyebrow">5 · Target</span>
-    <h2>Where the missing gate belongs</h2>
-    <p class="lede">The mechanism is not chosen yet and needs its own ADR. What is fixed is <i>where</i> it sits: before the middleware that touches storage or Jira, so no route is reachable without it.</p>
+    <span class="eyebrow">5 · Decided and shipped · ADR-0020</span>
+    <h2>The gate in front of every data route</h2>
+    <p class="lede">Two checks run before the middleware that touches storage or Jira, so no data route is reachable without them. <code>/health</code>, <code>/doc</code> and <code>/ui</code> stay public.</p>
     <figure>
       <div class="diagram"><pre class="mermaid">
 sequenceDiagram
   autonumber
   participant O as Overlay
-  participant G as Auth gate
+  participant C as CORS
+  participant G as bearerAuth
   participant M as inject-repos
   participant H as Route handler
-  O->>G: any request plus a credential
-  alt origin not on the allowlist
-    G-->>O: CORS rejection
-  else no credential, or not valid for this workspace
-    G-->>O: 401
-  else valid
-    G->>M: continue
-    M->>M: parseJiraEnv, build repos
-    M->>H: handle
-    H-->>O: response
+  O->>C: request with Authorization: Bearer token
+  alt origin not localhost and not in ALLOWED_ORIGINS
+    C-->>O: no CORS headers, the browser blocks it
+  else allowed origin
+    C->>G: continue
+    alt token missing or wrong
+      G-->>O: 401
+    else token matches SYNC_API_TOKEN
+      G->>M: continue
+      M->>M: parseJiraEnv, build repos
+      M->>H: handle
+      H-->>O: response
+    end
   end
 </pre></div>
-      <figcaption>Two checks, in this order: is the origin allowed at all, then is this caller allowed this workspace. The second one is also what would let the project key be trusted.</figcaption>
+      <figcaption>CORS first, so a preflight succeeds without a credential as the protocol requires; then Hono's built-in <code>bearerAuth</code> with its constant-time comparison. If <code>SYNC_API_TOKEN</code> is unset the gate fails closed. Screenshots load through the same token, as blob URLs.</figcaption>
     </figure>
-    <div class="read"><b>Candidates for the ADR, not yet researched against our setup:</b> Cloudflare Access in front of the Worker, or a per-workspace key issued to each host app. The constraint either has to satisfy is that the caller is a browser overlay on someone else's origin, so the credential must survive a cross-origin request and must not be something the host app bundles in plain sight.</div>
+    <div class="read"><b>Why a shared bearer token.</b> Cloudflare Access was the other candidate, but it answers a CORS preflight with 403 because preflights carry no credentials, so a cross-origin overlay cannot use it without extra configuration. A single token is the least moving parts for a handful of trusted callers. Its limit: anyone with the token reaches every workspace. Per-workspace keys are the next step if outside teams ever call the Worker. Full reasoning in <code>decree/adr/0020-bearer-token-and-origin-allowlist-for-the-sync-server.md</code>.</div>
   </section>
 
   <section>
@@ -290,12 +294,14 @@ sequenceDiagram
     <div class="scroll"><table>
       <thead><tr><th>Severity</th><th>Risk</th><th>Evidence</th><th>Direction</th></tr></thead>
       <tbody>
-        <tr><td><span class="sev high">high</span></td><td>No authentication and wildcard CORS on every route</td><td><code>middleware/</code> holds only <code>inject-repos.ts</code>; <code>app.ts</code> calls <code>cors()</code> with no origin</td><td>Auth gate before storage, origin allowlist — ADR first</td></tr>
-        <tr><td><span class="sev low">fixed</span></td><td>Comment and group saves replaced the whole workspace, so concurrent writers lost each other's changes — including ticket links, which let a duplicate ticket through</td><td>Was <code>persistComments</code> / <code>persistGroups</code>: delete all, then insert</td><td>ADR-0019: one resource per item, ticket fields server-owned. Same-item edits remain last-write-wins.</td></tr>
-        <tr><td><span class="sev med">medium</span></td><td>Client chooses the Jira project and nothing checks it</td><td><code>projectKey: z.string()</code> flows into <code>createIssue</code></td><td>Revisit once the gate exists; SPEC-009 explains today's design</td></tr>
-        <tr><td><span class="sev med">medium</span></td><td>Production cannot reach Jira and is far behind</td><td><code>secret list</code> returns <code>[]</code>; last deploy 31 Mar, 759 commits ago</td><td>Decide the account first, then set secrets and redeploy</td></tr>
-        <tr><td><span class="sev med">medium</span></td><td>Backend lives in a personal Cloudflare account</td><td><code>wrangler whoami</code>: one account, Doruksahin98</td><td>Move to a company account before anyone depends on it</td></tr>
+        <tr><td><span class="sev med">medium</span></td><td>Backend lives in a personal Cloudflare account</td><td><code>account_id</code> pinned in <code>wrangler.toml</code>; one person's login deploys it</td><td>Move to a company account before anyone depends on it: new D1 and R2, migrations, the three secrets</td></tr>
+        <tr><td><span class="sev med">medium</span></td><td>Local work writes to the real backend</td><td>One shared Worker by choice, no local backend; the dashboard proxy defaults to it</td><td>Fine while nobody else uses it. Test with a throwaway workspace; a ticket created while testing is a real one in <code>SCRUM</code></td></tr>
+        <tr><td><span class="sev low">low</span></td><td>One shared token opens every workspace</td><td><code>bearerAuth</code> checks a single <code>SYNC_API_TOKEN</code></td><td>Rotate with <code>wrangler secret put</code> and update callers; per-workspace keys if outside teams join</td></tr>
+        <tr><td><span class="sev low">low</span></td><td>Client chooses the Jira project and nothing checks it</td><td><code>projectKey: z.string()</code> flows into <code>createIssue</code>; only token holders can send it</td><td>Map workspace to project on the server if more than one team shares the Worker; SPEC-009 explains today's design</td></tr>
         <tr><td><span class="sev low">low</span></td><td>Jira polling scales with groups × tabs</td><td><code>sync-layer.ts</code>: one request per ticketed group every 30 s</td><td>Watch it; batch or move polling server-side if it bites</td></tr>
+        <tr><td><span class="sev low">fixed</span></td><td>No authentication and wildcard CORS on every route</td><td>Was: <code>cors()</code> with no origin, no auth middleware</td><td>ADR-0020: bearer token and origin allowlist, live in production</td></tr>
+        <tr><td><span class="sev low">fixed</span></td><td>Comment and group saves replaced the whole workspace, so concurrent writers lost each other's changes — including ticket links, which let a duplicate ticket through</td><td>Was <code>persistComments</code> / <code>persistGroups</code>: delete all, then insert</td><td>ADR-0019: one resource per item, ticket fields server-owned. Same-item edits remain last-write-wins.</td></tr>
+        <tr><td><span class="sev low">fixed</span></td><td>Production could not reach Jira and was far behind</td><td>Was: no secrets, last deploy 31 Mar</td><td>Deployed 13 Nov from this branch; all three secrets set; live checks 200/401 as expected</td></tr>
       </tbody>
     </table></div>
   </section>
@@ -311,6 +317,8 @@ sequenceDiagram
         <tr><td>ADR-0004</td><td>Descriptions are written as markdown and converted to Atlassian's format on the server</td><td>Ticket</td></tr>
         <tr><td>ADR-0008</td><td>A loose comment gets an invisible single-item group so it can be ticketed</td><td>Ticket</td></tr>
         <tr><td>ADR-0018</td><td>Worker configuration is a Zod schema, validated where it is read</td><td>Ticket, step 7</td></tr>
+        <tr><td>ADR-0019</td><td>Comments and groups are written one item at a time; ticket fields are server-owned</td><td>Lost updates</td></tr>
+        <tr><td>ADR-0020</td><td>Every data route needs the shared bearer token; CORS allows localhost plus <code>ALLOWED_ORIGINS</code></td><td>Context, Gate</td></tr>
       </tbody>
     </table></div>
   </section>
