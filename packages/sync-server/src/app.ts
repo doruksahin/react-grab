@@ -29,10 +29,11 @@ export function createApp(options?: CreateAppOptions) {
   app.use("/workspaces/*", requireApiToken);
   app.use("/jira/*", requireApiToken);
 
-  if (options?.middleware) {
-    for (const mw of options.middleware) {
-      app.use("*", mw);
-    }
+  // Only the data routes use the injected repos. Keeping the middleware off
+  // /health means a missing Jira secret cannot take the health check down.
+  for (const mw of options?.middleware ?? []) {
+    app.use("/workspaces/*", mw);
+    app.use("/jira/*", mw);
   }
 
   app.route("/", healthRoutes);
