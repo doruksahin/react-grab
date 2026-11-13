@@ -1,4 +1,7 @@
 name = "react-grab-sync-server"
+# Personal Cloudflare account, chosen for now; moves to a company account last.
+# Pinned so a deploy cannot land in another account a login happens to reach.
+account_id = "601031668a1130f8c22117a0ea8e5e63"
 main = "src/worker.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
@@ -10,7 +13,7 @@ workers_dev = true
 # JIRA_BASE_URL decides which Jira site every ticket is created on.
 [vars]
 ENVIRONMENT = "development"
-JIRA_BASE_URL = "https://appier.atlassian.net"
+JIRA_BASE_URL = "https://doruksahin.atlassian.net"
 
 # D1 database binding
 [[d1_databases]]
