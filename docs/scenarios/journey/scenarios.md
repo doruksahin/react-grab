@@ -127,9 +127,9 @@ Personas, legend and gap priorities are in `README.md`. Paths: `rg/` is `package
 |---|---|---|---|---|
 | S5.1 | Create a ticket from a group | flow (P07 5–8, P05 08–09) | done | none (`sidebar.spec` only opens the dialog) |
 | S5.2 | Several selections in one ticket | flow (P07 multi branch, "UI-128 · 2 selections linked") | done | none |
-| S5.3 | Required fields block submit | none | partial (only Summary `required`; submit waits for issue types) | none |
-| S5.4 | Submit fails, form is kept, retry | flow (P07 6 Submit failed) | partial (error shown and form kept, no Retry button) | none |
-| S5.5 | Submit succeeds and shows the ticket key | flow (P07 7 Sent to Jira) | partial (dialog closes, no success state; key appears on label) | none |
+| S5.3 | Required fields block submit | board (P08 G2.1) | done (RG-2: summary and work type gate submit, missing fields marked) | e2e (`mocked/jira-create-dialog.spec`) |
+| S5.4 | Submit fails, form is kept, retry | flow (P07 6), board (P08 G2.3) | done (RG-2: banner above the fields, Retry button) | e2e (`mocked/jira-create-dialog.spec`) |
+| S5.5 | Submit succeeds and shows the ticket key | flow (P07 7), board (P08 G2.4) | done (RG-2: dialog confirms the ticket and stays open) | e2e (`mocked/jira-create-dialog.spec`) |
 | S5.6 | Ticket description has everything P3 needs | none | done (RG-1: page title and URL per selection) | e2e (`mocked/jira-ticket-page-link.spec`), unit (`jira-defaults.test`) |
 | S5.7 | Screenshots are attached to the ticket | none (P07 form always shows "No screenshots") | done | none (lightbox only: `mocked/screenshot-lightbox.spec`) |
 | S5.8 | Create a ticket for one ungrouped comment | flow (P05 08) | done (synthetic group) | e2e (`mocked/jira-ticket-page-link.spec`) |
@@ -146,18 +146,18 @@ Personas, legend and gap priorities are in `README.md`. Paths: `rg/` is `package
 
 **S5.3 Required fields**
 - Given the Jira form is open
-- When P2 clears the summary or no work type is selected
-- Then submit is disabled and the missing field is marked
+- When P2 clears the summary (whitespace does not count) or no work type is selected
+- Then submit is disabled and the missing field shows "Required"
 
 **S5.4 Submit fails**
 - Given the Jira form is filled
 - When the request fails
-- Then the form shows "Could not send", keeps every field and the comment, and offers Retry
+- Then a banner above the fields says "Could not create the ticket. Your form is kept.", every field keeps its value, and the submit button becomes Retry
 
 **S5.5 Submit succeeds**
 - Given the Jira form is filled
 - When the request succeeds
-- Then P2 sees the ticket key with a link, and the group is locked (S3.6)
+- Then the dialog stays open and shows "✓ <key> created", the line "This group is now locked to <key>.", an "Open in Jira" link and a Done button, and the group is locked (S3.6)
 
 **S5.6 Ticket description content**
 - Given a comment on the `CardDescription` component on `/projects/42`

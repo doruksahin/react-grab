@@ -51,7 +51,7 @@ Priority is impact on the core promise ("select, comment, create, and the ticket
 | # | Gap | Scenarios | Why it matters | Effort |
 |---|---|---|---|---|
 | 1 | **Done (RG-1, 2026-11-13).** The ticket had no page URL. Comments now store `pageUrl` and `pageTitle`, and the description links each selection to its page. | S5.6, S8.1 | P3 can find where the problem is. | S |
-| 2 | Jira create has no success state, no retry button, and no e2e test for submit, validation or failure. Penpot P07 already designs submit-failed and sent states. | S5.3, S5.4, S5.5 | The "money shot" of the demo is untested and has no confirmation. | M |
+| 2 | **Done (RG-2, 2026-11-13).** Jira create had no validation, no retry and no success state, and none of the submit path was tested. All three are in, covered by five acceptance tests. | S5.3, S5.4, S5.5 | The demo's main moment now confirms itself and is tested. | M |
 | 3 | The group menu does not flip near viewport edges, so it is clipped. P06 designs the fix and measures the clipping (189 px right, 113 px bottom). | S3.5 | Visible bug on real host apps such as Cognograph. | S |
 | 4 | The sidebar "Retry" button when the sync server is unreachable has an empty handler. | S4.6 | A dead button in an error state erodes trust. | S |
 | 5 | No undo after removing a comment. The P05 "Undo" button only restarts the flow. | S2.5 | Removal is easy to do by mistake and cannot be reverted. | M |

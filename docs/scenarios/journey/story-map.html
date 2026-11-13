@@ -104,7 +104,7 @@ h2 { font-size: 22px; font-weight: 600; }
   <header>
     <h1>React Grab story map</h1>
     <p class="lede">Every scenario of the select → comment → group → Jira → fix loop, checked against three sources: the Penpot prototype, the code, and the Playwright tests. Click a status to see only those cards.</p>
-    <p class="meta">Snapshot 2026-11-13 · code HEAD 40aeb71c + RG-1 · Penpot file “React Grab · Custom UI &amp; States” · source of truth: docs/scenarios/journey/</p>
+    <p class="meta">Snapshot 2026-11-13 · code HEAD 40aeb71c + RG-1, RG-2 · Penpot file “React Grab · Custom UI &amp; States” · source of truth: docs/scenarios/journey/</p>
   </header>
 
   <section aria-label="Status filter" class="summary" id="summary"></section>
@@ -178,9 +178,9 @@ const S = [
   ["S4.7","Sidebar does not hide the label","partial","flow P06","partial","none"],
   ["S5.1","Create a ticket from a group","untested","flow P07","done","none"],
   ["S5.2","Several selections, one ticket","untested","flow P07","done","none"],
-  ["S5.3","Required fields block submit","partial","none","partial","none"],
-  ["S5.4","Submit fails, form kept, retry","partial","flow P07","no Retry","none"],
-  ["S5.5","Submit succeeds, key shown","partial","flow P07","no success state","none"],
+  ["S5.3","Required fields block submit","covered","board P08","done (RG-2)","e2e"],
+  ["S5.4","Submit fails, form kept, retry","covered","flow P07 · P08","done (RG-2)","e2e"],
+  ["S5.5","Submit succeeds, key shown","covered","flow P07 · P08","done (RG-2)","e2e"],
   ["S5.6","Description has what P3 needs","nodesign","none","done (RG-1)","e2e + unit"],
   ["S5.7","Screenshots attached","untested","none","done","none"],
   ["S5.8","Ticket for one ungrouped comment","covered","flow P05","done","e2e"],
@@ -200,7 +200,7 @@ const S = [
 ];
 const GAPS = [
   ["Done (RG-1): tickets link to the page", "Each comment now stores its page URL and title, and the ticket description links every selection to its page.", "S5.6 · S8.1", "done"],
-  ["Jira create has no success state, no Retry, no test", "The demo's main moment is untested. Penpot already designs the failed and sent states.", "S5.3 · S5.4 · S5.5", "M"],
+  ["Done (RG-2): Jira create validates, retries and confirms", "Create is gated on the required fields, a failed submit keeps the form and offers Retry, and success confirms the ticket in the dialog.", "S5.3 · S5.4 · S5.5", "done"],
   ["Group menu is clipped near screen edges", "Visible on real host apps. Penpot measures 189 px clipped on the right and 113 px at the bottom, and designs the fix.", "S3.5", "S"],
   ["Retry does nothing when the sync server is down", "A dead button in an error state erodes trust.", "S4.6", "S"],
   ["No undo after removing a comment", "Removal is easy to do by mistake and cannot be reverted.", "S2.5", "M"],

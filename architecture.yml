@@ -589,6 +589,10 @@ data_attrs:
         - jira-form
         - jira-create
         - jira-dots
+        - jira-error
+        - jira-success
+        - jira-required
+        - jira-open-ticket
         - create-ticket
         - jira-ticket-link
 
@@ -727,11 +731,15 @@ data_attrs:
     generation-abort: { scope: generation, src: 1, tests: 1 }
     generation-input: { scope: generation, src: 1, tests: 1 }
     generation-submit: { scope: generation, src: 1, tests: 0 }
-    create-ticket: { scope: jira, src: 1, tests: 1 }
+    create-ticket: { scope: jira, src: 1, tests: 2 }
     jira-create: { scope: jira, src: 1, tests: 0 }
     jira-dialog: { scope: jira, src: 1, tests: 0 }
     jira-dots: { scope: jira, src: 1, tests: 0 }
-    jira-form: { scope: jira, src: 1, tests: 1 }
+    jira-error: { scope: jira, src: 1, tests: 2 }
+    jira-form: { scope: jira, src: 1, tests: 2 }
+    jira-open-ticket: { scope: jira, src: 1, tests: 0 }
+    jira-required: { scope: jira, src: 2, tests: 3 }
+    jira-success: { scope: jira, src: 1, tests: 2 }
     jira-ticket-link: { scope: jira, src: 1, tests: 0 }
     image-lightbox: { scope: lightbox, src: 1, tests: 3 }
     lightbox-close: { scope: lightbox, src: 1, tests: 1 }
@@ -753,7 +761,7 @@ data_attrs:
     dev-insights: { scope: selection, src: 1, tests: 0 }
     screenshot-pair: { scope: selection, src: 1, tests: 0 }
     screenshot-thumb: { scope: selection, src: 3, tests: 1 }
-    selection-card: { scope: selection, src: 2, tests: 1 }
+    selection-card: { scope: selection, src: 2, tests: 2 }
     selection-card-body: { scope: selection, src: 1, tests: 0 }
     selection-content: { scope: selection, src: 1, tests: 0 }
     selection-header: { scope: selection, src: 1, tests: 0 }
@@ -787,7 +795,7 @@ data_attrs:
     toolbar-collapse: { scope: toolbar, src: 1, tests: 1 }
     toolbar-comments: { scope: toolbar, src: 3, tests: 6 }
     toolbar-copy-all: { scope: toolbar, src: 3, tests: 2 }
-    toolbar-dashboard: { scope: toolbar, src: 1, tests: 13 }
+    toolbar-dashboard: { scope: toolbar, src: 1, tests: 14 }
     toolbar-devmode: { scope: toolbar, src: 2, tests: 2 }
     toolbar-menu: { scope: toolbar, src: 1, tests: 3 }
     toolbar-toggle: { scope: toolbar, src: 2, tests: 4 }
