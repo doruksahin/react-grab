@@ -28,6 +28,8 @@ export type ListComments200Item = {
   screenshotFullPage?: string;
   /** R2 key for element screenshot */
   screenshotElement?: string;
+  /** Link to the replay of how the user got here (SPEC-020) */
+  recordingUrl?: string;
   jiraTicketId?: string;
   capturedBy?: string;
 };

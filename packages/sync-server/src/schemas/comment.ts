@@ -1,8 +1,10 @@
 import { z } from "@hono/zod-openapi";
 
-export const SelectionStatus = z.enum(["open", "ticketed", "resolved"]).openapi({
-  description: "Lifecycle status of a selection",
-});
+export const SelectionStatus = z
+  .enum(["open", "ticketed", "resolved"])
+  .openapi({
+    description: "Lifecycle status of a selection",
+  });
 
 export const CommentItem = z.object({
   id: z.string(),
@@ -19,8 +21,20 @@ export const CommentItem = z.object({
   status: SelectionStatus.optional(),
   pageUrl: z.string().optional(),
   pageTitle: z.string().optional(),
-  screenshotFullPage: z.string().optional().openapi({ description: "R2 key for full-page screenshot" }),
-  screenshotElement: z.string().optional().openapi({ description: "R2 key for element screenshot" }),
+  screenshotFullPage: z
+    .string()
+    .optional()
+    .openapi({ description: "R2 key for full-page screenshot" }),
+  screenshotElement: z
+    .string()
+    .optional()
+    .openapi({ description: "R2 key for element screenshot" }),
+  recordingUrl: z
+    .string()
+    .optional()
+    .openapi({
+      description: "Link to the replay of how the user got here (SPEC-020)",
+    }),
   jiraTicketId: z.string().optional(),
   capturedBy: z.string().optional(),
 });

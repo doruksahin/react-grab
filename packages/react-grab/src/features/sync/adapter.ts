@@ -2,14 +2,31 @@ import { z } from "zod";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroup } from "../selection-groups/types.js";
 import type { StorageAdapter, SyncConfig } from "./types.js";
-import { CommentItemSchema, SelectionGroupSchema, UploadResultSchema } from "./schemas.js";
 import {
-  stripRevealedFromComments,
-  stripRevealedFromGroups,
+  CommentItemSchema,
+  SelectionGroupSchema,
+  UploadResultSchema,
+  RecordingUploadResultSchema,
+} from "./schemas.js";
+import {
+  toCommentWire,
+  toGroupWire,
   mergeRevealedIntoComments,
   mergeRevealedIntoGroups,
-  saveLocalRevealedStates,
 } from "./transforms.js";
+import {
+  upsertComment as putComment,
+  deleteComment as removeComment,
+  upsertGroup as putGroup,
+  deleteGroup as removeGroup,
+} from "../../generated/sync-api.js";
+import { apiAuthHeaders } from "../../generated/custom-fetch.js";
+
+const expectOk = (operation: string, status: number) => {
+  if (status < 200 || status >= 300) {
+    throw new Error(`${operation} failed: ${status}`);
+  }
+};
 
 export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
   const baseUrl = `${config.serverUrl}/workspaces/${encodeURIComponent(config.workspace)}`;
@@ -23,7 +40,9 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
   return {
     loadComments: async (): Promise<CommentItem[]> => {
       try {
-        const response = await fetch(`${baseUrl}/comments`);
+        const response = await fetch(`${baseUrl}/comments`, {
+          headers: apiAuthHeaders(),
+        });
         if (!response.ok) {
           throw new Error(`GET /comments failed: ${response.status}`);
         }
@@ -44,33 +63,33 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
       }
     },
 
-    persistComments: async (items: CommentItem[]): Promise<CommentItem[]> => {
-      // Wire-format translation: client null → server "" (see transforms.ts).
-      // stripRevealedFromComments already handles this on the non-sync path.
-      const payload = config.syncRevealedState
-        ? items.map((i) => ({ ...i, groupId: i.groupId === null ? "" : i.groupId }))
-        : stripRevealedFromComments(items);
-      if (!config.syncRevealedState) {
-        saveLocalRevealedStates(items, []);
-      }
+    upsertComment: async (item: CommentItem): Promise<void> => {
       try {
-        const response = await fetch(`${baseUrl}/comments`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-          throw new Error(`PUT /comments failed: ${response.status}`);
-        }
-        return items;
+        const result = await putComment(
+          config.workspace,
+          item.id,
+          toCommentWire(item, config.syncRevealedState),
+        );
+        expectOk("PUT /comments/:commentId", result.status);
       } catch (error) {
-        return handleError(error);
+        handleError(error);
+      }
+    },
+
+    deleteComment: async (commentId: string): Promise<void> => {
+      try {
+        const result = await removeComment(config.workspace, commentId);
+        expectOk("DELETE /comments/:commentId", result.status);
+      } catch (error) {
+        handleError(error);
       }
     },
 
     loadGroups: async (): Promise<SelectionGroup[]> => {
       try {
-        const response = await fetch(`${baseUrl}/groups`);
+        const response = await fetch(`${baseUrl}/groups`, {
+          headers: apiAuthHeaders(),
+        });
         if (!response.ok) {
           throw new Error(`GET /groups failed: ${response.status}`);
         }
@@ -86,25 +105,25 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
       }
     },
 
-    persistGroups: async (groups: SelectionGroup[]): Promise<SelectionGroup[]> => {
-      const payload = config.syncRevealedState
-        ? groups
-        : stripRevealedFromGroups(groups);
-      if (!config.syncRevealedState) {
-        saveLocalRevealedStates([], groups);
-      }
+    upsertGroup: async (group: SelectionGroup): Promise<void> => {
       try {
-        const response = await fetch(`${baseUrl}/groups`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-          throw new Error(`PUT /groups failed: ${response.status}`);
-        }
-        return groups;
+        const result = await putGroup(
+          config.workspace,
+          group.id,
+          toGroupWire(group, config.syncRevealedState),
+        );
+        expectOk("PUT /groups/:groupId", result.status);
       } catch (error) {
-        return handleError(error);
+        handleError(error);
+      }
+    },
+
+    deleteGroup: async (groupId: string): Promise<void> => {
+      try {
+        const result = await removeGroup(config.workspace, groupId);
+        expectOk("DELETE /groups/:groupId", result.status);
+      } catch (error) {
+        handleError(error);
       }
     },
 
@@ -119,7 +138,7 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
           {
             method: "PUT",
             body: blob,
-            headers: { "Content-Type": blob.type },
+            headers: { "Content-Type": blob.type, ...apiAuthHeaders() },
           },
         );
         if (!response.ok) {
@@ -128,6 +147,33 @@ export const createHttpAdapter = (config: SyncConfig): StorageAdapter => {
         const raw = await response.json();
         const result = UploadResultSchema.parse(raw);
         return result.key;
+      } catch (error) {
+        return handleError(error);
+      }
+    },
+
+    // Raw fetch like uploadScreenshot: the generated client JSON-encodes bodies.
+    uploadRecording: async (
+      commentId: string,
+      gzipBlob: Blob,
+    ): Promise<string> => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/recordings/${encodeURIComponent(commentId)}`,
+          {
+            method: "PUT",
+            body: gzipBlob,
+            headers: {
+              "Content-Type": "application/gzip",
+              ...apiAuthHeaders(),
+            },
+          },
+        );
+        if (!response.ok) {
+          throw new Error(`PUT /recordings failed: ${response.status}`);
+        }
+        return RecordingUploadResultSchema.parse(await response.json())
+          .recordingUrl;
       } catch (error) {
         return handleError(error);
       }

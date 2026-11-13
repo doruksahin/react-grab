@@ -1,6 +1,9 @@
 import type { MiddlewareHandler } from "hono";
-import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import {
+  corsForCallers,
+  requireApiToken,
+} from "./middleware/access-control.js";
 import { swaggerUI } from "@hono/swagger-ui";
 import { createRouter } from "./lib/create-router.js";
 import { commentsRoutes } from "./routes/comments.js";
@@ -8,6 +11,10 @@ import { groupsRoutes } from "./routes/groups.js";
 import { healthRoutes } from "./routes/health.js";
 import { screenshotsRoutes } from "./routes/screenshots.js";
 import { jiraRoutes } from "./routes/jira.js";
+import {
+  recordingShareRoutes,
+  recordingUploadRoutes,
+} from "./routes/recordings.js";
 import { DOC_CONFIG } from "./lib/doc-config.js";
 
 interface CreateAppOptions {
@@ -18,13 +25,21 @@ interface CreateAppOptions {
 export function createApp(options?: CreateAppOptions) {
   const app = createRouter();
 
-  app.use("*", cors());
+  app.use("*", corsForCallers);
   app.use("*", logger());
 
-  if (options?.middleware) {
-    for (const mw of options.middleware) {
-      app.use("*", mw);
-    }
+  // Everything that reads or writes data needs the API token (ADR-0020).
+  // /health, /doc and /ui stay public.
+  app.use("/workspaces/*", requireApiToken);
+  app.use("/jira/*", requireApiToken);
+
+  // Only the data routes use the injected repos. Keeping the middleware off
+  // /health means a missing Jira secret cannot take the health check down.
+  for (const mw of options?.middleware ?? []) {
+    app.use("/workspaces/*", mw);
+    app.use("/jira/*", mw);
+    // Recording links: storage, but no token; the share id is the credential (ADR-0021).
+    app.use("/r/*", mw);
   }
 
   app.route("/", healthRoutes);
@@ -32,6 +47,8 @@ export function createApp(options?: CreateAppOptions) {
   app.route("/", groupsRoutes);
   app.route("/", screenshotsRoutes);
   app.route("/", jiraRoutes);
+  app.route("/", recordingUploadRoutes);
+  app.route("/", recordingShareRoutes);
 
   app.doc("/doc", DOC_CONFIG);
   app.get("/ui", swaggerUI({ url: "/doc" }));

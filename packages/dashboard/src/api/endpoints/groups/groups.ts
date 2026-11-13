@@ -28,10 +28,11 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  DeleteGroup200,
   ListGroups200Item,
-  PersistGroups200,
-  PersistGroups400,
-  PersistGroupsBodyItem
+  UpsertGroup200,
+  UpsertGroup400,
+  UpsertGroupBody
 } from '../../model';
 
 
@@ -208,62 +209,64 @@ export function useListGroupsSuspense<TData = Awaited<ReturnType<typeof listGrou
 
 
 /**
- * @summary Replace all groups in a workspace
+ * @summary Create or replace one group
  */
-export type persistGroupsResponse200 = {
-  data: PersistGroups200
+export type upsertGroupResponse200 = {
+  data: UpsertGroup200
   status: 200
 }
 
-export type persistGroupsResponse400 = {
-  data: PersistGroups400
+export type upsertGroupResponse400 = {
+  data: UpsertGroup400
   status: 400
 }
 
-export type persistGroupsResponseSuccess = (persistGroupsResponse200) & {
+export type upsertGroupResponseSuccess = (upsertGroupResponse200) & {
   headers: Headers;
 };
-export type persistGroupsResponseError = (persistGroupsResponse400) & {
+export type upsertGroupResponseError = (upsertGroupResponse400) & {
   headers: Headers;
 };
 
-export type persistGroupsResponse = (persistGroupsResponseSuccess | persistGroupsResponseError)
+export type upsertGroupResponse = (upsertGroupResponseSuccess | upsertGroupResponseError)
 
-export const getPersistGroupsUrl = (id: string,) => {
+export const getUpsertGroupUrl = (id: string,
+    groupId: string,) => {
 
 
 
 
-  return `/workspaces/${id}/groups`
+  return `/workspaces/${id}/groups/${groupId}`
 }
 
-export const persistGroups = async (id: string,
-    persistGroupsBodyItem: PersistGroupsBodyItem[], options?: RequestInit): Promise<persistGroupsResponse> => {
+export const upsertGroup = async (id: string,
+    groupId: string,
+    upsertGroupBody: UpsertGroupBody, options?: RequestInit): Promise<upsertGroupResponse> => {
 
-  const res = await fetch(getPersistGroupsUrl(id),
+  const res = await fetch(getUpsertGroupUrl(id,groupId),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      persistGroupsBodyItem,)
+      upsertGroupBody,)
   }
 )
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-  const data: persistGroupsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as persistGroupsResponse
+  const data: upsertGroupResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as upsertGroupResponse
 }
 
 
 
 
-export const getPersistGroupsMutationOptions = <TError = PersistGroups400,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof persistGroups>>, TError,{id: string;data: PersistGroupsBodyItem[]}, TContext>, fetch?: RequestInit}
-): UseMutationOptions<Awaited<ReturnType<typeof persistGroups>>, TError,{id: string;data: PersistGroupsBodyItem[]}, TContext> => {
+export const getUpsertGroupMutationOptions = <TError = UpsertGroup400,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertGroup>>, TError,{id: string;groupId: string;data: UpsertGroupBody}, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof upsertGroup>>, TError,{id: string;groupId: string;data: UpsertGroupBody}, TContext> => {
 
-const mutationKey = ['persistGroups'];
+const mutationKey = ['upsertGroup'];
 const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -273,10 +276,10 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof persistGroups>>, {id: string;data: PersistGroupsBodyItem[]}> = (props) => {
-          const {id,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertGroup>>, {id: string;groupId: string;data: UpsertGroupBody}> = (props) => {
+          const {id,groupId,data} = props ?? {};
 
-          return  persistGroups(id,data,fetchOptions)
+          return  upsertGroup(id,groupId,data,fetchOptions)
         }
 
 
@@ -286,20 +289,109 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type PersistGroupsMutationResult = NonNullable<Awaited<ReturnType<typeof persistGroups>>>
-    export type PersistGroupsMutationBody = PersistGroupsBodyItem[]
-    export type PersistGroupsMutationError = PersistGroups400
+    export type UpsertGroupMutationResult = NonNullable<Awaited<ReturnType<typeof upsertGroup>>>
+    export type UpsertGroupMutationBody = UpsertGroupBody
+    export type UpsertGroupMutationError = UpsertGroup400
 
     /**
- * @summary Replace all groups in a workspace
+ * @summary Create or replace one group
  */
-export const usePersistGroups = <TError = PersistGroups400,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof persistGroups>>, TError,{id: string;data: PersistGroupsBodyItem[]}, TContext>, fetch?: RequestInit}
+export const useUpsertGroup = <TError = UpsertGroup400,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertGroup>>, TError,{id: string;groupId: string;data: UpsertGroupBody}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof persistGroups>>,
+        Awaited<ReturnType<typeof upsertGroup>>,
         TError,
-        {id: string;data: PersistGroupsBodyItem[]},
+        {id: string;groupId: string;data: UpsertGroupBody},
         TContext
       > => {
-      return useMutation(getPersistGroupsMutationOptions(options), queryClient);
+      return useMutation(getUpsertGroupMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Delete one group
+ */
+export type deleteGroupResponse200 = {
+  data: DeleteGroup200
+  status: 200
+}
+
+export type deleteGroupResponseSuccess = (deleteGroupResponse200) & {
+  headers: Headers;
+};
+;
+
+export type deleteGroupResponse = (deleteGroupResponseSuccess)
+
+export const getDeleteGroupUrl = (id: string,
+    groupId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/groups/${groupId}`
+}
+
+export const deleteGroup = async (id: string,
+    groupId: string, options?: RequestInit): Promise<deleteGroupResponse> => {
+
+  const res = await fetch(getDeleteGroupUrl(id,groupId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: deleteGroupResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as deleteGroupResponse
+}
+
+
+
+
+export const getDeleteGroupMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGroup>>, TError,{id: string;groupId: string}, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGroup>>, TError,{id: string;groupId: string}, TContext> => {
+
+const mutationKey = ['deleteGroup'];
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGroup>>, {id: string;groupId: string}> = (props) => {
+          const {id,groupId} = props ?? {};
+
+          return  deleteGroup(id,groupId,fetchOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGroupMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGroup>>>
+
+    export type DeleteGroupMutationError = unknown
+
+    /**
+ * @summary Delete one group
+ */
+export const useDeleteGroup = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGroup>>, TError,{id: string;groupId: string}, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGroup>>,
+        TError,
+        {id: string;groupId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteGroupMutationOptions(options), queryClient);
     }

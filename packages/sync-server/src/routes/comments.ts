@@ -2,8 +2,10 @@ import { createRoute } from "@hono/zod-openapi";
 import { createRouter } from "../lib/create-router.js";
 import {
   WorkspaceIdParam,
+  CommentIdParam,
   StatusResponse,
   ErrorResponse,
+  CommentItem,
   CommentItemArray,
 } from "../schemas/index.js";
 
@@ -28,18 +30,23 @@ const listCommentsRoute = createRoute({
   },
 });
 
-const persistCommentsRoute = createRoute({
+/**
+ * Writes one comment. Each comment is its own resource so a client can only
+ * replace what it changed — see ADR-0019 for why the old "replace every
+ * comment in the workspace" route was removed.
+ */
+const upsertCommentRoute = createRoute({
   method: "put",
-  path: "/workspaces/{id}/comments",
+  path: "/workspaces/{id}/comments/{commentId}",
   tags: ["comments"],
-  summary: "Replace all comments in a workspace",
-  operationId: "persistComments",
+  summary: "Create or replace one comment",
+  operationId: "upsertComment",
   request: {
-    params: WorkspaceIdParam,
+    params: CommentIdParam,
     body: {
       content: {
         "application/json": {
-          schema: CommentItemArray,
+          schema: CommentItem,
         },
       },
       required: true,
@@ -47,7 +54,7 @@ const persistCommentsRoute = createRoute({
   },
   responses: {
     200: {
-      description: "Success",
+      description: "Saved",
       content: {
         "application/json": {
           schema: StatusResponse,
@@ -55,10 +62,31 @@ const persistCommentsRoute = createRoute({
       },
     },
     400: {
-      description: "Invalid body",
+      description: "Invalid body, or the body's id does not match the path",
       content: {
         "application/json": {
           schema: ErrorResponse,
+        },
+      },
+    },
+  },
+});
+
+const deleteCommentRoute = createRoute({
+  method: "delete",
+  path: "/workspaces/{id}/comments/{commentId}",
+  tags: ["comments"],
+  summary: "Delete one comment",
+  operationId: "deleteComment",
+  request: {
+    params: CommentIdParam,
+  },
+  responses: {
+    200: {
+      description: "Deleted, or already absent",
+      content: {
+        "application/json": {
+          schema: StatusResponse,
         },
       },
     },
@@ -71,9 +99,20 @@ export const commentsRoutes = createRouter()
     const comments = await c.var.repo.listComments(id);
     return c.json(comments, 200);
   })
-  .openapi(persistCommentsRoute, async (c) => {
-    const { id } = c.req.valid("param");
+  .openapi(upsertCommentRoute, async (c) => {
+    const { id, commentId } = c.req.valid("param");
     const body = c.req.valid("json");
-    await c.var.repo.persistComments(id, body);
+    if (body.id !== commentId) {
+      return c.json(
+        { error: "Body id must match the commentId in the path" },
+        400,
+      );
+    }
+    await c.var.repo.upsertComment(id, body);
+    return c.json({ status: "ok" as const }, 200);
+  })
+  .openapi(deleteCommentRoute, async (c) => {
+    const { id, commentId } = c.req.valid("param");
+    await c.var.repo.deleteComment(id, commentId);
     return c.json({ status: "ok" as const }, 200);
   });

@@ -1,0 +1,327 @@
+<title>React Grab Architecture</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one flow per section. Prose sets up the question, the diagram answers it, a callout gives the architect's read. */
+:root {
+  --bg: #f4f3f0;
+  --surface: #ffffff;
+  --sunken: #ebe9e4;
+  --ink: #1e2321;
+  --muted: #5e6763;
+  --line: #dcdad4;
+  --accent: #1f6f55;
+  --accent-bg: #e2efe9;
+  --warn: #9a5a12;
+  --warn-bg: #fbeedb;
+  --risk: #a3302c;
+  --risk-bg: #f9e3e1;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #13100e; --surface: #1e1b19; --sunken: #171412; --ink: #ece9e4; --muted: #9d9790;
+    --line: #322d29; --accent: #6fd3a0; --accent-bg: #16342a; --warn: #f0bd6e; --warn-bg: #352713;
+    --risk: #ff8f88; --risk-bg: #3a1a18;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #13100e; --surface: #1e1b19; --sunken: #171412; --ink: #ece9e4; --muted: #9d9790;
+  --line: #322d29; --accent: #6fd3a0; --accent-bg: #16342a; --warn: #f0bd6e; --warn-bg: #352713;
+  --risk: #ff8f88; --risk-bg: #3a1a18;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1060px; margin: 0 auto; padding-block: 36px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 48px; }
+h1, h2 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 22px; font-weight: 600; }
+.lede { color: var(--muted); max-width: 68ch; margin: 8px 0 0; }
+.meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 12px; }
+section { display: grid; gap: 14px; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.diagram { overflow-x: auto; }
+pre.mermaid { margin: 0; background: none; font-family: var(--font-body); }
+figcaption { font-size: 13.5px; color: var(--muted); }
+code { font-family: var(--font-mono); font-size: 12.5px; background: var(--sunken); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.read { border-left: 3px solid var(--accent); background: var(--accent-bg); padding: 13px 16px; font-size: 14px; display: grid; gap: 6px; }
+.read.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+.read.risk { border-left-color: var(--risk); background: var(--risk-bg); }
+.read b { font-weight: 600; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+.scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.sev { font-family: var(--font-mono); font-size: 11px; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.sev.high { background: var(--risk-bg); color: var(--risk); }
+.sev.med { background: var(--warn-bg); color: var(--warn); }
+.sev.low { background: var(--sunken); color: var(--muted); }
+.foot { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 620px) { h1 { font-size: 29px; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>React Grab architecture</h1>
+    <p class="lede">The system as it runs today, one flow at a time, with the places it breaks marked on the flow itself. Every arrow below was traced in the code on the date given; nothing is drawn from intent.</p>
+    <p class="meta">13 Nov 2026 · branch claude/penpot-mcp-access-70fbd6 · HEAD 5618ed98</p>
+  </header>
+
+  <section>
+    <span class="eyebrow">1 · Context</span>
+    <h2>Three runtimes, two trust boundaries</h2>
+    <p class="lede">The overlay runs inside someone else's app, in a browser. Everything it persists goes over the network to one Cloudflare Worker, which is the only thing that holds Jira credentials.</p>
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph browser["Browser · host app"]
+    host["Host app"] -- "initSync(serverUrl, apiToken, workspace, jiraProjectKey)" --> overlay["react-grab overlay · Solid in shadow DOM"]
+  end
+  subgraph cf["Cloudflare · personal account"]
+    worker["sync-server Worker · Hono"]
+    d1[("D1 · comments, groups")]
+    r2[("R2 · screenshots")]
+    worker --> d1
+    worker --> r2
+  end
+  jira["Jira Cloud · JIRA_BASE_URL"]
+  overlay -- "HTTPS · Bearer SYNC_API_TOKEN · CORS allowlist" --> worker
+  worker -- "Basic auth · JIRA_EMAIL + JIRA_API_TOKEN" --> jira
+</pre></div>
+      <figcaption>Two edges, two credentials. The browser sends the shared sync token on every data request (ADR-0020); only the Worker holds the Jira credential. Local development uses this same deployed Worker — there is no second backend.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <span class="eyebrow">2 · Boot</span>
+    <h2>What happens when the host app starts</h2>
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant H as Host app
+  participant O as Overlay
+  participant W as sync-server
+  participant D as D1
+  participant J as Jira
+  H->>O: initSync(serverUrl, apiToken, workspace, jiraProjectKey)
+  O->>W: GET /workspaces/:id/comments
+  W->>D: select comments where workspace
+  D-->>W: rows
+  W-->>O: CommentItem[]
+  O->>W: GET /workspaces/:id/groups
+  W-->>O: SelectionGroup[]
+  Note over O: renders labels and sidebar from the fetched state
+  loop every 30 s, for each group that has a ticket
+    O->>W: GET /groups/:groupId/jira-status
+    W->>J: GET issue, comments, flag, assignee
+    J-->>W: issue fields
+    W-->>O: status, assignee, comments
+  end
+</pre></div>
+      <figcaption>The poll fans out per ticketed group, per open browser tab. Each tick is one Jira read per group.</figcaption>
+    </figure>
+    <div class="read warn"><b>Architect's read.</b> Polling cost grows as groups × open tabs. With ten people each watching twenty ticketed groups, that is 200 Jira reads every 30 seconds, all on one service account's rate limit. Fine at today's size; the first thing to break at scale.</div>
+  </section>
+
+  <section>
+    <span class="eyebrow">3 · Capture</span>
+    <h2>Commenting on an element</h2>
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as Reporter
+  participant O as Overlay
+  participant W as sync-server
+  participant D as D1
+  participant R as R2
+  U->>O: select element, type comment, Enter
+  O->>O: build CommentItem with pageUrl, pageTitle, selectors
+  O->>O: compare with this tab's previous list, keep what changed
+  O->>W: PUT /workspaces/:id/comments/:commentId  (one comment)
+  W->>D: insert, or replace that one row
+  W-->>O: 200
+  par fire and forget
+    O->>O: capture element and full-page screenshots
+    O->>W: PUT /workspaces/:id/screenshots/:commentId/element
+    W->>R: put object
+    O->>W: PUT /workspaces/:id/screenshots/:commentId/full
+    W->>R: put object
+  end
+</pre></div>
+      <figcaption>Step 3 is the change from ADR-0019. The tab sends only the comments it changed, one request each, so it cannot reach comments it never saw.</figcaption>
+    </figure>
+    <div class="read"><b>Architect's read: lost updates, fixed.</b> Until ADR-0019 a save sent the whole list and the server deleted every comment before inserting the tab's copy, so whoever saved second erased the first person's new comment. Each write now targets one comment. What remains is narrower: two people editing the <i>same</i> comment at once, where the last write wins.</div>
+  </section>
+
+  <section>
+    <span class="eyebrow">4 · Ticket</span>
+    <h2>Creating a Jira ticket</h2>
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor P as Triage owner
+  participant O as Overlay dialog
+  participant W as sync-server
+  participant D as D1
+  participant R as R2
+  participant J as Jira
+  P->>O: open Create ticket
+  O->>W: GET /jira/issue-types?projectKey=ATT
+  O->>W: GET /jira/priorities
+  O->>W: GET /jira/labels?projectKey=ATT
+  W-->>O: options for the form
+  P->>O: fill summary, submit
+  O->>W: POST /groups/:groupId/jira-ticket  projectKey, summary, description
+  Note over W: inject-repos middleware runs parseJiraEnv. No caller check exists.
+  W->>D: list groups
+  alt group already has a ticket
+    W-->>O: existing key and URL
+  else first time
+    W->>D: list comments of the group
+    W->>J: POST /rest/api/3/issue  project = projectKey from the request
+    J-->>W: issue key
+    loop each screenshot of the group
+      W->>R: get object
+      W->>J: POST /issue/:key/attachments
+    end
+    W->>D: update group with the ticket key
+    W-->>O: jiraTicketId, jiraUrl
+  end
+  O->>P: show key, Open in Jira, Done
+</pre></div>
+      <figcaption>The idempotency guard (step 9) makes a retry safe: a second POST for the same group returns the first ticket instead of creating a duplicate. That is what made RG-2's Retry button safe to add.</figcaption>
+    </figure>
+    <div class="read warn"><b>Architect's read.</b> Step 11 files into whatever project the request names. The server validates that it is a string and nothing else, and the Jira credential can write to every project its account can reach. Since ADR-0020 only callers holding the sync token can send this request, so this is a trust-the-team issue, not an open door.</div>
+  </section>
+
+  <section>
+    <span class="eyebrow">5 · Decided and shipped · ADR-0020</span>
+    <h2>The gate in front of every data route</h2>
+    <p class="lede">Two checks run before the middleware that touches storage or Jira, so no data route is reachable without them. <code>/health</code>, <code>/doc</code> and <code>/ui</code> stay public.</p>
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant O as Overlay
+  participant C as CORS
+  participant G as bearerAuth
+  participant M as inject-repos
+  participant H as Route handler
+  O->>C: request with Authorization: Bearer token
+  alt origin not localhost and not in ALLOWED_ORIGINS
+    C-->>O: no CORS headers, the browser blocks it
+  else allowed origin
+    C->>G: continue
+    alt token missing or wrong
+      G-->>O: 401
+    else token matches SYNC_API_TOKEN
+      G->>M: continue
+      M->>M: parseJiraEnv, build repos
+      M->>H: handle
+      H-->>O: response
+    end
+  end
+</pre></div>
+      <figcaption>CORS first, so a preflight succeeds without a credential as the protocol requires; then Hono's built-in <code>bearerAuth</code> with its constant-time comparison. If <code>SYNC_API_TOKEN</code> is unset the gate fails closed. Screenshots load through the same token, as blob URLs.</figcaption>
+    </figure>
+    <div class="read"><b>Why a shared bearer token.</b> Cloudflare Access was the other candidate, but it answers a CORS preflight with 403 because preflights carry no credentials, so a cross-origin overlay cannot use it without extra configuration. A single token is the least moving parts for a handful of trusted callers. Its limit: anyone with the token reaches every workspace. Per-workspace keys are the next step if outside teams ever call the Worker. Full reasoning in <code>decree/adr/0020-bearer-token-and-origin-allowlist-for-the-sync-server.md</code>.</div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Decided and shipped · ADR-0019</span>
+    <h2>Lost updates, and why they could duplicate a Jira ticket</h2>
+    <p class="lede">Clients load comments and groups once at start-up. They used to save by sending the whole list, which the server wrote over everything it had. The sharpest consequence was not a lost comment but a lost ticket link, which disarmed the guard that prevents duplicate tickets.</p>
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant A as Tab A
+  participant B as Tab B
+  participant W as sync-server
+  participant J as Jira
+  A->>W: GET groups  (G has no ticket)
+  B->>W: GET groups  (G has no ticket)
+  A->>W: POST groups/G/jira-ticket
+  W->>J: create issue
+  J-->>W: UI-128
+  W->>W: G.jiraTicketId = UI-128
+  B->>W: PUT groups  (whole list, G still without a ticket)
+  W->>W: delete every group, insert B's copy
+  Note over W: UI-128 is no longer linked to G
+  A->>W: POST groups/G/jira-ticket  (a retry, or someone else)
+  W->>J: create issue
+  J-->>W: UI-129, a duplicate
+</pre></div>
+      <figcaption>Before. Step 8 is B saving an unrelated change; its stale copy of G erases the link that step 6 wrote, so the guard at step 11 lets a second ticket through.</figcaption>
+    </figure>
+    <figure>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant A as Tab A
+  participant B as Tab B
+  participant W as sync-server
+  participant J as Jira
+  A->>W: POST groups/G/jira-ticket
+  W->>J: create issue
+  J-->>W: UI-128
+  W->>W: G.jiraTicketId = UI-128
+  B->>W: PUT groups/H  (only the group B changed)
+  W->>W: replace H, nothing else
+  Note over W: G keeps UI-128, and no client can write jiraTicketId at all
+  A->>W: POST groups/G/jira-ticket  (a retry)
+  W-->>A: UI-128, the guard holds
+</pre></div>
+      <figcaption>Now. Each write targets one item, so B's save cannot reach G, and the ticket fields are server-owned: absent from the client's write type, stripped by the server schema, and never written by the repository.</figcaption>
+    </figure>
+    <div class="read"><b>Why this and not <code>If-Match</code> on the whole list.</b> A version check on the list is the textbook lost-update guard, but every rejected save would need the client to refetch, merge and retry — the merge is the custom logic we would then own. Per-item writes remove the conflict for different items outright; <code>If-Match</code> stays in reserve for the rare case of two people editing the same item. Full reasoning in <code>decree/adr/0019-per-item-writes-for-comments-and-groups.md</code>.</div>
+  </section>
+
+  <section>
+    <span class="eyebrow">6 · Register</span>
+    <h2>Risks, ranked</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Severity</th><th>Risk</th><th>Evidence</th><th>Direction</th></tr></thead>
+      <tbody>
+        <tr><td><span class="sev med">medium</span></td><td>Backend lives in a personal Cloudflare account</td><td><code>account_id</code> pinned in <code>wrangler.toml</code>; one person's login deploys it</td><td>Move to a company account before anyone depends on it: new D1 and R2, migrations, the three secrets</td></tr>
+        <tr><td><span class="sev med">medium</span></td><td>Local work writes to the real backend</td><td>One shared Worker by choice, no local backend; the dashboard proxy defaults to it</td><td>Fine while nobody else uses it. Test with a throwaway workspace; a ticket created while testing is a real one in <code>SCRUM</code></td></tr>
+        <tr><td><span class="sev low">low</span></td><td>One shared token opens every workspace</td><td><code>bearerAuth</code> checks a single <code>SYNC_API_TOKEN</code></td><td>Rotate with <code>wrangler secret put</code> and update callers; per-workspace keys if outside teams join</td></tr>
+        <tr><td><span class="sev low">low</span></td><td>Client chooses the Jira project and nothing checks it</td><td><code>projectKey: z.string()</code> flows into <code>createIssue</code>; only token holders can send it</td><td>Map workspace to project on the server if more than one team shares the Worker; SPEC-009 explains today's design</td></tr>
+        <tr><td><span class="sev low">low</span></td><td>Jira polling scales with groups × tabs</td><td><code>sync-layer.ts</code>: one request per ticketed group every 30 s</td><td>Watch it; batch or move polling server-side if it bites</td></tr>
+        <tr><td><span class="sev low">fixed</span></td><td>No authentication and wildcard CORS on every route</td><td>Was: <code>cors()</code> with no origin, no auth middleware</td><td>ADR-0020: bearer token and origin allowlist, live in production</td></tr>
+        <tr><td><span class="sev low">fixed</span></td><td>Comment and group saves replaced the whole workspace, so concurrent writers lost each other's changes — including ticket links, which let a duplicate ticket through</td><td>Was <code>persistComments</code> / <code>persistGroups</code>: delete all, then insert</td><td>ADR-0019: one resource per item, ticket fields server-owned. Same-item edits remain last-write-wins.</td></tr>
+        <tr><td><span class="sev low">fixed</span></td><td>Production could not reach Jira and was far behind</td><td>Was: no secrets, last deploy 31 Mar</td><td>Deployed 13 Nov from this branch; all three secrets set; live checks 200/401 as expected</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <span class="eyebrow">7 · On record</span>
+    <h2>Decisions already made</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Record</th><th>What it decided</th><th>Shown in</th></tr></thead>
+      <tbody>
+        <tr><td>SPEC-009</td><td>The project key is a host-app parameter, not a hardcoded string</td><td>Boot, Ticket</td></tr>
+        <tr><td>ADR-0003</td><td>The browser never calls Jira; every Jira request goes through the Worker, which keeps <code>jira.js</code> as its client</td><td>Context, Ticket</td></tr>
+        <tr><td>ADR-0004</td><td>Descriptions are written as markdown and converted to Atlassian's format on the server</td><td>Ticket</td></tr>
+        <tr><td>ADR-0008</td><td>A loose comment gets an invisible single-item group so it can be ticketed</td><td>Ticket</td></tr>
+        <tr><td>ADR-0018</td><td>Worker configuration is a Zod schema, validated where it is read</td><td>Ticket, step 7</td></tr>
+        <tr><td>ADR-0019</td><td>Comments and groups are written one item at a time; ticket fields are server-owned</td><td>Lost updates</td></tr>
+        <tr><td>ADR-0020</td><td>Every data route needs the shared bearer token; CORS allows localhost plus <code>ALLOWED_ORIGINS</code></td><td>Context, Gate</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <p class="foot">Source of truth is the code; this page is a snapshot. Its source is <code>docs/architecture/react-grab-architecture.html</code>. When a flow changes, redraw the diagram in the same commit.</p>
+</div>

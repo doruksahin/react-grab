@@ -68,7 +68,23 @@ pnpm --filter @react-grab/sync-server db:reset:local
 - `searchUsers` — user search for @mention resolution
 - `fetchThreadedComments` — threaded comments via Atlassian GraphQL gateway
 
-JIRA credentials: `JIRA_EMAIL` and `JIRA_API_TOKEN` in `.dev.vars` (gitignored). `JIRA_BASE_URL` in `wrangler.toml`.
+## Configuration
+
+`JIRA_BASE_URL` is a non-secret `[vars]` entry in `wrangler.toml` and decides which Jira site every ticket lands on. `JIRA_EMAIL` and `JIRA_API_TOKEN` are per-developer: copy `.dev.vars.example` to `.dev.vars` (gitignored) and fill them in. In production set them on the deployed Worker with `wrangler secret put`, never in a committed file.
+
+All three are described by `src/schemas/env.ts` — the sixth schema in that folder — and validated by `parseJiraEnv()` in `middleware/inject-repos.ts`, the one place the configuration is read. A missing or malformed value fails the first request with every problem named, instead of an opaque Jira 401 later. See ADR-0018 for why this is a Zod schema rather than an env library.
+
+## Access control
+
+Every route under `/workspaces/*` and `/jira/*` requires `Authorization: Bearer <SYNC_API_TOKEN>` (Hono's `bearerAuth`), and CORS allows only local dev servers plus `ALLOWED_ORIGINS` — see `middleware/access-control.ts` and ADR-0020. `/health`, `/doc` and `/ui` stay public. The token is validated by `parseAuthEnv()` in `schemas/env.ts`; if it is missing or shorter than 32 characters, every API request fails closed. Do not add a route outside these prefixes that reads or writes data. The one exception is `GET /r/{shareId}` in `routes/recordings.ts`: a recording's random share id is itself the permission, so a Jira reader can watch it without a token (a capability URL, ADR-0021). It only reads, and only the object named by that id.
+
+## Writes are per item
+
+Comments and groups are written one item at a time — `PUT`/`DELETE` on `/workspaces/{id}/comments/{commentId}` and `/workspaces/{id}/groups/{groupId}`. There is no route that replaces a whole workspace's list, and none should be added: that is what let a stale client erase other people's comments and the server's ticket links (ADR-0019). A group's `status` and `jiraTicketId` are server-owned — set only by `updateGroupJira` — and are absent from the group write schema.
+
+## Tests
+
+`pnpm --filter @react-grab/sync-server exec vitest run`. Tests run inside workerd through Cloudflare's `@cloudflare/vitest-plugin`, against real D1: `vitest.config.ts` reads the drizzle migrations and `src/test/apply-migrations.ts` applies them. Storage is isolated per test file, not per test, so give each test its own workspace id. Route tests call the Worker through `SELF.fetch` and send the token with `authorized()` from `src/test/api-token.ts`. The config supplies fake credentials and points `JIRA_BASE_URL` at `https://jira.invalid`, which never resolves, so no test can reach a real Jira even if it slips past the token check.
 
 ## Dev server
 

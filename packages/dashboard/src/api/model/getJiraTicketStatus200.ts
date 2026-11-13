@@ -5,6 +5,7 @@
  * API for the react-grab dashboard — comments, groups, workspaces.
  * OpenAPI spec version: 0.1.0
  */
+import type { GetJiraTicketStatus200CommentsItem } from './getJiraTicketStatus200CommentsItem';
 
 export type GetJiraTicketStatus200 = {
   status: string;
@@ -19,4 +20,18 @@ export type GetJiraTicketStatus200 = {
   reporterAvatar: string | null;
   jiraUrl: string;
   labels: string[];
+  comments: GetJiraTicketStatus200CommentsItem[];
+  flagged?: boolean;
+  /** @nullable */
+  flaggedAt?: string | null;
+  /** @nullable */
+  flaggedBy?: string | null;
+  /** @nullable */
+  flaggedByAvatar?: string | null;
+  /** @nullable */
+  priority?: string | null;
+  /** @nullable */
+  issueType?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
 };

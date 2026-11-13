@@ -1,7 +1,13 @@
-import { batch } from "solid-js";
+import { batch, untrack } from "solid-js";
 import { createSyncStore } from "./store/sync-store.js";
 import { createHttpAdapter } from "./adapter.js";
-import { setApiBaseUrl } from "../../generated/custom-fetch.js";
+import { itemChanges } from "./business/item-changes.js";
+import {
+  toCommentWire,
+  toGroupWire,
+  saveLocalRevealedStates,
+} from "./transforms.js";
+import { setApiBaseUrl, setApiToken } from "../../generated/custom-fetch.js";
 import { getJiraTicketStatus } from "../../generated/sync-api.js";
 import { migrateLegacyDefaultGroup } from "../../utils/migrate-legacy-groups.js";
 import { logRecoverableError } from "../../utils/log-recoverable-error.js";
@@ -55,7 +61,8 @@ const trimToSizeLimit = (items: CommentItem[]): CommentItem[] => {
   let trimmed = items;
   while (trimmed.length > 0) {
     const serialized = JSON.stringify(trimmed);
-    if (new Blob([serialized]).size <= MAX_LOCAL_STORAGE_SIZE_BYTES) return trimmed;
+    if (new Blob([serialized]).size <= MAX_LOCAL_STORAGE_SIZE_BYTES)
+      return trimmed;
     trimmed = trimmed.slice(0, -1);
   }
   return trimmed;
@@ -64,35 +71,82 @@ const trimToSizeLimit = (items: CommentItem[]): CommentItem[] => {
 export const createSyncLayer = () => {
   const storeHandle = createSyncStore();
   let adapterRef: StorageAdapter | null = null;
+  let syncRevealedState = true;
   let pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
+  // When revealed state is not synced, it lives in localStorage instead. Both
+  // lists are saved together so writing one never wipes the other's flags.
+  const rememberRevealedLocally = () => {
+    if (syncRevealedState) return;
+    saveLocalRevealedStates(
+      storeHandle.store.comments,
+      storeHandle.store.groups,
+    );
+  };
+
   // --- Persistence ---
-  const persistComments = (items: CommentItem[]): CommentItem[] => {
-    const toStore = adapterRef ? items : trimToSizeLimit(items);
-    storeHandle.setComments(toStore);
-    if (adapterRef) {
-      adapterRef.persistComments(toStore).catch(() => {});
-    } else {
+  // Callers still hand over the whole next list — it is the local state. What
+  // goes to the server is only what changed relative to this client's own
+  // previous state, one item per request (ADR-0019). Changes are computed
+  // before the store is updated, so the "before" is never the new state.
+  //
+  // Both run untracked. Comparing reads every field of every stored item; a
+  // caller that persists from inside an effect would otherwise subscribe to
+  // all of them, and the write would re-run that effect — an infinite loop.
+  const persistComments = (items: CommentItem[]): CommentItem[] =>
+    untrack(() => persistCommentsNow(items));
+
+  const persistGroups = (groups: SelectionGroup[]): SelectionGroup[] =>
+    untrack(() => persistGroupsNow(groups));
+
+  const persistCommentsNow = (items: CommentItem[]): CommentItem[] => {
+    const adapter = adapterRef;
+    if (!adapter) {
+      const toStore = trimToSizeLimit(items);
+      storeHandle.setComments(toStore);
       try {
         localStorage.setItem(COMMENT_ITEMS_KEY, JSON.stringify(toStore));
       } catch (error) {
         logRecoverableError("Failed to save comments to localStorage", error);
       }
+      return toStore;
     }
-    return toStore;
+
+    const changes = itemChanges(storeHandle.store.comments, items, (item) =>
+      toCommentWire(item, syncRevealedState),
+    );
+    storeHandle.setComments(items);
+    for (const item of changes.upserts)
+      adapter.upsertComment(item).catch(() => {});
+    for (const id of changes.deletedIds)
+      adapter.deleteComment(id).catch(() => {});
+    rememberRevealedLocally();
+    return items;
   };
 
-  const persistGroups = (groups: SelectionGroup[]): SelectionGroup[] => {
-    storeHandle.setGroups(groups);
-    if (adapterRef) {
-      adapterRef.persistGroups(groups).catch(() => {});
-    } else {
+  const persistGroupsNow = (groups: SelectionGroup[]): SelectionGroup[] => {
+    const adapter = adapterRef;
+    if (!adapter) {
+      storeHandle.setGroups(groups);
       try {
         localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
       } catch (error) {
         logRecoverableError("Failed to save groups to localStorage", error);
       }
+      return groups;
     }
+
+    const changes = itemChanges<SelectionGroup>(
+      storeHandle.store.groups,
+      groups,
+      (group) => toGroupWire(group, syncRevealedState),
+    );
+    storeHandle.setGroups(groups);
+    for (const group of changes.upserts)
+      adapter.upsertGroup(group).catch(() => {});
+    for (const id of changes.deletedIds)
+      adapter.deleteGroup(id).catch(() => {});
+    rememberRevealedLocally();
     return groups;
   };
 
@@ -112,7 +166,9 @@ export const createSyncLayer = () => {
   // --- JIRA polling ---
   const pollJira = async () => {
     const workspace = storeHandle.store.workspace;
-    const ticketed = [...storeHandle.store.groups].filter((g) => g.jiraTicketId);
+    const ticketed = [...storeHandle.store.groups].filter(
+      (g) => g.jiraTicketId,
+    );
     if (!workspace || ticketed.length === 0) return;
     await Promise.allSettled(
       ticketed.map(async (g) => {
@@ -143,15 +199,29 @@ export const createSyncLayer = () => {
   // --- Init ---
   const init = async (config: SyncConfig) => {
     if (!config.jiraProjectKey) {
-      throw new Error("react-grab: SyncConfig.jiraProjectKey is required (e.g. 'ATT')");
+      throw new Error(
+        "react-grab: SyncConfig.jiraProjectKey is required (e.g. 'ATT')",
+      );
+    }
+
+    if (config.enabled && !config.apiToken) {
+      throw new Error(
+        "react-grab: SyncConfig.apiToken is required when sync is enabled — the sync server refuses requests without it (ADR-0020)",
+      );
     }
 
     if (config.serverUrl) {
       setApiBaseUrl(config.serverUrl);
     }
+    setApiToken(config.apiToken ?? "");
+    syncRevealedState = config.syncRevealedState;
 
     batch(() => {
-      storeHandle.setConfig(config.workspace, config.serverUrl, config.jiraProjectKey);
+      storeHandle.setConfig(
+        config.workspace,
+        config.serverUrl,
+        config.jiraProjectKey,
+      );
       storeHandle.setStatus("loading");
     });
 
@@ -184,7 +254,9 @@ export const createSyncLayer = () => {
         storeHandle.setComments(loadCommentsFromLocalStorage());
         storeHandle.setStatus("error", String(error));
       });
-      config.onSyncError(error instanceof Error ? error : new Error(String(error)));
+      config.onSyncError(
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   };
 
@@ -200,7 +272,11 @@ export const createSyncLayer = () => {
     comments?: CommentItem[];
   }) => {
     batch(() => {
-      storeHandle.setConfig(data.workspace, data.serverUrl, data.jiraProjectKey);
+      storeHandle.setConfig(
+        data.workspace,
+        data.serverUrl,
+        data.jiraProjectKey,
+      );
       if (data.groups) storeHandle.setGroups(data.groups);
       if (data.comments) storeHandle.setComments(data.comments);
       storeHandle.setStatus("local");

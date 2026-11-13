@@ -274,6 +274,7 @@ interface SyncConnectionConfig {
   workspace: string;
   serverUrl: string;
   jiraProjectKey: string;
+  apiToken?: string;
 }
 
 interface SeedPayload extends SyncConnectionConfig {
@@ -2526,17 +2527,21 @@ const createReactGrabPageObject = (
 
     /** Trigger initSync manually. For HTTP behavior tests — call AFTER mockServer routes are registered. */
     triggerInitSync: async (config?: Partial<SyncConnectionConfig>) => {
-      await page.evaluate((cfg) => {
-        return window.__reactGrabSync.initSync({
-          enabled: cfg.enabled ?? true,
-          serverUrl: cfg.serverUrl ?? "http://localhost:9999",
-          workspace: cfg.workspace ?? "test-workspace",
-          jiraProjectKey: cfg.jiraProjectKey ?? "ATT",
-          syncRevealedState: true,
-          onSyncError: (err: Error) =>
-            console.warn("[e2e] sync error:", err.message),
-        });
-      }, config ?? {});
+      await page.evaluate(
+        ({ cfg, defaultToken }) => {
+          return window.__reactGrabSync.initSync({
+            enabled: cfg.enabled ?? true,
+            serverUrl: cfg.serverUrl ?? "http://localhost:9999",
+            workspace: cfg.workspace ?? "test-workspace",
+            jiraProjectKey: cfg.jiraProjectKey ?? "ATT",
+            apiToken: cfg.apiToken ?? defaultToken,
+            syncRevealedState: true,
+            onSyncError: (err: Error) =>
+              console.warn("[e2e] sync error:", err.message),
+          });
+        },
+        { cfg: config ?? {}, defaultToken: mockFixtures.TEST_API_TOKEN },
+      );
     },
   };
 };

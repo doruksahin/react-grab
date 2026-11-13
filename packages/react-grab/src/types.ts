@@ -366,6 +366,14 @@ export interface ScreenshotConfig {
   maxHeight?: number;
 }
 
+/** Session recording (SPEC-020): what led to a selection, replayable from its link. */
+export interface RecordingConfig {
+  /** Record in the background and attach the recent window to each new comment. @default false */
+  enabled: boolean;
+  /** Length of one rrweb checkout period; the saved window is one to two of these. @default 5 */
+  windowMinutes?: number;
+}
+
 export interface Options {
   enabled?: boolean;
   activationMode?: ActivationMode;
@@ -382,6 +390,7 @@ export interface Options {
   freezeReactUpdates?: boolean;
   sync?: SyncConfig;
   screenshot?: ScreenshotConfig;
+  recording?: RecordingConfig;
   /** When true, persistent labels expose the collapse affordance (dot + chevron). */
   collapsibleLabels?: boolean;
   /**
@@ -404,8 +413,6 @@ export interface SourceInfo {
   lineNumber: number | null;
   componentName: string | null;
 }
-
-
 
 export interface ToolbarState {
   edge: "top" | "bottom" | "left" | "right";
@@ -461,8 +468,11 @@ export interface OverlayBounds {
 /** JIRA status name (e.g. "In Progress") or undefined for no ticket */
 export type GroupStatus = string | undefined;
 
-
-export type TicketCreatedCallback = (groupId: string, ticketId: string, ticketUrl: string) => void;
+export type TicketCreatedCallback = (
+  groupId: string,
+  ticketId: string,
+  ticketUrl: string,
+) => void;
 
 export type SelectionLabelStatus =
   | "idle"
@@ -680,7 +690,10 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   syncWorkspace?: string;
   syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
   jiraProjectKey?: string;
-  onFilterVisibilityChange?: (visibleIds: Set<string>, allGroupIds: string[]) => void;
+  onFilterVisibilityChange?: (
+    visibleIds: Set<string>,
+    allGroupIds: string[],
+  ) => void;
   onTicketCreated?: TicketCreatedCallback;
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   looseTicketDialog?: { group: SelectionGroup; items: CommentItem[] } | null;
@@ -767,10 +780,11 @@ export interface CompletionViewProps {
 
 /** @deprecated Use narrow interfaces from `components/selection-label/types.ts` instead. */
 export interface SelectionLabelProps
-  extends Pick<
-    SelectionGroupsViewProps,
-    "groups" | "activeGroupId" | "onActiveGroupChange" | "onAddGroup"
-  >,
+  extends
+    Pick<
+      SelectionGroupsViewProps,
+      "groups" | "activeGroupId" | "onActiveGroupChange" | "onAddGroup"
+    >,
     JiraDisplayFields {
   tagName?: string;
   componentName?: string;

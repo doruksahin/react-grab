@@ -1,5 +1,9 @@
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroup } from "../selection-groups/types.js";
+import type {
+  UpsertCommentBody,
+  UpsertGroupBody,
+} from "../../generated/sync-api.js";
 
 const REVEALED_COMMENTS_KEY = "react-grab-revealed-comments";
 const REVEALED_GROUPS_KEY = "react-grab-revealed-groups";
@@ -19,24 +23,37 @@ const groupIdFromWire = (id: string | null): string | null =>
   id === "" || id === null ? null : id;
 
 /**
- * Strip `revealed` from comments and translate `groupId` to the wire format
- * before sending to server.
+ * The comment as the server stores it: `groupId` in wire format, no UI-only
+ * preview bounds, and `revealed` only when revealed state is synced.
  */
-export const stripRevealedFromComments = (
-  items: CommentItem[],
-): Omit<CommentItem, "revealed">[] =>
-  items.map(({ revealed: _revealed, ...rest }) => ({
+export const toCommentWire = (
+  item: CommentItem,
+  syncRevealed: boolean,
+): UpsertCommentBody => {
+  const { previewBounds: _previewBounds, revealed, ...rest } = item;
+  return {
     ...rest,
     groupId: groupIdToWire(rest.groupId),
-  })) as Omit<CommentItem, "revealed">[];
+    ...(syncRevealed && revealed !== undefined ? { revealed } : {}),
+  };
+};
 
 /**
- * Strip `revealed` from groups before sending to server.
+ * The group fields a client may write. `status`, `jiraTicketId` and the Jira
+ * display fields are deliberately absent: the server owns them (ADR-0019).
  */
-export const stripRevealedFromGroups = (
-  groups: SelectionGroup[],
-): Omit<SelectionGroup, "revealed">[] =>
-  groups.map(({ revealed: _revealed, ...rest }) => rest);
+export const toGroupWire = (
+  group: SelectionGroup,
+  syncRevealed: boolean,
+): UpsertGroupBody => ({
+  id: group.id,
+  name: group.name,
+  createdAt: group.createdAt,
+  ...(group.synthetic !== undefined ? { synthetic: group.synthetic } : {}),
+  ...(syncRevealed && group.revealed !== undefined
+    ? { revealed: group.revealed }
+    : {}),
+});
 
 /**
  * Save revealed states locally (localStorage) so they survive server round-trips.

@@ -287,11 +287,27 @@ export const jiraStatusByGroup: Record<string, GetJiraTicketStatus200> = {
   "grp-2": jiraTicketStatusATT102,
 };
 
-/** Default response for PUT /workspaces/:id/comments */
-export const persistCommentsResponse = { ok: true } as const;
+/**
+ * The API token `triggerInitSync()` gives the overlay by default (ADR-0020).
+ * The mock server records each request's Authorization header so tests can
+ * assert the overlay always sends it.
+ */
+export const TEST_API_TOKEN = "e2e-sync-token-0123456789abcdef0123";
 
-/** Default response for PUT /workspaces/:id/groups */
-export const persistGroupsResponse = { ok: true } as const;
+/**
+ * Default response for every per-item write: PUT and DELETE on
+ * /workspaces/:id/comments/:commentId and /workspaces/:id/groups/:groupId.
+ * There is no whole-list write any more (ADR-0019).
+ */
+export const itemWriteResponse = { status: "ok" } as const;
+
+/** Default response for PUT /workspaces/:id/screenshots/:id/:kind. */
+export const uploadScreenshotResponse = { ok: true } as const;
+
+/** Default response for PUT /workspaces/:id/recordings/:commentId (SPEC-020). */
+export const RECORDING_URL =
+  "http://localhost:9999/r/6f1c2d3e-4a5b-4c6d-8e7f-001122334455";
+export const uploadRecordingResponse = { recordingUrl: RECORDING_URL } as const;
 
 // ---------------------------------------------------------------------------
 // 6. Create JIRA ticket — POST /api/workspaces/:id/jira/ticket
@@ -395,8 +411,9 @@ export const allFixtures = {
   jiraLabels,
   screenshotFull,
   screenshotElement,
-  persistCommentsResponse,
-  persistGroupsResponse,
+  itemWriteResponse,
+  uploadScreenshotResponse,
+  uploadRecordingResponse,
 } as const;
 
 // ---------------------------------------------------------------------------

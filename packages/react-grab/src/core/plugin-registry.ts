@@ -19,6 +19,7 @@ import type {
   AgentContext,
   ActionContext,
   ScreenshotConfig,
+  RecordingConfig,
 } from "../types.js";
 import { DEFAULT_THEME, deepMergeTheme } from "./theme.js";
 import {
@@ -40,6 +41,7 @@ interface OptionsState {
   getContent: ((elements: Element[]) => Promise<string> | string) | undefined;
   freezeReactUpdates: boolean;
   screenshot?: ScreenshotConfig;
+  recording?: RecordingConfig;
 }
 
 const DEFAULT_OPTIONS: OptionsState = {

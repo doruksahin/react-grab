@@ -43,6 +43,7 @@ import {
   ZOOM_DETECTION_THRESHOLD,
 } from "../constants.js";
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
+import { createSessionRecorder } from "../features/session-recording/index.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
 import { isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
@@ -96,6 +97,7 @@ import {
   invalidateBoundsCache,
 } from "../utils/create-element-bounds.js";
 import { createElementSelector } from "../utils/create-element-selector.js";
+import { getPageContext } from "../utils/get-page-context.js";
 import { generateId } from "../utils/generate-id.js";
 import { generateSnippet } from "../utils/generate-snippet.js";
 import { getAncestorElements } from "../utils/get-ancestor-elements.js";
@@ -343,6 +345,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     });
     domObserver.observe(document.body, { childList: true, subtree: true });
     onCleanup(() => domObserver.disconnect());
+
+    // SPEC-020: record in the background so each new comment can show how the user got there.
+    const recordingConfig = pluginRegistry.store.options.recording;
+    const sessionRecorder = recordingConfig?.enabled
+      ? createSessionRecorder(recordingConfig)
+      : null;
+    onCleanup(() => sessionRecorder?.stop());
 
     const updateToolbarState = (updates: Partial<ToolbarState>) => {
       const currentState = currentToolbarState() ?? loadToolbarState();
@@ -802,6 +811,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         commentText: extraPrompt,
         timestamp: Date.now(),
         revealed: visibility.selectionsRevealed(),
+        ...getPageContext(),
       };
       const groupId = selectionGroups.ensureGroupForItem(
         itemSeed,
@@ -844,6 +854,18 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             setCommentItems(patched);
           }
         });
+      }
+
+      if (newestCommentItem && sessionRecorder) {
+        sessionRecorder
+          .saveFor(newestCommentItem.id, getActiveAdapter())
+          .then((recordingUrl) => {
+            if (recordingUrl) {
+              setCommentItems(
+                patchCommentItem(newestCommentItem.id, { recordingUrl }),
+              );
+            }
+          });
       }
     };
 

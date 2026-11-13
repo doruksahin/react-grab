@@ -9,6 +9,8 @@ export interface CapturedRequest {
   url: string;
   method: string;
   body: unknown;
+  /** The request's Authorization header, if any (ADR-0020). */
+  authorization: string | undefined;
   timestamp: number;
 }
 
@@ -21,11 +23,14 @@ export type RouteHandler =
 export interface MockOverrides {
   health: RouteHandler;
   listComments: RouteHandler;
-  persistComments: RouteHandler;
+  upsertComment: RouteHandler;
+  deleteComment: RouteHandler;
   listGroups: RouteHandler;
-  persistGroups: RouteHandler;
+  upsertGroup: RouteHandler;
+  deleteGroup: RouteHandler;
   getScreenshot: RouteHandler;
   uploadScreenshot: RouteHandler;
+  uploadRecording: RouteHandler;
   createJiraTicket: RouteHandler;
   getJiraTicketStatus: RouteHandler;
   addJiraComment: RouteHandler;
@@ -58,9 +63,11 @@ interface EndpointDef {
 const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
   health: { pattern: "**/health", method: "GET" },
   listComments: { pattern: "**/workspaces/*/comments", method: "GET" },
-  persistComments: { pattern: "**/workspaces/*/comments", method: "PUT" },
+  upsertComment: { pattern: "**/workspaces/*/comments/*", method: "PUT" },
+  deleteComment: { pattern: "**/workspaces/*/comments/*", method: "DELETE" },
   listGroups: { pattern: "**/workspaces/*/groups", method: "GET" },
-  persistGroups: { pattern: "**/workspaces/*/groups", method: "PUT" },
+  upsertGroup: { pattern: "**/workspaces/*/groups/*", method: "PUT" },
+  deleteGroup: { pattern: "**/workspaces/*/groups/*", method: "DELETE" },
   getScreenshot: {
     pattern: "**/workspaces/*/screenshots/*/*",
     method: "GET",
@@ -70,6 +77,10 @@ const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
     pattern: "**/workspaces/*/screenshots/*/*",
     method: "PUT",
     binary: true,
+  },
+  uploadRecording: {
+    pattern: "**/workspaces/*/recordings/*",
+    method: "PUT",
   },
   createJiraTicket: {
     pattern: "**/workspaces/*/groups/*/jira-ticket",
@@ -97,11 +108,14 @@ const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
 const DEFAULT_FIXTURES: Record<keyof MockOverrides, unknown> = {
   health: fixtures.healthCheck,
   listComments: fixtures.comments,
-  persistComments: fixtures.persistCommentsResponse,
+  upsertComment: fixtures.itemWriteResponse,
+  deleteComment: fixtures.itemWriteResponse,
   listGroups: fixtures.groups,
-  persistGroups: fixtures.persistGroupsResponse,
+  upsertGroup: fixtures.itemWriteResponse,
+  deleteGroup: fixtures.itemWriteResponse,
   getScreenshot: fixtures.screenshotFull,
-  uploadScreenshot: fixtures.persistGroupsResponse,
+  uploadScreenshot: fixtures.uploadScreenshotResponse,
+  uploadRecording: fixtures.uploadRecordingResponse,
   createJiraTicket: fixtures.createJiraTicketResponse,
   getJiraTicketStatus: null, // handled by group-specific logic below
   addJiraComment: fixtures.addJiraCommentResponse,
@@ -143,6 +157,7 @@ function captureRequest(request: Request): CapturedRequest {
     url: request.url(),
     method: request.method(),
     body,
+    authorization: request.headers()["authorization"],
     timestamp: Date.now(),
   };
 }

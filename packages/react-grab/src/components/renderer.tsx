@@ -476,8 +476,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             commentItems={state().items}
             jiraProjectKey={props.jiraProjectKey ?? ""}
             onTicketCreated={(groupId, ticketId, ticketUrl) => {
+              // The dialog stays open to confirm the ticket; it closes via
+              // its own Done button, which calls onClose.
               props.onTicketCreated?.(groupId, ticketId, ticketUrl);
-              props.onLooseTicketDialogClose?.();
             }}
             onClose={() => props.onLooseTicketDialogClose?.()}
           />

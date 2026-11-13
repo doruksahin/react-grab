@@ -15,3 +15,14 @@ export const SelectionGroup = z.object({
 });
 
 export const SelectionGroupArray = z.array(SelectionGroup);
+
+/**
+ * What a client may write to a group. `status` and `jiraTicketId` are set by
+ * the server when it creates the Jira ticket (`updateGroupJira`), so they are
+ * read-only to clients — see ADR-0019. Unknown keys are stripped, so a client
+ * that still sends them cannot overwrite the server's values.
+ */
+export const SelectionGroupWrite = SelectionGroup.omit({
+  status: true,
+  jiraTicketId: true,
+});

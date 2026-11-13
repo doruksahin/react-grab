@@ -1,0 +1,30 @@
+# Copy to `.dev.vars` and fill in. `.dev.vars` is gitignored — never commit it.
+#
+# These are the values the Worker needs on top of the non-secret `[vars]` in
+# wrangler.toml. They are validated on the first request by
+# `src/schemas/env.ts`, which names every missing or malformed value at once.
+#
+# In production these are NOT set here. Set them on the deployed Worker:
+#   wrangler secret put JIRA_API_TOKEN
+# and set JIRA_EMAIL as a per-environment var or secret.
+
+# The Jira account every ticket is created as.
+JIRA_EMAIL=you@yourcompany.com
+
+# Atlassian API token for that account.
+# Create one at https://id.atlassian.com/manage-profile/security/api-tokens
+JIRA_API_TOKEN=
+
+# Optional: override the Jira site from wrangler.toml for local work.
+# JIRA_BASE_URL=https://yourcompany.atlassian.net
+
+# Bearer token every API request must carry (ADR-0020). At least 32 random
+# characters, for example: openssl rand -base64 32
+# Give the same value to the overlay (initSync apiToken, via the host app's
+# VITE_REACT_GRAB_SYNC_TOKEN) and to the dashboard (SYNC_API_TOKEN in
+# packages/dashboard/.env.local). In production: wrangler secret put SYNC_API_TOKEN
+SYNC_API_TOKEN=
+
+# Optional: extra browser origins allowed to call the API, comma-separated.
+# Local dev servers (localhost, 127.0.0.1) are always allowed.
+# ALLOWED_ORIGINS=https://staging.example.com

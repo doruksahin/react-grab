@@ -9,7 +9,7 @@
     "export-spec": "tsx src/export-spec.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply react-grab-sync --local",
-    "db:migrate:prod": "wrangler d1 migrations apply react-grab-sync",
+    "db:migrate:prod": "wrangler d1 migrations apply react-grab-sync --remote",
     "db:reset:local": "wrangler d1 execute react-grab-sync --local --command \"DELETE FROM comments; DELETE FROM groups;\"",
     "db:open": "open \"$(find .wrangler/state/v3/d1 -name '*.sqlite' ! -name 'metadata.sqlite' | head -1)\"",
     "publish:worker": "wrangler deploy"
@@ -25,6 +25,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.4.11",
     "@cloudflare/workers-types": "^4.20260331.1",
     "@types/node": "^25.5.0",
     "drizzle-kit": "^0.31.10",

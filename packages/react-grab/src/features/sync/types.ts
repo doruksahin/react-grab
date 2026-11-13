@@ -9,18 +9,25 @@ import type { SelectionGroup } from "../selection-groups/types.js";
 export interface StorageAdapter {
   /** Load all comments. Called once at init. */
   loadComments: () => Promise<CommentItem[]>;
-  /** Persist the full comments array. Called on every mutation. */
-  persistComments: (items: CommentItem[]) => Promise<CommentItem[]>;
+  /**
+   * Write one comment. There is no whole-list write: a client can only send
+   * what it changed, so it cannot erase other people's comments (ADR-0019).
+   */
+  upsertComment: (item: CommentItem) => Promise<void>;
+  deleteComment: (commentId: string) => Promise<void>;
   /** Load all groups. Called once at init. */
   loadGroups: () => Promise<SelectionGroup[]>;
-  /** Persist the full groups array. Called on every mutation. */
-  persistGroups: (groups: SelectionGroup[]) => Promise<SelectionGroup[]>;
+  /** Write one group's client-owned fields; the server owns its ticket fields. */
+  upsertGroup: (group: SelectionGroup) => Promise<void>;
+  deleteGroup: (groupId: string) => Promise<void>;
   /** Upload a screenshot blob. Returns the storage key/URL. Optional. */
   uploadScreenshot?: (
     selectionId: string,
     type: "full" | "element",
     blob: Blob,
   ) => Promise<string>;
+  /** Upload a gzip session recording (SPEC-020). Returns the link to watch it. Optional. */
+  uploadRecording?: (commentId: string, gzipBlob: Blob) => Promise<string>;
 }
 
 /**
@@ -32,6 +39,13 @@ export interface SyncConfig {
   serverUrl: string;
   workspace: string;
   jiraProjectKey: string;
+  /**
+   * Bearer token the sync server requires on every request (ADR-0020).
+   * Required when `enabled` is true. Read it from the host app's own env
+   * (for example `VITE_REACT_GRAB_SYNC_TOKEN`); `initSync()` runs only in
+   * development builds, so it never ships in a production bundle.
+   */
+  apiToken?: string;
   syncRevealedState: boolean;
   onSyncError: (error: Error) => void;
   /** Options forwarded to init() — use this to set screenshot config etc. */
