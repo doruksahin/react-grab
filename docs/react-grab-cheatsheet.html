@@ -1,0 +1,252 @@
+<title>React Grab Cheatsheet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a task-oriented reference. "I want to change X" leads, the rest is lookup. */
+:root {
+  --bg: #f4f3f0;
+  --surface: #ffffff;
+  --sunken: #ebe9e4;
+  --ink: #1e2321;
+  --muted: #5e6763;
+  --line: #dcdad4;
+  --accent: #1f6f55;
+  --accent-bg: #e2efe9;
+  --warn: #9a5a12;
+  --warn-bg: #fbeedb;
+  --danger: #a3302c;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #13100e; --surface: #1e1b19; --sunken: #171412; --ink: #ece9e4; --muted: #9d9790;
+    --line: #322d29; --accent: #6fd3a0; --accent-bg: #16342a;
+    --warn: #f0bd6e; --warn-bg: #352713; --danger: #ff8f88;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #13100e; --surface: #1e1b19; --sunken: #171412; --ink: #ece9e4; --muted: #9d9790;
+  --line: #322d29; --accent: #6fd3a0; --accent-bg: #16342a;
+  --warn: #f0bd6e; --warn-bg: #352713; --danger: #ff8f88;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1060px; margin: 0 auto; padding-block: 36px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.015em; }
+h2 { font-size: 21px; font-weight: 600; }
+h3 { font-size: 15px; font-weight: 600; }
+.lede { color: var(--muted); max-width: 64ch; margin: 10px 0 0; }
+.meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 12px; }
+section { display: grid; gap: 14px; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; min-width: 0; }
+.card .want { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
+.card .where { font-size: 13px; color: var(--muted); }
+dl.kv { margin: 0; display: grid; gap: 8px; }
+dl.kv > div { display: grid; gap: 3px; min-width: 0; }
+dl.kv dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+dl.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
+code, .path { font-family: var(--font-mono); font-size: 12.5px; background: var(--sunken); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.cmd { display: flex; gap: 8px; align-items: flex-start; background: var(--sunken); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; min-width: 0; }
+.cmd code { background: none; padding: 0; flex: 1; min-width: 0; line-height: 1.5; }
+.cmd button { font-family: var(--font-body); font-size: 11px; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 5px; padding: 2px 7px; cursor: pointer; flex-shrink: 0; }
+.cmd button:hover { color: var(--ink); border-color: var(--muted); }
+.cmd button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rows { display: grid; gap: 10px; }
+.row { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 16px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 13px 16px; }
+.row .label { font-weight: 600; font-size: 14px; }
+.row .label span { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.row .body { display: grid; gap: 8px; min-width: 0; font-size: 14px; }
+.note { border-left: 3px solid var(--accent); background: var(--accent-bg); color: var(--ink); border-radius: 0; padding: 12px 15px; font-size: 14px; }
+.note.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+.note b { font-weight: 600; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+td:first-child { white-space: nowrap; }
+.scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.foot { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 620px) {
+  h1 { font-size: 29px; }
+  .row { grid-template-columns: 1fr; gap: 8px; }
+  td:first-child { white-space: normal; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>React Grab cheatsheet</h1>
+    <p class="lede">What to touch when something needs to change, and what to run afterwards. Written against the repository, not from memory.</p>
+    <p class="meta">13 Nov 2026 · branch claude/penpot-mcp-access-70fbd6 · paths are repo-relative</p>
+  </header>
+
+  <section>
+    <span class="eyebrow">The one people ask for</span>
+    <h2>Changing the Jira connection</h2>
+    <p class="lede">Four separate things decide where a ticket ends up. They live in three different places, so change the right one.</p>
+
+    <div class="rows">
+      <div class="row">
+        <div class="label">Which Jira site<span>the company's Atlassian instance</span></div>
+        <div class="body">
+          <div><code>JIRA_BASE_URL</code> under <code>[vars]</code> in <span class="path">packages/sync-server/wrangler.toml</span>. Not a secret, committed.</div>
+          <div class="cmd"><code>pnpm sync:dev</code><button type="button" data-copy="pnpm sync:dev">Copy</button></div>
+          <div class="where">Restart the sync server after editing. For the deployed Worker, redeploy.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">Which account<span>tickets are created as this user</span></div>
+        <div class="body">
+          <div><code>JIRA_EMAIL</code> in <span class="path">packages/sync-server/.dev.vars</span> for local work. In production set it on the deployed Worker, never in a committed file.</div>
+          <div class="where">Copy <span class="path">.dev.vars.example</span> to <span class="path">.dev.vars</span> if you do not have one. It is gitignored.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">The API token<span>secret</span></div>
+        <div class="body">
+          <div><code>JIRA_API_TOKEN</code> in <span class="path">.dev.vars</span> locally. Create one at <a href="https://id.atlassian.com/manage-profile/security/api-tokens">id.atlassian.com</a>.</div>
+          <div class="cmd"><code>pnpm --filter @react-grab/sync-server exec wrangler secret put JIRA_API_TOKEN</code><button type="button" data-copy="pnpm --filter @react-grab/sync-server exec wrangler secret put JIRA_API_TOKEN">Copy</button></div>
+          <div class="where">That is the production route. The token is stored encrypted by Cloudflare and never enters git.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="label">Which project<span>which Jira project the ticket is filed in</span></div>
+        <div class="body">
+          <div>Not server-side at all. The host application passes it: <code>initSync({ jiraProjectKey: "ATT" })</code>. It travels to the create dialog and to the issue-type, priority and label lookups.</div>
+          <div class="where">Change it where the host app calls <code>initSync</code>, then restart that app. In this repo nothing calls <code>initSync</code> outside the test harness, so the only live caller is AdCreative-Frontend-V2.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Get it wrong and it says so.</b> The three server values are validated by <span class="path">packages/sync-server/src/schemas/env.ts</span> on the first request. A missing or malformed value fails with every problem named at once, instead of an opaque Jira 401 later. ADR-0018 explains why this is a plain Zod schema and not an env library.
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Daily</span>
+    <h2>Running the stack</h2>
+    <p class="lede">Three terminals. The first build must finish before the host app starts, or its TypeScript cannot resolve <code>react-grab</code>.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="want">First run, once</div>
+        <div class="cmd"><code>pnpm install &amp;&amp; pnpm build</code><button type="button" data-copy="pnpm install && pnpm build">Copy</button></div>
+        <div class="cmd"><code>pnpm --filter @react-grab/sync-server db:migrate:local</code><button type="button" data-copy="pnpm --filter @react-grab/sync-server db:migrate:local">Copy</button></div>
+        <div class="where">The build writes the type definitions that watch mode then preserves.</div>
+      </div>
+      <div class="card">
+        <div class="want">Terminal 1 — library</div>
+        <div class="cmd"><code>pnpm dev</code><button type="button" data-copy="pnpm dev">Copy</button></div>
+        <div class="where">JS only, about 15–20s a rebuild. Use <code>pnpm dev:full</code> when you are changing public types and need the IDE to follow.</div>
+      </div>
+      <div class="card">
+        <div class="want">Terminal 2 — sync server</div>
+        <div class="cmd"><code>pnpm sync:dev</code><button type="button" data-copy="pnpm sync:dev">Copy</button></div>
+        <div class="where">Worker on :8787. Swagger at <code>/swagger</code>, health at <code>/health</code>.</div>
+      </div>
+      <div class="card">
+        <div class="want">Terminal 3 — host app</div>
+        <div class="cmd"><code>pnpm dev</code><button type="button" data-copy="pnpm dev">Copy</button></div>
+        <div class="where">In AdCreative-Frontend-V2. Its <span class="path">node_modules/react-grab</span> is a symlink here, so Vite HMR picks changes up.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Lookup</span>
+    <h2>Commands worth remembering</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>When</th><th>Run</th></tr></thead>
+      <tbody>
+        <tr><td>Test one spec</td><td><code>pnpm --filter react-grab exec playwright test e2e/mocked/jira-create-dialog.spec.ts --project=chromium</code></td></tr>
+        <tr><td>Test one scenario</td><td><code>pnpm --filter react-grab exec playwright test --project=chromium --grep @S5.4</code></td></tr>
+        <tr><td>Debug a test visually</td><td><code>pnpm --filter react-grab test:e2e:ui</code></td></tr>
+        <tr><td>Unit tests</td><td><code>pnpm --filter react-grab exec vitest run</code></td></tr>
+        <tr><td>After changing a server schema</td><td><code>pnpm --filter @react-grab/sync-server export-spec &amp;&amp; pnpm --filter react-grab codegen</code></td></tr>
+        <tr><td>After adding a file or a data attribute</td><td><code>pnpm arch:codegen &amp;&amp; pnpm arch:lint</code></td></tr>
+        <tr><td>Before a commit</td><td><code>pnpm typecheck &amp;&amp; pnpm lint</code></td></tr>
+      </tbody>
+    </table></div>
+    <div class="note warn">
+      <b>Never run the whole E2E suite locally.</b> It is 580+ tests and over four minutes. Always target a file or a <code>--grep</code> tag. The pre-commit hook runs <code>arch:lint</code>, which needs <span class="path">packages/sync-server/openapi.json</span> to exist — if it fails there, run <code>export-spec</code> once.
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Orientation</span>
+    <h2>Where things live</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Looking for</th><th>Path</th></tr></thead>
+      <tbody>
+        <tr><td>The map of everything</td><td><span class="path">architecture.yml</span> — read it first, it indexes features, data flows and attributes</td></tr>
+        <tr><td>Why a decision was made</td><td><span class="path">decree/adr/</span>, with requirements in <span class="path">decree/prd/</span> and designs in <span class="path">decree/spec/</span></td></tr>
+        <tr><td>What the product should do</td><td><span class="path">docs/scenarios/journey/</span> — 45 scenarios, each with design, code and test status</td></tr>
+        <tr><td>Jira integration, server side</td><td><span class="path">packages/sync-server/src/services/jira.service.ts</span></td></tr>
+        <tr><td>Jira create dialog</td><td><span class="path">packages/react-grab/src/components/sidebar/jira-create-form.tsx</span></td></tr>
+        <tr><td>Ticket description text</td><td><span class="path">packages/react-grab/src/features/sidebar/jira-defaults.ts</span></td></tr>
+        <tr><td>Worker configuration</td><td><span class="path">packages/sync-server/src/schemas/env.ts</span></td></tr>
+        <tr><td>Mock data for tests</td><td><span class="path">packages/react-grab/e2e/mocks/fixtures.ts</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <span class="eyebrow">When it breaks</span>
+    <h2>Known traps</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="want">Two builds racing</div>
+        <div class="where">Never run <code>pnpm build</code> while <code>pnpm dev</code> is watching in another terminal. Two tsup processes on one <span class="path">dist/</span> corrupt the output and wedge the watcher. Stop the watcher first.</div>
+      </div>
+      <div class="card">
+        <div class="want">Failed to resolve entry for "react-grab"</div>
+        <div class="where">The host app started while tsup was mid-rebuild and cached the failure.</div>
+        <div class="cmd"><code>rm -rf node_modules/.vite</code><button type="button" data-copy="rm -rf node_modules/.vite">Copy</button></div>
+        <div class="where">Run it in the host app, then restart its Vite.</div>
+      </div>
+      <div class="card">
+        <div class="want">Jira calls return 401</div>
+        <div class="where">Check the account and token in <span class="path">.dev.vars</span>, then restart <code>pnpm sync:dev</code>. Since ADR-0018 an empty value fails loudly on the first request instead, so a 401 now points at a wrong value rather than a missing one.</div>
+      </div>
+      <div class="card">
+        <div class="want">Tickets land in the wrong place</div>
+        <div class="where">Site is <code>JIRA_BASE_URL</code> in <span class="path">wrangler.toml</span>; project is <code>jiraProjectKey</code> from the host app. They are set in different repositories, which is the usual cause of confusion.</div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">Source of truth is the repository. Where this page and the code disagree, the code is right — and the page is wrong, so fix it at <span class="path">docs/react-grab-cheatsheet.html</span>.</p>
+</div>
+
+<script>
+for (const button of document.querySelectorAll("button[data-copy]")) {
+  button.addEventListener("click", async () => {
+    const text = button.getAttribute("data-copy");
+    const original = button.textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      button.textContent = "Copied";
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents(button.previousElementSibling);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      button.textContent = "Selected";
+    }
+    setTimeout(() => { button.textContent = original; }, 1400);
+  });
+}
+</script>
