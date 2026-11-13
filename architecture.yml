@@ -960,3 +960,7 @@ decree:
       title: Bundle all solid-js-consuming deps into react-grab's dist
       file: decree/adr/0017-bundle-solid-js-deps-to-prevent-dual-instance.md
       status: accepted
+    ADR-0018:
+      title: Validate Worker configuration with a Zod schema, not an env library
+      file: decree/adr/0018-worker-configuration-as-a-zod-schema.md
+      status: accepted

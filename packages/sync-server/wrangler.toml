@@ -4,10 +4,13 @@ compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
+# Non-secret configuration. Secrets never belong here — see .dev.vars.example
+# for the full list of what the Worker needs, and ADR-0018 for why.
+#
+# JIRA_BASE_URL decides which Jira site every ticket is created on.
 [vars]
 ENVIRONMENT = "development"
 JIRA_BASE_URL = "https://appier.atlassian.net"
-JIRA_EMAIL = ""
 
 # D1 database binding
 [[d1_databases]]

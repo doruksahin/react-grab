@@ -1,0 +1,19 @@
+# Copy to `.dev.vars` and fill in. `.dev.vars` is gitignored — never commit it.
+#
+# These are the values the Worker needs on top of the non-secret `[vars]` in
+# wrangler.toml. They are validated on the first request by
+# `src/schemas/env.ts`, which names every missing or malformed value at once.
+#
+# In production these are NOT set here. Set them on the deployed Worker:
+#   wrangler secret put JIRA_API_TOKEN
+# and set JIRA_EMAIL as a per-environment var or secret.
+
+# The Jira account every ticket is created as.
+JIRA_EMAIL=you@yourcompany.com
+
+# Atlassian API token for that account.
+# Create one at https://id.atlassian.com/manage-profile/security/api-tokens
+JIRA_API_TOKEN=
+
+# Optional: override the Jira site from wrangler.toml for local work.
+# JIRA_BASE_URL=https://yourcompany.atlassian.net

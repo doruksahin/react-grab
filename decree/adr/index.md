@@ -17,3 +17,4 @@
 | ADR-0012 | ADR-0012 Architecture YAML codegen via madge and ts-morph | accepted | 2026-04-15 |  |
 | ADR-0014 | ADR-0014 Reusable Image Lightbox Composition — UI primitive + singleton hook + Portal-to-shadow | accepted | 2026-04-16 |  |
 | ADR-0015 | ADR-0015 Due date filter — preset Select over client-side loaded groups | accepted | 2026-04-16 |  |
+| ADR-0018 | ADR-0018 Validate Worker configuration with a Zod schema, not an env library | accepted | 2026-11-13 |  |

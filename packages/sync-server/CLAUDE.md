@@ -68,7 +68,11 @@ pnpm --filter @react-grab/sync-server db:reset:local
 - `searchUsers` — user search for @mention resolution
 - `fetchThreadedComments` — threaded comments via Atlassian GraphQL gateway
 
-JIRA credentials: `JIRA_EMAIL` and `JIRA_API_TOKEN` in `.dev.vars` (gitignored). `JIRA_BASE_URL` in `wrangler.toml`.
+## Configuration
+
+`JIRA_BASE_URL` is a non-secret `[vars]` entry in `wrangler.toml` and decides which Jira site every ticket lands on. `JIRA_EMAIL` and `JIRA_API_TOKEN` are per-developer: copy `.dev.vars.example` to `.dev.vars` (gitignored) and fill them in. In production set them on the deployed Worker with `wrangler secret put`, never in a committed file.
+
+All three are described by `src/schemas/env.ts` — the sixth schema in that folder — and validated by `parseJiraEnv()` in `middleware/inject-repos.ts`, the one place the configuration is read. A missing or malformed value fails the first request with every problem named, instead of an opaque Jira 401 later. See ADR-0018 for why this is a Zod schema rather than an env library.
 
 ## Dev server
 
