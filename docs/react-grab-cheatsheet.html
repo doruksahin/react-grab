@@ -77,9 +77,9 @@ td:first-child { white-space: nowrap; }
 
   <section>
     <span class="eyebrow">Start here</span>
-    <h2>Local and production hold the same three values in different places</h2>
+    <h2>Local and production hold the same values in different places</h2>
     <figure>
-      <svg viewBox="0 0 720 372" role="img" aria-label="Local development reads the Jira site from wrangler.toml and the account and token from the gitignored .dev.vars file. Production reads the same site from the same committed file, but the account and token from Cloudflare's encrypted secret store. Both paths end at the same validation step.">
+      <svg viewBox="0 0 720 372" role="img" aria-label="Local development reads the Jira site from wrangler.toml and the Jira account, Jira token and sync API token from the gitignored .dev.vars file. Production reads the same site from the same committed file, but the three secrets from Cloudflare's encrypted secret store. Both paths end at the same validation step.">
         <defs>
           <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M1 1 L9 5 L1 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -97,7 +97,9 @@ td:first-child { white-space: nowrap; }
         <text x="22" y="136" font-size="12.5" fill="currentColor">.dev.vars</text>
         <text x="22" y="152" font-size="11" fill="currentColor" opacity=".6">gitignored · copy from .dev.vars.example</text>
         <line x1="164" y1="162" x2="164" y2="206" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"/>
-        <text x="172" y="188" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">JIRA_EMAIL · JIRA_API_TOKEN</text>
+        <text x="172" y="177" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">JIRA_EMAIL</text>
+        <text x="172" y="189" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">JIRA_API_TOKEN</text>
+        <text x="172" y="201" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">SYNC_API_TOKEN</text>
 
         <rect x="8" y="206" width="312" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".85"/>
         <text x="22" y="228" font-size="12.5" fill="currentColor">Worker on localhost:8787</text>
@@ -114,11 +116,13 @@ td:first-child { white-space: nowrap; }
         <text x="412" y="136" font-size="12.5" fill="currentColor">Cloudflare secret store</text>
         <text x="412" y="152" font-size="11" fill="currentColor" opacity=".6">wrangler secret put · encrypted, never in git</text>
         <line x1="554" y1="162" x2="554" y2="206" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"/>
-        <text x="562" y="188" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">JIRA_EMAIL · JIRA_API_TOKEN</text>
+        <text x="562" y="177" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">JIRA_EMAIL</text>
+        <text x="562" y="189" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">JIRA_API_TOKEN</text>
+        <text x="562" y="201" font-family="monospace" font-size="10.5" fill="currentColor" opacity=".7">SYNC_API_TOKEN</text>
 
         <rect x="398" y="206" width="312" height="50" rx="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".85"/>
         <text x="412" y="228" font-size="12.5" fill="currentColor">Worker on workers.dev</text>
-        <text x="412" y="244" font-size="11" fill="currentColor" opacity=".6">react-grab-sync-server</text>
+        <text x="412" y="244" font-size="11" fill="currentColor" opacity=".6">react-grab-sync-server · all three secrets set</text>
 
         <line x1="164" y1="256" x2="164" y2="296" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"/>
         <line x1="554" y1="256" x2="554" y2="296" stroke="currentColor" stroke-width="1" marker-end="url(#ar)"/>
@@ -126,7 +130,7 @@ td:first-child { white-space: nowrap; }
         <text x="359" y="318" font-size="12.5" text-anchor="middle" fill="currentColor">Both end here: src/schemas/env.ts validates on the first request</text>
         <text x="359" y="336" font-size="11" text-anchor="middle" fill="currentColor" opacity=".6">a missing or malformed value names every problem at once, instead of a Jira 401 later</text>
       </svg>
-      <figcaption>The committed file is identical in both columns. Only the middle box changes — and that is the box that holds the secret.</figcaption>
+      <figcaption>The committed file is identical in both columns. Only the middle box changes — and that is the box that holds the secrets. Local and production use different <code>SYNC_API_TOKEN</code> values, so the production one never sits in a plain file.</figcaption>
     </figure>
   </section>
 
@@ -178,29 +182,37 @@ td:first-child { white-space: nowrap; }
   <section>
     <span class="eyebrow">Cloudflare</span>
     <h2>Which account, which project</h2>
+    <p class="lede">Verified against the live account on 13 Nov 2026 with <code>wrangler whoami</code>, <code>secret list</code>, <code>deploy</code> and requests to the live Worker.</p>
     <div class="scroll"><table>
-      <thead><tr><th>Resource</th><th>Name in the repository</th><th>Declared in</th></tr></thead>
+      <thead><tr><th>Resource</th><th>Value</th><th>State</th></tr></thead>
       <tbody>
-        <tr><td>Worker (the project)</td><td><code>react-grab-sync-server</code></td><td><span class="path">packages/sync-server/wrangler.toml</span></td></tr>
-        <tr><td>D1 database</td><td><code>react-grab-sync</code> · id <code>6f0223f9-025b-481a-a2e3-3d1e77c46904</code></td><td>same file</td></tr>
-        <tr><td>R2 bucket</td><td><code>react-grab-screenshots</code></td><td>same file</td></tr>
-        <tr><td>Public URL</td><td><code>react-grab-sync-server.&lt;subdomain&gt;.workers.dev</code></td><td><code>workers_dev = true</code></td></tr>
-        <tr><td><b>Account</b></td><td><b>not recorded anywhere</b></td><td>—</td></tr>
+        <tr><td>Cloudflare account</td><td>personal account · <code>601031668a1130f8c22117a0ea8e5e63</code></td><td>pinned in <span class="path">wrangler.toml</span>; a company account comes later</td></tr>
+        <tr><td>Worker (the project)</td><td><code>react-grab-sync-server</code> · <code>react-grab-sync-server.&lt;account&gt;.workers.dev</code></td><td>deployed 13 Nov 2026 from this branch</td></tr>
+        <tr><td>D1 database</td><td><code>react-grab-sync</code> · <code>6f0223f9-025b-481a-a2e3-3d1e77c46904</code></td><td>all migrations applied (through 0005)</td></tr>
+        <tr><td>R2 bucket</td><td><code>react-grab-screenshots</code></td><td>exists</td></tr>
+        <tr><td>Jira site</td><td><code>https://doruksahin.atlassian.net</code> · project <code>SCRUM</code></td><td>a personal site, not AdCreative's</td></tr>
+        <tr><td>Production secrets</td><td><code>SYNC_API_TOKEN</code> · <code>JIRA_EMAIL</code> · <code>JIRA_API_TOKEN</code></td><td>all set</td></tr>
+        <tr><td>Extra browser origins</td><td><code>ALLOWED_ORIGINS</code></td><td>not set — only localhost may call it from a browser</td></tr>
       </tbody>
     </table></div>
-    <div class="note warn">
-      <b>The account is the one thing the repository does not say.</b> There is no <code>account_id</code> in <span class="path">wrangler.toml</span>, no Cloudflare credentials in CI, and <code>wrangler whoami</code> on this machine reports not logged in — so nothing here has ever been deployed from this checkout. The D1 id above is real, so the database exists in <i>someone's</i> account; which one has to be found, not read.
+    <div class="note">
+      <b>Production works end to end.</b> Live checks on 13 Nov 2026: <code>/health</code> 200 · a data request without the token 401 · with the token 200 · a Jira read through the Worker 200. No ticket was created to test it.
     </div>
     <div class="cards">
       <div class="card">
-        <div class="want">Find out which account</div>
-        <div class="cmd"><code>pnpm --filter @react-grab/sync-server exec wrangler login</code><button type="button" data-copy="pnpm --filter @react-grab/sync-server exec wrangler login">Copy</button></div>
-        <div class="cmd"><code>pnpm --filter @react-grab/sync-server exec wrangler whoami</code><button type="button" data-copy="pnpm --filter @react-grab/sync-server exec wrangler whoami">Copy</button></div>
-        <div class="where">Prints the email and every account id that login can reach.</div>
+        <div class="want">Where the production token is</div>
+        <div class="where">In the deployer's macOS Keychain, and nowhere else outside Cloudflare. Print it only to paste it somewhere:</div>
+        <div class="cmd"><code>security find-generic-password -s react-grab-sync-prod -a SYNC_API_TOKEN -w</code><button type="button" data-copy="security find-generic-password -s react-grab-sync-prod -a SYNC_API_TOKEN -w">Copy</button></div>
       </div>
       <div class="card">
-        <div class="want">Then pin it</div>
-        <div class="where">Add <code>account_id = "…"</code> to <span class="path">wrangler.toml</span>. It is not a secret, and pinning it is what stops a deploy landing in the wrong account when someone's login can see several.</div>
+        <div class="want">To deploy a change</div>
+        <div class="cmd"><code>pnpm --filter @react-grab/sync-server db:migrate:prod</code><button type="button" data-copy="pnpm --filter @react-grab/sync-server db:migrate:prod">Copy</button></div>
+        <div class="cmd"><code>pnpm --filter @react-grab/sync-server publish:worker</code><button type="button" data-copy="pnpm --filter @react-grab/sync-server publish:worker">Copy</button></div>
+        <div class="where">Migrations first, so the new code never meets an old schema. Secrets survive a redeploy.</div>
+      </div>
+      <div class="card">
+        <div class="want">It is on a personal account</div>
+        <div class="where">One person's login is the only way in, and nothing in CI can deploy it. Move it to a company account before anyone depends on it: change <code>account_id</code>, create D1 and R2 there, run the migrations and set the three secrets again.</div>
       </div>
     </div>
   </section>
@@ -213,7 +225,9 @@ td:first-child { white-space: nowrap; }
       <tbody>
         <tr><td>Which Jira site</td><td><code>JIRA_BASE_URL</code> in <span class="path">wrangler.toml</span></td><td>restart <code>pnpm sync:dev</code>; redeploy for production</td></tr>
         <tr><td>Which account files tickets</td><td><code>JIRA_EMAIL</code> in <span class="path">.dev.vars</span></td><td>restart <code>pnpm sync:dev</code></td></tr>
-        <tr><td>The API token</td><td><code>JIRA_API_TOKEN</code> in <span class="path">.dev.vars</span></td><td>restart; in production <code>wrangler secret put</code></td></tr>
+        <tr><td>The Jira API token</td><td><code>JIRA_API_TOKEN</code> in <span class="path">.dev.vars</span></td><td>restart; in production <code>wrangler secret put</code></td></tr>
+        <tr><td>The sync API token</td><td><code>SYNC_API_TOKEN</code> in <span class="path">.dev.vars</span>, the dashboard's <span class="path">.env.local</span>, and <code>VITE_REACT_GRAB_SYNC_TOKEN</code> in the host app</td><td>all three must match; in production <code>wrangler secret put</code></td></tr>
+        <tr><td>Which sites may call it from a browser</td><td><code>ALLOWED_ORIGINS</code>, comma-separated</td><td>localhost is always allowed; ADR-0020</td></tr>
         <tr><td>Which Jira project</td><td><code>jiraProjectKey</code> where the host app calls <code>initSync</code></td><td>restart the host app</td></tr>
       </tbody>
     </table></div>
@@ -305,6 +319,10 @@ td:first-child { white-space: nowrap; }
       <div class="card">
         <div class="want">Jira returns 401</div>
         <div class="where">A wrong value, not a missing one — since ADR-0018 an empty value fails loudly on the first request instead. Check the account and token in <span class="path">.dev.vars</span>, then restart <code>pnpm sync:dev</code>.</div>
+      </div>
+      <div class="card">
+        <div class="want">Every sync request returns 401</div>
+        <div class="where">The overlay's token does not match the server's. Compare <code>VITE_REACT_GRAB_SYNC_TOKEN</code> in the host app with <code>SYNC_API_TOKEN</code> in <span class="path">.dev.vars</span> (or production's), then restart both.</div>
       </div>
       <div class="card">
         <div class="want">Tickets land in the wrong place</div>
