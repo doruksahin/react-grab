@@ -14,8 +14,9 @@ import type { AppEnv } from "../types.js";
  */
 export const corsForCallers = createMiddleware<AppEnv>(async (c, next) => {
   const handler = cors({
+    // c.env is absent when the app runs outside Workers, as export-spec does.
     origin: (origin) =>
-      isAllowedOrigin(origin, c.env.ALLOWED_ORIGINS) ? origin : null,
+      isAllowedOrigin(origin, c.env?.ALLOWED_ORIGINS) ? origin : null,
     allowHeaders: ["Authorization", "Content-Type"],
     allowMethods: ["GET", "PUT", "POST", "DELETE", "OPTIONS"],
     maxAge: 600,
