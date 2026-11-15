@@ -56,6 +56,7 @@ const MenuListItem: Component<ComponentProps<"button">> = (props) => {
     "class",
     "onPointerEnter",
     "onPointerLeave",
+    "onMouseDown",
   ]);
   const controller = useContext(MenuListContext);
 
@@ -76,6 +77,14 @@ const MenuListItem: Component<ComponentProps<"button">> = (props) => {
       onPointerLeave={(event) => {
         controller?.clearHighlight();
         callEventHandler(local.onPointerLeave, event);
+      }}
+      // The overlay's keyboard handler drives these menus. A focused
+      // role="menuitem" counts as a host-page control for that handler
+      // (is-keyboard-event-triggered-by-input.ts), so choosing a row with the
+      // pointer must not move focus into it, or the arrow keys stop working.
+      onMouseDown={(event) => {
+        callEventHandler(local.onMouseDown, event);
+        event.preventDefault();
       }}
       {...rest}
     />
