@@ -167,6 +167,46 @@
       "rules": {
         "overlay-ui/no-jsx": "off"
       }
+    },
+    {
+      "files": [
+        "src/sync-http/**/*.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "solid-js",
+                  "solid-js/*",
+                  "@kobalte/*",
+                  "@tiptap/*",
+                  "@floating-ui/*",
+                  "@rrweb/*",
+                  "bippy",
+                  "modern-screenshot",
+                  "react",
+                  "react-dom"
+                ],
+                "message": "sync-http runs in the extension's service worker: no Solid, no DOM (ADR-0023)."
+              },
+              {
+                "group": [
+                  "../components/**",
+                  "../core/**",
+                  "../utils/**",
+                  "../features/**",
+                  "!../features/sync/business/persisted-fields.js"
+                ],
+                "allowTypeImports": true,
+                "message": "sync-http may import overlay types and pure business rules only, never UI or DOM code (ADR-0023)."
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "jsPlugins": [

@@ -22,4 +22,28 @@ export default defineConfig({
       afterAllFilesWrite: "node scripts/patch-orval-imports.mjs",
     },
   },
+  // Runtime checks for what the server sends, from the same spec, so they
+  // cannot drift from the types above. Used by react-grab/sync-http.
+  syncSchemas: {
+    input: {
+      target: "../sync-server/openapi.json",
+    },
+    output: {
+      mode: "single",
+      target: "src/generated/sync-api.zod.ts",
+      client: "zod",
+      override: {
+        zod: {
+          version: 4,
+          generate: {
+            param: false,
+            query: false,
+            header: false,
+            body: false,
+            response: true,
+          },
+        },
+      },
+    },
+  },
 });

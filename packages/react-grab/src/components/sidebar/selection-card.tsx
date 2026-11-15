@@ -4,7 +4,7 @@ import type { CommentItem } from "../../types.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
 import { extractFilePath, relativeTime } from "../../features/sidebar/index.js";
 import { screenshotRefs } from "../../features/screenshot/index.js";
-import { useSyncPorts } from "../../features/sync/sync-ports-context.js";
+import { useSyncContext } from "../../features/sync/sync-context.js";
 import { ScreenshotPair } from "./screenshot-pair.js";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 import { FlagIndicator } from "../flag-indicator.js";
@@ -28,7 +28,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
   const isDevMode = useDevMode();
   const filePath = createMemo(() => extractFilePath(props.item.content ?? ""));
 
-  const { storage } = useSyncPorts();
+  const { storage } = useSyncContext();
   const screenshots = createMemo(() =>
     storage() ? screenshotRefs(props.item) : {},
   );

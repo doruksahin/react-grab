@@ -11,30 +11,32 @@ export const withErrorReporting = (
   storage: StorageAdapter,
   onSyncError: (error: Error) => void,
 ): StorageAdapter => {
-  const reported =
-    <Args extends unknown[], Result>(
-      call: (...args: Args) => Promise<Result>,
-    ) =>
-    async (...args: Args): Promise<Result> => {
-      try {
-        return await call(...args);
-      } catch (error) {
-        const reportedError = toError(error);
-        onSyncError(reportedError);
-        throw reportedError;
-      }
-    };
+  const reported = async <Result>(
+    call: () => Promise<Result>,
+  ): Promise<Result> => {
+    try {
+      return await call();
+    } catch (error) {
+      const reportedError = toError(error);
+      onSyncError(reportedError);
+      throw reportedError;
+    }
+  };
 
   return {
-    loadComments: reported(storage.loadComments),
-    upsertComment: reported(storage.upsertComment),
-    deleteComment: reported(storage.deleteComment),
-    loadGroups: reported(storage.loadGroups),
-    upsertGroup: reported(storage.upsertGroup),
-    deleteGroup: reported(storage.deleteGroup),
-    uploadScreenshot: reported(storage.uploadScreenshot),
+    loadComments: () => reported(() => storage.loadComments()),
+    upsertComment: (item) => reported(() => storage.upsertComment(item)),
+    deleteComment: (commentId) =>
+      reported(() => storage.deleteComment(commentId)),
+    loadGroups: () => reported(() => storage.loadGroups()),
+    upsertGroup: (group) => reported(() => storage.upsertGroup(group)),
+    deleteGroup: (groupId) => reported(() => storage.deleteGroup(groupId)),
+    uploadScreenshot: (selectionId, kind, blob) =>
+      reported(() => storage.uploadScreenshot(selectionId, kind, blob)),
     // A screenshot that fails to show leaves an empty slot; it is not a sync failure.
-    loadScreenshot: storage.loadScreenshot,
-    uploadRecording: reported(storage.uploadRecording),
+    loadScreenshot: (selectionId, kind) =>
+      storage.loadScreenshot(selectionId, kind),
+    uploadRecording: (commentId, gzipBlob) =>
+      reported(() => storage.uploadRecording(commentId, gzipBlob)),
   };
 };

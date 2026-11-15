@@ -1,6 +1,6 @@
 import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js";
-import { useSyncPorts } from "../sync/sync-ports-context.js";
-import type { ScreenshotRef } from "./types.js";
+import { useSyncContext } from "../../sync/sync-context.js";
+import type { ScreenshotRef } from "../types.js";
 
 /**
  * A displayable URL for an uploaded screenshot. An `<img>` cannot send the
@@ -14,7 +14,7 @@ import type { ScreenshotRef } from "./types.js";
 export const useScreenshotUrl = (
   screenshot: Accessor<ScreenshotRef | undefined>,
 ): Accessor<string | undefined> => {
-  const { storage } = useSyncPorts();
+  const { storage } = useSyncContext();
   const [displayUrl, setDisplayUrl] = createSignal<string | undefined>();
 
   createEffect(() => {

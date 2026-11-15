@@ -10,6 +10,21 @@ export interface SyncRequestInit extends RequestInit {
   serverUrl?: string;
 }
 
+/**
+ * The response body as JSON. A body that is not JSON (an HTML error page from
+ * a proxy, say) becomes undefined, so the caller still sees the status and
+ * reports it as a failed request instead of a SyntaxError.
+ */
+const parseBody = (body: string): unknown => {
+  if (!body) return {};
+  try {
+    const data: unknown = JSON.parse(body);
+    return data;
+  } catch {
+    return undefined;
+  }
+};
+
 /** Orval custom mutator: resolves the relative path against the caller's server URL. */
 export const customFetch = async <T>(
   path: string,
@@ -22,8 +37,7 @@ export const customFetch = async <T>(
     );
   }
   const response = await fetch(`${serverUrl}${path}`, init);
-  const body = await response.text();
-  const data: unknown = body ? JSON.parse(body) : {};
+  const data = parseBody(await response.text());
   // HACK: Orval's mutator contract returns the generated response union `T`,
   // which it cannot express in the mutator's own signature.
   return { data, status: response.status, headers: response.headers } as T;

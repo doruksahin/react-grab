@@ -1,5 +1,5 @@
 import { createResource, type Accessor, type Resource } from "solid-js";
-import { useSyncPorts } from "../../sync/sync-ports-context.js";
+import { useSyncContext } from "../../sync/sync-context.js";
 import type {
   CreatedJiraTicket,
   JiraIssueType,
@@ -23,7 +23,7 @@ export interface JiraTicketCreation {
 export const useJiraTicketCreation = (
   projectKey: Accessor<string>,
 ): JiraTicketCreation => {
-  const { jira } = useSyncPorts();
+  const { jira } = useSyncContext();
   const requireJira = (): JiraPort => {
     const port = jira();
     if (!port) throw new Error("Jira is not connected");

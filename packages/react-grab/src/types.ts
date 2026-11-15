@@ -3,13 +3,7 @@ export type { CommentItem, OverlayBounds } from "./shared-types.js";
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
 import type { SelectionGroup } from "./features/selection-groups/types.js";
 import type { JiraPort, StorageAdapter } from "./features/sync/types.js";
-import type {
-  JiraComment,
-  RefreshGroupStatusFn,
-  SearchJiraUsersFn,
-  SubmitCommentFn,
-  SubmitGroupCommentFn,
-} from "./features/jira-comments/types.js";
+import type { JiraComment } from "./features/jira-comments/types.js";
 
 export interface Position {
   x: number;
@@ -684,12 +678,6 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   looseTicketDialog?: { group: SelectionGroup; items: CommentItem[] } | null;
   onLooseTicketDialogClose?: () => void;
-  /** Submit a JIRA comment for a specific group */
-  onSubmitJiraComment?: SubmitGroupCommentFn;
-  /** Search JIRA users for @mention autocomplete */
-  onSearchJiraUsers?: SearchJiraUsersFn;
-  /** Trigger JIRA status refresh for a specific group */
-  onRefreshJiraStatus?: RefreshGroupStatusFn;
   commentEditorToolbarVisible?: boolean;
 }
 
@@ -833,12 +821,6 @@ export interface SelectionLabelProps
   hideArrow?: boolean;
   /** True during the exit animation before the label is actually collapsed */
   isCollapsing?: boolean;
-  /** Submit a JIRA comment for the current group's ticket */
-  onSubmitJiraComment?: SubmitCommentFn;
-  /** Search JIRA users for @mention autocomplete */
-  onSearchJiraUsers?: SearchJiraUsersFn;
-  /** Trigger a JIRA status refresh (after posting a comment) */
-  onRefreshJiraStatus?: () => void;
   commentEditorToolbarVisible?: boolean;
 }
 
@@ -848,7 +830,8 @@ export interface SelectionLabelProps
  */
 export interface SyncConfig {
   enabled: boolean;
-  serverUrl: string;
+  /** Required when an HTTP port has to be built (no injected `storage` or `jira`). */
+  serverUrl?: string;
   workspace: string;
   jiraProjectKey: string;
   /**

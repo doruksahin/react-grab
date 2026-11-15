@@ -13,11 +13,6 @@ import { cn } from "../../utils/cn.js";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import type { SyncStatus } from "../../features/sync/types.js";
 import type { SidebarFocusRequest } from "../../features/sidebar/hooks/use-sidebar-session.js";
-import type {
-  RefreshGroupStatusFn,
-  SearchJiraUsersFn,
-  SubmitGroupCommentFn,
-} from "../../features/jira-comments/types.js";
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
 import { StatusFilter } from "./status-filter.js";
@@ -85,12 +80,6 @@ export interface SidebarProps {
     items: CommentItem[];
   } | null;
   onLooseTicketDialogClose?: () => void;
-  /** Submit a JIRA comment for a specific group */
-  onSubmitJiraComment?: SubmitGroupCommentFn;
-  /** Search JIRA users for @mention autocomplete */
-  onSearchJiraUsers?: SearchJiraUsersFn;
-  /** Trigger JIRA status refresh for a specific group */
-  onRefreshJiraStatus?: RefreshGroupStatusFn;
   commentEditorToolbarVisible?: boolean;
 }
 
@@ -400,9 +389,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   onToggleSelect={toggleSelect}
                   searchQuery={searchQuery()}
                   flaggedOnly={flaggedOnly()}
-                  onSubmitJiraComment={props.onSubmitJiraComment}
-                  onSearchJiraUsers={props.onSearchJiraUsers}
-                  onRefreshJiraStatus={props.onRefreshJiraStatus}
                   commentEditorToolbarVisible={
                     props.commentEditorToolbarVisible
                   }

@@ -9,7 +9,7 @@ import { PriorityIcon } from "./priority-icon.jsx";
 import { Avatar } from "../ui/avatar.jsx";
 import { CommentsSection } from "../jira-comments/comments-section.jsx";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
-import { useSyncPorts } from "../../features/sync/sync-ports-context.js";
+import { useSyncContext } from "../../features/sync/sync-context.js";
 import { ScreenshotThumb } from "./screenshot-thumb.js";
 import { StatusChip } from "../ui/status-chip.jsx";
 import { getStatusChip } from "../../features/sidebar/get-status-chip.js";
@@ -135,7 +135,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       jiraStatus: props.jiraStatus,
       jiraFlagged: props.jiraFlagged,
     });
-  const { storage } = useSyncPorts();
+  const { storage } = useSyncContext();
   const screenshotItemId = () => {
     const itemId = props.itemId;
     if (!itemId || !storage()) return undefined;

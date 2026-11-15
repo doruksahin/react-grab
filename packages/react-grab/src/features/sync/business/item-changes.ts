@@ -13,14 +13,14 @@ export interface ItemChanges<Item> {
  * client changed — never an item another person added, which is what the old
  * whole-list write used to erase.
  *
- * `toWire` projects an item onto the fields the server stores, so a change to
- * a local-only field (preview bounds, a revealed flag that is not synced)
- * does not cause a write.
+ * `persistedFields` projects an item onto the fields that are persisted
+ * (business/persisted-fields.ts), so a change to a local-only field such as
+ * preview bounds does not cause a write.
  */
 export const itemChanges = <Item extends { id: string }>(
   previous: readonly Item[],
   next: readonly Item[],
-  toWire: (item: Item) => unknown,
+  persistedFields: (item: Item) => unknown,
 ): ItemChanges<Item> => {
   const previousById = new Map(previous.map((item) => [item.id, item]));
   const nextIds = new Set(next.map((item) => item.id));
@@ -29,7 +29,10 @@ export const itemChanges = <Item extends { id: string }>(
     const before = previousById.get(item.id);
     if (before === item) return false;
     if (!before) return true;
-    return JSON.stringify(toWire(before)) !== JSON.stringify(toWire(item));
+    return (
+      JSON.stringify(persistedFields(before)) !==
+      JSON.stringify(persistedFields(item))
+    );
   });
 
   const deletedIds = previous

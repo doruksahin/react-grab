@@ -1,4 +1,3 @@
-import { z } from "zod";
 import type { StorageAdapter } from "../features/sync/types.js";
 import {
   deleteComment,
@@ -13,20 +12,19 @@ import {
 } from "../generated/sync-api.js";
 import { createSyncRequest, pathSegment, successData } from "./request.js";
 import {
-  RecordingUploadResultSchema,
-  ServerCommentSchema,
-  ServerGroupSchema,
-  UploadResultSchema,
-} from "./schemas.js";
+  ListCommentsResponse,
+  ListGroupsResponse,
+  UploadRecordingResponse,
+  UploadScreenshotResponse,
+} from "../generated/sync-api.zod.js";
 import type { SyncHttpConfig } from "./types.js";
 import { fromCommentWire, toCommentWire, toGroupWire } from "./wire.js";
 
 const RECORDING_CONTENT_TYPE = "application/gzip";
 
 /**
- * The storage port over HTTP, bound to one workspace. Sends every field it is
- * given, `revealed` included; whether revealed state is synced is the
- * overlay's policy, applied before the port (features/sync/store).
+ * The storage port over HTTP, bound to one workspace. Responses are checked
+ * with the Zod schemas Orval generates from the server's OpenAPI spec.
  */
 export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
   const request = createSyncRequest(config);
@@ -38,7 +36,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
         "GET /comments",
         await listComments(workspace, request.options()),
       );
-      return z.array(ServerCommentSchema).parse(data).map(fromCommentWire);
+      return ListCommentsResponse.parse(data).map(fromCommentWire);
     },
 
     upsertComment: async (item) => {
@@ -47,7 +45,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
         await upsertComment(
           workspace,
           pathSegment(item.id),
-          toCommentWire(item, true),
+          toCommentWire(item),
           request.options(),
         ),
       );
@@ -69,7 +67,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
         "GET /groups",
         await listGroups(workspace, request.options()),
       );
-      return z.array(ServerGroupSchema).parse(data);
+      return ListGroupsResponse.parse(data);
     },
 
     upsertGroup: async (group) => {
@@ -78,7 +76,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
         await upsertGroup(
           workspace,
           pathSegment(group.id),
-          toGroupWire(group, true),
+          toGroupWire(group),
           request.options(),
         ),
       );
@@ -97,7 +95,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
         getUploadScreenshotUrl(workspace, pathSegment(selectionId), kind),
         { method: "PUT", body: blob, contentType: blob.type },
       );
-      return UploadResultSchema.parse(await response.json()).key;
+      return UploadScreenshotResponse.parse(await response.json()).key;
     },
 
     loadScreenshot: async (selectionId, kind) => {
@@ -115,8 +113,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
         getUploadRecordingUrl(workspace, pathSegment(commentId)),
         { method: "PUT", body: gzipBlob, contentType: RECORDING_CONTENT_TYPE },
       );
-      return RecordingUploadResultSchema.parse(await response.json())
-        .recordingUrl;
+      return UploadRecordingResponse.parse(await response.json()).recordingUrl;
     },
   };
 };

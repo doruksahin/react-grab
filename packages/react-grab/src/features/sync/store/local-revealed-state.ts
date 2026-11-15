@@ -54,6 +54,24 @@ export const saveLocalRevealedStates = (
   }
 };
 
+/** Records one item's revealed flag, leaving the others as they are. */
+export const rememberRevealed = (
+  kind: "comments" | "groups",
+  id: string,
+  revealed: boolean,
+): void => {
+  const key = kind === "comments" ? REVEALED_COMMENTS_KEY : REVEALED_GROUPS_KEY;
+  const { [id]: _previous, ...others } = readRevealed(key);
+  try {
+    localStorage.setItem(
+      key,
+      JSON.stringify(revealed ? { ...others, [id]: true } : others),
+    );
+  } catch {
+    // localStorage may be unavailable
+  }
+};
+
 export const mergeRevealedIntoComments = (
   items: CommentItem[],
 ): CommentItem[] => {

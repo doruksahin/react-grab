@@ -277,14 +277,15 @@ interface SyncConnectionConfig {
   apiToken?: string;
 }
 
-interface SeedPayload extends SyncConnectionConfig {
+interface SeedPayload {
+  workspace: string;
+  jiraProjectKey: string;
   groups: SelectionGroupWithJira[];
   comments: CommentItem[];
 }
 
 const DEFAULT_SEED: SeedPayload = {
   workspace: "test-workspace",
-  serverUrl: "http://localhost:9999",
   jiraProjectKey: "ATT",
   groups: mockFixtures.groups,
   comments: mockFixtures.comments,

@@ -34,9 +34,17 @@ import { LabelPin } from "./selection-label/label-pin.js";
 import { useLabelPins } from "../features/selection-label/hooks/use-label-pins.js";
 import { useSidebarSession } from "../features/sidebar/hooks/use-sidebar-session.js";
 import { LABEL_EXIT_ANIMATION_MS } from "../constants.js";
+import { useSyncContext } from "../features/sync/sync-context.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const sidebar = useSidebarSession();
+  const sync = useSyncContext();
+  const refreshStatusFor = (groupId: string | undefined) =>
+    groupId && sync.jira()
+      ? () => {
+          void sync.refreshJiraStatus(groupId);
+        }
+      : undefined;
   const sidebarOpen = sidebar.isOpen;
 
   const labelPins = useLabelPins({
@@ -376,11 +384,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
                       }
                     : undefined
                 }
-                onRefreshJiraStatus={
-                  instance().groupId && props.onRefreshJiraStatus
-                    ? () => props.onRefreshJiraStatus!(instance().groupId!)
-                    : undefined
-                }
+                onRefreshJiraStatus={refreshStatusFor(instance().groupId)}
                 isCollapsing={isLabelExiting()}
               />
             </Show>
@@ -515,9 +519,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onAddGroup={props.onAddGroup}
           looseTicketDialog={props.looseTicketDialog}
           onLooseTicketDialogClose={props.onLooseTicketDialogClose}
-          onSubmitJiraComment={props.onSubmitJiraComment}
-          onSearchJiraUsers={props.onSearchJiraUsers}
-          onRefreshJiraStatus={props.onRefreshJiraStatus}
           commentEditorToolbarVisible={props.commentEditorToolbarVisible}
           onClose={() => {
             sidebar.close();

@@ -85,3 +85,19 @@ export interface JiraPort {
   ) => Promise<PostedJiraComment>;
   searchUsers: (query: string, projectKey?: string) => Promise<JiraUser[]>;
 }
+
+/** What an HTTP port needs to reach the sync server (ADR-0020). */
+export interface SyncServerConfig {
+  serverUrl: string;
+  apiToken: string;
+  workspace: string;
+}
+
+/**
+ * How the sync layer builds the ports a SyncConfig does not inject. The
+ * composition root passes the HTTP ones from `react-grab/sync-http`.
+ */
+export interface SyncPortFactories {
+  createStorage: (config: SyncServerConfig) => StorageAdapter;
+  createJira: (config: SyncServerConfig) => JiraPort;
+}

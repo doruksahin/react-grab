@@ -51,15 +51,12 @@ import type { SelectionGroup } from "../features/selection-groups/types.js";
 import { isPinnedLabel } from "../features/selection-label/business/is-pinned-label.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
 import { createSyncLayer } from "../features/sync/sync-layer.js";
-import type {
-  JiraPort,
-  SyncConfig,
-  SyncStatus,
-} from "../features/sync/types.js";
+import type { SyncConfig, SyncStatus } from "../features/sync/types.js";
 import {
-  SyncPortsProvider,
-  type SyncPorts,
-} from "../features/sync/sync-ports-context.js";
+  SyncProvider,
+  type SyncContextValue,
+} from "../features/sync/sync-context.js";
+import { createHttpAdapter, createHttpJiraPort } from "../sync-http/index.js";
 import type {
   ActionCycleItem,
   ActionCycleState,
@@ -178,15 +175,17 @@ interface BuildActionContextOptions {
   customEnterPromptMode?: (agent?: AgentOptions) => void;
 }
 
-const syncLayer = createSyncLayer();
-const syncPorts: SyncPorts = {
+// Composition root: the HTTP ports are the default for configs that do not
+// inject their own (ADR-0023).
+const syncLayer = createSyncLayer({
+  createStorage: createHttpAdapter,
+  createJira: createHttpJiraPort,
+});
+const syncContext: SyncContextValue = {
   storage: syncLayer.adapter,
   jira: syncLayer.jira,
-};
-const requireJira = (): JiraPort => {
-  const jira = syncLayer.jira();
-  if (!jira) throw new Error("react-grab: Jira is not connected");
-  return jira;
+  jiraProjectKey: syncLayer.jiraProjectKey,
+  refreshJiraStatus: syncLayer.refreshJiraStatus,
 };
 let pendingSyncOptions: Options | undefined;
 
@@ -3160,7 +3159,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           if (disposed) return;
           disposeRenderer = render(() => {
             return (
-              <SyncPortsProvider value={syncPorts}>
+              <SyncProvider value={syncContext}>
                 <ReactGrabRenderer
                   selectionVisible={selectionVisible()}
                   selectionBounds={selectionBounds()}
@@ -3349,48 +3348,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                   onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
                   looseTicketDialog={looseTicketDialog()}
                   onLooseTicketDialogClose={() => setLooseTicketDialog(null)}
-                  onSubmitJiraComment={
-                    syncLayer.workspace()
-                      ? async (groupId, markdown, mentions, parentId) =>
-                          requireJira().addComment(groupId, {
-                            body: markdown,
-                            mentions,
-                            parentId,
-                          })
-                      : undefined
-                  }
-                  onSearchJiraUsers={
-                    syncLayer.workspace()
-                      ? async (query) => {
-                          try {
-                            return await requireJira().searchUsers(
-                              query,
-                              syncLayer.jiraProjectKey() ?? undefined,
-                            );
-                          } catch {
-                            return [];
-                          }
-                        }
-                      : undefined
-                  }
-                  onRefreshJiraStatus={
-                    syncLayer.workspace()
-                      ? (groupId) => {
-                          syncLayer
-                            .jira()
-                            ?.getTicketStatus(groupId)
-                            .then((status) =>
-                              syncLayer.updateJiraStatus(groupId, status),
-                            )
-                            .catch(() => {});
-                        }
-                      : undefined
-                  }
                   commentEditorToolbarVisible={
                     initialOptions.commentEditorToolbarVisible
                   }
                 />
-              </SyncPortsProvider>
+              </SyncProvider>
             );
           }, rendererRoot);
         })

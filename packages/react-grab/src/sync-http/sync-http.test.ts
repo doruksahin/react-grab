@@ -5,6 +5,7 @@ import {
   SyncHttpError,
 } from "./index.js";
 import type { SyncHttpConfig } from "./types.js";
+import { customFetch } from "../generated/custom-fetch.js";
 
 const config: SyncHttpConfig = {
   serverUrl: "https://sync.example.com/",
@@ -268,5 +269,149 @@ describe("Jira port", () => {
       "https://sync.example.com/jira/users?query=ali&project=ATT",
       "https://sync.example.com/jira/users?query=ali",
     ]);
+  });
+});
+
+describe("non-JSON responses", () => {
+  const htmlResponse = (status: number) =>
+    new Response("<html><body>502 Bad Gateway</body></html>", {
+      status,
+      headers: { "Content-Type": "text/html" },
+    });
+
+  it("reports an HTML error page from a generated call as a SyncHttpError", async () => {
+    fetchMock.mockResolvedValue(htmlResponse(502));
+    const failure = createHttpAdapter(config).loadGroups();
+    await expect(failure).rejects.toBeInstanceOf(SyncHttpError);
+    await expect(failure).rejects.toMatchObject({
+      status: 502,
+      message: "GET /groups failed: 502",
+    });
+  });
+
+  it("reports an HTML error page from a binary call as a SyncHttpError", async () => {
+    fetchMock.mockResolvedValue(htmlResponse(502));
+    await expect(
+      createHttpAdapter(config).loadScreenshot("comment-1", "full"),
+    ).rejects.toMatchObject({
+      status: 502,
+      message: "GET /screenshots failed: 502",
+    });
+  });
+});
+
+describe("customFetch", () => {
+  it("refuses a call that names no server", async () => {
+    await expect(customFetch("/jira/site", {})).rejects.toThrow(
+      /no sync server URL/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+/*
+ * ADR-0023: in the extension a port call crosses two message channels that
+ * use the structured clone algorithm. Every value a port returns, and the
+ * message of every error it throws, must survive it.
+ */
+describe("structured clone contract", () => {
+  const ticketStatus = {
+    status: "In Progress",
+    statusCategory: "indeterminate",
+    assignee: null,
+    reporter: null,
+    assigneeAvatar: null,
+    reporterAvatar: null,
+    jiraUrl: "https://acme.atlassian.net/browse/ATT-1",
+    labels: ["ui"],
+    comments: [],
+  };
+
+  const respond = (url: string, method: string): Response => {
+    const path = new URL(url).pathname;
+    if (method !== "GET") {
+      if (path.includes("/screenshots/"))
+        return jsonResponse(200, { key: "k" });
+      if (path.includes("/recordings/"))
+        return jsonResponse(200, {
+          recordingUrl: "https://sync.example.com/r/a",
+        });
+      if (path.endsWith("/jira-ticket"))
+        return jsonResponse(200, {
+          jiraTicketId: "ATT-1",
+          jiraUrl: "https://j/ATT-1",
+        });
+      if (path.endsWith("/jira-comment"))
+        return jsonResponse(200, { id: "10", created: "now" });
+      return jsonResponse(200, { status: "ok" });
+    }
+    if (path.endsWith("/comments")) return jsonResponse(200, [comment]);
+    if (path.endsWith("/groups"))
+      return jsonResponse(200, [{ id: "g", name: "G", createdAt: 1 }]);
+    if (path.includes("/screenshots/"))
+      return new Response("png", { headers: { "Content-Type": "image/png" } });
+    if (path.endsWith("/jira-status")) return jsonResponse(200, ticketStatus);
+    if (path === "/jira/site")
+      return jsonResponse(200, { siteUrl: "https://j" });
+    if (path === "/jira/labels") return jsonResponse(200, ["ui"]);
+    if (path === "/jira/users")
+      return jsonResponse(200, [
+        { accountId: "a", displayName: "A", avatarUrl: null },
+      ]);
+    return jsonResponse(200, [{ id: "1", name: "Task" }]);
+  };
+
+  it("returns only cloneable values from every port method", async () => {
+    fetchMock.mockImplementation(async (input, init) =>
+      respond(String(input), init?.method ?? "GET"),
+    );
+    const storage = createHttpAdapter(config);
+    const jira = createHttpJiraPort(config);
+    const blob = new Blob(["x"], { type: "image/png" });
+
+    const results: Record<string, unknown> = {
+      loadComments: await storage.loadComments(),
+      upsertComment: await storage.upsertComment({ ...comment, groupId: null }),
+      deleteComment: await storage.deleteComment("c"),
+      loadGroups: await storage.loadGroups(),
+      upsertGroup: await storage.upsertGroup({
+        id: "g",
+        name: "G",
+        createdAt: 1,
+      }),
+      deleteGroup: await storage.deleteGroup("g"),
+      uploadScreenshot: await storage.uploadScreenshot("c", "full", blob),
+      loadScreenshot: await storage.loadScreenshot("c", "full"),
+      uploadRecording: await storage.uploadRecording("c", blob),
+      getSite: await jira.getSite(),
+      listIssueTypes: await jira.listIssueTypes("ATT"),
+      listPriorities: await jira.listPriorities(),
+      listLabels: await jira.listLabels("ATT"),
+      getTicketStatus: await jira.getTicketStatus("g"),
+      createTicket: await jira.createTicket("g", {
+        projectKey: "ATT",
+        issueType: "Task",
+        priority: "Medium",
+        summary: "S",
+        description: "",
+      }),
+      addComment: await jira.addComment("g", { body: "b" }),
+      searchUsers: await jira.searchUsers("a"),
+    };
+
+    for (const [method, result] of Object.entries(results)) {
+      expect(() => structuredClone(result), method).not.toThrow();
+      if (!(result instanceof Blob)) {
+        expect(structuredClone(result), method).toEqual(result);
+      }
+    }
+  });
+
+  it("keeps the server's message on a cloned error", async () => {
+    fetchMock.mockResolvedValue(jsonResponse(400, { error: "JIRA said no" }));
+    const error: unknown = await createHttpJiraPort(config)
+      .getSite()
+      .catch((caught: unknown) => caught);
+    expect(structuredClone(error)).toMatchObject({ message: "JIRA said no" });
   });
 });

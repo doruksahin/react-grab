@@ -1,16 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CommentItem } from "../../types.js";
-import type { JiraPort, StorageAdapter, SyncConfig } from "./types.js";
-import type { SyncHttpConfig } from "../../sync-http/types.js";
+import { createSyncLayer } from "./sync-layer.js";
+import type {
+  JiraPort,
+  StorageAdapter,
+  SyncConfig,
+  SyncPortFactories,
+  SyncServerConfig,
+} from "./types.js";
 
-const httpPorts = vi.hoisted(() => ({
-  createHttpAdapter: vi.fn(),
-  createHttpJiraPort: vi.fn(),
-}));
-
-vi.mock("../../sync-http/index.js", () => httpPorts);
-
-const { createSyncLayer } = await import("./sync-layer.js");
+const factories = {
+  createStorage: vi.fn<SyncPortFactories["createStorage"]>(),
+  createJira: vi.fn<SyncPortFactories["createJira"]>(),
+};
 
 const adapter = {
   loadComments: vi.fn<StorageAdapter["loadComments"]>(),
@@ -47,7 +49,6 @@ const makeComment = (id: string, commentText: string): CommentItem => ({
 
 const makeConfig = (overrides: Partial<SyncConfig> = {}): SyncConfig => ({
   enabled: true,
-  serverUrl: "",
   workspace: "test-workspace",
   jiraProjectKey: "ATT",
   storage: adapter,
@@ -61,8 +62,8 @@ const resetPorts = () => {
   localStorage.clear();
   for (const method of [...Object.values(adapter), ...Object.values(jira)])
     method.mockReset();
-  httpPorts.createHttpAdapter.mockReset();
-  httpPorts.createHttpJiraPort.mockReset();
+  factories.createStorage.mockReset();
+  factories.createJira.mockReset();
   adapter.upsertComment.mockResolvedValue(undefined);
   adapter.deleteComment.mockResolvedValue(undefined);
   adapter.upsertGroup.mockResolvedValue(undefined);
@@ -81,7 +82,7 @@ describe("sync layer retry", () => {
   });
 
   it("keeps a change made while offline and sends it on a successful retry", async () => {
-    const layer = createSyncLayer();
+    const layer = createSyncLayer(factories);
     await layer.init(makeConfig());
     expect(layer.status()).toBe("error");
     expect(layer.adapter()).toBeNull();
@@ -108,7 +109,7 @@ describe("sync layer retry", () => {
   });
 
   it("runs one connection for retries made while one is in flight", async () => {
-    const layer = createSyncLayer();
+    const layer = createSyncLayer(factories);
     await layer.init(makeConfig());
     const first = layer.retry();
     const second = layer.retry();
@@ -119,7 +120,7 @@ describe("sync layer retry", () => {
   });
 
   it("does not connect again after dispose", async () => {
-    const layer = createSyncLayer();
+    const layer = createSyncLayer(factories);
     await layer.init(makeConfig());
     layer.dispose();
     await layer.retry();
@@ -136,21 +137,21 @@ describe("sync layer ports", () => {
   });
 
   it("uses injected ports without a server URL or token", async () => {
-    const layer = createSyncLayer();
+    const layer = createSyncLayer(factories);
     await layer.init(makeConfig());
 
     expect(layer.status()).toBe("synced");
     expect(layer.comments().map((item) => item.id)).toEqual(["server-1"]);
-    expect(httpPorts.createHttpAdapter).not.toHaveBeenCalled();
-    expect(httpPorts.createHttpJiraPort).not.toHaveBeenCalled();
+    expect(factories.createStorage).not.toHaveBeenCalled();
+    expect(factories.createJira).not.toHaveBeenCalled();
     expect(layer.jira()).toBe(jira);
     layer.dispose();
   });
 
   it("builds the HTTP ports from serverUrl, apiToken and workspace when none are injected", async () => {
-    httpPorts.createHttpAdapter.mockReturnValue(adapter);
-    httpPorts.createHttpJiraPort.mockReturnValue(jira);
-    const layer = createSyncLayer();
+    factories.createStorage.mockReturnValue(adapter);
+    factories.createJira.mockReturnValue(jira);
+    const layer = createSyncLayer(factories);
     await layer.init(
       makeConfig({
         storage: undefined,
@@ -160,20 +161,20 @@ describe("sync layer ports", () => {
       }),
     );
 
-    const expected: SyncHttpConfig = {
+    const expected: SyncServerConfig = {
       serverUrl: "http://localhost:9999",
       apiToken: "test-token",
       workspace: "test-workspace",
     };
-    expect(httpPorts.createHttpAdapter).toHaveBeenCalledWith(expected);
-    expect(httpPorts.createHttpJiraPort).toHaveBeenCalledWith(expected);
+    expect(factories.createStorage).toHaveBeenCalledWith(expected);
+    expect(factories.createJira).toHaveBeenCalledWith(expected);
     expect(layer.status()).toBe("synced");
     layer.dispose();
   });
 
   it("builds only the missing port", async () => {
-    httpPorts.createHttpJiraPort.mockReturnValue(jira);
-    const layer = createSyncLayer();
+    factories.createJira.mockReturnValue(jira);
+    const layer = createSyncLayer(factories);
     await layer.init(
       makeConfig({
         jira: undefined,
@@ -181,13 +182,13 @@ describe("sync layer ports", () => {
         apiToken: "test-token",
       }),
     );
-    expect(httpPorts.createHttpAdapter).not.toHaveBeenCalled();
-    expect(httpPorts.createHttpJiraPort).toHaveBeenCalledTimes(1);
+    expect(factories.createStorage).not.toHaveBeenCalled();
+    expect(factories.createJira).toHaveBeenCalledTimes(1);
     layer.dispose();
   });
 
   it("requires a token when it has to build an HTTP port", async () => {
-    const layer = createSyncLayer();
+    const layer = createSyncLayer(factories);
     await expect(
       layer.init(makeConfig({ jira: undefined, serverUrl: "http://x" })),
     ).rejects.toThrow(/apiToken is required/);
@@ -209,7 +210,7 @@ describe("sync layer ports", () => {
       labels: [],
       comments: [],
     });
-    const layer = createSyncLayer();
+    const layer = createSyncLayer(factories);
     await layer.init(makeConfig());
 
     await vi.waitFor(() => {
@@ -223,7 +224,7 @@ describe("sync layer ports", () => {
   it("reports a failed write to onSyncError and keeps the local change", async () => {
     const onSyncError = vi.fn();
     adapter.upsertComment.mockRejectedValue(new Error("PUT failed: 500"));
-    const layer = createSyncLayer();
+    const layer = createSyncLayer(factories);
     await layer.init(makeConfig({ onSyncError }));
 
     layer.persistComments([makeComment("new-1", "New"), ...layer.comments()]);
@@ -245,7 +246,7 @@ describe("sync layer ports", () => {
     adapter.loadComments.mockResolvedValue([
       { ...serverComment, revealed: false },
     ]);
-    const layer = createSyncLayer();
+    const layer = createSyncLayer(factories);
     await layer.init(makeConfig({ syncRevealedState: false }));
 
     expect(layer.comments()[0].revealed).toBe(true);
@@ -258,6 +259,48 @@ describe("sync layer ports", () => {
     expect(adapter.upsertComment.mock.calls[0][0]).not.toHaveProperty(
       "revealed",
     );
+    layer.dispose();
+  });
+
+  it("sends nothing when only an unsynced revealed flag changes", async () => {
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig({ syncRevealedState: false }));
+
+    layer.persistComments(
+      layer.comments().map((item) => ({ ...item, revealed: !item.revealed })),
+    );
+
+    await vi.waitFor(() =>
+      expect(localStorage.getItem("react-grab-revealed-comments")).toBe(
+        JSON.stringify({ "server-1": true }),
+      ),
+    );
+    expect(adapter.upsertComment).not.toHaveBeenCalled();
+    layer.dispose();
+  });
+
+  it("refreshes one group's Jira status on request", async () => {
+    adapter.loadGroups.mockResolvedValue([
+      { id: "group-1", name: "Checkout", createdAt: 1 },
+    ]);
+    jira.getTicketStatus.mockResolvedValue({
+      status: "Done",
+      statusCategory: "done",
+      assignee: null,
+      reporter: null,
+      assigneeAvatar: null,
+      reporterAvatar: null,
+      jiraUrl: "https://acme.atlassian.net/browse/ATT-1",
+      labels: [],
+      comments: [],
+    });
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+
+    await layer.refreshJiraStatus("group-1");
+
+    expect(jira.getTicketStatus).toHaveBeenCalledWith("group-1");
+    expect(layer.groups()[0]).toMatchObject({ jiraStatus: "Done" });
     layer.dispose();
   });
 });

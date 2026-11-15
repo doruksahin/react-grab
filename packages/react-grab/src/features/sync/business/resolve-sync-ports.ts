@@ -1,10 +1,9 @@
-import type { SyncHttpConfig } from "../../../sync-http/types.js";
-import type { JiraPort, StorageAdapter, SyncConfig } from "../types.js";
-
-export interface SyncPortFactories {
-  createStorage: (config: SyncHttpConfig) => StorageAdapter;
-  createJira: (config: SyncHttpConfig) => JiraPort;
-}
+import type {
+  JiraPort,
+  StorageAdapter,
+  SyncConfig,
+  SyncPortFactories,
+} from "../types.js";
 
 export interface ResolvedSyncPorts {
   /** Null when sync is off: the overlay then keeps everything in localStorage. */
@@ -13,9 +12,10 @@ export interface ResolvedSyncPorts {
 }
 
 /**
- * The ports for a sync config: the injected ones, and HTTP ones built from
- * `serverUrl`, `apiToken` and `workspace` for any that are missing. Only a
- * port that has to be built needs those fields (ADR-0020, ADR-0023).
+ * The ports for a sync config: the injected ones, and ones built by the
+ * factories from `serverUrl`, `apiToken` and `workspace` for any that are
+ * missing. Only a port that has to be built needs those fields (ADR-0020,
+ * ADR-0023).
  */
 export const resolveSyncPorts = (
   config: SyncConfig,
@@ -39,13 +39,13 @@ export const resolveSyncPorts = (
     );
   }
 
-  const httpConfig: SyncHttpConfig = {
+  const serverConfig = {
     serverUrl: config.serverUrl,
     apiToken: config.apiToken,
     workspace: config.workspace,
   };
   return {
-    storage: storage ?? factories.createStorage(httpConfig),
-    jira: jira ?? factories.createJira(httpConfig),
+    storage: storage ?? factories.createStorage(serverConfig),
+    jira: jira ?? factories.createJira(serverConfig),
   };
 };
