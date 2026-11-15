@@ -4,7 +4,7 @@ import type {
   SearchJiraUsersFn,
   SubmitCommentFn,
 } from "../../features/jira-comments/types.js";
-import { JiraTicketLink } from "../ui/jira-ticket-link.jsx";
+import { JiraTicketLink } from "../jira/jira-ticket-link.jsx";
 import { PriorityIcon } from "./priority-icon.jsx";
 import { Avatar } from "../ui/avatar.jsx";
 import { CommentsSection } from "../jira-comments/comments-section.jsx";

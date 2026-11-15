@@ -3,7 +3,7 @@ import { type Component, Show } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { StatusChipData } from "../../features/sidebar/get-status-chip.js";
 import { SelectionCard } from "./selection-card.jsx";
-import { CreateTicketButton } from "../ui/create-ticket-button.jsx";
+import { CreateTicketButton } from "../jira/create-ticket-button.jsx";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 import { FlagIndicator } from "../flag-indicator.js";
 import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";

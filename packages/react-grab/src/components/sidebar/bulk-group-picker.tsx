@@ -1,6 +1,6 @@
 import { type Component, createSignal, Show } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
-import { GroupPickerFlyout } from "../../features/selection-groups/components/group-picker-flyout.js";
+import { GroupPickerFlyout } from "../selection-groups/group-picker-flyout.js";
 import { Button } from "../ui/button.js";
 
 interface BulkGroupPickerProps {

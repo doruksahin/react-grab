@@ -1,14 +1,14 @@
 import {
   type Component,
-  Show,
   createEffect,
   createSignal,
   on,
   onCleanup,
 } from "solid-js";
-import { Portal } from "solid-js/web";
+import { Dialog as DialogPrimitive } from "@kobalte/core/dialog";
 import { useShadowMount } from "../../utils/shadow-context.js";
 import { cn } from "../../utils/cn.js";
+import { IconButton } from "./icon-button.js";
 
 type ZoomMode = "fit" | "actual";
 
@@ -43,12 +43,11 @@ export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
     ),
   );
 
-  // Esc-to-close — only when open
+  // Esc-to-close. Kobalte's own Esc handler runs after the overlay's
+  // document handlers; the capture phase + stopImmediatePropagation here keeps
+  // the sidebar underneath from also reacting to the same keystroke.
   createEffect(() => {
     if (!props.open) return;
-    // Capture phase + stopImmediatePropagation prevents the sidebar's focus
-    // trap (or any other Esc handler on the page) from also reacting to the
-    // same keystroke and closing the parent surface underneath the lightbox.
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -61,16 +60,6 @@ export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
     onCleanup(() =>
       document.removeEventListener("keydown", handleKeyDown, true),
     );
-  });
-
-  // Body scroll lock — restore previous overflow on close
-  createEffect(() => {
-    if (!props.open) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    onCleanup(() => {
-      document.body.style.overflow = previous;
-    });
   });
 
   // Any click bubbling up to the root closes — children that should NOT
@@ -112,43 +101,50 @@ export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
   };
 
   return (
-    <Show when={props.open}>
-      <Portal mount={useShadowMount()}>
-        <div
-          data-react-grab-image-lightbox
-          class="fixed inset-0 flex flex-col"
+    <DialogPrimitive
+      open={props.open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) props.onClose();
+      }}
+    >
+      <DialogPrimitive.Portal mount={useShadowMount()}>
+        <DialogPrimitive.Overlay
+          class="fixed inset-0 bg-black/80 backdrop-blur-sm"
           style={{ "z-index": "var(--z-dialog)", "pointer-events": "auto" }}
-          role="dialog"
-          aria-modal="true"
+        />
+        <DialogPrimitive.Content
+          data-react-grab-image-lightbox
+          class="fixed inset-0 flex flex-col outline-none"
+          style={{ "z-index": "var(--z-dialog)", "pointer-events": "auto" }}
           aria-label={props.caption}
+          onEscapeKeyDown={(event) => event.preventDefault()}
           onClick={handleBackdropClick}
         >
-          <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-
           {/* Topbar */}
           <div
             class="relative flex items-center justify-between px-5 py-4 z-10"
             onClick={(event) => event.stopPropagation()}
           >
             <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-black/35 border border-white/10 backdrop-blur-sm">
-              <span class="text-xs text-white/90">{props.caption}</span>
+              <span class="text-caption text-white/90">{props.caption}</span>
               <span class="text-meta text-white/55 font-mono uppercase">
                 {mode() === "fit" ? "FIT" : "1:1"}
               </span>
             </div>
-            <button
+            <IconButton
               data-react-grab-lightbox-close
               data-react-grab-ignore-events
-              aria-label="Close"
-              title="Close (Esc)"
-              class="size-9 rounded-full border border-white/10 bg-black/40 text-white text-lg leading-none hover:bg-white/15 hover:scale-105 transition-all cursor-pointer flex items-center justify-center"
+              label="Close"
+              variant="ghost"
+              size="icon"
+              class="rounded-full border border-white/10 bg-black/40 text-title leading-none text-white hover:scale-105 hover:bg-white/15 hover:text-white"
               onClick={(event) => {
                 event.stopPropagation();
                 props.onClose();
               }}
             >
               ×
-            </button>
+            </IconButton>
           </div>
 
           {/* Viewport — clicks on whitespace bubble to root and close */}
@@ -188,9 +184,9 @@ export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
           <div class="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/35 border border-white/10 text-meta text-white/55 backdrop-blur-sm pointer-events-none z-10">
             Click to toggle zoom · Esc to close
           </div>
-        </div>
-      </Portal>
-    </Show>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive>
   );
 };
 

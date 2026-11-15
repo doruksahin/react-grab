@@ -1,8 +1,8 @@
 import { createSignal, For, Show } from "solid-js";
 import type { Component, JSX } from "solid-js";
-import type { CommentItem } from "../../../types.js";
-import { cn } from "../../../utils/cn.js";
-import { Badge } from "../../../components/ui/badge.js";
+import type { CommentItem } from "../../types.js";
+import { cn } from "../../utils/cn.js";
+import { Badge } from "../ui/badge.js";
 
 interface UngroupedSectionProps {
   items: CommentItem[];

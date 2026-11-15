@@ -5,21 +5,21 @@ import {
   Show,
   splitProps,
   useContext,
-} from 'solid-js';
+} from "solid-js";
 import type {
   Accessor,
   Component,
   ComponentProps,
   ParentComponent,
   Setter,
-} from 'solid-js';
-import type { SelectionGroup } from '../types.js';
-import { Button } from '../../../components/ui/button.jsx';
-import { cn } from '../../../utils/cn.js';
-import { GroupPickerFlyout } from './group-picker-flyout.jsx';
-import { useActiveGroupPickerState } from '../hooks/use-active-group-picker-state.js';
-import { isSynthetic } from '../business/synthetic-group.js';
-import { IconLock } from '../../../components/icons/icon-lock.jsx';
+} from "solid-js";
+import type { SelectionGroup } from "../../features/selection-groups/types.js";
+import { Button } from "../ui/button.jsx";
+import { cn } from "../../utils/cn.js";
+import { GroupPickerFlyout } from "./group-picker-flyout.jsx";
+import { useActiveGroupPickerState } from "../../features/selection-groups/hooks/use-active-group-picker-state.js";
+import { isSynthetic } from "../../features/selection-groups/business/synthetic-group.js";
+import { IconLock } from "../icons/icon-lock.jsx";
 
 /**
  * Compound component for the active-group picker rendered inside the
@@ -59,7 +59,7 @@ const useActiveGroupPicker = (): ActiveGroupPickerContextValue => {
   const ctx = useContext(ActiveGroupPickerContext);
   if (!ctx) {
     throw new Error(
-      'ActiveGroupPicker subcomponent must be used inside <ActiveGroupPicker>'
+      "ActiveGroupPicker subcomponent must be used inside <ActiveGroupPicker>",
     );
   }
   return ctx;
@@ -70,18 +70,18 @@ interface ActiveGroupPickerRootProps {
   activeGroupId?: string | null;
   onActiveGroupChange?: (groupId: string | null) => void;
   onAddGroup?: (name: string) => void;
-  children: import('solid-js').JSX.Element;
+  children: import("solid-js").JSX.Element;
 }
 
 const ActiveGroupPickerRoot: ParentComponent<ActiveGroupPickerRootProps> = (
-  props
+  props,
 ) => {
   const [isOpen, setOpen] = createSignal(false);
 
   const groups = createMemo(() => props.groups ?? []);
   const activeGroupId = () => props.activeGroupId;
   const activeGroup = createMemo(() =>
-    groups().find((g) => g.id === props.activeGroupId)
+    groups().find((g) => g.id === props.activeGroupId),
   );
 
   const { isLocked, assignableGroups } = useActiveGroupPickerState({
@@ -129,7 +129,7 @@ const ChevronDownIcon: Component<{ rotated: boolean }> = (props) => (
     height="8"
     viewBox="0 0 16 16"
     class="text-muted-foreground transition-transform duration-100"
-    style={{ transform: props.rotated ? 'rotate(180deg)' : '' }}
+    style={{ transform: props.rotated ? "rotate(180deg)" : "" }}
   >
     <path
       fill="currentColor"
@@ -169,10 +169,10 @@ const LockedTrigger: Component<{
     data-react-grab-ignore-events
     data-react-grab-active-group-picker-locked
     class={cn(
-      'flex items-center gap-1 px-0.5 -mx-0.5 py-0 text-meta font-medium leading-none text-muted-foreground',
-      props.class
+      "flex items-center gap-1 px-0.5 -mx-0.5 py-0 text-meta font-medium leading-none text-muted-foreground",
+      props.class,
     )}
-    title={`Locked — ${props.ticketId ?? 'ticketed'}`}
+    title={`Locked — ${props.ticketId ?? "ticketed"}`}
   >
     <IconLock size={9} class="text-muted-foreground shrink-0" />
     <span>{props.label}</span>
@@ -184,18 +184,18 @@ const LockedTrigger: Component<{
  * Folder icon, group name, chevron that rotates with open state.
  */
 const InteractiveTrigger: Component<
-  Omit<ComponentProps<typeof Button>, 'onClick' | 'type'> & { label: string }
+  Omit<ComponentProps<typeof Button>, "onClick" | "type"> & { label: string }
 > = (props) => {
   const ctx = useActiveGroupPicker();
-  const [local, rest] = splitProps(props, ['class', 'label']);
+  const [local, rest] = splitProps(props, ["class", "label"]);
   return (
     <Button
       data-react-grab-ignore-events
       type="button"
       variant="ghost"
       class={cn(
-        'h-auto gap-1 px-0.5 -mx-0.5 py-0 text-meta font-medium leading-none text-muted-foreground rounded-sm shadow-none',
-        local.class
+        "h-auto gap-1 px-0.5 -mx-0.5 py-0 text-meta font-medium leading-none text-muted-foreground rounded-sm shadow-none",
+        local.class,
       )}
       aria-haspopup="listbox"
       aria-expanded={ctx.isOpen()}
@@ -213,7 +213,7 @@ const InteractiveTrigger: Component<
 };
 
 const ActiveGroupPickerTrigger: Component<
-  Omit<ComponentProps<typeof Button>, 'onClick' | 'type'>
+  Omit<ComponentProps<typeof Button>, "onClick" | "type">
 > = (props) => {
   const ctx = useActiveGroupPicker();
   // Synthetic groups are backing stores for loose-ticketed items —
@@ -222,7 +222,7 @@ const ActiveGroupPickerTrigger: Component<
   // is presented as "Ungrouped", not as the synthetic group's name.
   const label = () => {
     const g = ctx.activeGroup();
-    return g && !isSynthetic(g) ? g.name : 'Ungrouped';
+    return g && !isSynthetic(g) ? g.name : "Ungrouped";
   };
 
   return (

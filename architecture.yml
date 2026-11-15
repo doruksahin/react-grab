@@ -226,7 +226,6 @@ features:
       - packages/react-grab/src/components/selection-label/arrow.tsx
       - packages/react-grab/src/components/selection-label/bottom-section.tsx
       - packages/react-grab/src/components/selection-label/completion-view.tsx
-      - packages/react-grab/src/components/selection-label/create-ticket-button.tsx
       - packages/react-grab/src/components/selection-label/discard-prompt.tsx
       - packages/react-grab/src/components/selection-label/error-view.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
@@ -337,7 +336,6 @@ features:
       - packages/react-grab/src/components/selection-label/arrow.tsx
       - packages/react-grab/src/components/selection-label/bottom-section.tsx
       - packages/react-grab/src/components/selection-label/completion-view.tsx
-      - packages/react-grab/src/components/selection-label/create-ticket-button.tsx
       - packages/react-grab/src/components/selection-label/discard-prompt.tsx
       - packages/react-grab/src/components/selection-label/error-view.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
@@ -778,7 +776,7 @@ data_attrs:
     overlay-canvas: {scope: overlay, src: 1, tests: 0}
     product: {scope: overlay, src: 1, tests: 61}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 67, tests: 6}
+    ignore-events: {scope: reserved, src: 63, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -812,7 +810,7 @@ data_attrs:
     loose-selection-list: {scope: sidebar, src: 1, tests: 0}
     progress-bar: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}
-    sidebar: {scope: sidebar, src: 1, tests: 1}
+    sidebar: {scope: sidebar, src: 1, tests: 2}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
     sidebar-search: {scope: sidebar, src: 1, tests: 2}
     stats-bar: {scope: sidebar, src: 1, tests: 0}
@@ -821,12 +819,12 @@ data_attrs:
     ungrouped-section: {scope: sidebar, src: 1, tests: 2}
     toolbar: {scope: toolbar, src: 2, tests: 10}
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
-    toolbar-comments: {scope: toolbar, src: 3, tests: 6}
-    toolbar-copy-all: {scope: toolbar, src: 3, tests: 2}
+    toolbar-comments: {scope: toolbar, src: 2, tests: 6}
+    toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
     toolbar-dashboard: {scope: toolbar, src: 1, tests: 18}
-    toolbar-devmode: {scope: toolbar, src: 2, tests: 2}
+    toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
-    toolbar-toggle: {scope: toolbar, src: 2, tests: 4}
+    toolbar-toggle: {scope: toolbar, src: 1, tests: 4}
     toolbar-visibility: {scope: toolbar, src: 1, tests: 0}
     avatar: {scope: ui, src: 1, tests: 0}
     avatar-fallback: {scope: ui, src: 1, tests: 1}

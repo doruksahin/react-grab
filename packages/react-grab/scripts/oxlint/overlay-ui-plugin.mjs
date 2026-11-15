@@ -46,7 +46,21 @@ const noRawStyles = {
   },
 };
 
+// features/ holds domain logic, hooks and stores; JSX components live in
+// components/ (ADR-0022).
+const noJsx = {
+  meta: { type: "problem" },
+  create(context) {
+    const report = (node) =>
+      context.report({
+        node,
+        message: "JSX belongs in components/, not features/ (ADR-0022).",
+      });
+    return { JSXElement: report, JSXFragment: report };
+  },
+};
+
 export default {
   meta: { name: "overlay-ui" },
-  rules: { "no-raw-styles": noRawStyles },
+  rules: { "no-raw-styles": noRawStyles, "no-jsx": noJsx },
 };

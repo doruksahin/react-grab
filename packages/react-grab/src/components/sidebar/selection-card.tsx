@@ -12,7 +12,7 @@ import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 import { FlagIndicator } from "../flag-indicator.js";
 import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";
 import { cn } from "../../utils/cn.js";
-import { DevInsights } from "../ui/dev-insights/index.js";
+import { DevInsights } from "../dev-insights/index.js";
 
 export interface SelectionCardProps {
   item: CommentItem;
@@ -94,9 +94,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
 
       {/* Row 2: comment text */}
       <Show when={props.item.commentText}>
-        <p class="text-meta text-foreground mb-1.5">
-          {props.item.commentText}
-        </p>
+        <p class="text-meta text-foreground mb-1.5">{props.item.commentText}</p>
       </Show>
 
       {/* Screenshots — hidden entirely when both are absent (A-018) */}

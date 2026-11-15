@@ -16,9 +16,9 @@ import { SelectionLabelContent } from "../parts/content.js";
 import { DevInsightsSection } from "../parts/dev-insights-section.js";
 import { CopyingState } from "../parts/copying-state.js";
 import { ErrorView } from "../error-view.js";
-import { CreateTicketButton } from "../create-ticket-button.js";
+import { CreateTicketButton } from "../../jira/create-ticket-button.js";
 import { SelectionCardBody } from "../../sidebar/selection-card-body.js";
-import { ActiveGroupPicker } from "../../../features/selection-groups/components/active-group-picker.js";
+import { ActiveGroupPicker } from "../../selection-groups/active-group-picker.js";
 
 export interface PersistedLabelProps extends JiraDisplayFields {
   tagName?: string;
@@ -151,7 +151,7 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
                 props.onCreateTicket && !props.jiraTicketId ? (
                   <CreateTicketButton
                     onClick={() => props.onCreateTicket?.()}
-                    class="w-full"
+                    class="self-stretch"
                   />
                 ) : undefined
               }

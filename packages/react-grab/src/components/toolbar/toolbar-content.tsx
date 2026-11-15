@@ -1,23 +1,18 @@
 import type { Component, JSX } from "solid-js";
 import { cn } from "../../utils/cn.js";
-import { IconSelect } from "../icons/icon-select.jsx";
 import { IconChevron } from "../icons/icon-chevron.jsx";
-import { IconComment } from "../icons/icon-comment.jsx";
-import { IconCopy } from "../icons/icon-copy.jsx";
 import { IconEyeOff } from "../icons/icon-eye-off.jsx";
 import { IconEyeFilled } from "../icons/icon-eye-filled.jsx";
 import { IconDashboard } from "../icons/icon-dashboard.jsx";
 import {
   getExpandGridClass,
-  getButtonSpacingClass,
   getMinDimensionClass,
-  getHitboxConstraintClass,
 } from "../../utils/toolbar-layout.js";
 
 import type { SyncStatus } from "../../features/sync/types.js";
-import { SyncIndicator } from "../../features/sync/components/sync-indicator.jsx";
-import { ToggleSwitch } from "../ui/toggle-switch.jsx";
+import { SyncIndicator } from "../sync/sync-indicator.jsx";
 import { Button } from "../ui/button.js";
+import { ToolbarButton } from "./toolbar-button.js";
 
 export interface ToolbarContentProps {
   isActive?: boolean;
@@ -34,17 +29,15 @@ export interface ToolbarContentProps {
   onPanelClick?: (event: MouseEvent) => void;
   onCollapseClick?: (event: MouseEvent) => void;
   onExpandableButtonsRef?: (element: HTMLDivElement) => void;
-  selectButton?: JSX.Element;
-  commentsButton?: JSX.Element;
-  copyAllButton?: JSX.Element;
-  toggleButton?: JSX.Element;
-  visibilityButton?: JSX.Element;
+  selectButton: JSX.Element;
+  commentsButton: JSX.Element;
+  copyAllButton: JSX.Element;
+  toggleButton: JSX.Element;
   selectionsRevealed: boolean;
   onToggleSelectionsRevealed?: () => void;
   sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
   onDashboardBtnRef?: (el: HTMLButtonElement) => void;
-  collapseButton?: JSX.Element;
   transformOrigin?: string;
   syncStatus: SyncStatus;
   syncWorkspace?: string;
@@ -75,9 +68,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
     return "transition-[grid-template-columns] duration-150 ease-out";
   };
 
-  const buttonSpacingClass = () => getButtonSpacingClass(isVertical());
   const minDimensionClass = () => getMinDimensionClass(isVertical());
-  const hitboxConstraintClass = () => getHitboxConstraintClass(isVertical());
 
   const collapsedEdgeClasses = () => {
     if (!props.isCollapsed) return "";
@@ -107,64 +98,9 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
     }
   };
 
-  const defaultSelectButton = () => (
-    <Button
-      variant="toolbar"
-      size="auto"
-      data-react-grab-ignore-events
-      data-react-grab-toolbar-toggle
-      aria-label={props.isActive ? "Stop selecting element" : "Select element"}
-      aria-pressed={Boolean(props.isActive)}
-      class={cn("touch-hitbox", buttonSpacingClass(), hitboxConstraintClass())}
-    >
-      <IconSelect
-        size={14}
-        class={cn(
-          "transition-colors",
-          props.isActive ? "text-popover-foreground" : "text-muted-foreground",
-        )}
-      />
-    </Button>
-  );
-
-  const defaultCommentsButton = () => (
-    <Button
-      variant="toolbar"
-      size="auto"
-      data-react-grab-ignore-events
-      data-react-grab-toolbar-comments
-      aria-label="Open comments"
-      class={cn("touch-hitbox", buttonSpacingClass(), hitboxConstraintClass())}
-    >
-      <IconComment
-        size={14}
-        class={cn(
-          "transition-colors",
-          props.isCommentsPinned
-            ? "text-muted-foreground"
-            : "text-muted-foreground",
-        )}
-      />
-    </Button>
-  );
-
-  const defaultCopyAllButton = () => (
-    <Button
-      variant="toolbar"
-      size="auto"
-      data-react-grab-ignore-events
-      data-react-grab-toolbar-copy-all
-      aria-label="Copy all comments"
-      class={cn("touch-hitbox", buttonSpacingClass(), hitboxConstraintClass())}
-    >
-      <IconCopy size={14} class="text-muted-foreground transition-colors" />
-    </Button>
-  );
-
-  const defaultVisibilityButton = () => (
-    <Button
-      variant="toolbar"
-      size="auto"
+  const visibilityButton = () => (
+    <ToolbarButton
+      vertical={isVertical()}
       data-react-grab-ignore-events
       data-react-grab-toolbar-visibility
       aria-label={
@@ -173,7 +109,6 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
           : "Reveal all selections"
       }
       aria-pressed={props.selectionsRevealed}
-      class={cn("touch-hitbox", buttonSpacingClass(), hitboxConstraintClass())}
       onClick={() => props.onToggleSelectionsRevealed?.()}
     >
       {props.selectionsRevealed ? (
@@ -184,38 +119,10 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
       ) : (
         <IconEyeOff size={14} class="text-muted-foreground transition-colors" />
       )}
-    </Button>
+    </ToolbarButton>
   );
 
-  const defaultToggleButton = () => (
-    <Button
-      variant="toolbar"
-      size="auto"
-      data-react-grab-ignore-events
-      data-react-grab-toolbar-devmode
-      aria-label={props.isDevMode ? "DEV mode active" : "Toggle DEV mode"}
-      aria-pressed={Boolean(props.isDevMode)}
-      class={cn("gap-1", isVertical() ? "my-0.5 flex-col" : "mx-0.5")}
-    >
-      <span
-        class="text-meta font-extrabold tracking-wider leading-none"
-        classList={{
-          "text-muted-foreground/60": !props.isDevMode,
-          "text-sky-500": Boolean(props.isDevMode),
-        }}
-      >
-        DEV
-      </span>
-      <ToggleSwitch
-        isOn={Boolean(props.isDevMode)}
-        size="sm"
-        vertical={isVertical()}
-        color="sky"
-      />
-    </Button>
-  );
-
-  const defaultCollapseButton = () => (
+  const collapseButton = () => (
     <Button
       variant="toolbar"
       size="auto"
@@ -282,7 +189,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
               class={cn("grid", gridTransitionClass(), expandGridClass(true))}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
-                {props.selectButton ?? defaultSelectButton()}
+                {props.selectButton}
               </div>
             </div>
             <div
@@ -296,7 +203,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
               )}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
-                {props.commentsButton ?? defaultCommentsButton()}
+                {props.commentsButton}
               </div>
             </div>
             <div
@@ -310,23 +217,22 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
               )}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
-                {props.copyAllButton ?? defaultCopyAllButton()}
+                {props.copyAllButton}
               </div>
             </div>
             <div
               class={cn("grid", gridTransitionClass(), expandGridClass(true))}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
-                {props.visibilityButton ?? defaultVisibilityButton()}
+                {visibilityButton()}
               </div>
             </div>
             <div
               class={cn("grid", gridTransitionClass(), expandGridClass(true))}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
-                <Button
-                  variant="toolbar"
-                  size="auto"
+                <ToolbarButton
+                  vertical={isVertical()}
                   ref={props.onDashboardBtnRef}
                   data-react-grab-ignore-events
                   data-react-grab-toolbar-dashboard
@@ -334,12 +240,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
                     props.sidebarOpen ? "Close dashboard" : "Open dashboard"
                   }
                   aria-pressed={Boolean(props.sidebarOpen)}
-                  class={cn(
-                    "touch-hitbox",
-                    buttonSpacingClass(),
-                    hitboxConstraintClass(),
-                    props.sidebarOpen && "text-[var(--color-grab-pink)]",
-                  )}
+                  class={cn(props.sidebarOpen && "text-grab-pink")}
                   onClick={() => props.onToggleSidebar?.()}
                 >
                   <IconDashboard
@@ -351,16 +252,16 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
                         : "text-muted-foreground",
                     )}
                   />
-                </Button>
+                </ToolbarButton>
               </div>
             </div>
           </div>
           <div class="relative shrink-0 overflow-visible">
-            {props.toggleButton ?? defaultToggleButton()}
+            {props.toggleButton}
           </div>
         </div>
       </div>
-      {props.collapseButton ?? defaultCollapseButton()}
+      {collapseButton()}
       <SyncIndicator
         status={props.syncStatus}
         workspace={props.syncWorkspace}

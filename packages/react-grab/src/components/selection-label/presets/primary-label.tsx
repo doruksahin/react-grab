@@ -23,8 +23,8 @@ import { ErrorView } from "../error-view.js";
 import { ArrowNavigationMenu } from "../arrow-navigation-menu.js";
 import { BottomSection } from "../bottom-section.js";
 import { SelectionCardBody } from "../../sidebar/selection-card-body.js";
-import { CreateTicketButton } from "../create-ticket-button.js";
-import { ActiveGroupPicker } from "../../../features/selection-groups/components/active-group-picker.js";
+import { CreateTicketButton } from "../../jira/create-ticket-button.js";
+import { ActiveGroupPicker } from "../../selection-groups/active-group-picker.js";
 
 export interface PrimaryLabelProps
   extends
@@ -271,7 +271,7 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
                 canInteract() && props.onCreateTicket && !props.jiraTicketId ? (
                   <CreateTicketButton
                     onClick={() => props.onCreateTicket?.()}
-                    class="w-full"
+                    class="self-stretch"
                   />
                 ) : undefined
               }

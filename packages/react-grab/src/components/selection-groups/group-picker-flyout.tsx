@@ -1,7 +1,8 @@
 import { For, Show, onMount, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
-import type { SelectionGroup } from "../types.js";
-import { registerOverlayDismiss } from "../../../utils/register-overlay-dismiss.js";
+import type { SelectionGroup } from "../../features/selection-groups/types.js";
+import { registerOverlayDismiss } from "../../utils/register-overlay-dismiss.js";
+import { Button } from "../ui/button.js";
 
 interface GroupPickerFlyoutProps {
   groups: SelectionGroup[];
@@ -17,9 +18,7 @@ interface GroupPickerFlyoutProps {
   placement?: "bottom" | "top";
 }
 
-export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
-  props,
-) => {
+export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
   onMount(() => {
     const unregister = registerOverlayDismiss({
       isOpen: () => true,
@@ -44,13 +43,17 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
       }}
     >
       <div class="px-2 pt-1.5 pb-1">
-        <span class="text-meta font-medium text-muted-foreground">{header()}</span>
+        <span class="text-meta font-medium text-muted-foreground">
+          {header()}
+        </span>
       </div>
       <div class="border-t border-border py-1">
         {/* Ungrouped row — selecting it sets groupId to null */}
-        <button
+        <Button
           data-react-grab-ignore-events
-          class="w-full flex items-center gap-2 px-2 py-1 hover:bg-accent cursor-pointer text-left"
+          variant="ghost"
+          size="menu"
+          class="w-full justify-start"
           onClick={(e) => {
             e.stopPropagation();
             props.onSelect(null);
@@ -66,7 +69,10 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
               viewBox="0 0 16 16"
               class="text-muted-foreground shrink-0"
             >
-              <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
+              <path
+                fill="currentColor"
+                d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z"
+              />
             </svg>
           </Show>
           <span
@@ -78,14 +84,16 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
           >
             Ungrouped
           </span>
-        </button>
+        </Button>
         <For each={visibleGroups()}>
           {(group) => {
             const isActive = () => group.id === props.activeGroupId;
             return (
-              <button
+              <Button
                 data-react-grab-ignore-events
-                class="w-full flex items-center gap-2 px-2 py-1 hover:bg-accent cursor-pointer text-left"
+                variant="ghost"
+                size="menu"
+                class="w-full justify-start"
                 onClick={(e) => {
                   e.stopPropagation();
                   props.onSelect(group.id);
@@ -101,7 +109,10 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
                     viewBox="0 0 16 16"
                     class="text-muted-foreground shrink-0"
                   >
-                    <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
+                    <path
+                      fill="currentColor"
+                      d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z"
+                    />
                   </svg>
                 </Show>
                 <span
@@ -113,7 +124,7 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
                 >
                   {group.name}
                 </span>
-              </button>
+              </Button>
             );
           }}
         </For>
@@ -121,7 +132,19 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
       <Show when={props.onAddGroup}>
         <div class="border-t border-border px-2 py-1.5">
           <div class="flex items-center gap-1.5">
-            <svg width="10" height="10" viewBox="0 0 16 16" class="text-muted-foreground/50 shrink-0"><path fill="currentColor" fill-rule="evenodd" d="M7.25 8.75V15h1.5V8.75H15v-1.5H8.75V1h-1.5v6.25H1v1.5z" clip-rule="evenodd" /></svg>
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 16 16"
+              class="text-muted-foreground/50 shrink-0"
+            >
+              <path
+                fill="currentColor"
+                fill-rule="evenodd"
+                d="M7.25 8.75V15h1.5V8.75H15v-1.5H8.75V1h-1.5v6.25H1v1.5z"
+                clip-rule="evenodd"
+              />
+            </svg>
             <input
               data-react-grab-ignore-events
               type="text"

@@ -1,6 +1,6 @@
 import type { Component } from "solid-js";
-import type { SyncStatus } from "../types.js";
-import { cn } from "../../../utils/cn.js";
+import type { SyncStatus } from "../../features/sync/types.js";
+import { cn } from "../../utils/cn.js";
 
 interface SyncIndicatorProps {
   status: SyncStatus;

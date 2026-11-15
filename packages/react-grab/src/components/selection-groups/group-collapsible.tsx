@@ -1,9 +1,10 @@
 import { createSignal, For, Show } from "solid-js";
 import type { Component, JSX } from "solid-js";
-import type { CommentItem } from "../../../types.js";
-import type { SelectionGroup } from "../types.js";
-import { cn } from "../../../utils/cn.js";
-import { Badge } from "../../../components/ui/badge.js";
+import type { CommentItem } from "../../types.js";
+import type { SelectionGroup } from "../../features/selection-groups/types.js";
+import { cn } from "../../utils/cn.js";
+import { Badge } from "../ui/badge.js";
+import { IconButton } from "../ui/icon-button.js";
 
 interface GroupCollapsibleProps {
   group: SelectionGroup;
@@ -82,9 +83,10 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
         <div class="flex items-center gap-1.5 shrink-0">
           {/* Hover actions — all groups are user groups now */}
           <div class="flex items-center gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
-            <button
+            <IconButton
               data-react-grab-ignore-events
-              class="text-foreground/30 hover:text-foreground/60 cursor-pointer p-0.5"
+              label="Rename group"
+              size="icon-2xs"
               on:click={(e) => {
                 e.stopPropagation();
                 setIsRenaming(true);
@@ -102,10 +104,12 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
                   clip-rule="evenodd"
                 />
               </svg>
-            </button>
-            <button
+            </IconButton>
+            <IconButton
               data-react-grab-ignore-events
-              class="text-destructive/50 hover:text-destructive cursor-pointer p-0.5"
+              label="Delete group"
+              variant="chip-destructive"
+              size="icon-2xs"
               on:click={(e) => {
                 e.stopPropagation();
                 props.onDelete(props.group.id);
@@ -119,18 +123,18 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
                   clip-rule="evenodd"
                 />
               </svg>
-            </button>
+            </IconButton>
           </div>
           {/* Copy button — always visible for all groups */}
-          <button
+          <IconButton
             data-react-grab-ignore-events
-            class="flex items-center justify-center w-[18px] h-[18px] rounded hover:bg-foreground/5 transition-colors"
+            label="Copy group selections"
+            size="icon-xs"
             on:click={(e) => {
               e.stopPropagation();
               props.onCopy?.(props.group.id);
             }}
             on:pointerdown={(e) => e.stopPropagation()}
-            aria-label="Copy group selections"
           >
             <svg
               width="11"
@@ -145,21 +149,21 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
                 clip-rule="evenodd"
               />
             </svg>
-          </button>
+          </IconButton>
           {/* Group eye toggle */}
-          <button
+          <IconButton
             data-react-grab-ignore-events
-            class="flex items-center justify-center w-[18px] h-[18px] rounded hover:bg-foreground/5 transition-colors"
+            label={
+              props.group.revealed
+                ? "Hide group selections"
+                : "Reveal group selections"
+            }
+            size="icon-xs"
             on:click={(e) => {
               e.stopPropagation();
               props.onToggleRevealed(props.group.id);
             }}
             on:pointerdown={(e) => e.stopPropagation()}
-            aria-label={
-              props.group.revealed
-                ? "Hide group selections"
-                : "Reveal group selections"
-            }
           >
             {props.group.revealed ? (
               <svg
@@ -194,7 +198,7 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
                 />
               </svg>
             )}
-          </button>
+          </IconButton>
           {/* Count badge */}
           <Badge variant="count">{props.items.length}</Badge>
         </div>

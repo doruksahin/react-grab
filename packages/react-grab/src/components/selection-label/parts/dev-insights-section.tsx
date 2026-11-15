@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 import type { Component } from "solid-js";
-import { DevInsights } from "../../ui/dev-insights/index.js";
+import { DevInsights } from "../../dev-insights/index.js";
 import { useSelectionLabelContext } from "../context.js";
 
 export interface DevInsightsSectionProps {

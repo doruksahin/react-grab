@@ -1,11 +1,11 @@
 import type { Component, JSX } from "solid-js";
-import { cn } from "../../../utils/cn.js";
+import { cn } from "../../utils/cn.js";
 import {
   Collapsible,
   CollapsibleTrigger,
   CollapsibleContent,
-} from "../collapsible.jsx";
-import { ChevronIcon } from "../chevron-icon.jsx";
+} from "../ui/collapsible.jsx";
+import { ChevronIcon } from "../ui/chevron-icon.jsx";
 
 export interface DevInsightsShellProps {
   children: JSX.Element;

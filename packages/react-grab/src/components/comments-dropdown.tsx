@@ -10,9 +10,9 @@ import {
 import type { Component } from "solid-js";
 import type { CommentItem, DropdownAnchor } from "../types.js";
 import type { SelectionGroupsViewProps } from "../features/selection-groups/types.js";
-import { GroupCollapsible } from "../features/selection-groups/components/group-collapsible.jsx";
-import { GroupPickerFlyout } from "../features/selection-groups/components/group-picker-flyout.jsx";
-import { UngroupedSection } from "../features/selection-groups/components/ungrouped-section.jsx";
+import { GroupCollapsible } from "./selection-groups/group-collapsible.jsx";
+import { GroupPickerFlyout } from "./selection-groups/group-picker-flyout.jsx";
+import { UngroupedSection } from "./selection-groups/ungrouped-section.jsx";
 import {
   groupComments,
   fuzzyMatchGroup,

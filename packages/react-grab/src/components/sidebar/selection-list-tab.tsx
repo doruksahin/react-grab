@@ -16,11 +16,11 @@ import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { isSelectionLocked } from "../../features/selection-groups/business/ticket-lock.js";
 import { SelectionCardBody } from "./selection-card-body.js";
 import { SelectionCheckbox } from "../ui/selection-checkbox.js";
-import { SelectionCard } from "../ui/selection-card.js";
-import { CreateTicketButton } from "../ui/create-ticket-button.js";
-import { DevInsights } from "../ui/dev-insights/index.js";
+import { SelectionCard } from "../selection/selection-card.js";
+import { CreateTicketButton } from "../jira/create-ticket-button.js";
+import { DevInsights } from "../dev-insights/index.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
-import { ActiveGroupPicker } from "../../features/selection-groups/components/active-group-picker.js";
+import { ActiveGroupPicker } from "../selection-groups/active-group-picker.js";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];

@@ -4,8 +4,8 @@ import {
   Collapsible,
   CollapsibleTrigger,
   CollapsibleContent,
-} from "../collapsible.jsx";
-import { ChevronIcon } from "../chevron-icon.jsx";
+} from "../ui/collapsible.jsx";
+import { ChevronIcon } from "../ui/chevron-icon.jsx";
 
 export interface DevInsightsSectionProps {
   label: string;

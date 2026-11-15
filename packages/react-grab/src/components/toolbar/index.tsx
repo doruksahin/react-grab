@@ -48,10 +48,7 @@ import {
 } from "react-grab-upstream/primitives";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip.js";
 import { Kbd } from "../kbd.jsx";
-import {
-  getButtonSpacingClass,
-  getHitboxConstraintClass,
-} from "../../utils/toolbar-layout.js";
+import {} from "../../utils/toolbar-layout.js";
 import { ToolbarContent } from "./toolbar-content.js";
 import { ToggleSwitch } from "../ui/toggle-switch.jsx";
 import { nativeRequestAnimationFrame } from "../../utils/native-raf.js";
@@ -65,7 +62,8 @@ import {
 } from "../../utils/toolbar-position.js";
 import { createToolbarDrag } from "../../utils/create-toolbar-drag.js";
 import { Badge } from "../ui/badge.js";
-import { buttonVariants } from "../ui/button.js";
+import { Button } from "../ui/button.js";
+import { ToolbarButton } from "./toolbar-button.js";
 
 interface ToolbarProps {
   isActive?: boolean;
@@ -222,14 +220,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     return count > 0 ? `Comments (${count})` : "Comments";
   };
 
-  const commentsIconClass = () =>
-    cn(
-      "transition-colors",
-      props.isCommentsPinned
-        ? "text-muted-foreground"
-        : "text-muted-foreground",
-    );
-
   const isVertical = () => snapEdge() === "left" || snapEdge() === "right";
 
   const isTooltipAllowed = () =>
@@ -251,9 +241,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         return "left";
     }
   };
-
-  const buttonSpacingClass = () => getButtonSpacingClass(isVertical());
-  const hitboxConstraintClass = () => getHitboxConstraintClass(isVertical());
 
   const shakeTooltipPositionClass = (): string => {
     const tooltipSide = tooltipPosition();
@@ -911,19 +898,14 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             placement={tooltipPosition()}
           >
             <TooltipTrigger
-              as="button"
+              as={ToolbarButton}
+              vertical={isVertical()}
               data-react-grab-ignore-events
               data-react-grab-toolbar-toggle
               aria-label={
                 props.isActive ? "Stop selecting element" : "Select element"
               }
               aria-pressed={Boolean(props.isActive)}
-              class={cn(
-                buttonVariants({ variant: "toolbar", size: "auto" }),
-                "touch-hitbox",
-                buttonSpacingClass(),
-                hitboxConstraintClass(),
-              )}
               onClick={(event: MouseEvent) => {
                 setIsSelectTooltipVisible(false);
                 handleToggle(
@@ -959,7 +941,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             placement={tooltipPosition()}
           >
             <TooltipTrigger
-              as="button"
+              as={ToolbarButton}
+              vertical={isVertical()}
               data-react-grab-ignore-events
               data-react-grab-toolbar-comments
               aria-label={`Open comments${
@@ -969,12 +952,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               }`}
               aria-haspopup="menu"
               aria-expanded={Boolean(props.isCommentsDropdownOpen)}
-              class={cn(
-                buttonVariants({ variant: "toolbar", size: "auto" }),
-                "touch-hitbox",
-                buttonSpacingClass(),
-                hitboxConstraintClass(),
-              )}
               onClick={(event: MouseEvent) => {
                 setIsCommentsTooltipVisible(false);
                 handleComments(
@@ -1001,7 +978,10 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               )}
             >
               <span ref={clockFlashRef} class="inline-flex relative">
-                <IconComment size={14} class={commentsIconClass()} />
+                <IconComment
+                  size={14}
+                  class="text-muted-foreground transition-colors"
+                />
                 <Show when={(props.commentItemCount ?? 0) > 0}>
                   <Badge
                     data-react-grab-unread-indicator
@@ -1024,16 +1004,11 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             placement={tooltipPosition()}
           >
             <TooltipTrigger
-              as="button"
+              as={ToolbarButton}
+              vertical={isVertical()}
               data-react-grab-ignore-events
               data-react-grab-toolbar-copy-all
               aria-label="Copy all comments"
-              class={cn(
-                buttonVariants({ variant: "toolbar", size: "auto" }),
-                "touch-hitbox",
-                buttonSpacingClass(),
-                hitboxConstraintClass(),
-              )}
               onClick={(event: MouseEvent) => {
                 setIsCopyAllTooltipVisible(false);
                 handleCopyAll(
@@ -1066,18 +1041,16 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             placement={tooltipPosition()}
           >
             <TooltipTrigger
-              as="button"
+              as={Button}
+              variant="toolbar"
+              size="auto"
               data-react-grab-ignore-events
               data-react-grab-toolbar-devmode
               aria-label={
                 props.isDevMode ? "DEV mode active" : "Toggle DEV mode"
               }
               aria-pressed={Boolean(props.isDevMode)}
-              class={cn(
-                buttonVariants({ variant: "toolbar", size: "auto" }),
-                "gap-1",
-                isVertical() ? "my-0.5 flex-col" : "mx-0.5",
-              )}
+              class={cn("gap-1", isVertical() ? "my-0.5 flex-col" : "mx-0.5")}
               onClick={(event: MouseEvent) => {
                 setIsToggleTooltipVisible(false);
                 handleToggleDevMode(

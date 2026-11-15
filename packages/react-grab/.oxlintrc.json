@@ -129,6 +129,23 @@
         "react/forbid-elements": "off",
         "overlay-ui/no-raw-styles": "off"
       }
+    },
+    {
+      "files": [
+        "src/features/**/*.tsx"
+      ],
+      "rules": {
+        "overlay-ui/no-jsx": "error"
+      }
+    },
+    {
+      "files": [
+        "src/features/dev-mode/dev-mode-context.tsx",
+        "src/features/**/*.test.tsx"
+      ],
+      "rules": {
+        "overlay-ui/no-jsx": "off"
+      }
     }
   ],
   "jsPlugins": [

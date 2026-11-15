@@ -1,6 +1,6 @@
 import type { Component } from "solid-js";
 import { Show } from "solid-js";
-import { cn } from "../../../utils/cn.js";
+import { cn } from "../../utils/cn.js";
 
 const VALUE_COLORS = {
   green: "text-emerald-400",

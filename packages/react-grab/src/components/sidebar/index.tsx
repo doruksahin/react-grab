@@ -100,7 +100,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   createFocusTrap({
     element: () => containerRef ?? null,
     initialFocusElement: () => containerRef ?? null,
-    enabled: () => true,
+    // The lightbox is a modal dialog with its own focus trap.
+    enabled: () => !lightbox.state().open,
   });
 
   // Synthetic groups are invisible in user-facing surfaces (GroupList,
