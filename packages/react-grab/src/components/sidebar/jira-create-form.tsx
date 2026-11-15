@@ -1,15 +1,19 @@
-// packages/react-grab/src/components/sidebar/jira-create-form.tsx
-// packages/react-grab/src/components/sidebar/jira-create-form.tsx
 import {
   type Component,
+  type JSX,
   createResource,
   createSignal,
   For,
   Show,
 } from "solid-js";
+import { Alert } from "../ui/alert.js";
 import { Button } from "../ui/button.js";
+import { Textarea } from "../ui/textarea.js";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.js";
+import { IconAlertCircle } from "../icons/icon-alert-circle.js";
+import { IconCheck } from "../icons/icon-check.js";
 import { DialogLayout, DialogHeader } from "./dialog-layout.js";
-import { JiraEditor } from "./jira-editor.js";
+import { MarkdownPreview } from "./markdown-preview.js";
 import { ScreenshotPair } from "./screenshot-pair.js";
 import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
 import {
@@ -30,8 +34,9 @@ import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import {
   defaultSummary,
-  defaultDescription,
-} from "../../features/sidebar/jira-defaults.js";
+  normalizeSummary,
+} from "../../features/jira-ticket/business/default-summary.js";
+import { defaultDescription } from "../../features/jira-ticket/business/default-description.js";
 
 const DEFAULT_ISSUE_TYPE = "Task";
 const DEFAULT_PRIORITY = "Medium";
@@ -44,16 +49,15 @@ interface JiraCreateFormProps {
   group: SelectionGroup;
   commentItems: CommentItem[];
   jiraProjectKey: string;
+  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
+  jiraSiteHost?: string | null;
   onSuccess: TicketCreatedCallback;
   onClose: () => void;
 }
 
 const noScrollRoot = () => null;
 
-const triggerClass =
-  "w-full text-[12px] bg-muted border-border text-foreground";
-const textareaClass =
-  "w-full bg-muted text-foreground text-[12px] rounded px-2 py-1.5 border border-border resize-none";
+const TRIGGER_CLASS = "bg-muted text-body text-foreground";
 
 export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
   const [issueTypes] = createResource(() =>
@@ -93,10 +97,15 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
     <Show
       when={!configError()}
       fallback={
-        <div class="p-3 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300">
-          <p class="font-semibold mb-1">Configuration error</p>
-          <For each={configError()!}>{(err) => <p>{err}</p>}</For>
-        </div>
+        <Alert class="m-4">
+          <IconAlertCircle class="mt-0.5 shrink-0" />
+          <div class="flex flex-col gap-1">
+            <p class="font-semibold">Configuration error</p>
+            <For each={configError()!}>
+              {(err) => <p class="text-caption">{err}</p>}
+            </For>
+          </div>
+        </Alert>
       }
     >
       <JiraCreateFormInner
@@ -120,14 +129,35 @@ interface JiraCreateFormInnerProps extends JiraCreateFormProps {
   labels: () => string[] | undefined;
 }
 
+const FieldLabel: Component<{ children: JSX.Element }> = (props) => (
+  <span class="flex justify-between text-caption font-medium text-muted-foreground">
+    {props.children}
+  </span>
+);
+
+const RequiredMark: Component = () => (
+  <span data-react-grab-jira-required class="text-danger-light">
+    Required
+  </span>
+);
+
+const LoadingField: Component = () => (
+  <div class="flex h-9 items-center rounded-md border border-input bg-muted px-3 text-body italic text-muted-foreground">
+    Loading…
+  </div>
+);
+
 const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
   const projectKey = props.jiraProjectKey;
   const [issueType, setIssueType] = createSignal(DEFAULT_ISSUE_TYPE);
   const [priority, setPriority] = createSignal(DEFAULT_PRIORITY);
-  const [summary, setSummary] = createSignal(defaultSummary(props.group));
+  const [summary, setSummary] = createSignal(
+    defaultSummary(props.group, props.commentItems),
+  );
   const [description, setDescription] = createSignal(
     defaultDescription(props.group, props.commentItems),
   );
+  const [descriptionView, setDescriptionView] = createSignal("preview");
   const [selectedLabels, setSelectedLabels] = createSignal<string[]>([]);
   const [submitting, setSubmitting] = createSignal(false);
   /** Detail of the last failed submit, or null when the last submit did not fail. */
@@ -138,6 +168,11 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
     props.commentItems.filter(
       (item) => item.screenshotElement || item.screenshotFullPage,
     );
+
+  const selectionCount = () => {
+    const count = props.commentItems.length;
+    return `${count} ${count === 1 ? "selection" : "selections"}`;
+  };
 
   const summaryMissing = () => summary().trim().length === 0;
   const workTypeMissing = () => !issueType();
@@ -151,7 +186,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
 
   const submitLabel = () => {
     if (submitting()) return "Creating…";
-    return failure() === null ? "Create Ticket" : "Retry";
+    return failure() === null ? "Create ticket" : "Retry";
   };
 
   async function handleSubmit(e: SubmitEvent) {
@@ -164,7 +199,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
         projectKey,
         issueType: issueType(),
         priority: priority(),
-        summary: summary().trim(),
+        summary: normalizeSummary(summary()),
         description: description(),
         labels: selectedLabels().length > 0 ? selectedLabels() : undefined,
       });
@@ -179,8 +214,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           result.data.jiraUrl,
         );
       } else {
-        const errData = result.data as { error?: string };
-        setFailure(errData.error ?? "");
+        setFailure(result.data.error);
       }
     } catch {
       setFailure("Check your connection and try again.");
@@ -201,14 +235,26 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
             title={
               created()
                 ? `✓ ${created()!.ticketId} created`
-                : "Create JIRA Ticket"
+                : "Create Jira ticket"
+            }
+            subtitle={
+              <span data-react-grab-jira-destination>
+                Into{" "}
+                <strong class="font-semibold text-foreground">
+                  {projectKey}
+                </strong>
+                <Show when={props.jiraSiteHost}>
+                  {(host) => <> on {host()}</>}
+                </Show>
+                {` · ${selectionCount()}`}
+              </span>
             }
             onClose={props.onClose}
           />
         }
         footer={
           <div
-            class="flex gap-2 justify-end items-center"
+            class="flex items-center justify-end gap-2"
             style={{ "pointer-events": "auto" }}
           >
             <Show
@@ -226,6 +272,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
                   </Button>
                   <Button
                     type="submit"
+                    variant="inverse"
                     size="sm"
                     disabled={!canSubmit()}
                     style={{ "pointer-events": "auto" }}
@@ -242,13 +289,14 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
                     href={ticket().url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    class="text-[12px] text-jira-create hover:underline px-2"
+                    class="px-2 text-body text-jira-create hover:underline"
                     style={{ "pointer-events": "auto" }}
                   >
                     Open in Jira ↗
                   </a>
                   <Button
                     type="button"
+                    variant="inverse"
                     size="sm"
                     style={{ "pointer-events": "auto" }}
                     onClick={props.onClose}
@@ -263,174 +311,178 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
       >
         {/* Outcome of the last submit — kept above the fields so it is seen. */}
         <Show when={failure() !== null && !created()}>
-          <div
-            data-react-grab-jira-error
-            class="mb-3 p-2 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300"
-          >
-            <p>Could not create the ticket. Your form is kept.</p>
-            <Show when={failure()}>
-              <p class="mt-1 opacity-80">{failure()}</p>
-            </Show>
-          </div>
+          <Alert data-react-grab-jira-error>
+            <IconAlertCircle class="mt-0.5 shrink-0" />
+            <div class="flex flex-col gap-1">
+              <p>Could not create the ticket. Your form is kept.</p>
+              <Show when={failure()}>
+                <p class="text-caption text-muted-foreground">{failure()}</p>
+              </Show>
+            </div>
+          </Alert>
         </Show>
         <Show when={created()}>
           {(ticket) => (
-            <div
-              data-react-grab-jira-success
-              class="mb-3 p-2 bg-green-500/15 border border-green-500/30 rounded text-[11px] text-green-300"
-            >
-              The ticket is in Jira. This group is now locked to{" "}
-              {ticket().ticketId}.
-            </div>
+            <Alert data-react-grab-jira-success tone="success">
+              <IconCheck class="mt-0.5 shrink-0" />
+              <p>
+                The ticket is in Jira. This group is now locked to{" "}
+                {ticket().ticketId}.
+              </p>
+            </Alert>
           )}
         </Show>
 
-        {/* Issue type — pre-selected to "Task" */}
-        <div class="mb-3">
-          <label class="flex justify-between text-[11px] text-muted-foreground mb-1">
-            <span>Work Type *</span>
-            <Show when={workTypeMissing()}>
-              <span data-react-grab-jira-required class="text-red-400">
-                Required
-              </span>
-            </Show>
-          </label>
-          <Show
-            when={props.issueTypes()}
-            fallback={
-              <div
-                class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}
-              >
-                Loading…
-              </div>
-            }
-          >
-            {(types) => (
-              <Select
-                defaultValue={DEFAULT_ISSUE_TYPE}
-                onChange={(value: string | null) =>
-                  value && setIssueType(value)
-                }
-                options={types().map((t) => t.name)}
-                itemComponent={(itemProps) => (
-                  <SelectItem item={itemProps.item}>
-                    {itemProps.item.rawValue}
-                  </SelectItem>
-                )}
-              >
-                <SelectTrigger
-                  class={triggerClass}
-                  style={{ "pointer-events": "auto" }}
-                >
-                  <SelectValue<string>>
-                    {(state) => state.selectedOption()}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent />
-              </Select>
-            )}
-          </Show>
-        </div>
-
-        {/* Priority — pre-selected to "Medium" */}
-        <div class="mb-3">
-          <label class="block text-[11px] text-muted-foreground mb-1">
-            Priority
-          </label>
-          <Show
-            when={props.priorities()}
-            fallback={
-              <div
-                class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}
-              >
-                Loading…
-              </div>
-            }
-          >
-            {(prios) => (
-              <Select
-                defaultValue={DEFAULT_PRIORITY}
-                onChange={(value: string | null) => value && setPriority(value)}
-                options={prios().map((p) => p.name)}
-                itemComponent={(itemProps) => (
-                  <SelectItem item={itemProps.item}>
-                    {itemProps.item.rawValue}
-                  </SelectItem>
-                )}
-              >
-                <SelectTrigger
-                  class={triggerClass}
-                  style={{ "pointer-events": "auto" }}
-                >
-                  <SelectValue<string>>
-                    {(state) => state.selectedOption()}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent />
-              </Select>
-            )}
-          </Show>
-        </div>
-
-        {/* Labels — optional multi-select with search */}
-        <div class="mb-3">
-          <label class="block text-[11px] text-muted-foreground mb-1">
-            Labels
-          </label>
-          <Show
-            when={props.labels() !== undefined}
-            fallback={
-              <div
-                class={`${triggerClass} h-9 px-3 flex items-center rounded-md border text-muted-foreground italic`}
-              >
-                Loading…
-              </div>
-            }
-          >
-            <LabelSelect
-              allLabels={props.labels() ?? []}
-              value={selectedLabels()}
-              onChange={setSelectedLabels}
-            />
-          </Show>
-        </div>
-
-        {/* Summary */}
-        <div class="mb-3">
-          <label class="flex justify-between text-[11px] text-muted-foreground mb-1">
-            <span>Summary *</span>
+        {/* Summary — first, starting from the comment (defaultSummary) */}
+        <label class="flex flex-col gap-1.5">
+          <FieldLabel>
+            <span>Summary</span>
             <Show when={summaryMissing()}>
-              <span data-react-grab-jira-required class="text-red-400">
-                Required
-              </span>
+              <RequiredMark />
             </Show>
-          </label>
-          <textarea
-            class={textareaClass}
+          </FieldLabel>
+          <Textarea
+            variant="field"
+            class="min-h-9 py-2"
             style={{ "pointer-events": "auto" }}
-            rows={2}
+            rows={1}
             value={summary()}
             onInput={(e) => setSummary(e.currentTarget.value)}
             readOnly={Boolean(created())}
             placeholder="Add a short summary"
           />
+        </label>
+
+        <div class="grid grid-cols-3 gap-3">
+          {/* Work type — pre-selected to "Task" */}
+          <div class="flex min-w-0 flex-col gap-1.5">
+            <FieldLabel>
+              <span>Work type</span>
+              <Show when={workTypeMissing()}>
+                <RequiredMark />
+              </Show>
+            </FieldLabel>
+            <Show when={props.issueTypes()} fallback={<LoadingField />}>
+              {(types) => (
+                <Select
+                  defaultValue={DEFAULT_ISSUE_TYPE}
+                  onChange={(value: string | null) =>
+                    value && setIssueType(value)
+                  }
+                  options={types().map((t) => t.name)}
+                  itemComponent={(itemProps) => (
+                    <SelectItem item={itemProps.item}>
+                      {itemProps.item.rawValue}
+                    </SelectItem>
+                  )}
+                >
+                  <SelectTrigger
+                    aria-label="Work type"
+                    class={TRIGGER_CLASS}
+                    style={{ "pointer-events": "auto" }}
+                  >
+                    <SelectValue<string>>
+                      {(state) => state.selectedOption()}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent />
+                </Select>
+              )}
+            </Show>
+          </div>
+
+          {/* Priority — pre-selected to "Medium" */}
+          <div class="flex min-w-0 flex-col gap-1.5">
+            <FieldLabel>Priority</FieldLabel>
+            <Show when={props.priorities()} fallback={<LoadingField />}>
+              {(prios) => (
+                <Select
+                  defaultValue={DEFAULT_PRIORITY}
+                  onChange={(value: string | null) =>
+                    value && setPriority(value)
+                  }
+                  options={prios().map((p) => p.name)}
+                  itemComponent={(itemProps) => (
+                    <SelectItem item={itemProps.item}>
+                      {itemProps.item.rawValue}
+                    </SelectItem>
+                  )}
+                >
+                  <SelectTrigger
+                    aria-label="Priority"
+                    class={TRIGGER_CLASS}
+                    style={{ "pointer-events": "auto" }}
+                  >
+                    <SelectValue<string>>
+                      {(state) => state.selectedOption()}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent />
+                </Select>
+              )}
+            </Show>
+          </div>
+
+          {/* Labels — optional multi-select with search */}
+          <div class="flex min-w-0 flex-col gap-1.5">
+            <FieldLabel>Labels</FieldLabel>
+            <Show
+              when={props.labels() !== undefined}
+              fallback={<LoadingField />}
+            >
+              <LabelSelect
+                allLabels={props.labels() ?? []}
+                value={selectedLabels()}
+                onChange={setSelectedLabels}
+              />
+            </Show>
+          </div>
         </div>
 
-        {/* Description */}
-        <div class="mb-3">
-          <label class="block text-[11px] text-muted-foreground mb-1">
-            Description
-          </label>
-          <JiraEditor initialValue={description()} onChange={setDescription} />
-        </div>
+        {/* Description — the formatted preview first, the markdown on Edit */}
+        <Tabs
+          value={descriptionView()}
+          onChange={setDescriptionView}
+          class="gap-1.5"
+        >
+          <div class="flex items-center gap-2">
+            <span class="flex-1 text-caption font-medium text-muted-foreground">
+              Description
+            </span>
+            <TabsList aria-label="Description view" class="w-36">
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+              <TabsTrigger value="edit">Edit</TabsTrigger>
+            </TabsList>
+          </div>
+          <TabsContent value="preview">
+            <MarkdownPreview
+              data-react-grab-jira-description-preview
+              markdown={description()}
+              class="max-h-64 overflow-y-auto rounded-lg border border-border bg-muted/60 px-3.5 py-3"
+            />
+          </TabsContent>
+          <TabsContent value="edit">
+            <Textarea
+              data-react-grab-jira-description-input
+              variant="field"
+              aria-label="Description"
+              class="max-h-64 font-mono text-caption"
+              style={{ "pointer-events": "auto" }}
+              rows={10}
+              value={description()}
+              onInput={(e) => setDescription(e.currentTarget.value)}
+              readOnly={Boolean(created())}
+            />
+          </TabsContent>
+        </Tabs>
 
         {/* Attachments — screenshot previews */}
-        <div class="mb-4">
-          <p class="text-[11px] text-muted-foreground mb-1">Screenshots</p>
+        <div class="flex flex-col gap-1.5">
+          <FieldLabel>Screenshots</FieldLabel>
           <Show
             when={itemsWithScreenshots().length > 0}
             fallback={
-              <p class="text-[10px] text-muted-foreground italic">
+              <p class="text-caption italic text-muted-foreground">
                 No screenshots
               </p>
             }
@@ -462,6 +514,9 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
                 />
               )}
             </For>
+            <p class="text-caption text-muted-foreground">
+              These attach to the ticket.
+            </p>
           </Show>
         </div>
       </DialogLayout>

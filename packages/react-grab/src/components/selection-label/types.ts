@@ -13,10 +13,9 @@ export interface SelectionLabelRootProps {
   status?: SelectionLabelStatus;
   isPromptMode?: boolean;
   hideArrow?: boolean;
-  extraTopOffset?: number;
-  onPlacementChange?: (placement: "above" | "below") => void;
+  /** An element to open under instead of the selection, e.g. a label's pin. */
+  anchorElement?: HTMLElement;
   isCollapsing?: boolean;
-  onCollapse?: () => void;
   selectionLabelShakeCount?: number;
   /** For the remove button — rendered by Root when present */
   onRemoveItem?: () => void;
@@ -75,6 +74,35 @@ export interface SelectionLabelHeaderProps {
   jiraFlaggedByAvatar?: string | null;
 }
 
+/** Card header — the comment, then the element and the group */
+export interface SelectionLabelCardHeaderProps {
+  /** The comment; the element name stands in when there is none. */
+  title?: string;
+  tagName?: string;
+  componentName?: string;
+  elementsCount?: number;
+  /** Right side of the meta line, e.g. the group picker. */
+  trailing?: JSX.Element;
+  jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
+}
+
+/** Composer header — element name, tag and file, open and close */
+export interface SelectionLabelComposerHeaderProps {
+  tagName?: string;
+  componentName?: string;
+  elementsCount?: number;
+  filePath?: string;
+  onOpen?: () => void;
+  onClose?: () => void;
+  jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
+}
+
 /** Context input — textarea + submit/abort buttons */
 export interface SelectionLabelContextInputProps {
   value?: string;
@@ -84,6 +112,10 @@ export interface SelectionLabelContextInputProps {
   placeholder?: string;
   disabled?: boolean;
   autoFocus?: boolean;
+  /** "inline" sits in the label's text flow; "field" is a bordered input. */
+  variant?: "inline" | "field";
+  /** Accessible name of the textarea. */
+  label?: string;
 }
 
 /** Content wrapper — just children */

@@ -1,4 +1,4 @@
-import type { SelectionGroupWithJira } from "./jira-types.js";
+import type { SelectionGroupWithJira } from "../selection-groups/types.js";
 
 export interface StatusColorConfig {
   hex: string; // border + badge border
@@ -53,6 +53,9 @@ const UNKNOWN_COLOR: StatusColorConfig = {
 
 export const ALL_ATT_STATUSES = Object.keys(ATT_STATUS_COLORS);
 
+/** The status label of a group that has no Jira ticket. */
+export const NO_TASK_STATUS = "No Task";
+
 export function getStatusColor(
   jiraStatus: string | undefined,
 ): StatusColorConfig {
@@ -60,6 +63,21 @@ export function getStatusColor(
   return ATT_STATUS_COLORS[jiraStatus] ?? UNKNOWN_COLOR;
 }
 
-export function getStatusLabel(group: SelectionGroupWithJira): string {
-  return group.jiraTicketId ? (group.jiraStatus ?? "To Do") : "No Task";
+/**
+ * The Jira status a status label is coloured by: none for "No Task", which
+ * then gets the no-ticket colour.
+ */
+export function getColorStatus(statusLabel: string): string | undefined {
+  return statusLabel === NO_TASK_STATUS ? undefined : statusLabel;
+}
+
+/** The colour of a status label, as getStatusLabel returns it. */
+export function getStatusLabelColor(statusLabel: string): StatusColorConfig {
+  return getStatusColor(getColorStatus(statusLabel));
+}
+
+export function getStatusLabel(
+  group: Pick<SelectionGroupWithJira, "jiraTicketId" | "jiraStatus">,
+): string {
+  return group.jiraTicketId ? (group.jiraStatus ?? "To Do") : NO_TASK_STATUS;
 }

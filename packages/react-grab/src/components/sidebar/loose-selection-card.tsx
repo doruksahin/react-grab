@@ -1,21 +1,19 @@
 // packages/react-grab/src/components/sidebar/loose-selection-card.tsx
-import { type Component, Show } from 'solid-js';
-import type { CommentItem } from '../../types.js';
-import type { StatusColorConfig } from '../../features/sidebar/status-colors.js';
-import { SelectionCard } from './selection-card.jsx';
-import { CreateTicketButton } from '../ui/create-ticket-button.jsx';
-import { RemoveSelectionButton } from '../remove-selection-button.jsx';
-import { FlagIndicator } from '../flag-indicator.js';
-import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-color.js';
-import { LooseSelectionCardHeader } from './loose-selection-card-header.jsx';
-import { cn } from '../../utils/cn.js';
+import { type Component, Show } from "solid-js";
+import type { CommentItem } from "../../types.js";
+import type { StatusChipData } from "../../features/sidebar/get-status-chip.js";
+import { SelectionCard } from "./selection-card.jsx";
+import { CreateTicketButton } from "../jira/create-ticket-button.jsx";
+import { RemoveSelectionButton } from "../remove-selection-button.jsx";
+import { FlagIndicator } from "../flag-indicator.js";
+import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";
+import { LooseSelectionCardHeader } from "./loose-selection-card-header.jsx";
+import { cn } from "../../utils/cn.js";
+import { StatusChip } from "../ui/status-chip.jsx";
 
 interface LooseSelectionCardProps {
   item: CommentItem;
-  /** Status label rendered in the right pill — 'No Task' when no ticket. */
-  statusLabel: string;
-  /** Status color config — matches the GroupCard pill colors. */
-  statusColor: StatusColorConfig;
+  status: StatusChipData;
   /** Ticket id when ticketed. */
   jiraTicketId?: string;
   /** Jira URL when ticketed. */
@@ -46,7 +44,7 @@ interface LooseSelectionCardProps {
  * `core/index.tsx`. The Create-ticket button just calls `onCreateTicket`.
  */
 export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
-  props
+  props,
 ) => {
   const hasTicket = () => Boolean(props.jiraTicketId);
 
@@ -54,12 +52,14 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
     <div
       data-react-grab-loose-selection-card
       class="mb-1.5"
-      style={{ 'pointer-events': 'auto' }}
+      style={{ "pointer-events": "auto" }}
     >
-      <div class={cn(
-        "relative bg-muted rounded-lg border border-border p-3 cursor-default",
-        props.jiraFlagged && FLAGGED_BORDER_CLASS
-      )}>
+      <div
+        class={cn(
+          "relative bg-muted rounded-lg border border-border p-3 cursor-default",
+          props.jiraFlagged && FLAGGED_BORDER_CLASS,
+        )}
+      >
         {/* Absolute close button — top right */}
         <Show when={!hasTicket() && props.onRemoveItem}>
           <div class="absolute -top-2 -right-2 z-10">
@@ -74,7 +74,9 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             <Show
               when={hasTicket()}
               fallback={
-                <CreateTicketButton onClick={() => props.onCreateTicket(props.item)} />
+                <CreateTicketButton
+                  onClick={() => props.onCreateTicket(props.item)}
+                />
               }
             >
               <div class="flex items-center gap-1">
@@ -89,7 +91,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
                   href={props.jiraUrl}
                   target="_blank"
                   rel="noreferrer"
-                  class="text-[10px] font-medium text-blue-400 hover:underline"
+                  class="text-meta font-medium text-link hover:underline"
                 >
                   {props.jiraTicketId}
                 </a>
@@ -98,16 +100,8 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
           }
           right={
             <>
-              <span
-                class="text-[10px] font-semibold rounded-full px-2 py-0.5"
-                style={{
-                  color: props.statusColor.text,
-                  background: props.statusColor.bg,
-                }}
-              >
-                {props.statusLabel}
-              </span>
-              <span class="text-[10px] text-muted-foreground">
+              <StatusChip {...props.status} />
+              <span class="text-meta text-muted-foreground">
                 {new Date(props.item.timestamp).toLocaleString()}
               </span>
             </>

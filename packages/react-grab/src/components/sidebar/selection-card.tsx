@@ -12,7 +12,7 @@ import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 import { FlagIndicator } from "../flag-indicator.js";
 import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";
 import { cn } from "../../utils/cn.js";
-import { DevInsights } from "../ui/dev-insights/index.js";
+import { DevInsights } from "../dev-insights/index.js";
 
 export interface SelectionCardProps {
   item: CommentItem;
@@ -73,15 +73,15 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
               flaggedByAvatar={props.jiraFlaggedByAvatar}
             />
           </Show>
-          <span class="text-[13px] font-semibold text-foreground truncate">
+          <span class="text-body font-semibold text-foreground truncate">
             {props.item.componentName || props.item.elementName}
           </span>
-          <span class="px-1.5 py-0.5 rounded bg-accent text-muted-foreground text-[10px] font-mono shrink-0">
+          <span class="px-1.5 py-0.5 rounded bg-accent text-muted-foreground text-meta font-mono shrink-0">
             {props.item.tagName}
           </span>
         </div>
         <div class="flex items-center gap-1.5 shrink-0 ml-2">
-          <span class="text-[10px] text-muted-foreground">
+          <span class="text-meta text-muted-foreground">
             {relativeTime(props.item.timestamp)}
           </span>
           {/* Ticket-lock gates visibility at the caller — if the prop is
@@ -94,9 +94,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
 
       {/* Row 2: comment text */}
       <Show when={props.item.commentText}>
-        <p class="text-[11px] text-foreground mb-1.5">
-          {props.item.commentText}
-        </p>
+        <p class="text-meta text-foreground mb-1.5">{props.item.commentText}</p>
       </Show>
 
       {/* Screenshots — hidden entirely when both are absent (A-018) */}
@@ -114,12 +112,12 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
           <DevInsights.Field
             label="tag"
             value={props.item.tagName}
-            color="green"
+            kind="tag"
           />
           <DevInsights.Field
             label="node"
             value={props.item.componentName ?? props.item.elementName}
-            color="purple"
+            kind="component"
           />
           <DevInsights.Field
             label="file"
@@ -128,18 +126,18 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
                 ? `${filePath()!.path}${filePath()!.line !== null ? `:${filePath()!.line}` : ""}`
                 : undefined
             }
-            color="amber"
+            kind="string"
           />
           <DevInsights.Attributes content={props.item.content} />
           <Show when={props.item.elementSelectors?.[0]}>
             <DevInsights.Section label="selector">
-              <span class="text-[9px] font-mono text-[#cbd5e1] break-all">
+              <span class="text-meta font-mono text-foreground/80 break-all">
                 {props.item.elementSelectors?.[0]}
               </span>
             </DevInsights.Section>
           </Show>
           <DevInsights.Section label="html">
-            <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
+            <pre class="text-meta font-mono text-foreground/80 whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
               {props.item.content}
             </pre>
           </DevInsights.Section>

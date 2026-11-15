@@ -1,6 +1,8 @@
 import { type Component, Show, For } from "solid-js";
 import type { FilterState } from "../../features/sidebar/filter-state.js";
 import { DUE_DATE_PRESET_LABEL } from "../../features/sidebar/due-date/index.js";
+import { Badge } from "../ui/badge.js";
+import { IconButton } from "../ui/icon-button.js";
 
 interface FilterChipsProps {
   filter: FilterState;
@@ -10,26 +12,19 @@ interface FilterChipsProps {
 export const FilterChips: Component<FilterChipsProps> = (props) => {
   const chips = () => {
     const result: { label: string; onDismiss: () => void }[] = [];
-    for (const status of props.filter.statuses) {
-      result.push({
-        label: `Status: ${status}`,
-        onDismiss: () => {
-          const next = new Set(props.filter.statuses);
-          next.delete(status);
-          props.onFilterChange({ ...props.filter, statuses: next });
-        },
-      });
-    }
+    // The selected status shows as the pressed status chip (status-filter.tsx).
     if (props.filter.assignee) {
       result.push({
         label: `Assignee: ${props.filter.assignee}`,
-        onDismiss: () => props.onFilterChange({ ...props.filter, assignee: null }),
+        onDismiss: () =>
+          props.onFilterChange({ ...props.filter, assignee: null }),
       });
     }
     if (props.filter.reporter) {
       result.push({
         label: `Reporter: ${props.filter.reporter}`,
-        onDismiss: () => props.onFilterChange({ ...props.filter, reporter: null }),
+        onDismiss: () =>
+          props.onFilterChange({ ...props.filter, reporter: null }),
       });
     }
     if (props.filter.label) {
@@ -41,7 +36,8 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
     if (props.filter.dueDatePreset) {
       result.push({
         label: `Due: ${DUE_DATE_PRESET_LABEL[props.filter.dueDatePreset]}`,
-        onDismiss: () => props.onFilterChange({ ...props.filter, dueDatePreset: null }),
+        onDismiss: () =>
+          props.onFilterChange({ ...props.filter, dueDatePreset: null }),
       });
     }
     return result;
@@ -55,15 +51,16 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
       >
         <For each={chips()}>
           {(chip) => (
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent text-[10px] text-foreground">
+            <Badge>
               {chip.label}
-              <button
-                class="text-muted-foreground hover:text-foreground cursor-pointer"
+              <IconButton
+                label={`Remove filter ${chip.label}`}
+                size="icon-2xs"
                 onClick={chip.onDismiss}
               >
                 ✕
-              </button>
-            </span>
+              </IconButton>
+            </Badge>
           )}
         </For>
       </div>

@@ -108,6 +108,7 @@
   "dependencies": {
     "@floating-ui/dom": "^1.7.6",
     "@kobalte/core": "^0.13.11",
+    "@kobalte/utils": "0.9.1",
     "@medv/finder": "^4.0.2",
     "@react-grab/cli": "workspace:*",
     "@rrweb/record": "2.2.2",

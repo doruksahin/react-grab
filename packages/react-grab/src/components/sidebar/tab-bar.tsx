@@ -1,8 +1,7 @@
-import type { Component } from "solid-js";
+import { type Component, For } from "solid-js";
+import { TabsCount, TabsList, TabsTrigger } from "../ui/tabs.js";
 
 export interface TabBarProps {
-  activeTab: "groups" | "selections";
-  onTabChange: (tab: "groups" | "selections") => void;
   groupsCount: number;
   selectionsCount: number;
 }
@@ -13,6 +12,7 @@ interface TabConfig {
   count: number;
 }
 
+/** The tab list of the sidebar's Tabs root (components/sidebar/index.tsx). */
 export const TabBar: Component<TabBarProps> = (props) => {
   const tabs = (): TabConfig[] => [
     { id: "groups", label: "Groups", count: props.groupsCount },
@@ -20,40 +20,19 @@ export const TabBar: Component<TabBarProps> = (props) => {
   ];
 
   return (
-    <div
+    <TabsList
       data-react-grab-tab-bar
-      class="flex border-b border-border px-2 py-1.5"
+      aria-label="Dashboard view"
+      class="border-b border-border px-2 py-1.5"
     >
-      {tabs().map((tab, index) => {
-        const isActive = () => props.activeTab === tab.id;
-        const isFirst = index === 0;
-        const isLast = index === tabs().length - 1;
-
-        return (
-          <button
-            type="button"
-            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 font-semibold text-[11px] cursor-pointer border border-border transition-colors"
-            classList={{
-              "rounded-l-lg border-r-0": isFirst,
-              "rounded-r-lg": isLast,
-              "bg-accent text-foreground shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]": isActive(),
-              "bg-accent/50 text-muted-foreground hover:bg-accent/70": !isActive(),
-            }}
-            onClick={() => props.onTabChange(tab.id)}
-          >
+      <For each={tabs()}>
+        {(tab) => (
+          <TabsTrigger value={tab.id}>
             {tab.label}
-            <span
-              class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-medium leading-none"
-              classList={{
-                "text-purple-400 bg-purple-400/10": isActive(),
-                "text-muted-foreground bg-foreground/5": !isActive(),
-              }}
-            >
-              {tab.count}
-            </span>
-          </button>
-        );
-      })}
-    </div>
+            <TabsCount>{tab.count}</TabsCount>
+          </TabsTrigger>
+        )}
+      </For>
+    </TabsList>
   );
 };

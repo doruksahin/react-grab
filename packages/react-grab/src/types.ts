@@ -1,7 +1,7 @@
-import type { ServerCommentItem } from "./generated/types.js";
+import type { CommentItem, OverlayBounds } from "./shared-types.js";
+export type { CommentItem, OverlayBounds } from "./shared-types.js";
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
 import type { SelectionGroup } from "./features/selection-groups/types.js";
-import type { SyncConfig, SyncStatus } from "./features/sync/types.js";
 import type {
   JiraComment,
   RefreshGroupStatusFn,
@@ -391,13 +391,16 @@ export interface Options {
   sync?: SyncConfig;
   screenshot?: ScreenshotConfig;
   recording?: RecordingConfig;
-  /** When true, persistent labels expose the collapse affordance (dot + chevron). */
+  /**
+   * Saved labels show as pins that open their card on click (ADR-0022
+   * step 3). `false` shows them as open labels with no pin (SPEC-016 AC1-3).
+   * @default true
+   */
   collapsibleLabels?: boolean;
   /**
-   * Controls the initial state of persistent labels when `collapsibleLabels` is on.
-   * - `true` (default when the feature is enabled): labels start collapsed as a dot.
-   * - `false`: labels start expanded; users can collapse them via the chevron.
-   * Ignored when `collapsibleLabels` is off.
+   * With pins on, whether a pin's card starts closed. Ignored when
+   * `collapsibleLabels` is false.
+   * @default true
    */
   labelsStartCollapsed?: boolean;
   /** When true, the comment editor toolbar is shown by default. @default false */
@@ -424,11 +427,11 @@ export interface ToolbarState {
   selectionsRevealed: boolean;
 }
 
+/** A toolbar dropdown's anchor: the toolbar element and the edge it sits on. */
 export interface DropdownAnchor {
-  x: number;
-  y: number;
   edge: ToolbarState["edge"];
   toolbarWidth: number;
+  reference: HTMLElement;
 }
 
 export interface ReactGrabAPI {
@@ -454,15 +457,6 @@ export interface ReactGrabAPI {
   unregisterPlugin: (name: string) => void;
   getPlugins: () => string[];
   getDisplayName: (element: Element) => string | null;
-}
-
-export interface OverlayBounds {
-  borderRadius: string;
-  height: number;
-  transform: string;
-  width: number;
-  x: number;
-  y: number;
 }
 
 /** JIRA status name (e.g. "In Progress") or undefined for no ticket */
@@ -491,7 +485,6 @@ export interface JiraDisplayFields {
   groupStatus?: GroupStatus;
   jiraTicketId?: string;
   jiraUrl?: string;
-  jiraStatusCategory?: string;
   jiraAssignee?: string | null;
   jiraReporter?: string | null;
   jiraAssigneeAvatar?: string | null;
@@ -514,7 +507,6 @@ export const JIRA_DISPLAY_KEYS = [
   "groupStatus",
   "jiraTicketId",
   "jiraUrl",
-  "jiraStatusCategory",
   "jiraAssignee",
   "jiraReporter",
   "jiraAssigneeAvatar",
@@ -561,20 +553,6 @@ export interface SelectionLabelInstance extends JiraDisplayFields {
   hasFullPageScreenshot?: boolean;
 }
 
-/**
- * CommentItem extends the server-defined shape with UI-only fields.
- * Server fields come from Orval (SSOT: sync-server Zod schemas).
- * UI-only fields are added here.
- *
- * `groupId` is overridden to `string | null` (server type is `string`).
- * `null` = intentionally ungrouped. The wire-format translation
- * (`null` ↔ `""`) lives in features/sync/transforms.ts.
- */
-export interface CommentItem extends Omit<ServerCommentItem, "groupId"> {
-  groupId: string | null;
-  previewBounds?: OverlayBounds[];
-}
-
 export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   selectionVisible?: boolean;
   selectionBounds?: OverlayBounds;
@@ -595,9 +573,13 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   inspectNavigationState?: ArrowNavigationState;
   onInspectSelect?: (index: number) => void;
   labelInstances?: SelectionLabelInstance[];
-  /** When true, persistent label instances start collapsed */
-  collapsibleLabelsDefault?: boolean;
-  labelsStartCollapsedDefault?: boolean;
+  /** Saved labels show as pins (Options.collapsibleLabels, ADR-0022 step 3). */
+  labelPinsEnabled?: boolean;
+  /** Pins start with their card closed (Options.labelsStartCollapsed). */
+  labelPinsStartClosed?: boolean;
+  /** A saved selection whose card is open while its comment is hovered in
+   *  the comments menu. */
+  previewedItemId?: string | null;
   dragVisible?: boolean;
   dragBounds?: OverlayBounds;
   grabbedBoxes?: Array<{
@@ -687,9 +669,13 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onToggleSelectionsRevealed?: () => void;
   onToggleCommentItemRevealed?: (commentItemId: string) => void;
   syncStatus?: SyncStatus;
+  /** Connects to the sync server again after a failed connection. */
+  onRetrySync?: () => Promise<void>;
   syncWorkspace?: string;
   syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
   jiraProjectKey?: string;
+  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
+  jiraSiteHost?: string;
   onFilterVisibilityChange?: (
     visibleIds: Set<string>,
     allGroupIds: string[],
@@ -732,9 +718,10 @@ export type ArrowPosition = "bottom" | "top";
 
 export interface ArrowProps {
   position: ArrowPosition;
-  leftPercent: number;
-  leftOffsetPx: number;
+  /** Left offset inside the label, from Floating UI's arrow middleware. */
+  left?: number;
   labelWidth?: number;
+  ref?: (element: HTMLDivElement) => void;
 }
 
 export interface TagBadgeProps {
@@ -846,14 +833,8 @@ export interface SelectionLabelProps
    *  button that opens the JiraCreateDialog. */
   onCreateTicket?: () => void;
   hideArrow?: boolean;
-  /** Collapse the label to a minimal dot indicator */
-  onCollapse?: () => void;
   /** True during the exit animation before the label is actually collapsed */
   isCollapsing?: boolean;
-  /** Extra pixels added to the label's top offset (e.g. to reserve space for the dot indicator above). */
-  extraTopOffset?: number;
-  /** Called when the label's vertical placement changes (flips above/below the selection). */
-  onPlacementChange?: (placement: "above" | "below") => void;
   /** Submit a JIRA comment for the current group's ticket */
   onSubmitJiraComment?: SubmitCommentFn;
   /** Search JIRA users for @mention autocomplete */
@@ -862,3 +843,27 @@ export interface SelectionLabelProps
   onRefreshJiraStatus?: () => void;
   commentEditorToolbarVisible?: boolean;
 }
+
+/**
+ * Configuration for sync. Passed to initSync().
+ * Optional `options` field is forwarded to init() when it auto-fires.
+ */
+export interface SyncConfig {
+  enabled: boolean;
+  serverUrl: string;
+  workspace: string;
+  jiraProjectKey: string;
+  /**
+   * Bearer token the sync server requires on every request (ADR-0020).
+   * Required when `enabled` is true. Read it from the host app's own env
+   * (for example `VITE_REACT_GRAB_SYNC_TOKEN`); `initSync()` runs only in
+   * development builds, so it never ships in a production bundle.
+   */
+  apiToken?: string;
+  syncRevealedState: boolean;
+  onSyncError: (error: Error) => void;
+  /** Options forwarded to init() — use this to set screenshot config etc. */
+  options?: Options;
+}
+
+export type SyncStatus = "local" | "synced" | "error";

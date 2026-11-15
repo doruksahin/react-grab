@@ -5,6 +5,7 @@ import { TagBadge } from "../tag-badge.js";
 import { FlagIndicator } from "../../flag-indicator.js";
 import { IconChevron } from "../../icons/icon-chevron.js";
 import type { SelectionLabelHeaderProps } from "../types.js";
+import { IconButton } from "../../ui/icon-button.js";
 
 export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
   props,
@@ -26,7 +27,7 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
   return (
     <div
       data-react-grab-selection-header
-      class="contain-layout shrink-0 flex items-baseline gap-1 pt-1.5 pb-1 h-fit px-2 w-full bg-[#252545] border-b border-white/10"
+      class="contain-layout shrink-0 flex items-baseline gap-1 pt-1.5 pb-1 h-fit px-2 w-full bg-muted border-b border-border"
       classList={{
         "py-1.5": !props.compactPadding,
         "pt-1.5 pb-1": Boolean(props.compactPadding),
@@ -49,23 +50,22 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
             onClick={handleTagClick}
             shrink={!props.trailing}
             forceShowIcon={
-              props.trailing
-                ? true
-                : Boolean(props.isContextMenuOpen)
+              props.trailing ? true : Boolean(props.isContextMenuOpen)
             }
           />
         }
       >
-        <span class="text-[13px] leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-popover-foreground">
+        <span class="text-body leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-popover-foreground">
           {props.inputValue}
         </span>
       </Show>
       <Show when={props.onCollapse}>
-        <button
+        <IconButton
           data-react-grab-ignore-events
           data-react-grab-collapse-label
-          title="Collapse"
-          class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-popover-foreground opacity-60 hover:opacity-100 hover:bg-accent cursor-pointer transition-all ml-1"
+          label="Collapse"
+          size="icon-xs"
+          class="shrink-0 ml-1"
           onClick={(event) => {
             event.stopImmediatePropagation();
             props.onCollapse?.();
@@ -73,7 +73,7 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
           onPointerDown={(event) => event.stopImmediatePropagation()}
         >
           <IconChevron size={12} />
-        </button>
+        </IconButton>
       </Show>
       <Show when={props.trailing}>
         <span class="flex-1" />

@@ -80,7 +80,6 @@ export const ACTIVE_GROUP_SHADOW_PASSES = [
 export const ARROW_HEIGHT_PX = 8;
 export const ARROW_MIN_SIZE_PX = 4;
 export const ARROW_MAX_LABEL_WIDTH_RATIO = 0.2;
-export const ARROW_CENTER_PERCENT = 50;
 export const ARROW_LABEL_MARGIN_PX = 16;
 export const LABEL_GAP_PX = 4;
 export const PREVIEW_TEXT_MAX_LENGTH = 100;
@@ -129,7 +128,7 @@ export const SELECTION_HINT_CYCLE_INTERVAL_MS = 3000;
 export const SELECTION_HINT_COUNT = 3;
 
 export const TOOLTIP_BASE_CLASS =
-  "absolute whitespace-nowrap px-1.5 py-0.5 rounded-[10px] text-[10px] text-black/60 pointer-events-none [corner-shape:superellipse(1.25)] filter-[drop-shadow(0px_1px_2px_#51515140)]";
+  "absolute whitespace-nowrap px-1.5 py-0.5 rounded-[10px] text-meta text-black/60 pointer-events-none [corner-shape:superellipse(1.25)] drop-shadow-overlay";
 
 export const HINT_FLIP_IN_ANIMATION =
   "animate-[hint-flip-in_var(--transition-normal)_ease-out]";
@@ -154,14 +153,25 @@ export const MAX_COMMENT_ITEMS = 20;
 export const MAX_SESSION_STORAGE_SIZE_BYTES = 2 * 1024 * 1024;
 export const DROPDOWN_ANIMATION_DURATION_MS = 100;
 export const DROPDOWN_HOVER_OPEN_DELAY_MS = 200;
-export const DROPDOWN_VIEWPORT_PADDING_PX = 8;
+export const ICON_BUTTON_TOOLTIP_OPEN_DELAY_MS = 400;
 export const DROPDOWN_ANCHOR_GAP_PX = 8;
+// Floating UI defaults for overlays (utils/floating.ts).
+export const FLOATING_GAP_PX = 4;
+export const FLOATING_VIEWPORT_PADDING_PX = 8;
+// Label pins (components/selection-label/label-pin.tsx, ui/pin.tsx).
+export const PIN_HEIGHT_PX = 30;
+export const PIN_MAX_WIDTH_PX = 240;
+/** Between an element and its pin, and between stacked pins. */
+export const PIN_GAP_PX = 6;
+/** How long a label card takes to close before it is removed. */
+export const LABEL_EXIT_ANIMATION_MS = 150;
+/** How long the sidebar marks the selection it was opened on. */
+export const SIDEBAR_FOCUS_HIGHLIGHT_MS = 2000;
 export const SAFE_POLYGON_BUFFER_PX = 8;
 export const DROPDOWN_ICON_SIZE_PX = 11;
 export const DROPDOWN_MIN_WIDTH_PX = 180;
 export const DROPDOWN_MAX_WIDTH_PX = 280;
 export const TOOLBAR_MENU_MIN_WIDTH_PX = 100;
-export const DROPDOWN_OFFSCREEN_POSITION = { left: -9999, top: -9999 };
 
 export const DROPDOWN_EDGE_TRANSFORM_ORIGIN = {
   left: "left center",
@@ -175,7 +185,6 @@ export const NEXTJS_REVALIDATION_DELAY_MS = 1000;
 export const TEXTAREA_MAX_HEIGHT_PX = 95;
 
 export const IME_COMPOSING_KEY_CODE = 229;
-export const SELECTION_LABEL_OFFSCREEN_PX = -9999;
 
 export const RELEVANT_CSS_PROPERTIES = new Set([
   "display",

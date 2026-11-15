@@ -7,10 +7,10 @@ import {
 } from "../../constants.js";
 import { cn } from "../../utils/cn.js";
 import { formatShortcut } from "../../utils/format-shortcut.js";
-import { createMenuHighlight } from "../../utils/create-menu-highlight.js";
 import { suppressMenuEvent } from "../../utils/suppress-menu-event.js";
 import { createAnchoredDropdown } from "../../utils/create-anchored-dropdown.js";
 import { registerOverlayDismiss } from "../../utils/register-overlay-dismiss.js";
+import { ActionList, ActionListItem } from "../ui/action-list.js";
 
 interface ToolbarMenuProps {
   position: DropdownAnchor | null;
@@ -22,12 +22,6 @@ interface ToolbarMenuProps {
 
 export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
   let containerRef: HTMLDivElement | undefined;
-  const {
-    containerRef: highlightContainerRef,
-    highlightRef,
-    updateHighlight,
-    clearHighlight,
-  } = createMenuHighlight();
 
   const dropdown = createAnchoredDropdown(
     () => containerRef,
@@ -41,7 +35,6 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
   };
 
   onMount(() => {
-    dropdown.measure();
     const unregisterOverlayDismiss = registerOverlayDismiss({
       isOpen: () => Boolean(props.position),
       onDismiss: props.onDismiss,
@@ -59,10 +52,9 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-toolbar-menu
-        class="fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
+        class="fixed text-body antialiased drop-shadow-overlay select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
         style={{
-          top: `${dropdown.displayPosition().top}px`,
-          left: `${dropdown.displayPosition().left}px`,
+          ...dropdown.floatingStyle(),
           "z-index": "var(--z-dropdown)",
           "pointer-events": dropdown.isAnimatedIn() ? "auto" : "none",
           "transform-origin":
@@ -82,47 +74,41 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
           )}
           style={{ "min-width": `${TOOLBAR_MENU_MIN_WIDTH_PX}px` }}
         >
-          <div ref={highlightContainerRef} class="relative flex flex-col py-1">
-            <div
-              ref={highlightRef}
-              class="pointer-events-none absolute bg-accent opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
-            />
+          <ActionList label="Toolbar actions" class="py-1">
             <For each={props.actions}>
               {(action) => {
                 const isDefault = () => action.id === props.defaultActionId;
 
                 return (
-                  <button
+                  <ActionListItem
                     data-react-grab-ignore-events
                     data-react-grab-menu-item={action.id}
-                    class="relative z-1 contain-layout flex items-center justify-between w-full px-2 py-1 cursor-pointer text-left border-none bg-transparent"
+                    class="justify-between"
                     onPointerDown={(event) => event.stopPropagation()}
-                    onPointerEnter={(event) =>
-                      updateHighlight(event.currentTarget)
-                    }
-                    onPointerLeave={clearHighlight}
                     onClick={(event) => handleActionClick(action, event)}
                   >
                     <span
                       class={cn(
-                        "text-[13px] leading-4 font-medium",
-                        isDefault() ? "text-popover-foreground" : "text-muted-foreground",
+                        "text-body leading-4 font-medium",
+                        isDefault()
+                          ? "text-popover-foreground"
+                          : "text-muted-foreground",
                       )}
                     >
                       {action.label}
                     </span>
                     <Show when={action.shortcut}>
                       {(shortcutKey) => (
-                        <span class="text-[11px] text-muted-foreground ml-4">
+                        <span class="text-meta text-muted-foreground ml-4">
                           {formatShortcut(shortcutKey())}
                         </span>
                       )}
                     </Show>
-                  </button>
+                  </ActionListItem>
                 );
               }}
             </For>
-          </div>
+          </ActionList>
         </div>
       </div>
     </Show>

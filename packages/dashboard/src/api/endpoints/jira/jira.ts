@@ -35,6 +35,7 @@ import type {
   CreateJiraTicket200,
   CreateJiraTicket400,
   CreateJiraTicketBody,
+  GetJiraSite200,
   GetJiraTicketStatus200,
   GetJiraTicketStatus404,
   ListJiraIssueTypes200Item,
@@ -446,6 +447,175 @@ export const useAddJiraComment = <TError = AddJiraComment400 | AddJiraComment404
       return useMutation(getAddJiraCommentMutationOptions(options), queryClient);
     }
     /**
+ * @summary The Jira site tickets are created on
+ */
+export type getJiraSiteResponse200 = {
+  data: GetJiraSite200
+  status: 200
+}
+
+export type getJiraSiteResponseSuccess = (getJiraSiteResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getJiraSiteResponse = (getJiraSiteResponseSuccess)
+
+export const getGetJiraSiteUrl = () => {
+
+
+
+
+  return `/jira/site`
+}
+
+export const getJiraSite = async ( options?: RequestInit): Promise<getJiraSiteResponse> => {
+
+  const res = await fetch(getGetJiraSiteUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getJiraSiteResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getJiraSiteResponse
+}
+
+
+
+
+
+export const getGetJiraSiteQueryKey = () => {
+    return [
+    `/jira/site`
+    ] as const;
+    }
+
+
+export const getGetJiraSiteQueryOptions = <TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJiraSiteQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJiraSite>>> = ({ signal }) => getJiraSite({ signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetJiraSiteQueryResult = NonNullable<Awaited<ReturnType<typeof getJiraSite>>>
+export type GetJiraSiteQueryError = unknown
+
+
+export function useGetJiraSite<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJiraSite>>,
+          TError,
+          Awaited<ReturnType<typeof getJiraSite>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJiraSite<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJiraSite>>,
+          TError,
+          Awaited<ReturnType<typeof getJiraSite>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJiraSite<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary The Jira site tickets are created on
+ */
+
+export function useGetJiraSite<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetJiraSiteQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+export const getGetJiraSiteSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJiraSiteQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJiraSite>>> = ({ signal }) => getJiraSite({ signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetJiraSiteSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getJiraSite>>>
+export type GetJiraSiteSuspenseQueryError = unknown
+
+
+export function useGetJiraSiteSuspense<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJiraSiteSuspense<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJiraSiteSuspense<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary The Jira site tickets are created on
+ */
+
+export function useGetJiraSiteSuspense<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetJiraSiteSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
  * @summary List JIRA projects
  */
 export type listJiraProjectsResponse200 = {

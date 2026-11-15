@@ -283,6 +283,10 @@ export type AddJiraComment404 = {
   error: string;
 };
 
+export type GetJiraSite200 = {
+  siteUrl: string;
+};
+
 export type ListJiraProjects200Item = {
   key: string;
   name: string;
@@ -882,6 +886,42 @@ export const addJiraComment = async (id: string,
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
       addJiraCommentBody,)
+  }
+);}
+
+
+
+/**
+ * @summary The Jira site tickets are created on
+ */
+export type getJiraSiteResponse200 = {
+  data: GetJiraSite200
+  status: 200
+}
+
+export type getJiraSiteResponseSuccess = (getJiraSiteResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getJiraSiteResponse = (getJiraSiteResponseSuccess)
+
+export const getGetJiraSiteUrl = () => {
+
+
+
+
+  return `/jira/site`
+}
+
+export const getJiraSite = async ( options?: RequestInit): Promise<getJiraSiteResponse> => {
+
+  return customFetch<getJiraSiteResponse>(getGetJiraSiteUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
   }
 );}
 

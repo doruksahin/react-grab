@@ -50,12 +50,13 @@ for (const environment of ["development", "production"]) {
       }) => {
         if (lifecycle === "already-active") await reactGrab.activate();
         const select = reactGrab.page.getByRole("button", {
-          name:
-            lifecycle === "already-active"
-              ? "Stop selecting element"
-              : "Select element",
+          name: "Select element",
           exact: true,
         });
+        await expect(select).toHaveAttribute(
+          "aria-pressed",
+          lifecycle === "already-active" ? "true" : "false",
+        );
         await select.hover();
         await reactGrab.page.evaluate(() => {
           window.freezeContract.update(3);

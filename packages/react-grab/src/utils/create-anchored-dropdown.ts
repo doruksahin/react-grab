@@ -1,36 +1,53 @@
-import { createSignal, createEffect, createMemo, onCleanup } from "solid-js";
+import { createEffect, createSignal, onCleanup } from "solid-js";
 import type { Accessor } from "solid-js";
+import type { Placement } from "@floating-ui/dom";
 import type { DropdownAnchor } from "../types.js";
 import {
   DROPDOWN_ANCHOR_GAP_PX,
   DROPDOWN_ANIMATION_DURATION_MS,
-  DROPDOWN_OFFSCREEN_POSITION,
-  DROPDOWN_VIEWPORT_PADDING_PX,
 } from "../constants.js";
-import { getAnchoredDropdownPosition } from "./get-anchored-dropdown-position.js";
+import { createFloating, type FloatingStyle } from "./floating.js";
 import {
   nativeCancelAnimationFrame,
   nativeRequestAnimationFrame,
 } from "./native-raf.js";
 
+interface AnchoredDropdownOptions {
+  /** Cap the dropdown's height to the space left in the viewport. */
+  fitHeight?: boolean;
+  /** Cap the dropdown's width to this and to the space left. */
+  maxWidthPx?: number;
+}
+
 interface AnchoredDropdownResult {
   shouldMount: Accessor<boolean>;
   isAnimatedIn: Accessor<boolean>;
   lastAnchorEdge: Accessor<DropdownAnchor["edge"]>;
-  displayPosition: Accessor<{ left: number; top: number }>;
-  measure: () => void;
+  /** left / top / visibility for the dropdown container. */
+  floatingStyle: Accessor<FloatingStyle>;
   clearAnimationHandles: () => void;
 }
 
+// The dropdown opens away from the toolbar edge it is anchored to.
+const PLACEMENT_BY_EDGE: Record<DropdownAnchor["edge"], Placement> = {
+  top: "bottom",
+  bottom: "top",
+  left: "right",
+  right: "left",
+};
+
+/**
+ * A toolbar dropdown: mount/enter/exit animation plus placement against the
+ * toolbar element (Floating UI, followed every frame while the toolbar moves).
+ */
 export const createAnchoredDropdown = (
   containerRef: () => HTMLDivElement | undefined,
   anchorAccessor: Accessor<DropdownAnchor | null>,
+  options: AnchoredDropdownOptions = {},
 ): AnchoredDropdownResult => {
-  const [measuredWidth, setMeasuredWidth] = createSignal(0);
-  const [measuredHeight, setMeasuredHeight] = createSignal(0);
   const [shouldMount, setShouldMount] = createSignal(false);
   const [isAnimatedIn, setIsAnimatedIn] = createSignal(false);
-  const [viewportVersion, setViewportVersion] = createSignal(0);
+  const [container, setContainer] = createSignal<HTMLDivElement>();
   const [lastAnchorEdge, setLastAnchorEdge] =
     createSignal<DropdownAnchor["edge"]>("bottom");
 
@@ -45,21 +62,6 @@ export const createAnchoredDropdown = (
     }
   };
 
-  const measure = () => {
-    const container = containerRef();
-    if (container) {
-      setMeasuredWidth(container.offsetWidth);
-      setMeasuredHeight(container.offsetHeight);
-    }
-  };
-
-  const handleViewportChange = () => {
-    setViewportVersion(
-      (previousViewportVersion) => previousViewportVersion + 1,
-    );
-    measure();
-  };
-
   createEffect(() => {
     const anchor = anchorAccessor();
     if (anchor) {
@@ -68,9 +70,9 @@ export const createAnchoredDropdown = (
       setShouldMount(true);
       if (enterAnimationFrameId !== undefined)
         nativeCancelAnimationFrame(enterAnimationFrameId);
-      // HACK: rAF measures then forces reflow so the browser commits the correct position before transitioning in
+      // HACK: rAF lets the mounted container take its position before transitioning in
       enterAnimationFrameId = nativeRequestAnimationFrame(() => {
-        measure();
+        setContainer(containerRef());
         void containerRef()?.offsetHeight;
         setIsAnimatedIn(true);
       });
@@ -80,59 +82,30 @@ export const createAnchoredDropdown = (
       setIsAnimatedIn(false);
       exitAnimationTimeout = setTimeout(() => {
         setShouldMount(false);
+        setContainer(undefined);
       }, DROPDOWN_ANIMATION_DURATION_MS);
     }
     onCleanup(clearAnimationHandles);
   });
 
-  createEffect(() => {
-    const anchor = anchorAccessor();
-    if (!anchor) return;
-
-    window.addEventListener("resize", handleViewportChange);
-    window.visualViewport?.addEventListener("resize", handleViewportChange);
-    window.visualViewport?.addEventListener("scroll", handleViewportChange);
-
-    onCleanup(() => {
-      window.removeEventListener("resize", handleViewportChange);
-      window.visualViewport?.removeEventListener(
-        "resize",
-        handleViewportChange,
-      );
-      window.visualViewport?.removeEventListener(
-        "scroll",
-        handleViewportChange,
-      );
-    });
+  const floating = createFloating({
+    reference: () => anchorAccessor()?.reference ?? null,
+    floating: container,
+    options: () => ({
+      placement: PLACEMENT_BY_EDGE[lastAnchorEdge()],
+      offsetPx: DROPDOWN_ANCHOR_GAP_PX,
+      shiftCrossAxis: true,
+      fitHeight: options.fitHeight,
+      maxWidthPx: options.maxWidthPx,
+      followEveryFrame: true,
+    }),
   });
-
-  const displayPosition = createMemo(
-    (previousPosition: { left: number; top: number }) => {
-      viewportVersion();
-      const position = getAnchoredDropdownPosition({
-        anchor: anchorAccessor(),
-        measuredWidth: measuredWidth(),
-        measuredHeight: measuredHeight(),
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        anchorGapPx: DROPDOWN_ANCHOR_GAP_PX,
-        viewportPaddingPx: DROPDOWN_VIEWPORT_PADDING_PX,
-        offscreenPosition: DROPDOWN_OFFSCREEN_POSITION,
-      });
-      if (position.left !== DROPDOWN_OFFSCREEN_POSITION.left) {
-        return position;
-      }
-      return previousPosition;
-    },
-    DROPDOWN_OFFSCREEN_POSITION,
-  );
 
   return {
     shouldMount,
     isAnimatedIn,
     lastAnchorEdge,
-    displayPosition,
-    measure,
+    floatingStyle: floating.style,
     clearAnimationHandles,
   };
 };

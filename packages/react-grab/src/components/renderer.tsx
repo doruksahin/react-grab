@@ -6,6 +6,7 @@ import {
   createRenderEffect,
   onCleanup,
   on,
+  createMemo,
 } from "solid-js";
 import type { Component } from "solid-js";
 import type { AgentSession, ReactGrabRendererProps } from "../types.js";
@@ -29,15 +30,21 @@ import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
 import { DevModeProvider } from "../features/dev-mode/index.js";
-import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
-import { useCollapsibleLabel } from "../features/collapsible-label/index.js";
-import {
-  CollapsedDot,
-  DOT_TOTAL_OFFSET_PX,
-} from "./collapsible-label/collapsed-dot.js";
+import { LabelPin } from "./selection-label/label-pin.js";
+import { useLabelPins } from "../features/selection-label/hooks/use-label-pins.js";
+import { useSidebarSession } from "../features/sidebar/hooks/use-sidebar-session.js";
+import { LABEL_EXIT_ANIMATION_MS } from "../constants.js";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
-  const [sidebarOpen, setSidebarOpen] = createSignal(false);
+  const sidebar = useSidebarSession();
+  const sidebarOpen = sidebar.isOpen;
+
+  const labelPins = useLabelPins({
+    instances: () => props.labelInstances ?? [],
+    enabled: () => Boolean(props.labelPinsEnabled),
+    startClosed: () => Boolean(props.labelPinsStartClosed),
+    previewedItemId: () => props.previewedItemId,
+  });
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
     string | null
   >(null);
@@ -75,8 +82,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       // close the sidebar if no nested layer consumed the event.
       queueMicrotask(() => {
         if (!e.defaultPrevented) {
-          setSidebarOpen(false);
-          dashboardBtnRef?.focus();
+          sidebar.close();
+          setActiveDetailGroupId(null);
         }
       });
     };
@@ -225,154 +232,160 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         />
       </Show>
 
+      {/* Pins first and cards after: on the same layer the later element
+          is on top, so an open card covers the pins of nearby elements. */}
+      <Index each={labelPins.pinned()}>
+        {(instance) => {
+          const [element, setElement] = createSignal<HTMLButtonElement>();
+          createEffect(() => {
+            const pinElement = element();
+            if (!pinElement) return;
+            onCleanup(labelPins.registerPin(instance().id, pinElement));
+          });
+          return (
+            <LabelPin
+              ref={setElement}
+              selectionBounds={instance().selectionBounds}
+              onToggle={() =>
+                labelPins.setOpen(instance().id, !labelPins.isOpen(instance()))
+              }
+              inputValue={instance().inputValue}
+              ticketKey={instance().jiraTicketId}
+              statusColor={labelPins.statusColor(instance())}
+              expanded={labelPins.isOpen(instance())}
+              stackOffsetPx={labelPins.stackOffset(instance().id)}
+            />
+          );
+        }}
+      </Index>
+
       <Index each={props.labelInstances ?? []}>
         {(instance) => {
-          const collapsible = useCollapsibleLabel({
-            instanceId: instance().id,
-            defaultCollapsed: props.labelsStartCollapsedDefault,
-          });
+          // A pin's card plays its closing animation before it goes.
           const [isLabelExiting, setIsLabelExiting] = createSignal(false);
-          const [isDotExiting, setIsDotExiting] = createSignal(false);
-          const [labelPlacement, setLabelPlacement] = createSignal<
-            "above" | "below"
-          >("below");
-          const ANIM_MS = 150;
-
-          const handleCollapse = () => {
-            setIsLabelExiting(true);
-            setTimeout(() => {
-              collapsible.collapse();
-              setIsLabelExiting(false);
-            }, ANIM_MS);
-          };
-          const handleExpand = () => {
-            setIsDotExiting(true);
-            setTimeout(() => {
-              collapsible.expand();
-              setIsDotExiting(false);
-            }, ANIM_MS);
-          };
+          const shown = createMemo(() => labelPins.isCardShown(instance()));
+          const [isMounted, setIsMounted] = createSignal(shown());
+          createEffect(
+            on(
+              shown,
+              (isShown) => {
+                if (isShown) {
+                  setIsLabelExiting(false);
+                  setIsMounted(true);
+                  return;
+                }
+                setIsLabelExiting(true);
+                const timeoutId = setTimeout(() => {
+                  setIsMounted(false);
+                  setIsLabelExiting(false);
+                }, LABEL_EXIT_ANIMATION_MS);
+                onCleanup(() => clearTimeout(timeoutId));
+              },
+              { defer: true },
+            ),
+          );
 
           return (
-            <>
-              <CollapsedDot
+            <Show when={isMounted()}>
+              <PersistedLabel
+                anchorElement={
+                  labelPins.isPinned(instance())
+                    ? labelPins.pinElement(instance().id)
+                    : undefined
+                }
+                tagName={instance().tagName}
+                componentName={instance().componentName}
+                elementsCount={instance().elementsCount}
                 selectionBounds={instance().selectionBounds}
-                onExpand={
-                  collapsible.isCollapsed() ? handleExpand : handleCollapse
+                mouseX={instance().mouseX}
+                status={instance().status}
+                statusText={instance().statusText}
+                hasAgent={Boolean(instance().statusText)}
+                isPromptMode={instance().isPromptMode}
+                inputValue={instance().inputValue}
+                error={instance().error}
+                hideArrow={instance().hideArrow}
+                groupStatus={instance().groupStatus}
+                jiraTicketId={instance().jiraTicketId}
+                jiraUrl={instance().jiraUrl}
+                jiraAssignee={instance().jiraAssignee}
+                jiraReporter={instance().jiraReporter}
+                jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
+                jiraReporterAvatar={instance().jiraReporterAvatar}
+                jiraLabels={instance().jiraLabels}
+                jiraComments={instance().jiraComments}
+                jiraFlagged={instance().jiraFlagged}
+                jiraFlaggedAt={instance().jiraFlaggedAt}
+                jiraFlaggedBy={instance().jiraFlaggedBy}
+                jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
+                jiraPriority={instance().jiraPriority}
+                jiraIssueType={instance().jiraIssueType}
+                jiraDueDate={instance().jiraDueDate}
+                itemId={instance().itemId}
+                commentText={instance().commentText}
+                timestamp={instance().timestamp}
+                hasElementScreenshot={instance().hasElementScreenshot}
+                hasFullPageScreenshot={instance().hasFullPageScreenshot}
+                syncServerUrl={props.syncServerUrl}
+                syncWorkspace={props.syncWorkspace}
+                groups={props.groups ?? []}
+                activeGroupId={instance().groupId}
+                onActiveGroupChange={(groupId) => {
+                  const itemId = instance().itemId;
+                  if (!itemId) return;
+                  props.onMoveItem?.(itemId, groupId ?? null);
+                }}
+                onAddGroup={props.onAddGroup}
+                onShowContextMenu={
+                  (instance().status === "copied" ||
+                    instance().status === "fading") &&
+                  isElementConnected(instance().element)
+                    ? () => props.onShowContextMenuInstance?.(instance().id)
+                    : undefined
                 }
-                inputValue={
-                  collapsible.isCollapsed() ? instance().inputValue : undefined
+                onHoverChange={(isHovered) =>
+                  props.onLabelInstanceHoverChange?.(instance().id, isHovered)
                 }
-                isExpanding={isDotExiting()}
-                placement={
-                  collapsible.isCollapsed() ? "below" : labelPlacement()
+                onRemoveItem={
+                  instance().itemId && props.onRemoveItem
+                    ? () => {
+                        const itemId = instance().itemId;
+                        if (itemId) props.onRemoveItem?.(itemId);
+                      }
+                    : undefined
                 }
+                onCreateTicket={
+                  instance().itemId && props.onCreateTicketForLooseItem
+                    ? () => {
+                        const itemId = instance().itemId;
+                        if (!itemId) return;
+                        const item = (props.commentItems ?? []).find(
+                          (ci) => ci.id === itemId,
+                        );
+                        if (item) props.onCreateTicketForLooseItem?.(item);
+                      }
+                    : undefined
+                }
+                onOpenThread={
+                  instance().itemId && instance().jiraTicketId
+                    ? () => {
+                        const itemId = instance().itemId;
+                        if (!itemId) return;
+                        sidebar.openOnItem(
+                          itemId,
+                          labelPins.pinElement(instance().id) ?? null,
+                        );
+                      }
+                    : undefined
+                }
+                onRefreshJiraStatus={
+                  instance().groupId && props.onRefreshJiraStatus
+                    ? () => props.onRefreshJiraStatus!(instance().groupId!)
+                    : undefined
+                }
+                isCollapsing={isLabelExiting()}
               />
-              <Show when={!collapsible.isCollapsed()}>
-                <PersistedLabel
-                  extraTopOffset={
-                    props.collapsibleLabelsDefault ? DOT_TOTAL_OFFSET_PX : 0
-                  }
-                  onPlacementChange={setLabelPlacement}
-                  tagName={instance().tagName}
-                  componentName={instance().componentName}
-                  elementsCount={instance().elementsCount}
-                  selectionBounds={instance().selectionBounds}
-                  mouseX={instance().mouseX}
-                  status={instance().status}
-                  statusText={instance().statusText}
-                  hasAgent={Boolean(instance().statusText)}
-                  isPromptMode={instance().isPromptMode}
-                  inputValue={instance().inputValue}
-                  error={instance().error}
-                  hideArrow={instance().hideArrow}
-                  groupStatus={instance().groupStatus}
-                  jiraTicketId={instance().jiraTicketId}
-                  jiraUrl={instance().jiraUrl}
-                  jiraStatusCategory={instance().jiraStatusCategory}
-                  jiraAssignee={instance().jiraAssignee}
-                  jiraReporter={instance().jiraReporter}
-                  jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
-                  jiraReporterAvatar={instance().jiraReporterAvatar}
-                  jiraLabels={instance().jiraLabels}
-                  jiraComments={instance().jiraComments}
-                  jiraFlagged={instance().jiraFlagged}
-                  jiraFlaggedAt={instance().jiraFlaggedAt}
-                  jiraFlaggedBy={instance().jiraFlaggedBy}
-                  jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
-                  jiraPriority={instance().jiraPriority}
-                  jiraIssueType={instance().jiraIssueType}
-                  jiraDueDate={instance().jiraDueDate}
-                  itemId={instance().itemId}
-                  commentText={instance().commentText}
-                  timestamp={instance().timestamp}
-                  hasElementScreenshot={instance().hasElementScreenshot}
-                  hasFullPageScreenshot={instance().hasFullPageScreenshot}
-                  syncServerUrl={props.syncServerUrl}
-                  syncWorkspace={props.syncWorkspace}
-                  groups={props.groups ?? []}
-                  activeGroupId={instance().groupId}
-                  onActiveGroupChange={(groupId) => {
-                    const itemId = instance().itemId;
-                    if (!itemId) return;
-                    props.onMoveItem?.(itemId, groupId ?? null);
-                  }}
-                  onAddGroup={props.onAddGroup}
-                  onShowContextMenu={
-                    (instance().status === "copied" ||
-                      instance().status === "fading") &&
-                    isElementConnected(instance().element)
-                      ? () => props.onShowContextMenuInstance?.(instance().id)
-                      : undefined
-                  }
-                  onHoverChange={(isHovered) =>
-                    props.onLabelInstanceHoverChange?.(instance().id, isHovered)
-                  }
-                  onRemoveItem={
-                    instance().itemId && props.onRemoveItem
-                      ? () => {
-                          const itemId = instance().itemId;
-                          if (itemId) props.onRemoveItem?.(itemId);
-                        }
-                      : undefined
-                  }
-                  onCreateTicket={
-                    instance().itemId && props.onCreateTicketForLooseItem
-                      ? () => {
-                          const itemId = instance().itemId;
-                          if (!itemId) return;
-                          const item = (props.commentItems ?? []).find(
-                            (ci) => ci.id === itemId,
-                          );
-                          if (item) props.onCreateTicketForLooseItem?.(item);
-                        }
-                      : undefined
-                  }
-                  onSubmitJiraComment={
-                    instance().groupId && props.onSubmitJiraComment
-                      ? (md, mentions, parentId) =>
-                          props.onSubmitJiraComment!(
-                            instance().groupId!,
-                            md,
-                            mentions,
-                            parentId,
-                          )
-                      : undefined
-                  }
-                  onSearchJiraUsers={props.onSearchJiraUsers}
-                  commentEditorToolbarVisible={
-                    props.commentEditorToolbarVisible
-                  }
-                  onRefreshJiraStatus={
-                    instance().groupId && props.onRefreshJiraStatus
-                      ? () => props.onRefreshJiraStatus!(instance().groupId!)
-                      : undefined
-                  }
-                  isCollapsing={isLabelExiting()}
-                  onCollapse={undefined}
-                />
-              </Show>
-            </>
+            </Show>
           );
         }}
       </Index>
@@ -407,7 +420,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           syncStatus={props.syncStatus}
           syncWorkspace={props.syncWorkspace}
           sidebarOpen={sidebarOpen()}
-          onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+          onToggleSidebar={() => sidebar.toggle(dashboardBtnRef ?? null)}
           onDashboardBtnRef={(el) => {
             dashboardBtnRef = el;
           }}
@@ -475,6 +488,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             group={state().group}
             commentItems={state().items}
             jiraProjectKey={props.jiraProjectKey ?? ""}
+            jiraSiteHost={props.jiraSiteHost}
             onTicketCreated={(groupId, ticketId, ticketUrl) => {
               // The dialog stays open to confirm the ticket; it closes via
               // its own Done button, which calls onClose.
@@ -487,9 +501,12 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       <Show when={sidebarOpen()}>
         <Sidebar
-          groups={(props.groups ?? []) as SelectionGroupWithJira[]}
+          focusRequest={sidebar.focusRequest()}
+          groups={props.groups ?? []}
           commentItems={props.commentItems ?? []}
           syncStatus={props.syncStatus ?? "local"}
+          onRetrySync={props.onRetrySync}
+          jiraSiteHost={props.jiraSiteHost}
           syncServerUrl={props.syncServerUrl}
           syncWorkspace={props.syncWorkspace}
           jiraProjectKey={props.jiraProjectKey}
@@ -509,9 +526,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onRefreshJiraStatus={props.onRefreshJiraStatus}
           commentEditorToolbarVisible={props.commentEditorToolbarVisible}
           onClose={() => {
-            setSidebarOpen(false);
+            sidebar.close();
             setActiveDetailGroupId(null);
-            dashboardBtnRef?.focus();
           }}
         />
       </Show>

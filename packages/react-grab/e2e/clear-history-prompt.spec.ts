@@ -224,10 +224,10 @@ test.describe("Clear History Prompt", () => {
       await reactGrab.clickCommentsButton();
       await expect(
         reactGrab.page.getByRole("button", {
-          name: "Hide all selections",
+          name: "Reveal all selections",
           exact: true,
         }),
-      ).toBeVisible();
+      ).toHaveAttribute("aria-pressed", "true");
       await reactGrab.clickToolbarCopyAll();
 
       await expect
@@ -336,7 +336,7 @@ test.describe("Clear History Prompt", () => {
         .toBe(true);
 
       await reactGrab.page
-        .getByRole("button", { name: "Toggle DEV mode", exact: true })
+        .getByRole("button", { name: "DEV mode", exact: true })
         .click();
       await reactGrab.page.waitForTimeout(200);
 

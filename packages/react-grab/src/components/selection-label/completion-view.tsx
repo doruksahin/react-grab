@@ -17,6 +17,9 @@ import { IconEllipsis } from "../icons/icon-ellipsis.jsx";
 import { cn } from "../../utils/cn.js";
 import { IconCheck } from "../icons/icon-check.jsx";
 import { BottomSection } from "./bottom-section.js";
+import { Button } from "../ui/button.js";
+import { IconButton } from "../ui/icon-button.js";
+import { Textarea } from "../ui/textarea.js";
 
 interface MoreOptionsButtonProps {
   onClick: () => void;
@@ -24,10 +27,12 @@ interface MoreOptionsButtonProps {
 
 const MoreOptionsButton: Component<MoreOptionsButtonProps> = (props) => {
   return (
-    <button
+    <IconButton
       data-react-grab-ignore-events
       data-react-grab-completion-more-options
-      class="flex items-center justify-center size-[18px] rounded-sm cursor-pointer bg-transparent hover:bg-accent text-muted-foreground hover:text-popover-foreground border-none outline-none p-0 shrink-0 press-scale"
+      label="More options"
+      size="icon-xs"
+      class="shrink-0 press-scale"
       // HACK: Native events with stopImmediatePropagation needed to block document-level handlers in the overlay system
       on:pointerdown={(event) => {
         event.stopImmediatePropagation();
@@ -38,7 +43,7 @@ const MoreOptionsButton: Component<MoreOptionsButtonProps> = (props) => {
       }}
     >
       <IconEllipsis size={14} />
-    </button>
+    </IconButton>
   );
 };
 
@@ -171,7 +176,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
     >
       <Show when={!didCopy() && (props.onDismiss || props.onUndo)}>
         <div class="contain-layout shrink-0 flex items-center justify-between gap-2 pt-1.5 pb-1 px-2 w-full h-fit">
-          <span class="text-popover-foreground text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+          <span class="text-popover-foreground text-body leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
             {displayStatusText()}
           </span>
           <div class="contain-layout shrink-0 flex items-center gap-2 h-fit">
@@ -179,30 +184,28 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
               <MoreOptionsButton onClick={handleShowContextMenu} />
             </Show>
             <Show when={props.supportsUndo && props.onUndo}>
-              <button
+              <Button
                 data-react-grab-completion-undo
-                class="contain-layout shrink-0 flex items-center justify-center px-[3px] py-px rounded-sm bg-destructive/10 cursor-pointer transition-all hover:bg-destructive/20 press-scale h-[17px]"
+                variant="chip-destructive"
+                class="shrink-0"
                 onClick={() => props.onUndo?.()}
               >
-                <span class="text-destructive text-[13px] leading-3.5 font-medium">
-                  Undo
-                </span>
-              </button>
+                Undo
+              </Button>
             </Show>
             <Show when={props.onDismiss}>
-              <button
+              <Button
                 data-react-grab-completion-dismiss
-                class="contain-layout shrink-0 flex items-center justify-center gap-1 px-[3px] py-px rounded-sm bg-popover [border-width:0.5px] border-solid border-border cursor-pointer transition-all hover:bg-accent press-scale h-[17px]"
+                variant="chip"
+                class="shrink-0"
                 onClick={handleAccept}
                 disabled={didCopy()}
               >
-                <span class="text-popover-foreground text-[13px] leading-3.5 font-medium">
-                  {props.dismissButtonText ?? "Keep"}
-                </span>
+                {props.dismissButtonText ?? "Keep"}
                 <Show when={!didCopy()}>
                   <IconReturn size={10} class="text-muted-foreground" />
                 </Show>
-              </button>
+              </Button>
             </Show>
           </div>
         </div>
@@ -213,7 +216,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
             size={14}
             class="text-popover-foreground shrink-0 animate-success-pop"
           />
-          <span class="text-popover-foreground text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+          <span class="text-popover-foreground text-body leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
             {displayStatusText()}
           </span>
           <Show when={props.onShowContextMenu && !props.supportsFollowUp}>
@@ -228,7 +231,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
           <Show when={props.previousPrompt}>
             <div class="flex items-center gap-1 w-full mb-1 overflow-hidden">
               <IconReply size={10} class="text-muted-foreground shrink-0" />
-              <span class="text-muted-foreground text-[11px] leading-3 font-medium truncate italic">
+              <span class="text-muted-foreground text-meta leading-3 font-medium truncate italic">
                 {props.previousPrompt}
               </span>
             </div>
@@ -237,17 +240,11 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
             class="shrink-0 flex justify-between items-end w-full min-h-4"
             style={{ "padding-left": props.previousPrompt ? "14px" : "0" }}
           >
-            <textarea
+            <Textarea
               ref={inputRef}
               data-react-grab-ignore-events
               data-react-grab-followup-input
-              class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
-              style={{
-                "field-sizing": "content",
-                "min-height": "16px",
-                "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px`,
-                "scrollbar-width": "none",
-              }}
+              style={{ "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px` }}
               value={followUpInput()}
               onInput={(event) => {
                 autoResizeTextarea(event.target, TEXTAREA_MAX_HEIGHT_PX);
@@ -257,16 +254,19 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
               placeholder="follow-up"
               rows={1}
             />
-            <button
+            <IconButton
               data-react-grab-followup-submit
+              label="Send follow-up"
+              variant="inverse"
+              size="icon-2xs"
               class={cn(
-                "contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale",
+                "shrink-0 ml-1",
                 !followUpInput().trim() && "opacity-35",
               )}
               onClick={handleFollowUpSubmit}
             >
               <IconSubmit size={10} class="text-popover" />
-            </button>
+            </IconButton>
           </div>
         </BottomSection>
       </Show>

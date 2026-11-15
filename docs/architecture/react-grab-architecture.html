@@ -72,7 +72,7 @@ th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .05em; text
   <header>
     <h1>React Grab architecture</h1>
     <p class="lede">The system as it runs today, one flow at a time, with the places it breaks marked on the flow itself. Every arrow below was traced in the code on the date given; nothing is drawn from intent.</p>
-    <p class="meta">13 Nov 2026 · branch claude/penpot-mcp-access-70fbd6 · HEAD 5618ed98</p>
+    <p class="meta">15 Nov 2026 · branch claude/ui-layers-tokens · HEAD cd312d10</p>
   </header>
 
   <section>
@@ -119,7 +119,12 @@ sequenceDiagram
   W-->>O: CommentItem[]
   O->>W: GET /workspaces/:id/groups
   W-->>O: SelectionGroup[]
-  Note over O: renders labels and sidebar from the fetched state
+  O->>W: GET /jira/site
+  W-->>O: siteUrl (JIRA_BASE_URL)
+  Note over O: renders pins and the sidebar from the fetched state
+  alt the Worker cannot be reached
+    Note over O: keeps local state, writes go to localStorage, the sidebar shows an offline banner; Retry runs the load again and sends what changed offline
+  end
   loop every 30 s, for each group that has a ticket
     O->>W: GET /groups/:groupId/jira-status
     W->>J: GET issue, comments, flag, assignee
@@ -127,7 +132,7 @@ sequenceDiagram
     W-->>O: status, assignee, comments
   end
 </pre></div>
-      <figcaption>The poll fans out per ticketed group, per open browser tab. Each tick is one Jira read per group.</figcaption>
+      <figcaption>The poll fans out per ticketed group, per open browser tab. Each tick is one Jira read per group. <code>GET /jira/site</code> only names the site in the Jira dialog; an older Worker without it answers 404 and the dialog names the project only.</figcaption>
     </figure>
     <div class="read warn"><b>Architect's read.</b> Polling cost grows as groups × open tabs. With ten people each watching twenty ticketed groups, that is 200 Jira reads every 30 seconds, all on one service account's rate limit. Fine at today's size; the first thing to break at scale.</div>
   </section>
@@ -319,6 +324,7 @@ sequenceDiagram
         <tr><td>ADR-0018</td><td>Worker configuration is a Zod schema, validated where it is read</td><td>Ticket, step 7</td></tr>
         <tr><td>ADR-0019</td><td>Comments and groups are written one item at a time; ticket fields are server-owned</td><td>Lost updates</td></tr>
         <tr><td>ADR-0020</td><td>Every data route needs the shared bearer token; CORS allows localhost plus <code>ALLOWED_ORIGINS</code></td><td>Context, Gate</td></tr>
+        <tr><td>ADR-0022</td><td>The overlay UI is three layers: tokens in <code>styles.css</code>, primitives in <code>components/ui/</code>, feature components that only compose them; placement on Floating UI, with pin stacking as the one custom rule. Saved comments are pins; the Jira thread lives in the sidebar.</td><td>Boot</td></tr>
       </tbody>
     </table></div>
   </section>

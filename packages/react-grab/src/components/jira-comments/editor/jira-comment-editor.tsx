@@ -1,7 +1,5 @@
 import { type Component, createSignal, onCleanup, onMount, Show } from "solid-js";
 import { Editor } from "@tiptap/core";
-import StarterKit from "@tiptap/starter-kit";
-import { Markdown } from "tiptap-markdown";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
@@ -22,6 +20,7 @@ const MentionWithMarkdown = Mention.extend({
     };
   },
 });
+import { markdownBaseExtensions } from "../../../utils/markdown-extensions.js";
 import { extractMentions } from "../../../features/jira-comments/extract-mentions.js";
 import { setupImageHandlers } from "../../../features/jira-comments/use-editor-images.js";
 import type { JiraCommentEditorProps } from "../../../features/jira-comments/types.js";
@@ -39,8 +38,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
     const ed = new Editor({
       element: editorEl,
       extensions: [
-        StarterKit,
-        Markdown.configure({ html: false, transformPastedText: true }),
+        ...markdownBaseExtensions,
         Link.configure({ openOnClick: false }),
         Underline,
         TextStyle,
@@ -110,7 +108,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         ref={editorEl}
         data-react-grab-comment-editor
         data-react-grab-ignore-events
-        class="jira-editor-content px-3 py-2 min-h-[2rem] text-[12px] text-foreground outline-none"
+        class="rich-text-content px-3 py-2 min-h-[2rem] text-caption text-foreground outline-none"
         style={{ "pointer-events": "auto" }}
       />
 

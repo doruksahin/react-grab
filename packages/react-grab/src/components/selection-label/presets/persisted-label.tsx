@@ -5,20 +5,22 @@ import type {
   SelectionLabelStatus,
   JiraDisplayFields,
 } from "../../../types.js";
-import type { SelectionGroupWithJira } from "../../../features/sidebar/jira-types.js";
-import type {
-  SubmitCommentFn,
-  SearchJiraUsersFn,
-} from "../../../features/jira-comments/types.js";
+import type { SelectionGroupWithJira } from "../../../features/selection-groups/types.js";
 import { SelectionLabelRoot } from "../index.js";
-import { SelectionLabelHeader } from "../parts/header.js";
+import { SelectionLabelCardHeader } from "../parts/card-header.js";
+import { CommentBody } from "../../jira-comments/comment-body.js";
+import {
+  latestComment,
+  sentCommentCount,
+} from "../../../features/jira-comments/latest-comment.js";
 import { SelectionLabelContent } from "../parts/content.js";
 import { DevInsightsSection } from "../parts/dev-insights-section.js";
 import { CopyingState } from "../parts/copying-state.js";
 import { ErrorView } from "../error-view.js";
-import { CreateTicketButton } from "../create-ticket-button.js";
+import { CreateTicketButton } from "../../jira/create-ticket-button.js";
 import { SelectionCardBody } from "../../sidebar/selection-card-body.js";
-import { ActiveGroupPicker } from "../../../features/selection-groups/components/active-group-picker.js";
+import { ActiveGroupPicker } from "../../selection-groups/active-group-picker.js";
+import { Button } from "../../ui/button.js";
 
 export interface PersistedLabelProps extends JiraDisplayFields {
   tagName?: string;
@@ -52,19 +54,20 @@ export interface PersistedLabelProps extends JiraDisplayFields {
   onShowContextMenu?: () => void;
   onHoverChange?: (isHovered: boolean) => void;
 
-  onSubmitJiraComment?: SubmitCommentFn;
-  onSearchJiraUsers?: SearchJiraUsersFn;
   onRefreshJiraStatus?: () => void;
-  commentEditorToolbarVisible?: boolean;
+  /** Opens the sidebar on this selection, where its Jira thread lives. */
+  onOpenThread?: () => void;
 
   isCollapsing?: boolean;
-  onCollapse?: () => void;
-  extraTopOffset?: number;
-  onPlacementChange?: (placement: "above" | "below") => void;
+  /** The pin to open under (ADR-0022 step 3); the selection otherwise. */
+  anchorElement?: HTMLElement;
 }
 
 export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
   const isCopying = () => props.status === "copying";
+  const comments = () => props.jiraComments ?? [];
+  const latest = () => latestComment(comments());
+  const commentCount = () => sentCommentCount(comments());
 
   return (
     <SelectionLabelRoot
@@ -74,10 +77,8 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
       status={props.status}
       isPromptMode={true}
       hideArrow={props.hideArrow}
-      extraTopOffset={props.extraTopOffset}
-      onPlacementChange={props.onPlacementChange}
+      anchorElement={props.anchorElement}
       isCollapsing={props.isCollapsing}
-      onCollapse={props.onCollapse}
       tagName={props.tagName}
       componentName={props.componentName}
       onRemoveItem={props.onRemoveItem}
@@ -98,12 +99,12 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
       </Show>
 
       <Show when={!isCopying()}>
-        <div class="contain-layout shrink-0 flex flex-col justify-center items-stretch min-w-[150px] max-w-[280px]">
-          <SelectionLabelHeader
+        <div class="contain-layout shrink-0 flex w-[280px] flex-col justify-center items-stretch">
+          <SelectionLabelCardHeader
+            title={props.inputValue}
             tagName={props.tagName}
             componentName={props.componentName}
             elementsCount={props.elementsCount}
-            inputValue={props.inputValue}
             jiraFlagged={props.jiraFlagged}
             jiraFlaggedAt={props.jiraFlaggedAt}
             jiraFlaggedBy={props.jiraFlaggedBy}
@@ -129,30 +130,68 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
               jiraTicketId={props.jiraTicketId}
               jiraUrl={props.jiraUrl}
               jiraStatus={props.groupStatus}
-              jiraStatusCategory={props.jiraStatusCategory}
+              jiraFlagged={props.jiraFlagged}
               jiraLabels={props.jiraLabels}
               jiraDueDate={props.jiraDueDate}
               jiraIssueType={props.jiraIssueType}
               jiraPriority={props.jiraPriority}
               jiraAssignee={props.jiraAssignee}
               jiraAssigneeAvatar={props.jiraAssigneeAvatar}
-              jiraComments={props.jiraComments}
-              onSubmitComment={props.onSubmitJiraComment}
-              onSearchUsers={props.onSearchJiraUsers}
               onRefreshStatus={
                 props.onRefreshJiraStatus
                   ? () => props.onRefreshJiraStatus?.()
                   : undefined
               }
-              commentEditorToolbarVisible={props.commentEditorToolbarVisible}
               hasElementScreenshot={props.hasElementScreenshot}
               hasFullPageScreenshot={props.hasFullPageScreenshot}
               noTicketAction={
-                props.onCreateTicket && !props.jiraTicketId
-                  ? <CreateTicketButton onClick={() => props.onCreateTicket?.()} class="w-full" />
-                  : undefined
+                props.onCreateTicket && !props.jiraTicketId ? (
+                  <CreateTicketButton
+                    onClick={() => props.onCreateTicket?.()}
+                    class="self-stretch"
+                  />
+                ) : undefined
               }
             />
+            {/* The thread itself lives in the sidebar; the card shows the
+                latest comment and opens it there (ADR-0022, Label S6.2). */}
+            <Show when={latest()}>
+              {(comment) => (
+                <div
+                  data-react-grab-latest-comment
+                  class="mt-2 flex w-full flex-col gap-0.5 rounded-md bg-muted px-2.5 py-2"
+                >
+                  <span class="text-caption text-muted-foreground">
+                    {comment().author}
+                    {commentCount() > 1
+                      ? ` · latest of ${commentCount()} comments`
+                      : ""}
+                  </span>
+                  <CommentBody
+                    compact
+                    body={comment().body}
+                    class="line-clamp-2 whitespace-normal text-body text-foreground"
+                  />
+                </div>
+              )}
+            </Show>
+            <Show when={props.onOpenThread}>
+              <Button
+                data-react-grab-ignore-events
+                data-react-grab-open-thread
+                type="button"
+                variant="inverse"
+                size="xs"
+                class="mt-2 h-7 px-3 text-caption"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  props.onOpenThread?.();
+                }}
+              >
+                Open thread
+              </Button>
+            </Show>
           </SelectionLabelContent>
           <DevInsightsSection
             tagName={props.tagName}

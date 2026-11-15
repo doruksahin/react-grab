@@ -94,6 +94,8 @@ The `onGroupClick` callback in `renderer.tsx` had a stub comment `/* Phase 2: na
 
 ### Component Tree
 
+> **Superseded (ADR-0022 step 3):** the StatsBar and its `stats-bar` and `progress-bar` attributes are removed. Status chips (`status-filter`, `components/sidebar/status-filter.tsx`) take their place and filter the groups. A sync error now shows an inline banner (`sync-offline-banner`) above the list, not a full-panel EmptyState.
+
 ```
 Sidebar
 ├── SidebarHeader                              (unchanged from Phase 1)

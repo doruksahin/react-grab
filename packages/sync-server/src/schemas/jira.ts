@@ -14,6 +14,11 @@ export const CreateJiraTicketResponse = z.object({
   jiraUrl: z.string().openapi({ example: "https://appier.atlassian.net/browse/ATT-123" }),
 });
 
+/** The Jira site every ticket is created on (JIRA_BASE_URL, ADR-0018). */
+export const JiraSite = z.object({
+  siteUrl: z.string().url().openapi({ example: "https://acme.atlassian.net" }),
+});
+
 export const JiraProject = z.object({
   key: z.string(),
   name: z.string(),

@@ -4,7 +4,7 @@ import {
   isFilterActive,
   applyFilters,
 } from "./filter-state.js";
-import type { SelectionGroupWithJira } from "./jira-types.js";
+import type { SelectionGroupWithJira } from "../selection-groups/types.js";
 
 // Per-preset matcher tests live in ./due-date/matchers.test.ts. This file only
 // covers the FilterState wiring: dueDatePreset's effect on EMPTY_FILTER /

@@ -4,7 +4,6 @@ import {
   onMount,
   onCleanup,
   createSignal,
-  createEffect,
   createMemo,
 } from "solid-js";
 import type { Component } from "solid-js";
@@ -14,11 +13,7 @@ import type {
   ContextMenuAction,
   ContextMenuActionContext,
 } from "../types.js";
-import {
-  ARROW_HEIGHT_PX,
-  DROPDOWN_OFFSCREEN_POSITION,
-  LABEL_GAP_PX,
-} from "../constants.js";
+import { ARROW_HEIGHT_PX, LABEL_GAP_PX } from "../constants.js";
 import { cn } from "../utils/cn.js";
 import { Arrow } from "./selection-label/arrow.js";
 import { TagBadge } from "./selection-label/tag-badge.js";
@@ -26,10 +21,12 @@ import { BottomSection } from "./selection-label/bottom-section.js";
 import { formatShortcut } from "../utils/format-shortcut.js";
 import { getTagDisplay } from "../utils/get-tag-display.js";
 import { resolveActionEnabled } from "../utils/resolve-action-enabled.js";
-import { nativeRequestAnimationFrame } from "../utils/native-raf.js";
-import { createMenuHighlight } from "../utils/create-menu-highlight.js";
+import { createFloating, virtualReference } from "../utils/floating.js";
+import type { ArrowPosition } from "../types.js";
+import type { Rect } from "@floating-ui/dom";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { registerOverlayDismiss } from "../utils/register-overlay-dismiss.js";
+import { ActionList, ActionListItem } from "./ui/action-list.js";
 
 interface ContextMenuProps {
   position: Position | null;
@@ -51,16 +48,7 @@ interface MenuItem {
 }
 
 export const ContextMenu: Component<ContextMenuProps> = (props) => {
-  let containerRef: HTMLDivElement | undefined;
-  const {
-    containerRef: highlightContainerRef,
-    highlightRef,
-    updateHighlight,
-    clearHighlight,
-  } = createMenuHighlight();
-
-  const [measuredWidth, setMeasuredWidth] = createSignal(0);
-  const [measuredHeight, setMeasuredHeight] = createSignal(0);
+  const [container, setContainer] = createSignal<HTMLDivElement>();
 
   const isVisible = () => props.position !== null;
 
@@ -71,74 +59,44 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
     }),
   );
 
-  const measureContainer = () => {
-    if (containerRef) {
-      const rect = containerRef.getBoundingClientRect();
-      setMeasuredWidth(rect.width);
-      setMeasuredHeight(rect.height);
-    }
-  };
+  const [arrowElement, setArrowElement] = createSignal<HTMLDivElement>();
 
-  createEffect(() => {
-    if (isVisible()) {
-      nativeRequestAnimationFrame(measureContainer);
-    }
-  });
-
-  const computedPosition = createMemo(() => {
+  // The element's rect at the cursor's x; the reference object stays the same
+  // while it moves, so autoUpdate is not restarted.
+  const anchorRect = (): Rect | null => {
     const bounds = props.selectionBounds;
     const clickPosition = props.position;
-    const labelWidth = measuredWidth();
-    const labelHeight = measuredHeight();
+    if (!bounds || !clickPosition) return null;
+    return {
+      x: clickPosition.x ?? bounds.x + bounds.width / 2,
+      y: bounds.y,
+      width: 0,
+      height: bounds.height,
+    };
+  };
+  const menuReference = virtualReference(
+    () => anchorRect() ?? { x: 0, y: 0, width: 0, height: 0 },
+  );
+  const hasAnchor = createMemo(() => anchorRect() !== null);
 
-    if (labelWidth === 0 || labelHeight === 0 || !bounds || !clickPosition) {
-      return {
-        left: DROPDOWN_OFFSCREEN_POSITION.left,
-        top: DROPDOWN_OFFSCREEN_POSITION.top,
-        arrowLeft: 0,
-        arrowPosition: "bottom" as const,
-      };
-    }
-
-    const cursorX = clickPosition.x ?? bounds.x + bounds.width / 2;
-    const positionLeft = Math.max(
-      LABEL_GAP_PX,
-      Math.min(
-        cursorX - labelWidth / 2,
-        window.innerWidth - labelWidth - LABEL_GAP_PX,
-      ),
-    );
-    const arrowLeft = Math.max(
-      ARROW_HEIGHT_PX,
-      Math.min(cursorX - positionLeft, labelWidth - ARROW_HEIGHT_PX),
-    );
-
-    const positionBelow =
-      bounds.y + bounds.height + ARROW_HEIGHT_PX + LABEL_GAP_PX;
-    const positionAbove =
-      bounds.y - labelHeight - ARROW_HEIGHT_PX - LABEL_GAP_PX;
-    const wouldOverflowBottom =
-      positionBelow + labelHeight > window.innerHeight;
-    const hasSpaceAbove = positionAbove >= 0;
-
-    const shouldFlipAbove = wouldOverflowBottom && hasSpaceAbove;
-    let positionTop = shouldFlipAbove ? positionAbove : positionBelow;
-    let arrowPosition: "top" | "bottom" = shouldFlipAbove ? "top" : "bottom";
-
-    if (wouldOverflowBottom && !hasSpaceAbove) {
-      const cursorY = clickPosition.y ?? bounds.y + bounds.height / 2;
-      positionTop = Math.max(
-        LABEL_GAP_PX,
-        Math.min(
-          cursorY + LABEL_GAP_PX,
-          window.innerHeight - labelHeight - LABEL_GAP_PX,
-        ),
-      );
-      arrowPosition = "top";
-    }
-
-    return { left: positionLeft, top: positionTop, arrowLeft, arrowPosition };
+  // Below the element at the cursor's x, flipping above when it does not fit.
+  const floating = createFloating({
+    reference: () => (hasAnchor() ? menuReference : null),
+    floating: container,
+    watch: anchorRect,
+    options: () => ({
+      placement: "bottom",
+      fallbackPlacements: ["top"],
+      offsetPx: ARROW_HEIGHT_PX + LABEL_GAP_PX,
+      paddingPx: LABEL_GAP_PX,
+      shiftCrossAxis: true,
+      arrowElement: arrowElement(),
+      arrowPaddingPx: ARROW_HEIGHT_PX,
+    }),
   });
+
+  const arrowPosition = (): ArrowPosition =>
+    floating.position()?.side === "top" ? "top" : "bottom";
 
   const menuItems = createMemo<MenuItem[]>(() => {
     const pluginActions = props.actions ?? [];
@@ -165,8 +123,6 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
   };
 
   onMount(() => {
-    measureContainer();
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isVisible()) return;
 
@@ -227,13 +183,12 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
   return (
     <Show when={isVisible()}>
       <div
-        ref={containerRef}
+        ref={setContainer}
         data-react-grab-ignore-events
         data-react-grab-context-menu
-        class="fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none"
+        class="fixed text-body antialiased drop-shadow-overlay select-none"
         style={{
-          top: `${computedPosition().top}px`,
-          left: `${computedPosition().left}px`,
+          ...floating.style(),
           "z-index": "var(--z-dropdown)",
           "pointer-events": "auto",
         }}
@@ -243,9 +198,9 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
         onContextMenu={suppressMenuEvent}
       >
         <Arrow
-          position={computedPosition().arrowPosition}
-          leftPercent={0}
-          leftOffsetPx={computedPosition().arrowLeft}
+          ref={setArrowElement}
+          position={arrowPosition()}
+          left={floating.position()?.arrowX}
         />
 
         <div
@@ -273,44 +228,34 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
             />
           </div>
           <BottomSection>
-            <div
-              ref={highlightContainerRef}
-              class="relative flex flex-col w-[calc(100%+16px)] -mx-2 -my-1.5"
+            <ActionList
+              label="Element actions"
+              class="w-[calc(100%+16px)] -mx-2 -my-1.5"
             >
-              <div
-                ref={highlightRef}
-                class="pointer-events-none absolute bg-accent opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
-              />
               <For each={menuItems()}>
                 {(item) => (
-                  <button
+                  <ActionListItem
                     data-react-grab-ignore-events
                     data-react-grab-menu-item={item.label.toLowerCase()}
-                    class="relative z-1 contain-layout flex items-center justify-between w-full px-2 py-1 cursor-pointer text-left border-none bg-transparent disabled:opacity-40 disabled:cursor-default"
+                    class="justify-between"
                     disabled={!item.enabled}
                     onPointerDown={(event) => event.stopPropagation()}
-                    onPointerEnter={(event) => {
-                      if (item.enabled) {
-                        updateHighlight(event.currentTarget);
-                      }
-                    }}
-                    onPointerLeave={clearHighlight}
                     onClick={(event) => handleAction(item, event)}
                   >
-                    <span class="text-[13px] leading-4 font-medium text-popover-foreground">
+                    <span class="text-body leading-4 font-medium text-popover-foreground">
                       {item.label}
                     </span>
                     <Show when={item.shortcut}>
                       {(shortcut) => (
-                        <span class="text-[11px] text-muted-foreground ml-4">
+                        <span class="text-meta text-muted-foreground ml-4">
                           {formatShortcut(shortcut())}
                         </span>
                       )}
                     </Show>
-                  </button>
+                  </ActionListItem>
                 )}
               </For>
-            </div>
+            </ActionList>
           </BottomSection>
         </div>
       </div>

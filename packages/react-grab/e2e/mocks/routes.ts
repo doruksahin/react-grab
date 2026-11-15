@@ -34,6 +34,7 @@ export interface MockOverrides {
   createJiraTicket: RouteHandler;
   getJiraTicketStatus: RouteHandler;
   addJiraComment: RouteHandler;
+  getJiraSite: RouteHandler;
   listJiraProjects: RouteHandler;
   listJiraIssueTypes: RouteHandler;
   listJiraPriorities: RouteHandler;
@@ -94,6 +95,7 @@ const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
     pattern: "**/workspaces/*/groups/*/jira-comment",
     method: "POST",
   },
+  getJiraSite: { pattern: "**/jira/site", method: "GET" },
   listJiraProjects: { pattern: "**/jira/projects", method: "GET" },
   listJiraIssueTypes: { pattern: "**/jira/issue-types*", method: "GET" },
   listJiraPriorities: { pattern: "**/jira/priorities", method: "GET" },
@@ -119,6 +121,7 @@ const DEFAULT_FIXTURES: Record<keyof MockOverrides, unknown> = {
   createJiraTicket: fixtures.createJiraTicketResponse,
   getJiraTicketStatus: null, // handled by group-specific logic below
   addJiraComment: fixtures.addJiraCommentResponse,
+  getJiraSite: fixtures.jiraSite,
   listJiraProjects: fixtures.jiraProjects,
   listJiraIssueTypes: fixtures.jiraIssueTypes,
   listJiraPriorities: fixtures.jiraPriorities,

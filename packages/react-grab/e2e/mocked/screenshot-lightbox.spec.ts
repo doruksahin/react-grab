@@ -287,9 +287,10 @@ test.describe("Screenshot Lightbox", { tag: ["@SPEC-017"] }, () => {
     expect(state?.mode).toBe("actual");
 
     // HACK: Trigger the source change behind the modal to verify the existing lightbox resets its mode.
+    // The modal lightbox hides the sidebar from the accessibility tree, so
+    // the thumbnail is found by its data attribute, not by role.
     await page
-      .getByRole("dialog", { name: "React Grab Dashboard", exact: true })
-      .getByAltText("Full page screenshot", { exact: true })
+      .locator("[data-react-grab-sidebar] img[alt='Full page screenshot']")
       .first()
       .evaluate((element) => {
         if (element instanceof HTMLElement) element.click();

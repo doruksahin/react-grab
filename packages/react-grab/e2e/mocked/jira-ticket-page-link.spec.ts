@@ -78,7 +78,7 @@ test.describe(
         await page.locator("[data-react-grab-toolbar-dashboard]").click();
         await page
           .getByRole("dialog", { name: "React Grab Dashboard" })
-          .getByRole("button", { name: /^Selections/ })
+          .getByRole("tab", { name: /^Selections/ })
           .click();
         const card = page
           .locator("[data-react-grab-selection-card]")

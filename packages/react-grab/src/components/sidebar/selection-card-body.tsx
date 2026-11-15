@@ -4,29 +4,16 @@ import type {
   SearchJiraUsersFn,
   SubmitCommentFn,
 } from "../../features/jira-comments/types.js";
-import { JiraTicketLink } from "../ui/jira-ticket-link.jsx";
+import { JiraTicketLink } from "../jira/jira-ticket-link.jsx";
 import { PriorityIcon } from "./priority-icon.jsx";
-import { UserAvatar } from "./UserAvatar.jsx";
+import { Avatar } from "../ui/avatar.jsx";
 import { CommentsSection } from "../jira-comments/comments-section.jsx";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
 import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
 import { ScreenshotThumb } from "./screenshot-thumb.js";
-
-const getStatusPillClass = (category?: string): string => {
-  switch (category) {
-    case "indeterminate":
-      return "text-blue-400 bg-blue-400/[0.12]";
-    case "done":
-      return "text-green-400 bg-green-400/[0.12]";
-    case "new":
-    default:
-      return "text-muted-foreground bg-foreground/[0.06]";
-  }
-};
-
-const getStatusDisplayText = (status?: string): string => {
-  return status ?? "To Do";
-};
+import { StatusChip } from "../ui/status-chip.jsx";
+import { getStatusChip } from "../../features/sidebar/get-status-chip.js";
+import { Badge } from "../ui/badge.jsx";
 
 const formatDueDate = (dueDate: string): string =>
   new Date(dueDate).toLocaleDateString("en-US", {
@@ -90,7 +77,7 @@ export interface SelectionCardBodyProps {
   jiraTicketId?: string;
   jiraUrl?: string;
   jiraStatus?: string;
-  jiraStatusCategory?: string;
+  jiraFlagged?: boolean;
 
   // Leading slot — optional element before the summary (e.g. multi-select checkbox)
   leading?: JSX.Element;
@@ -144,6 +131,12 @@ export interface SelectionCardBodyProps {
 
 export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
   const hasTicket = () => Boolean(props.jiraTicketId);
+  const statusChip = () =>
+    getStatusChip({
+      jiraTicketId: props.jiraTicketId,
+      jiraStatus: props.jiraStatus,
+      jiraFlagged: props.jiraFlagged,
+    });
   const screenshotContext = () => {
     const serverUrl = props.syncServerUrl;
     const workspace = props.syncWorkspace;
@@ -160,29 +153,19 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       subheader={props.subheader}
       summary={
         props.summary ? (
-          <div class="text-[12px] font-medium text-foreground truncate">
+          <div class="text-caption font-medium text-foreground truncate">
             {props.summary}
           </div>
         ) : undefined
       }
       statusPill={
         <Show when={hasTicket()}>
-          <span
-            class={`text-[9px] uppercase font-medium px-1.5 py-0.5 rounded ${getStatusPillClass(props.jiraStatusCategory)}`}
-          >
-            {getStatusDisplayText(props.jiraStatus)}
-          </span>
+          <StatusChip {...statusChip()} />
         </Show>
       }
       labels={
         <Show when={props.jiraLabels?.length}>
-          <For each={props.jiraLabels}>
-            {(label) => (
-              <span class="bg-foreground/[0.06] text-muted-foreground text-[9px] font-medium px-1.5 py-0.5 rounded">
-                {label}
-              </span>
-            )}
-          </For>
+          <For each={props.jiraLabels}>{(label) => <Badge>{label}</Badge>}</For>
         </Show>
       }
       dates={
@@ -190,7 +173,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
           when={props.timestamp !== undefined ? props.timestamp : undefined}
         >
           {(timestamp) => (
-            <div class="flex items-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
+            <div class="flex items-center gap-1.5 mt-1.5 text-meta text-muted-foreground">
               <svg width="12" height="12" viewBox="0 0 16 16">
                 <path
                   fill="currentColor"
@@ -259,7 +242,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
                 href={recordingUrl()}
                 target="_blank"
                 rel="noreferrer"
-                class="inline-flex items-center gap-1 mt-1.5 text-[10px] text-primary hover:underline"
+                class="inline-flex items-center gap-1 mt-1.5 text-meta text-primary hover:underline"
               >
                 Watch how we got here {"\u2197"}
               </a>
@@ -283,12 +266,12 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
 
           <Show when={props.jiraAssignee}>
             <div class="flex items-center gap-1">
-              <UserAvatar
-                avatarUrl={props.jiraAssigneeAvatar}
-                displayName={props.jiraAssignee ?? undefined}
-                size={20}
+              <Avatar
+                name={props.jiraAssignee}
+                src={props.jiraAssigneeAvatar}
+                size="md"
               />
-              <span class="text-[10px] text-muted-foreground">
+              <span class="text-meta text-muted-foreground">
                 {props.jiraAssignee}
               </span>
             </div>

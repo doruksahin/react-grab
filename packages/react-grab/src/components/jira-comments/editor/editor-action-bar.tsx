@@ -1,7 +1,18 @@
 import { type Component, Show } from "solid-js";
+import { Button } from "../../ui/button.js";
 
 const FormatIcon: Component = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
     <polyline points="4 7 4 4 20 4 20 7" />
     <line x1="9" y1="20" x2="15" y2="20" />
     <line x1="12" y1="4" x2="12" y2="20" />
@@ -14,37 +25,55 @@ export const EditorActionBar: Component<{
   onSubmit: () => void;
   onCancel?: () => void;
 }> = (props) => (
-  <div class="flex items-center gap-2 px-2 py-1.5 border-t border-border" data-react-grab-ignore-events>
-    <button
+  <div
+    class="flex items-center gap-2 px-2 py-1.5 border-t border-border"
+    data-react-grab-ignore-events
+  >
+    <Button
       type="button"
       data-react-grab-editor-toolbar-toggle
+      variant="subtle"
+      size="icon-xs"
       title="Toggle formatting"
-      classList={{ "bg-accent text-foreground": props.toolbarVisible }}
-      class="flex items-center justify-center p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
-      onMouseDown={(e) => { e.preventDefault(); props.onToggleToolbar(); }}
+      aria-pressed={props.toolbarVisible}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        props.onToggleToolbar();
+      }}
     >
       <FormatIcon />
-    </button>
-    <button
+    </Button>
+    <Button
       type="button"
       data-react-grab-comment-submit
-      class="px-3 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-      onMouseDown={(e) => { e.preventDefault(); props.onSubmit(); }}
+      size="xs"
+      onMouseDown={(e) => {
+        e.preventDefault();
+        props.onSubmit();
+      }}
     >
       Save
-    </button>
+    </Button>
     <Show when={props.onCancel}>
-      <button
+      <Button
         type="button"
         data-react-grab-comment-cancel
-        class="px-3 py-1 rounded text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-        onMouseDown={(e) => { e.preventDefault(); props.onCancel?.(); }}
+        variant="subtle"
+        size="xs"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          props.onCancel?.();
+        }}
       >
         Cancel
-      </button>
+      </Button>
     </Show>
-    <span data-react-grab-comment-hint class="ml-auto text-[10px] text-muted-foreground">
-      Tip: Type <kbd class="px-1 py-0.5 bg-muted rounded text-[9px]">@</kbd> to mention
+    <span
+      data-react-grab-comment-hint
+      class="ml-auto text-meta text-muted-foreground"
+    >
+      Tip: Type <kbd class="px-1 py-0.5 bg-muted rounded text-meta">@</kbd> to
+      mention
     </span>
   </div>
 );

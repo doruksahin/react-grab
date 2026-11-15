@@ -297,8 +297,26 @@ td:first-child { white-space: nowrap; }
         <tr><td>Worker configuration</td><td><span class="path">packages/sync-server/src/schemas/env.ts</span> · ADR-0018</td></tr>
         <tr><td>Jira integration, server side</td><td><span class="path">packages/sync-server/src/services/jira.service.ts</span></td></tr>
         <tr><td>Jira create dialog</td><td><span class="path">packages/react-grab/src/components/sidebar/jira-create-form.tsx</span></td></tr>
-        <tr><td>Ticket description text</td><td><span class="path">packages/react-grab/src/features/sidebar/jira-defaults.ts</span></td></tr>
+        <tr><td>Ticket summary and description text</td><td><span class="path">packages/react-grab/src/features/jira-ticket/business/</span> — <span class="path">default-summary.ts</span>, <span class="path">default-description.ts</span></td></tr>
+        <tr><td>Overlay look: tokens, primitives, feature UI</td><td><span class="path">packages/react-grab/src/styles.css</span> (<code>@theme</code>) · <span class="path">src/components/ui/</span> · <span class="path">src/components/&lt;feature&gt;/</span> · ADR-0022</td></tr>
         <tr><td>Mock data for tests</td><td><span class="path">packages/react-grab/e2e/mocks/fixtures.ts</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Overlay UI</span>
+    <h2>How the overlay is built and what it shows</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Topic</th><th>What is true now</th></tr></thead>
+      <tbody>
+        <tr><td>Three layers (ADR-0022)</td><td>Tokens in <span class="path">styles.css</span> <code>@theme</code> (colours, five text steps, radius) · primitives in <span class="path">components/ui/</span> (Button, IconButton, Badge, StatusChip, StatusDot, ToggleGroup, Tabs, Alert, Textarea, Pin, Menu, Select, Popover, Tooltip) · feature components only compose them. <code>pnpm lint</code> rejects a raw <code>&lt;button&gt;</code>, hex colours and <code>text-[Npx]</code> outside <span class="path">components/ui/</span>.</td></tr>
+        <tr><td>Placement</td><td>Floating UI through <span class="path">utils/floating.ts</span> (ADR-0005). The one custom rule is <span class="path">features/selection-label/business/stack-pins.ts</span>, which keeps pins of nearby elements apart.</td></tr>
+        <tr><td>Saved comments on the page</td><td>Pins by default: status dot, ticket key, first words. Click (or Enter) opens a card under the pin with the latest comment and <b>Open thread</b>, which opens the sidebar on that selection. The Jira thread and its editor live only in the sidebar.</td></tr>
+        <tr><td>Turning pins off</td><td><code>init({ collapsibleLabels: false })</code> shows saved labels open, with no pins (SPEC-016). <code>labelsStartCollapsed: false</code> keeps pins but opens their cards.</td></tr>
+        <tr><td>Sidebar</td><td>Status chips filter the groups (same filter as the Filter menu). When the sync server is unreachable an inline banner says so and <b>Retry</b> connects again; changes made offline stay on the device and are sent once it answers.</td></tr>
+        <tr><td>Jira create dialog</td><td>Summary first, from the comment · "Into <i>KEY</i> on <i>site</i>" from <code>GET /jira/site</code> · the description shows as a preview, <b>Edit</b> shows the markdown that is sent.</td></tr>
+        <tr><td>Checking the look</td><td>One screenshot per surface in <span class="path">e2e/mocked/overlay-surfaces-visual.spec.ts</span>; baselines are chromium-darwin only. After a deliberate change, update with <code>--update-snapshots=all</code> for that test and look at the PNGs.</td></tr>
       </tbody>
     </table></div>
   </section>
@@ -324,6 +342,10 @@ td:first-child { white-space: nowrap; }
       <div class="card">
         <div class="want">Every sync request returns 401</div>
         <div class="where">The overlay's token does not match the server's. Compare <code>VITE_REACT_GRAB_SYNC_TOKEN</code> in the host app with <code>SYNC_API_TOKEN</code> in <span class="path">.dev.vars</span> (or production's), then restart both.</div>
+      </div>
+      <div class="card">
+        <div class="want">The Jira dialog says only "Into ATT"</div>
+        <div class="where">The deployed Worker predates <code>GET /jira/site</code>, so the site name is unknown. Deploy the Worker (see "To deploy a change"); nothing else is needed.</div>
       </div>
       <div class="card">
         <div class="want">Tickets land in the wrong place</div>

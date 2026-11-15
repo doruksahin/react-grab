@@ -1,4 +1,4 @@
-import type { SelectionGroupWithJira } from "../../src/features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../src/features/selection-groups/types.js";
 import { test, expect } from "../fixtures.js";
 
 /**

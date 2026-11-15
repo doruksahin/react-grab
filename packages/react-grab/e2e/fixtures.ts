@@ -1,5 +1,5 @@
 import type { CommentItem, Options } from "../src/types.js";
-import type { SelectionGroupWithJira } from "../src/features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../src/features/selection-groups/types.js";
 import type { init, initSync, populateSync } from "../src/core/index.js";
 
 declare global {

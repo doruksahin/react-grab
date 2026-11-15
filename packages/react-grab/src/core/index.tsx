@@ -48,8 +48,8 @@ import { groupComments } from "../features/selection-groups/business/group-opera
 import { isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
+import { isPinnedLabel } from "../features/selection-label/business/is-pinned-label.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
-import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { createSyncLayer } from "../features/sync/sync-layer.js";
 import type { SyncConfig, SyncStatus } from "../features/sync/types.js";
 import {
@@ -203,6 +203,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     keyHoldDuration: DEFAULT_KEY_HOLD_DURATION_MS,
     allowActivationInsideInput: true,
     maxContextLines: DEFAULT_MAX_CONTEXT_LINES,
+    // ADR-0022 step 3: saved labels are pins that start closed.
+    collapsibleLabels: true,
+    labelsStartCollapsed: true,
     ...scriptOptions,
     ...pendingSyncOptions,
     ...rawOptions,
@@ -331,7 +334,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     const [clearPromptPosition, setClearPromptPosition] =
       createSignal<DropdownAnchor | null>(null);
     let toolbarElement: HTMLDivElement | undefined;
-    let dropdownTrackingFrameId: number | null = null;
     const commentElementMap = new Map<string, Element[]>();
     const [clockFlashTrigger, setClockFlashTrigger] = createSignal(0);
     const [isCommentsHoverOpen, setIsCommentsHoverOpen] = createSignal(false);
@@ -2080,9 +2082,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       if (actionCycleIdleTimeoutId) {
         window.clearTimeout(actionCycleIdleTimeoutId);
       }
-      if (dropdownTrackingFrameId !== null) {
-        nativeCancelAnimationFrame(dropdownTrackingFrameId);
-      }
       grabbedBoxTimeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
       grabbedBoxTimeouts.clear();
       cancelAllLabelFades();
@@ -2521,7 +2520,14 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       }, 0);
     };
 
+    // The saved selection whose pin card is open because its comment is
+    // hovered in the comments menu.
+    const [previewedItemId, setPreviewedItemId] = createSignal<string | null>(
+      null,
+    );
+
     const clearCommentsHoverPreviews = () => {
+      setPreviewedItemId(null);
       for (const { boxId, labelId } of commentsHoverPreviews) {
         actions.removeGrabbedBox(boxId);
         if (labelId) {
@@ -2540,6 +2546,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         boxId: string;
         labelId: string | null;
       }[] = commentsHoverPreviews,
+      // "saved": the selection's own label (a pin); "preview": a passing
+      // card for a hovered comment, not a pin; "none": highlight only.
+      labelKind: "saved" | "preview" | "none" = "saved",
     ) => {
       if (previewBounds.length === 0) return;
 
@@ -2555,11 +2564,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         });
 
         let labelId: string | null = null;
-        if (index === 0) {
+        if (index === 0 && labelKind !== "none") {
           labelId = `${idPrefix}-label-${item.id}`;
           actions.addLabelInstance({
             id: labelId,
-            itemId: item.id,
+            // A preview stands in for the selection without being it, so it
+            // carries no item id and never becomes a pin.
+            itemId: labelKind === "saved" ? item.id : undefined,
             selectionBounds: bounds,
             tagName: item.tagName,
             componentName: item.componentName,
@@ -2639,15 +2650,12 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         if (!effectiveGroupId) return withLiveGroup;
         const group = selectionGroups
           .groups()
-          .find((g) => g.id === effectiveGroupId) as
-          | SelectionGroupWithJira
-          | undefined;
+          .find((g) => g.id === effectiveGroupId);
         return {
           ...withLiveGroup,
           groupStatus: group?.jiraStatus,
           jiraTicketId: group?.jiraTicketId,
           jiraUrl: group?.jiraUrl,
-          jiraStatusCategory: group?.jiraStatusCategory,
           jiraAssignee: group?.jiraAssignee,
           jiraReporter: group?.jiraReporter,
           jiraAssigneeAvatar: group?.jiraAssigneeAvatar,
@@ -2693,67 +2701,48 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       const previewBounds = connectedElements.map((element) =>
         createElementBounds(element),
       );
-      addCommentItemPreview(item, previewBounds, connectedElements, idPrefix);
+      // A hovered comment opens the card of its pin when it has one;
+      // otherwise a passing card shows for it.
+      const hasPin = store.labelInstances.some(
+        (instance) => isPinnedLabel(instance) && instance.itemId === item.id,
+      );
+      if (hasPin) setPreviewedItemId(item.id);
+      addCommentItemPreview(
+        item,
+        previewBounds,
+        connectedElements,
+        idPrefix,
+        commentsHoverPreviews,
+        hasPin ? "none" : "preview",
+      );
     };
 
-    const stopTrackingDropdownPosition = () => {
-      if (dropdownTrackingFrameId !== null) {
-        nativeCancelAnimationFrame(dropdownTrackingFrameId);
-        dropdownTrackingFrameId = null;
-      }
-    };
-
-    const startTrackingDropdownPosition = (computePosition: () => void) => {
-      stopTrackingDropdownPosition();
-      const updatePosition = () => {
-        computePosition();
-        dropdownTrackingFrameId = nativeRequestAnimationFrame(updatePosition);
-      };
-      updatePosition();
-    };
-
+    // The dropdown follows the toolbar element itself (Floating UI
+    // autoUpdate in createAnchoredDropdown), so only the edge is read here.
     const computeDropdownAnchor = (): DropdownAnchor | null => {
       if (!toolbarElement) return null;
       const toolbarRect = toolbarElement.getBoundingClientRect();
-      const edge = getNearestEdge(toolbarRect);
-
-      if (edge === "left" || edge === "right") {
-        return {
-          x: edge === "left" ? toolbarRect.right : toolbarRect.left,
-          y: toolbarRect.top + toolbarRect.height / 2,
-          edge,
-          toolbarWidth: toolbarRect.width,
-        };
-      }
-
       return {
-        x: toolbarRect.left + toolbarRect.width / 2,
-        y: edge === "top" ? toolbarRect.bottom : toolbarRect.top,
-        edge,
+        edge: getNearestEdge(toolbarRect),
         toolbarWidth: toolbarRect.width,
+        reference: toolbarElement,
       };
     };
 
-    const openTrackedDropdown = (
-      setPosition: (anchor: DropdownAnchor) => void,
-    ) => {
-      startTrackingDropdownPosition(() => {
-        const anchor = computeDropdownAnchor();
-        if (anchor) setPosition(anchor);
-      });
+    const openDropdown = (setPosition: (anchor: DropdownAnchor) => void) => {
+      const anchor = computeDropdownAnchor();
+      if (anchor) setPosition(anchor);
     };
 
     const dismissCommentsDropdown = () => {
       cancelCommentsHoverOpenTimeout();
       cancelCommentsHoverCloseTimeout();
-      stopTrackingDropdownPosition();
       clearCommentsHoverPreviews();
       setCommentsDropdownPosition(null);
       setIsCommentsHoverOpen(false);
     };
 
     const dismissToolbarMenu = () => {
-      stopTrackingDropdownPosition();
       setToolbarMenuPosition(null);
     };
 
@@ -2761,7 +2750,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       actions.hideContextMenu();
       dismissToolbarMenu();
       dismissClearPrompt();
-      openTrackedDropdown(setCommentsDropdownPosition);
+      openDropdown(setCommentsDropdownPosition);
     };
 
     let commentsHoverOpenTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -2792,11 +2781,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     const showClearPrompt = () => {
       dismissCommentsDropdown();
       dismissToolbarMenu();
-      openTrackedDropdown(setClearPromptPosition);
+      openDropdown(setClearPromptPosition);
     };
 
     const dismissClearPrompt = () => {
-      stopTrackingDropdownPosition();
       setClearPromptPosition(null);
     };
 
@@ -2813,7 +2801,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         actions.hideContextMenu();
         dismissCommentsDropdown();
         dismissClearPrompt();
-        openTrackedDropdown(setToolbarMenuPosition);
+        openDropdown(setToolbarMenuPosition);
       }
     };
 
@@ -3022,14 +3010,17 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     };
 
     const handleCommentItemHover = (commentItemId: string | null) => {
-      // Don't show hover preview for items already revealed (they have pinned previews)
       clearCommentsHoverPreviews();
       if (!commentItemId) return;
       const item = commentItems().find(
         (innerItem) => innerItem.id === commentItemId,
       );
       if (!item) return;
-      if (visibility.isItemRevealed(item.id)) return;
+      // A revealed item is already on the page: open its pin's card.
+      if (visibility.isItemRevealed(item.id)) {
+        setPreviewedItemId(item.id);
+        return;
+      }
       showCommentItemPreview(item, "comment-hover");
     };
 
@@ -3180,11 +3171,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 inspectNavigationState={inspectNavigationState()}
                 onInspectSelect={handleInspectSelect}
                 labelInstances={computedLabelInstancesWithStatus()}
-                collapsibleLabelsDefault={initialOptions.collapsibleLabels}
-                labelsStartCollapsedDefault={
-                  initialOptions.labelsStartCollapsed ??
-                  initialOptions.collapsibleLabels
-                }
+                labelPinsEnabled={Boolean(initialOptions.collapsibleLabels)}
+                labelPinsStartClosed={Boolean(
+                  initialOptions.labelsStartCollapsed,
+                )}
+                previewedItemId={previewedItemId()}
                 dragVisible={dragVisible()}
                 dragBounds={dragBounds()}
                 grabbedBoxes={computedGrabbedBoxes()}
@@ -3299,9 +3290,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 onToggleSelectionsRevealed={visibility.handleToggleParent}
                 onToggleCommentItemRevealed={visibility.handleToggleItem}
                 syncStatus={derivedSyncStatus()}
+                onRetrySync={syncLayer.retry}
                 syncWorkspace={syncLayer.workspace() ?? undefined}
                 syncServerUrl={syncLayer.serverUrl() ?? undefined}
                 jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
+                jiraSiteHost={syncLayer.jiraSiteHost() ?? undefined}
                 groups={selectionGroups.groups()}
                 activeGroupId={selectionGroups.activeGroupId()}
                 onAddGroup={selectionGroups.handleAddGroup}
@@ -3529,7 +3522,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         disposeRenderer?.();
         cancelCommentsHoverOpenTimeout();
         cancelCommentsHoverCloseTimeout();
-        stopTrackingDropdownPosition();
         toolbarStateChangeCallbacks.clear();
         syncLayer.dispose();
         dispose();

@@ -86,6 +86,10 @@ interface SearchJiraUsers200Item {
   avatarUrl: string | null;
 }
 
+interface GetJiraSite200 {
+  siteUrl: string;
+}
+
 interface ListJiraProjects200Item {
   key: string;
   name: string;
@@ -334,6 +338,14 @@ export const addJiraCommentResponse: AddJiraComment200 = {
 export const searchJiraUsers: SearchJiraUsers200Item[] = users;
 
 // ---------------------------------------------------------------------------
+// The Jira site tickets go to — GET /jira/site (ADR-0022 step 3)
+// ---------------------------------------------------------------------------
+
+export const jiraSite: GetJiraSite200 = {
+  siteUrl: "https://adcreative.atlassian.net",
+};
+
+// ---------------------------------------------------------------------------
 // 9. List JIRA projects — GET /api/workspaces/:id/jira/projects
 // ---------------------------------------------------------------------------
 
@@ -405,6 +417,7 @@ export const allFixtures = {
   createJiraTicketResponse,
   addJiraCommentResponse,
   searchJiraUsers,
+  jiraSite,
   jiraProjects,
   jiraIssueTypes,
   jiraPriorities,

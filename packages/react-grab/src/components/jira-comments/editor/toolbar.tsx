@@ -1,4 +1,7 @@
-import { type Component, type JSX, createSignal, Show } from "solid-js";
+import { type Component, type JSX, createSignal } from "solid-js";
+import { Button } from "../../ui/button.js";
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover.js";
+import { FLOATING_GAP_PX } from "../../../constants.js";
 
 export const ToolbarButton: Component<{
   active?: boolean;
@@ -8,27 +11,25 @@ export const ToolbarButton: Component<{
   children: JSX.Element;
   dataAction?: string;
 }> = (props) => (
-  <button
+  <Button
     type="button"
+    variant="subtle"
+    size="xs"
     title={props.title}
+    aria-pressed={Boolean(props.active)}
     disabled={props.disabled}
     data-react-grab-ignore-events
-    {...(props.dataAction ? { "data-react-grab-editor-action": props.dataAction } : {})}
+    {...(props.dataAction
+      ? { "data-react-grab-editor-action": props.dataAction }
+      : {})}
     onMouseDown={(e) => {
       e.preventDefault();
       if (!props.disabled) props.onClick();
     }}
-    class={[
-      "px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors",
-      props.active
-        ? "bg-accent text-accent-foreground"
-        : "text-muted-foreground hover:text-foreground hover:bg-accent",
-      props.disabled ? "opacity-30 cursor-not-allowed" : "",
-    ].join(" ")}
     style={{ "pointer-events": "auto" }}
   >
     {props.children}
-  </button>
+  </Button>
 );
 
 export const ToolbarSeparator: Component = () => (
@@ -44,30 +45,39 @@ export const ToolbarDropdown: Component<{
   const [open, setOpen] = createSignal(false);
 
   return (
-    <div class="relative" data-react-grab-ignore-events>
-      <button
+    <Popover
+      open={open()}
+      onOpenChange={setOpen}
+      placement="bottom-start"
+      gutter={FLOATING_GAP_PX}
+    >
+      <PopoverTrigger
+        as={Button}
         type="button"
+        variant="subtle"
+        size="xs"
         title={props.title}
-        {...(props.dataDropdown ? { "data-react-grab-editor-dropdown": props.dataDropdown } : {})}
-        onMouseDown={(e) => {
-          e.preventDefault();
-          setOpen((v) => !v);
-        }}
-        class="px-1.5 py-0.5 rounded text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors flex items-center gap-0.5"
+        data-react-grab-ignore-events
+        {...(props.dataDropdown
+          ? { "data-react-grab-editor-dropdown": props.dataDropdown }
+          : {})}
+        // Keep the editor's focus and selection while the dropdown opens.
+        onMouseDown={(event: MouseEvent) => event.preventDefault()}
         style={{ "pointer-events": "auto" }}
       >
         {props.label}
-        <span class="text-[8px] text-muted-foreground">▾</span>
-      </button>
-      <Show when={open()}>
-        <div
-          class="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50 min-w-[120px] p-1"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => setOpen(false)}
-        >
-          {props.children}
-        </div>
-      </Show>
-    </div>
+        <span class="text-muted-foreground">▾</span>
+      </PopoverTrigger>
+      <PopoverContent
+        data-react-grab-ignore-events
+        class="min-w-[120px]"
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        onCloseAutoFocus={(event) => event.preventDefault()}
+        onMouseDown={(event: MouseEvent) => event.preventDefault()}
+        onClick={() => setOpen(false)}
+      >
+        {props.children}
+      </PopoverContent>
+    </Popover>
   );
 };

@@ -150,11 +150,14 @@ features:
     files:
       - packages/react-grab/src/components/sidebar/index.tsx
       - packages/react-grab/src/core/index.tsx
+      - packages/react-grab/src/features/jira-ticket/business/default-description.ts
+      - packages/react-grab/src/features/jira-ticket/business/default-summary.ts
+      - packages/react-grab/src/features/jira-ticket/business/site-host.ts
+      - packages/react-grab/src/features/jira-ticket/issue-type-icons.ts
+      - packages/react-grab/src/features/jira-ticket/priority-icons.ts
       - packages/react-grab/src/features/sidebar/derive-status.ts
       - packages/react-grab/src/features/sidebar/extract-file-path.ts
       - packages/react-grab/src/features/sidebar/index.ts
-      - packages/react-grab/src/features/sidebar/jira-defaults.ts
-      - packages/react-grab/src/features/sidebar/jira-types.ts
       - packages/react-grab/src/features/sidebar/relative-time.ts
       - packages/react-grab/src/features/sidebar/screenshot-url.ts
       - packages/react-grab/src/features/sidebar/use-lazy-visible.ts
@@ -226,7 +229,6 @@ features:
       - packages/react-grab/src/components/selection-label/arrow.tsx
       - packages/react-grab/src/components/selection-label/bottom-section.tsx
       - packages/react-grab/src/components/selection-label/completion-view.tsx
-      - packages/react-grab/src/components/selection-label/create-ticket-button.tsx
       - packages/react-grab/src/components/selection-label/discard-prompt.tsx
       - packages/react-grab/src/components/selection-label/error-view.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
@@ -245,16 +247,20 @@ features:
     status: implemented
     prds: [PRD-002]
     specs: [SPEC-003, SPEC-009]
-    adrs: [ADR-0003, ADR-0004, ADR-0005]
+    adrs: [ADR-0003, ADR-0004, ADR-0005, ADR-0022]
     files:
       - packages/dashboard/src/api/endpoints/jira/jira.ts
       - packages/dashboard/src/components/jira/jira-create-dialog.tsx
       - packages/react-grab/src/components/sidebar/jira-create-button.tsx
       - packages/react-grab/src/components/sidebar/jira-create-dialog.tsx
       - packages/react-grab/src/components/sidebar/jira-create-form.tsx
+      - packages/react-grab/src/features/jira-ticket/business/default-description.ts
+      - packages/react-grab/src/features/jira-ticket/business/default-summary.ts
+      - packages/react-grab/src/features/jira-ticket/business/site-host.ts
+      - packages/react-grab/src/features/jira-ticket/index.ts
+      - packages/react-grab/src/features/jira-ticket/issue-type-icons.ts
+      - packages/react-grab/src/features/jira-ticket/priority-icons.ts
       - packages/react-grab/src/features/sidebar/extract-file-path.ts
-      - packages/react-grab/src/features/sidebar/jira-defaults.ts
-      - packages/react-grab/src/features/sidebar/jira-types.ts
       - packages/sync-server/src/routes/jira.ts
       - packages/sync-server/src/schemas/jira.ts
       - packages/sync-server/src/services/jira.service.ts
@@ -292,7 +298,6 @@ features:
       - packages/react-grab/src/features/sidebar/due-date/matchers.ts
       - packages/react-grab/src/features/sidebar/due-date/presets.ts
       - packages/react-grab/src/features/sidebar/filter-state.ts
-      - packages/react-grab/src/features/sidebar/jira-types.ts
       - packages/react-grab/src/features/sidebar/status-colors.ts
 
   jira-avatars:
@@ -301,7 +306,7 @@ features:
     prds: [PRD-005]
     specs: [SPEC-008]
     files:
-      - packages/react-grab/src/features/sidebar/jira-types.ts
+      - packages/react-grab/src/features/selection-groups/types.ts
       - packages/sync-server/src/schemas/jira.ts
       - packages/sync-server/src/services/jira.service.ts
 
@@ -315,7 +320,7 @@ features:
       - packages/react-grab/src/components/icons/icon-flag.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
       - packages/react-grab/src/components/sidebar/group-card.tsx
-      - packages/react-grab/src/features/sidebar/jira-types.ts
+      - packages/react-grab/src/features/selection-groups/types.ts
       - packages/react-grab/src/features/sidebar/resolve-display-color.ts
       - packages/react-grab/src/features/sidebar/status-colors.ts
       - packages/sync-server/src/services/jira.service.ts
@@ -337,11 +342,11 @@ features:
       - packages/react-grab/src/components/selection-label/arrow.tsx
       - packages/react-grab/src/components/selection-label/bottom-section.tsx
       - packages/react-grab/src/components/selection-label/completion-view.tsx
-      - packages/react-grab/src/components/selection-label/create-ticket-button.tsx
       - packages/react-grab/src/components/selection-label/discard-prompt.tsx
       - packages/react-grab/src/components/selection-label/error-view.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
       - packages/react-grab/src/components/selection-label/tag-badge.tsx
+      - packages/react-grab/src/components/ui/action-list.tsx
       - packages/react-grab/src/components/ui/button.tsx
       - packages/react-grab/src/components/ui/collapsible.tsx
       - packages/react-grab/src/components/ui/tooltip.tsx
@@ -355,12 +360,10 @@ features:
     specs: [SPEC-013]
     adrs: [ADR-0007, ADR-0010]
     files:
-      - packages/react-grab/src/components/jira-comments/avatar.tsx
       - packages/react-grab/src/components/jira-comments/comment-item.tsx
       - packages/react-grab/src/components/jira-comments/comments-section.tsx
       - packages/react-grab/src/components/jira-comments/editor/jira-comment-editor.tsx
       - packages/react-grab/src/components/jira-comments/editor/mention-picker.tsx
-      - packages/react-grab/src/features/jira-comments/avatar-utils.ts
       - packages/react-grab/src/features/jira-comments/mention-cache.ts
       - packages/react-grab/src/features/jira-comments/parse-comment-body.ts
       - packages/react-grab/src/features/jira-comments/types.ts
@@ -375,17 +378,27 @@ features:
     status: planned
     prds: [PRD-010]
     files:
-      - packages/react-grab/src/components/sidebar/UserAvatar.tsx
       - packages/react-grab/src/components/sidebar/group-card.tsx
+      - packages/react-grab/src/components/sidebar/group-children.tsx
       - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
+      - packages/react-grab/src/components/ui/avatar.tsx
+      - packages/react-grab/src/components/ui/badge.tsx
+      - packages/react-grab/src/components/ui/button.tsx
+      - packages/react-grab/src/components/ui/icon-button.tsx
+      - packages/react-grab/src/components/ui/status-chip.tsx
+      - packages/react-grab/src/components/ui/status-dot.tsx
+      - packages/react-grab/src/components/ui/tooltip.tsx
       - packages/sync-server/src/services/jira.service.ts
-  collapsible-label:
-    description: TODO
-    status: discovered
+  label-pins:
+    description: Saved labels as pins that open a card (ADR-0022 step 3; was collapsible-label, SPEC-016)
+    status: implemented
+    specs: [SPEC-016]
+    adrs: [ADR-0022]
     files:
-      - packages/react-grab/src/features/collapsible-label/index.ts
-      - packages/react-grab/src/features/collapsible-label/types.ts
-      - packages/react-grab/src/features/collapsible-label/use-collapsible-label.ts
+      - packages/react-grab/src/components/selection-label/label-pin.tsx
+      - packages/react-grab/src/features/selection-label/business/is-pinned-label.ts
+      - packages/react-grab/src/features/selection-label/business/stack-pins.ts
+      - packages/react-grab/src/features/selection-label/hooks/use-label-pins.ts
   image-lightbox:
     description: TODO
     status: discovered
@@ -408,6 +421,10 @@ features:
       - packages/react-grab/src/features/session-recording/business/gzip-json.ts
       - packages/react-grab/src/features/session-recording/business/recent-window.ts
       - packages/react-grab/src/features/session-recording/index.ts
+  selection-label:
+    description: TODO
+    status: discovered
+    files: []
 
 data_flows:
   sync_layer:
@@ -428,6 +445,7 @@ data_flows:
         consumers:
           - packages/react-grab/src/core/index.tsx
           - packages/react-grab/src/features/sync/index.ts
+          - packages/react-grab/src/features/sync/sync-layer.test.ts
           - packages/react-grab/src/features/sync/sync-layer.ts
       comments:
         store_path: store.comments
@@ -436,6 +454,7 @@ data_flows:
         consumers:
           - packages/react-grab/src/core/index.tsx
           - packages/react-grab/src/features/sync/index.ts
+          - packages/react-grab/src/features/sync/sync-layer.test.ts
           - packages/react-grab/src/features/sync/sync-layer.ts
       jira_status:
         store_path: store.groups[i].jiraStatus (fine-grained per-group)
@@ -448,6 +467,7 @@ data_flows:
         consumers:
           - packages/react-grab/src/core/index.tsx
           - packages/react-grab/src/features/sync/index.ts
+          - packages/react-grab/src/features/sync/sync-layer.test.ts
           - packages/react-grab/src/features/sync/sync-layer.ts
 
 # ─── Data attributes catalog ──────────────────────────────────────────────────
@@ -512,11 +532,12 @@ data_attrs:
         - sidebar
         - sidebar-header
         - sidebar-search
-        - stats-bar
+        - status-filter
+        - sync-offline-banner
+        - sync-retry
         - tab-bar
         - status-legend
         - filter-chips
-        - progress-bar
         - bulk-action-bar
         - bulk-group-picker
         - jira-status-banner
@@ -525,6 +546,7 @@ data_attrs:
         - due-date-filter
         - active-group-picker
         - active-group-picker-locked
+        - group-picker-flyout
         - detail-header
         - group-card
         - group-detail
@@ -554,6 +576,8 @@ data_attrs:
         - dev-insights
         - selection-header
         - selection-content
+        - latest-comment
+        - open-thread
 
     generation:
       description: Active generation flow inside a selection label (prompt textarea, submit, abort)
@@ -563,6 +587,7 @@ data_attrs:
         - generation-abort
         - generation-submit
         - context-input
+        - composer-footer
 
     completion:
       description: Selection-label completion view — streaming result, follow-up, undo/dismiss/more-options
@@ -606,6 +631,9 @@ data_attrs:
         - jira-open-ticket
         - create-ticket
         - jira-ticket-link
+        - jira-destination
+        - jira-description-preview
+        - jira-description-input
 
     comments:
       description: JIRA comment authoring, display, mention picker, comment thread
@@ -676,6 +704,19 @@ data_attrs:
         - lightbox-viewport
         - lightbox-close
 
+    ui:
+      description: Shared primitives in components/ui (ADR-0022) — appearance only, no domain
+      owns:
+        - icon-button
+        - status-chip
+        - status-dot
+        - badge
+        - chip
+        - pin
+        - avatar
+        - avatar-image
+        - avatar-fallback
+
   # Bare-verb attrs — flagged by `pnpm arch:lint` as warnings. Empty after
   # Phase 2 migration; add any future bare-verb regressions here to silence
   # them temporarily while a rename is in progress.
@@ -685,10 +726,10 @@ data_attrs:
   # Format: attr-suffix → { scope, src: <count>, tests: <count> }
   inventory:
     comment-author: {scope: comments, src: 1, tests: 0}
-    comment-avatar: {scope: comments, src: 2, tests: 0}
+    comment-avatar: {scope: comments, src: 3, tests: 0}
     comment-body: {scope: comments, src: 1, tests: 0}
     comment-cancel: {scope: comments, src: 1, tests: 0}
-    comment-composer: {scope: comments, src: 1, tests: 3}
+    comment-composer: {scope: comments, src: 1, tests: 5}
     comment-editor: {scope: comments, src: 1, tests: 2}
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
@@ -726,7 +767,7 @@ data_attrs:
     color-picker: {scope: editor, src: 1, tests: 0}
     color-reset: {scope: editor, src: 1, tests: 0}
     editor-action: {scope: editor, src: 1, tests: 0}
-    editor-dropdown: {scope: editor, src: 1, tests: 0}
+    editor-dropdown: {scope: editor, src: 2, tests: 0}
     editor-image-input: {scope: editor, src: 1, tests: 1}
     editor-toolbar: {scope: editor, src: 1, tests: 0}
     editor-toolbar-toggle: {scope: editor, src: 1, tests: 0}
@@ -735,22 +776,26 @@ data_attrs:
     error: {scope: error, src: 1, tests: 1}
     error-ok: {scope: error, src: 1, tests: 0}
     error-retry: {scope: error, src: 1, tests: 1}
-    filter-badge: {scope: filter, src: 1, tests: 0}
+    filter-badge: {scope: filter, src: 1, tests: 1}
     filter-clear: {scope: filter, src: 1, tests: 0}
     filter-row: {scope: filter, src: 5, tests: 3}
+    composer-footer: {scope: generation, src: 1, tests: 0}
     context-input: {scope: generation, src: 1, tests: 0}
     generation-abort: {scope: generation, src: 1, tests: 1}
     generation-input: {scope: generation, src: 1, tests: 1}
     generation-submit: {scope: generation, src: 1, tests: 0}
-    create-ticket: {scope: jira, src: 1, tests: 4}
+    create-ticket: {scope: jira, src: 1, tests: 5}
     jira-create: {scope: jira, src: 1, tests: 0}
+    jira-description-input: {scope: jira, src: 1, tests: 2}
+    jira-description-preview: {scope: jira, src: 1, tests: 1}
+    jira-destination: {scope: jira, src: 1, tests: 2}
     jira-dialog: {scope: jira, src: 1, tests: 0}
     jira-dots: {scope: jira, src: 1, tests: 0}
     jira-error: {scope: jira, src: 1, tests: 2}
-    jira-form: {scope: jira, src: 1, tests: 5}
+    jira-form: {scope: jira, src: 1, tests: 6}
     jira-open-ticket: {scope: jira, src: 1, tests: 0}
-    jira-required: {scope: jira, src: 2, tests: 3}
-    jira-success: {scope: jira, src: 1, tests: 5}
+    jira-required: {scope: jira, src: 1, tests: 3}
+    jira-success: {scope: jira, src: 1, tests: 6}
     jira-ticket-link: {scope: jira, src: 1, tests: 0}
     image-lightbox: {scope: lightbox, src: 1, tests: 3}
     lightbox-close: {scope: lightbox, src: 1, tests: 1}
@@ -762,56 +807,69 @@ data_attrs:
     overlay-canvas: {scope: overlay, src: 1, tests: 0}
     product: {scope: overlay, src: 1, tests: 61}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 67, tests: 6}
+    ignore-events: {scope: reserved, src: 66, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
     collapse-label: {scope: selection, src: 1, tests: 2}
-    collapsed-dot: {scope: selection, src: 1, tests: 6}
+    collapsed-dot: {scope: selection, src: 1, tests: 8}
     collapsed-dot-preview: {scope: selection, src: 1, tests: 0}
     dev-insights: {scope: selection, src: 1, tests: 0}
+    latest-comment: {scope: selection, src: 1, tests: 1}
+    open-thread: {scope: selection, src: 1, tests: 1}
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 4}
+    selection-card: {scope: selection, src: 2, tests: 8}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
-    selection-header: {scope: selection, src: 1, tests: 0}
-    selection-label: {scope: selection, src: 1, tests: 16}
+    selection-header: {scope: selection, src: 3, tests: 0}
+    selection-label: {scope: selection, src: 1, tests: 19}
     selection-remove: {scope: selection, src: 1, tests: 0}
     unread-indicator: {scope: selection, src: 1, tests: 0}
-    active-group-picker: {scope: sidebar, src: 1, tests: 0}
+    active-group-picker: {scope: sidebar, src: 1, tests: 1}
     active-group-picker-locked: {scope: sidebar, src: 1, tests: 0}
     bulk-action-bar: {scope: sidebar, src: 1, tests: 0}
     bulk-group-picker: {scope: sidebar, src: 1, tests: 0}
     detail-header: {scope: sidebar, src: 1, tests: 1}
     due-date-filter: {scope: sidebar, src: 1, tests: 2}
     empty-state: {scope: sidebar, src: 1, tests: 0}
-    filter-chips: {scope: sidebar, src: 1, tests: 1}
-    group-card: {scope: sidebar, src: 2, tests: 2}
+    filter-chips: {scope: sidebar, src: 1, tests: 0}
+    group-card: {scope: sidebar, src: 2, tests: 5}
     group-detail: {scope: sidebar, src: 1, tests: 0}
     group-list: {scope: sidebar, src: 2, tests: 3}
+    group-picker-flyout: {scope: sidebar, src: 1, tests: 1}
     jira-status-banner: {scope: sidebar, src: 1, tests: 0}
     loose-selection-card: {scope: sidebar, src: 1, tests: 0}
     loose-selection-list: {scope: sidebar, src: 1, tests: 0}
-    progress-bar: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}
-    sidebar: {scope: sidebar, src: 1, tests: 0}
+    sidebar: {scope: sidebar, src: 1, tests: 2}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
     sidebar-search: {scope: sidebar, src: 1, tests: 2}
-    stats-bar: {scope: sidebar, src: 1, tests: 0}
+    status-filter: {scope: sidebar, src: 1, tests: 2}
     status-legend: {scope: sidebar, src: 1, tests: 0}
+    sync-offline-banner: {scope: sidebar, src: 1, tests: 2}
+    sync-retry: {scope: sidebar, src: 1, tests: 0}
     tab-bar: {scope: sidebar, src: 1, tests: 0}
     ungrouped-section: {scope: sidebar, src: 1, tests: 2}
-    toolbar: {scope: toolbar, src: 2, tests: 8}
+    toolbar: {scope: toolbar, src: 2, tests: 10}
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
-    toolbar-comments: {scope: toolbar, src: 3, tests: 6}
-    toolbar-copy-all: {scope: toolbar, src: 3, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 17}
-    toolbar-devmode: {scope: toolbar, src: 2, tests: 2}
+    toolbar-comments: {scope: toolbar, src: 2, tests: 6}
+    toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 20}
+    toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
-    toolbar-toggle: {scope: toolbar, src: 2, tests: 4}
+    toolbar-toggle: {scope: toolbar, src: 1, tests: 4}
     toolbar-visibility: {scope: toolbar, src: 1, tests: 0}
+    avatar: {scope: ui, src: 1, tests: 0}
+    avatar-fallback: {scope: ui, src: 1, tests: 1}
+    avatar-image: {scope: ui, src: 1, tests: 1}
+    badge: {scope: ui, src: 1, tests: 0}
+    chip: {scope: ui, src: 1, tests: 0}
+    icon-button: {scope: ui, src: 1, tests: 0}
+    pin: {scope: ui, src: 1, tests: 0}
+    status-chip: {scope: ui, src: 1, tests: 0}
+    status-dot: {scope: ui, src: 1, tests: 0}
 
 # ─── API contract flow ────────────────────────────────────────────────────────
 
@@ -992,3 +1050,7 @@ decree:
       title: Record how the user got to a selection with rrweb, and share it by a capability link
       file: decree/adr/0021-record-sessions-with-rrweb-and-share-them-by-capability-link.md
       status: accepted
+    ADR-0022:
+      title: "Overlay UI in three layers: tokens, primitives, feature components"
+      file: decree/adr/0022-overlay-ui-layers-tokens-primitives-features.md
+      status: proposed

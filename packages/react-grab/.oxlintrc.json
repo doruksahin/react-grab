@@ -1,6 +1,9 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript"],
+  "plugins": [
+    "typescript",
+    "react"
+  ],
   "settings": {
     "typescript": {
       "tsconfigPath": "./tsconfig.json"
@@ -71,7 +74,12 @@
   },
   "overrides": [
     {
-      "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "files": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.mts",
+        "**/*.cts"
+      ],
       "rules": {
         "constructor-super": "off",
         "no-class-assign": "off",
@@ -91,6 +99,77 @@
         "prefer-rest-params": "error",
         "prefer-spread": "error"
       }
+    },
+    {
+      "files": [
+        "src/components/**/*.tsx",
+        "src/components/**/*.ts"
+      ],
+      "rules": {
+        "react/forbid-elements": [
+          "error",
+          {
+            "forbid": [
+              {
+                "element": "button",
+                "message": "Use Button or IconButton from components/ui (ADR-0022)."
+              }
+            ]
+          }
+        ],
+        "overlay-ui/no-raw-styles": "error"
+      }
+    },
+    {
+      "files": [
+        "src/components/ui/**/*.tsx",
+        "src/components/ui/**/*.ts"
+      ],
+      "rules": {
+        "react/forbid-elements": "off",
+        "overlay-ui/no-raw-styles": "off",
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "../[!.]*/**",
+                  "../*.js",
+                  "../*.jsx",
+                  "../../core/**",
+                  "../../features/**",
+                  "../../generated/**",
+                  "../../index.js",
+                  "../../primitives.js",
+                  "../../types.js"
+                ],
+                "message": "components/ui imports only ui/, utils/ and constants (ADR-0022)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/features/**/*.tsx"
+      ],
+      "rules": {
+        "overlay-ui/no-jsx": "error"
+      }
+    },
+    {
+      "files": [
+        "src/features/dev-mode/dev-mode-context.tsx",
+        "src/features/**/*.test.tsx"
+      ],
+      "rules": {
+        "overlay-ui/no-jsx": "off"
+      }
     }
+  ],
+  "jsPlugins": [
+    "./scripts/oxlint/overlay-ui-plugin.mjs"
   ]
 }

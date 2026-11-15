@@ -43,11 +43,17 @@ const clickInShadow = async (page: Page, selector: string): Promise<void> => {
 
 test.describe("Collapsible Label", { tag: ["@SPEC-016"] }, () => {
   test(
-    "expanded default — copying preserves saved labels and their toggle dots",
+    "turned off — saved labels stay open, with no pins (SPEC-016 AC1-AC3)",
     {
       annotation: { type: "ac", description: "SPEC-016 AC1-AC3" },
     },
     async ({ page, reactGrab }) => {
+      // ADR-0022 step 3 makes pins the default; turning them off restores
+      // SPEC-016's flag-off behaviour: open labels, no dot.
+      await reactGrab.reinitialize({ collapsibleLabels: false });
+      await expect
+        .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+        .toBe(true);
       await reactGrab.populate();
       await expect
         .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
@@ -76,7 +82,7 @@ test.describe("Collapsible Label", { tag: ["@SPEC-016"] }, () => {
         "[data-react-grab-collapse-label]",
       );
 
-      expect(dotCount).toBe(savedLabelCount);
+      expect(dotCount).toBe(0);
       expect(labelCount).toBe(savedLabelCount);
       expect(collapseBtnCount).toBe(0);
     },

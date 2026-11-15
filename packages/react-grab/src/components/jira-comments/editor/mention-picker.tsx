@@ -2,20 +2,36 @@ import { type Component, For, createSignal } from "solid-js";
 import { render } from "solid-js/web";
 import type { SuggestionOptions, SuggestionProps } from "@tiptap/suggestion";
 import type { JiraUserSuggestion } from "../../../features/jira-comments/types.js";
-import { getCachedUsers, setCachedUsers } from "../../../features/jira-comments/mention-cache.js";
+import {
+  getCachedUsers,
+  setCachedUsers,
+} from "../../../features/jira-comments/mention-cache.js";
 import { useShadowMount } from "../../../utils/shadow-context.js";
-import { Avatar } from "../avatar.js";
+import {
+  type FloatingOptions,
+  trackFloating,
+} from "../../../utils/floating.js";
+import { Avatar } from "../../ui/avatar.js";
 
-/** Position the popup above the cursor (preferred) or below if no room above. */
-function positionPopup(popup: HTMLDivElement, rect: DOMRect) {
-  popup.style.left = `${rect.left}px`;
-  requestAnimationFrame(() => {
-    const h = popup.offsetHeight || 200;
-    popup.style.top = rect.top >= h + 4
-      ? `${rect.top - h - 4}px`
-      : `${rect.bottom + 4}px`;
-  });
-}
+// Above the typed mention (preferred) or below it when there is no room.
+const POPUP_OPTIONS: FloatingOptions = {
+  placement: "top-start",
+  fallbackPlacements: ["bottom-start"],
+};
+
+const trackPopupPosition = (
+  decorationNode: HTMLElement,
+  popup: HTMLDivElement,
+): (() => void) =>
+  trackFloating(
+    decorationNode,
+    popup,
+    () => POPUP_OPTIONS,
+    ({ x, y }) => {
+      popup.style.left = `${x}px`;
+      popup.style.top = `${y}px`;
+    },
+  ).stop;
 
 const MentionList: Component<{
   items: () => JiraUserSuggestion[];
@@ -37,8 +53,13 @@ const MentionList: Component<{
           props.onSelect(i());
         }}
       >
-        <Avatar name={user.displayName} url={user.avatarUrl} size={22} />
-        <span class="text-[12px] truncate">{user.displayName}</span>
+        <Avatar
+          data-react-grab-comment-avatar
+          name={user.displayName}
+          src={user.avatarUrl}
+          size="lg"
+        />
+        <span class="text-caption truncate">{user.displayName}</span>
       </div>
     )}
   </For>
@@ -60,6 +81,29 @@ export function createMentionSuggestion(
       let popup: HTMLDivElement | null = null;
       let dispose: (() => void) | null = null;
       let commandFn: SuggestionProps["command"] | null = null;
+      let stopTracking: (() => void) | null = null;
+      let trackedNode: HTMLElement | null = null;
+
+      const closePopup = () => {
+        stopTracking?.();
+        stopTracking = null;
+        trackedNode = null;
+        dispose?.();
+        popup?.remove();
+        popup = null;
+        dispose = null;
+      };
+
+      // autoUpdate already follows the node; restart only when it changes.
+      const followDecoration = (decorationNode: HTMLElement | null) => {
+        if (decorationNode === trackedNode && stopTracking) return;
+        stopTracking?.();
+        trackedNode = decorationNode;
+        stopTracking =
+          popup && decorationNode
+            ? trackPopupPosition(decorationNode, popup)
+            : null;
+      };
 
       // Signals bridge TipTap's imperative API → SolidJS reactivity
       const [items, setItems] = createSignal<JiraUserSuggestion[]>([]);
@@ -75,7 +119,8 @@ export function createMentionSuggestion(
       return {
         onStart(props: SuggestionProps) {
           popup = document.createElement("div");
-          popup.className = "rounded-md border border-border bg-popover shadow-lg p-1 min-w-[200px] max-h-[200px] overflow-y-auto";
+          popup.className =
+            "rounded-md border border-border bg-popover shadow-lg p-1 min-w-[200px] max-h-[200px] overflow-y-auto";
           popup.setAttribute("data-react-grab-mention-picker", "");
           popup.setAttribute("data-react-grab-ignore-events", "");
           popup.style.pointerEvents = "auto";
@@ -88,27 +133,33 @@ export function createMentionSuggestion(
 
           // Mount SolidJS component tree into the popup
           dispose = render(
-            () => <MentionList items={items} selected={selected} onSelect={selectItem} />,
+            () => (
+              <MentionList
+                items={items}
+                selected={selected}
+                onSelect={selectItem}
+              />
+            ),
             popup,
           );
 
           const mount = useShadowMount();
           mount.appendChild(popup);
 
-          const { decorationNode } = props as SuggestionProps & { decorationNode: HTMLElement | null };
-          if (decorationNode) {
-            positionPopup(popup, decorationNode.getBoundingClientRect());
-          }
+          const { decorationNode } = props as SuggestionProps & {
+            decorationNode: HTMLElement | null;
+          };
+          followDecoration(decorationNode);
         },
         onUpdate(props: SuggestionProps) {
           commandFn = props.command;
           setItems(props.items as JiraUserSuggestion[]);
           setSelected(0);
 
-          const { decorationNode } = props as SuggestionProps & { decorationNode: HTMLElement | null };
-          if (popup && decorationNode) {
-            positionPopup(popup, decorationNode.getBoundingClientRect());
-          }
+          const { decorationNode } = props as SuggestionProps & {
+            decorationNode: HTMLElement | null;
+          };
+          followDecoration(decorationNode);
         },
         onKeyDown(props: { event: KeyboardEvent }) {
           const len = items().length;
@@ -125,19 +176,13 @@ export function createMentionSuggestion(
             return true;
           }
           if (props.event.key === "Escape") {
-            dispose?.();
-            popup?.remove();
-            popup = null;
-            dispose = null;
+            closePopup();
             return true;
           }
           return false;
         },
         onExit() {
-          dispose?.();
-          popup?.remove();
-          popup = null;
-          dispose = null;
+          closePopup();
         },
       };
     },

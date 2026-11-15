@@ -26,6 +26,7 @@ export {
   AddJiraCommentResponse,
   JiraUser,
   JiraProject,
+  JiraSite,
   JiraIssueType,
   JiraPriority,
   JiraTicketStatus,

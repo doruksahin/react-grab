@@ -1,6 +1,15 @@
-import { type Component, createMemo, For, Show } from "solid-js";
+import {
+  type Component,
+  createMemo,
+  For,
+  Show,
+  createEffect,
+  createSignal,
+  on,
+  onCleanup,
+} from "solid-js";
 import type { CommentItem } from "../../types.js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import {
   applyFilters,
   type FilterState,
@@ -16,11 +25,13 @@ import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { isSelectionLocked } from "../../features/selection-groups/business/ticket-lock.js";
 import { SelectionCardBody } from "./selection-card-body.js";
 import { SelectionCheckbox } from "../ui/selection-checkbox.js";
-import { SelectionCard } from "../ui/selection-card.js";
-import { CreateTicketButton } from "../ui/create-ticket-button.js";
-import { DevInsights } from "../ui/dev-insights/index.js";
+import { SelectionCard } from "../selection/selection-card.js";
+import type { SidebarFocusRequest } from "../../features/sidebar/hooks/use-sidebar-session.js";
+import { SIDEBAR_FOCUS_HIGHLIGHT_MS } from "../../constants.js";
+import { CreateTicketButton } from "../jira/create-ticket-button.js";
+import { DevInsights } from "../dev-insights/index.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
-import { ActiveGroupPicker } from "../../features/selection-groups/components/active-group-picker.js";
+import { ActiveGroupPicker } from "../selection-groups/active-group-picker.js";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];
@@ -39,11 +50,48 @@ interface SelectionListTabProps {
   onCreateTicket?: (item: CommentItem) => void;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
   onAddGroup?: (name: string) => void;
+  /** Scroll to, focus and briefly mark a selection (a label's "Open thread"). */
+  focusRequest?: SidebarFocusRequest | null;
 }
 
 export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
   const isDevMode = useDevMode();
   const lightbox = useImageLightbox();
+
+  // Cards by selection id, for a focus request to scroll to.
+  const cardElements = new Map<string, HTMLElement>();
+  const [highlightedItemId, setHighlightedItemId] = createSignal<string | null>(
+    null,
+  );
+
+  // Once per request: scroll to the card, move focus to it and mark it until
+  // the timer runs out or the user moves on.
+  createEffect(
+    on(
+      () => props.focusRequest,
+      (request) => {
+        if (!request) return;
+        const frame = requestAnimationFrame(() => {
+          const card = cardElements.get(request.itemId);
+          if (!card) return;
+          card.scrollIntoView({ block: "center" });
+          card.focus({ preventScroll: true });
+          setHighlightedItemId(request.itemId);
+          card.addEventListener("blur", () => setHighlightedItemId(null), {
+            once: true,
+          });
+        });
+        const timeoutId = setTimeout(
+          () => setHighlightedItemId(null),
+          SIDEBAR_FOCUS_HIGHLIGHT_MS,
+        );
+        onCleanup(() => {
+          cancelAnimationFrame(frame);
+          clearTimeout(timeoutId);
+        });
+      },
+    ),
+  );
 
   const groupMap = createMemo(
     () => new Map(props.groups.map((g) => [g.id, g])),
@@ -88,7 +136,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
   return (
     <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2.5">
       <Show when={filteredItems().length === 0}>
-        <div class="py-8 text-center text-[12px] text-muted-foreground italic">
+        <div class="py-8 text-center text-caption text-muted-foreground italic">
           No matching selections
         </div>
       </Show>
@@ -122,7 +170,24 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
           };
 
           return (
-            <SelectionCard flagged={isFlagged()} selected={isSelected()}>
+            <SelectionCard
+              flagged={isFlagged()}
+              selected={isSelected()}
+              tabIndex={-1}
+              class={
+                item.id === highlightedItemId()
+                  ? "ring-1 ring-selection outline-none"
+                  : "outline-none"
+              }
+              ref={(element) => {
+                cardElements.set(item.id, element);
+                onCleanup(() => {
+                  if (cardElements.get(item.id) === element) {
+                    cardElements.delete(item.id);
+                  }
+                });
+              }}
+            >
               <SelectionCardBody
                 leading={
                   props.onToggleSelect && checkable() ? (
@@ -164,7 +229,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 jiraTicketId={group()?.jiraTicketId}
                 jiraUrl={group()?.jiraUrl}
                 jiraStatus={group()?.jiraStatus}
-                jiraStatusCategory={group()?.jiraStatusCategory}
+                jiraFlagged={group()?.jiraFlagged}
                 jiraLabels={group()?.jiraLabels}
                 jiraDueDate={group()?.jiraDueDate}
                 jiraIssueType={group()?.jiraIssueType}
@@ -183,23 +248,23 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                   <DevInsights.Field
                     label="tag"
                     value={item.tagName}
-                    color="green"
+                    kind="tag"
                   />
                   <DevInsights.Field
                     label="node"
                     value={item.componentName ?? item.elementName}
-                    color="purple"
+                    kind="component"
                   />
                   <DevInsights.Attributes content={item.content} />
                   <Show when={item.elementSelectors?.[0]}>
                     <DevInsights.Section label="selector">
-                      <span class="text-[9px] font-mono text-[#cbd5e1] break-all">
+                      <span class="text-meta font-mono text-foreground/80 break-all">
                         {item.elementSelectors?.[0]}
                       </span>
                     </DevInsights.Section>
                   </Show>
                   <DevInsights.Section label="html">
-                    <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
+                    <pre class="text-meta font-mono text-foreground/80 whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
                       {item.content}
                     </pre>
                   </DevInsights.Section>

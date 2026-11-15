@@ -23,8 +23,8 @@ interface SyntheticGroupSeed {
 
 /**
  * Best-effort name inferred from the item being ticketed. Used as the
- * synthetic group's `name`, which feeds `defaultSummary(group)` in the
- * Jira create form.
+ * synthetic group's `name`, the fallback of `defaultSummary` (features/jira-ticket) when the item
+ * has no comment text.
  */
 export const inferSyntheticGroupName = (item: SyntheticGroupSeed): string =>
   item.componentName || item.elementName || "Untitled";

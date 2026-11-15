@@ -25,7 +25,6 @@ export const ClearCommentsPrompt: Component<ClearCommentsPromptProps> = (
   );
 
   onMount(() => {
-    dropdown.measure();
     const unregisterOverlayDismiss = registerOverlayDismiss({
       isOpen: () => Boolean(props.position),
       onDismiss: props.onCancel,
@@ -45,10 +44,9 @@ export const ClearCommentsPrompt: Component<ClearCommentsPromptProps> = (
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-clear-comments-prompt
-        class="fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
+        class="fixed text-body antialiased drop-shadow-overlay select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
         style={{
-          top: `${dropdown.displayPosition().top}px`,
-          left: `${dropdown.displayPosition().left}px`,
+          ...dropdown.floatingStyle(),
           "z-index": "var(--z-dialog)",
           "pointer-events": dropdown.isAnimatedIn() ? "auto" : "none",
           "transform-origin":

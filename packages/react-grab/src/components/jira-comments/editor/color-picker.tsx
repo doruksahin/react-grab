@@ -1,9 +1,7 @@
 import { type Component, For } from "solid-js";
-
-const COLORS = [
-  "#e74c3c", "#e67e22", "#f1c40f", "#2ecc71", "#1abc9c",
-  "#3498db", "#9b59b6", "#e91e63", "#95a5a6", "#2c3e50",
-];
+import { EDITOR_TEXT_COLORS } from "../../../features/jira-comments/editor-text-colors.js";
+import { IconButton } from "../../ui/icon-button.js";
+import { ToggleGroup, ToggleGroupItem } from "../../ui/toggle-group.js";
 
 export const ColorPicker: Component<{
   onSelect: (color: string | null) => void;
@@ -11,39 +9,41 @@ export const ColorPicker: Component<{
 }> = (props) => (
   <div
     data-react-grab-color-picker
-    class="grid gap-1 p-2"
-    style={{ "grid-template-columns": "repeat(5, 1fr)", "min-width": "140px" }}
+    class="flex flex-col gap-1 p-2"
+    style={{ "min-width": "140px" }}
     data-react-grab-ignore-events
   >
-    <button
-      type="button"
+    <IconButton
       data-react-grab-color-reset
-      class="w-6 h-6 rounded border border-dashed border-muted-foreground flex items-center justify-center text-[10px] text-muted-foreground hover:border-foreground"
-      title="Reset color"
+      label="Reset color"
+      variant="outline"
+      class="border-dashed text-meta"
       onMouseDown={(e) => {
         e.preventDefault();
         props.onSelect(null);
       }}
     >
       ↺
-    </button>
-    <For each={COLORS}>
-      {(color) => (
-        <button
-          type="button"
-          data-react-grab-color={color}
-          class={[
-            "w-6 h-6 rounded border-2 transition-all hover:scale-110",
-            props.activeColor === color ? "border-foreground" : "border-transparent",
-          ].join(" ")}
-          style={{ background: color }}
-          title={color}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            props.onSelect(color);
-          }}
-        />
-      )}
-    </For>
+    </IconButton>
+    <ToggleGroup
+      variant="swatch"
+      aria-label="Text color"
+      value={props.activeColor ?? null}
+      // Clicking the active swatch re-applies its colour, as before; only
+      // the reset button removes the colour (ToggleGroup would send null).
+      onChange={(color) => props.onSelect(color ?? props.activeColor ?? null)}
+    >
+      <For each={EDITOR_TEXT_COLORS}>
+        {(color) => (
+          <ToggleGroupItem
+            value={color.value}
+            color={color.value}
+            data-react-grab-color={color.value}
+            aria-label={color.name}
+            onMouseDown={(e) => e.preventDefault()}
+          />
+        )}
+      </For>
+    </ToggleGroup>
   </div>
 );

@@ -1,6 +1,6 @@
 // packages/react-grab/src/components/sidebar/jira-status-banner.tsx
 import { type Component } from "solid-js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import { JiraProgressDots } from "./jira-progress-dots.js";
 
 interface JiraStatusBannerProps {
@@ -19,12 +19,12 @@ export const JiraStatusBanner: Component<JiraStatusBannerProps> = (props) => {
           href={props.group.jiraUrl ?? "#"}
           target="_blank"
           rel="noopener noreferrer"
-          class="text-[12px] font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+          class="text-caption font-semibold text-link hover:text-link-hover transition-colors"
           style={{ "pointer-events": "auto" }}
         >
           {props.group.jiraTicketId}
         </a>
-        <span class="text-[10px] text-muted-foreground">
+        <span class="text-meta text-muted-foreground">
           {props.group.jiraStatus ?? "—"}
         </span>
       </div>

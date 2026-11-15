@@ -46,12 +46,9 @@ import {
   unfreeze,
   isFreezeActive,
 } from "react-grab-upstream/primitives";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.js";
 import { Kbd } from "../kbd.jsx";
-import {
-  getButtonSpacingClass,
-  getHitboxConstraintClass,
-} from "../../utils/toolbar-layout.js";
+import {} from "../../utils/toolbar-layout.js";
 import { ToolbarContent } from "./toolbar-content.js";
 import { ToggleSwitch } from "../ui/toggle-switch.jsx";
 import { nativeRequestAnimationFrame } from "../../utils/native-raf.js";
@@ -64,6 +61,10 @@ import {
   getRatioFromPosition,
 } from "../../utils/toolbar-position.js";
 import { createToolbarDrag } from "../../utils/create-toolbar-drag.js";
+import { Badge } from "../ui/badge.js";
+import { Button } from "../ui/button.js";
+import { ToolbarButton } from "./toolbar-button.js";
+import { isKeyboardFocus } from "../../utils/is-keyboard-focus.js";
 
 interface ToolbarProps {
   isActive?: boolean;
@@ -119,7 +120,10 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
 
   const getElementRect = (selector: string): TargetRect | null => {
     if (!containerRef) return null;
-    const rootNode = containerRef.getRootNode() as Document | ShadowRoot;
+    const rootNode = containerRef.getRootNode();
+    if (!(rootNode instanceof Document || rootNode instanceof ShadowRoot)) {
+      return null;
+    }
     const element = rootNode.querySelector<HTMLElement>(selector);
     if (!element) return null;
     const rect = element.getBoundingClientRect();
@@ -220,16 +224,12 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     return count > 0 ? `Comments (${count})` : "Comments";
   };
 
-  const commentsIconClass = () =>
-    cn(
-      "transition-colors",
-      props.isCommentsPinned
-        ? "text-muted-foreground"
-        : "text-muted-foreground",
-    );
-
   const isVertical = () => snapEdge() === "left" || snapEdge() === "right";
 
+  // Toolbar tooltips stay controlled (open={…}): they must not open while the
+  // toolbar is dragged or collapsed, or while one of its menus or prompts is
+  // open (createFreezeHandlers, isTooltipAllowed). Kobalte's hover state does
+  // not know about those rules.
   const isTooltipAllowed = () =>
     !isCollapsed() &&
     !props.isCommentsDropdownOpen &&
@@ -249,9 +249,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
         return "left";
     }
   };
-
-  const buttonSpacingClass = () => getButtonSpacingClass(isVertical());
-  const hitboxConstraintClass = () => getHitboxConstraintClass(isVertical());
 
   const shakeTooltipPositionClass = (): string => {
     const tooltipSide = tooltipPosition();
@@ -273,6 +270,11 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     setTooltipVisible: (visible: boolean) => void,
     options?: FreezeHandlersOptions,
   ) => ({
+    // Keyboard focus shows the tooltip like hover does (not script focus).
+    onFocus: (event: FocusEvent) => {
+      if (isKeyboardFocus(event)) setTooltipVisible(true);
+    },
+    onBlur: () => setTooltipVisible(false),
     onMouseEnter: () => {
       if (drag.isDragging()) return;
       safePolygonTracker.stop();
@@ -739,6 +741,28 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       onCleanup(unsubscribe);
     }
 
+    // The remembered position is a ratio along the edge, turned into pixels
+    // with the toolbar's size. That size grows after mount (the sync dot, a
+    // comment count), so re-measure when it changes and re-apply the same ratio.
+    const sizeObserver = new ResizeObserver(() => {
+      if (isCollapsed() || isCollapseAnimating() || drag.isDragging()) return;
+      const currentRect = containerRef?.getBoundingClientRect();
+      if (!currentRect) return;
+      if (
+        currentRect.width === expandedDimensions.width &&
+        currentRect.height === expandedDimensions.height
+      ) {
+        return;
+      }
+      expandedDimensions = {
+        width: currentRect.width,
+        height: currentRect.height,
+      };
+      recalculatePosition();
+    });
+    if (containerRef) sizeObserver.observe(containerRef);
+    onCleanup(() => sizeObserver.disconnect());
+
     window.addEventListener("resize", handleResize);
     window.visualViewport?.addEventListener("resize", handleResize);
     window.visualViewport?.addEventListener("scroll", handleResize);
@@ -814,7 +838,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       data-react-grab-ignore-events
       data-react-grab-toolbar
       class={cn(
-        "fixed left-0 top-0 text-[13px] antialiased select-none",
+        "fixed left-0 top-0 text-body antialiased select-none",
         getCursorClass(),
         getTransitionClass(),
         isVisible()
@@ -887,23 +911,15 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             placement={tooltipPosition()}
           >
             <TooltipTrigger
-              as="button"
+              as={ToolbarButton}
+              vertical={isVertical()}
               data-react-grab-ignore-events
               data-react-grab-toolbar-toggle
-              aria-label={
-                props.isActive ? "Stop selecting element" : "Select element"
-              }
+              aria-label="Select element"
               aria-pressed={Boolean(props.isActive)}
-              class={cn(
-                "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
-                buttonSpacingClass(),
-                hitboxConstraintClass(),
-              )}
               onClick={(event: MouseEvent) => {
                 setIsSelectTooltipVisible(false);
-                handleToggle(
-                  event as MouseEvent & { currentTarget: HTMLButtonElement },
-                );
+                handleToggle(event);
               }}
               onContextMenu={(event: MouseEvent) => {
                 event.preventDefault();
@@ -934,7 +950,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             placement={tooltipPosition()}
           >
             <TooltipTrigger
-              as="button"
+              as={ToolbarButton}
+              vertical={isVertical()}
               data-react-grab-ignore-events
               data-react-grab-toolbar-comments
               aria-label={`Open comments${
@@ -944,16 +961,9 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               }`}
               aria-haspopup="menu"
               aria-expanded={Boolean(props.isCommentsDropdownOpen)}
-              class={cn(
-                "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
-                buttonSpacingClass(),
-                hitboxConstraintClass(),
-              )}
               onClick={(event: MouseEvent) => {
                 setIsCommentsTooltipVisible(false);
-                handleComments(
-                  event as MouseEvent & { currentTarget: HTMLButtonElement },
-                );
+                handleComments(event);
               }}
               {...createFreezeHandlers(
                 (visible) => {
@@ -975,14 +985,20 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               )}
             >
               <span ref={clockFlashRef} class="inline-flex relative">
-                <IconComment size={14} class={commentsIconClass()} />
+                <IconComment
+                  size={14}
+                  class="text-muted-foreground transition-colors"
+                />
                 <Show when={(props.commentItemCount ?? 0) > 0}>
-                  <span
+                  <Badge
                     data-react-grab-unread-indicator
-                    class="absolute -top-1 -right-1 min-w-2.5 h-2.5 px-0.5 flex items-center justify-center rounded-full bg-black text-white text-[8px] font-semibold leading-none"
+                    variant="count"
+                    tone="inverse"
+                    size="xs"
+                    class="absolute -top-1 -right-1"
                   >
                     {props.commentItemCount}
-                  </span>
+                  </Badge>
                 </Show>
               </span>
             </TooltipTrigger>
@@ -995,20 +1011,14 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             placement={tooltipPosition()}
           >
             <TooltipTrigger
-              as="button"
+              as={ToolbarButton}
+              vertical={isVertical()}
               data-react-grab-ignore-events
               data-react-grab-toolbar-copy-all
               aria-label="Copy all comments"
-              class={cn(
-                "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
-                buttonSpacingClass(),
-                hitboxConstraintClass(),
-              )}
               onClick={(event: MouseEvent) => {
                 setIsCopyAllTooltipVisible(false);
-                handleCopyAll(
-                  event as MouseEvent & { currentTarget: HTMLButtonElement },
-                );
+                handleCopyAll(event);
               }}
               {...createFreezeHandlers(setIsCopyAllTooltipVisible, {
                 onHoverChange: (isHovered) => props.onCopyAllHover?.(isHovered),
@@ -1036,31 +1046,29 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             placement={tooltipPosition()}
           >
             <TooltipTrigger
-              as="button"
+              as={Button}
+              variant="toolbar"
               data-react-grab-ignore-events
               data-react-grab-toolbar-devmode
-              aria-label={
-                props.isDevMode ? "DEV mode active" : "Toggle DEV mode"
-              }
+              aria-label="DEV mode"
               aria-pressed={Boolean(props.isDevMode)}
-              class={cn(
-                "contain-layout flex items-center gap-1 cursor-pointer interactive-scale outline-none",
-                isVertical() ? "my-0.5 flex-col" : "mx-0.5",
-              )}
+              class={cn("gap-1", isVertical() ? "my-0.5 flex-col" : "mx-0.5")}
               onClick={(event: MouseEvent) => {
                 setIsToggleTooltipVisible(false);
-                handleToggleDevMode(
-                  event as MouseEvent & { currentTarget: HTMLButtonElement },
-                );
+                handleToggleDevMode(event);
               }}
               onMouseEnter={() => setIsToggleTooltipVisible(true)}
               onMouseLeave={() => setIsToggleTooltipVisible(false)}
+              onFocus={(event: FocusEvent) => {
+                if (isKeyboardFocus(event)) setIsToggleTooltipVisible(true);
+              }}
+              onBlur={() => setIsToggleTooltipVisible(false)}
             >
               <span
-                class="text-[7px] font-extrabold tracking-wider leading-none"
+                class="text-meta font-extrabold tracking-wider leading-none"
                 classList={{
                   "text-muted-foreground/60": !props.isDevMode,
-                  "text-sky-500": Boolean(props.isDevMode),
+                  "text-dev": Boolean(props.isDevMode),
                 }}
               >
                 DEV
@@ -1072,9 +1080,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 color="sky"
               />
             </TooltipTrigger>
-            <TooltipContent>
-              {props.isDevMode ? "DEV mode" : "DEV mode"}
-            </TooltipContent>
+            <TooltipContent>{"DEV mode"}</TooltipContent>
           </Tooltip>
         }
       />

@@ -4,12 +4,15 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  on,
   Show,
   untrack,
 } from "solid-js";
 import createFocusTrap from "solid-focus-trap";
+import { cn } from "../../utils/cn.js";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import type { SyncStatus } from "../../features/sync/types.js";
+import type { SidebarFocusRequest } from "../../features/sidebar/hooks/use-sidebar-session.js";
 import type {
   RefreshGroupStatusFn,
   SearchJiraUsersFn,
@@ -17,7 +20,8 @@ import type {
 } from "../../features/jira-comments/types.js";
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
-import { StatsBar } from "./stats-bar.js";
+import { StatusFilter } from "./status-filter.js";
+import { SyncOfflineBanner } from "./sync-offline-banner.js";
 import { FilterMenu } from "./filter-menu.js";
 import { FilterChips } from "./filter-chips.js";
 import {
@@ -34,10 +38,11 @@ import { GroupDetailView } from "./group-detail-view.js";
 import { StatusLegend } from "./status-legend.js";
 import { groupComments } from "../../features/selection-groups/business/group-operations.js";
 import { type GroupedEntry } from "../../features/sidebar/index.js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 import { TabBar } from "./tab-bar.js";
+import { Tabs, TabsContent } from "../ui/tabs.js";
 import { SelectionListTab } from "./selection-list-tab.js";
 import { BulkActionBar } from "./bulk-action-bar.js";
 import { BulkGroupPicker } from "./bulk-group-picker.js";
@@ -48,15 +53,22 @@ import {
 import { ImageLightbox } from "../ui/image-lightbox.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { IconFlag } from "../icons/icon-flag.js";
+import { IconButton } from "../ui/icon-button.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
   commentItems: CommentItem[];
   syncStatus: SyncStatus;
+  onRetrySync?: () => Promise<void>;
+  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
+  jiraSiteHost?: string;
   syncServerUrl?: string;
   syncWorkspace?: string;
   jiraProjectKey?: string;
   onClose: () => void;
+  /** Open on this selection, in the Selections tab where its Jira thread
+   *  is (a label's "Open thread"); a new object for every request. */
+  focusRequest?: SidebarFocusRequest | null;
   onActiveDetailGroupChange: (groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
   onTicketCreated?: TicketCreatedCallback;
@@ -94,7 +106,18 @@ export const Sidebar: Component<SidebarProps> = (props) => {
 
   // Trap focus inside the sidebar for the duration it is mounted.
   // solid-focus-trap restores focus to the previously focused element on cleanup.
-  createFocusTrap({ element: () => containerRef ?? null, enabled: () => true });
+  // Focus starts on the dialog itself: its first control is the minor
+  // "Status legend" button (WAI-ARIA dialog pattern).
+  createFocusTrap({
+    element: () => containerRef ?? null,
+    initialFocusElement: () => containerRef ?? null,
+    // Opened on a selection: the Selections tab moves focus to its card.
+    onInitialFocus: (event: Event) => {
+      if (untrack(() => props.focusRequest)) event.preventDefault();
+    },
+    // The lightbox is a modal dialog with its own focus trap.
+    enabled: () => !lightbox.state().open,
+  });
 
   // Synthetic groups are invisible in user-facing surfaces (GroupList,
   // filter chips, stats bar, empty-state guard). Loose selections appear
@@ -106,6 +129,20 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   const [activeTab, setActiveTab] = createSignal<"groups" | "selections">(
     "groups",
   );
+  // A focus request shows the Selections tab; the tab scrolls to the card.
+  createEffect(
+    on(
+      () => props.focusRequest,
+      (request) => {
+        if (!request) return;
+        setActiveDetailGroupId(null);
+        setActiveTab("selections");
+      },
+    ),
+  );
+  const handleTabChange = (value: string) => {
+    if (value === "groups" || value === "selections") setActiveTab(value);
+  };
   const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
@@ -227,7 +264,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
       }}
       data-react-grab-sidebar
       data-react-grab-ignore-events
-      class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-card text-card-foreground animate-slide-in-left"
+      tabIndex={-1}
+      class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-card text-card-foreground outline-none animate-slide-in-left"
       style={{
         "z-index": "var(--z-sidebar)",
         "pointer-events": "auto",
@@ -247,28 +285,26 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         <StatusLegend onClose={() => setShowLegend(false)} />
       </Show>
 
-      {/* Phase 1 sync error state — must remain intact */}
+      <Show when={props.syncStatus === "error"}>
+        <SyncOfflineBanner onRetry={props.onRetrySync} />
+      </Show>
+
+      {/* Phase 2 navigation: list view vs detail view */}
       <Show
-        when={props.syncStatus !== "error"}
+        when={activeDetailGroupId() !== null && activeGroup() !== null}
         fallback={
-          <EmptyState
-            message="Could not connect to sync server."
-            action={{ label: "Retry", onClick: () => {} }}
-          />
-        }
-      >
-        {/* Phase 2 navigation: list view vs detail view */}
-        <Show
-          when={activeDetailGroupId() !== null && activeGroup() !== null}
-          fallback={
-            <>
-              <StatsBar
-                groups={props.groups ?? []}
-                commentItems={props.commentItems ?? []}
-              />
+          <>
+            <StatusFilter
+              groups={userFacingGroups()}
+              filter={filterState()}
+              onFilterChange={setFilterState}
+            />
+            <Tabs
+              value={activeTab()}
+              onChange={handleTabChange}
+              class="min-h-0 flex-1"
+            >
               <TabBar
-                activeTab={activeTab()}
-                onTabChange={setActiveTab}
                 groupsCount={userFacingGroups().length}
                 selectionsCount={(props.commentItems ?? []).length}
               />
@@ -280,7 +316,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 <input
                   type="text"
                   placeholder="Search selections..."
-                  class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-400 transition-colors"
+                  class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-caption text-foreground placeholder:text-muted-foreground outline-none focus:border-selection transition-colors"
                   value={searchQuery()}
                   onInput={(e) => setSearchQuery(e.currentTarget.value)}
                   data-react-grab-ignore-events
@@ -292,30 +328,32 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   labels={getDistinctLabels(userFacingGroups())}
                   onFilterChange={setFilterState}
                 />
-                <button
-                  class="inline-flex items-center justify-center rounded-md border h-7 w-7 shrink-0 cursor-pointer transition-all"
-                  classList={{
-                    "border-red-400 bg-red-400/[0.08]": flaggedOnly(),
-                    "border-border bg-muted hover:border-foreground/20":
-                      !flaggedOnly(),
-                  }}
+                <IconButton
+                  label="Flagged only"
+                  variant="outline"
+                  size="icon-md"
+                  class={cn(
+                    "shrink-0",
+                    flaggedOnly() &&
+                      "border-flag bg-flag/8 hover:bg-flag/8 aria-pressed:bg-flag/8",
+                  )}
+                  aria-pressed={flaggedOnly()}
                   onClick={() => setFlaggedOnly((prev) => !prev)}
-                  title="Flagged only"
                 >
                   <IconFlag
                     size={14}
                     class={
-                      flaggedOnly() ? "text-red-400" : "text-muted-foreground"
+                      flaggedOnly() ? "text-flag" : "text-muted-foreground"
                     }
                   />
-                </button>
+                </IconButton>
               </div>
               <FilterChips
                 filter={filterState()}
                 onFilterChange={setFilterState}
               />
 
-              <Show when={activeTab() === "groups"}>
+              <TabsContent value="groups">
                 <Show
                   when={
                     userFacingGroups().length > 0 ||
@@ -353,9 +391,9 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                     </Show>
                   </div>
                 </Show>
-              </Show>
+              </TabsContent>
 
-              <Show when={activeTab() === "selections"}>
+              <TabsContent value="selections">
                 <SelectionListTab
                   commentItems={props.commentItems ?? []}
                   groups={props.groups ?? []}
@@ -375,26 +413,27 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   onCreateTicket={props.onCreateTicketForLooseItem}
                   onMoveItem={props.onMoveItem}
                   onAddGroup={props.onAddGroup}
+                  focusRequest={props.focusRequest}
                 />
-              </Show>
-            </>
+              </TabsContent>
+            </Tabs>
+          </>
+        }
+      >
+        <GroupDetailView
+          ref={(el: HTMLDivElement) => {
+            detailViewRef = el;
+          }}
+          group={activeGroup()!}
+          commentItems={props.commentItems}
+          syncServerUrl={props.syncServerUrl}
+          syncWorkspace={props.syncWorkspace}
+          onBack={() => setActiveDetailGroupId(null)}
+          onCreateTicket={(group, items) =>
+            setGroupTicketDialog({ group, items })
           }
-        >
-          <GroupDetailView
-            ref={(el: HTMLDivElement) => {
-              detailViewRef = el;
-            }}
-            group={activeGroup()!}
-            commentItems={props.commentItems}
-            syncServerUrl={props.syncServerUrl}
-            syncWorkspace={props.syncWorkspace}
-            onBack={() => setActiveDetailGroupId(null)}
-            onCreateTicket={(group, items) =>
-              setGroupTicketDialog({ group, items })
-            }
-            onRemoveItem={props.onRemoveItem}
-          />
-        </Show>
+          onRemoveItem={props.onRemoveItem}
+        />
       </Show>
 
       <Show when={groupTicketDialog()}>
@@ -406,6 +445,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             group={state().group}
             commentItems={state().items}
             jiraProjectKey={props.jiraProjectKey ?? ""}
+            jiraSiteHost={props.jiraSiteHost}
             onTicketCreated={(groupId, ticketId, ticketUrl) => {
               // The dialog stays open to confirm the ticket; it closes via
               // its own Done button, which calls onClose.

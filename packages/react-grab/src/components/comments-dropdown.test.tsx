@@ -3,8 +3,8 @@ import { describe, it, expect } from "vitest";
 import { For } from "solid-js";
 import type { CommentItem } from "../types.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
-import { GroupCollapsible } from "../features/selection-groups/components/group-collapsible.jsx";
-import { UngroupedSection } from "../features/selection-groups/components/ungrouped-section.jsx";
+import { GroupCollapsible } from "./selection-groups/group-collapsible.jsx";
+import { UngroupedSection } from "./selection-groups/ungrouped-section.jsx";
 import { isPresentedAsLoose } from "../features/selection-groups/business/membership.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
 import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
@@ -56,10 +56,17 @@ const GroupListHarness = (props: {
 describe("comments-dropdown group-list composition", () => {
   it("renders loose selections (synthetic group) and user groups under one container", () => {
     const synthGroup: SelectionGroup = {
-      id: "synth1", name: "Button", createdAt: 0, revealed: false, synthetic: true,
+      id: "synth1",
+      name: "Button",
+      createdAt: 0,
+      revealed: false,
+      synthetic: true,
     };
     const realGroup: SelectionGroup = {
-      id: "g1", name: "Alpha", createdAt: 0, revealed: false,
+      id: "g1",
+      name: "Alpha",
+      createdAt: 0,
+      revealed: false,
     };
     const selections = [
       { id: "u1", groupId: "synth1" },
@@ -67,7 +74,10 @@ describe("comments-dropdown group-list composition", () => {
     ] as unknown as CommentItem[];
 
     const { container } = render(() => (
-      <GroupListHarness selections={selections} groups={[synthGroup, realGroup]} />
+      <GroupListHarness
+        selections={selections}
+        groups={[synthGroup, realGroup]}
+      />
     ));
 
     const list = container.querySelector("[data-react-grab-group-list]");

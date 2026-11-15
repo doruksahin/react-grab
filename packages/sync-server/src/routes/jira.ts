@@ -9,6 +9,7 @@ import {
   AddJiraCommentResponse,
   JiraUser,
   JiraProject,
+  JiraSite,
   JiraIssueType,
   JiraPriority,
   JiraTicketStatus,
@@ -56,6 +57,20 @@ const getTicketStatus = createRoute({
     404: {
       description: "No JIRA ticket linked",
       content: { "application/json": { schema: ErrorResponse } },
+    },
+  },
+});
+
+const getSite = createRoute({
+  method: "get",
+  path: "/jira/site",
+  tags: ["jira"],
+  summary: "The Jira site tickets are created on",
+  operationId: "getJiraSite",
+  responses: {
+    200: {
+      description: "The configured Jira site",
+      content: { "application/json": { schema: JiraSite } },
     },
   },
 });
@@ -242,6 +257,7 @@ export const jiraRoutes = createRouter()
       return c.json({ error: message }, 400);
     }
   })
+  .openapi(getSite, (c) => c.json(c.var.jira.getSite(), 200))
   .openapi(listProjects, async (c) => {
     try {
       const projects = await c.var.jira.getProjects();

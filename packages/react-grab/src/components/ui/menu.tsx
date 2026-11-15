@@ -5,7 +5,9 @@ import {
   mergeProps,
   splitProps,
 } from "solid-js";
+import { cva, type VariantProps } from "cva";
 import { cn } from "../../utils/cn.js";
+import { buttonVariants } from "./button.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
 
 // Module-level reference to the currently mounted MenuContent DOM element.
@@ -19,16 +21,28 @@ export const Menu: Component<ComponentProps<typeof DropdownMenu>> = (props) => {
   return <DropdownMenu {...props} />;
 };
 
+const menuTriggerVariants = cva({
+  variants: {
+    variant: {
+      field:
+        "relative inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-2 h-7 text-meta text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 data-[expanded]:border-primary/70 data-[expanded]:bg-accent/30",
+      toolbar: cn(
+        buttonVariants({ variant: "subtle", size: "xs" }),
+        "data-[expanded]:bg-accent data-[expanded]:text-foreground",
+      ),
+    },
+  },
+  defaultVariants: { variant: "field" },
+});
+
 export const MenuTrigger: Component<
-  ComponentProps<typeof DropdownMenu.Trigger>
+  ComponentProps<typeof DropdownMenu.Trigger> &
+    VariantProps<typeof menuTriggerVariants>
 > = (props) => {
-  const [local, rest] = splitProps(props, ["class", "children"]);
+  const [local, rest] = splitProps(props, ["class", "children", "variant"]);
   return (
     <DropdownMenu.Trigger
-      class={cn(
-        "relative inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-2 h-7 text-[11px] text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 data-[expanded]:border-primary/70 data-[expanded]:bg-accent/30",
-        local.class,
-      )}
+      class={cn(menuTriggerVariants({ variant: local.variant }), local.class)}
       {...rest}
     >
       {local.children}
@@ -43,9 +57,11 @@ export const MenuContent: Component<
   return (
     <DropdownMenu.Portal mount={useShadowMount()}>
       <DropdownMenu.Content
-        ref={(el) => { activeMenuContentEl = el; }}
+        ref={(el) => {
+          activeMenuContentEl = el;
+        }}
         class={cn(
-          "z-50 min-w-[14rem] overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 data-[closed]:zoom-out-95 data-[expanded]:zoom-in-95",
+          "z-(--z-dropdown) min-w-[14rem] overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none data-[expanded]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[expanded]:fade-in-0 data-[closed]:zoom-out-95 data-[expanded]:zoom-in-95",
           local.class,
         )}
         {...rest}
@@ -63,7 +79,7 @@ export const MenuItem: Component<ComponentProps<typeof DropdownMenu.Item>> = (
   return (
     <DropdownMenu.Item
       class={cn(
-        "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-[12px] outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+        "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-caption outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
         local.class,
       )}
       {...rest}
@@ -94,7 +110,7 @@ export const MenuSubTrigger: Component<
         );
       }}
       class={cn(
-        "flex cursor-default select-none items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-[12px] outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[expanded]:bg-accent data-[expanded]:text-accent-foreground",
+        "flex cursor-default select-none items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-caption outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[expanded]:bg-accent data-[expanded]:text-accent-foreground",
         local.class,
       )}
       {...rest}
@@ -112,7 +128,7 @@ export const MenuSubContent: Component<
     <DropdownMenu.Portal mount={useShadowMount()}>
       <DropdownMenu.SubContent
         class={cn(
-          "z-50 min-w-[12rem] overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none data-[expanded]:animate-in data-[expanded]:fade-in-0 data-[expanded]:zoom-in-95",
+          "z-(--z-dropdown) min-w-[12rem] overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none data-[expanded]:animate-in data-[expanded]:fade-in-0 data-[expanded]:zoom-in-95",
           local.class,
         )}
         {...rest}
@@ -134,19 +150,18 @@ export const MenuRadioItem: Component<
   return (
     <DropdownMenu.RadioItem
       class={cn(
-        "relative flex cursor-default select-none items-center gap-2 rounded-sm py-1.5 pl-7 pr-2 text-[12px] outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+        "relative flex cursor-default select-none items-center gap-2 rounded-sm py-1.5 pl-7 pr-2 text-caption outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
         local.class,
       )}
       {...rest}
     >
       <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
         <DropdownMenu.ItemIndicator>
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 16 16"
-          >
-            <path fill="currentColor" d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z" />
+          <svg width="12" height="12" viewBox="0 0 16 16">
+            <path
+              fill="currentColor"
+              d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z"
+            />
           </svg>
         </DropdownMenu.ItemIndicator>
       </span>

@@ -1,4 +1,5 @@
-import type { CommentItem } from "../../types.js";
+import type { CommentItem } from "../../shared-types.js";
+export type { SyncConfig, SyncStatus } from "../../types.js";
 import type { SelectionGroup } from "../selection-groups/types.js";
 
 /**
@@ -29,27 +30,3 @@ export interface StorageAdapter {
   /** Upload a gzip session recording (SPEC-020). Returns the link to watch it. Optional. */
   uploadRecording?: (commentId: string, gzipBlob: Blob) => Promise<string>;
 }
-
-/**
- * Configuration for sync. Passed to initSync().
- * Optional `options` field is forwarded to init() when it auto-fires.
- */
-export interface SyncConfig {
-  enabled: boolean;
-  serverUrl: string;
-  workspace: string;
-  jiraProjectKey: string;
-  /**
-   * Bearer token the sync server requires on every request (ADR-0020).
-   * Required when `enabled` is true. Read it from the host app's own env
-   * (for example `VITE_REACT_GRAB_SYNC_TOKEN`); `initSync()` runs only in
-   * development builds, so it never ships in a production bundle.
-   */
-  apiToken?: string;
-  syncRevealedState: boolean;
-  onSyncError: (error: Error) => void;
-  /** Options forwarded to init() — use this to set screenshot config etc. */
-  options?: import("../../types.js").Options;
-}
-
-export type SyncStatus = "local" | "synced" | "error";
