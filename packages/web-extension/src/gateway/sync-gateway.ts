@@ -12,6 +12,8 @@ import {
   STORAGE_METHODS,
 } from "../messaging/port-requests.js";
 import { readSyncSettings } from "../settings/settings-items.js";
+import type { SiteSettings } from "../settings/types.js";
+import { bindSiteJiraProject } from "./bind-site-jira-project.js";
 import {
   GatewayRefusalError,
   assertTopFrameSender,
@@ -34,6 +36,20 @@ type PortMethodResult<Port, Method extends keyof Port> = Port[Method] extends (
   ? Result
   : never;
 
+interface AcceptedArguments {
+  success: true;
+  data: ReadonlyArray<unknown>;
+}
+
+interface RejectedArguments {
+  success: false;
+  error: { message: string };
+}
+
+interface ArgumentSchema {
+  safeParse: (value: unknown) => AcceptedArguments | RejectedArguments;
+}
+
 export interface SyncGateway {
   callStorage: <Method extends keyof StorageAdapter & string>(
     method: Method,
@@ -47,9 +63,14 @@ export interface SyncGateway {
   ) => Promise<PortMethodResult<JiraPort, Method>>;
 }
 
+interface SenderConnection {
+  config: SyncHttpConfig;
+  site: SiteSettings;
+}
+
 const resolveConnection = async (
   sender: Browser.runtime.MessageSender,
-): Promise<SyncHttpConfig> => {
+): Promise<SenderConnection> => {
   assertTopFrameSender(sender);
   const settings = await readSyncSettings();
   const site = findSenderSite(sender, settings.sites);
@@ -62,10 +83,44 @@ const resolveConnection = async (
     throw new GatewayRefusalError("the sync server is not configured");
   }
   return {
-    serverUrl: settings.serverUrl,
-    apiToken: settings.apiToken,
-    workspace: site.workspace,
+    config: {
+      serverUrl: settings.serverUrl,
+      apiToken: settings.apiToken,
+      workspace: site.workspace,
+    },
+    site,
   };
+};
+
+interface PortCall<Port, Method extends keyof Port & string> {
+  portName: PortName;
+  schemas: Record<keyof Port & string, ArgumentSchema>;
+  createPort: (config: SyncHttpConfig) => Port;
+  bindToSite: (
+    method: Method,
+    args: ReadonlyArray<unknown>,
+    site: SiteSettings,
+  ) => ReadonlyArray<unknown>;
+  method: Method;
+  args: ReadonlyArray<unknown>;
+  sender: Browser.runtime.MessageSender;
+}
+
+const validateArguments = <Port, Method extends keyof Port & string>(
+  call: PortCall<Port, Method>,
+): ReadonlyArray<unknown> => {
+  if (!Object.hasOwn(call.schemas, call.method)) {
+    throw new GatewayRefusalError(
+      `${call.portName}.${call.method} is not allowed`,
+    );
+  }
+  const parsed = call.schemas[call.method].safeParse(call.args);
+  if (!parsed.success) {
+    throw new GatewayRefusalError(
+      `${call.portName}.${call.method} got invalid arguments: ${parsed.error.message}`,
+    );
+  }
+  return parsed.data;
 };
 
 const callPortMethod = async <
@@ -74,44 +129,45 @@ const callPortMethod = async <
   },
   Method extends keyof Port & string,
 >(
-  methods: Record<keyof Port & string, true>,
-  createPort: (config: SyncHttpConfig) => Port,
-  portName: PortName,
-  method: Method,
-  args: ReadonlyArray<unknown>,
-  sender: Browser.runtime.MessageSender,
+  call: PortCall<Port, Method>,
 ): Promise<PortMethodResult<Port, Method>> => {
-  if (!Object.hasOwn(methods, method)) {
-    throw new GatewayRefusalError(`${portName}.${method} is not allowed`);
-  }
-  const port = createPort(await resolveConnection(sender));
+  const validArgs = validateArguments(call);
+  const { config, site } = await resolveConnection(call.sender);
+  const port = call.createPort(config);
   const result: PortMethodResult<Port, Method> = await Reflect.apply(
-    port[method],
+    port[call.method],
     port,
-    args,
+    call.bindToSite(call.method, validArgs, site),
   );
   return result;
 };
+
+const unchangedArguments = (
+  _method: string,
+  args: ReadonlyArray<unknown>,
+): ReadonlyArray<unknown> => args;
 
 export const createSyncGateway = (
   factories: SyncPortFactories = HTTP_PORT_FACTORIES,
 ): SyncGateway => ({
   callStorage: (method, args, sender) =>
-    callPortMethod(
-      STORAGE_METHODS,
-      factories.createStorage,
-      "storage",
+    callPortMethod({
+      portName: "storage",
+      schemas: STORAGE_METHODS,
+      createPort: factories.createStorage,
+      bindToSite: unchangedArguments,
       method,
       args,
       sender,
-    ),
+    }),
   callJira: (method, args, sender) =>
-    callPortMethod(
-      JIRA_METHODS,
-      factories.createJira,
-      "jira",
+    callPortMethod({
+      portName: "jira",
+      schemas: JIRA_METHODS,
+      createPort: factories.createJira,
+      bindToSite: bindSiteJiraProject,
       method,
       args,
       sender,
-    ),
+    }),
 });

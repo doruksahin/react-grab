@@ -81,7 +81,7 @@ describe("sync gateway", () => {
 
     await gateway.callStorage(
       "loadGroups",
-      [{ workspace: "app-workspace" }],
+      [],
       senderFrom({ origin: OTHER_SITE_ORIGIN }),
     );
 
@@ -167,5 +167,130 @@ describe("sync gateway", () => {
     await expect(gateway.callJira("getSite", [], senderFrom())).rejects.toThrow(
       "Jira site not found",
     );
+  });
+
+  describe("argument validation", () => {
+    const TRAVERSAL = "../../../workspaces/other/comments/x";
+    const blob = new Blob(["x"], { type: "image/png" });
+    const comment = {
+      id: "c1",
+      groupId: null,
+      content: "<li>x</li>",
+      elementName: "li",
+      tagName: "li",
+      timestamp: 1,
+    };
+    const draft = {
+      projectKey: "ATT",
+      issueType: "Task",
+      priority: "High",
+      summary: "s",
+      description: "d",
+    };
+
+    const storageCalls: Array<[string, ReadonlyArray<unknown>]> = [
+      ["upsertComment", [{ ...comment, id: TRAVERSAL }]],
+      ["deleteComment", [TRAVERSAL]],
+      ["upsertGroup", [{ id: TRAVERSAL, name: "G", createdAt: 1 }]],
+      ["deleteGroup", [TRAVERSAL]],
+      ["uploadScreenshot", [TRAVERSAL, "full", blob]],
+      ["loadScreenshot", [TRAVERSAL, "element"]],
+      [
+        "loadScreenshot",
+        ["s", "../../../workspaces/OTHER/screenshots/id/full"],
+      ],
+      ["uploadRecording", [TRAVERSAL, blob]],
+      ["deleteComment", [".."]],
+      ["uploadScreenshot", ["s", "full", "not a blob"]],
+      ["loadComments", ["unexpected extra argument"]],
+    ];
+
+    const jiraCalls: Array<[string, ReadonlyArray<unknown>]> = [
+      ["getTicketStatus", [TRAVERSAL]],
+      ["createTicket", [TRAVERSAL, draft]],
+      ["addComment", [TRAVERSAL, { body: "b" }]],
+    ];
+
+    it("refuses a path traversal or a malformed value in every id-like argument", async () => {
+      const { gateway, storageConfigs, jiraConfigs } = createRecordingGateway();
+
+      for (const [method, args] of storageCalls) {
+        await expect(
+          Reflect.apply(gateway.callStorage, gateway, [
+            method,
+            args,
+            senderFrom(),
+          ]),
+          `storage.${method}`,
+        ).rejects.toThrow(`storage.${method} got invalid arguments`);
+      }
+      for (const [method, args] of jiraCalls) {
+        await expect(
+          Reflect.apply(gateway.callJira, gateway, [
+            method,
+            args,
+            senderFrom(),
+          ]),
+          `jira.${method}`,
+        ).rejects.toThrow(`jira.${method} got invalid arguments`);
+      }
+      expect(storageConfigs).toEqual([]);
+      expect(jiraConfigs).toEqual([]);
+    });
+
+    it("accepts valid arguments and passes the parsed values on", async () => {
+      const storage = createFakeStorage();
+      const gateway = createSyncGateway({
+        createStorage: () => storage,
+        createJira: () => createFakeJiraPort(),
+      });
+
+      await gateway.callStorage("upsertComment", [comment], senderFrom());
+
+      await expect(
+        gateway.callStorage("loadComments", [], senderFrom()),
+      ).resolves.toEqual([comment]);
+    });
+
+    it("binds every Jira project key to the site's project", async () => {
+      const projectKeys: Array<string | undefined> = [];
+      const gateway = createSyncGateway({
+        createStorage: () => createFakeStorage(),
+        createJira: () => ({
+          ...createFakeJiraPort(),
+          listIssueTypes: async (projectKey) => {
+            projectKeys.push(projectKey);
+            return [];
+          },
+          listLabels: async (projectKey) => {
+            projectKeys.push(projectKey);
+            return [];
+          },
+          searchUsers: async (_query, projectKey) => {
+            projectKeys.push(projectKey);
+            return [];
+          },
+          createTicket: async (_groupId, ticket) => {
+            projectKeys.push(ticket.projectKey);
+            return {
+              jiraTicketId: "ATT-1",
+              jiraUrl: "https://jira.test/ATT-1",
+            };
+          },
+        }),
+      });
+
+      await gateway.callJira("listIssueTypes", ["OTHER"], senderFrom());
+      await gateway.callJira("listLabels", ["OTHER"], senderFrom());
+      await gateway.callJira("searchUsers", ["ann", "OTHER"], senderFrom());
+      await gateway.callJira("searchUsers", ["ann"], senderFrom());
+      await gateway.callJira(
+        "createTicket",
+        ["g1", { ...draft, projectKey: "OTHER" }],
+        senderFrom(),
+      );
+
+      expect(projectKeys).toEqual(["ATT", "ATT", "ATT", "ATT", "ATT"]);
+    });
   });
 });
