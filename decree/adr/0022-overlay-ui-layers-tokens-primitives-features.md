@@ -4,7 +4,7 @@ references:
 - ADR-0005
 - ADR-0006
 - ADR-0014
-status: proposed
+status: accepted
 ---
 
 # ADR-0022 Overlay UI in three layers: tokens, primitives, feature components
@@ -55,3 +55,19 @@ We want a consistent UI without touching domain logic, the test contract, or add
 - Neutral: `pnpm lint` enforces the rule in `packages/react-grab/src/components/` outside `components/ui/` (`packages/react-grab/.oxlintrc.json`): oxlint's built-in `react/forbid-elements` rejects a raw `<button>`, and the JS plugin `scripts/oxlint/overlay-ui-plugin.mjs` rejects hex and `rgb()`/`hsl()` colours and `text-[Npx]` sizes in string literals. Jira's own colours (priority, issue type, editor text colours) are data and live in `features/`. The same config keeps JSX out of `src/features/` (`overlay-ui/no-jsx`; the dev-mode context provider is exempt), rejects `as="button"` triggers, and limits `components/ui/` imports to `ui/`, `utils/` and `constants` (built-in `no-restricted-imports`).
 - Neutral: `styles.css` resets Tailwind's default palette and text sizes (`--color-*: initial`, `--text-*: initial`) and declares only the overlay's tokens, so an off-token class such as `bg-red-500` or `text-sm` generates nothing.
 - Neutral: primitives own their appearance, so a fixed pixel size inside `components/ui/` (for example the avatar initials) is allowed; the planned lint rule applies outside `components/ui/` only.
+
+### Rollout
+
+Done on branch `claude/ui-layers-tokens`, one scenario per change, each reviewed by screenshot (`e2e/mocked/overlay-surfaces-visual.spec.ts`).
+
+- **Before step 1:** this ADR (c439d406); a screenshot per overlay surface (f9f16bf9).
+- **Step 1, tokens:** the design-system palette and a five-step type scale in `styles.css` (4e15c673).
+- **Step 2, primitives:** IconButton, StatusChip and Avatar (f976a8e2, 2afd147b); feature components compose primitives only, primitives in `components/ui/` (5f93f247, ddd8622d); Kobalte Tabs, ToggleGroup and MenuList (6adb7248, ec8a4ecf, fdc1c5c8); positioning on Floating UI (f235c720, f1d88946).
+- **Step 3, layout:** composer and sidebar status chips, offline banner with a Retry that reconnects and sends offline changes (374eb72c, 25bdbbae); Jira dialog with summary first, destination line from `GET /jira/site` and a description preview (6ef43ade, f503703d); saved labels as pins that open a card, with the thread in the sidebar (2c19f4ee, cd312d10).
+
+Known limits:
+
+- Pin stacking (`stack-pins.ts`) uses the elements' positions; a pin Floating UI shifts back inside the viewport at the edge can still overlap a neighbour (risk R-006).
+- A pin opens its card on click or Enter, not on hover.
+- Screenshot baselines exist for chromium-darwin only.
+- `GET /jira/site` needs a Worker deploy; until then the Jira dialog says "Into ATT" without the site.

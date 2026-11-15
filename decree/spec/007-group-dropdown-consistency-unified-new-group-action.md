@@ -8,6 +8,8 @@ references:
 
 # SPEC-007 Group Dropdown Consistency — Unified New Group Action
 
+> **Paths updated (2026-11-15):** component paths follow the move of feature UI into `src/components/` (ADR-0022). `group-storage.ts` no longer exists: groups now load and persist through the sync layer (`src/features/sync/sync-layer.ts`), so the `onGroupsLoaded` bridge below is historical.
+
 ## Overview
 
 Two bugs affect the group dropdown in the selection popup (`SelectionLabel` → `GroupPickerFlyout`):
@@ -24,7 +26,7 @@ A user can assign a selection to a group but cannot create one without first ope
 
 ### Current state
 
-`GroupPickerFlyout` (`src/features/selection-groups/components/group-picker-flyout.tsx`) accepts:
+`GroupPickerFlyout` (`src/components/selection-groups/group-picker-flyout.tsx`) accepts:
 
 ```ts
 interface GroupPickerFlyoutProps {
@@ -81,7 +83,7 @@ When `onAddGroup` is provided, render the "New group..." inline input at the bot
 
 **2. Wire `onAddGroup` in `SelectionLabel`**
 
-In `src/components/selection-label/index.tsx`, where `GroupPickerFlyout` is rendered, pass the group creation handler from the `SelectionGroupsAPI`:
+In the selection label, where `GroupPickerFlyout` is rendered (now through `ActiveGroupPicker`, `src/components/selection-groups/active-group-picker.tsx`, used by the label presets in `src/components/selection-label/presets/`), pass the group creation handler from the `SelectionGroupsAPI`:
 
 ```tsx
 <GroupPickerFlyout
