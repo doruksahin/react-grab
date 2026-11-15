@@ -12,7 +12,8 @@ interface GroupCollapsibleProps {
   renderItem: (item: CommentItem) => JSX.Element;
   isFirst: boolean;
   onRename: (groupId: string, name: string) => void;
-  onDelete: (groupId: string) => void;
+  /** Absent when the group may not be deleted (it has a ticket). */
+  onDelete?: (groupId: string) => void;
   onToggleRevealed: (groupId: string) => void;
   onCopy?: (groupId: string) => void;
 }
@@ -32,7 +33,7 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
   };
 
   return (
-    <div>
+    <div data-react-grab-group-collapsible>
       {/* Group header */}
       <div
         class={cn(
@@ -105,25 +106,29 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
                 />
               </svg>
             </IconButton>
-            <IconButton
-              data-react-grab-ignore-events
-              label="Delete group"
-              variant="chip-destructive"
-              size="icon-2xs"
-              on:click={(e) => {
-                e.stopPropagation();
-                props.onDelete(props.group.id);
-              }}
-            >
-              <svg width="10" height="10" viewBox="0 0 16 16">
-                <path
-                  fill="currentColor"
-                  fill-rule="evenodd"
-                  d="M5 .75A.75.75 0 0 1 5.75 0h4.5a.75.75 0 0 1 .75.75V2.5h3.5V4h-1v10a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V4h-1V2.5H5zM6.5 2.5h3v-1h-3zM4 4v10a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V4zm1.75 9V5.5h1.5V13zm3 0V5.5h1.5V13z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </IconButton>
+            <Show when={props.onDelete}>
+              {(onDelete) => (
+                <IconButton
+                  data-react-grab-ignore-events
+                  label="Delete group"
+                  variant="chip-destructive"
+                  size="icon-2xs"
+                  on:click={(e) => {
+                    e.stopPropagation();
+                    onDelete()(props.group.id);
+                  }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 16 16">
+                    <path
+                      fill="currentColor"
+                      fill-rule="evenodd"
+                      d="M5 .75A.75.75 0 0 1 5.75 0h4.5a.75.75 0 0 1 .75.75V2.5h3.5V4h-1v10a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V4h-1V2.5H5zM6.5 2.5h3v-1h-3zM4 4v10a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V4zm1.75 9V5.5h1.5V13zm3 0V5.5h1.5V13z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </IconButton>
+              )}
+            </Show>
           </div>
           {/* Copy button — always visible for all groups */}
           <IconButton

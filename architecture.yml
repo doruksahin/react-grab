@@ -191,6 +191,7 @@ features:
     prds: [PRD-002]
     specs: [SPEC-001]
     files:
+      - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
       - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
       - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
       - packages/react-grab/src/features/selection-groups/business/ticket-lock.ts
@@ -241,8 +242,11 @@ features:
       - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
       - packages/react-grab/src/components/sidebar/loose-selection-list.tsx
       - packages/react-grab/src/core/index.tsx
+      - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
       - packages/react-grab/src/features/selection-groups/business/membership.ts
+      - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
       - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
+      - packages/react-grab/src/features/selection-groups/business/ticket-lock.ts
       - packages/react-grab/src/features/selection-groups/types.ts
 
   group-dropdown-consistency:
@@ -330,6 +334,10 @@ features:
     prds: [PRD-005]
     specs: [SPEC-008]
     files:
+      - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
+      - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
+      - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
+      - packages/react-grab/src/features/selection-groups/business/ticket-lock.ts
       - packages/react-grab/src/features/selection-groups/types.ts
       - packages/sync-server/src/schemas/jira.ts
       - packages/sync-server/src/services/jira.service.ts
@@ -344,6 +352,10 @@ features:
       - packages/react-grab/src/components/icons/icon-flag.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
       - packages/react-grab/src/components/sidebar/group-card.tsx
+      - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
+      - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
+      - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
+      - packages/react-grab/src/features/selection-groups/business/ticket-lock.ts
       - packages/react-grab/src/features/selection-groups/types.ts
       - packages/react-grab/src/features/sidebar/resolve-display-color.ts
       - packages/react-grab/src/features/sidebar/status-colors.ts
@@ -600,6 +612,7 @@ data_attrs:
         - active-group-picker
         - active-group-picker-locked
         - group-picker-flyout
+        - group-collapsible
         - detail-header
         - group-card
         - group-detail
@@ -786,7 +799,7 @@ data_attrs:
     comment-editor: {scope: comments, src: 1, tests: 1}
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
-    comment-item: {scope: comments, src: 1, tests: 3}
+    comment-item: {scope: comments, src: 1, tests: 4}
     comment-reply: {scope: comments, src: 1, tests: 0}
     comment-submit: {scope: comments, src: 1, tests: 1}
     comment-thread: {scope: comments, src: 1, tests: 0}
@@ -794,7 +807,7 @@ data_attrs:
     comments-clear: {scope: comments, src: 1, tests: 1}
     comments-copy-all: {scope: comments, src: 1, tests: 2}
     comments-count: {scope: comments, src: 1, tests: 0}
-    comments-dropdown: {scope: comments, src: 3, tests: 4}
+    comments-dropdown: {scope: comments, src: 3, tests: 6}
     comments-error: {scope: comments, src: 1, tests: 1}
     comments-list: {scope: comments, src: 1, tests: 1}
     comments-section: {scope: comments, src: 1, tests: 0}
@@ -889,9 +902,10 @@ data_attrs:
     empty-state: {scope: sidebar, src: 1, tests: 0}
     filter-chips: {scope: sidebar, src: 1, tests: 0}
     group-card: {scope: sidebar, src: 2, tests: 5}
+    group-collapsible: {scope: sidebar, src: 1, tests: 1}
     group-detail: {scope: sidebar, src: 1, tests: 0}
     group-list: {scope: sidebar, src: 2, tests: 3}
-    group-picker-flyout: {scope: sidebar, src: 1, tests: 1}
+    group-picker-flyout: {scope: sidebar, src: 1, tests: 2}
     jira-status-banner: {scope: sidebar, src: 1, tests: 0}
     loose-selection-card: {scope: sidebar, src: 1, tests: 0}
     loose-selection-list: {scope: sidebar, src: 1, tests: 0}
