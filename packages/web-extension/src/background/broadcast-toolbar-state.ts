@@ -1,17 +1,17 @@
 import type { ToolbarState } from "react-grab";
-import { extensionMessenger } from "../messaging/extension-messenger.js";
+import { extensionEventMessenger } from "../messaging/extension-messengers.js";
+import { enabledItem, withEnabledFlag } from "../storage/overlay-items.js";
 import { forEachTab } from "./for-each-tab.js";
 
-export const broadcastToolbarState = (
+export const broadcastToolbarState = async (
   toolbarState: ToolbarState,
-  sourceTabId?: number,
-): Promise<void> =>
-  forEachTab(
-    (tabId) =>
-      extensionMessenger.sendMessage(
-        "toolbarStateChanged",
-        toolbarState,
-        tabId,
-      ),
-    sourceTabId,
+): Promise<void> => {
+  const enabled = await enabledItem.getValue();
+  await forEachTab((tabId) =>
+    extensionEventMessenger.sendMessage(
+      "toolbarStateChanged",
+      withEnabledFlag(toolbarState, enabled),
+      tabId,
+    ),
   );
+};

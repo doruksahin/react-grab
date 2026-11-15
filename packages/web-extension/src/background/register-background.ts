@@ -1,35 +1,35 @@
 import { browser } from "wxt/browser";
-import { extensionMessenger } from "../messaging/extension-messenger.js";
-import {
-  enabledItem,
-  readOverlayState,
-  toolbarStateItem,
-} from "../storage/overlay-items.js";
+import { enabledItem, toolbarStateItem } from "../storage/overlay-items.js";
 import { broadcastEnabled } from "./broadcast-enabled.js";
 import { broadcastToolbarState } from "./broadcast-toolbar-state.js";
+import { handleOverlayRequests } from "./handle-overlay-requests.js";
 import { showEnabledState } from "./show-enabled-state.js";
 import { toggleEnabled } from "./toggle-enabled.js";
 
+const showStoredEnabledState = async (): Promise<void> => {
+  await showEnabledState(await enabledItem.getValue());
+};
+
 export const registerBackground = (): void => {
+  browser.runtime.onInstalled.addListener(() => {
+    void showStoredEnabledState();
+  });
+  browser.runtime.onStartup.addListener(() => {
+    void showStoredEnabledState();
+  });
+
   browser.action.onClicked.addListener(() => {
     void toggleEnabled();
   });
 
   enabledItem.watch((enabled) => {
+    void showEnabledState(enabled);
     void broadcastEnabled(enabled);
   });
 
-  browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
-    if (changeInfo.status !== "loading") return;
-    void enabledItem
-      .getValue()
-      .then((enabled) => showEnabledState(tabId, enabled));
+  toolbarStateItem.watch((toolbarState) => {
+    if (toolbarState) void broadcastToolbarState(toolbarState);
   });
 
-  extensionMessenger.onMessage("getOverlayState", () => readOverlayState());
-
-  extensionMessenger.onMessage("saveToolbarState", async ({ data, sender }) => {
-    await toolbarStateItem.setValue(data);
-    await broadcastToolbarState(data, sender.tab?.id);
-  });
+  handleOverlayRequests();
 };

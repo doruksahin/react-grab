@@ -134,11 +134,14 @@ packages:
     background: packages/web-extension/src/background/register-background.ts
     overlay: packages/web-extension/src/overlay/start-overlay.ts
     relay: packages/web-extension/src/relay/start-relay.ts
+    request_policy: packages/web-extension/src/background/handle-overlay-requests.ts
     messaging:
-      protocol: packages/web-extension/src/messaging/overlay-state-protocol.ts
-      window: packages/web-extension/src/messaging/window-messenger.ts
-      extension: packages/web-extension/src/messaging/extension-messenger.ts
+      request_protocol: packages/web-extension/src/messaging/overlay-request-protocol.ts
+      event_protocol: packages/web-extension/src/messaging/overlay-event-protocol.ts
+      page: packages/web-extension/src/messaging/page-messengers.ts
+      extension: packages/web-extension/src/messaging/extension-messengers.ts
     storage: packages/web-extension/src/storage/overlay-items.ts
+    toolbar_state_schema: packages/web-extension/src/storage/toolbar-state-schema.ts
     e2e: packages/web-extension/e2e/extension.spec.ts
 
   design-system:

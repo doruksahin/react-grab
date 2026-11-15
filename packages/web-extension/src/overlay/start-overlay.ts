@@ -1,36 +1,22 @@
 import {
-  DEFAULT_ENABLED,
-  OVERLAY_STATE_REQUEST_TIMEOUT_MS,
-} from "../constants.js";
-import { windowMessenger } from "../messaging/window-messenger.js";
-import type { OverlayState } from "../types.js";
+  pageEventMessenger,
+  pageRequestMessenger,
+} from "../messaging/page-messengers.js";
 import { isReactGrabApi } from "./is-react-grab-api.js";
 import { onDocumentReady } from "./on-document-ready.js";
 import { createOverlaySession } from "./overlay-session.js";
-import { wait } from "./wait.js";
-
-const DEFAULT_OVERLAY_STATE: OverlayState = {
-  enabled: DEFAULT_ENABLED,
-  toolbarState: null,
-};
-
-const requestOverlayState = (): Promise<OverlayState> =>
-  Promise.race([
-    windowMessenger.sendMessage("getOverlayState"),
-    wait(OVERLAY_STATE_REQUEST_TIMEOUT_MS).then(() => DEFAULT_OVERLAY_STATE),
-  ]);
 
 export const startOverlay = (): void => {
   const session = createOverlaySession({
     saveToolbarState: (toolbarState) => {
-      void windowMessenger.sendMessage("saveToolbarState", toolbarState);
+      void pageRequestMessenger.sendMessage("saveToolbarState", toolbarState);
     },
   });
 
-  windowMessenger.onMessage("enabledChanged", ({ data }) =>
+  pageEventMessenger.onMessage("enabledChanged", ({ data }) =>
     session.setEnabled(data),
   );
-  windowMessenger.onMessage("toolbarStateChanged", ({ data }) =>
+  pageEventMessenger.onMessage("toolbarStateChanged", ({ data }) =>
     session.applyToolbarState(data),
   );
 
@@ -41,6 +27,8 @@ export const startOverlay = (): void => {
   });
 
   onDocumentReady(() => {
-    void requestOverlayState().then(session.start);
+    void pageRequestMessenger
+      .sendMessage("getOverlayState")
+      .then(session.start);
   });
 };

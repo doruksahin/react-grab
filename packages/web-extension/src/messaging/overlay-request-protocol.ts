@@ -1,9 +1,11 @@
 import type { ToolbarState } from "react-grab";
 import type { OverlayState } from "../types.js";
 
-export interface OverlayStateProtocol {
+export interface OverlayRequestProtocol {
   getOverlayState(): OverlayState;
   saveToolbarState(toolbarState: ToolbarState): void;
-  enabledChanged(enabled: boolean): void;
-  toolbarStateChanged(toolbarState: ToolbarState): void;
 }
+
+export const OVERLAY_REQUEST_NAMES: ReadonlyArray<
+  keyof OverlayRequestProtocol
+> = ["getOverlayState", "saveToolbarState"];

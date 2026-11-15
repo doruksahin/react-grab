@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeBrowser } from "wxt/testing/fake-browser";
-import { extensionMessenger } from "../messaging/extension-messenger.js";
+import {
+  extensionEventMessenger,
+  extensionRequestMessenger,
+} from "../messaging/extension-messengers.js";
 import { enabledItem, toolbarStateItem } from "../storage/overlay-items.js";
 import { TOOLBAR_STATE_FIXTURE } from "../test-fixtures.js";
 import { registerBackground } from "./register-background.js";
@@ -23,6 +26,23 @@ const createTabs = async (): Promise<TestTabs> => {
   return { firstTabId: firstTab.id, secondTabId: secondTab.id };
 };
 
+const sendAsOwnContentScript = (): void => {
+  vi.spyOn(fakeBrowser.runtime, "sendMessage").mockImplementation(
+    (message: unknown, sendResponse: unknown) => {
+      void fakeBrowser.runtime.onMessage.trigger(
+        message,
+        { id: fakeBrowser.runtime.id },
+        (response: unknown) => {
+          if (typeof sendResponse === "function") sendResponse(response);
+        },
+      );
+    },
+  );
+};
+
+const spyOnEvents = () =>
+  vi.spyOn(extensionEventMessenger, "sendMessage").mockResolvedValue(undefined);
+
 describe("registerBackground", () => {
   beforeEach(() => {
     fakeBrowser.reset();
@@ -30,54 +50,58 @@ describe("registerBackground", () => {
   });
 
   afterEach(() => {
-    extensionMessenger.removeAllListeners();
+    extensionEventMessenger.removeAllListeners();
+    extensionRequestMessenger.removeAllListeners();
   });
 
-  it("toggles the enabled flag and tells every tab when the action is clicked", async () => {
+  it("toggles the enabled flag, badges the action and tells every tab when the action is clicked", async () => {
     const { firstTabId, secondTabId } = await createTabs();
-    const sendMessage = vi
-      .spyOn(extensionMessenger, "sendMessage")
-      .mockResolvedValue(undefined);
+    const sendEvent = spyOnEvents();
 
-    const clickedTab = await fakeBrowser.tabs.get(firstTabId);
-    await fakeBrowser.action.onClicked.trigger(clickedTab);
+    await fakeBrowser.action.onClicked.trigger(
+      await fakeBrowser.tabs.get(firstTabId),
+    );
 
     await vi.waitFor(async () => {
       expect(await enabledItem.getValue()).toBe(false);
+      expect(await fakeBrowser.action.getBadgeText({})).toBe("OFF");
+      expect(await fakeBrowser.action.getTitle({})).toBe(
+        "React Grab (Inactive)",
+      );
       for (const tabId of [firstTabId, secondTabId]) {
-        expect(sendMessage).toHaveBeenCalledWith(
-          "enabledChanged",
-          false,
-          tabId,
-        );
-        expect(await fakeBrowser.action.getBadgeText({ tabId })).toBe("OFF");
-        expect(await fakeBrowser.action.getTitle({ tabId })).toBe(
-          "React Grab (Inactive)",
-        );
+        expect(sendEvent).toHaveBeenCalledWith("enabledChanged", false, tabId);
       }
     });
   });
 
   it("clears the badge when the overlay is enabled again", async () => {
-    const { firstTabId: tabId } = await createTabs();
-    vi.spyOn(extensionMessenger, "sendMessage").mockResolvedValue(undefined);
+    spyOnEvents();
 
     await enabledItem.setValue(false);
     await enabledItem.setValue(true);
 
     await vi.waitFor(async () => {
-      expect(await fakeBrowser.action.getBadgeText({ tabId })).toBe("");
-      expect(await fakeBrowser.action.getTitle({ tabId })).toBe(
-        "React Grab (Active)",
-      );
+      expect(await fakeBrowser.action.getBadgeText({})).toBe("");
+      expect(await fakeBrowser.action.getTitle({})).toBe("React Grab (Active)");
+    });
+  });
+
+  it("restores the badge from storage when the browser starts", async () => {
+    await fakeBrowser.storage.local.set({ react_grab_enabled: false });
+    await fakeBrowser.action.setBadgeText({ text: "" });
+
+    await fakeBrowser.runtime.onStartup.trigger();
+
+    await vi.waitFor(async () => {
+      expect(await fakeBrowser.action.getBadgeText({})).toBe("OFF");
     });
   });
 
   it("keeps broadcasting to the other tabs when one tab has no relay", async () => {
     const { firstTabId: unreachableTabId, secondTabId: reachableTabId } =
       await createTabs();
-    const sendMessage = vi
-      .spyOn(extensionMessenger, "sendMessage")
+    const sendEvent = vi
+      .spyOn(extensionEventMessenger, "sendMessage")
       .mockImplementation((_type, _data, tabId) =>
         tabId === unreachableTabId
           ? Promise.reject(new Error("Receiving end does not exist."))
@@ -87,7 +111,7 @@ describe("registerBackground", () => {
     await enabledItem.setValue(false);
 
     await vi.waitFor(() => {
-      expect(sendMessage).toHaveBeenCalledWith(
+      expect(sendEvent).toHaveBeenCalledWith(
         "enabledChanged",
         false,
         reachableTabId,
@@ -95,50 +119,61 @@ describe("registerBackground", () => {
     });
   });
 
-  it("answers getOverlayState from storage", async () => {
-    await toolbarStateItem.setValue(TOOLBAR_STATE_FIXTURE);
-
-    const overlayState = await fakeBrowser.runtime.sendMessage({
-      id: 0,
-      type: "getOverlayState",
-      timestamp: Date.now(),
+  it("answers getOverlayState with the enabled flag as the only source of enabled", async () => {
+    sendAsOwnContentScript();
+    await enabledItem.setValue(false);
+    await toolbarStateItem.setValue({
+      ...TOOLBAR_STATE_FIXTURE,
+      enabled: true,
     });
 
-    expect(overlayState).toEqual({
-      res: { enabled: true, toolbarState: TOOLBAR_STATE_FIXTURE },
+    expect(
+      await extensionRequestMessenger.sendMessage("getOverlayState"),
+    ).toEqual({
+      enabled: false,
+      toolbarState: { ...TOOLBAR_STATE_FIXTURE, enabled: false },
     });
   });
 
-  it("saves toolbar state and forwards it to every tab except the sender", async () => {
-    const { firstTabId: senderTabId, secondTabId: otherTabId } =
-      await createTabs();
-    const sendMessage = vi
-      .spyOn(extensionMessenger, "sendMessage")
-      .mockResolvedValue(undefined);
-    const senderTab = await fakeBrowser.tabs.get(senderTabId);
+  it("saves a valid toolbar state and forwards it to every tab", async () => {
+    sendAsOwnContentScript();
+    const { firstTabId, secondTabId } = await createTabs();
+    const sendEvent = spyOnEvents();
 
-    await fakeBrowser.runtime.onMessage.trigger(
-      {
-        id: 1,
-        type: "saveToolbarState",
-        data: TOOLBAR_STATE_FIXTURE,
-        timestamp: Date.now(),
-      },
-      { tab: senderTab },
-      () => undefined,
-    );
-    await vi.waitFor(async () => {
-      expect(await toolbarStateItem.getValue()).toEqual(TOOLBAR_STATE_FIXTURE);
-      expect(sendMessage).toHaveBeenCalledWith(
-        "toolbarStateChanged",
-        TOOLBAR_STATE_FIXTURE,
-        otherTabId,
-      );
-    });
-    expect(sendMessage).not.toHaveBeenCalledWith(
-      "toolbarStateChanged",
+    await extensionRequestMessenger.sendMessage(
+      "saveToolbarState",
       TOOLBAR_STATE_FIXTURE,
-      senderTabId,
     );
+
+    expect(await toolbarStateItem.getValue()).toEqual(TOOLBAR_STATE_FIXTURE);
+    await vi.waitFor(() => {
+      for (const tabId of [firstTabId, secondTabId]) {
+        expect(sendEvent).toHaveBeenCalledWith(
+          "toolbarStateChanged",
+          TOOLBAR_STATE_FIXTURE,
+          tabId,
+        );
+      }
+    });
+  });
+
+  it("rejects a toolbar state that does not match the schema", async () => {
+    sendAsOwnContentScript();
+    const invalidToolbarState = { ...TOOLBAR_STATE_FIXTURE };
+    Reflect.set(invalidToolbarState, "edge", "middle");
+
+    await expect(
+      extensionRequestMessenger.sendMessage(
+        "saveToolbarState",
+        invalidToolbarState,
+      ),
+    ).rejects.toThrow();
+    expect(await toolbarStateItem.getValue()).toBeNull();
+  });
+
+  it("rejects requests from a sender outside this extension", async () => {
+    await expect(
+      extensionRequestMessenger.sendMessage("getOverlayState"),
+    ).rejects.toThrow("Rejected a request from outside this extension");
   });
 });

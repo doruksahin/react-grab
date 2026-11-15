@@ -62,7 +62,10 @@ export const createOverlaySession = (
     return attach(createExtensionApi());
   };
 
-  const applyWithoutEcho = (api: ReactGrabAPI, toolbarState: ToolbarState) => {
+  const applyWithoutEcho = (
+    api: ReactGrabAPI,
+    toolbarState: Partial<ToolbarState>,
+  ): void => {
     isApplyingExternalState = true;
     try {
       api.setToolbarState(toolbarState);
@@ -77,13 +80,14 @@ export const createOverlaySession = (
       if (!api) return;
       if (overlayState.toolbarState) {
         applyWithoutEcho(api, overlayState.toolbarState);
-        return;
       }
-      if (!overlayState.enabled) api.setEnabled(false);
+      api.setEnabled(overlayState.enabled);
     },
     setEnabled: async (enabled) => {
       const api = await resolveApi();
-      api?.setEnabled(enabled);
+      if (!api) return;
+      applyWithoutEcho(api, { enabled });
+      api.setEnabled(enabled);
     },
     applyToolbarState: async (toolbarState) => {
       const api = await resolveApi();
