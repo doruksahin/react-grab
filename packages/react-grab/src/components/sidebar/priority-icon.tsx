@@ -1,5 +1,5 @@
 import { type Component, For, Show } from "solid-js";
-import { resolvePriorityLayers } from "../../features/sidebar/priority-icons.js";
+import { resolvePriorityLayers } from "../../features/jira-ticket/priority-icons.js";
 
 const ICON_SIZE_PX = 12;
 

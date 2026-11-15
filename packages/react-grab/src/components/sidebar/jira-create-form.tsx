@@ -34,8 +34,9 @@ import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import {
   defaultSummary,
-  defaultDescription,
-} from "../../features/sidebar/jira-defaults.js";
+  normalizeSummary,
+} from "../../features/jira-ticket/business/default-summary.js";
+import { defaultDescription } from "../../features/jira-ticket/business/default-description.js";
 
 const DEFAULT_ISSUE_TYPE = "Task";
 const DEFAULT_PRIORITY = "Medium";
@@ -48,7 +49,7 @@ interface JiraCreateFormProps {
   group: SelectionGroup;
   commentItems: CommentItem[];
   jiraProjectKey: string;
-  /** Host of the Jira site, when known (features/sidebar/jira-site-host.ts). */
+  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
   jiraSiteHost?: string | null;
   onSuccess: TicketCreatedCallback;
   onClose: () => void;
@@ -198,7 +199,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
         projectKey,
         issueType: issueType(),
         priority: priority(),
-        summary: summary().trim(),
+        summary: normalizeSummary(summary()),
         description: description(),
         labels: selectedLabels().length > 0 ? selectedLabels() : undefined,
       });
@@ -213,8 +214,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           result.data.jiraUrl,
         );
       } else {
-        const errData = result.data as { error?: string };
-        setFailure(errData.error ?? "");
+        setFailure(result.data.error);
       }
     } catch {
       setFailure("Check your connection and try again.");
@@ -456,6 +456,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           </div>
           <TabsContent value="preview">
             <MarkdownPreview
+              data-react-grab-jira-description-preview
               markdown={description()}
               class="max-h-64 overflow-y-auto rounded-lg border border-border bg-muted/60 px-3.5 py-3"
             />

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_FILTER, type FilterState } from "../filter-state.js";
-import type { SelectionGroupWithJira } from "../jira-types.js";
+import type { SelectionGroupWithJira } from "../../selection-groups/types.js";
 import { getStatusColor } from "../status-colors.js";
 import {
   getSelectedStatus,

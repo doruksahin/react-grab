@@ -18,6 +18,7 @@ export * from './deleteComment200';
 export * from './deleteComment200Status';
 export * from './deleteGroup200';
 export * from './deleteGroup200Status';
+export * from './getJiraSite200';
 export * from './getJiraTicketStatus200';
 export * from './getJiraTicketStatus200CommentsItem';
 export * from './getJiraTicketStatus404';

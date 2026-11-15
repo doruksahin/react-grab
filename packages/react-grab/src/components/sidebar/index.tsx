@@ -36,10 +36,9 @@ import { GroupDetailView } from "./group-detail-view.js";
 import { StatusLegend } from "./status-legend.js";
 import { groupComments } from "../../features/selection-groups/business/group-operations.js";
 import { type GroupedEntry } from "../../features/sidebar/index.js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
-import { getJiraSiteHost } from "../../features/sidebar/jira-site-host.js";
 import { TabBar } from "./tab-bar.js";
 import { Tabs, TabsContent } from "../ui/tabs.js";
 import { SelectionListTab } from "./selection-list-tab.js";
@@ -59,6 +58,8 @@ export interface SidebarProps {
   commentItems: CommentItem[];
   syncStatus: SyncStatus;
   onRetrySync?: () => Promise<void>;
+  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
+  jiraSiteHost?: string;
   syncServerUrl?: string;
   syncWorkspace?: string;
   jiraProjectKey?: string;
@@ -423,7 +424,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             group={state().group}
             commentItems={state().items}
             jiraProjectKey={props.jiraProjectKey ?? ""}
-            jiraSiteHost={getJiraSiteHost(props.groups)}
+            jiraSiteHost={props.jiraSiteHost}
             onTicketCreated={(groupId, ticketId, ticketUrl) => {
               // The dialog stays open to confirm the ticket; it closes via
               // its own Done button, which calls onClose.

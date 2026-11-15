@@ -5,7 +5,7 @@ import type {
   SelectionLabelStatus,
   JiraDisplayFields,
 } from "../../../types.js";
-import type { SelectionGroupWithJira } from "../../../features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../../features/selection-groups/types.js";
 import type {
   SubmitCommentFn,
   SearchJiraUsersFn,

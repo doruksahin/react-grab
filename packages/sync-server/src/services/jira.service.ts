@@ -293,6 +293,11 @@ export class JiraService {
     return { jiraTicketId: ticketId, jiraUrl: ticketUrl };
   }
 
+  /** The site tickets are created on, as configured by JIRA_BASE_URL. */
+  getSite(): { siteUrl: string } {
+    return { siteUrl: this.config.baseUrl };
+  }
+
   async getProjects() {
     const result = await this.client.projects.searchProjects({
       query: "ATT",

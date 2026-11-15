@@ -1,5 +1,5 @@
 import { type Component, Show } from "solid-js";
-import { resolveIssueTypeIcon } from "../../features/sidebar/issue-type-icons.js";
+import { resolveIssueTypeIcon } from "../../features/jira-ticket/issue-type-icons.js";
 
 const ICON_SIZE_PX = 12;
 

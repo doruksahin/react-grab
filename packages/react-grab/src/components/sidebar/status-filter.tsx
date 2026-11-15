@@ -1,6 +1,6 @@
 import { type Component, For, Show, createMemo } from "solid-js";
 import type { FilterState } from "../../features/sidebar/filter-state.js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import {
   ALL_STATUSES_VALUE,
   getSelectedStatus,

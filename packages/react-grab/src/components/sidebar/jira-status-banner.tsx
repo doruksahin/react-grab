@@ -1,6 +1,6 @@
 // packages/react-grab/src/components/sidebar/jira-status-banner.tsx
 import { type Component } from "solid-js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import { JiraProgressDots } from "./jira-progress-dots.js";
 
 interface JiraStatusBannerProps {

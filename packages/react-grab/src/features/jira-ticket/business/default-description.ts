@@ -1,59 +1,26 @@
-// packages/react-grab/src/features/sidebar/jira-defaults.ts
-import type { SelectionGroup } from "../selection-groups/types.js";
-import type { CommentItem } from "../../types.js";
-import { isSynthetic } from "../selection-groups/business/synthetic-group.js";
-import { extractFilePath } from "./extract-file-path.js";
+import type { SelectionGroup } from "../../selection-groups/types.js";
+import type { CommentItem } from "../../../types.js";
+import { isSynthetic } from "../../selection-groups/business/synthetic-group.js";
+import { extractFilePath } from "../../sidebar/extract-file-path.js";
 
 const RAW_HTML_MAX_CHARS = 1000;
-
-const SUMMARY_MAX_CHARS = 80;
-
-/** The first line of a text, cut at a word boundary to fit the summary. */
-function toSummaryLine(text: string): string {
-  const line = (text.split("\n").find((part) => part.trim()) ?? "")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (line.length <= SUMMARY_MAX_CHARS) return line;
-  const cut = line.slice(0, SUMMARY_MAX_CHARS - 1);
-  const lastSpace = cut.lastIndexOf(" ");
-  const wordCut =
-    lastSpace > SUMMARY_MAX_CHARS / 2 ? cut.slice(0, lastSpace) : cut;
-  return `${wordCut.trimEnd()}…`;
-}
-
-/**
- * Generates the default JIRA ticket summary. A group the user named keeps
- * its name; a single loose selection (synthetic group) starts from what the
- * user wrote, since its name is only the component name. Falls back to the
- * group name when there is no comment text.
- */
-export function defaultSummary(
-  group: SelectionGroup,
-  items: CommentItem[],
-): string {
-  if (!isSynthetic(group)) return group.name;
-  const commentText = items.find((item) =>
-    item.commentText?.trim(),
-  )?.commentText;
-  return commentText ? toSummaryLine(commentText) : group.name;
-}
 
 /**
  * Markdown link. The text falls back to the URL; brackets in the text and
  * parentheses in the URL are escaped so they cannot end the link early.
  */
-function renderMarkdownLink(url: string, text?: string): string {
+const renderMarkdownLink = (url: string, text?: string): string => {
   const label = (text || url).replace(/[\\[\]]/g, "\\$&");
   const href = url.replace(/\(/g, "%28").replace(/\)/g, "%29");
   return `[${label}](${href})`;
-}
+};
 
 /**
  * Builds the markdown block for a single selection: heading, optional
  * comment, file path, selector, raw HTML code block. Pure — consumes
  * the same fields `SelectionCard` displays in the sidebar.
  */
-function renderSelection(item: CommentItem, index: number): string {
+const renderSelection = (item: CommentItem, index: number): string => {
   const lines: string[] = [];
   const title = item.componentName ?? item.elementName;
   lines.push(`### ${index + 1}. ${title} \`<${item.tagName}>\``);
@@ -99,7 +66,7 @@ function renderSelection(item: CommentItem, index: number): string {
   }
 
   return lines.join("\n");
-}
+};
 
 /**
  * Generates the default JIRA ticket description as a markdown string.
@@ -109,10 +76,10 @@ function renderSelection(item: CommentItem, index: number): string {
  * Synthetic groups (backing stores for loose-ticketed items) suppress
  * the "Group:" header — the ticket reads as a single-selection ticket.
  */
-export function defaultDescription(
+export const defaultDescription = (
   group: SelectionGroup,
   items: CommentItem[],
-): string {
+): string => {
   const sections: string[] = [];
 
   if (!isSynthetic(group)) {
@@ -126,4 +93,4 @@ export function defaultDescription(
   sections.push(items.map(renderSelection).join(separator));
 
   return sections.join("\n\n");
-}
+};

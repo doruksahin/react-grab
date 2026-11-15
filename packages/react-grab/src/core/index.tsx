@@ -49,7 +49,6 @@ import { isSynthetic } from "../features/selection-groups/business/synthetic-gro
 import { createSelectionGroups } from "../features/selection-groups/index.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
-import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { createSyncLayer } from "../features/sync/sync-layer.js";
 import type { SyncConfig, SyncStatus } from "../features/sync/types.js";
 import {
@@ -2635,9 +2634,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         if (!effectiveGroupId) return withLiveGroup;
         const group = selectionGroups
           .groups()
-          .find((g) => g.id === effectiveGroupId) as
-          | SelectionGroupWithJira
-          | undefined;
+          .find((g) => g.id === effectiveGroupId);
         return {
           ...withLiveGroup,
           groupStatus: group?.jiraStatus,
@@ -3265,6 +3262,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 syncWorkspace={syncLayer.workspace() ?? undefined}
                 syncServerUrl={syncLayer.serverUrl() ?? undefined}
                 jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
+                jiraSiteHost={syncLayer.jiraSiteHost() ?? undefined}
                 groups={selectionGroups.groups()}
                 activeGroupId={selectionGroups.activeGroupId()}
                 onAddGroup={selectionGroups.handleAddGroup}

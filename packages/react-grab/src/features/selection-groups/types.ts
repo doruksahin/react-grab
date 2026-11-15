@@ -1,6 +1,7 @@
 import type { Accessor, Setter } from "solid-js";
 import type { ServerSelectionGroup } from "../../generated/types.js";
 import type { CommentItem } from "../../shared-types.js";
+import type { JiraComment } from "../jira-comments/types.js";
 
 /**
  * Application-level group type. Extends the server type with UI-only fields.
@@ -21,22 +22,62 @@ export interface SelectionGroup extends ServerSelectionGroup {
 }
 
 /**
+ * A group as the sync layer holds it: the persisted group plus the Jira
+ * fields the status poll fills in (SPEC-003). jiraResolved is persisted on
+ * SelectionGroup; the fields below come from the sync server's Jira status
+ * and are refreshed by polling, not stored locally.
+ */
+export interface SelectionGroupWithJira extends SelectionGroup {
+  /** Raw JIRA status name, e.g. "In Progress" */
+  jiraStatus?: string;
+  /** JIRA status category, e.g. "In Progress", "Done", "To Do" */
+  jiraStatusCategory?: string;
+  /** Full JIRA ticket URL, e.g. "https://company.atlassian.net/browse/ATT-123" */
+  jiraUrl?: string;
+  /** JIRA assignee display name, null if unassigned */
+  jiraAssignee?: string | null;
+  /** JIRA reporter display name, null if unknown */
+  jiraReporter?: string | null;
+  /** Avatar URL (48×48) for the Jira assignee, null if unassigned or unavailable */
+  jiraAssigneeAvatar?: string | null;
+  /** Avatar URL (48×48) for the Jira reporter, null if unavailable */
+  jiraReporterAvatar?: string | null;
+  /** JIRA labels array, e.g. ["UI Ticket Manager", "frontend"] */
+  jiraLabels?: string[];
+  /** Jira comments fetched alongside status. Flat list with parentId for threading. */
+  jiraComments?: JiraComment[];
+  jiraFlagged?: boolean;
+  /** ISO timestamp of when the ticket was flagged (from JIRA changelog) */
+  jiraFlaggedAt?: string | null;
+  /** Display name of who flagged the ticket */
+  jiraFlaggedBy?: string | null;
+  /** Avatar URL (48x48) of who flagged the ticket */
+  jiraFlaggedByAvatar?: string | null;
+  /** JIRA priority name, e.g. "High", "Medium", "Low" */
+  jiraPriority?: string | null;
+  /** JIRA issue type name, e.g. "Bug", "Task", "Story" */
+  jiraIssueType?: string | null;
+  /** JIRA due date as ISO string, e.g. "2026-04-20", null if not set */
+  jiraDueDate?: string | null;
+}
+
+/**
  * Dependencies injected from core/index.tsx into the selection groups module.
  */
 export interface SelectionGroupsDeps {
   commentItems: () => CommentItem[];
   persistCommentItems: (items: CommentItem[]) => CommentItem[];
-  groups: () => SelectionGroup[];
-  persistGroups: (groups: SelectionGroup[]) => SelectionGroup[];
+  groups: () => SelectionGroupWithJira[];
+  persistGroups: (groups: SelectionGroupWithJira[]) => SelectionGroupWithJira[];
 }
 
 /**
  * Public API returned by createSelectionGroups.
  */
 export interface SelectionGroupsAPI {
-  groups: Accessor<SelectionGroup[]>;
-  setGroups: Setter<SelectionGroup[]>;
-  persistGroups: (groups: SelectionGroup[]) => SelectionGroup[];
+  groups: Accessor<SelectionGroupWithJira[]>;
+  setGroups: Setter<SelectionGroupWithJira[]>;
+  persistGroups: (groups: SelectionGroupWithJira[]) => SelectionGroupWithJira[];
   activeGroupId: Accessor<string | null>;
   setActiveGroupId: Setter<string | null>;
   handleAddGroup: (name: string) => void;
@@ -60,7 +101,7 @@ export interface SelectionGroupsAPI {
  * ReactGrabRendererProps extends this. Component props Pick<> their subset.
  */
 export interface SelectionGroupsViewProps {
-  groups?: SelectionGroup[];
+  groups?: SelectionGroupWithJira[];
   activeGroupId?: string | null;
   onActiveGroupChange?: (groupId: string | null) => void;
   onAddGroup?: (name: string) => void;

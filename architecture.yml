@@ -150,11 +150,14 @@ features:
     files:
       - packages/react-grab/src/components/sidebar/index.tsx
       - packages/react-grab/src/core/index.tsx
+      - packages/react-grab/src/features/jira-ticket/business/default-description.ts
+      - packages/react-grab/src/features/jira-ticket/business/default-summary.ts
+      - packages/react-grab/src/features/jira-ticket/business/site-host.ts
+      - packages/react-grab/src/features/jira-ticket/issue-type-icons.ts
+      - packages/react-grab/src/features/jira-ticket/priority-icons.ts
       - packages/react-grab/src/features/sidebar/derive-status.ts
       - packages/react-grab/src/features/sidebar/extract-file-path.ts
       - packages/react-grab/src/features/sidebar/index.ts
-      - packages/react-grab/src/features/sidebar/jira-defaults.ts
-      - packages/react-grab/src/features/sidebar/jira-types.ts
       - packages/react-grab/src/features/sidebar/relative-time.ts
       - packages/react-grab/src/features/sidebar/screenshot-url.ts
       - packages/react-grab/src/features/sidebar/use-lazy-visible.ts
@@ -244,16 +247,20 @@ features:
     status: implemented
     prds: [PRD-002]
     specs: [SPEC-003, SPEC-009]
-    adrs: [ADR-0003, ADR-0004, ADR-0005]
+    adrs: [ADR-0003, ADR-0004, ADR-0005, ADR-0022]
     files:
       - packages/dashboard/src/api/endpoints/jira/jira.ts
       - packages/dashboard/src/components/jira/jira-create-dialog.tsx
       - packages/react-grab/src/components/sidebar/jira-create-button.tsx
       - packages/react-grab/src/components/sidebar/jira-create-dialog.tsx
       - packages/react-grab/src/components/sidebar/jira-create-form.tsx
+      - packages/react-grab/src/features/jira-ticket/business/default-description.ts
+      - packages/react-grab/src/features/jira-ticket/business/default-summary.ts
+      - packages/react-grab/src/features/jira-ticket/business/site-host.ts
+      - packages/react-grab/src/features/jira-ticket/index.ts
+      - packages/react-grab/src/features/jira-ticket/issue-type-icons.ts
+      - packages/react-grab/src/features/jira-ticket/priority-icons.ts
       - packages/react-grab/src/features/sidebar/extract-file-path.ts
-      - packages/react-grab/src/features/sidebar/jira-defaults.ts
-      - packages/react-grab/src/features/sidebar/jira-types.ts
       - packages/sync-server/src/routes/jira.ts
       - packages/sync-server/src/schemas/jira.ts
       - packages/sync-server/src/services/jira.service.ts
@@ -291,7 +298,6 @@ features:
       - packages/react-grab/src/features/sidebar/due-date/matchers.ts
       - packages/react-grab/src/features/sidebar/due-date/presets.ts
       - packages/react-grab/src/features/sidebar/filter-state.ts
-      - packages/react-grab/src/features/sidebar/jira-types.ts
       - packages/react-grab/src/features/sidebar/status-colors.ts
 
   jira-avatars:
@@ -300,7 +306,7 @@ features:
     prds: [PRD-005]
     specs: [SPEC-008]
     files:
-      - packages/react-grab/src/features/sidebar/jira-types.ts
+      - packages/react-grab/src/features/selection-groups/types.ts
       - packages/sync-server/src/schemas/jira.ts
       - packages/sync-server/src/services/jira.service.ts
 
@@ -314,7 +320,7 @@ features:
       - packages/react-grab/src/components/icons/icon-flag.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
       - packages/react-grab/src/components/sidebar/group-card.tsx
-      - packages/react-grab/src/features/sidebar/jira-types.ts
+      - packages/react-grab/src/features/selection-groups/types.ts
       - packages/react-grab/src/features/sidebar/resolve-display-color.ts
       - packages/react-grab/src/features/sidebar/status-colors.ts
       - packages/sync-server/src/services/jira.service.ts
@@ -776,7 +782,7 @@ data_attrs:
     jira-create: {scope: jira, src: 1, tests: 0}
     jira-description-input: {scope: jira, src: 1, tests: 2}
     jira-description-preview: {scope: jira, src: 1, tests: 1}
-    jira-destination: {scope: jira, src: 1, tests: 1}
+    jira-destination: {scope: jira, src: 1, tests: 2}
     jira-dialog: {scope: jira, src: 1, tests: 0}
     jira-dots: {scope: jira, src: 1, tests: 0}
     jira-error: {scope: jira, src: 1, tests: 2}

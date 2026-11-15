@@ -1,4 +1,4 @@
-import type { SelectionGroupWithJira } from "../jira-types.js";
+import type { SelectionGroupWithJira } from "../../selection-groups/types.js";
 import { type FilterState, applyFilters } from "../filter-state.js";
 import {
   ALL_ATT_STATUSES,

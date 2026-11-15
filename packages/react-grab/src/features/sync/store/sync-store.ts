@@ -1,6 +1,6 @@
 import { createStore } from "solid-js/store";
 import type { CommentItem } from "../../../types.js";
-import type { SelectionGroupWithJira } from "../../sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../selection-groups/types.js";
 import type { GetJiraTicketStatus200 } from "../../../generated/sync-api.js";
 
 export interface SyncStoreShape {
@@ -9,6 +9,8 @@ export interface SyncStoreShape {
   workspace: string | null;
   serverUrl: string | null;
   jiraProjectKey: string | null;
+  /** The Jira site tickets go to (GET /jira/site); null until it answers. */
+  jiraSiteUrl: string | null;
   status: "idle" | "loading" | "synced" | "local" | "error";
   error: string | null;
 }
@@ -19,6 +21,7 @@ const INITIAL_STATE: SyncStoreShape = {
   workspace: null,
   serverUrl: null,
   jiraProjectKey: null,
+  jiraSiteUrl: null,
   status: "idle",
   error: null,
 };
@@ -28,8 +31,15 @@ export const createSyncStore = () => {
 
   return {
     store,
-    setConfig: (workspace: string, serverUrl: string, jiraProjectKey: string) => {
+    setConfig: (
+      workspace: string,
+      serverUrl: string,
+      jiraProjectKey: string,
+    ) => {
       setStore({ workspace, serverUrl, jiraProjectKey });
+    },
+    setJiraSiteUrl: (jiraSiteUrl: string | null) => {
+      setStore({ jiraSiteUrl });
     },
     setStatus: (status: SyncStoreShape["status"], error?: string) => {
       setStore({ status, error: error ?? null });
@@ -47,29 +57,25 @@ export const createSyncStore = () => {
     // so only the affected group's properties change in the store.
     updateJiraStatus: (groupId: string, status: GetJiraTicketStatus200) => {
       const resolved = status.statusCategory.toLowerCase() === "done";
-      setStore(
-        "groups",
-        (g) => g.id === groupId,
-        {
-          jiraStatus: status.status,
-          jiraStatusCategory: status.statusCategory,
-          jiraAssignee: status.assignee,
-          jiraReporter: status.reporter,
-          jiraAssigneeAvatar: status.assigneeAvatar,
-          jiraReporterAvatar: status.reporterAvatar,
-          jiraLabels: status.labels,
-          jiraComments: status.comments,
-          jiraResolved: resolved,
-          jiraUrl: status.jiraUrl,
-          jiraFlagged: status.flagged ?? false,
-          jiraFlaggedAt: status.flaggedAt ?? null,
-          jiraFlaggedBy: status.flaggedBy ?? null,
-          jiraFlaggedByAvatar: status.flaggedByAvatar ?? null,
-          jiraPriority: status.priority,
-          jiraIssueType: status.issueType,
-          jiraDueDate: status.dueDate,
-        },
-      );
+      setStore("groups", (g) => g.id === groupId, {
+        jiraStatus: status.status,
+        jiraStatusCategory: status.statusCategory,
+        jiraAssignee: status.assignee,
+        jiraReporter: status.reporter,
+        jiraAssigneeAvatar: status.assigneeAvatar,
+        jiraReporterAvatar: status.reporterAvatar,
+        jiraLabels: status.labels,
+        jiraComments: status.comments,
+        jiraResolved: resolved,
+        jiraUrl: status.jiraUrl,
+        jiraFlagged: status.flagged ?? false,
+        jiraFlaggedAt: status.flaggedAt ?? null,
+        jiraFlaggedBy: status.flaggedBy ?? null,
+        jiraFlaggedByAvatar: status.flaggedByAvatar ?? null,
+        jiraPriority: status.priority,
+        jiraIssueType: status.issueType,
+        jiraDueDate: status.dueDate,
+      });
     },
   };
 };

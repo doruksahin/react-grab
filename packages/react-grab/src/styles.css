@@ -243,30 +243,30 @@
 }
 
 /* Tiptap / ProseMirror editor prose styles */
-.jira-editor-content .ProseMirror {
+.rich-text-content .ProseMirror {
   outline: none;
 }
-.jira-editor-content .ProseMirror p { margin: 0 0 0.5em; }
-.jira-editor-content .ProseMirror p:last-child { margin-bottom: 0; }
-.jira-editor-content .ProseMirror h1 { font-size: 1.25em; font-weight: 600; margin: 0.75em 0 0.25em; }
-.jira-editor-content .ProseMirror h2 { font-size: 1.1em; font-weight: 600; margin: 0.75em 0 0.25em; }
-.jira-editor-content .ProseMirror h3 { font-size: 1em; font-weight: 600; margin: 0.75em 0 0.25em; }
-.jira-editor-content .ProseMirror ul { list-style: disc; padding-left: 1.25em; margin: 0.25em 0; }
-.jira-editor-content .ProseMirror ol { list-style: decimal; padding-left: 1.25em; margin: 0.25em 0; }
-.jira-editor-content .ProseMirror li { margin: 0.1em 0; }
-.jira-editor-content .ProseMirror blockquote { border-left: 3px solid var(--editor-blockquote-border); margin: 0.5em 0; padding-left: 0.75em; color: var(--editor-blockquote-text); }
-.jira-editor-content .ProseMirror code { background: var(--editor-code-bg); border-radius: 3px; padding: 0.1em 0.3em; font-family: monospace; font-size: 0.9em; }
-.jira-editor-content .ProseMirror pre { background: var(--editor-pre-bg); border-radius: 6px; padding: 0.75em 1em; margin: 0.5em 0; overflow-x: auto; }
-.jira-editor-content .ProseMirror pre code { background: none; padding: 0; }
-.jira-editor-content .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--editor-placeholder-color); pointer-events: none; float: left; height: 0; }
+.rich-text-content .ProseMirror p { margin: 0 0 0.5em; }
+.rich-text-content .ProseMirror p:last-child { margin-bottom: 0; }
+.rich-text-content .ProseMirror h1 { font-size: 1.25em; font-weight: 600; margin: 0.75em 0 0.25em; }
+.rich-text-content .ProseMirror h2 { font-size: 1.1em; font-weight: 600; margin: 0.75em 0 0.25em; }
+.rich-text-content .ProseMirror h3 { font-size: 1em; font-weight: 600; margin: 0.75em 0 0.25em; }
+.rich-text-content .ProseMirror ul { list-style: disc; padding-left: 1.25em; margin: 0.25em 0; }
+.rich-text-content .ProseMirror ol { list-style: decimal; padding-left: 1.25em; margin: 0.25em 0; }
+.rich-text-content .ProseMirror li { margin: 0.1em 0; }
+.rich-text-content .ProseMirror blockquote { border-left: 3px solid var(--editor-blockquote-border); margin: 0.5em 0; padding-left: 0.75em; color: var(--editor-blockquote-text); }
+.rich-text-content .ProseMirror code { background: var(--editor-code-bg); border-radius: 3px; padding: 0.1em 0.3em; font-family: monospace; font-size: 0.9em; }
+.rich-text-content .ProseMirror pre { background: var(--editor-pre-bg); border-radius: 6px; padding: 0.75em 1em; margin: 0.5em 0; overflow-x: auto; }
+.rich-text-content .ProseMirror pre code { background: none; padding: 0; }
+.rich-text-content .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--editor-placeholder-color); pointer-events: none; float: left; height: 0; }
 
 /* Mention chip */
-.jira-editor-content .ProseMirror .mention {
+.rich-text-content .ProseMirror .mention {
   @apply mention-chip;
 }
 
 /* Images in comment editor */
-.jira-editor-content .ProseMirror img {
+.rich-text-content .ProseMirror img {
   max-width: 200px;
   border-radius: 4px;
   margin: 0.25em 0;
@@ -274,22 +274,22 @@
   display: block;
   cursor: pointer;
 }
-.jira-editor-content .ProseMirror img.ProseMirror-selectednode {
+.rich-text-content .ProseMirror img.ProseMirror-selectednode {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* Link styles */
-.jira-editor-content .ProseMirror a {
+.rich-text-content .ProseMirror a {
   color: var(--color-primary);
   text-decoration: underline;
 }
 
 /* Underline */
-.jira-editor-content .ProseMirror u { text-decoration: underline; }
+.rich-text-content .ProseMirror u { text-decoration: underline; }
 
 /* Horizontal rule */
-.jira-editor-content .ProseMirror hr {
+.rich-text-content .ProseMirror hr {
   border: none;
   border-top: 1px solid var(--color-border);
   margin: 0.75em 0;

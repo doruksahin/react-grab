@@ -1,20 +1,18 @@
 import { type Component, Show, For } from "solid-js";
-import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import { getStatusChip } from "../../features/sidebar/get-status-chip.js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import { Avatar } from "../ui/avatar.js";
 import { StatusChip } from "../ui/status-chip.js";
 import { IconButton } from "../ui/icon-button.js";
 import { Badge } from "../ui/badge.js";
 
 interface DetailHeaderProps {
-  group: SelectionGroup;
+  group: SelectionGroupWithJira;
   onBack: () => void;
 }
 
 export const DetailHeader: Component<DetailHeaderProps> = (props) => {
-  const groupWithJira = () => props.group as SelectionGroupWithJira;
-  const statusChip = () => getStatusChip(groupWithJira());
+  const statusChip = () => getStatusChip(props.group);
 
   return (
     <div
@@ -39,41 +37,41 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
         <StatusChip size="md" {...statusChip()} />
       </div>
 
-      <Show when={groupWithJira().jiraTicketId}>
+      <Show when={props.group.jiraTicketId}>
         <div class="flex gap-3 mt-1.5 pl-7 text-meta">
           <a
-            href={groupWithJira().jiraUrl ?? "#"}
+            href={props.group.jiraUrl ?? "#"}
             target="_blank"
             rel="noopener noreferrer"
             class="text-link hover:text-link-hover transition-colors font-semibold"
             style={{ "pointer-events": "auto" }}
           >
-            {groupWithJira().jiraTicketId}
+            {props.group.jiraTicketId}
           </a>
-          <Show when={groupWithJira().jiraAssignee}>
+          <Show when={props.group.jiraAssignee}>
             <span class="flex items-center gap-1.5 text-meta text-muted-foreground">
               <Avatar
-                name={groupWithJira().jiraAssignee}
-                src={groupWithJira().jiraAssigneeAvatar}
+                name={props.group.jiraAssignee}
+                src={props.group.jiraAssigneeAvatar}
                 size="sm"
               />
-              {groupWithJira().jiraAssignee}
+              {props.group.jiraAssignee}
             </span>
           </Show>
-          <Show when={groupWithJira().jiraReporter}>
+          <Show when={props.group.jiraReporter}>
             <span class="flex items-center gap-1.5 text-meta text-muted-foreground">
               <Avatar
-                name={groupWithJira().jiraReporter}
-                src={groupWithJira().jiraReporterAvatar}
+                name={props.group.jiraReporter}
+                src={props.group.jiraReporterAvatar}
                 size="sm"
               />
-              {groupWithJira().jiraReporter}
+              {props.group.jiraReporter}
             </span>
           </Show>
         </div>
-        <Show when={groupWithJira().jiraLabels?.length}>
+        <Show when={props.group.jiraLabels?.length}>
           <div class="flex flex-wrap gap-1 mt-1 pl-7">
-            <For each={groupWithJira().jiraLabels}>
+            <For each={props.group.jiraLabels}>
               {(lbl) => <Badge>{lbl}</Badge>}
             </For>
           </div>

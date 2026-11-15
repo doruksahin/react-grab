@@ -5,7 +5,7 @@ import { DetailHeader } from "./detail-header.js";
 import { SelectionList } from "./selection-list.js";
 import { JiraCreateButton } from "./jira-create-button.js";
 import { getStatusLabel } from "../../features/sidebar/status-colors.js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import { isTicketed } from "../../features/selection-groups/business/ticket-lock.js";
 
 interface GroupDetailViewProps {

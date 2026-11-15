@@ -12,8 +12,8 @@ interface JiraCreateDialogProps {
   group: SelectionGroup;
   commentItems: CommentItem[];
   jiraProjectKey: string;
-  /** Host of the Jira site, when known (features/sidebar/jira-site-host.ts). */
-  jiraSiteHost?: string | null;
+  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
+  jiraSiteHost?: string;
   onTicketCreated: TicketCreatedCallback;
   onClose: () => void;
 }

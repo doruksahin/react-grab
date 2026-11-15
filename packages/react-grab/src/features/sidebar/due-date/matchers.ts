@@ -10,7 +10,7 @@
  * returns matching tickets. The presets.ts contract survives unchanged.
  */
 
-import type { SelectionGroupWithJira } from "../jira-types.js";
+import type { SelectionGroupWithJira } from "../../selection-groups/types.js";
 import type { DueDatePreset } from "./presets.js";
 
 const startOfToday = (): Date => {

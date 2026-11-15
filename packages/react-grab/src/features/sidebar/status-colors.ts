@@ -1,4 +1,4 @@
-import type { SelectionGroupWithJira } from "./jira-types.js";
+import type { SelectionGroupWithJira } from "../selection-groups/types.js";
 
 export interface StatusColorConfig {
   hex: string; // border + badge border

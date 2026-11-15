@@ -10,24 +10,25 @@ import {
   saveLocalRevealedStates,
 } from "./transforms.js";
 import { setApiBaseUrl, setApiToken } from "../../generated/custom-fetch.js";
-import { getJiraTicketStatus } from "../../generated/sync-api.js";
+import { getJiraSite, getJiraTicketStatus } from "../../generated/sync-api.js";
+import { getSiteHost } from "../jira-ticket/business/site-host.js";
 import { migrateLegacyDefaultGroup } from "../../utils/migrate-legacy-groups.js";
 import { logRecoverableError } from "../../utils/log-recoverable-error.js";
 import type { SyncConfig } from "./types.js";
 import type { StorageAdapter } from "./types.js";
 import type { CommentItem } from "../../types.js";
-import type { SelectionGroup } from "../selection-groups/types.js";
+import type { SelectionGroupWithJira } from "../selection-groups/types.js";
 
 const GROUPS_KEY = "react-grab-selection-groups";
 const COMMENT_ITEMS_KEY = "react-grab-comment-items";
 const POLL_INTERVAL_MS = 30_000;
 const MAX_LOCAL_STORAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
-const loadGroupsFromLocalStorage = (): SelectionGroup[] => {
+const loadGroupsFromLocalStorage = (): SelectionGroupWithJira[] => {
   try {
     const serialized = localStorage.getItem(GROUPS_KEY);
     if (!serialized) return [];
-    const parsed = JSON.parse(serialized) as SelectionGroup[];
+    const parsed = JSON.parse(serialized) as SelectionGroupWithJira[];
     return parsed
       .filter((group) => group.id !== "default")
       .map((group) => ({
@@ -84,7 +85,7 @@ export const createSyncLayer = () => {
   // difference to the current lists is what changed while offline.
   let offlineBaseline: {
     comments: CommentItem[];
-    groups: SelectionGroup[];
+    groups: SelectionGroupWithJira[];
   } | null = null;
 
   // When revealed state is not synced, it lives in localStorage instead. Both
@@ -109,8 +110,9 @@ export const createSyncLayer = () => {
   const persistComments = (items: CommentItem[]): CommentItem[] =>
     untrack(() => persistCommentsNow(items));
 
-  const persistGroups = (groups: SelectionGroup[]): SelectionGroup[] =>
-    untrack(() => persistGroupsNow(groups));
+  const persistGroups = (
+    groups: SelectionGroupWithJira[],
+  ): SelectionGroupWithJira[] => untrack(() => persistGroupsNow(groups));
 
   const persistCommentsNow = (items: CommentItem[]): CommentItem[] => {
     const adapter = adapterRef;
@@ -137,7 +139,9 @@ export const createSyncLayer = () => {
     return items;
   };
 
-  const persistGroupsNow = (groups: SelectionGroup[]): SelectionGroup[] => {
+  const persistGroupsNow = (
+    groups: SelectionGroupWithJira[],
+  ): SelectionGroupWithJira[] => {
     const adapter = adapterRef;
     if (!adapter) {
       storeHandle.setGroups(groups);
@@ -149,7 +153,7 @@ export const createSyncLayer = () => {
       return groups;
     }
 
-    const changes = itemChanges<SelectionGroup>(
+    const changes = itemChanges<SelectionGroupWithJira>(
       storeHandle.store.groups,
       groups,
       (group) => toGroupWire(group, syncRevealedState),
@@ -195,6 +199,17 @@ export const createSyncLayer = () => {
         }
       }),
     );
+  };
+
+  // An older Worker has no /jira/site; the dialog then names the project only.
+  const loadJiraSite = async () => {
+    try {
+      const result = await getJiraSite();
+      if (result.status === 200)
+        storeHandle.setJiraSiteUrl(result.data.siteUrl);
+    } catch {
+      storeHandle.setJiraSiteUrl(null);
+    }
   };
 
   const startPolling = () => {
@@ -259,7 +274,7 @@ export const createSyncLayer = () => {
   // those changes applied. Groups go first: comments refer to them.
   const replayOfflineChanges = (
     adapter: StorageAdapter,
-    server: { groups: SelectionGroup[]; comments: CommentItem[] },
+    server: { groups: SelectionGroupWithJira[]; comments: CommentItem[] },
   ) => {
     const baseline = offlineBaseline;
     if (!baseline) return server;
@@ -311,6 +326,7 @@ export const createSyncLayer = () => {
       });
       startPolling();
       pollJira();
+      loadJiraSite();
     } catch (error) {
       if (connectGeneration !== generation) return;
       adapterRef = null;
@@ -356,7 +372,7 @@ export const createSyncLayer = () => {
     workspace: string;
     serverUrl: string;
     jiraProjectKey: string;
-    groups?: SelectionGroup[];
+    groups?: SelectionGroupWithJira[];
     comments?: CommentItem[];
   }) => {
     batch(() => {
@@ -378,6 +394,7 @@ export const createSyncLayer = () => {
     workspace: () => storeHandle.store.workspace,
     serverUrl: () => storeHandle.store.serverUrl,
     jiraProjectKey: () => storeHandle.store.jiraProjectKey,
+    jiraSiteHost: () => getSiteHost(storeHandle.store.jiraSiteUrl),
     status: () => storeHandle.store.status,
 
     setGroups: storeHandle.setGroups,

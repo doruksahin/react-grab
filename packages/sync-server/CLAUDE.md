@@ -67,6 +67,7 @@ pnpm --filter @react-grab/sync-server db:reset:local
 - `uploadBase64Images` — upload inline images to JIRA attachments
 - `searchUsers` — user search for @mention resolution
 - `fetchThreadedComments` — threaded comments via Atlassian GraphQL gateway
+- `getSite` — the configured `JIRA_BASE_URL`, served as `GET /jira/site` so the overlay can name the site in its Jira dialog
 
 ## Configuration
 

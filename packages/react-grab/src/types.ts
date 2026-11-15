@@ -667,6 +667,8 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   syncWorkspace?: string;
   syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
   jiraProjectKey?: string;
+  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
+  jiraSiteHost?: string;
   onFilterVisibilityChange?: (
     visibleIds: Set<string>,
     allGroupIds: string[],

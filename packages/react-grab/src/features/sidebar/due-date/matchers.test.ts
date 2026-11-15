@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { matchesDueDatePreset } from "./matchers.js";
-import type { SelectionGroupWithJira } from "../jira-types.js";
+import type { SelectionGroupWithJira } from "../../selection-groups/types.js";
 
 const makeGroup = (jiraDueDate: string | null): SelectionGroupWithJira =>
   ({

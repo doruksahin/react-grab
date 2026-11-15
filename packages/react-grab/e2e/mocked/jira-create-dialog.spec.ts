@@ -196,7 +196,7 @@ test.describe(
             "ADR-0022 step 3, Jira board S5.1: summary first, destination",
         },
       },
-      async ({ page, reactGrab }) => {
+      async ({ page, reactGrab, mockServer }) => {
         const form = await openCreateDialog(page, reactGrab);
         await expect(form.getByRole("textbox").first()).toHaveValue(
           COMMENT_TEXT,
@@ -204,6 +204,7 @@ test.describe(
         await expect(
           form.locator("[data-react-grab-jira-destination]"),
         ).toHaveText("Into ATT on adcreative.atlassian.net · 1 selection");
+        expect(mockServer.requests("getJiraSite")).toHaveLength(1);
       },
     );
 
@@ -243,6 +244,40 @@ test.describe(
           summary: COMMENT_TEXT,
           description: "Edited description",
         });
+      },
+    );
+  },
+);
+
+test.describe(
+  "Jira create dialog — older sync server",
+  { tag: ["@ADR-0022", "@S5.1"] },
+  () => {
+    test.beforeEach(async ({ reactGrab, mockServer }) => {
+      // A Worker deployed before GET /jira/site answers 404.
+      mockServer.override("getJiraSite", () => null);
+      await reactGrab.triggerInitSync();
+      await expect
+        .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+        .toBe(true);
+    });
+
+    test(
+      "without the site the destination names the project only",
+      {
+        annotation: {
+          type: "ac",
+          description: "ADR-0022 step 3, Jira board S5.1: destination fallback",
+        },
+      },
+      async ({ page, reactGrab }) => {
+        const form = await openCreateDialog(page, reactGrab);
+        await expect(
+          form.locator("[data-react-grab-jira-destination]"),
+        ).toHaveText("Into ATT · 1 selection");
+        await expect(
+          form.getByRole("button", { name: "Create ticket" }),
+        ).toBeEnabled();
       },
     );
   },

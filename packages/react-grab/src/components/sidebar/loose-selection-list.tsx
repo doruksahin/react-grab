@@ -1,7 +1,7 @@
 // packages/react-grab/src/components/sidebar/loose-selection-list.tsx
 import { type Component, For, Show, createMemo } from "solid-js";
 import type { CommentItem } from "../../types.js";
-import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
+import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import { isPresentedAsLoose } from "../../features/selection-groups/business/membership.js";
 import { getStatusChip } from "../../features/sidebar/get-status-chip.js";
 import { LooseSelectionCard } from "./loose-selection-card.jsx";

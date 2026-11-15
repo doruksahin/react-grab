@@ -23,7 +23,7 @@ interface SyntheticGroupSeed {
 
 /**
  * Best-effort name inferred from the item being ticketed. Used as the
- * synthetic group's `name`, the fallback of `defaultSummary` when the item
+ * synthetic group's `name`, the fallback of `defaultSummary` (features/jira-ticket) when the item
  * has no comment text.
  */
 export const inferSyntheticGroupName = (item: SyntheticGroupSeed): string =>

@@ -1,12 +1,18 @@
-import { type Component, onCleanup, onMount } from "solid-js";
+import {
+  type Component,
+  type ComponentProps,
+  createEffect,
+  on,
+  onCleanup,
+  onMount,
+  splitProps,
+} from "solid-js";
 import { Editor } from "@tiptap/core";
-import StarterKit from "@tiptap/starter-kit";
-import { Markdown } from "tiptap-markdown";
+import { markdownBaseExtensions } from "../../utils/markdown-extensions.js";
 import { cn } from "../../utils/cn.js";
 
-interface MarkdownPreviewProps {
+interface MarkdownPreviewProps extends Omit<ComponentProps<"div">, "children"> {
   markdown: string;
-  class?: string;
 }
 
 /**
@@ -14,6 +20,7 @@ interface MarkdownPreviewProps {
  * renderer the comment editor uses, read-only.
  */
 export const MarkdownPreview: Component<MarkdownPreviewProps> = (props) => {
+  const [local, rest] = splitProps(props, ["markdown", "class"]);
   let element!: HTMLDivElement;
   let editor: Editor | undefined;
 
@@ -21,18 +28,26 @@ export const MarkdownPreview: Component<MarkdownPreviewProps> = (props) => {
     editor = new Editor({
       element,
       editable: false,
-      extensions: [StarterKit, Markdown.configure({ html: false })],
-      content: props.markdown,
+      extensions: markdownBaseExtensions,
+      content: local.markdown,
     });
   });
+
+  createEffect(
+    on(
+      () => local.markdown,
+      (markdown) => editor?.commands.setContent(markdown),
+      { defer: true },
+    ),
+  );
 
   onCleanup(() => editor?.destroy());
 
   return (
     <div
       ref={element}
-      data-react-grab-jira-description-preview
-      class={cn("jira-editor-content text-body text-foreground", props.class)}
+      class={cn("rich-text-content text-body text-foreground", local.class)}
+      {...rest}
     />
   );
 };
