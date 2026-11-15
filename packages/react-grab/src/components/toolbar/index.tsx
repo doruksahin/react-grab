@@ -64,6 +64,7 @@ import {
   getRatioFromPosition,
 } from "../../utils/toolbar-position.js";
 import { createToolbarDrag } from "../../utils/create-toolbar-drag.js";
+import { Badge } from "../ui/badge.js";
 
 interface ToolbarProps {
   isActive?: boolean;
@@ -999,12 +1000,15 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               <span ref={clockFlashRef} class="inline-flex relative">
                 <IconComment size={14} class={commentsIconClass()} />
                 <Show when={(props.commentItemCount ?? 0) > 0}>
-                  <span
+                  <Badge
                     data-react-grab-unread-indicator
-                    class="absolute -top-1 -right-1 min-w-2.5 h-2.5 px-0.5 flex items-center justify-center rounded-full bg-black text-white text-meta font-semibold leading-none"
+                    variant="count"
+                    tone="inverse"
+                    size="xs"
+                    class="absolute -top-1 -right-1"
                   >
                     {props.commentItemCount}
-                  </span>
+                  </Badge>
                 </Show>
               </span>
             </TooltipTrigger>

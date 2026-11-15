@@ -43,7 +43,6 @@ features/jira-comments/
   use-jira-comments.ts  — main hook (optimistic updates, reply threading)
   types.ts              — JiraComment, MentionMapping, JiraCommentEditorProps, JiraCommentsSectionProps
   parse-comment-body.ts — ADF/markdown body parsing
-  avatar-utils.ts       — avatar URL helpers
   mention-cache.ts      — mention resolution cache
   extract-mentions.ts   — extract @mentions from text
   __tests__/
@@ -51,8 +50,7 @@ features/jira-comments/
 
 components/jira-comments/
   comments-section.tsx
-  comment-item.tsx
-  avatar.tsx
+  comment-item.tsx      — uses ui/avatar.tsx (initials from utils/get-initials.ts, colour from utils/get-avatar-color.ts)
   editor/
     jira-comment-editor.tsx
     mention-picker.tsx
@@ -98,7 +96,7 @@ Example: `jira-comment-editor.tsx` (composition shell) composes `EditorToolbar` 
 ### Reusability
 
 - Components take **props for everything they vary on** — no hardcoded feature-specific assumptions
-- Extract primitives to `components/ui/` when used by 2+ features (e.g., `collapsible.tsx`, `button.tsx`)
+- Extract primitives to `components/ui/` when used by 2+ features (e.g., `collapsible.tsx`, `button.tsx`, `avatar.tsx`, `status-chip.tsx`, `badge.tsx`). Primitives own appearance and never import from `features/` (ADR-0022)
 - Feature-specific components stay in `components/<feature-name>/` — only promote to `ui/` when reused
 - Use `splitProps` to separate local props from pass-through, enabling composition
 

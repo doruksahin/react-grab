@@ -5,7 +5,9 @@ export const openGroupDetail = async (page: Page, groupName: string) => {
     has: page.getByText(groupName, { exact: true }),
   });
   await card.hover();
-  await card.getByTitle("Open detail view", { exact: true }).click();
+  await card
+    .getByRole("button", { name: "Open detail view", exact: true })
+    .click();
   await expect(
     page.getByRole("region", { name: `Detail: ${groupName}`, exact: true }),
   ).toBeVisible();

@@ -46,6 +46,19 @@
   --transition-slow: 200ms;
 }
 
+/* Avatar initials backgrounds (ADR-0022). `static` keeps them in the build:
+   utils/get-avatar-color.ts picks one at runtime, so no utility class uses them. */
+@theme static {
+  --color-avatar-1: #e74c3c;
+  --color-avatar-2: #e67e22;
+  --color-avatar-3: #f1c40f;
+  --color-avatar-4: #2ecc71;
+  --color-avatar-5: #1abc9c;
+  --color-avatar-6: #3498db;
+  --color-avatar-7: #9b59b6;
+  --color-avatar-8: #e91e63;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

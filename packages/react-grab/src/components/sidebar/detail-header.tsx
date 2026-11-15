@@ -1,13 +1,11 @@
 import { type Component, Show, For } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
-import {
-  getStatusLabel,
-  getStatusColor,
-} from "../../features/sidebar/status-colors.js";
+import { getStatusChip } from "../../features/sidebar/get-status-chip.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { Avatar } from "../ui/avatar.js";
 import { StatusChip } from "../ui/status-chip.js";
 import { IconButton } from "../ui/icon-button.js";
+import { Badge } from "../ui/badge.js";
 
 interface DetailHeaderProps {
   group: SelectionGroup;
@@ -16,8 +14,7 @@ interface DetailHeaderProps {
 
 export const DetailHeader: Component<DetailHeaderProps> = (props) => {
   const groupWithJira = () => props.group as SelectionGroupWithJira;
-  const statusLabel = () => getStatusLabel(groupWithJira());
-  const statusColor = () => getStatusColor(groupWithJira().jiraStatus);
+  const statusChip = () => getStatusChip(groupWithJira());
 
   return (
     <div
@@ -39,7 +36,7 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
         >
           {props.group.name}
         </span>
-        <StatusChip size="md" label={statusLabel()} color={statusColor()} />
+        <StatusChip size="md" {...statusChip()} />
       </div>
 
       <Show when={groupWithJira().jiraTicketId}>
@@ -77,11 +74,7 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
         <Show when={groupWithJira().jiraLabels?.length}>
           <div class="flex flex-wrap gap-1 mt-1 pl-7">
             <For each={groupWithJira().jiraLabels}>
-              {(lbl) => (
-                <span class="text-meta px-1.5 py-0.5 rounded-full bg-accent text-muted-foreground">
-                  {lbl}
-                </span>
-              )}
+              {(lbl) => <Badge>{lbl}</Badge>}
             </For>
           </div>
         </Show>

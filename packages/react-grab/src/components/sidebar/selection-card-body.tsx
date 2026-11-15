@@ -12,10 +12,8 @@ import { relativeTime } from "../../features/sidebar/relative-time.js";
 import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
 import { ScreenshotThumb } from "./screenshot-thumb.js";
 import { StatusChip } from "../ui/status-chip.jsx";
-import {
-  getStatusColor,
-  getStatusLabel,
-} from "../../features/sidebar/status-colors.js";
+import { getStatusChip } from "../../features/sidebar/get-status-chip.js";
+import { Badge } from "../ui/badge.jsx";
 
 const formatDueDate = (dueDate: string): string =>
   new Date(dueDate).toLocaleDateString("en-US", {
@@ -79,6 +77,7 @@ export interface SelectionCardBodyProps {
   jiraTicketId?: string;
   jiraUrl?: string;
   jiraStatus?: string;
+  jiraFlagged?: boolean;
 
   // Leading slot — optional element before the summary (e.g. multi-select checkbox)
   leading?: JSX.Element;
@@ -132,10 +131,11 @@ export interface SelectionCardBodyProps {
 
 export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
   const hasTicket = () => Boolean(props.jiraTicketId);
-  const statusLabel = () =>
-    getStatusLabel({
+  const statusChip = () =>
+    getStatusChip({
       jiraTicketId: props.jiraTicketId,
       jiraStatus: props.jiraStatus,
+      jiraFlagged: props.jiraFlagged,
     });
   const screenshotContext = () => {
     const serverUrl = props.syncServerUrl;
@@ -160,22 +160,12 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       }
       statusPill={
         <Show when={hasTicket()}>
-          <StatusChip
-            class="uppercase"
-            label={statusLabel()}
-            color={getStatusColor(statusLabel())}
-          />
+          <StatusChip {...statusChip()} />
         </Show>
       }
       labels={
         <Show when={props.jiraLabels?.length}>
-          <For each={props.jiraLabels}>
-            {(label) => (
-              <span class="bg-foreground/[0.06] text-muted-foreground text-meta font-medium px-1.5 py-0.5 rounded">
-                {label}
-              </span>
-            )}
-          </For>
+          <For each={props.jiraLabels}>{(label) => <Badge>{label}</Badge>}</For>
         </Show>
       }
       dates={

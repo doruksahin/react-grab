@@ -1,6 +1,7 @@
 import { type Component, Show, For } from "solid-js";
 import type { FilterState } from "../../features/sidebar/filter-state.js";
 import { DUE_DATE_PRESET_LABEL } from "../../features/sidebar/due-date/index.js";
+import { Badge } from "../ui/badge.js";
 
 interface FilterChipsProps {
   filter: FilterState;
@@ -23,13 +24,15 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
     if (props.filter.assignee) {
       result.push({
         label: `Assignee: ${props.filter.assignee}`,
-        onDismiss: () => props.onFilterChange({ ...props.filter, assignee: null }),
+        onDismiss: () =>
+          props.onFilterChange({ ...props.filter, assignee: null }),
       });
     }
     if (props.filter.reporter) {
       result.push({
         label: `Reporter: ${props.filter.reporter}`,
-        onDismiss: () => props.onFilterChange({ ...props.filter, reporter: null }),
+        onDismiss: () =>
+          props.onFilterChange({ ...props.filter, reporter: null }),
       });
     }
     if (props.filter.label) {
@@ -41,7 +44,8 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
     if (props.filter.dueDatePreset) {
       result.push({
         label: `Due: ${DUE_DATE_PRESET_LABEL[props.filter.dueDatePreset]}`,
-        onDismiss: () => props.onFilterChange({ ...props.filter, dueDatePreset: null }),
+        onDismiss: () =>
+          props.onFilterChange({ ...props.filter, dueDatePreset: null }),
       });
     }
     return result;
@@ -55,7 +59,7 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
       >
         <For each={chips()}>
           {(chip) => (
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent text-meta text-foreground">
+            <Badge>
               {chip.label}
               <button
                 class="text-muted-foreground hover:text-foreground cursor-pointer"
@@ -63,7 +67,7 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
               >
                 ✕
               </button>
-            </span>
+            </Badge>
           )}
         </For>
       </div>

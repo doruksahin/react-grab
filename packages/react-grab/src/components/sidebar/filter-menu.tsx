@@ -18,6 +18,7 @@ import {
   MenuSubTrigger,
   MenuTrigger,
 } from "../ui/menu.js";
+import { Badge } from "../ui/badge.js";
 
 interface FilterMenuProps {
   filter: FilterState;
@@ -136,12 +137,15 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
           </svg>
           <span class="text-muted-foreground font-medium">Filter</span>
           <Show when={activeCount() > 0}>
-            <span
+            <Badge
               data-react-grab-filter-badge
-              class="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-meta font-bold inline-flex items-center justify-center ring-2 ring-background"
+              variant="count"
+              tone="primary"
+              size="sm"
+              class="absolute -top-1.5 -right-1.5 ring-2 ring-background"
             >
               {activeCount()}
-            </span>
+            </Badge>
           </Show>
         </MenuTrigger>
 

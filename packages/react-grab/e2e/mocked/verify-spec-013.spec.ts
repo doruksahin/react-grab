@@ -99,7 +99,9 @@ test.describe("Jira editor current UI contract", () => {
     mockServer,
   }) => {
     await editor(page).fill("Keep main draft");
-    await selectionLabel(page).getByTitle("Reply", { exact: true }).click();
+    await selectionLabel(page)
+      .getByRole("button", { name: "Reply", exact: true })
+      .click();
     const reply = selectionLabel(page).locator(
       "[data-react-grab-inline-reply]",
     );
@@ -115,7 +117,9 @@ test.describe("Jira editor current UI contract", () => {
     page,
     mockServer,
   }) => {
-    await selectionLabel(page).getByTitle("Reply", { exact: true }).click();
+    await selectionLabel(page)
+      .getByRole("button", { name: "Reply", exact: true })
+      .click();
     const reply = selectionLabel(page).locator(
       "[data-react-grab-inline-reply]",
     );

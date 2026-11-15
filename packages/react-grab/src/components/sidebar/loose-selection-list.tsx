@@ -3,8 +3,7 @@ import { type Component, For, Show, createMemo } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { isPresentedAsLoose } from "../../features/selection-groups/business/membership.js";
-import { getStatusLabel } from "../../features/sidebar/status-colors.js";
-import { resolveDisplayColor } from "../../features/sidebar/resolve-display-color.js";
+import { getStatusChip } from "../../features/sidebar/get-status-chip.js";
 import { LooseSelectionCard } from "./loose-selection-card.jsx";
 
 interface LooseSelectionListProps {
@@ -25,7 +24,9 @@ interface LooseSelectionListProps {
  * LooseSelectionCard along with the right Jira status data (looked up
  * from the backing synthetic group, when present).
  */
-export const LooseSelectionList: Component<LooseSelectionListProps> = (props) => {
+export const LooseSelectionList: Component<LooseSelectionListProps> = (
+  props,
+) => {
   const looseItems = createMemo(() =>
     props.commentItems.filter((item) =>
       isPresentedAsLoose(item, props.allGroups, props.commentItems),
@@ -53,8 +54,7 @@ export const LooseSelectionList: Component<LooseSelectionListProps> = (props) =>
             return (
               <LooseSelectionCard
                 item={item}
-                statusLabel={group() ? getStatusLabel(group()!) : "No Task"}
-                statusColor={resolveDisplayColor(group()?.jiraStatus, group()?.jiraFlagged)}
+                status={getStatusChip(group() ?? {})}
                 jiraTicketId={group()?.jiraTicketId}
                 jiraUrl={group()?.jiraUrl}
                 jiraFlagged={group()?.jiraFlagged}

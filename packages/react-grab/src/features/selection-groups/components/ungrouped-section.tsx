@@ -2,6 +2,7 @@ import { createSignal, For, Show } from "solid-js";
 import type { Component, JSX } from "solid-js";
 import type { CommentItem } from "../../../types.js";
 import { cn } from "../../../utils/cn.js";
+import { Badge } from "../../../components/ui/badge.js";
 
 interface UngroupedSectionProps {
   items: CommentItem[];
@@ -30,18 +31,24 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
       >
         <div class="flex items-center gap-1.5 min-w-0 flex-1">
           <svg
-            width="10" height="10" viewBox="0 0 16 16"
-            class={cn("text-foreground/30 transition-transform duration-150 shrink-0", !isOpen() && "-rotate-90")}
+            width="10"
+            height="10"
+            viewBox="0 0 16 16"
+            class={cn(
+              "text-foreground/30 transition-transform duration-150 shrink-0",
+              !isOpen() && "-rotate-90",
+            )}
           >
-            <path fill="currentColor" d="m14.53 6.03-6 6a.75.75 0 0 1-1.004.052l-.056-.052-6-6 1.06-1.06L8 10.44l5.47-5.47z" />
+            <path
+              fill="currentColor"
+              d="m14.53 6.03-6 6a.75.75 0 0 1-1.004.052l-.056-.052-6-6 1.06-1.06L8 10.44l5.47-5.47z"
+            />
           </svg>
           <span class="text-caption font-semibold text-foreground/70 truncate">
             Ungrouped
           </span>
         </div>
-        <span class="text-meta font-medium text-muted-foreground bg-foreground/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-          {props.items.length}
-        </span>
+        <Badge variant="count">{props.items.length}</Badge>
       </div>
       {/* Collapsible items */}
       <div

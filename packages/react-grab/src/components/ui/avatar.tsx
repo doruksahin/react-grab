@@ -1,12 +1,10 @@
 import { Image as ImagePrimitive } from "@kobalte/core/image";
 import { cva, type VariantProps } from "cva";
 import type { Component, ComponentProps } from "solid-js";
-import { splitProps } from "solid-js";
-import {
-  avatarColor,
-  initials,
-} from "../../features/jira-comments/avatar-utils.js";
+import { Show, splitProps } from "solid-js";
 import { cn } from "../../utils/cn.js";
+import { getAvatarColor } from "../../utils/get-avatar-color.js";
+import { getInitials } from "../../utils/get-initials.js";
 
 const avatarVariants = cva({
   base: "inline-flex shrink-0 overflow-hidden rounded-full select-none",
@@ -35,25 +33,27 @@ const Avatar: Component<AvatarProps> = (props) => {
   const [local, rest] = splitProps(props, ["name", "src", "size", "class"]);
 
   return (
-    <ImagePrimitive
-      data-react-grab-avatar
-      class={cn(avatarVariants({ size: local.size }), local.class)}
-      {...rest}
-    >
-      <ImagePrimitive.Img
-        data-testid="user-avatar-img"
-        src={local.src ?? undefined}
-        alt={local.name ?? ""}
-        class="size-full object-cover"
-      />
-      <ImagePrimitive.Fallback
-        data-testid="user-avatar-initials"
-        class="flex size-full items-center justify-center font-semibold leading-none text-white"
-        style={{ background: avatarColor(local.name) }}
+    <Show when={local.name || local.src}>
+      <ImagePrimitive
+        data-react-grab-avatar
+        class={cn(avatarVariants({ size: local.size }), local.class)}
+        {...rest}
       >
-        {initials(local.name)}
-      </ImagePrimitive.Fallback>
-    </ImagePrimitive>
+        <ImagePrimitive.Img
+          data-react-grab-avatar-image
+          src={local.src ?? undefined}
+          alt={local.name ?? ""}
+          class="size-full object-cover"
+        />
+        <ImagePrimitive.Fallback
+          data-react-grab-avatar-fallback
+          class="flex size-full items-center justify-center font-semibold leading-none text-white"
+          style={{ background: getAvatarColor(local.name) }}
+        >
+          {getInitials(local.name)}
+        </ImagePrimitive.Fallback>
+      </ImagePrimitive>
+    </Show>
   );
 };
 

@@ -129,6 +129,7 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
               jiraTicketId={props.jiraTicketId}
               jiraUrl={props.jiraUrl}
               jiraStatus={props.groupStatus}
+              jiraFlagged={props.jiraFlagged}
               jiraLabels={props.jiraLabels}
               jiraDueDate={props.jiraDueDate}
               jiraIssueType={props.jiraIssueType}

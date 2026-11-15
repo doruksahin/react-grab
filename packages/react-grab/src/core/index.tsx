@@ -2647,7 +2647,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           groupStatus: group?.jiraStatus,
           jiraTicketId: group?.jiraTicketId,
           jiraUrl: group?.jiraUrl,
-          jiraStatusCategory: group?.jiraStatusCategory,
           jiraAssignee: group?.jiraAssignee,
           jiraReporter: group?.jiraReporter,
           jiraAssigneeAvatar: group?.jiraAssigneeAvatar,

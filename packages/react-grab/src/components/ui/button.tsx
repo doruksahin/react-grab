@@ -3,7 +3,7 @@ import type { Component, ComponentProps } from "solid-js";
 import { splitProps } from "solid-js";
 import { cn } from "../../utils/cn.js";
 
-const buttonVariants = cva({
+const buttonVariantDefinitions = {
   base: "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   variants: {
     variant: {
@@ -26,6 +26,10 @@ const buttonVariants = cva({
       "icon-sm": "size-6 rounded-md",
     },
   },
+};
+
+const buttonVariants = cva({
+  ...buttonVariantDefinitions,
   defaultVariants: {
     variant: "default",
     size: "default",
@@ -50,5 +54,5 @@ const Button: Component<ButtonProps> = (props) => {
   );
 };
 
-export { Button, buttonVariants };
+export { Button, buttonVariantDefinitions, buttonVariants };
 export type { ButtonProps };

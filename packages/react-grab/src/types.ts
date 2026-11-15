@@ -491,7 +491,6 @@ export interface JiraDisplayFields {
   groupStatus?: GroupStatus;
   jiraTicketId?: string;
   jiraUrl?: string;
-  jiraStatusCategory?: string;
   jiraAssignee?: string | null;
   jiraReporter?: string | null;
   jiraAssigneeAvatar?: string | null;
@@ -514,7 +513,6 @@ export const JIRA_DISPLAY_KEYS = [
   "groupStatus",
   "jiraTicketId",
   "jiraUrl",
-  "jiraStatusCategory",
   "jiraAssignee",
   "jiraReporter",
   "jiraAssigneeAvatar",

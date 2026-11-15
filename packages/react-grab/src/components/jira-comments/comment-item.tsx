@@ -2,6 +2,7 @@ import { type Component, Show } from "solid-js";
 import type { JiraComment } from "../../features/jira-comments/types.js";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
 import { Avatar } from "../ui/avatar.js";
+import { IconButton } from "../ui/icon-button.js";
 import { CommentBody } from "./comment-body.js";
 
 export const CommentItem: Component<{
@@ -47,11 +48,10 @@ export const CommentItem: Component<{
         </div>
         <Show when={!props.isReply && !props.comment.sending}>
           <div class="flex gap-0.5 mt-1">
-            <button
+            <IconButton
               data-react-grab-comment-reply
               data-react-grab-ignore-events
-              class="text-muted-foreground hover:text-foreground hover:bg-accent p-0.5 rounded"
-              title="Reply"
+              label="Reply"
               onMouseDown={(e) => {
                 e.preventDefault();
                 props.onReply?.();
@@ -65,7 +65,7 @@ export const CommentItem: Component<{
                   clip-rule="evenodd"
                 />
               </svg>
-            </button>
+            </IconButton>
           </div>
         </Show>
       </div>

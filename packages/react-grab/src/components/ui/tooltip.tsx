@@ -1,6 +1,14 @@
 import { Tooltip as TooltipPrimitive } from "@kobalte/core/tooltip";
 import type { Component, ComponentProps } from "solid-js";
-import { createEffect, createSignal, onCleanup, splitProps } from "solid-js";
+import {
+  createContext,
+  createEffect,
+  createSignal,
+  onCleanup,
+  Show,
+  splitProps,
+  useContext,
+} from "solid-js";
 import { cn } from "../../utils/cn.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
 
@@ -22,6 +30,11 @@ import { useShadowMount } from "../../utils/shadow-context.js";
  */
 
 type TooltipRootProps = ComponentProps<typeof TooltipPrimitive>;
+
+// With forceMount Kobalte would keep the content mounted while closed, and
+// start positioning it while the trigger is still detached. The content
+// renders only while this delayed open state is true.
+const DelayedOpenContext = createContext<() => boolean>();
 
 const Tooltip: Component<TooltipRootProps> = (props) => {
   const [local, rest] = splitProps(props, [
@@ -72,35 +85,44 @@ const Tooltip: Component<TooltipRootProps> = (props) => {
   onCleanup(() => clearTimeout(timeout));
 
   return (
-    <TooltipPrimitive
-      open={delayedOpen()}
-      onOpenChange={(isOpen) => setHoverIntent(isOpen)}
-      forceMount
-      {...rest}
-    >
-      {local.children}
-    </TooltipPrimitive>
+    <DelayedOpenContext.Provider value={delayedOpen}>
+      <TooltipPrimitive
+        open={delayedOpen()}
+        onOpenChange={(isOpen) => setHoverIntent(isOpen)}
+        forceMount
+        {...rest}
+      >
+        {local.children}
+      </TooltipPrimitive>
+    </DelayedOpenContext.Provider>
   );
 };
 
 const TooltipTrigger = TooltipPrimitive.Trigger;
 
-const TooltipPortal: Component<ComponentProps<typeof TooltipPrimitive.Portal>> = (props) => {
+const TooltipPortal: Component<
+  ComponentProps<typeof TooltipPrimitive.Portal>
+> = (props) => {
   return <TooltipPrimitive.Portal {...props} mount={useShadowMount()} />;
 };
 
-const TooltipContent: Component<ComponentProps<typeof TooltipPrimitive.Content>> = (props) => {
+const TooltipContent: Component<
+  ComponentProps<typeof TooltipPrimitive.Content>
+> = (props) => {
   const [local, rest] = splitProps(props, ["class"]);
+  const delayedOpen = useContext(DelayedOpenContext);
   return (
-    <TooltipPortal>
-      <TooltipPrimitive.Content
-        class={cn(
-          "z-50 overflow-hidden rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
-          local.class,
-        )}
-        {...rest}
-      />
-    </TooltipPortal>
+    <Show when={delayedOpen?.() ?? true}>
+      <TooltipPortal>
+        <TooltipPrimitive.Content
+          class={cn(
+            "z-50 overflow-hidden rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
+            local.class,
+          )}
+          {...rest}
+        />
+      </TooltipPortal>
+    </Show>
   );
 };
 

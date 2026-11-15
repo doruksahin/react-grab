@@ -1,6 +1,7 @@
 import { type Component, For } from "solid-js";
 import { getStatusColor } from "../../features/sidebar/status-colors.js";
 import { FLAGGED_COLOR } from "../../features/sidebar/resolve-display-color.js";
+import { StatusDot } from "../ui/status-dot.js";
 
 interface StatusLegendProps {
   onClose: () => void;
@@ -11,16 +12,27 @@ const STATUS_DESCRIPTIONS: Record<string, string> = {
   "To Do": "Ticket created, not yet started",
   "In Progress": "Developer actively working on it",
   "Code Review": "Pull request submitted for review",
-  "Test": "QA testing in progress",
+  Test: "QA testing in progress",
   "Test Passed": "QA approved, ready for UAT",
-  "UAT": "User acceptance testing",
+  UAT: "User acceptance testing",
   "In Preprod": "Deployed to pre-production environment",
   "In Production": "Live in production",
   "Won't Do": "Ticket closed without implementation",
-  "Done": "Completed and verified",
+  Done: "Completed and verified",
 };
 
-const FLOW = ["No Task", "To Do", "In Progress", "Code Review", "Test", "Test Passed", "UAT", "In Preprod", "In Production", "Done"];
+const FLOW = [
+  "No Task",
+  "To Do",
+  "In Progress",
+  "Code Review",
+  "Test",
+  "Test Passed",
+  "UAT",
+  "In Preprod",
+  "In Production",
+  "Done",
+];
 
 export const StatusLegend: Component<StatusLegendProps> = (props) => {
   return (
@@ -29,7 +41,9 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
       class="absolute inset-0 z-50 bg-card/95 backdrop-blur-sm flex flex-col overflow-y-auto"
     >
       <div class="px-4 py-3 border-b border-border flex items-center justify-between">
-        <span class="text-body font-semibold text-foreground">Status Legend</span>
+        <span class="text-body font-semibold text-foreground">
+          Status Legend
+        </span>
         <button
           class="text-meta text-muted-foreground hover:text-foreground cursor-pointer"
           onClick={props.onClose}
@@ -40,14 +54,14 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
       <div class="px-4 py-3 space-y-2">
         {/* Flagged — cross-cutting override, shown above workflow statuses */}
         <div class="flex items-start gap-2.5 bg-flag-hover rounded-md p-1.5 -mx-1.5 border-l-[3px] border-l-flag">
-          <div
-            class="w-3 h-3 rounded-sm mt-0.5 shrink-0"
-            style={{ background: FLAGGED_COLOR.hex }}
-          />
+          <StatusDot size="md" class="mt-0.5" color={FLAGGED_COLOR.hex} />
           <div>
-            <div class="text-meta font-medium text-foreground">Flagged / Blocked</div>
+            <div class="text-meta font-medium text-foreground">
+              Flagged / Blocked
+            </div>
             <div class="text-meta text-muted-foreground">
-              Ticket has an impediment — overrides status color on canvas and label border
+              Ticket has an impediment — overrides status color on canvas and
+              label border
             </div>
           </div>
         </div>
@@ -58,18 +72,20 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
         </div>
         <For each={FLOW}>
           {(status) => {
-            const color = status === "No Task"
-              ? getStatusColor(undefined)
-              : getStatusColor(status);
+            const color =
+              status === "No Task"
+                ? getStatusColor(undefined)
+                : getStatusColor(status);
             return (
               <div class="flex items-start gap-2.5">
-                <div
-                  class="w-3 h-3 rounded-sm mt-0.5 shrink-0"
-                  style={{ background: color.hex }}
-                />
+                <StatusDot size="md" class="mt-0.5" color={color.hex} />
                 <div>
-                  <div class="text-meta font-medium text-foreground">{status}</div>
-                  <div class="text-meta text-muted-foreground">{STATUS_DESCRIPTIONS[status]}</div>
+                  <div class="text-meta font-medium text-foreground">
+                    {status}
+                  </div>
+                  <div class="text-meta text-muted-foreground">
+                    {STATUS_DESCRIPTIONS[status]}
+                  </div>
                 </div>
               </div>
             );
@@ -77,7 +93,8 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
         </For>
         <div class="mt-3 pt-3 border-t border-border">
           <div class="text-meta text-muted-foreground leading-relaxed">
-            Lifecycle: No Task → To Do → In Progress → Code Review → Test → Test Passed → UAT → In Preprod → In Production → Done
+            Lifecycle: No Task → To Do → In Progress → Code Review → Test → Test
+            Passed → UAT → In Preprod → In Production → Done
           </div>
         </div>
       </div>

@@ -679,7 +679,7 @@ test.describe("Sidebar — JIRA integration", () => {
             const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
             return (
               root
-                ?.querySelector("[data-testid='user-avatar-img']")
+                ?.querySelector("[data-react-grab-avatar-image]")
                 ?.getAttribute("src") ?? null
             );
           }, ATTR),
@@ -693,7 +693,7 @@ test.describe("Sidebar — JIRA integration", () => {
       const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
       return (
         root
-          ?.querySelector("[data-testid='user-avatar-initials']")
+          ?.querySelector("[data-react-grab-avatar-fallback]")
           ?.textContent?.trim() ?? null
       );
     }, ATTR);

@@ -1,13 +1,12 @@
 import { type Component, createSignal, For, Show } from "solid-js";
 import type { GroupedEntry } from "../../features/sidebar/index.js";
 import { relativeTime } from "../../features/sidebar/index.js";
-import {
-  getStatusColor,
-  getStatusLabel,
-} from "../../features/sidebar/status-colors.js";
+import { getStatusChip } from "../../features/sidebar/get-status-chip.js";
 import { Avatar } from "../ui/avatar.js";
 import { StatusChip } from "../ui/status-chip.js";
+import { IconButton } from "../ui/icon-button.js";
 import { GroupChildren } from "./group-children.js";
+import { Badge } from "../ui/badge.js";
 
 interface GroupCardProps {
   entry: GroupedEntry;
@@ -16,8 +15,7 @@ interface GroupCardProps {
 
 export const GroupCard: Component<GroupCardProps> = (props) => {
   const [isExpanded, setIsExpanded] = createSignal(false);
-  const statusLabel = () => getStatusLabel(props.entry.group);
-  const statusColor = () => getStatusColor(props.entry.group.jiraStatus);
+  const statusChip = () => getStatusChip(props.entry.group);
   const comments = () => props.entry.items;
 
   const handleCardClick = (e: MouseEvent) => {
@@ -36,7 +34,7 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
     <div
       data-react-grab-group-card
       class="group/card bg-muted rounded-lg mb-1.5 cursor-pointer border border-transparent hover:border-border hover:bg-accent transition-colors overflow-hidden"
-      style={{ "border-left": `2px solid ${statusColor().hex}` }}
+      style={{ "border-left": `2px solid ${statusChip().color.hex}` }}
       onClick={handleCardClick}
     >
       <div class="p-3">
@@ -58,20 +56,19 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
             </span>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
-            <StatusChip label={statusLabel()} color={statusColor()} />
-            {/* Detail open button — visible on hover */}
-            <button
-              class="opacity-0 group-hover/card:opacity-100 transition-opacity p-0.5 rounded hover:bg-foreground/10"
+            <StatusChip {...statusChip()} />
+            <IconButton
+              label="Open detail view"
+              class="opacity-0 group-hover/card:opacity-100"
               onClick={handleDetailOpen}
-              title="Open detail view"
             >
-              <svg viewBox="0 0 16 16" class="w-2.5 h-2.5 text-foreground/40">
+              <svg viewBox="0 0 16 16" class="w-2.5 h-2.5">
                 <path
                   fill="currentColor"
                   d="m6.03 1.47 6 6a.75.75 0 0 1 .052 1.004l-.052.056-6 6-1.06-1.06L10.44 8 4.97 2.53z"
                 />
               </svg>
-            </button>
+            </IconButton>
           </div>
         </div>
 
@@ -115,11 +112,7 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
         <Show when={props.entry.group.jiraLabels?.length}>
           <div class="flex flex-wrap gap-1 mb-2">
             <For each={props.entry.group.jiraLabels}>
-              {(lbl) => (
-                <span class="text-meta px-1.5 py-0.5 rounded-full bg-accent text-muted-foreground">
-                  {lbl}
-                </span>
-              )}
+              {(lbl) => <Badge>{lbl}</Badge>}
             </For>
           </div>
         </Show>

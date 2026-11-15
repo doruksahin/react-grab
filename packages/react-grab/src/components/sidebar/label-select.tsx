@@ -3,6 +3,7 @@ import { type Component, createMemo, createSignal, For, Show } from "solid-js";
 import { createFilter } from "@kobalte/core";
 import { Combobox, ComboboxInput } from "../ui/combobox.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
+import { Badge } from "../ui/badge.js";
 
 interface LabelSelectProps {
   allLabels: string[];
@@ -88,7 +89,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
           >
             <For each={selected()}>
               {(lbl) => (
-                <span class="bg-accent text-accent-foreground text-meta px-1.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                <Badge>
                   {lbl}
                   <button
                     type="button"
@@ -100,7 +101,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
                   >
                     ×
                   </button>
-                </span>
+                </Badge>
               )}
             </For>
             <ComboboxInput

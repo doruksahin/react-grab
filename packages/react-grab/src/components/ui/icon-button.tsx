@@ -1,15 +1,23 @@
 import type { Component, ComponentProps, JSX } from "solid-js";
 import { splitProps } from "solid-js";
-import type { VariantProps } from "cva";
+import { cva, type VariantProps } from "cva";
 import { ICON_BUTTON_TOOLTIP_OPEN_DELAY_MS } from "../../constants.js";
 import { cn } from "../../utils/cn.js";
-import { buttonVariants } from "./button.js";
+import { buttonVariantDefinitions } from "./button.js";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip.js";
+
+const iconButtonVariants = cva({
+  ...buttonVariantDefinitions,
+  defaultVariants: {
+    variant: "subtle",
+    size: "icon-sm",
+  },
+});
 
 interface IconButtonProps
   extends
     Omit<ComponentProps<"button">, "children" | "aria-label">,
-    VariantProps<typeof buttonVariants> {
+    VariantProps<typeof iconButtonVariants> {
   label: string;
   children: JSX.Element;
 }
@@ -29,10 +37,7 @@ const IconButton: Component<IconButtonProps> = (props) => {
         data-react-grab-icon-button
         aria-label={local.label}
         class={cn(
-          buttonVariants({
-            variant: local.variant ?? "subtle",
-            size: local.size ?? "icon-sm",
-          }),
+          iconButtonVariants({ variant: local.variant, size: local.size }),
           local.class,
         )}
         {...rest}
@@ -44,5 +49,5 @@ const IconButton: Component<IconButtonProps> = (props) => {
   );
 };
 
-export { IconButton };
+export { IconButton, iconButtonVariants };
 export type { IconButtonProps };

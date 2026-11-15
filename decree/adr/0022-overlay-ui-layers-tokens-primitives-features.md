@@ -34,13 +34,15 @@ We want a consistent UI without touching domain logic, the test contract, or add
 | Layer | Owns | Built with | Never contains |
 |---|---|---|---|
 | Tokens (`styles.css` `@theme`) | colour, type scale, radius, spacing, shadow values | Tailwind v4 `@theme` | component structure |
-| Primitives (`components/ui/`) | how a control looks and behaves: Button, IconButton, StatusChip, Avatar, Pin, Menu, Select, Tooltip, Popover, Toast | Kobalte for behaviour and accessibility, `cva` for variants, `@floating-ui/dom` for placement (ADR-0005) | domain rules, data fetching |
+| Primitives (`components/ui/`) | how a control looks and behaves: Button, IconButton, StatusChip, StatusDot, Badge, Avatar, Pin, Menu, Select, Tooltip, Popover, Toast | Kobalte for behaviour and accessibility, `cva` for variants, `@floating-ui/dom` for placement (ADR-0005) | domain rules, data fetching |
 | Feature components (`components/<feature>/`) | which primitives a screen uses and in what order | the primitives | hex colours, arbitrary `px` text sizes, raw `<button>` styling, positioning maths |
 | Domain (`features/<feature>/business`) | rules, including which colour a status gets (ADR-0006) | plain TypeScript | JSX, signals |
 
 - **Libraries, all already dependencies:** Kobalte `Tooltip`, `Popover`, `DropdownMenu`, `Toast` and `Image` (avatar with initials fallback) in 0.13.11; `cva` for variants; `@floating-ui/dom` `computePosition` with `flip`, `shift` and `size` for labels and menus. Playwright's built-in `toHaveScreenshot` guards each surface's appearance.
 - **Custom code that remains, and why:** keeping several label pins near one element from overlapping. Floating UI places one element against one reference; no library spreads several floating elements apart. It is one pure function in `business/` with its own test.
 - **Status chip:** the primitive owns the shape (dot, label, sentence case); the colour per status keeps coming from `status-colors.ts`. Moving those values onto tokens is allowed; moving the mapping out of the domain is not.
+- **Status dot:** the coloured dot of a status, used by the status chip and the status legend; the colour comes from the domain.
+- **Badge:** a neutral pill for Jira labels, filter chips and counts; it carries no status meaning.
 - **Fixed contract:** every `data-react-grab-*` attribute and its scope, the roles and accessible names tests use, the z-index layers and the Shadow DOM mount stay as they are.
 - **Order:** tokens first, then primitives, then layout one scenario per change. The first two change no behaviour; layout changes are approved one by one.
 
@@ -51,3 +53,4 @@ We want a consistent UI without touching domain logic, the test contract, or add
 - Good: no new dependency.
 - Bad: migrating 50 raw buttons and the positioning utilities touches many files; screenshot tests are needed so the migration is reviewed by image, not by reading diffs.
 - Neutral: nothing enforces the rule mechanically yet. A lint rule (no raw `<button>` and no `text-[Npx]` outside `components/ui/`) is a follow-up once the migration is done, so it does not fail on day one.
+- Neutral: primitives own their appearance, so a fixed pixel size inside `components/ui/` (for example the avatar initials) is allowed; the planned lint rule applies outside `components/ui/` only.

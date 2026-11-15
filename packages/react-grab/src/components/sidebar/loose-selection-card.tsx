@@ -1,7 +1,7 @@
 // packages/react-grab/src/components/sidebar/loose-selection-card.tsx
 import { type Component, Show } from "solid-js";
 import type { CommentItem } from "../../types.js";
-import type { StatusColorConfig } from "../../features/sidebar/status-colors.js";
+import type { StatusChipData } from "../../features/sidebar/get-status-chip.js";
 import { SelectionCard } from "./selection-card.jsx";
 import { CreateTicketButton } from "../ui/create-ticket-button.jsx";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
@@ -13,10 +13,7 @@ import { StatusChip } from "../ui/status-chip.jsx";
 
 interface LooseSelectionCardProps {
   item: CommentItem;
-  /** Status label rendered in the right pill — 'No Task' when no ticket. */
-  statusLabel: string;
-  /** Status color config — matches the GroupCard pill colors. */
-  statusColor: StatusColorConfig;
+  status: StatusChipData;
   /** Ticket id when ticketed. */
   jiraTicketId?: string;
   /** Jira URL when ticketed. */
@@ -103,7 +100,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
           }
           right={
             <>
-              <StatusChip label={props.statusLabel} color={props.statusColor} />
+              <StatusChip {...props.status} />
               <span class="text-meta text-muted-foreground">
                 {new Date(props.item.timestamp).toLocaleString()}
               </span>

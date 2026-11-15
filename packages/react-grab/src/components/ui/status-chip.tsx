@@ -1,8 +1,14 @@
 import { cva, type VariantProps } from "cva";
 import type { Component, ComponentProps } from "solid-js";
 import { splitProps } from "solid-js";
-import type { StatusColorConfig } from "../../features/sidebar/status-colors.js";
 import { cn } from "../../utils/cn.js";
+import { StatusDot } from "./status-dot.js";
+
+interface ChipColor {
+  hex: string;
+  bg: string;
+  text: string;
+}
 
 const statusChipVariants = cva({
   base: "inline-flex shrink-0 items-center rounded-full font-medium leading-none whitespace-nowrap",
@@ -22,7 +28,7 @@ interface StatusChipProps
     Omit<ComponentProps<"span">, "children" | "color">,
     VariantProps<typeof statusChipVariants> {
   label: string;
-  color: StatusColorConfig;
+  color: ChipColor;
 }
 
 const StatusChip: Component<StatusChipProps> = (props) => {
@@ -35,15 +41,11 @@ const StatusChip: Component<StatusChipProps> = (props) => {
       style={{ background: local.color.bg, color: local.color.text }}
       {...rest}
     >
-      <span
-        aria-hidden="true"
-        class="size-1.5 shrink-0 rounded-full"
-        style={{ background: local.color.hex }}
-      />
+      <StatusDot color={local.color.hex} />
       {local.label}
     </span>
   );
 };
 
 export { StatusChip, statusChipVariants };
-export type { StatusChipProps };
+export type { ChipColor, StatusChipProps };
