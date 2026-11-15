@@ -48,6 +48,7 @@ import { groupComments } from "../features/selection-groups/business/group-opera
 import { isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
+import { isPinnedLabel } from "../features/selection-label/business/is-pinned-label.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
 import { createSyncLayer } from "../features/sync/sync-layer.js";
 import type { SyncConfig, SyncStatus } from "../features/sync/types.js";
@@ -202,6 +203,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     keyHoldDuration: DEFAULT_KEY_HOLD_DURATION_MS,
     allowActivationInsideInput: true,
     maxContextLines: DEFAULT_MAX_CONTEXT_LINES,
+    // ADR-0022 step 3: saved labels are pins that start closed.
+    collapsibleLabels: true,
+    labelsStartCollapsed: true,
     ...scriptOptions,
     ...pendingSyncOptions,
     ...rawOptions,
@@ -2516,7 +2520,14 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       }, 0);
     };
 
+    // The saved selection whose pin card is open because its comment is
+    // hovered in the comments menu.
+    const [previewedItemId, setPreviewedItemId] = createSignal<string | null>(
+      null,
+    );
+
     const clearCommentsHoverPreviews = () => {
+      setPreviewedItemId(null);
       for (const { boxId, labelId } of commentsHoverPreviews) {
         actions.removeGrabbedBox(boxId);
         if (labelId) {
@@ -2535,7 +2546,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         boxId: string;
         labelId: string | null;
       }[] = commentsHoverPreviews,
-      options: { startExpanded?: boolean } = {},
+      // "saved": the selection's own label (a pin); "preview": a passing
+      // card for a hovered comment, not a pin; "none": highlight only.
+      labelKind: "saved" | "preview" | "none" = "saved",
     ) => {
       if (previewBounds.length === 0) return;
 
@@ -2551,11 +2564,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         });
 
         let labelId: string | null = null;
-        if (index === 0) {
+        if (index === 0 && labelKind !== "none") {
           labelId = `${idPrefix}-label-${item.id}`;
           actions.addLabelInstance({
             id: labelId,
-            itemId: item.id,
+            // A preview stands in for the selection without being it, so it
+            // carries no item id and never becomes a pin.
+            itemId: labelKind === "saved" ? item.id : undefined,
             selectionBounds: bounds,
             tagName: item.tagName,
             componentName: item.componentName,
@@ -2571,7 +2586,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             timestamp: item.timestamp,
             hasElementScreenshot: Boolean(item.screenshotElement),
             hasFullPageScreenshot: Boolean(item.screenshotFullPage),
-            startExpanded: options.startExpanded,
           });
         }
 
@@ -2687,14 +2701,19 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       const previewBounds = connectedElements.map((element) =>
         createElementBounds(element),
       );
-      // A hovered item in the comments menu previews its card, not a pin.
+      // A hovered comment opens the card of its pin when it has one;
+      // otherwise a passing card shows for it.
+      const hasPin = store.labelInstances.some(
+        (instance) => isPinnedLabel(instance) && instance.itemId === item.id,
+      );
+      if (hasPin) setPreviewedItemId(item.id);
       addCommentItemPreview(
         item,
         previewBounds,
         connectedElements,
         idPrefix,
         commentsHoverPreviews,
-        { startExpanded: true },
+        hasPin ? "none" : "preview",
       );
     };
 
@@ -2991,14 +3010,17 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     };
 
     const handleCommentItemHover = (commentItemId: string | null) => {
-      // Don't show hover preview for items already revealed (they have pinned previews)
       clearCommentsHoverPreviews();
       if (!commentItemId) return;
       const item = commentItems().find(
         (innerItem) => innerItem.id === commentItemId,
       );
       if (!item) return;
-      if (visibility.isItemRevealed(item.id)) return;
+      // A revealed item is already on the page: open its pin's card.
+      if (visibility.isItemRevealed(item.id)) {
+        setPreviewedItemId(item.id);
+        return;
+      }
       showCommentItemPreview(item, "comment-hover");
     };
 
@@ -3149,11 +3171,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 inspectNavigationState={inspectNavigationState()}
                 onInspectSelect={handleInspectSelect}
                 labelInstances={computedLabelInstancesWithStatus()}
-                labelsStartCollapsedDefault={
-                  initialOptions.labelsStartCollapsed ??
-                  initialOptions.collapsibleLabels ??
-                  true
-                }
+                labelPinsEnabled={Boolean(initialOptions.collapsibleLabels)}
+                labelPinsStartClosed={Boolean(
+                  initialOptions.labelsStartCollapsed,
+                )}
+                previewedItemId={previewedItemId()}
                 dragVisible={dragVisible()}
                 dragBounds={dragBounds()}
                 grabbedBoxes={computedGrabbedBoxes()}

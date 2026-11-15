@@ -7,7 +7,12 @@ import type {
 } from "../../../types.js";
 import type { SelectionGroupWithJira } from "../../../features/selection-groups/types.js";
 import { SelectionLabelRoot } from "../index.js";
-import { SelectionLabelHeader } from "../parts/header.js";
+import { SelectionLabelCardHeader } from "../parts/card-header.js";
+import { CommentBody } from "../../jira-comments/comment-body.js";
+import {
+  latestComment,
+  sentCommentCount,
+} from "../../../features/jira-comments/latest-comment.js";
 import { SelectionLabelContent } from "../parts/content.js";
 import { DevInsightsSection } from "../parts/dev-insights-section.js";
 import { CopyingState } from "../parts/copying-state.js";
@@ -54,15 +59,15 @@ export interface PersistedLabelProps extends JiraDisplayFields {
   onOpenThread?: () => void;
 
   isCollapsing?: boolean;
-  onCollapse?: () => void;
-  extraTopOffset?: number;
-  onPlacementChange?: (placement: "above" | "below") => void;
+  /** The pin to open under (ADR-0022 step 3); the selection otherwise. */
+  anchorElement?: HTMLElement;
 }
 
 export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
   const isCopying = () => props.status === "copying";
   const comments = () => props.jiraComments ?? [];
-  const latestComment = () => comments()[comments().length - 1];
+  const latest = () => latestComment(comments());
+  const commentCount = () => sentCommentCount(comments());
 
   return (
     <SelectionLabelRoot
@@ -72,10 +77,8 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
       status={props.status}
       isPromptMode={true}
       hideArrow={props.hideArrow}
-      extraTopOffset={props.extraTopOffset}
-      onPlacementChange={props.onPlacementChange}
+      anchorElement={props.anchorElement}
       isCollapsing={props.isCollapsing}
-      onCollapse={props.onCollapse}
       tagName={props.tagName}
       componentName={props.componentName}
       onRemoveItem={props.onRemoveItem}
@@ -96,12 +99,12 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
       </Show>
 
       <Show when={!isCopying()}>
-        <div class="contain-layout shrink-0 flex flex-col justify-center items-stretch min-w-[150px] max-w-[280px]">
-          <SelectionLabelHeader
+        <div class="contain-layout shrink-0 flex w-[280px] flex-col justify-center items-stretch">
+          <SelectionLabelCardHeader
+            title={props.inputValue}
             tagName={props.tagName}
             componentName={props.componentName}
             elementsCount={props.elementsCount}
-            inputValue={props.inputValue}
             jiraFlagged={props.jiraFlagged}
             jiraFlaggedAt={props.jiraFlaggedAt}
             jiraFlaggedBy={props.jiraFlaggedBy}
@@ -152,7 +155,7 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
             />
             {/* The thread itself lives in the sidebar; the card shows the
                 latest comment and opens it there (ADR-0022, Label S6.2). */}
-            <Show when={latestComment()}>
+            <Show when={latest()}>
               {(comment) => (
                 <div
                   data-react-grab-latest-comment
@@ -160,13 +163,15 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
                 >
                   <span class="text-caption text-muted-foreground">
                     {comment().author}
-                    {comments().length > 1
-                      ? ` · latest of ${comments().length} comments`
+                    {commentCount() > 1
+                      ? ` · latest of ${commentCount()} comments`
                       : ""}
                   </span>
-                  <span class="line-clamp-2 text-body text-foreground">
-                    {comment().body}
-                  </span>
+                  <CommentBody
+                    compact
+                    body={comment().body}
+                    class="line-clamp-2 whitespace-normal text-body text-foreground"
+                  />
                 </div>
               )}
             </Show>

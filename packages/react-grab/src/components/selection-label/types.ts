@@ -13,10 +13,9 @@ export interface SelectionLabelRootProps {
   status?: SelectionLabelStatus;
   isPromptMode?: boolean;
   hideArrow?: boolean;
-  extraTopOffset?: number;
-  onPlacementChange?: (placement: "above" | "below") => void;
+  /** An element to open under instead of the selection, e.g. a label's pin. */
+  anchorElement?: HTMLElement;
   isCollapsing?: boolean;
-  onCollapse?: () => void;
   selectionLabelShakeCount?: number;
   /** For the remove button — rendered by Root when present */
   onRemoveItem?: () => void;
@@ -69,6 +68,21 @@ export interface SelectionLabelHeaderProps {
   /** Right-side slot (e.g. ActiveGroupPicker) */
   trailing?: JSX.Element;
   /** Show flag indicator before tag */
+  jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
+}
+
+/** Card header — the comment, then the element and the group */
+export interface SelectionLabelCardHeaderProps {
+  /** The comment; the element name stands in when there is none. */
+  title?: string;
+  tagName?: string;
+  componentName?: string;
+  elementsCount?: number;
+  /** Right side of the meta line, e.g. the group picker. */
+  trailing?: JSX.Element;
   jiraFlagged?: boolean;
   jiraFlaggedAt?: string | null;
   jiraFlaggedBy?: string | null;

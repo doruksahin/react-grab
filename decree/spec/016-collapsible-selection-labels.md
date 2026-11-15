@@ -9,7 +9,7 @@ status: implemented
 # SPEC-016 Collapsible Selection Labels
 
 
-> **Amended (ADR-0022 step 3):** saved labels now start as pins by default (`collapsibleLabels` and `labelsStartCollapsed` default to `true`; set either to `false` for the old expanded default). The dot became a pin (`ui/pin.tsx`) with the status dot, ticket key and comment excerpt; pins of nearby elements stack (`features/selection-label/business/stack-pins.ts`). The expanded card no longer holds the Jira thread: it shows the latest comment and "Open thread" opens the sidebar on that selection.
+> **Amended (ADR-0022 step 3):** `collapsibleLabels` and `labelsStartCollapsed` now default to `true` (set in core's option defaults). `collapsibleLabels: false` is the flag-off behaviour of AC1-AC3: saved labels render open and no pin renders. `labelsStartCollapsed` applies only when pins are on. The dot became a pin (`components/selection-label/label-pin.tsx` on `ui/pin.tsx`) with the status dot, ticket key and comment excerpt; the card opens under the pin and is anchored to it. Pins of nearby elements stack (`features/selection-label/business/stack-pins.ts`). Open/closed state lives in one hook, `features/selection-label/hooks/use-label-pins.ts`, keyed by label id (it replaces `useCollapsibleLabel`, AC19-AC20), so pins and cards render in separate passes. The card no longer holds the Jira thread: it shows the latest comment, and "Open thread" opens the sidebar on that selection. Known limit: stacking does not account for a pin pushed back inside the viewport at the edge.
 
 ## Overview
 

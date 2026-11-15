@@ -195,16 +195,18 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
   );
   const hasAnchor = createMemo(() => anchorRect() !== null);
 
-  // Below the element at the pointer's x, flipping above when it does not
-  // fit, kept inside the visible viewport.
+  // Below the element at the pointer's x, or under the anchor element (a
+  // pin) from its left edge; flipping above when it does not fit, kept
+  // inside the visible viewport.
   const floating = createFloating({
-    reference: () => (hasAnchor() ? labelReference : null),
+    reference: () =>
+      hasAnchor() ? (props.anchorElement ?? labelReference) : null,
     floating: container,
     watch: anchorRect,
     options: () => ({
-      placement: "bottom",
-      fallbackPlacements: ["top"],
-      offsetPx: arrowHeight() + LABEL_GAP_PX + (props.extraTopOffset ?? 0),
+      placement: props.anchorElement ? "bottom-start" : "bottom",
+      fallbackPlacements: [props.anchorElement ? "top-start" : "top"],
+      offsetPx: arrowHeight() + LABEL_GAP_PX,
       paddingPx: VIEWPORT_MARGIN_PX,
       shiftCrossAxis: true,
       boundary: visibleViewport(),
@@ -229,12 +231,6 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
 
   const arrowPosition = (): ArrowPosition =>
     floating.position()?.side === "top" ? "top" : "bottom";
-
-  createEffect(
-    on(arrowPosition, (position) =>
-      props.onPlacementChange?.(position === "top" ? "above" : "below"),
-    ),
-  );
 
   createEffect(
     on(
@@ -273,7 +269,7 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
           "fixed text-body antialiased drop-shadow-overlay select-none transition-opacity duration-100 ease-out",
           props.isCollapsing
             ? "animate-out fade-out-0 zoom-out-95 duration-150 ease-in fill-mode-forwards origin-top"
-            : props.onCollapse &&
+            : props.anchorElement &&
                 "animate-in fade-in-0 zoom-in-95 duration-200 ease-out origin-top",
         )}
         style={{

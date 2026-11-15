@@ -393,12 +393,13 @@ export interface Options {
   recording?: RecordingConfig;
   /**
    * Saved labels show as pins that open their card on click (ADR-0022
-   * step 3). `false` starts them as open cards instead.
+   * step 3). `false` shows them as open labels with no pin (SPEC-016 AC1-3).
    * @default true
    */
   collapsibleLabels?: boolean;
   /**
-   * Whether saved labels start as pins. Overrides `collapsibleLabels`.
+   * With pins on, whether a pin's card starts closed. Ignored when
+   * `collapsibleLabels` is false.
    * @default true
    */
   labelsStartCollapsed?: boolean;
@@ -545,8 +546,6 @@ export interface SelectionLabelInstance extends JiraDisplayFields {
   error?: string;
   hideArrow?: boolean;
   groupId?: string;
-  /** Show the card rather than the pin, e.g. while previewing from a menu. */
-  startExpanded?: boolean;
   // From backing CommentItem — used by <SelectionCardBody> in the selection label
   commentText?: string;
   timestamp?: number;
@@ -574,8 +573,13 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   inspectNavigationState?: ArrowNavigationState;
   onInspectSelect?: (index: number) => void;
   labelInstances?: SelectionLabelInstance[];
-  /** When true, saved labels start as pins (ADR-0022 step 3). */
-  labelsStartCollapsedDefault?: boolean;
+  /** Saved labels show as pins (Options.collapsibleLabels, ADR-0022 step 3). */
+  labelPinsEnabled?: boolean;
+  /** Pins start with their card closed (Options.labelsStartCollapsed). */
+  labelPinsStartClosed?: boolean;
+  /** A saved selection whose card is open while its comment is hovered in
+   *  the comments menu. */
+  previewedItemId?: string | null;
   dragVisible?: boolean;
   dragBounds?: OverlayBounds;
   grabbedBoxes?: Array<{
@@ -829,14 +833,8 @@ export interface SelectionLabelProps
    *  button that opens the JiraCreateDialog. */
   onCreateTicket?: () => void;
   hideArrow?: boolean;
-  /** Collapse the label to a minimal dot indicator */
-  onCollapse?: () => void;
   /** True during the exit animation before the label is actually collapsed */
   isCollapsing?: boolean;
-  /** Extra pixels added to the label's top offset (e.g. to reserve space for the dot indicator above). */
-  extraTopOffset?: number;
-  /** Called when the label's vertical placement changes (flips above/below the selection). */
-  onPlacementChange?: (placement: "above" | "below") => void;
   /** Submit a JIRA comment for the current group's ticket */
   onSubmitJiraComment?: SubmitCommentFn;
   /** Search JIRA users for @mention autocomplete */

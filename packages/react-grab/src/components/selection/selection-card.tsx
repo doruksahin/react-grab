@@ -6,6 +6,7 @@ export interface SelectionCardProps {
   selected?: boolean;
   class?: string;
   ref?: (element: HTMLDivElement) => void;
+  tabIndex?: number;
   children: JSX.Element;
 }
 

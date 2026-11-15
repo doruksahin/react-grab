@@ -158,11 +158,15 @@ export const DROPDOWN_ANCHOR_GAP_PX = 8;
 // Floating UI defaults for overlays (utils/floating.ts).
 export const FLOATING_GAP_PX = 4;
 export const FLOATING_VIEWPORT_PADDING_PX = 8;
-// Label pins (components/collapsible-label/collapsed-dot.tsx, ui/pin.tsx).
+// Label pins (components/selection-label/label-pin.tsx, ui/pin.tsx).
 export const PIN_HEIGHT_PX = 30;
 export const PIN_MAX_WIDTH_PX = 240;
 /** Between an element and its pin, and between stacked pins. */
 export const PIN_GAP_PX = 6;
+/** How long a label card takes to close before it is removed. */
+export const LABEL_EXIT_ANIMATION_MS = 150;
+/** How long the sidebar marks the selection it was opened on. */
+export const SIDEBAR_FOCUS_HIGHLIGHT_MS = 2000;
 export const SAFE_POLYGON_BUFFER_PX = 8;
 export const DROPDOWN_ICON_SIZE_PX = 11;
 export const DROPDOWN_MIN_WIDTH_PX = 180;

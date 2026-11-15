@@ -1,10 +1,21 @@
 import { type Component, For } from "solid-js";
 import { parseCommentBody } from "../../features/jira-comments/parse-comment-body.js";
+import { cn } from "../../utils/cn.js";
 
-export const CommentBody: Component<{ body: string }> = (props) => (
+interface CommentBodyProps {
+  body: string;
+  /** Text only: an image shows as its name, for one-line excerpts. */
+  compact?: boolean;
+  class?: string;
+}
+
+export const CommentBody: Component<CommentBodyProps> = (props) => (
   <div
     data-react-grab-comment-body
-    class="text-muted-foreground whitespace-pre-wrap wrap-break-word text-caption"
+    class={cn(
+      "text-muted-foreground whitespace-pre-wrap wrap-break-word text-caption",
+      props.class,
+    )}
   >
     <For each={parseCommentBody(props.body)}>
       {(seg) =>
@@ -14,6 +25,8 @@ export const CommentBody: Component<{ body: string }> = (props) => (
           <span data-react-grab-mention class="mention-chip text-meta">
             @{seg.name}
           </span>
+        ) : props.compact ? (
+          <span class="italic">{seg.alt || "image"}</span>
         ) : (
           <div class="inline-block my-1 border border-border rounded-lg overflow-hidden max-w-[180px]">
             <img

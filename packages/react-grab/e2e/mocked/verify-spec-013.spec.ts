@@ -20,16 +20,16 @@ import * as fixtures from "../mocks/fixtures.js";
 
 // ADR-0022 step 3: the Jira thread lives in the sidebar only; labels on the
 // page link to it. The selection's card in the sidebar holds the editor.
-const selectionLabel = (page: Page) =>
+const selectionCard = (page: Page) =>
   page
     .locator("[data-react-grab-selection-card]")
     .filter({ hasText: "Navigation bar is misaligned on mobile viewports" });
 const composer = (page: Page) =>
-  selectionLabel(page).locator("[data-react-grab-comment-composer]").first();
+  selectionCard(page).locator("[data-react-grab-comment-composer]").first();
 const editor = (page: Page) =>
   composer(page).locator('[contenteditable="true"]');
 
-test.describe("Jira editor current UI contract", () => {
+test.describe("Jira editor current UI contract", { tag: ["@SPEC-013"] }, () => {
   test.beforeEach(async ({ reactGrab, mockServer }) => {
     mockServer.override("listComments", [fixtures.comments[0]]);
     await reactGrab.triggerInitSync();
@@ -39,7 +39,7 @@ test.describe("Jira editor current UI contract", () => {
       .getByRole("tab", { name: /^Selections/ })
       .click();
     await expect(
-      selectionLabel(reactGrab.page).locator(
+      selectionCard(reactGrab.page).locator(
         '[data-react-grab-jira-comment-id="jira-cmt-1"]',
       ),
     ).toBeVisible();
@@ -82,12 +82,12 @@ test.describe("Jira editor current UI contract", () => {
     });
     await expect(editor(page)).toHaveText("");
     await expect(
-      selectionLabel(page).locator(
+      selectionCard(page).locator(
         '[data-react-grab-jira-comment-id="jira-cmt-new-1"]',
       ),
     ).toContainText(text);
     await expect(
-      selectionLabel(page).locator(
+      selectionCard(page).locator(
         '[data-react-grab-jira-comment-state="sending"]',
       ),
     ).toHaveCount(0);
@@ -106,12 +106,10 @@ test.describe("Jira editor current UI contract", () => {
     mockServer,
   }) => {
     await editor(page).fill("Keep main draft");
-    await selectionLabel(page)
+    await selectionCard(page)
       .getByRole("button", { name: "Reply", exact: true })
       .click();
-    const reply = selectionLabel(page).locator(
-      "[data-react-grab-inline-reply]",
-    );
+    const reply = selectionCard(page).locator("[data-react-grab-inline-reply]");
     await expect(reply).toContainText("Replying to Alice Cooper");
     await reply.locator('[contenteditable="true"]').fill("Discard reply draft");
     await reply.getByRole("button", { name: "Cancel", exact: true }).click();
@@ -124,12 +122,10 @@ test.describe("Jira editor current UI contract", () => {
     page,
     mockServer,
   }) => {
-    await selectionLabel(page)
+    await selectionCard(page)
       .getByRole("button", { name: "Reply", exact: true })
       .click();
-    const reply = selectionLabel(page).locator(
-      "[data-react-grab-inline-reply]",
-    );
+    const reply = selectionCard(page).locator("[data-react-grab-inline-reply]");
     await reply.locator('[contenteditable="true"]').fill("Verified reply");
     await reply.getByRole("button", { name: "Save", exact: true }).click();
     await expect
@@ -244,15 +240,15 @@ test.describe("Jira editor current UI contract", () => {
       .poll(() => mockServer.requests("addJiraComment").length)
       .toBe(1);
     await expect(
-      selectionLabel(page).locator("[data-react-grab-comments-error]"),
+      selectionCard(page).locator("[data-react-grab-comments-error]"),
     ).toBeVisible();
     await expect(
-      selectionLabel(page).locator(
+      selectionCard(page).locator(
         '[data-react-grab-jira-comment-state="sending"]',
       ),
     ).toHaveCount(0);
     await expect(
-      selectionLabel(page).locator("[data-react-grab-comments-list]"),
+      selectionCard(page).locator("[data-react-grab-comments-list]"),
     ).not.toContainText("This request will fail");
   });
 });

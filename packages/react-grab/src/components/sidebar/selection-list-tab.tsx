@@ -1,4 +1,13 @@
-import { type Component, createMemo, For, Show, untrack } from "solid-js";
+import {
+  type Component,
+  createMemo,
+  For,
+  Show,
+  createEffect,
+  createSignal,
+  on,
+  onCleanup,
+} from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import {
@@ -17,6 +26,8 @@ import { isSelectionLocked } from "../../features/selection-groups/business/tick
 import { SelectionCardBody } from "./selection-card-body.js";
 import { SelectionCheckbox } from "../ui/selection-checkbox.js";
 import { SelectionCard } from "../selection/selection-card.js";
+import type { SidebarFocusRequest } from "../../features/sidebar/hooks/use-sidebar-session.js";
+import { SIDEBAR_FOCUS_HIGHLIGHT_MS } from "../../constants.js";
 import { CreateTicketButton } from "../jira/create-ticket-button.js";
 import { DevInsights } from "../dev-insights/index.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
@@ -39,13 +50,48 @@ interface SelectionListTabProps {
   onCreateTicket?: (item: CommentItem) => void;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
   onAddGroup?: (name: string) => void;
-  /** The selection to scroll to and mark, e.g. from a label's "Open thread". */
-  focusItemId?: string | null;
+  /** Scroll to, focus and briefly mark a selection (a label's "Open thread"). */
+  focusRequest?: SidebarFocusRequest | null;
 }
 
 export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
   const isDevMode = useDevMode();
   const lightbox = useImageLightbox();
+
+  // Cards by selection id, for a focus request to scroll to.
+  const cardElements = new Map<string, HTMLElement>();
+  const [highlightedItemId, setHighlightedItemId] = createSignal<string | null>(
+    null,
+  );
+
+  // Once per request: scroll to the card, move focus to it and mark it until
+  // the timer runs out or the user moves on.
+  createEffect(
+    on(
+      () => props.focusRequest,
+      (request) => {
+        if (!request) return;
+        const frame = requestAnimationFrame(() => {
+          const card = cardElements.get(request.itemId);
+          if (!card) return;
+          card.scrollIntoView({ block: "center" });
+          card.focus({ preventScroll: true });
+          setHighlightedItemId(request.itemId);
+          card.addEventListener("blur", () => setHighlightedItemId(null), {
+            once: true,
+          });
+        });
+        const timeoutId = setTimeout(
+          () => setHighlightedItemId(null),
+          SIDEBAR_FOCUS_HIGHLIGHT_MS,
+        );
+        onCleanup(() => {
+          cancelAnimationFrame(frame);
+          clearTimeout(timeoutId);
+        });
+      },
+    ),
+  );
 
   const groupMap = createMemo(
     () => new Map(props.groups.map((g) => [g.id, g])),
@@ -127,16 +173,19 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
             <SelectionCard
               flagged={isFlagged()}
               selected={isSelected()}
+              tabIndex={-1}
               class={
-                item.id === props.focusItemId
-                  ? "ring-1 ring-selection"
-                  : undefined
+                item.id === highlightedItemId()
+                  ? "ring-1 ring-selection outline-none"
+                  : "outline-none"
               }
               ref={(element) => {
-                if (item.id !== untrack(() => props.focusItemId)) return;
-                queueMicrotask(() =>
-                  element.scrollIntoView({ block: "center" }),
-                );
+                cardElements.set(item.id, element);
+                onCleanup(() => {
+                  if (cardElements.get(item.id) === element) {
+                    cardElements.delete(item.id);
+                  }
+                });
               }}
             >
               <SelectionCardBody

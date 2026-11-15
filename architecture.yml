@@ -389,13 +389,16 @@ features:
       - packages/react-grab/src/components/ui/status-dot.tsx
       - packages/react-grab/src/components/ui/tooltip.tsx
       - packages/sync-server/src/services/jira.service.ts
-  collapsible-label:
-    description: TODO
-    status: discovered
+  label-pins:
+    description: Saved labels as pins that open a card (ADR-0022 step 3; was collapsible-label, SPEC-016)
+    status: implemented
+    specs: [SPEC-016]
+    adrs: [ADR-0022]
     files:
-      - packages/react-grab/src/features/collapsible-label/index.ts
-      - packages/react-grab/src/features/collapsible-label/types.ts
-      - packages/react-grab/src/features/collapsible-label/use-collapsible-label.ts
+      - packages/react-grab/src/components/selection-label/label-pin.tsx
+      - packages/react-grab/src/features/selection-label/business/is-pinned-label.ts
+      - packages/react-grab/src/features/selection-label/business/stack-pins.ts
+      - packages/react-grab/src/features/selection-label/hooks/use-label-pins.ts
   image-lightbox:
     description: TODO
     status: discovered
@@ -817,11 +820,11 @@ data_attrs:
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 7}
+    selection-card: {scope: selection, src: 2, tests: 8}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
-    selection-header: {scope: selection, src: 2, tests: 0}
-    selection-label: {scope: selection, src: 1, tests: 18}
+    selection-header: {scope: selection, src: 3, tests: 0}
+    selection-label: {scope: selection, src: 1, tests: 19}
     selection-remove: {scope: selection, src: 1, tests: 0}
     unread-indicator: {scope: selection, src: 1, tests: 0}
     active-group-picker: {scope: sidebar, src: 1, tests: 1}

@@ -2,18 +2,15 @@ import { Show, createSignal } from "solid-js";
 import type { Component } from "solid-js";
 import type { OverlayBounds } from "../../types.js";
 import { createFloating, virtualReference } from "../../utils/floating.js";
-import { PIN_GAP_PX, PIN_HEIGHT_PX } from "../../constants.js";
+import { PIN_GAP_PX } from "../../constants.js";
 import { Pin, PinKey, PinText } from "../ui/pin.js";
 import { StatusDot } from "../ui/status-dot.js";
 
 const PREVIEW_MAX_LENGTH = 48;
 
-/** Vertical space a pin takes below its element (gap + pin). */
-export const PIN_TOTAL_OFFSET_PX = PIN_GAP_PX + PIN_HEIGHT_PX;
-
-interface CollapsedDotProps {
+interface LabelPinProps {
   selectionBounds: OverlayBounds;
-  onExpand: () => void;
+  onToggle: () => void;
   /** The comment; its first words show on the pin. */
   inputValue?: string;
   /** The ticket key, e.g. "ATT-101". */
@@ -24,6 +21,7 @@ interface CollapsedDotProps {
   expanded: boolean;
   /** How far below its own spot the pin sits, so it does not cover another pin. */
   stackOffsetPx: number;
+  ref?: (element: HTMLButtonElement) => void;
 }
 
 const toPreview = (value: string): string => {
@@ -33,7 +31,7 @@ const toPreview = (value: string): string => {
 };
 
 /** A saved comment on the page: a pin under its element's left edge. */
-export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
+export const LabelPin: Component<LabelPinProps> = (props) => {
   // Below the element's left edge, moved down by the stack offset and kept
   // inside the viewport along the edge.
   const [pin, setPin] = createSignal<HTMLButtonElement>();
@@ -41,7 +39,7 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
   const floating = createFloating({
     reference: () => pinReference,
     floating: pin,
-    watch: () => [props.selectionBounds, props.stackOffsetPx],
+    watch: () => props.selectionBounds,
     options: () => ({
       placement: "bottom-start",
       flip: false,
@@ -59,7 +57,10 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
 
   return (
     <Pin
-      ref={setPin}
+      ref={(element) => {
+        setPin(element);
+        props.ref?.(element);
+      }}
       data-react-grab-ignore-events
       data-react-grab-collapsed-dot
       aria-expanded={props.expanded}
@@ -71,7 +72,7 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
       }}
       onClick={(event) => {
         event.stopImmediatePropagation();
-        props.onExpand();
+        props.onToggle();
       }}
       onPointerDown={(event) => event.stopImmediatePropagation()}
     >

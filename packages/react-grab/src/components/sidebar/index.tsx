@@ -4,6 +4,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  on,
   Show,
   untrack,
 } from "solid-js";
@@ -11,6 +12,7 @@ import createFocusTrap from "solid-focus-trap";
 import { cn } from "../../utils/cn.js";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import type { SyncStatus } from "../../features/sync/types.js";
+import type { SidebarFocusRequest } from "../../features/sidebar/hooks/use-sidebar-session.js";
 import type {
   RefreshGroupStatusFn,
   SearchJiraUsersFn,
@@ -64,9 +66,9 @@ export interface SidebarProps {
   syncWorkspace?: string;
   jiraProjectKey?: string;
   onClose: () => void;
-  /** Selection the sidebar opens on, in the Selections tab where its Jira
-   *  thread is (a label's "Open thread"). */
-  initialFocusItemId?: string | null;
+  /** Open on this selection, in the Selections tab where its Jira thread
+   *  is (a label's "Open thread"); a new object for every request. */
+  focusRequest?: SidebarFocusRequest | null;
   onActiveDetailGroupChange: (groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
   onTicketCreated?: TicketCreatedCallback;
@@ -109,6 +111,10 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   createFocusTrap({
     element: () => containerRef ?? null,
     initialFocusElement: () => containerRef ?? null,
+    // Opened on a selection: the Selections tab moves focus to its card.
+    onInitialFocus: (event: Event) => {
+      if (untrack(() => props.focusRequest)) event.preventDefault();
+    },
     // The lightbox is a modal dialog with its own focus trap.
     enabled: () => !lightbox.state().open,
   });
@@ -121,7 +127,18 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   );
 
   const [activeTab, setActiveTab] = createSignal<"groups" | "selections">(
-    untrack(() => props.initialFocusItemId) ? "selections" : "groups",
+    "groups",
+  );
+  // A focus request shows the Selections tab; the tab scrolls to the card.
+  createEffect(
+    on(
+      () => props.focusRequest,
+      (request) => {
+        if (!request) return;
+        setActiveDetailGroupId(null);
+        setActiveTab("selections");
+      },
+    ),
   );
   const handleTabChange = (value: string) => {
     if (value === "groups" || value === "selections") setActiveTab(value);
@@ -396,7 +413,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   onCreateTicket={props.onCreateTicketForLooseItem}
                   onMoveItem={props.onMoveItem}
                   onAddGroup={props.onAddGroup}
-                  focusItemId={props.initialFocusItemId}
+                  focusRequest={props.focusRequest}
                 />
               </TabsContent>
             </Tabs>
