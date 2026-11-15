@@ -1,7 +1,3 @@
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import path from "node:path";
-import type { Page } from "@playwright/test";
 import type { WxtBrowser } from "wxt/browser";
 import {
   FORGED_TOOLBAR_EDGE,
@@ -9,29 +5,16 @@ import {
   TEST_PAGE_WITH_IFRAME_URL,
   expect,
   test,
+  waitForOverlay,
 } from "./fixtures.js";
+import { readPageMessagingBundle } from "./page-messaging.js";
 
 type PageMessagingModule = typeof import("@webext-core/messaging/page");
 
 const BLOB_PROBE_NAMESPACE = "react-grab-extension:blob-probe";
 
-const readPageMessagingBundle = (): Promise<string> => {
-  const pageModulePath = createRequire(import.meta.url).resolve(
-    "@webext-core/messaging/page",
-  );
-  return readFile(
-    path.join(path.dirname(pageModulePath), "page.iife.js"),
-    "utf8",
-  );
-};
-
-const waitForOverlay = (page: Page) =>
-  expect
-    .poll(() => page.evaluate(() => Boolean(window.__REACT_GRAB__)))
-    .toBe(true);
-
 test.describe(
-  "web extension on a non-localhost page",
+  "overlay on an enabled non-localhost site",
   { tag: ["@ADR-0023"] },
   () => {
     test("mounts the overlay in the page", async ({ page, serviceWorker }) => {

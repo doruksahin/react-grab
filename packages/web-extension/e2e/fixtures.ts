@@ -1,19 +1,39 @@
 import path from "node:path";
 import {
   type BrowserContext,
+  type Page,
   type Worker,
   chromium,
   test as base,
+  expect,
 } from "@playwright/test";
+import type { WxtBrowser } from "wxt/browser";
+import {
+  type MockServerHandle,
+  mockSyncServer,
+} from "../../react-grab/e2e/mocks/routes.js";
+import { TEST_API_TOKEN } from "../../react-grab/e2e/mocks/fixtures.js";
+import type { SiteSettingsByOrigin } from "../src/settings/types.js";
+import {
+  DISABLED_SITE_ORIGIN,
+  ENABLED_SITE_ORIGIN,
+  SYNC_SERVER_URL,
+} from "./e2e-origins.js";
 
-const EXTENSION_PATH = path.resolve(import.meta.dirname, "../dist/chrome-mv3");
+const EXTENSION_PATH = path.resolve(
+  import.meta.dirname,
+  "../dist/chrome-mv3-e2e",
+);
 
-export const TEST_PAGE_URL = "https://react-grab-extension.test/";
-export const TEST_PAGE_WITH_IFRAME_URL =
-  "https://react-grab-extension.test/with-iframe";
+export const TEST_PAGE_URL = `${ENABLED_SITE_ORIGIN}/`;
+export const TEST_PAGE_WITH_IFRAME_URL = `${ENABLED_SITE_ORIGIN}/with-iframe`;
+export const DISABLED_PAGE_URL = `${DISABLED_SITE_ORIGIN}/`;
 const THIRD_PARTY_IFRAME_URL = "https://third-party-ads.test/frame";
 
+export const TEST_WORKSPACE = "extension-e2e-workspace";
+export const TEST_JIRA_PROJECT_KEY = "ATT";
 export const FORGED_TOOLBAR_EDGE = "left";
+export { TEST_API_TOKEN };
 
 const TEST_PAGE_HTML =
   "<!doctype html><html><head><title>Extension test page</title></head><body><h1>Extension test page</h1></body></html>";
@@ -38,12 +58,59 @@ parent.postMessage("forgery-attempted", "*");
 const HTML_PAGES = new Map([
   [TEST_PAGE_URL, TEST_PAGE_HTML],
   [TEST_PAGE_WITH_IFRAME_URL, TEST_PAGE_WITH_IFRAME_HTML],
+  [DISABLED_PAGE_URL, TEST_PAGE_HTML],
   [THIRD_PARTY_IFRAME_URL, THIRD_PARTY_IFRAME_HTML],
 ]);
+
+export const ENABLED_SITES: SiteSettingsByOrigin = {
+  [ENABLED_SITE_ORIGIN]: {
+    workspace: TEST_WORKSPACE,
+    jiraProjectKey: TEST_JIRA_PROJECT_KEY,
+  },
+};
+
+const configureSync = async (serviceWorker: Worker): Promise<void> => {
+  await serviceWorker.evaluate(
+    async ({ serverUrl, apiToken, sites }) => {
+      const extensionApi: WxtBrowser = Reflect.get(globalThis, "chrome");
+      await extensionApi.storage.local.set({
+        sync_server_url: serverUrl,
+        sync_api_token: apiToken,
+        sync_sites: sites,
+      });
+    },
+    {
+      serverUrl: SYNC_SERVER_URL,
+      apiToken: TEST_API_TOKEN,
+      sites: ENABLED_SITES,
+    },
+  );
+  await expect
+    .poll(() =>
+      serviceWorker.evaluate(async () => {
+        const extensionApi: WxtBrowser = Reflect.get(globalThis, "chrome");
+        const scripts =
+          await extensionApi.scripting.getRegisteredContentScripts();
+        return scripts.flatMap((script) => script.matches ?? []);
+      }),
+    )
+    .toEqual(
+      Object.keys(ENABLED_SITES).flatMap((origin) => [
+        `${origin}/*`,
+        `${origin}/*`,
+      ]),
+    );
+};
+
+export const waitForOverlay = (page: Page) =>
+  expect
+    .poll(() => page.evaluate(() => Boolean(window.__REACT_GRAB__)))
+    .toBe(true);
 
 interface ExtensionFixtures {
   context: BrowserContext;
   serviceWorker: Worker;
+  syncServer: MockServerHandle;
 }
 
 export const test = base.extend<ExtensionFixtures>({
@@ -66,8 +133,18 @@ export const test = base.extend<ExtensionFixtures>({
   },
   serviceWorker: async ({ context }, use) => {
     const [existingWorker] = context.serviceWorkers();
-    await use(existingWorker ?? (await context.waitForEvent("serviceworker")));
+    const serviceWorker =
+      existingWorker ?? (await context.waitForEvent("serviceworker"));
+    await use(serviceWorker);
   },
+  syncServer: [
+    async ({ context, serviceWorker }, use) => {
+      const syncServer = await mockSyncServer(context);
+      await configureSync(serviceWorker);
+      await use(syncServer);
+    },
+    { auto: true },
+  ],
 });
 
-export { expect } from "@playwright/test";
+export { expect };
