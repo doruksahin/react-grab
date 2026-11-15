@@ -219,3 +219,24 @@ All tests live in `packages/react-grab/src`. Baseline before this branch: 5 file
 - [x] Typecheck delta: 0 new errors vs `feat/optional-group-membership` baseline (20 pre-existing errors unchanged)
 - [x] Lint delta: 0 new errors vs baseline (11 pre-existing errors unchanged)
 - [x] Vitest: 27 tests passing in 6 files (up from 12 in 5)
+
+## Amendment 2026-11-15: membership policy
+
+A locked selection was moved from the comments panel into another ticketed synthetic group. Its own synthetic group emptied and was garbage-collected, and three selections ended up in one synthetic group, which hid them. The panel offered every group, and the move command applied any target.
+
+The invariants now live in one module, `features/selection-groups/business/membership-policy.ts`, and every membership change goes through its commands:
+
+1. A locked selection (its group, real or synthetic, has a ticket) never leaves its group. A ticketed group cannot be deleted.
+2. A selection moves only into a group that exists, has no ticket and is not synthetic. Leaving every group (`null`) is allowed for an unlocked selection.
+3. A synthetic group has exactly one member. New selections get their own synthetic group unless the chosen group passes rule 2. Nothing moves into a synthetic group, and an emptied one is garbage-collected.
+
+The query `assignableGroupsFor` and the commands `moveSelection`, `moveSelections`, `deleteGroup` and `groupForNewSelection` use the same predicates. A command returns `moved`/`deleted` or `refused` with a reason; the orchestrator applies only accepted results and logs refusals. A bulk move refuses as a whole for a refused target, and otherwise moves the unlocked selections and lists the others.
+
+This supersedes the manual smoke test above that moves a ticketed loose card into a real group.
+
+### Acceptance criteria (amendment)
+
+- [x] AC-1: the comments panel's move picker lists only `assignableGroupsFor` targets (`e2e/mocked/comments-panel-move-policy.spec.ts`)
+- [x] AC-2: a locked selection has no move action in the comments panel; `handleMoveItem` refuses it with `selection-locked`
+- [x] AC-3: a ticketed group offers no delete; `handleDeleteGroup` refuses it with `group-ticketed`
+- [x] AC-4: synthetic and ticketed targets, missing targets and missing selections are refused (`membership-policy.test.ts`)
