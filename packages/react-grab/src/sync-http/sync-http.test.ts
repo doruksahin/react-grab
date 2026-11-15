@@ -6,6 +6,11 @@ import {
 } from "./index.js";
 import type { SyncHttpConfig } from "./types.js";
 import { customFetch } from "../generated/custom-fetch.js";
+import type { JiraPort, StorageAdapter } from "../features/sync/types.js";
+import {
+  createFakeJiraPort,
+  createFakeStorage,
+} from "../test-support/fake-ports.js";
 
 const config: SyncHttpConfig = {
   serverUrl: "https://sync.example.com/",
@@ -309,6 +314,51 @@ describe("customFetch", () => {
   });
 });
 
+const callEveryMethod = async (
+  storage: StorageAdapter,
+  jira: JiraPort,
+): Promise<Record<keyof StorageAdapter | keyof JiraPort, unknown>> => {
+  const blob = new Blob(["x"], { type: "image/png" });
+  return {
+    loadComments: await storage.loadComments(),
+    upsertComment: await storage.upsertComment({ ...comment, groupId: null }),
+    deleteComment: await storage.deleteComment("c"),
+    loadGroups: await storage.loadGroups(),
+    upsertGroup: await storage.upsertGroup({
+      id: "g",
+      name: "G",
+      createdAt: 1,
+    }),
+    deleteGroup: await storage.deleteGroup("g"),
+    uploadScreenshot: await storage.uploadScreenshot("c", "full", blob),
+    loadScreenshot: await storage.loadScreenshot("c", "full"),
+    uploadRecording: await storage.uploadRecording("c", blob),
+    getSite: await jira.getSite(),
+    listIssueTypes: await jira.listIssueTypes("ATT"),
+    listPriorities: await jira.listPriorities(),
+    listLabels: await jira.listLabels("ATT"),
+    getTicketStatus: await jira.getTicketStatus("g"),
+    createTicket: await jira.createTicket("g", {
+      projectKey: "ATT",
+      issueType: "Task",
+      priority: "Medium",
+      summary: "S",
+      description: "",
+    }),
+    addComment: await jira.addComment("g", { body: "b" }),
+    searchUsers: await jira.searchUsers("a"),
+  };
+};
+
+const expectCloneable = (results: Record<string, unknown>) => {
+  for (const [method, result] of Object.entries(results)) {
+    expect(() => structuredClone(result), method).not.toThrow();
+    if (!(result instanceof Blob)) {
+      expect(structuredClone(result), method).toEqual(result);
+    }
+  }
+};
+
 /*
  * ADR-0023: in the extension a port call crosses two message channels that
  * use the structured clone algorithm. Every value a port returns, and the
@@ -361,50 +411,33 @@ describe("structured clone contract", () => {
     return jsonResponse(200, [{ id: "1", name: "Task" }]);
   };
 
-  it("returns only cloneable values from every port method", async () => {
+  it("returns only cloneable values from every HTTP port method", async () => {
     fetchMock.mockImplementation(async (input, init) =>
       respond(String(input), init?.method ?? "GET"),
     );
-    const storage = createHttpAdapter(config);
-    const jira = createHttpJiraPort(config);
-    const blob = new Blob(["x"], { type: "image/png" });
+    expectCloneable(
+      await callEveryMethod(
+        createHttpAdapter(config),
+        createHttpJiraPort(config),
+      ),
+    );
+  });
 
-    const results: Record<string, unknown> = {
-      loadComments: await storage.loadComments(),
-      upsertComment: await storage.upsertComment({ ...comment, groupId: null }),
-      deleteComment: await storage.deleteComment("c"),
-      loadGroups: await storage.loadGroups(),
-      upsertGroup: await storage.upsertGroup({
-        id: "g",
-        name: "G",
-        createdAt: 1,
-      }),
-      deleteGroup: await storage.deleteGroup("g"),
-      uploadScreenshot: await storage.uploadScreenshot("c", "full", blob),
-      loadScreenshot: await storage.loadScreenshot("c", "full"),
-      uploadRecording: await storage.uploadRecording("c", blob),
-      getSite: await jira.getSite(),
-      listIssueTypes: await jira.listIssueTypes("ATT"),
-      listPriorities: await jira.listPriorities(),
-      listLabels: await jira.listLabels("ATT"),
-      getTicketStatus: await jira.getTicketStatus("g"),
-      createTicket: await jira.createTicket("g", {
-        projectKey: "ATT",
-        issueType: "Task",
-        priority: "Medium",
-        summary: "S",
-        description: "",
-      }),
-      addComment: await jira.addComment("g", { body: "b" }),
-      searchUsers: await jira.searchUsers("a"),
-    };
-
-    for (const [method, result] of Object.entries(results)) {
-      expect(() => structuredClone(result), method).not.toThrow();
-      if (!(result instanceof Blob)) {
-        expect(structuredClone(result), method).toEqual(result);
-      }
-    }
+  it("holds the fake ports to the same contract", async () => {
+    const storage = createFakeStorage({
+      comments: [{ ...comment, groupId: null }],
+      groups: [{ id: "g", name: "G", createdAt: 1 }],
+    });
+    const jira = createFakeJiraPort({
+      site: { siteUrl: "https://j" },
+      issueTypes: [{ id: "1", name: "Task" }],
+      priorities: [{ id: "1", name: "Medium" }],
+      labels: ["ui"],
+      ticketStatuses: { g: ticketStatus },
+      users: [{ accountId: "a", displayName: "Ali", avatarUrl: null }],
+    });
+    await storage.uploadScreenshot("c", "full", new Blob(["x"]));
+    expectCloneable(await callEveryMethod(storage, jira));
   });
 
   it("keeps the server's message on a cloned error", async () => {

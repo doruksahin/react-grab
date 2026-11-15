@@ -1,39 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import { resolveSyncPorts } from "./resolve-sync-ports.js";
-import type {
-  JiraPort,
-  StorageAdapter,
-  SyncConfig,
-  SyncPortFactories,
-} from "../types.js";
+import type { SyncConfig, SyncPortFactories } from "../types.js";
+import {
+  createFakeJiraPort,
+  createFakeStorage,
+} from "../../../test-support/fake-ports.js";
 
-const rejectAll = () => Promise.reject(new Error("not used"));
-
-const storage: StorageAdapter = {
-  loadComments: rejectAll,
-  upsertComment: rejectAll,
-  deleteComment: rejectAll,
-  loadGroups: rejectAll,
-  upsertGroup: rejectAll,
-  deleteGroup: rejectAll,
-  uploadScreenshot: rejectAll,
-  loadScreenshot: rejectAll,
-  uploadRecording: rejectAll,
-};
-
-const jira: JiraPort = {
-  getSite: rejectAll,
-  listIssueTypes: rejectAll,
-  listPriorities: rejectAll,
-  listLabels: rejectAll,
-  getTicketStatus: rejectAll,
-  createTicket: rejectAll,
-  addComment: rejectAll,
-  searchUsers: rejectAll,
-};
-
-const builtStorage: StorageAdapter = { ...storage };
-const builtJira: JiraPort = { ...jira };
+const storage = createFakeStorage();
+const jira = createFakeJiraPort();
+const builtStorage = createFakeStorage();
+const builtJira = createFakeJiraPort();
 
 const makeFactories = () => ({
   createStorage: vi.fn<SyncPortFactories["createStorage"]>(() => builtStorage),

@@ -97,36 +97,6 @@ const detailContainsText = async (
   );
 };
 
-/** Check whether a data-attribute selector exists inside the shadow root. */
-const shadowSelectorExists = async (
-  page: import("@playwright/test").Page,
-  selector: string,
-): Promise<boolean> => {
-  return page.evaluate(
-    ({ attrName, sel }) => {
-      const host = document.querySelector(`[${attrName}]`);
-      const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-      return root?.querySelector(sel) !== null;
-    },
-    { attrName: ATTR, sel: selector },
-  );
-};
-
-/** Click a selector inside the shadow root (non-button variant). */
-const clickShadowSelector = async (
-  page: import("@playwright/test").Page,
-  selector: string,
-) => {
-  await page.evaluate(
-    ({ attrName, sel }) => {
-      const host = document.querySelector(`[${attrName}]`);
-      const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
-      root?.querySelector<HTMLElement>(sel)?.click();
-    },
-    { attrName: ATTR, sel: selector },
-  );
-};
-
 /** Dump visible text content from the shadow root for debugging. */
 const getShadowTextContent = async (
   page: import("@playwright/test").Page,
@@ -235,55 +205,30 @@ test.describe(
       const { page } = reactGrab;
 
       await openSidebar(page);
-      await openGroupDetail(page, "Header alignment issue");
+      await page
+        .getByRole("dialog", { name: "React Grab Dashboard" })
+        .getByRole("tab", { name: /^Selections/ })
+        .click();
+      await reactGrab.screenshot("selections-tab", "page");
 
-      await expect
-        .poll(() => isDetailVisible(page), { timeout: 5000 })
-        .toBe(true);
-
-      // Wait for comments section to load
-      await expect
-        .poll(() => detailContainsText(page, "Reproduced on Chrome 120"), {
-          timeout: 8000,
-        })
-        .toBe(true)
-        .catch(() => {
-          // Non-fatal — continue to check the composer
-        });
-
-      await reactGrab.screenshot("detail-with-comments", "page");
-
-      // Look for the comment composer area
-      const hasComposer = await shadowSelectorExists(
-        page,
-        "[data-react-grab-comment-composer]",
-      );
+      // ADR-0022 step 3: the Jira thread lives on the selection's card in the
+      // sidebar. populate() injects an in-memory Jira port, so it renders.
+      const composer = page
+        .locator("[data-react-grab-selection-card]")
+        .filter({ hasText: "Navigation bar is misaligned on mobile viewports" })
+        .locator("[data-react-grab-comment-composer]")
+        .first();
+      await expect(composer).toBeVisible({ timeout: 5000 });
       await reactGrab.screenshot("comment-editor", "page");
 
-      if (hasComposer) {
-        // Try clicking the editor to focus it
-        const hasEditor = await shadowSelectorExists(
-          page,
-          "[data-react-grab-comment-editor]",
-        );
-        if (hasEditor) {
-          await clickShadowSelector(page, "[data-react-grab-comment-editor]");
-          // Small wait for focus state to render
-          await page.waitForTimeout(300);
-          await reactGrab.screenshot("editor-focused", "page");
-        }
+      const editor = composer.locator("[data-react-grab-comment-editor]");
+      await expect(editor).toBeVisible();
+      await editor.click();
+      await reactGrab.screenshot("editor-focused", "page");
 
-        // Check if submit button exists
-        const hasSubmit = await shadowSelectorExists(
-          page,
-          "[data-react-grab-comment-submit]",
-        );
-        console.log("Composer visible:", hasComposer);
-        console.log("Editor visible:", hasEditor);
-        console.log("Submit button visible:", hasSubmit);
-      } else {
-        console.log("Comment composer not found in the detail view");
-      }
+      await expect(
+        composer.locator("[data-react-grab-comment-submit]"),
+      ).toBeVisible();
     });
 
     test("group without comments shows empty state", async ({ reactGrab }) => {

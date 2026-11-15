@@ -5,6 +5,7 @@ import { SyncProvider } from "../../sync/sync-context.js";
 import type { StorageAdapter } from "../../sync/types.js";
 import type { ScreenshotRef } from "../types.js";
 import { useScreenshotUrl } from "./use-screenshot-url.js";
+import { createFakeStorage } from "../../../test-support/fake-ports.js";
 
 interface Deferred {
   resolve: (blob: Blob) => void;
@@ -16,18 +17,7 @@ const loadScreenshot = vi.fn<StorageAdapter["loadScreenshot"]>(
     new Promise<Blob>((resolve) => pending.set(selectionId, { resolve })),
 );
 
-const rejectAll = () => Promise.reject(new Error("not used"));
-const storage: StorageAdapter = {
-  loadComments: rejectAll,
-  upsertComment: rejectAll,
-  deleteComment: rejectAll,
-  loadGroups: rejectAll,
-  upsertGroup: rejectAll,
-  deleteGroup: rejectAll,
-  uploadScreenshot: rejectAll,
-  loadScreenshot,
-  uploadRecording: rejectAll,
-};
+const storage: StorageAdapter = { ...createFakeStorage(), loadScreenshot };
 
 const Wrapper = (props: { children: JSX.Element }) => (
   <SyncProvider

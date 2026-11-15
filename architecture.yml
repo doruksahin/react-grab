@@ -730,7 +730,7 @@ data_attrs:
     comment-body: {scope: comments, src: 1, tests: 0}
     comment-cancel: {scope: comments, src: 1, tests: 0}
     comment-composer: {scope: comments, src: 1, tests: 5}
-    comment-editor: {scope: comments, src: 1, tests: 2}
+    comment-editor: {scope: comments, src: 1, tests: 1}
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
     comment-item: {scope: comments, src: 1, tests: 3}
@@ -820,7 +820,7 @@ data_attrs:
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 8}
+    selection-card: {scope: selection, src: 2, tests: 9}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 3, tests: 0}
