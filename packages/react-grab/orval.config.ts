@@ -9,6 +9,9 @@ export default defineConfig({
       mode: "single",
       target: "src/generated/sync-api.ts",
       client: "fetch",
+      // Every path parameter goes through encodeURIComponent, so an id such
+      // as "../other" stays one segment (ADR-0023).
+      urlEncodeParameters: true,
       override: {
         mutator: {
           path: "./src/generated/custom-fetch.ts",
@@ -36,10 +39,10 @@ export default defineConfig({
         zod: {
           version: 4,
           generate: {
-            param: false,
-            query: false,
+            param: true,
+            query: true,
             header: false,
-            body: false,
+            body: true,
             response: true,
           },
         },

@@ -10,7 +10,7 @@ import {
   upsertComment,
   upsertGroup,
 } from "../generated/sync-api.js";
-import { createSyncRequest, pathSegment, successData } from "./request.js";
+import { createSyncRequest, successData } from "./request.js";
 import {
   ListCommentsResponse,
   ListGroupsResponse,
@@ -28,7 +28,7 @@ const RECORDING_CONTENT_TYPE = "application/gzip";
  */
 export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
   const request = createSyncRequest(config);
-  const workspace = pathSegment(config.workspace);
+  const { workspace } = config;
 
   return {
     loadComments: async () => {
@@ -44,7 +44,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
         "PUT /comments/:commentId",
         await upsertComment(
           workspace,
-          pathSegment(item.id),
+          item.id,
           toCommentWire(item),
           request.options(),
         ),
@@ -54,11 +54,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
     deleteComment: async (commentId) => {
       successData(
         "DELETE /comments/:commentId",
-        await deleteComment(
-          workspace,
-          pathSegment(commentId),
-          request.options(),
-        ),
+        await deleteComment(workspace, commentId, request.options()),
       );
     },
 
@@ -75,7 +71,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
         "PUT /groups/:groupId",
         await upsertGroup(
           workspace,
-          pathSegment(group.id),
+          group.id,
           toGroupWire(group),
           request.options(),
         ),
@@ -85,14 +81,14 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
     deleteGroup: async (groupId) => {
       successData(
         "DELETE /groups/:groupId",
-        await deleteGroup(workspace, pathSegment(groupId), request.options()),
+        await deleteGroup(workspace, groupId, request.options()),
       );
     },
 
     uploadScreenshot: async (selectionId, kind, blob) => {
       const response = await request.raw(
         "PUT /screenshots",
-        getUploadScreenshotUrl(workspace, pathSegment(selectionId), kind),
+        getUploadScreenshotUrl(workspace, selectionId, kind),
         { method: "PUT", body: blob, contentType: blob.type },
       );
       return UploadScreenshotResponse.parse(await response.json()).key;
@@ -101,7 +97,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
     loadScreenshot: async (selectionId, kind) => {
       const response = await request.raw(
         "GET /screenshots",
-        getGetScreenshotUrl(workspace, pathSegment(selectionId), kind),
+        getGetScreenshotUrl(workspace, selectionId, kind),
         { method: "GET" },
       );
       return response.blob();
@@ -110,7 +106,7 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
     uploadRecording: async (commentId, gzipBlob) => {
       const response = await request.raw(
         "PUT /recordings",
-        getUploadRecordingUrl(workspace, pathSegment(commentId)),
+        getUploadRecordingUrl(workspace, commentId),
         { method: "PUT", body: gzipBlob, contentType: RECORDING_CONTENT_TYPE },
       );
       return UploadRecordingResponse.parse(await response.json()).recordingUrl;

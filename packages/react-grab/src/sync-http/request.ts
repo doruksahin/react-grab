@@ -1,4 +1,7 @@
-import type { SyncRequestInit } from "../generated/custom-fetch.js";
+import {
+  type SyncRequestInit,
+  assertNoDotSegments,
+} from "../generated/custom-fetch.js";
 import type { SyncServerConnection } from "./types.js";
 
 const HTTP_STATUS_OK = 200;
@@ -86,6 +89,7 @@ export const createSyncRequest = (
     options: () => ({ serverUrl, headers: { Authorization: authorization } }),
 
     raw: async (operation, path, request) => {
+      assertNoDotSegments(path);
       const headers = new Headers({ Authorization: authorization });
       if (request.contentType) headers.set("Content-Type", request.contentType);
       const response = await fetch(`${serverUrl}${path}`, {
@@ -103,6 +107,3 @@ export const createSyncRequest = (
     },
   };
 };
-
-/** Encodes one path segment; the generated URL builders insert values as given. */
-export const pathSegment = (value: string): string => encodeURIComponent(value);

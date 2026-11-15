@@ -111,6 +111,81 @@ describe("request helper", () => {
   });
 });
 
+describe("path parameters (ADR-0023)", () => {
+  const TRAVERSAL = "../../../workspaces/other/comments/x";
+  const blob = new Blob(["x"], { type: "image/png" });
+  const draft = {
+    projectKey: "ATT",
+    issueType: "Task",
+    priority: "High",
+    summary: "s",
+    description: "d",
+  };
+
+  const pathCalls = (
+    storage: StorageAdapter,
+    jira: JiraPort,
+    value: string,
+  ): Array<[string, () => Promise<unknown>]> => [
+    ["upsertComment", () => storage.upsertComment({ ...comment, id: value })],
+    ["deleteComment", () => storage.deleteComment(value)],
+    [
+      "upsertGroup",
+      () => storage.upsertGroup({ id: value, name: "G", createdAt: 1 }),
+    ],
+    ["deleteGroup", () => storage.deleteGroup(value)],
+    ["uploadScreenshot", () => storage.uploadScreenshot(value, "full", blob)],
+    ["loadScreenshot", () => storage.loadScreenshot(value, "element")],
+    [
+      "loadScreenshot kind",
+      () => Reflect.apply(storage.loadScreenshot, storage, ["s", value]),
+    ],
+    ["uploadRecording", () => storage.uploadRecording(value, blob)],
+    ["getTicketStatus", () => jira.getTicketStatus(value)],
+    ["createTicket", () => jira.createTicket(value, draft)],
+    ["addComment", () => jira.addComment(value, { body: "b" })],
+  ];
+
+  it("keeps a ../ value inside one encoded segment for every method that builds a path", async () => {
+    fetchMock.mockImplementation(async () => jsonResponse(500, {}));
+    const calls = pathCalls(
+      createHttpAdapter(config),
+      createHttpJiraPort(config),
+      TRAVERSAL,
+    );
+
+    for (const [, call] of calls) await call().catch(() => undefined);
+
+    expect(recorded()).toHaveLength(calls.length);
+    for (const { url } of recorded()) {
+      expect(new URL(url).pathname).toMatch(/^\/workspaces\/team%20space\//);
+      expect(url).toContain(encodeURIComponent(TRAVERSAL));
+    }
+  });
+
+  it("refuses a value that is a dot segment before any request is sent", async () => {
+    for (const dotSegment of [".", ".."]) {
+      const calls = pathCalls(
+        createHttpAdapter(config),
+        createHttpJiraPort(config),
+        dotSegment,
+      );
+      for (const [name, call] of calls) {
+        await expect(call(), name).rejects.toThrow("dot segment");
+      }
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps a ../ workspace inside one encoded segment", async () => {
+    fetchMock.mockResolvedValue(jsonResponse(200, []));
+    await createHttpAdapter({ ...config, workspace: "../other" }).loadGroups();
+    expect(new URL(recorded()[0].url).pathname).toBe(
+      "/workspaces/..%2Fother/groups",
+    );
+  });
+});
+
 describe("domain values", () => {
   it("returns comments with an empty group id as ungrouped", async () => {
     fetchMock.mockResolvedValue(jsonResponse(200, [comment]));

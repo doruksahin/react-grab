@@ -25,6 +25,22 @@ const parseBody = (body: string): unknown => {
   }
 };
 
+const DOT_SEGMENTS = new Set([".", ".."]);
+
+/**
+ * Refuses a path with a "." or ".." segment. Orval encodes each path
+ * parameter (urlEncodeParameters), but encodeURIComponent leaves dots alone,
+ * and fetch would resolve "/comments/.." to the parent route (ADR-0023).
+ */
+export const assertNoDotSegments = (path: string): void => {
+  const [pathname = ""] = path.split("?");
+  if (pathname.split("/").some((segment) => DOT_SEGMENTS.has(segment))) {
+    throw new Error(
+      `react-grab: refused a sync path with a dot segment: ${path}`,
+    );
+  }
+};
+
 /** Orval custom mutator: resolves the relative path against the caller's server URL. */
 export const customFetch = async <T>(
   path: string,
@@ -36,6 +52,7 @@ export const customFetch = async <T>(
       `react-grab: no sync server URL for ${path}; call the generated functions through createSyncRequest()`,
     );
   }
+  assertNoDotSegments(path);
   const response = await fetch(`${serverUrl}${path}`, init);
   const data = parseBody(await response.text());
   // HACK: Orval's mutator contract returns the generated response union `T`,

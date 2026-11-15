@@ -9,13 +9,13 @@ import {
   listJiraPriorities,
   searchJiraUsers,
 } from "../generated/sync-api.js";
-import { createSyncRequest, pathSegment, successData } from "./request.js";
+import { createSyncRequest, successData } from "./request.js";
 import type { SyncHttpConfig } from "./types.js";
 
 /** The Jira port over HTTP. Group-scoped calls use the configured workspace. */
 export const createHttpJiraPort = (config: SyncHttpConfig): JiraPort => {
   const request = createSyncRequest(config);
-  const workspace = pathSegment(config.workspace);
+  const { workspace } = config;
 
   return {
     getSite: async () =>
@@ -42,33 +42,19 @@ export const createHttpJiraPort = (config: SyncHttpConfig): JiraPort => {
     getTicketStatus: async (groupId) =>
       successData(
         "GET /groups/:groupId/jira-status",
-        await getJiraTicketStatus(
-          workspace,
-          pathSegment(groupId),
-          request.options(),
-        ),
+        await getJiraTicketStatus(workspace, groupId, request.options()),
       ),
 
     createTicket: async (groupId, ticket) =>
       successData(
         "POST /groups/:groupId/jira-ticket",
-        await createJiraTicket(
-          workspace,
-          pathSegment(groupId),
-          ticket,
-          request.options(),
-        ),
+        await createJiraTicket(workspace, groupId, ticket, request.options()),
       ),
 
     addComment: async (groupId, comment) =>
       successData(
         "POST /groups/:groupId/jira-comment",
-        await addJiraComment(
-          workspace,
-          pathSegment(groupId),
-          comment,
-          request.options(),
-        ),
+        await addJiraComment(workspace, groupId, comment, request.options()),
       ),
 
     searchUsers: async (query, projectKey) =>
