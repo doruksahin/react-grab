@@ -63,7 +63,7 @@ In the overlay, server calls are only partly behind a port:
 
 | Concern | Choice | Source |
 |---|---|---|
-| Build, manifest, entrypoints, options page | WXT 0.21 + `@wxt-dev/module-solid` | vite-plugin-web-extension README; wxt.dev |
+| Build, manifest, entrypoints, options page | WXT 0.21 + `vite-plugin-solid`. `@wxt-dev/module-solid` adds a solid-js auto-import even with imports off, which broke the overlay bundle | vite-plugin-web-extension README; wxt.dev |
 | Per-site injection | `defineContentScript({ registration: "runtime", world: "MAIN" })`, registered when a site is enabled; `optional_host_permissions` requested then | WXT content scripts guide; Chrome `scripting`, `permissions` |
 | MAIN ↔ ISOLATED | `@webext-core/messaging` CustomEvent messenger, with a fixed namespace. It works only within one document, so iframes cannot send. The window messenger was rejected: version 4.0.1 never checks `event.source`. A `Blob` passes (verified in the extension E2E test) | webext-core.aklinker1.io/messaging |
 | ISOLATED ↔ service worker | `@webext-core/messaging` extension messenger, with `"message_serialization": "structured_clone"` and `minimum_chrome_version: "148"` | Chrome *Structured clone messaging* |
@@ -84,6 +84,15 @@ In the overlay, server calls are only partly behind a port:
   - The ISOLATED relay is extension code, not page code, so it would not leak the token even if it could read `storage.local`.
   - Restricting `storage.local` with `setAccessLevel` is checked against Chrome's reference in step 3 and applied if supported.
 - **Existing extension messages** (toggle, toolbar state) move to the same messengers, and the hand-written `postMessage` bridge is removed.
+
+### Hardening found in review (step 3)
+
+- **Path parameters.** Orval encodes every path parameter (`urlEncodeParameters`, Orval 8.44.0, pinned because 8.46 needs TypeScript 6). The request helpers also refuse `.` and `..` segments, which `encodeURIComponent` leaves unchanged. Without this, a page could reach another workspace with `../`.
+- **Arguments.** The gateway validates every argument with one zod tuple per port method. These are built from the Orval-generated zod schemas and exported by `react-grab/sync-http`. The same records are the method allowlist.
+- **Jira project.** The gateway always passes the site's `jiraProjectKey`, whatever the page sends.
+- **Server URL.** It must be https; http is allowed only for localhost, 127.0.0.1 and [::1]. Userinfo, query and fragment are refused.
+- **Localhost.** The extension starts no overlay and no sync of its own on localhost; the host app owns both (ADR-0020). Adopting a host app's overlay later cannot stop the extension's own `initSync` copy.
+- **Settings writes.** The service worker is the only writer and uses one serial queue, which script registration shares.
 
 ### Trust boundary
 
