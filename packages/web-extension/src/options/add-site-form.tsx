@@ -3,7 +3,7 @@ import {
   siteOriginSchema,
   siteSettingsSchema,
 } from "../settings/settings-schema.js";
-import { saveSite } from "../settings/settings-items.js";
+import { settingsMessenger } from "../messaging/extension-messengers.js";
 import { describeError } from "./describe-error.js";
 import { formField } from "./form-field.js";
 import { requestOriginPermission } from "./request-origin-permission.js";
@@ -22,7 +22,7 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
       jiraProjectKey: formField(form, "jiraProjectKey"),
     });
     await requestOriginPermission(origin);
-    await saveSite(origin, site);
+    await settingsMessenger.sendMessage("saveSite", { origin, site });
     form.reset();
     setStatus(`Enabled ${origin}.`);
     props.onSaved();

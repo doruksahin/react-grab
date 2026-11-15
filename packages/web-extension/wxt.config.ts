@@ -1,3 +1,4 @@
+import solid from "vite-plugin-solid";
 import { defineConfig } from "wxt";
 import { E2E_HOST_PERMISSIONS } from "./e2e/e2e-origins.js";
 
@@ -14,7 +15,10 @@ export default defineConfig({
   srcDir: "src",
   outDir: "dist",
   imports: false,
-  modules: ["@wxt-dev/module-solid"],
+  // HACK: vite-plugin-solid directly, not @wxt-dev/module-solid: the module
+  // adds a solid-js auto-import preset even with imports: false, which
+  // injected solid's `on` into react-grab's bundled chunk and broke the build.
+  vite: () => ({ plugins: [solid()] }),
   targetBrowsers: ["chrome"],
   zip: {
     artifactTemplate: "react-grab-extension-{{version}}-{{browser}}.zip",

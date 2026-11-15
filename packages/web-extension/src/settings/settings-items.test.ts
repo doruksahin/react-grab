@@ -36,6 +36,34 @@ describe("settings items", () => {
     });
   });
 
+  it("accepts https and local http server URLs and stores them without a trailing slash", async () => {
+    const accepted = [
+      ["https://sync.example.test/", "https://sync.example.test"],
+      ["https://sync.example.test/api/v1/", "https://sync.example.test/api/v1"],
+      ["http://localhost:8787", "http://localhost:8787"],
+      ["http://127.0.0.1:8787/", "http://127.0.0.1:8787"],
+      ["http://[::1]:8787", "http://[::1]:8787"],
+    ];
+    for (const [input, stored] of accepted) {
+      await saveServerUrl(input ?? "");
+      expect((await readSyncSettings()).serverUrl).toBe(stored);
+    }
+  });
+
+  it("refuses insecure or ambiguous server URLs", async () => {
+    for (const serverUrl of [
+      "http://sync.example.test",
+      "ftp://sync.example.test",
+      "https://user:pass@sync.example.test",
+      "https://sync.example.test/?workspace=other",
+      "https://sync.example.test/#fragment",
+      "not a url",
+    ]) {
+      await expect(saveServerUrl(serverUrl), serverUrl).rejects.toThrow();
+    }
+    expect((await readSyncSettings()).serverUrl).toBeNull();
+  });
+
   it("refuses invalid values before they reach storage", async () => {
     await expect(saveServerUrl("javascript:alert(1)")).rejects.toThrow();
     await expect(saveApiToken("   ")).rejects.toThrow();

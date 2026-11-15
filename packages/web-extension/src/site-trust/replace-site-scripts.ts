@@ -22,7 +22,9 @@ const grantedMatchPatterns = async (
   return matchPatterns.filter((_matchPattern, index) => grants[index]);
 };
 
-const replaceSiteScripts = async (sites: SiteSettingsByOrigin) => {
+export const replaceSiteScripts = async (
+  sites: SiteSettingsByOrigin,
+): Promise<void> => {
   const registeredScripts = await browser.scripting.getRegisteredContentScripts(
     { ids: SITE_SCRIPT_IDS },
   );
@@ -53,13 +55,4 @@ const replaceSiteScripts = async (sites: SiteSettingsByOrigin) => {
       world: "MAIN",
     },
   ]);
-};
-
-let pendingSync: Promise<void> = Promise.resolve();
-
-export const syncSiteScripts = (sites: SiteSettingsByOrigin): Promise<void> => {
-  pendingSync = pendingSync
-    .catch(() => undefined)
-    .then(() => replaceSiteScripts(sites));
-  return pendingSync;
 };

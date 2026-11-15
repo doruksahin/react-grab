@@ -28,18 +28,20 @@ To get the token, see "Environment variables" in the root `CLAUDE.md`. Do not pu
 
 To change a site's workspace, enable the site again with the new values. Open tabs of that site reload. To stop the overlay on a site, click **Disable** next to it. Open tabs of that site reload and the extension gives back its access to that site.
 
+On a `localhost` site the host app owns the overlay and its sync (`initSync` with its own token, ADR-0020). The extension then only relays the enabled flag and the toolbar state; it starts no overlay and no sync of its own there.
+
 Clicking the extension icon turns the overlay's enabled flag on or off. The badge shows **OFF** when it is off.
 
 ## How it works
 
-| Part                              | Runs in                         | Does                                                                        |
-| --------------------------------- | ------------------------------- | --------------------------------------------------------------------------- |
-| `src/overlay/`                    | the page (MAIN world)           | starts the overlay and calls `initSync` with ports that send messages       |
-| `src/relay/`                      | content script (ISOLATED world) | forwards only the allowed requests to the service worker                    |
-| `src/gateway/`, `src/background/` | service worker                  | checks the sender, reads the settings, calls the sync server with the token |
-| `src/site-trust/`                 | service worker                  | registers the two content scripts for enabled sites only                    |
-| `src/settings/`                   | service worker and options page | stores the server URL, the token and the sites (validated with zod)         |
-| `src/options/`                    | options page                    | the settings UI (Solid)                                                     |
+| Part                              | Runs in                         | Does                                                                                                                                    |
+| --------------------------------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/overlay/`                    | the page (MAIN world)           | starts the overlay and calls `initSync` with ports that send messages                                                                   |
+| `src/relay/`                      | content script (ISOLATED world) | forwards only the allowed requests to the service worker                                                                                |
+| `src/gateway/`, `src/background/` | service worker                  | checks the sender, reads the settings, calls the sync server with the token                                                             |
+| `src/site-trust/`                 | service worker                  | registers the two content scripts for enabled sites only                                                                                |
+| `src/settings/`                   | service worker and options page | stores the server URL, the token and the sites (validated with zod); site changes are written only by the service worker, one at a time |
+| `src/options/`                    | options page                    | the settings UI (Solid)                                                                                                                 |
 
 The page never gets the token. A script on an enabled site can send the same messages as the overlay. It can then read and change that site's workspace and create Jira tickets. It cannot read the token, choose a URL or reach another site's workspace. Enable only sites you trust.
 

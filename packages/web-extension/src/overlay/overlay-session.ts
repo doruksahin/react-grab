@@ -58,7 +58,7 @@ export const createOverlaySession = (
       // HACK: a localhost app may load its own react-grab after this script; give it time to announce itself before reusing it
       await wait(LOCALHOST_PAGE_API_WAIT_MS);
       const pageApi = findExistingApi();
-      if (pageApi) return attach(pageApi);
+      return pageApi ? attach(pageApi) : null;
     }
 
     extensionApi = createExtensionApi();

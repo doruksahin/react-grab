@@ -17,6 +17,7 @@ import type { SiteSettingsByOrigin } from "../src/settings/types.js";
 import {
   DISABLED_SITE_ORIGIN,
   ENABLED_SITE_ORIGIN,
+  LOCALHOST_SITE_ORIGIN,
   SYNC_SERVER_URL,
 } from "./e2e-origins.js";
 
@@ -28,6 +29,13 @@ const EXTENSION_PATH = path.resolve(
 export const TEST_PAGE_URL = `${ENABLED_SITE_ORIGIN}/`;
 export const TEST_PAGE_WITH_IFRAME_URL = `${ENABLED_SITE_ORIGIN}/with-iframe`;
 export const DISABLED_PAGE_URL = `${DISABLED_SITE_ORIGIN}/`;
+export const LOCALHOST_PAGE_URL = `${LOCALHOST_SITE_ORIGIN}/`;
+const HOST_REACT_GRAB_URL = `${LOCALHOST_SITE_ORIGIN}/react-grab.js`;
+const HOST_REACT_GRAB_PATH = path.resolve(
+  import.meta.dirname,
+  "../../react-grab/dist/index.global.js",
+);
+export const HOST_INIT_DELAY_MS = 1500;
 const THIRD_PARTY_IFRAME_URL = "https://third-party-ads.test/frame";
 
 export const TEST_WORKSPACE = "extension-e2e-workspace";
@@ -55,7 +63,12 @@ for (const namespace of ["react-grab-extension", "react-grab-extension:request"]
 parent.postMessage("forgery-attempted", "*");
 </script></body></html>`;
 
+const LOCALHOST_PAGE_WITH_LATE_HOST_HTML = `<!doctype html><html><head><title>Host app with its own react-grab</title></head><body>
+<script>setTimeout(() => { const script = document.createElement("script"); script.src = "/react-grab.js"; document.head.appendChild(script); }, ${HOST_INIT_DELAY_MS});</script>
+</body></html>`;
+
 const HTML_PAGES = new Map([
+  [LOCALHOST_PAGE_URL, LOCALHOST_PAGE_WITH_LATE_HOST_HTML],
   [TEST_PAGE_URL, TEST_PAGE_HTML],
   [TEST_PAGE_WITH_IFRAME_URL, TEST_PAGE_WITH_IFRAME_HTML],
   [DISABLED_PAGE_URL, TEST_PAGE_HTML],
@@ -64,6 +77,10 @@ const HTML_PAGES = new Map([
 
 export const ENABLED_SITES: SiteSettingsByOrigin = {
   [ENABLED_SITE_ORIGIN]: {
+    workspace: TEST_WORKSPACE,
+    jiraProjectKey: TEST_JIRA_PROJECT_KEY,
+  },
+  [LOCALHOST_SITE_ORIGIN]: {
     workspace: TEST_WORKSPACE,
     jiraProjectKey: TEST_JIRA_PROJECT_KEY,
   },
@@ -91,14 +108,15 @@ const configureSync = async (serviceWorker: Worker): Promise<void> => {
         const extensionApi: WxtBrowser = Reflect.get(globalThis, "chrome");
         const scripts =
           await extensionApi.scripting.getRegisteredContentScripts();
-        return scripts.flatMap((script) => script.matches ?? []);
+        return scripts.flatMap((script) => script.matches ?? []).sort();
       }),
     )
     .toEqual(
-      Object.keys(ENABLED_SITES).flatMap((origin) => [
-        `${origin}/*`,
-        `${origin}/*`,
-      ]),
+      ["relay", "overlay"]
+        .flatMap(() =>
+          Object.keys(ENABLED_SITES).map((origin) => `${origin}/*`),
+        )
+        .sort(),
     );
 };
 
@@ -128,6 +146,12 @@ export const test = base.extend<ExtensionFixtures>({
         route.fulfill({ contentType: "text/html", body }),
       );
     }
+    await context.route(HOST_REACT_GRAB_URL, (route) =>
+      route.fulfill({
+        contentType: "text/javascript",
+        path: HOST_REACT_GRAB_PATH,
+      }),
+    );
     await use(context);
     await context.close();
   },

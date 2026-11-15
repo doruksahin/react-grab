@@ -1,5 +1,5 @@
 import { For, Show, createSignal } from "solid-js";
-import { removeSites } from "../settings/settings-items.js";
+import { settingsMessenger } from "../messaging/extension-messengers.js";
 import type { SiteSettingsByOrigin } from "../settings/types.js";
 import { describeError } from "./describe-error.js";
 
@@ -13,7 +13,8 @@ export const SiteList = (props: SiteListProps) => {
   const siteEntries = () => Object.entries(props.sites);
 
   const handleRemove = (origin: string) => {
-    removeSites([origin])
+    settingsMessenger
+      .sendMessage("removeSites", [origin])
       .then(() => {
         setStatus(`Disabled ${origin}.`);
         props.onRemoved();

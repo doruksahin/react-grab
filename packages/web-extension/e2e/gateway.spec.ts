@@ -9,6 +9,8 @@ import type { OverlayRequestProtocol } from "../src/messaging/overlay-request-pr
 import { DISABLED_SITE_ORIGIN, SYNC_SERVER_URL } from "./e2e-origins.js";
 import {
   DISABLED_PAGE_URL,
+  HOST_INIT_DELAY_MS,
+  LOCALHOST_PAGE_URL,
   TEST_API_TOKEN,
   TEST_PAGE_URL,
   TEST_WORKSPACE,
@@ -59,9 +61,9 @@ const pageRequestMessenger = (page: Page) => ({
       ]);
       return { isBlob: blob instanceof Blob, type: blob.type, size: blob.size };
     }, PAGE_REQUEST_NAMESPACE),
-  upsertCommentForAnotherWorkspace: (comment: unknown, workspace: string) =>
+  upsertComment: (args: unknown[]) =>
     page.evaluate(
-      async ({ namespace, item, otherWorkspace }) => {
+      async ({ namespace, requestArgs }) => {
         const messaging: PageMessagingModule = Reflect.get(
           window,
           "webExtCorePageMessaging",
@@ -69,16 +71,12 @@ const pageRequestMessenger = (page: Page) => ({
         const messenger = messaging.defineCustomEventMessaging<
           Record<string, (args: unknown[]) => unknown>
         >({ namespace });
-        await messenger.sendMessage("storage.upsertComment", [
-          item,
-          { workspace: otherWorkspace },
-        ]);
+        return messenger
+          .sendMessage("storage.upsertComment", requestArgs)
+          .then(() => "accepted")
+          .catch((error: unknown) => String(error));
       },
-      {
-        namespace: PAGE_REQUEST_NAMESPACE,
-        item: comment,
-        otherWorkspace: workspace,
-      },
+      { namespace: PAGE_REQUEST_NAMESPACE, requestArgs: args },
     ),
 });
 
@@ -119,10 +117,19 @@ test.describe(
       await waitForOverlay(page);
       await loadPageMessaging(page);
 
-      await pageRequestMessenger(page).upsertCommentForAnotherWorkspace(
-        comments[0],
-        OTHER_WORKSPACE,
-      );
+      const messenger = pageRequestMessenger(page);
+      expect(
+        await messenger.upsertComment([
+          comments[0],
+          { workspace: OTHER_WORKSPACE },
+        ]),
+      ).toContain("storage.upsertComment got invalid arguments");
+      expect(
+        await messenger.upsertComment([
+          { ...comments[0], id: `../../${OTHER_WORKSPACE}/comments/x` },
+        ]),
+      ).toContain("storage.upsertComment got invalid arguments");
+      expect(await messenger.upsertComment([comments[0]])).toBe("accepted");
 
       const upserts = syncServer.requests("upsertComment");
       expect(upserts).toHaveLength(1);
@@ -230,17 +237,21 @@ test.describe(
       await pageReloaded;
 
       await expect(
-        optionsPage.getByText("No site is enabled yet."),
-      ).toBeVisible();
+        optionsPage.getByRole("button", {
+          name: `Disable ${new URL(TEST_PAGE_URL).origin}`,
+        }),
+      ).toHaveCount(0);
       expect(await page.evaluate(() => Boolean(window.__REACT_GRAB__))).toBe(
         false,
       );
       expect(
         await serviceWorker.evaluate(async () => {
           const extensionApi: WxtBrowser = Reflect.get(globalThis, "chrome");
-          return extensionApi.scripting.getRegisteredContentScripts();
+          const scripts =
+            await extensionApi.scripting.getRegisteredContentScripts();
+          return scripts.flatMap((script) => script.matches ?? []);
         }),
-      ).toEqual([]);
+      ).not.toContain(`${new URL(TEST_PAGE_URL).origin}/*`);
     });
 
     test("enabling a site in the options page registers the overlay for it", async ({
@@ -262,6 +273,31 @@ test.describe(
       const disabledSitePage = await context.newPage();
       await disabledSitePage.goto(DISABLED_PAGE_URL);
       await waitForOverlay(disabledSitePage);
+    });
+
+    test("on localhost the host app's own react-grab is the only overlay and the extension starts no sync", async ({
+      page,
+      syncServer,
+    }) => {
+      await page.goto(LOCALHOST_PAGE_URL);
+      await expect
+        .poll(() => page.evaluate(() => Boolean(window.__REACT_GRAB__)), {
+          timeout: HOST_INIT_DELAY_MS * 4,
+        })
+        .toBe(true);
+
+      expect(
+        await page.evaluate(
+          () => document.querySelectorAll("[data-react-grab-product]").length,
+        ),
+      ).toBe(1);
+      expect(
+        await page.evaluate(() =>
+          Boolean(Reflect.get(window, "__REACT_GRAB_MODULE__")),
+        ),
+      ).toBe(true);
+      expect(syncServer.requests("listComments")).toEqual([]);
+      expect(syncServer.requests("listGroups")).toEqual([]);
     });
   },
 );

@@ -22,8 +22,9 @@ import {
 } from "../storage/overlay-items.js";
 import { toolbarStateSchema } from "../storage/toolbar-state-schema.js";
 
-const handleOverlayStateRequests = (): void => {
-  extensionRequestMessenger.onMessage("getOverlayState", ({ sender }) => {
+const handleOverlayStateRequests = (ready: Promise<void>): void => {
+  extensionRequestMessenger.onMessage("getOverlayState", async ({ sender }) => {
+    await ready;
     assertOwnExtensionSender(sender);
     return readOverlayState();
   });
@@ -31,35 +32,47 @@ const handleOverlayStateRequests = (): void => {
   extensionRequestMessenger.onMessage(
     "saveToolbarState",
     async ({ data, sender }) => {
+      await ready;
       assertOwnExtensionSender(sender);
       await toolbarStateItem.setValue(toolbarStateSchema.parse(data));
     },
   );
 
   extensionRequestMessenger.onMessage("getSiteSettings", async ({ sender }) => {
+    await ready;
     assertTopFrameSender(sender);
     return findSenderSite(sender, await sitesItem.getValue());
   });
 };
 
-const handlePortRequests = (gateway: SyncGateway): void => {
+const handlePortRequests = (
+  ready: Promise<void>,
+  gateway: SyncGateway,
+): void => {
   for (const method of portMethodNames<StorageAdapter>(STORAGE_METHODS)) {
     extensionRequestMessenger.onMessage(
       portRequestName("storage", method),
-      ({ data, sender }) => gateway.callStorage(method, data, sender),
+      async ({ data, sender }) => {
+        await ready;
+        return gateway.callStorage(method, data, sender);
+      },
     );
   }
   for (const method of portMethodNames<JiraPort>(JIRA_METHODS)) {
     extensionRequestMessenger.onMessage(
       portRequestName("jira", method),
-      ({ data, sender }) => gateway.callJira(method, data, sender),
+      async ({ data, sender }) => {
+        await ready;
+        return gateway.callJira(method, data, sender);
+      },
     );
   }
 };
 
 export const handleOverlayRequests = (
+  ready: Promise<void>,
   gateway: SyncGateway = createSyncGateway(),
 ): void => {
-  handleOverlayStateRequests();
-  handlePortRequests(gateway);
+  handleOverlayStateRequests(ready);
+  handlePortRequests(ready, gateway);
 };

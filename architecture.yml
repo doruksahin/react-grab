@@ -137,7 +137,9 @@ packages:
     request_handlers: packages/web-extension/src/background/handle-overlay-requests.ts
     gateway: packages/web-extension/src/gateway/sync-gateway.ts
     sender_policy: packages/web-extension/src/gateway/sender-policy.ts
-    site_scripts: packages/web-extension/src/site-trust/sync-site-scripts.ts
+    jira_project_binding: packages/web-extension/src/gateway/bind-site-jira-project.ts
+    settings_requests: packages/web-extension/src/background/handle-settings-requests.ts
+    site_scripts: packages/web-extension/src/site-trust/replace-site-scripts.ts
     settings: packages/web-extension/src/settings/settings-items.ts
     settings_schema: packages/web-extension/src/settings/settings-schema.ts
     overlay: packages/web-extension/src/overlay/start-overlay.ts
@@ -450,8 +452,12 @@ features:
     files:
       - packages/react-grab/src/features/sync/types.ts
       - packages/react-grab/src/sync-http/index.ts
+      - packages/react-grab/src/sync-http/port-arguments.ts
       - packages/web-extension/src/background/handle-overlay-requests.ts
+      - packages/web-extension/src/background/handle-settings-requests.ts
+      - packages/web-extension/src/background/queues.ts
       - packages/web-extension/src/background/register-background.ts
+      - packages/web-extension/src/gateway/bind-site-jira-project.ts
       - packages/web-extension/src/gateway/sender-policy.ts
       - packages/web-extension/src/gateway/sync-gateway.ts
       - packages/web-extension/src/messaging/extension-messengers.ts
@@ -465,8 +471,9 @@ features:
       - packages/web-extension/src/settings/settings-items.ts
       - packages/web-extension/src/settings/settings-schema.ts
       - packages/web-extension/src/site-trust/apply-site-changes.ts
+      - packages/web-extension/src/site-trust/release-server-permission.ts
       - packages/web-extension/src/site-trust/remove-revoked-sites.ts
-      - packages/web-extension/src/site-trust/sync-site-scripts.ts
+      - packages/web-extension/src/site-trust/replace-site-scripts.ts
   selection-label:
     description: TODO
     status: discovered

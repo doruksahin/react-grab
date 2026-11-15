@@ -27,6 +27,15 @@ export const assertTopFrameSender = (
   }
 };
 
+export const assertExtensionPageSender = (
+  sender: Browser.runtime.MessageSender,
+): void => {
+  assertOwnExtensionSender(sender);
+  if (!sender.url?.startsWith(browser.runtime.getURL("/"))) {
+    throw new GatewayRefusalError("the sender is not an extension page");
+  }
+};
+
 export const findSenderSite = (
   sender: Browser.runtime.MessageSender,
   sites: SiteSettingsByOrigin,

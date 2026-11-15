@@ -1,12 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Browser } from "wxt/browser";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 import {
   extensionEventMessenger,
   extensionRequestMessenger,
+  settingsMessenger,
 } from "../messaging/extension-messengers.js";
 import { enabledItem, toolbarStateItem } from "../storage/overlay-items.js";
 import { TOOLBAR_STATE_FIXTURE } from "../test-fixtures.js";
-import { saveApiToken, saveSite } from "../settings/settings-items.js";
+import {
+  saveApiToken,
+  saveServerUrl,
+  saveSite,
+  sitesItem,
+} from "../settings/settings-items.js";
 import { registerBackground } from "./register-background.js";
 
 interface TestTabs {
@@ -29,12 +36,12 @@ const createTabs = async (): Promise<TestTabs> => {
 
 const SITE_ORIGIN = "https://app.example.test";
 
-const sendAsOwnContentScript = (): void => {
+const sendAs = (sender: Browser.runtime.MessageSender): void => {
   vi.spyOn(fakeBrowser.runtime, "sendMessage").mockImplementation(
     (message: unknown, sendResponse: unknown) => {
       void fakeBrowser.runtime.onMessage.trigger(
         message,
-        { id: fakeBrowser.runtime.id, frameId: 0, origin: SITE_ORIGIN },
+        sender,
         (response: unknown) => {
           if (typeof sendResponse === "function") sendResponse(response);
         },
@@ -42,6 +49,20 @@ const sendAsOwnContentScript = (): void => {
     },
   );
 };
+
+const sendAsOwnContentScript = (): void =>
+  sendAs({
+    id: fakeBrowser.runtime.id,
+    frameId: 0,
+    origin: SITE_ORIGIN,
+    url: `${SITE_ORIGIN}/page`,
+  });
+
+const sendAsOptionsPage = (): void =>
+  sendAs({
+    id: fakeBrowser.runtime.id,
+    url: fakeBrowser.runtime.getURL("/options.html"),
+  });
 
 const spyOnEvents = () =>
   vi.spyOn(extensionEventMessenger, "sendMessage").mockResolvedValue(undefined);
@@ -61,6 +82,7 @@ describe("registerBackground", () => {
   afterEach(() => {
     extensionEventMessenger.removeAllListeners();
     extensionRequestMessenger.removeAllListeners();
+    settingsMessenger.removeAllListeners();
   });
 
   it("toggles the enabled flag, badges the action and tells every tab when the action is clicked", async () => {
@@ -214,5 +236,38 @@ describe("registerBackground", () => {
     await expect(
       extensionRequestMessenger.sendMessage("getOverlayState"),
     ).rejects.toThrow("the sender is not this extension");
+  });
+
+  it("writes sites only on a request from an extension page", async () => {
+    const site = { workspace: "app-workspace", jiraProjectKey: "ATT" };
+
+    sendAsOwnContentScript();
+    await expect(
+      settingsMessenger.sendMessage("saveSite", { origin: SITE_ORIGIN, site }),
+    ).rejects.toThrow("the sender is not an extension page");
+    expect(await sitesItem.getValue()).toEqual({});
+
+    vi.restoreAllMocks();
+    sendAsOptionsPage();
+    await settingsMessenger.sendMessage("saveSite", {
+      origin: SITE_ORIGIN,
+      site,
+    });
+    expect(await sitesItem.getValue()).toEqual({ [SITE_ORIGIN]: site });
+  });
+
+  it("gives back the old server origin's permission when the server URL moves", async () => {
+    const removePermission = vi
+      .spyOn(fakeBrowser.permissions, "remove")
+      .mockResolvedValue(undefined);
+
+    await saveServerUrl("https://old-sync.example.test");
+    await saveServerUrl("https://new-sync.example.test/api");
+
+    await vi.waitFor(() => {
+      expect(removePermission).toHaveBeenCalledWith({
+        origins: ["https://old-sync.example.test/*"],
+      });
+    });
   });
 });
