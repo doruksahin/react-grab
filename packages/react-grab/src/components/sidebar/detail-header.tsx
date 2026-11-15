@@ -5,7 +5,9 @@ import {
   getStatusColor,
 } from "../../features/sidebar/status-colors.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
-import { UserAvatar } from "./UserAvatar.js";
+import { Avatar } from "../ui/avatar.js";
+import { StatusChip } from "../ui/status-chip.js";
+import { IconButton } from "../ui/icon-button.js";
 
 interface DetailHeaderProps {
   group: SelectionGroup;
@@ -24,29 +26,20 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
       style={{ "pointer-events": "auto" }}
     >
       <div class="flex items-center gap-2">
-        <button
-          class="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors shrink-0"
+        <IconButton
+          label="Back to groups list"
+          class="shrink-0"
           onClick={props.onBack}
-          aria-label="Back to groups list"
         >
           ←
-        </button>
+        </IconButton>
         <span
           class="font-semibold text-title text-foreground flex-1 truncate"
           title={props.group.name}
         >
           {props.group.name}
         </span>
-        <span
-          class="text-meta px-2 py-0.5 rounded-full font-semibold shrink-0"
-          style={{
-            background: statusColor().bg,
-            color: statusColor().text,
-            border: `1px solid ${statusColor().hex}`,
-          }}
-        >
-          {statusLabel()}
-        </span>
+        <StatusChip size="md" label={statusLabel()} color={statusColor()} />
       </div>
 
       <Show when={groupWithJira().jiraTicketId}>
@@ -62,20 +55,20 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
           </a>
           <Show when={groupWithJira().jiraAssignee}>
             <span class="flex items-center gap-1.5 text-meta text-muted-foreground">
-              <UserAvatar
-                avatarUrl={groupWithJira().jiraAssigneeAvatar}
-                displayName={groupWithJira().jiraAssignee}
-                size={16}
+              <Avatar
+                name={groupWithJira().jiraAssignee}
+                src={groupWithJira().jiraAssigneeAvatar}
+                size="sm"
               />
               {groupWithJira().jiraAssignee}
             </span>
           </Show>
           <Show when={groupWithJira().jiraReporter}>
             <span class="flex items-center gap-1.5 text-meta text-muted-foreground">
-              <UserAvatar
-                avatarUrl={groupWithJira().jiraReporterAvatar}
-                displayName={groupWithJira().jiraReporter}
-                size={16}
+              <Avatar
+                name={groupWithJira().jiraReporter}
+                src={groupWithJira().jiraReporterAvatar}
+                size="sm"
               />
               {groupWithJira().jiraReporter}
             </span>

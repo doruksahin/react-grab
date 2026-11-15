@@ -2,18 +2,20 @@ import { type Component, For, createSignal } from "solid-js";
 import { render } from "solid-js/web";
 import type { SuggestionOptions, SuggestionProps } from "@tiptap/suggestion";
 import type { JiraUserSuggestion } from "../../../features/jira-comments/types.js";
-import { getCachedUsers, setCachedUsers } from "../../../features/jira-comments/mention-cache.js";
+import {
+  getCachedUsers,
+  setCachedUsers,
+} from "../../../features/jira-comments/mention-cache.js";
 import { useShadowMount } from "../../../utils/shadow-context.js";
-import { Avatar } from "../avatar.js";
+import { Avatar } from "../../ui/avatar.js";
 
 /** Position the popup above the cursor (preferred) or below if no room above. */
 function positionPopup(popup: HTMLDivElement, rect: DOMRect) {
   popup.style.left = `${rect.left}px`;
   requestAnimationFrame(() => {
     const h = popup.offsetHeight || 200;
-    popup.style.top = rect.top >= h + 4
-      ? `${rect.top - h - 4}px`
-      : `${rect.bottom + 4}px`;
+    popup.style.top =
+      rect.top >= h + 4 ? `${rect.top - h - 4}px` : `${rect.bottom + 4}px`;
   });
 }
 
@@ -37,7 +39,12 @@ const MentionList: Component<{
           props.onSelect(i());
         }}
       >
-        <Avatar name={user.displayName} url={user.avatarUrl} size={22} />
+        <Avatar
+          data-react-grab-comment-avatar
+          name={user.displayName}
+          src={user.avatarUrl}
+          size="lg"
+        />
         <span class="text-caption truncate">{user.displayName}</span>
       </div>
     )}
@@ -75,7 +82,8 @@ export function createMentionSuggestion(
       return {
         onStart(props: SuggestionProps) {
           popup = document.createElement("div");
-          popup.className = "rounded-md border border-border bg-popover shadow-lg p-1 min-w-[200px] max-h-[200px] overflow-y-auto";
+          popup.className =
+            "rounded-md border border-border bg-popover shadow-lg p-1 min-w-[200px] max-h-[200px] overflow-y-auto";
           popup.setAttribute("data-react-grab-mention-picker", "");
           popup.setAttribute("data-react-grab-ignore-events", "");
           popup.style.pointerEvents = "auto";
@@ -88,14 +96,22 @@ export function createMentionSuggestion(
 
           // Mount SolidJS component tree into the popup
           dispose = render(
-            () => <MentionList items={items} selected={selected} onSelect={selectItem} />,
+            () => (
+              <MentionList
+                items={items}
+                selected={selected}
+                onSelect={selectItem}
+              />
+            ),
             popup,
           );
 
           const mount = useShadowMount();
           mount.appendChild(popup);
 
-          const { decorationNode } = props as SuggestionProps & { decorationNode: HTMLElement | null };
+          const { decorationNode } = props as SuggestionProps & {
+            decorationNode: HTMLElement | null;
+          };
           if (decorationNode) {
             positionPopup(popup, decorationNode.getBoundingClientRect());
           }
@@ -105,7 +121,9 @@ export function createMentionSuggestion(
           setItems(props.items as JiraUserSuggestion[]);
           setSelected(0);
 
-          const { decorationNode } = props as SuggestionProps & { decorationNode: HTMLElement | null };
+          const { decorationNode } = props as SuggestionProps & {
+            decorationNode: HTMLElement | null;
+          };
           if (popup && decorationNode) {
             positionPopup(popup, decorationNode.getBoundingClientRect());
           }

@@ -6,27 +6,16 @@ import type {
 } from "../../features/jira-comments/types.js";
 import { JiraTicketLink } from "../ui/jira-ticket-link.jsx";
 import { PriorityIcon } from "./priority-icon.jsx";
-import { UserAvatar } from "./UserAvatar.jsx";
+import { Avatar } from "../ui/avatar.jsx";
 import { CommentsSection } from "../jira-comments/comments-section.jsx";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
 import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
 import { ScreenshotThumb } from "./screenshot-thumb.js";
-
-const getStatusPillClass = (category?: string): string => {
-  switch (category) {
-    case "indeterminate":
-      return "text-blue-400 bg-blue-400/[0.12]";
-    case "done":
-      return "text-green-400 bg-green-400/[0.12]";
-    case "new":
-    default:
-      return "text-muted-foreground bg-foreground/[0.06]";
-  }
-};
-
-const getStatusDisplayText = (status?: string): string => {
-  return status ?? "To Do";
-};
+import { StatusChip } from "../ui/status-chip.jsx";
+import {
+  getStatusColor,
+  getStatusLabel,
+} from "../../features/sidebar/status-colors.js";
 
 const formatDueDate = (dueDate: string): string =>
   new Date(dueDate).toLocaleDateString("en-US", {
@@ -90,7 +79,6 @@ export interface SelectionCardBodyProps {
   jiraTicketId?: string;
   jiraUrl?: string;
   jiraStatus?: string;
-  jiraStatusCategory?: string;
 
   // Leading slot — optional element before the summary (e.g. multi-select checkbox)
   leading?: JSX.Element;
@@ -144,6 +132,11 @@ export interface SelectionCardBodyProps {
 
 export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
   const hasTicket = () => Boolean(props.jiraTicketId);
+  const statusLabel = () =>
+    getStatusLabel({
+      jiraTicketId: props.jiraTicketId,
+      jiraStatus: props.jiraStatus,
+    });
   const screenshotContext = () => {
     const serverUrl = props.syncServerUrl;
     const workspace = props.syncWorkspace;
@@ -167,11 +160,11 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       }
       statusPill={
         <Show when={hasTicket()}>
-          <span
-            class={`text-meta uppercase font-medium px-1.5 py-0.5 rounded ${getStatusPillClass(props.jiraStatusCategory)}`}
-          >
-            {getStatusDisplayText(props.jiraStatus)}
-          </span>
+          <StatusChip
+            class="uppercase"
+            label={statusLabel()}
+            color={getStatusColor(statusLabel())}
+          />
         </Show>
       }
       labels={
@@ -283,10 +276,10 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
 
           <Show when={props.jiraAssignee}>
             <div class="flex items-center gap-1">
-              <UserAvatar
-                avatarUrl={props.jiraAssigneeAvatar}
-                displayName={props.jiraAssignee ?? undefined}
-                size={20}
+              <Avatar
+                name={props.jiraAssignee}
+                src={props.jiraAssigneeAvatar}
+                size="md"
               />
               <span class="text-meta text-muted-foreground">
                 {props.jiraAssignee}

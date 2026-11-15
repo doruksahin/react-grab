@@ -27,7 +27,8 @@ import { CreateTicketButton } from "../create-ticket-button.js";
 import { ActiveGroupPicker } from "../../../features/selection-groups/components/active-group-picker.js";
 
 export interface PrimaryLabelProps
-  extends Pick<
+  extends
+    Pick<
       SelectionGroupsViewProps,
       "groups" | "activeGroupId" | "onActiveGroupChange" | "onAddGroup"
     >,
@@ -251,7 +252,6 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
               jiraTicketId={props.jiraTicketId}
               jiraUrl={props.jiraUrl}
               jiraStatus={props.groupStatus}
-              jiraStatusCategory={props.jiraStatusCategory}
               jiraLabels={props.jiraLabels}
               jiraDueDate={props.jiraDueDate}
               jiraIssueType={props.jiraIssueType}
@@ -267,14 +267,12 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
                   : undefined
               }
               noTicketAction={
-                canInteract() && props.onCreateTicket && !props.jiraTicketId
-                  ? (
-                      <CreateTicketButton
-                        onClick={() => props.onCreateTicket?.()}
-                        class="w-full"
-                      />
-                    )
-                  : undefined
+                canInteract() && props.onCreateTicket && !props.jiraTicketId ? (
+                  <CreateTicketButton
+                    onClick={() => props.onCreateTicket?.()}
+                    class="w-full"
+                  />
+                ) : undefined
               }
             />
             <SelectionLabelContextInput

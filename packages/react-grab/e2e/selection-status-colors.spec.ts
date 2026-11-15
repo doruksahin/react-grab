@@ -99,7 +99,8 @@ test.describe("Selection Status Colors", () => {
         .locator("[data-react-grab-selection-label]")
         .getByText("In Progress", { exact: true });
       await expect(status).toBeVisible();
-      await expect(status).toHaveClass(/text-blue-400/);
+      // "In Progress" colour from status-colors.ts (ADR-0006): #3b82f6
+      await expect(status).toHaveCSS("color", "rgb(59, 130, 246)");
     });
 
     test("ticketed preview links to the Jira ticket", async ({ reactGrab }) => {

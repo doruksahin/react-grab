@@ -5,7 +5,8 @@ import {
   getStatusColor,
   getStatusLabel,
 } from "../../features/sidebar/status-colors.js";
-import { UserAvatar } from "./UserAvatar.js";
+import { Avatar } from "../ui/avatar.js";
+import { StatusChip } from "../ui/status-chip.js";
 import { GroupChildren } from "./group-children.js";
 
 interface GroupCardProps {
@@ -57,15 +58,7 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
             </span>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
-            <span
-              class="text-meta px-1.5 py-0.5 rounded"
-              style={{
-                background: statusColor().bg,
-                color: statusColor().text,
-              }}
-            >
-              {statusLabel()}
-            </span>
+            <StatusChip label={statusLabel()} color={statusColor()} />
             {/* Detail open button — visible on hover */}
             <button
               class="opacity-0 group-hover/card:opacity-100 transition-opacity p-0.5 rounded hover:bg-foreground/10"
@@ -98,20 +91,20 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
           <div class="flex gap-3 text-meta mb-2">
             <Show when={props.entry.group.jiraAssignee}>
               <span class="flex items-center gap-1.5 text-meta text-muted-foreground">
-                <UserAvatar
-                  avatarUrl={props.entry.group.jiraAssigneeAvatar}
-                  displayName={props.entry.group.jiraAssignee}
-                  size={16}
+                <Avatar
+                  name={props.entry.group.jiraAssignee}
+                  src={props.entry.group.jiraAssigneeAvatar}
+                  size="sm"
                 />
                 {props.entry.group.jiraAssignee}
               </span>
             </Show>
             <Show when={props.entry.group.jiraReporter}>
               <span class="flex items-center gap-1.5 text-meta text-muted-foreground">
-                <UserAvatar
-                  avatarUrl={props.entry.group.jiraReporterAvatar}
-                  displayName={props.entry.group.jiraReporter}
-                  size={16}
+                <Avatar
+                  name={props.entry.group.jiraReporter}
+                  src={props.entry.group.jiraReporterAvatar}
+                  size="sm"
                 />
                 {props.entry.group.jiraReporter}
               </span>

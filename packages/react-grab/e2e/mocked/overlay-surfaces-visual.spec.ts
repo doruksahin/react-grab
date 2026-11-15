@@ -16,8 +16,6 @@ test.use({ viewport: { width: 1440, height: 900 } });
 
 // The pointer stays where the last click left it, so a hover tooltip may or
 // may not be open; park it in a corner and wait for tooltips to close.
-// Comment avatars are mock URLs that fail to load at varying moments (the
-// Avatar primitive with a fallback replaces them, ADR-0022); they are masked.
 const expectPageShot = async (
   page: Page,
   name: string,
@@ -28,7 +26,7 @@ const expectPageShot = async (
   await expect(page).toHaveScreenshot(name, {
     animations: "disabled",
     caret: "hide",
-    mask: [page.locator("[data-react-grab-comment-avatar]"), ...extraMasks],
+    mask: extraMasks,
     // The toolbar can still land a pixel or two apart (about 0.07% of the
     // page); it has its own strict element shot. Any token or layout change
     // moves far more than 0.1% of the page.

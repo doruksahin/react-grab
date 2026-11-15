@@ -15,6 +15,7 @@ const buttonVariants = cva({
       secondary:
         "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
       ghost: "text-foreground hover:bg-accent hover:text-accent-foreground",
+      subtle: "text-muted-foreground hover:bg-accent hover:text-foreground",
       link: "text-primary underline-offset-4 hover:underline",
     },
     size: {
@@ -22,6 +23,7 @@ const buttonVariants = cva({
       sm: "h-8 rounded-md px-3 text-xs",
       lg: "h-10 rounded-md px-8",
       icon: "h-9 w-9",
+      "icon-sm": "size-6 rounded-md",
     },
   },
   defaultVariants: {
@@ -30,13 +32,19 @@ const buttonVariants = cva({
   },
 });
 
-interface ButtonProps extends Omit<ComponentProps<"button">, "size">, VariantProps<typeof buttonVariants> {}
+interface ButtonProps
+  extends
+    Omit<ComponentProps<"button">, "size">,
+    VariantProps<typeof buttonVariants> {}
 
 const Button: Component<ButtonProps> = (props) => {
   const [local, rest] = splitProps(props, ["class", "variant", "size"]);
   return (
     <button
-      class={cn(buttonVariants({ variant: local.variant, size: local.size }), local.class)}
+      class={cn(
+        buttonVariants({ variant: local.variant, size: local.size }),
+        local.class,
+      )}
       {...rest}
     />
   );

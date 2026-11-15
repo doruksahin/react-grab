@@ -355,7 +355,6 @@ features:
     specs: [SPEC-013]
     adrs: [ADR-0007, ADR-0010]
     files:
-      - packages/react-grab/src/components/jira-comments/avatar.tsx
       - packages/react-grab/src/components/jira-comments/comment-item.tsx
       - packages/react-grab/src/components/jira-comments/comments-section.tsx
       - packages/react-grab/src/components/jira-comments/editor/jira-comment-editor.tsx
@@ -375,9 +374,11 @@ features:
     status: planned
     prds: [PRD-010]
     files:
-      - packages/react-grab/src/components/sidebar/UserAvatar.tsx
       - packages/react-grab/src/components/sidebar/group-card.tsx
+      - packages/react-grab/src/components/sidebar/group-children.tsx
       - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
+      - packages/react-grab/src/components/ui/avatar.tsx
+      - packages/react-grab/src/components/ui/status-chip.tsx
       - packages/sync-server/src/services/jira.service.ts
   collapsible-label:
     description: TODO
@@ -676,6 +677,13 @@ data_attrs:
         - lightbox-viewport
         - lightbox-close
 
+    ui:
+      description: Shared primitives in components/ui (ADR-0022) — appearance only, no domain
+      owns:
+        - icon-button
+        - status-chip
+        - avatar
+
   # Bare-verb attrs — flagged by `pnpm arch:lint` as warnings. Empty after
   # Phase 2 migration; add any future bare-verb regressions here to silence
   # them temporarily while a rename is in progress.
@@ -685,7 +693,7 @@ data_attrs:
   # Format: attr-suffix → { scope, src: <count>, tests: <count> }
   inventory:
     comment-author: {scope: comments, src: 1, tests: 0}
-    comment-avatar: {scope: comments, src: 2, tests: 1}
+    comment-avatar: {scope: comments, src: 3, tests: 0}
     comment-body: {scope: comments, src: 1, tests: 0}
     comment-cancel: {scope: comments, src: 1, tests: 0}
     comment-composer: {scope: comments, src: 1, tests: 3}
@@ -812,6 +820,9 @@ data_attrs:
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 2, tests: 4}
     toolbar-visibility: {scope: toolbar, src: 1, tests: 0}
+    avatar: {scope: ui, src: 1, tests: 0}
+    icon-button: {scope: ui, src: 1, tests: 0}
+    status-chip: {scope: ui, src: 1, tests: 0}
 
 # ─── API contract flow ────────────────────────────────────────────────────────
 

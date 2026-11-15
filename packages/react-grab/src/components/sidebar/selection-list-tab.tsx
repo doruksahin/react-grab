@@ -164,7 +164,6 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 jiraTicketId={group()?.jiraTicketId}
                 jiraUrl={group()?.jiraUrl}
                 jiraStatus={group()?.jiraStatus}
-                jiraStatusCategory={group()?.jiraStatusCategory}
                 jiraLabels={group()?.jiraLabels}
                 jiraDueDate={group()?.jiraDueDate}
                 jiraIssueType={group()?.jiraIssueType}

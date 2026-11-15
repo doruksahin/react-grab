@@ -60,6 +60,8 @@ export function getStatusColor(
   return ATT_STATUS_COLORS[jiraStatus] ?? UNKNOWN_COLOR;
 }
 
-export function getStatusLabel(group: SelectionGroupWithJira): string {
+export function getStatusLabel(
+  group: Pick<SelectionGroupWithJira, "jiraTicketId" | "jiraStatus">,
+): string {
   return group.jiraTicketId ? (group.jiraStatus ?? "To Do") : "No Task";
 }

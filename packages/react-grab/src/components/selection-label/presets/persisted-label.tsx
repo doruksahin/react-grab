@@ -129,7 +129,6 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
               jiraTicketId={props.jiraTicketId}
               jiraUrl={props.jiraUrl}
               jiraStatus={props.groupStatus}
-              jiraStatusCategory={props.jiraStatusCategory}
               jiraLabels={props.jiraLabels}
               jiraDueDate={props.jiraDueDate}
               jiraIssueType={props.jiraIssueType}
@@ -148,9 +147,12 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
               hasElementScreenshot={props.hasElementScreenshot}
               hasFullPageScreenshot={props.hasFullPageScreenshot}
               noTicketAction={
-                props.onCreateTicket && !props.jiraTicketId
-                  ? <CreateTicketButton onClick={() => props.onCreateTicket?.()} class="w-full" />
-                  : undefined
+                props.onCreateTicket && !props.jiraTicketId ? (
+                  <CreateTicketButton
+                    onClick={() => props.onCreateTicket?.()}
+                    class="w-full"
+                  />
+                ) : undefined
               }
             />
           </SelectionLabelContent>

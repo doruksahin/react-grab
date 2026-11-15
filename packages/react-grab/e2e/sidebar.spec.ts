@@ -2,6 +2,10 @@ import { openGroupDetail } from "./open-group-detail.js";
 import { test, expect } from "./fixtures.js";
 
 const ATTR = "data-react-grab-product";
+const ONE_PIXEL_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+  "base64",
+);
 
 /** Click a button inside the shadow root by selector. */
 const clickShadowButton = async (
@@ -656,6 +660,10 @@ test.describe("Sidebar — JIRA integration", () => {
       reporterAvatar: null,
       labels: [],
     });
+    // The Avatar primitive shows the img only once it has loaded.
+    await page.route("https://example.com/avatar-jane.png", (route) =>
+      route.fulfill({ contentType: "image/png", body: ONE_PIXEL_PNG }),
+    );
     await reactGrab.triggerInitSync();
     await expect
       .poll(() => mockServer.requests("getJiraTicketStatus").length)

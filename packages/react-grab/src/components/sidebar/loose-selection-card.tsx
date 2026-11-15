@@ -1,14 +1,15 @@
 // packages/react-grab/src/components/sidebar/loose-selection-card.tsx
-import { type Component, Show } from 'solid-js';
-import type { CommentItem } from '../../types.js';
-import type { StatusColorConfig } from '../../features/sidebar/status-colors.js';
-import { SelectionCard } from './selection-card.jsx';
-import { CreateTicketButton } from '../ui/create-ticket-button.jsx';
-import { RemoveSelectionButton } from '../remove-selection-button.jsx';
-import { FlagIndicator } from '../flag-indicator.js';
-import { FLAGGED_BORDER_CLASS } from '../../features/sidebar/resolve-display-color.js';
-import { LooseSelectionCardHeader } from './loose-selection-card-header.jsx';
-import { cn } from '../../utils/cn.js';
+import { type Component, Show } from "solid-js";
+import type { CommentItem } from "../../types.js";
+import type { StatusColorConfig } from "../../features/sidebar/status-colors.js";
+import { SelectionCard } from "./selection-card.jsx";
+import { CreateTicketButton } from "../ui/create-ticket-button.jsx";
+import { RemoveSelectionButton } from "../remove-selection-button.jsx";
+import { FlagIndicator } from "../flag-indicator.js";
+import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";
+import { LooseSelectionCardHeader } from "./loose-selection-card-header.jsx";
+import { cn } from "../../utils/cn.js";
+import { StatusChip } from "../ui/status-chip.jsx";
 
 interface LooseSelectionCardProps {
   item: CommentItem;
@@ -46,7 +47,7 @@ interface LooseSelectionCardProps {
  * `core/index.tsx`. The Create-ticket button just calls `onCreateTicket`.
  */
 export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
-  props
+  props,
 ) => {
   const hasTicket = () => Boolean(props.jiraTicketId);
 
@@ -54,12 +55,14 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
     <div
       data-react-grab-loose-selection-card
       class="mb-1.5"
-      style={{ 'pointer-events': 'auto' }}
+      style={{ "pointer-events": "auto" }}
     >
-      <div class={cn(
-        "relative bg-muted rounded-lg border border-border p-3 cursor-default",
-        props.jiraFlagged && FLAGGED_BORDER_CLASS
-      )}>
+      <div
+        class={cn(
+          "relative bg-muted rounded-lg border border-border p-3 cursor-default",
+          props.jiraFlagged && FLAGGED_BORDER_CLASS,
+        )}
+      >
         {/* Absolute close button — top right */}
         <Show when={!hasTicket() && props.onRemoveItem}>
           <div class="absolute -top-2 -right-2 z-10">
@@ -74,7 +77,9 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
             <Show
               when={hasTicket()}
               fallback={
-                <CreateTicketButton onClick={() => props.onCreateTicket(props.item)} />
+                <CreateTicketButton
+                  onClick={() => props.onCreateTicket(props.item)}
+                />
               }
             >
               <div class="flex items-center gap-1">
@@ -98,15 +103,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
           }
           right={
             <>
-              <span
-                class="text-meta font-semibold rounded-full px-2 py-0.5"
-                style={{
-                  color: props.statusColor.text,
-                  background: props.statusColor.bg,
-                }}
-              >
-                {props.statusLabel}
-              </span>
+              <StatusChip label={props.statusLabel} color={props.statusColor} />
               <span class="text-meta text-muted-foreground">
                 {new Date(props.item.timestamp).toLocaleString()}
               </span>
