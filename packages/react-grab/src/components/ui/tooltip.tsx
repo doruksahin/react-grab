@@ -138,7 +138,7 @@ const TooltipContent: Component<
       <TooltipPortal>
         <TooltipPrimitive.Content
           class={cn(
-            "z-50 overflow-hidden rounded-md bg-primary px-3 py-1.5 text-caption leading-4 text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
+            "z-(--z-tooltip) overflow-hidden rounded-md bg-primary px-3 py-1.5 text-caption leading-4 text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
             local.class,
           )}
           {...rest}

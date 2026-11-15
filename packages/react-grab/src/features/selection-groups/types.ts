@@ -1,6 +1,6 @@
 import type { Accessor, Setter } from "solid-js";
 import type { ServerSelectionGroup } from "../../generated/types.js";
-import type { CommentItem } from "../../types.js";
+import type { CommentItem } from "../../shared-types.js";
 
 /**
  * Application-level group type. Extends the server type with UI-only fields.

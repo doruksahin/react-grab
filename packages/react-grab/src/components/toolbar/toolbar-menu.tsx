@@ -54,8 +54,7 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
         data-react-grab-toolbar-menu
         class="fixed text-body antialiased drop-shadow-overlay select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
         style={{
-          top: `${dropdown.displayPosition().top}px`,
-          left: `${dropdown.displayPosition().left}px`,
+          ...dropdown.floatingStyle(),
           "z-index": "var(--z-dropdown)",
           "pointer-events": dropdown.isAnimatedIn() ? "auto" : "none",
           "transform-origin":

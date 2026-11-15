@@ -1,7 +1,7 @@
-import type { ServerCommentItem } from "./generated/types.js";
+import type { CommentItem, OverlayBounds } from "./shared-types.js";
+export type { CommentItem, OverlayBounds } from "./shared-types.js";
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
 import type { SelectionGroup } from "./features/selection-groups/types.js";
-import type { SyncConfig, SyncStatus } from "./features/sync/types.js";
 import type {
   JiraComment,
   RefreshGroupStatusFn,
@@ -424,11 +424,11 @@ export interface ToolbarState {
   selectionsRevealed: boolean;
 }
 
+/** A toolbar dropdown's anchor: the toolbar element and the edge it sits on. */
 export interface DropdownAnchor {
-  x: number;
-  y: number;
   edge: ToolbarState["edge"];
   toolbarWidth: number;
+  reference: HTMLElement;
 }
 
 export interface ReactGrabAPI {
@@ -454,15 +454,6 @@ export interface ReactGrabAPI {
   unregisterPlugin: (name: string) => void;
   getPlugins: () => string[];
   getDisplayName: (element: Element) => string | null;
-}
-
-export interface OverlayBounds {
-  borderRadius: string;
-  height: number;
-  transform: string;
-  width: number;
-  x: number;
-  y: number;
 }
 
 /** JIRA status name (e.g. "In Progress") or undefined for no ticket */
@@ -557,20 +548,6 @@ export interface SelectionLabelInstance extends JiraDisplayFields {
   timestamp?: number;
   hasElementScreenshot?: boolean;
   hasFullPageScreenshot?: boolean;
-}
-
-/**
- * CommentItem extends the server-defined shape with UI-only fields.
- * Server fields come from Orval (SSOT: sync-server Zod schemas).
- * UI-only fields are added here.
- *
- * `groupId` is overridden to `string | null` (server type is `string`).
- * `null` = intentionally ungrouped. The wire-format translation
- * (`null` ↔ `""`) lives in features/sync/transforms.ts.
- */
-export interface CommentItem extends Omit<ServerCommentItem, "groupId"> {
-  groupId: string | null;
-  previewBounds?: OverlayBounds[];
 }
 
 export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
@@ -730,9 +707,10 @@ export type ArrowPosition = "bottom" | "top";
 
 export interface ArrowProps {
   position: ArrowPosition;
-  leftPercent: number;
-  leftOffsetPx: number;
+  /** Left offset inside the label, from Floating UI's arrow middleware. */
+  left?: number;
   labelWidth?: number;
+  ref?: (element: HTMLDivElement) => void;
 }
 
 export interface TagBadgeProps {
@@ -860,3 +838,27 @@ export interface SelectionLabelProps
   onRefreshJiraStatus?: () => void;
   commentEditorToolbarVisible?: boolean;
 }
+
+/**
+ * Configuration for sync. Passed to initSync().
+ * Optional `options` field is forwarded to init() when it auto-fires.
+ */
+export interface SyncConfig {
+  enabled: boolean;
+  serverUrl: string;
+  workspace: string;
+  jiraProjectKey: string;
+  /**
+   * Bearer token the sync server requires on every request (ADR-0020).
+   * Required when `enabled` is true. Read it from the host app's own env
+   * (for example `VITE_REACT_GRAB_SYNC_TOKEN`); `initSync()` runs only in
+   * development builds, so it never ships in a production bundle.
+   */
+  apiToken?: string;
+  syncRevealedState: boolean;
+  onSyncError: (error: Error) => void;
+  /** Options forwarded to init() — use this to set screenshot config etc. */
+  options?: Options;
+}
+
+export type SyncStatus = "local" | "synced" | "error";

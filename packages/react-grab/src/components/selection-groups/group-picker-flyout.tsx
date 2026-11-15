@@ -1,21 +1,49 @@
-import { For, Show, createSignal, onMount, onCleanup } from "solid-js";
-import {
-  FLYOUT_OFFSCREEN_PX,
-  FLYOUT_OFFSET_PX,
-  FLYOUT_VIEWPORT_PADDING_PX,
-} from "../../constants.js";
-import { createFloating } from "../../utils/floating.js";
-import type { Component } from "solid-js";
+import { For, Show } from "solid-js";
+import type { Component, JSX } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
-import { registerOverlayDismiss } from "../../utils/register-overlay-dismiss.js";
+import {
+  FLOATING_GAP_PX,
+  FLOATING_VIEWPORT_PADDING_PX,
+} from "../../constants.js";
 import { cn } from "../../utils/cn.js";
 import { IconCheck } from "../icons/icon-check.jsx";
 import { ActionList, ActionListItem } from "../ui/action-list.js";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover.js";
 
 interface GroupRow {
   id: string | null;
   name: string;
 }
+
+interface GroupPickerPopoverProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Opening direction. Defaults to "bottom" (drops down). */
+  placement?: "bottom" | "top";
+  children: JSX.Element;
+}
+
+/**
+ * The popover around a group picker trigger and its flyout (Kobalte
+ * Popover): it flips, shifts and fits the viewport, and closes on an outside
+ * click or Escape.
+ */
+export const GroupPickerPopover: Component<GroupPickerPopoverProps> = (
+  props,
+) => (
+  <Popover
+    open={props.open}
+    onOpenChange={props.onOpenChange}
+    placement={props.placement === "top" ? "top-start" : "bottom-start"}
+    gutter={FLOATING_GAP_PX}
+    overflowPadding={FLOATING_VIEWPORT_PADDING_PX}
+    fitViewport
+  >
+    {props.children}
+  </Popover>
+);
+
+export const GroupPickerTrigger = PopoverTrigger;
 
 interface GroupPickerFlyoutProps {
   groups: SelectionGroup[];
@@ -24,36 +52,11 @@ interface GroupPickerFlyoutProps {
   /** If set, this group is hidden from the list (move context). */
   excludeGroupId?: string;
   onSelect: (groupId: string | null) => void;
-  onClose: () => void;
   /** If provided, renders a "New group..." inline input at the bottom. */
   onAddGroup?: (name: string) => void;
-  /** Opening direction. Defaults to "bottom" (drops down). */
-  placement?: "bottom" | "top";
 }
 
 export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
-  onMount(() => {
-    const unregister = registerOverlayDismiss({
-      isOpen: () => true,
-      onDismiss: props.onClose,
-    });
-    onCleanup(unregister);
-  });
-
-  // Anchored to its trigger's wrapper (the parent element); flips and shifts
-  // so it stays inside the viewport, and its list scrolls when space is short.
-  const [flyout, setFlyout] = createSignal<HTMLDivElement>();
-  const position = createFloating({
-    reference: () => flyout()?.parentElement ?? null,
-    floating: flyout,
-    options: () => ({
-      placement: props.placement === "top" ? "top-start" : "bottom-start",
-      offsetPx: FLYOUT_OFFSET_PX,
-      paddingPx: FLYOUT_VIEWPORT_PADDING_PX,
-      fitHeight: true,
-    }),
-  });
-
   const visibleGroups = () =>
     props.groups.filter((g) => g.id !== props.excludeGroupId);
 
@@ -67,15 +70,13 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
     props.excludeGroupId !== undefined ? "Move to group" : "Add to group";
 
   return (
-    <div
-      ref={setFlyout}
+    <PopoverContent
       data-react-grab-ignore-events
       data-react-grab-group-picker-flyout
-      class="fixed z-50 flex flex-col bg-popover text-popover-foreground rounded-[10px] overflow-hidden w-[180px] [font-synthesis:none] [corner-shape:superellipse(1.25)] shadow-md"
-      style={{
-        left: `${position()?.x ?? FLYOUT_OFFSCREEN_PX}px`,
-        top: `${position()?.y ?? FLYOUT_OFFSCREEN_PX}px`,
-      }}
+      class="flex w-[180px] flex-col overflow-hidden rounded-[10px] border-0 p-0 shadow-md [font-synthesis:none] [corner-shape:superellipse(1.25)]"
+      // Focus stays where it was (the prompt or the list), as before.
+      onOpenAutoFocus={(event) => event.preventDefault()}
+      onCloseAutoFocus={(event) => event.preventDefault()}
     >
       <div class="px-2 pt-1.5 pb-1">
         <span class="text-meta font-medium text-muted-foreground">
@@ -153,6 +154,6 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
           </div>
         </div>
       </Show>
-    </div>
+    </PopoverContent>
   );
 };

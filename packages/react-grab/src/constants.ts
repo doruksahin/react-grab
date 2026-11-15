@@ -154,20 +154,19 @@ export const MAX_SESSION_STORAGE_SIZE_BYTES = 2 * 1024 * 1024;
 export const DROPDOWN_ANIMATION_DURATION_MS = 100;
 export const DROPDOWN_HOVER_OPEN_DELAY_MS = 200;
 export const ICON_BUTTON_TOOLTIP_OPEN_DELAY_MS = 400;
-export const DROPDOWN_VIEWPORT_PADDING_PX = 8;
 export const DROPDOWN_ANCHOR_GAP_PX = 8;
-export const FLYOUT_OFFSET_PX = 4;
-export const TOOLBAR_DROPDOWN_GAP_PX = 4;
-export const MENTION_PICKER_GAP_PX = 4;
-export const MENTION_PICKER_VIEWPORT_PADDING_PX = 8;
-export const FLYOUT_VIEWPORT_PADDING_PX = 8;
-export const FLYOUT_OFFSCREEN_PX = -9999;
+// Floating UI defaults for overlays (utils/floating.ts).
+export const FLOATING_GAP_PX = 4;
+export const FLOATING_VIEWPORT_PADDING_PX = 8;
+// Collapsed label dot (components/collapsible-label/collapsed-dot.tsx).
+export const DOT_SIZE_PX = 10;
+export const DOT_GAP_PX = 6;
+export const DOT_PADDING_PX = 6;
 export const SAFE_POLYGON_BUFFER_PX = 8;
 export const DROPDOWN_ICON_SIZE_PX = 11;
 export const DROPDOWN_MIN_WIDTH_PX = 180;
 export const DROPDOWN_MAX_WIDTH_PX = 280;
 export const TOOLBAR_MENU_MIN_WIDTH_PX = 100;
-export const DROPDOWN_OFFSCREEN_POSITION = { left: -9999, top: -9999 };
 
 export const DROPDOWN_EDGE_TRANSFORM_ORIGIN = {
   left: "left center",
@@ -181,7 +180,6 @@ export const NEXTJS_REVALIDATION_DELAY_MS = 1000;
 export const TEXTAREA_MAX_HEIGHT_PX = 95;
 
 export const IME_COMPOSING_KEY_CODE = 229;
-export const SELECTION_LABEL_OFFSCREEN_PX = -9999;
 
 export const RELEVANT_CSS_PROPERTIES = new Set([
   "display",

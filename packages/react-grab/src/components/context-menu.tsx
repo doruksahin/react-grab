@@ -13,11 +13,7 @@ import type {
   ContextMenuAction,
   ContextMenuActionContext,
 } from "../types.js";
-import {
-  ARROW_HEIGHT_PX,
-  DROPDOWN_OFFSCREEN_POSITION,
-  LABEL_GAP_PX,
-} from "../constants.js";
+import { ARROW_HEIGHT_PX, LABEL_GAP_PX } from "../constants.js";
 import { cn } from "../utils/cn.js";
 import { Arrow } from "./selection-label/arrow.js";
 import { TagBadge } from "./selection-label/tag-badge.js";
@@ -27,6 +23,7 @@ import { getTagDisplay } from "../utils/get-tag-display.js";
 import { resolveActionEnabled } from "../utils/resolve-action-enabled.js";
 import { createFloating, virtualReference } from "../utils/floating.js";
 import type { ArrowPosition } from "../types.js";
+import type { Rect } from "@floating-ui/dom";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { registerOverlayDismiss } from "../utils/register-overlay-dismiss.js";
 import { ActionList, ActionListItem } from "./ui/action-list.js";
@@ -50,13 +47,6 @@ interface MenuItem {
   shortcut?: string;
 }
 
-interface MenuPosition {
-  left: number;
-  top: number;
-  arrowLeft: number;
-  arrowPosition: ArrowPosition;
-}
-
 export const ContextMenu: Component<ContextMenuProps> = (props) => {
   const [container, setContainer] = createSignal<HTMLDivElement>();
 
@@ -69,47 +59,44 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
     }),
   );
 
+  const [arrowElement, setArrowElement] = createSignal<HTMLDivElement>();
+
+  // The element's rect at the cursor's x; the reference object stays the same
+  // while it moves, so autoUpdate is not restarted.
+  const anchorRect = (): Rect | null => {
+    const bounds = props.selectionBounds;
+    const clickPosition = props.position;
+    if (!bounds || !clickPosition) return null;
+    return {
+      x: clickPosition.x ?? bounds.x + bounds.width / 2,
+      y: bounds.y,
+      width: 0,
+      height: bounds.height,
+    };
+  };
+  const menuReference = virtualReference(
+    () => anchorRect() ?? { x: 0, y: 0, width: 0, height: 0 },
+  );
+  const hasAnchor = createMemo(() => anchorRect() !== null);
+
   // Below the element at the cursor's x, flipping above when it does not fit.
-  const floatingPosition = createFloating({
-    reference: () => {
-      const bounds = props.selectionBounds;
-      const clickPosition = props.position;
-      if (!bounds || !clickPosition) return null;
-      const cursorX = clickPosition.x ?? bounds.x + bounds.width / 2;
-      return virtualReference(() => ({
-        x: cursorX,
-        y: bounds.y,
-        width: 0,
-        height: bounds.height,
-      }));
-    },
+  const floating = createFloating({
+    reference: () => (hasAnchor() ? menuReference : null),
     floating: container,
+    watch: anchorRect,
     options: () => ({
       placement: "bottom",
       fallbackPlacements: ["top"],
       offsetPx: ARROW_HEIGHT_PX + LABEL_GAP_PX,
       paddingPx: LABEL_GAP_PX,
-      anchorPaddingPx: ARROW_HEIGHT_PX,
+      shiftCrossAxis: true,
+      arrowElement: arrowElement(),
+      arrowPaddingPx: ARROW_HEIGHT_PX,
     }),
   });
 
-  const computedPosition = (): MenuPosition => {
-    const position = isVisible() ? floatingPosition() : null;
-    if (!position) {
-      return {
-        left: DROPDOWN_OFFSCREEN_POSITION.left,
-        top: DROPDOWN_OFFSCREEN_POSITION.top,
-        arrowLeft: 0,
-        arrowPosition: "bottom",
-      };
-    }
-    return {
-      left: position.x,
-      top: position.y,
-      arrowLeft: position.anchorOffsetX,
-      arrowPosition: position.placement.startsWith("top") ? "top" : "bottom",
-    };
-  };
+  const arrowPosition = (): ArrowPosition =>
+    floating.position()?.side === "top" ? "top" : "bottom";
 
   const menuItems = createMemo<MenuItem[]>(() => {
     const pluginActions = props.actions ?? [];
@@ -201,8 +188,7 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
         data-react-grab-context-menu
         class="fixed text-body antialiased drop-shadow-overlay select-none"
         style={{
-          top: `${computedPosition().top}px`,
-          left: `${computedPosition().left}px`,
+          ...floating.style(),
           "z-index": "var(--z-dropdown)",
           "pointer-events": "auto",
         }}
@@ -212,9 +198,9 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
         onContextMenu={suppressMenuEvent}
       >
         <Arrow
-          position={computedPosition().arrowPosition}
-          leftPercent={0}
-          leftOffsetPx={computedPosition().arrowLeft}
+          ref={setArrowElement}
+          position={arrowPosition()}
+          left={floating.position()?.arrowX}
         />
 
         <div

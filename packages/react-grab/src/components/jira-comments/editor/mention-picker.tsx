@@ -7,14 +7,18 @@ import {
   setCachedUsers,
 } from "../../../features/jira-comments/mention-cache.js";
 import { useShadowMount } from "../../../utils/shadow-context.js";
-import { trackFloating } from "../../../utils/floating.js";
 import {
-  MENTION_PICKER_GAP_PX,
-  MENTION_PICKER_VIEWPORT_PADDING_PX,
-} from "../../../constants.js";
+  type FloatingOptions,
+  trackFloating,
+} from "../../../utils/floating.js";
 import { Avatar } from "../../ui/avatar.js";
 
 // Above the typed mention (preferred) or below it when there is no room.
+const POPUP_OPTIONS: FloatingOptions = {
+  placement: "top-start",
+  fallbackPlacements: ["bottom-start"],
+};
+
 const trackPopupPosition = (
   decorationNode: HTMLElement,
   popup: HTMLDivElement,
@@ -22,17 +26,12 @@ const trackPopupPosition = (
   trackFloating(
     decorationNode,
     popup,
-    {
-      placement: "top-start",
-      fallbackPlacements: ["bottom-start"],
-      offsetPx: MENTION_PICKER_GAP_PX,
-      paddingPx: MENTION_PICKER_VIEWPORT_PADDING_PX,
-    },
+    () => POPUP_OPTIONS,
     ({ x, y }) => {
       popup.style.left = `${x}px`;
       popup.style.top = `${y}px`;
     },
-  );
+  ).stop;
 
 const MentionList: Component<{
   items: () => JiraUserSuggestion[];
@@ -83,18 +82,23 @@ export function createMentionSuggestion(
       let dispose: (() => void) | null = null;
       let commandFn: SuggestionProps["command"] | null = null;
       let stopTracking: (() => void) | null = null;
+      let trackedNode: HTMLElement | null = null;
 
       const closePopup = () => {
         stopTracking?.();
         stopTracking = null;
+        trackedNode = null;
         dispose?.();
         popup?.remove();
         popup = null;
         dispose = null;
       };
 
+      // autoUpdate already follows the node; restart only when it changes.
       const followDecoration = (decorationNode: HTMLElement | null) => {
+        if (decorationNode === trackedNode && stopTracking) return;
         stopTracking?.();
+        trackedNode = decorationNode;
         stopTracking =
           popup && decorationNode
             ? trackPopupPosition(decorationNode, popup)

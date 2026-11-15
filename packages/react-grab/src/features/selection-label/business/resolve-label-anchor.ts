@@ -1,17 +1,24 @@
-import type { Rect } from "@floating-ui/dom";
+import type { OverlayBounds } from "../../../types.js";
+
+export interface AnchorRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 interface ResolveLabelAnchorInput {
-  bounds: Rect | undefined;
+  bounds: OverlayBounds | undefined;
   /** Pointer x over the element; the label centres there. */
   pointerX: number | undefined;
   /** The visible area (the visual viewport). */
-  viewport: Rect;
+  viewport: AnchorRect;
   /** The label has a measured size. */
   hasMeasurements: boolean;
 }
 
 export type LabelAnchor =
-  | { kind: "track"; rect: Rect }
+  | { kind: "track"; rect: AnchorRect }
   | { kind: "keep" }
   | { kind: "hide" };
 

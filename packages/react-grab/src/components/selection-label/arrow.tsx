@@ -11,15 +11,14 @@ export const Arrow: Component<ArrowProps> = (props) => {
 
   return (
     <div
+      ref={props.ref}
       data-react-grab-arrow
       class="absolute w-0 h-0 z-10"
       style={{
-        left: `calc(${props.leftPercent}% + ${props.leftOffsetPx}px)`,
+        left: `${props.left ?? 0}px`,
         top: isBottom() ? "0" : undefined,
         bottom: isBottom() ? undefined : "0",
-        transform: isBottom()
-          ? "translateX(-50%) translateY(-100%)"
-          : "translateX(-50%) translateY(100%)",
+        transform: isBottom() ? "translateY(-100%)" : "translateY(100%)",
         "border-left": `${arrowSize()}px solid transparent`,
         "border-right": `${arrowSize()}px solid transparent`,
         "border-bottom": isBottom()

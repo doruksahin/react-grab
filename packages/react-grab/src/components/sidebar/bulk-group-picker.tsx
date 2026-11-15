@@ -1,6 +1,10 @@
-import { type Component, createSignal, Show } from "solid-js";
+import { type Component, createSignal } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
-import { GroupPickerFlyout } from "../selection-groups/group-picker-flyout.js";
+import {
+  GroupPickerFlyout,
+  GroupPickerPopover,
+  GroupPickerTrigger,
+} from "../selection-groups/group-picker-flyout.js";
 import { Button } from "../ui/button.js";
 
 interface BulkGroupPickerProps {
@@ -14,17 +18,19 @@ export const BulkGroupPicker: Component<BulkGroupPickerProps> = (props) => {
 
   return (
     <div data-react-grab-bulk-group-picker class="relative">
-      <Button
-        variant="bulk"
-        size="xs"
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((v) => !v);
-        }}
+      <GroupPickerPopover
+        open={isOpen()}
+        onOpenChange={setOpen}
+        placement="top"
       >
-        Move to group
-      </Button>
-      <Show when={isOpen()}>
+        <GroupPickerTrigger
+          as={Button}
+          variant="bulk"
+          size="xs"
+          onClick={(event: MouseEvent) => event.stopPropagation()}
+        >
+          Move to group
+        </GroupPickerTrigger>
         <GroupPickerFlyout
           groups={props.groups}
           activeGroupId={null}
@@ -32,11 +38,9 @@ export const BulkGroupPicker: Component<BulkGroupPickerProps> = (props) => {
             if (groupId !== null) props.onSelect(groupId);
             setOpen(false);
           }}
-          onClose={() => setOpen(false)}
           onAddGroup={props.onAddGroup}
-          placement="top"
         />
-      </Show>
+      </GroupPickerPopover>
     </div>
   );
 };

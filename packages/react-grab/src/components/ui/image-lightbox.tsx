@@ -108,14 +108,10 @@ export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
       }}
     >
       <DialogPrimitive.Portal mount={useShadowMount()}>
-        <DialogPrimitive.Overlay
-          class="fixed inset-0 bg-black/80 backdrop-blur-sm"
-          style={{ "z-index": "var(--z-dialog)", "pointer-events": "auto" }}
-        />
+        <DialogPrimitive.Overlay class="pointer-events-auto fixed inset-0 z-(--z-dialog) bg-black/80 backdrop-blur-sm" />
         <DialogPrimitive.Content
           data-react-grab-image-lightbox
-          class="fixed inset-0 flex flex-col outline-none"
-          style={{ "z-index": "var(--z-dialog)", "pointer-events": "auto" }}
+          class="pointer-events-auto fixed inset-0 z-(--z-dialog) flex flex-col outline-none"
           aria-label={props.caption}
           onEscapeKeyDown={(event) => event.preventDefault()}
           onClick={handleBackdropClick}

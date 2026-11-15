@@ -16,11 +16,10 @@ const PopoverContent: Component<
     <PopoverPrimitive.Portal mount={useShadowMount()}>
       <PopoverPrimitive.Content
         class={cn(
-          "rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg outline-none",
+          "pointer-events-auto z-(--z-dropdown) rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg outline-none",
           local.class,
         )}
         {...rest}
-        style={{ "z-index": "var(--z-dropdown)", "pointer-events": "auto" }}
       />
     </PopoverPrimitive.Portal>
   );

@@ -1,7 +1,7 @@
 import { type Component, type JSX, createSignal } from "solid-js";
 import { Button } from "../../ui/button.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover.js";
-import { TOOLBAR_DROPDOWN_GAP_PX } from "../../../constants.js";
+import { FLOATING_GAP_PX } from "../../../constants.js";
 
 export const ToolbarButton: Component<{
   active?: boolean;
@@ -49,7 +49,7 @@ export const ToolbarDropdown: Component<{
       open={open()}
       onOpenChange={setOpen}
       placement="bottom-start"
-      gutter={TOOLBAR_DROPDOWN_GAP_PX}
+      gutter={FLOATING_GAP_PX}
     >
       <PopoverTrigger
         as={Button}

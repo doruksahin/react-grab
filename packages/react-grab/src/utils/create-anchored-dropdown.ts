@@ -1,14 +1,12 @@
-import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { createEffect, createSignal, onCleanup } from "solid-js";
 import type { Accessor } from "solid-js";
 import type { Placement } from "@floating-ui/dom";
 import type { DropdownAnchor } from "../types.js";
 import {
   DROPDOWN_ANCHOR_GAP_PX,
   DROPDOWN_ANIMATION_DURATION_MS,
-  DROPDOWN_OFFSCREEN_POSITION,
-  DROPDOWN_VIEWPORT_PADDING_PX,
 } from "../constants.js";
-import { createFloating, virtualReference } from "./floating.js";
+import { createFloating, type FloatingStyle } from "./floating.js";
 import {
   nativeCancelAnimationFrame,
   nativeRequestAnimationFrame,
@@ -25,7 +23,8 @@ interface AnchoredDropdownResult {
   shouldMount: Accessor<boolean>;
   isAnimatedIn: Accessor<boolean>;
   lastAnchorEdge: Accessor<DropdownAnchor["edge"]>;
-  displayPosition: Accessor<{ left: number; top: number }>;
+  /** left / top / visibility for the dropdown container. */
+  floatingStyle: Accessor<FloatingStyle>;
   clearAnimationHandles: () => void;
 }
 
@@ -37,6 +36,10 @@ const PLACEMENT_BY_EDGE: Record<DropdownAnchor["edge"], Placement> = {
   right: "left",
 };
 
+/**
+ * A toolbar dropdown: mount/enter/exit animation plus placement against the
+ * toolbar element (Floating UI, followed every frame while the toolbar moves).
+ */
 export const createAnchoredDropdown = (
   containerRef: () => HTMLDivElement | undefined,
   anchorAccessor: Accessor<DropdownAnchor | null>,
@@ -85,39 +88,24 @@ export const createAnchoredDropdown = (
     onCleanup(clearAnimationHandles);
   });
 
-  // One reference for the whole time the dropdown is open; it reads the
-  // latest anchor point, which the toolbar updates every frame.
-  const anchorReference = virtualReference(() => {
-    const anchor = anchorAccessor();
-    return { x: anchor?.x ?? 0, y: anchor?.y ?? 0, width: 0, height: 0 };
-  });
-  const isOpen = createMemo(() => anchorAccessor() !== null);
-
-  const position = createFloating({
-    reference: () => (isOpen() ? anchorReference : null),
+  const floating = createFloating({
+    reference: () => anchorAccessor()?.reference ?? null,
     floating: container,
     options: () => ({
       placement: PLACEMENT_BY_EDGE[lastAnchorEdge()],
       offsetPx: DROPDOWN_ANCHOR_GAP_PX,
-      paddingPx: DROPDOWN_VIEWPORT_PADDING_PX,
+      shiftCrossAxis: true,
       fitHeight: options.fitHeight,
       maxWidthPx: options.maxWidthPx,
       followEveryFrame: true,
     }),
   });
 
-  const displayPosition = () => {
-    const current = position();
-    return current
-      ? { left: current.x, top: current.y }
-      : DROPDOWN_OFFSCREEN_POSITION;
-  };
-
   return {
     shouldMount,
     isAnimatedIn,
     lastAnchorEdge,
-    displayPosition,
+    floatingStyle: floating.style,
     clearAnimationHandles,
   };
 };

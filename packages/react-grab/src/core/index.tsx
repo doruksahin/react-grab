@@ -331,7 +331,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     const [clearPromptPosition, setClearPromptPosition] =
       createSignal<DropdownAnchor | null>(null);
     let toolbarElement: HTMLDivElement | undefined;
-    let dropdownTrackingFrameId: number | null = null;
     const commentElementMap = new Map<string, Element[]>();
     const [clockFlashTrigger, setClockFlashTrigger] = createSignal(0);
     const [isCommentsHoverOpen, setIsCommentsHoverOpen] = createSignal(false);
@@ -2080,9 +2079,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       if (actionCycleIdleTimeoutId) {
         window.clearTimeout(actionCycleIdleTimeoutId);
       }
-      if (dropdownTrackingFrameId !== null) {
-        nativeCancelAnimationFrame(dropdownTrackingFrameId);
-      }
       grabbedBoxTimeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
       grabbedBoxTimeouts.clear();
       cancelAllLabelFades();
@@ -2695,64 +2691,32 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       addCommentItemPreview(item, previewBounds, connectedElements, idPrefix);
     };
 
-    const stopTrackingDropdownPosition = () => {
-      if (dropdownTrackingFrameId !== null) {
-        nativeCancelAnimationFrame(dropdownTrackingFrameId);
-        dropdownTrackingFrameId = null;
-      }
-    };
-
-    const startTrackingDropdownPosition = (computePosition: () => void) => {
-      stopTrackingDropdownPosition();
-      const updatePosition = () => {
-        computePosition();
-        dropdownTrackingFrameId = nativeRequestAnimationFrame(updatePosition);
-      };
-      updatePosition();
-    };
-
+    // The dropdown follows the toolbar element itself (Floating UI
+    // autoUpdate in createAnchoredDropdown), so only the edge is read here.
     const computeDropdownAnchor = (): DropdownAnchor | null => {
       if (!toolbarElement) return null;
       const toolbarRect = toolbarElement.getBoundingClientRect();
-      const edge = getNearestEdge(toolbarRect);
-
-      if (edge === "left" || edge === "right") {
-        return {
-          x: edge === "left" ? toolbarRect.right : toolbarRect.left,
-          y: toolbarRect.top + toolbarRect.height / 2,
-          edge,
-          toolbarWidth: toolbarRect.width,
-        };
-      }
-
       return {
-        x: toolbarRect.left + toolbarRect.width / 2,
-        y: edge === "top" ? toolbarRect.bottom : toolbarRect.top,
-        edge,
+        edge: getNearestEdge(toolbarRect),
         toolbarWidth: toolbarRect.width,
+        reference: toolbarElement,
       };
     };
 
-    const openTrackedDropdown = (
-      setPosition: (anchor: DropdownAnchor) => void,
-    ) => {
-      startTrackingDropdownPosition(() => {
-        const anchor = computeDropdownAnchor();
-        if (anchor) setPosition(anchor);
-      });
+    const openDropdown = (setPosition: (anchor: DropdownAnchor) => void) => {
+      const anchor = computeDropdownAnchor();
+      if (anchor) setPosition(anchor);
     };
 
     const dismissCommentsDropdown = () => {
       cancelCommentsHoverOpenTimeout();
       cancelCommentsHoverCloseTimeout();
-      stopTrackingDropdownPosition();
       clearCommentsHoverPreviews();
       setCommentsDropdownPosition(null);
       setIsCommentsHoverOpen(false);
     };
 
     const dismissToolbarMenu = () => {
-      stopTrackingDropdownPosition();
       setToolbarMenuPosition(null);
     };
 
@@ -2760,7 +2724,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       actions.hideContextMenu();
       dismissToolbarMenu();
       dismissClearPrompt();
-      openTrackedDropdown(setCommentsDropdownPosition);
+      openDropdown(setCommentsDropdownPosition);
     };
 
     let commentsHoverOpenTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -2791,11 +2755,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     const showClearPrompt = () => {
       dismissCommentsDropdown();
       dismissToolbarMenu();
-      openTrackedDropdown(setClearPromptPosition);
+      openDropdown(setClearPromptPosition);
     };
 
     const dismissClearPrompt = () => {
-      stopTrackingDropdownPosition();
       setClearPromptPosition(null);
     };
 
@@ -2812,7 +2775,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         actions.hideContextMenu();
         dismissCommentsDropdown();
         dismissClearPrompt();
-        openTrackedDropdown(setToolbarMenuPosition);
+        openDropdown(setToolbarMenuPosition);
       }
     };
 
@@ -3528,7 +3491,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         disposeRenderer?.();
         cancelCommentsHoverOpenTimeout();
         cancelCommentsHoverCloseTimeout();
-        stopTrackingDropdownPosition();
         toolbarStateChangeCallbacks.clear();
         syncLayer.dispose();
         dispose();

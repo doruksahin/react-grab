@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 import { resolveLabelAnchor } from "./resolve-label-anchor.js";
 
 const viewport = { x: 0, y: 0, width: 1000, height: 800 };
-const bounds = { x: 100, y: 200, width: 300, height: 50 };
+const bounds = {
+  x: 100,
+  y: 200,
+  width: 300,
+  height: 50,
+  borderRadius: "0px",
+  transform: "none",
+};
 
 describe("resolveLabelAnchor", () => {
   it("keeps the last position without a measured label", () => {

@@ -11,7 +11,11 @@ import type { Component } from "solid-js";
 import type { CommentItem, DropdownAnchor } from "../types.js";
 import type { SelectionGroupsViewProps } from "../features/selection-groups/types.js";
 import { GroupCollapsible } from "./selection-groups/group-collapsible.jsx";
-import { GroupPickerFlyout } from "./selection-groups/group-picker-flyout.jsx";
+import {
+  GroupPickerFlyout,
+  GroupPickerPopover,
+  GroupPickerTrigger,
+} from "./selection-groups/group-picker-flyout.jsx";
 import { UngroupedSection } from "./selection-groups/ungrouped-section.jsx";
 import {
   groupComments,
@@ -172,26 +176,37 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         </Show>
       </span>
       <div class="flex items-center gap-1 shrink-0">
-        <Show when={hoveredItemId() === item.id || openMoveId() === item.id}>
-          <IconButton
-            data-react-grab-ignore-events
-            label="Move to group"
-            size="icon-xs"
-            on:click={(e) => {
-              e.stopPropagation();
-              setOpenMoveId((id) => (id === item.id ? null : item.id));
+        <GroupPickerPopover
+          open={openMoveId() === item.id}
+          onOpenChange={(open) => setOpenMoveId(open ? item.id : null)}
+        >
+          <Show when={hoveredItemId() === item.id || openMoveId() === item.id}>
+            <GroupPickerTrigger
+              as={IconButton}
+              data-react-grab-ignore-events
+              label="Move to group"
+              size="icon-xs"
+              onClick={(event: MouseEvent) => event.stopPropagation()}
+            >
+              <svg width="10" height="10" viewBox="0 0 16 16">
+                <path
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                  d="M3 2.5a.5.5 0 0 0-.5.5v3h11V4.75a.5.5 0 0 0-.5-.5H7.69L5.94 2.5zm10.5 5h-11V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5zM1 3a2 2 0 0 1 2-2h3.56l1.75 1.75H13a2 2 0 0 1 2 2V13a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </GroupPickerTrigger>
+          </Show>
+          <GroupPickerFlyout
+            groups={props.groups ?? []}
+            excludeGroupId={item.groupId ?? undefined}
+            onSelect={(groupId) => {
+              props.onMoveItem?.(item.id, groupId);
+              setOpenMoveId(null);
             }}
-          >
-            <svg width="10" height="10" viewBox="0 0 16 16">
-              <path
-                fill="currentColor"
-                fill-rule="evenodd"
-                d="M3 2.5a.5.5 0 0 0-.5.5v3h11V4.75a.5.5 0 0 0-.5-.5H7.69L5.94 2.5zm10.5 5h-11V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5zM1 3a2 2 0 0 1 2-2h3.56l1.75 1.75H13a2 2 0 0 1 2 2V13a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </IconButton>
-        </Show>
+          />
+        </GroupPickerPopover>
         <span class="text-meta text-muted-foreground flex items-center justify-end">
           {formatRelativeTime(item.timestamp)}
         </span>
@@ -242,17 +257,6 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
           )}
         </IconButton>
       </div>
-      <Show when={openMoveId() === item.id}>
-        <GroupPickerFlyout
-          groups={props.groups ?? []}
-          excludeGroupId={item.groupId ?? undefined}
-          onSelect={(groupId) => {
-            props.onMoveItem?.(item.id, groupId);
-            setOpenMoveId(null);
-          }}
-          onClose={() => setOpenMoveId(null)}
-        />
-      </Show>
     </div>
   );
 
@@ -308,8 +312,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         data-react-grab-comments-dropdown
         class="fixed flex flex-col text-body antialiased drop-shadow-overlay select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
         style={{
-          top: `${dropdown.displayPosition().top}px`,
-          left: `${dropdown.displayPosition().left}px`,
+          ...dropdown.floatingStyle(),
           "z-index": "var(--z-dropdown)",
           "pointer-events": dropdown.isAnimatedIn() ? "auto" : "none",
           "transform-origin":

@@ -15,7 +15,6 @@ import {
   VIEWPORT_MARGIN_PX,
   ARROW_LABEL_MARGIN_PX,
   LABEL_GAP_PX,
-  SELECTION_LABEL_OFFSCREEN_PX,
 } from "../../constants.js";
 import { getArrowSize } from "../../utils/get-arrow-size.js";
 import { createFloating, virtualReference } from "../../utils/floating.js";
@@ -33,18 +32,6 @@ import { SelectionLabelHeader } from "./parts/header.js";
 import { SelectionLabelContent } from "./parts/content.js";
 import { SelectionLabelContextInput } from "./parts/context-input.js";
 import { DevInsightsSection } from "./parts/dev-insights-section.js";
-
-interface LabelPosition {
-  left: number;
-  top: number;
-  arrowOffsetX: number;
-}
-
-const DEFAULT_OFFSCREEN_POSITION: LabelPosition = {
-  left: SELECTION_LABEL_OFFSCREEN_PX,
-  top: SELECTION_LABEL_OFFSCREEN_PX,
-  arrowOffsetX: 0,
-};
 
 export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
   props,
@@ -195,41 +182,53 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
 
   const arrowHeight = () => (props.hideArrow ? 0 : getArrowSize(panelWidth()));
 
+  const [arrowElement, setArrowElement] = createSignal<HTMLDivElement>();
+
+  // The anchor rect the reference reads; the reference object itself stays
+  // the same, so autoUpdate is not restarted when the element or pointer moves.
+  const anchorRect = (): Rect | null => {
+    const current = anchor();
+    return current.kind === "track" ? current.rect : null;
+  };
+  const labelReference = virtualReference(
+    () => anchorRect() ?? { x: 0, y: 0, width: 0, height: 0 },
+  );
+  const hasAnchor = createMemo(() => anchorRect() !== null);
+
   // Below the element at the pointer's x, flipping above when it does not
   // fit, kept inside the visible viewport.
-  const floatingPosition = createFloating({
-    reference: () => {
-      const current = anchor();
-      return current.kind === "track"
-        ? virtualReference(() => current.rect)
-        : null;
-    },
+  const floating = createFloating({
+    reference: () => (hasAnchor() ? labelReference : null),
     floating: container,
+    watch: anchorRect,
     options: () => ({
       placement: "bottom",
       fallbackPlacements: ["top"],
       offsetPx: arrowHeight() + LABEL_GAP_PX + (props.extraTopOffset ?? 0),
       paddingPx: VIEWPORT_MARGIN_PX,
+      shiftCrossAxis: true,
       boundary: visibleViewport(),
-      anchorPaddingPx: ARROW_LABEL_MARGIN_PX,
+      arrowElement: arrowElement(),
+      arrowPaddingPx: ARROW_LABEL_MARGIN_PX,
     }),
   });
 
-  const labelPosition = (): LabelPosition => {
+  // A new element starts without a position of its own.
+  createEffect(on(elementIdentity, () => floating.reset(), { defer: true }));
+
+  const isPlaced = () => {
     const current = anchor();
-    const position = floatingPosition();
-    const isPlaced =
-      current.kind === "track" || (current.kind === "keep" && hadValidBounds());
-    if (!isPlaced || !position) return DEFAULT_OFFSCREEN_POSITION;
-    return {
-      left: position.x,
-      top: position.y,
-      arrowOffsetX: position.anchorOffsetX,
-    };
+    return (
+      current.kind === "track" || (current.kind === "keep" && hadValidBounds())
+    );
   };
 
+  // Unplaced labels are transparent and inert rather than visibility:hidden,
+  // so the prompt textarea can take focus as soon as the label mounts.
+  const isShown = () => isPlaced() && floating.position() !== null;
+
   const arrowPosition = (): ArrowPosition =>
-    floatingPosition()?.placement.startsWith("top") ? "top" : "bottom";
+    floating.position()?.side === "top" ? "top" : "bottom";
 
   createEffect(
     on(arrowPosition, (position) =>
@@ -278,11 +277,15 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
                 "animate-in fade-in-0 zoom-in-95 duration-200 ease-out origin-top",
         )}
         style={{
-          top: `${labelPosition().top}px`,
-          left: `${labelPosition().left}px`,
+          left: floating.style().left,
+          top: floating.style().top,
           "z-index": "var(--z-overlay)",
-          "pointer-events": shouldEnablePointerEvents() ? "auto" : "none",
-          opacity: props.status === "fading" || isInternalFading() ? 0 : 1,
+          "pointer-events":
+            isShown() && shouldEnablePointerEvents() ? "auto" : "none",
+          opacity:
+            !isShown() || props.status === "fading" || isInternalFading()
+              ? 0
+              : 1,
         }}
         onClick={(event) => {
           event.stopImmediatePropagation();
@@ -292,9 +295,9 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
       >
         <Show when={!props.hideArrow}>
           <Arrow
+            ref={setArrowElement}
             position={arrowPosition()}
-            leftPercent={0}
-            leftOffsetPx={labelPosition().arrowOffsetX}
+            left={floating.position()?.arrowX}
             labelWidth={panelWidth()}
           />
         </Show>

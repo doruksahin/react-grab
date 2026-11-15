@@ -11,12 +11,15 @@ import type {
   Component,
   ComponentProps,
   ParentComponent,
-  Setter,
 } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import { Button } from "../ui/button.jsx";
 import { cn } from "../../utils/cn.js";
-import { GroupPickerFlyout } from "./group-picker-flyout.jsx";
+import {
+  GroupPickerFlyout,
+  GroupPickerPopover,
+  GroupPickerTrigger,
+} from "./group-picker-flyout.jsx";
 import { useActiveGroupPickerState } from "../../features/selection-groups/hooks/use-active-group-picker-state.js";
 import { isSynthetic } from "../../features/selection-groups/business/synthetic-group.js";
 import { IconLock } from "../icons/icon-lock.jsx";
@@ -47,8 +50,6 @@ interface ActiveGroupPickerContextValue {
    *  icon; toggle/selectGroup become no-ops. */
   isLocked: Accessor<boolean>;
   isOpen: Accessor<boolean>;
-  setOpen: Setter<boolean>;
-  toggle: () => void;
   selectGroup: (groupId: string | null) => void;
   onAddGroup?: (name: string) => void;
 }
@@ -89,11 +90,6 @@ const ActiveGroupPickerRoot: ParentComponent<ActiveGroupPickerRootProps> = (
     activeGroupId,
   });
 
-  const toggle = () => {
-    if (isLocked()) return;
-    setOpen((v) => !v);
-  };
-
   const selectGroup = (groupId: string | null) => {
     if (isLocked()) return;
     props.onActiveGroupChange?.(groupId);
@@ -106,8 +102,6 @@ const ActiveGroupPickerRoot: ParentComponent<ActiveGroupPickerRootProps> = (
     activeGroup,
     isLocked,
     isOpen,
-    setOpen,
-    toggle,
     selectGroup,
     get onAddGroup() {
       return props.onAddGroup;
@@ -116,9 +110,14 @@ const ActiveGroupPickerRoot: ParentComponent<ActiveGroupPickerRootProps> = (
 
   return (
     <ActiveGroupPickerContext.Provider value={value}>
-      <div data-react-grab-active-group-picker class="relative px-2">
-        {props.children}
-      </div>
+      <GroupPickerPopover
+        open={isOpen()}
+        onOpenChange={(open) => setOpen(open && !isLocked())}
+      >
+        <div data-react-grab-active-group-picker class="relative px-2">
+          {props.children}
+        </div>
+      </GroupPickerPopover>
     </ActiveGroupPickerContext.Provider>
   );
 };
@@ -189,7 +188,8 @@ const InteractiveTrigger: Component<
   const ctx = useActiveGroupPicker();
   const [local, rest] = splitProps(props, ["class", "label"]);
   return (
-    <Button
+    <GroupPickerTrigger
+      as={Button}
       data-react-grab-ignore-events
       type="button"
       variant="ghost"
@@ -197,18 +197,14 @@ const InteractiveTrigger: Component<
         "h-auto gap-1 px-0.5 -mx-0.5 py-0 text-meta font-medium leading-none text-muted-foreground rounded-sm shadow-none",
         local.class,
       )}
-      aria-haspopup="listbox"
-      aria-expanded={ctx.isOpen()}
-      onClick={(e) => {
-        e.stopImmediatePropagation();
-        ctx.toggle();
-      }}
+      // The popover toggles itself; keep the overlay from seeing the click.
+      onClick={(event: MouseEvent) => event.stopImmediatePropagation()}
       {...rest}
     >
       <FolderIcon />
       <span>{local.label}</span>
       <ChevronDownIcon rotated={ctx.isOpen()} />
-    </Button>
+    </GroupPickerTrigger>
   );
 };
 
@@ -244,15 +240,12 @@ const ActiveGroupPickerTrigger: Component<
 const ActiveGroupPickerContent: Component = () => {
   const ctx = useActiveGroupPicker();
   return (
-    <Show when={ctx.isOpen()}>
-      <GroupPickerFlyout
-        groups={ctx.assignableGroups()}
-        activeGroupId={ctx.activeGroupId() ?? null}
-        onSelect={ctx.selectGroup}
-        onClose={() => ctx.setOpen(false)}
-        onAddGroup={ctx.onAddGroup}
-      />
-    </Show>
+    <GroupPickerFlyout
+      groups={ctx.assignableGroups()}
+      activeGroupId={ctx.activeGroupId() ?? null}
+      onSelect={ctx.selectGroup}
+      onAddGroup={ctx.onAddGroup}
+    />
   );
 };
 

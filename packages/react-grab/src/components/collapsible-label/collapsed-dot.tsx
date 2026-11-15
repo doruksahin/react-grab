@@ -4,11 +4,8 @@ import type { OverlayBounds } from "../../types.js";
 import { cn } from "../../utils/cn.js";
 import { Button } from "../ui/button.js";
 import { createFloating, virtualReference } from "../../utils/floating.js";
+import { DOT_GAP_PX, DOT_PADDING_PX, DOT_SIZE_PX } from "../../constants.js";
 
-const DOT_SIZE_PX = 10;
-const DOT_GAP_PX = 6;
-const DOT_OFFSCREEN_PX = -9999;
-const DOT_PADDING_PX = 6;
 const PREVIEW_MAX_LENGTH = 48;
 
 /** Total height of the dot-only button (no preview text). */
@@ -54,25 +51,17 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
   // Centred above or below its element (the side follows the label it
   // replaces); shifted along the edge to stay inside the viewport.
   const [dot, setDot] = createSignal<HTMLButtonElement>();
-  const floatingPosition = createFloating({
-    reference: () => {
-      const bounds = props.selectionBounds;
-      return virtualReference(() => bounds);
-    },
+  const dotReference = virtualReference(() => props.selectionBounds);
+  const floating = createFloating({
+    reference: () => dotReference,
     floating: dot,
-    options: () => {
-      const placement = props.placement === "above" ? "top" : "bottom";
-      return {
-        placement,
-        fallbackPlacements: [placement],
-        offsetPx: DOT_GAP_PX,
-        paddingPx: DOT_GAP_PX,
-      };
-    },
-  });
-  const position = () => ({
-    left: floatingPosition()?.x ?? DOT_OFFSCREEN_PX,
-    top: floatingPosition()?.y ?? DOT_OFFSCREEN_PX,
+    watch: () => props.selectionBounds,
+    options: () => ({
+      placement: props.placement === "above" ? "top" : "bottom",
+      flip: false,
+      offsetPx: DOT_GAP_PX,
+      paddingPx: DOT_GAP_PX,
+    }),
   });
 
   const previewText = () => {
@@ -99,8 +88,7 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
           : "animate-in fade-in-0 zoom-in-75 ease-out",
       )}
       style={{
-        left: `${position().left}px`,
-        top: `${position().top}px`,
+        ...floating.style(),
         "z-index": "var(--z-overlay)",
         "pointer-events": "auto",
         "max-width": "240px",
