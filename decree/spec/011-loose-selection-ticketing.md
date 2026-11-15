@@ -227,7 +227,7 @@ A locked selection was moved from the comments panel into another ticketed synth
 The invariants now live in one module, `features/selection-groups/business/membership-policy.ts`, and every membership change goes through its commands:
 
 1. A locked selection (its group, real or synthetic, has a ticket) never leaves its group. A ticketed group cannot be deleted.
-2. A selection moves only into a group that exists, has no ticket and is not synthetic. Leaving every group (`null`) is allowed for an unlocked selection.
+2. A selection moves only into a group that exists, has no ticket and is not synthetic. Moving an unlocked selection to "Ungrouped", or deleting its real group, gives it a new synthetic group of its own: a selection is never without a group (ADR-0008 amendment 2026-11-15).
 3. A synthetic group has exactly one member. New selections get their own synthetic group unless the chosen group passes rule 2. Nothing moves into a synthetic group, and an emptied one is garbage-collected.
 
 The query `assignableGroupsFor` and the commands `moveSelection`, `moveSelections`, `deleteGroup` and `groupForNewSelection` use the same predicates. A command returns `moved`/`deleted` or `refused` with a reason; the orchestrator applies only accepted results and logs refusals. A bulk move refuses as a whole for a refused target, and otherwise moves the unlocked selections and lists the others.
@@ -240,3 +240,4 @@ This supersedes the manual smoke test above that moves a ticketed loose card int
 - [x] AC-2: a locked selection has no move action in the comments panel; `handleMoveItem` refuses it with `selection-locked`
 - [x] AC-3: a ticketed group offers no delete; `handleDeleteGroup` refuses it with `group-ticketed`
 - [x] AC-4: synthetic and ticketed targets, missing targets and missing selections are refused (`membership-policy.test.ts`)
+- [x] AC-5: a synthetic group with several selections is shown as a group named after its ticket, and a selection whose group is missing is shown as loose; each anomaly is logged once and nothing is written (`membership.test.ts`, `index.test.ts`)

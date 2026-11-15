@@ -121,3 +121,10 @@ The original design created synthetic groups lazily — only when the user click
 3. Smoke test: ticket creation dialog opens with inferred name as default summary; ticket id appears on the card after polling.
 4. Smoke test: after moving a ticketed loose item into a real group, the synthetic group is absent from `localStorage`.
 5. Reload: ticketed loose cards persist; synthetic groups remain hidden after page refresh.
+
+**Amended 2026-11-15 — ticket lock and membership policy.**
+
+- **Ticket lock decided.** A selection whose group (real or synthetic) has a ticket is locked: it cannot move, be removed, or lose its group, and a ticketed group cannot be deleted. Validation step 4 above (move a ticketed loose item into a real group) is superseded.
+- **Invariants are enforced by commands, not by filtering pickers.** `features/selection-groups/business/membership-policy.ts` holds them. Every membership change goes through its commands (`moveSelection`, `moveSelections`, `deleteGroup`, `removeSelection`, `groupForNewSelection`). The pickers use the query `assignableGroupsFor`, which shares the commands' predicates. This replaces "exactly one item — enforced by filtering them from all pickers".
+- **Never ungrouped, through synthetic groups.** Moving a selection to "Ungrouped", or deleting its real group, gives it a new synthetic group of its own, so it can still be ticketed.
+- **Older data is shown, not rewritten.** `business/membership.ts` shows a synthetic group that has several selections as a visible group, named after its ticket key (`presentedGroups`). It shows a selection whose group is missing as loose. The orchestrator reports each such anomaly once through `logRecoverableError`, so the owner can repair the data deliberately. Nothing is written at load time.
