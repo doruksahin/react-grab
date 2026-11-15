@@ -135,7 +135,7 @@ pnpm workspaces + Turborepo. Key packages:
 | `mcp` | MCP server for Claude Code / Cursor |
 | `gym` | Next.js 15 playground for testing agent integration |
 | `e2e-app` | Vite React app — Playwright test target |
-| `web-extension` | Chrome/Firefox extension |
+| `web-extension` | Chrome MV3 extension — WXT, `@webext-core/messaging`, WXT storage (ADR-0023) |
 | `design-system` | Shared Solid.js components (tsup) |
 | `website` | Next.js marketing site |
 
