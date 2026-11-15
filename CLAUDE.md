@@ -366,4 +366,4 @@ When adding new mocked tests, always add a `@SPEC-xxx` tag. See `TESTING.md` for
 - Add changesets for published package changes: `pnpm changeset`
 - Lint/format tools: **oxlint** + **oxfmt** (not ESLint/Prettier, except dashboard)
 - Package manager: **pnpm** (pinned to 10.24.0 via `packageManager` field)
-- Node: >= 18 (>= 22.18 for AdCreative integration)
+- Node: >= 22 (WXT needs it; >= 22.18 for AdCreative integration)
