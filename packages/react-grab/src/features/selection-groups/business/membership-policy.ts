@@ -3,11 +3,14 @@
  * change group, and the commands that apply such a change.
  *
  * Invariants (ADR-0008, SPEC-011):
- *   1. A locked selection (its group has a ticket) never leaves its group,
- *      and a ticketed group cannot be deleted from under it.
+ *   1. A locked selection (its group has a ticket) never leaves its group or
+ *      the list, and a ticketed group cannot be deleted from under it.
  *   2. A selection can only move into a group that exists, has no ticket and
  *      is not synthetic.
- *   3. A synthetic group has exactly one member: new selections get their
+ *   3. A selection always has a group. Leaving a real group (moving to
+ *      "Ungrouped", or deleting the group) gives it a new synthetic group of
+ *      its own.
+ *   4. A synthetic group has exactly one member: new selections get their
  *      own, nothing moves into one, and an emptied one is garbage-collected
  *      by the caller (`gcEmptySyntheticGroups`).
  *
@@ -20,7 +23,6 @@ import type { SelectionGroup } from "../types.js";
 import {
   assignSelection,
   bulkAssignSelections,
-  unassignSelectionsInGroup,
 } from "./selection-assignment.js";
 import { createSyntheticGroupForItem, isSynthetic } from "./synthetic-group.js";
 import { isSelectionLocked, isTicketed } from "./ticket-lock.js";
@@ -38,8 +40,14 @@ export type SelectionRefusal = "selection-not-found" | "selection-locked";
 
 export type GroupDeletionRefusal = "group-not-found" | "group-ticketed";
 
+/** An accepted change carries the next items and groups; persist both. */
+interface MembershipChange {
+  items: CommentItem[];
+  groups: SelectionGroup[];
+}
+
 export type MoveResult =
-  | { status: "moved"; items: CommentItem[] }
+  | ({ status: "moved" } & MembershipChange)
   | { status: "refused"; reason: SelectionRefusal | TargetRefusal };
 
 export interface RefusedSelection {
@@ -53,17 +61,20 @@ export interface RefusedSelection {
  * left behind is listed with its reason.
  */
 export type BulkMoveResult =
-  | {
+  | ({
       status: "moved";
-      items: CommentItem[];
       movedIds: string[];
       refused: RefusedSelection[];
-    }
+    } & MembershipChange)
   | { status: "refused"; reason: SelectionRefusal | TargetRefusal };
 
 export type DeleteGroupResult =
-  | { status: "deleted"; items: CommentItem[]; groups: SelectionGroup[] }
+  | ({ status: "deleted" } & MembershipChange)
   | { status: "refused"; reason: GroupDeletionRefusal };
+
+export type RemoveResult =
+  | { status: "removed"; items: CommentItem[] }
+  | { status: "refused"; reason: SelectionRefusal };
 
 /** Why a group cannot receive selections, or null when it can. */
 const refusalForGroup = (group: SelectionGroup): TargetRefusal | null => {
@@ -99,6 +110,36 @@ export const assignableGroupsFor = (
   return groups.filter((group) => refusalForGroup(group) === null);
 };
 
+/** Each listed selection gets a new synthetic group of its own (invariant 3). */
+const giveOwnSyntheticGroups = (
+  items: CommentItem[],
+  groups: SelectionGroup[],
+  itemIds: ReadonlySet<string>,
+): MembershipChange => {
+  const created = new Map(
+    items
+      .filter((item) => itemIds.has(item.id))
+      .map((item) => [item.id, createSyntheticGroupForItem(item)]),
+  );
+  return {
+    items: items.map((item) => {
+      const own = created.get(item.id);
+      return own ? { ...item, groupId: own.id } : item;
+    }),
+    groups: [...groups, ...created.values()],
+  };
+};
+
+const isLoose = (item: HasMembership, groups: SelectionGroup[]): boolean => {
+  const group = groups.find((g) => g.id === item.groupId);
+  return Boolean(group && isSynthetic(group));
+};
+
+/**
+ * Moves a selection into a group, or out of every real group when the
+ * target is null ("Ungrouped"): it then gets its own synthetic group, and a
+ * selection that is already loose stays where it is.
+ */
 export const moveSelection = (
   items: CommentItem[],
   groups: SelectionGroup[],
@@ -109,10 +150,20 @@ export const moveSelection = (
   const reason =
     refusalForSelection(item, groups) ??
     refusalForTarget(targetGroupId, groups);
-  if (reason) return { status: "refused", reason };
+  if (reason || !item) {
+    return { status: "refused", reason: reason ?? "selection-not-found" };
+  }
+  if (targetGroupId !== null) {
+    return {
+      status: "moved",
+      items: assignSelection(items, itemId, targetGroupId),
+      groups,
+    };
+  }
+  if (isLoose(item, groups)) return { status: "moved", items, groups };
   return {
     status: "moved",
-    items: assignSelection(items, itemId, targetGroupId),
+    ...giveOwnSyntheticGroups(items, groups, new Set([itemId])),
   };
 };
 
@@ -143,6 +194,7 @@ export const moveSelections = (
   return {
     status: "moved",
     items: bulkAssignSelections(items, new Set(movedIds), targetGroupId),
+    groups,
     movedIds,
     refused,
   };
@@ -159,7 +211,7 @@ const refusalForDeletion = (
 export const canDeleteGroup = (group: SelectionGroup): boolean =>
   refusalForDeletion(group) === null;
 
-/** Deletes a group; its selections are left without a group. */
+/** Deletes a group; each of its selections gets its own synthetic group. */
 export const deleteGroup = (
   items: CommentItem[],
   groups: SelectionGroup[],
@@ -167,10 +219,33 @@ export const deleteGroup = (
 ): DeleteGroupResult => {
   const reason = refusalForDeletion(groups.find((g) => g.id === groupId));
   if (reason) return { status: "refused", reason };
+  const members = new Set(
+    items.filter((item) => item.groupId === groupId).map((item) => item.id),
+  );
   return {
     status: "deleted",
-    items: unassignSelectionsInGroup(items, groupId),
-    groups: groups.filter((g) => g.id !== groupId),
+    ...giveOwnSyntheticGroups(
+      items,
+      groups.filter((g) => g.id !== groupId),
+      members,
+    ),
+  };
+};
+
+/** Removes a selection; a locked one stays, removing it would orphan its ticket. */
+export const removeSelection = (
+  items: CommentItem[],
+  groups: SelectionGroup[],
+  itemId: string,
+): RemoveResult => {
+  const reason = refusalForSelection(
+    items.find((entry) => entry.id === itemId),
+    groups,
+  );
+  if (reason) return { status: "refused", reason };
+  return {
+    status: "removed",
+    items: items.filter((entry) => entry.id !== itemId),
   };
 };
 

@@ -192,6 +192,7 @@ features:
     specs: [SPEC-001]
     files:
       - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
+      - packages/react-grab/src/features/selection-groups/business/membership.ts
       - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
       - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
       - packages/react-grab/src/features/selection-groups/business/ticket-lock.ts

@@ -45,7 +45,7 @@ import {
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
 import { createSessionRecorder } from "../features/session-recording/index.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
-import { isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
+import { ticketScopeFor } from "../features/selection-groups/business/membership.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
 import { isPinnedLabel } from "../features/selection-label/business/is-pinned-label.js";
@@ -2622,19 +2622,15 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     } | null>(null);
 
     const handleCreateTicketForLooseItem = (item: CommentItem) => {
-      // Every item has a group (real or synthetic) from selection time.
-      // Find it and open the dialog.
-      const group = selectionGroups.groups().find((g) => g.id === item.groupId);
-      if (!group) return;
-
-      const groupItems = isSynthetic(group)
-        ? [item]
-        : commentItems().filter((ci) => ci.groupId === group.id);
-
-      setLooseTicketDialog({
-        group,
-        items: groupItems,
-      });
+      // Every item has a group (real or synthetic): the membership policy
+      // never leaves one ungrouped. A missing group is reported as a data
+      // anomaly by the selection-groups orchestrator.
+      const scope = ticketScopeFor(
+        item,
+        selectionGroups.groups(),
+        commentItems(),
+      );
+      if (scope) setLooseTicketDialog(scope);
     };
     // --- end per-item ticketing orchestrator ---
 
@@ -2700,8 +2696,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       updateToolbarState,
       // NEW: group deps
       groups: selectionGroups.groups,
-      setGroups: selectionGroups.setGroups,
-      persistGroups: selectionGroups.persistGroups,
+      // Revealed flags are visibility state, not membership: written through
+      // the sync layer directly, outside the selection-groups commands.
+      persistGroups: syncLayer.persistGroups,
     });
 
     const showCommentItemPreview = (
@@ -3327,24 +3324,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                   }}
                   onToggleGroupRevealed={visibility.handleToggleGroup}
                   onFilterVisibilityChange={visibility.setGroupsRevealed}
-                  onJiraResolved={(groupId) => {
-                    const updated = selectionGroups
-                      .groups()
-                      .map((g) =>
-                        g.id === groupId ? { ...g, jiraResolved: true } : g,
-                      );
-                    selectionGroups.persistGroups(updated);
-                  }}
-                  onTicketCreated={(groupId, ticketId, ticketUrl) => {
-                    const updated = selectionGroups
-                      .groups()
-                      .map((g) =>
-                        g.id === groupId
-                          ? { ...g, jiraTicketId: ticketId, jiraUrl: ticketUrl }
-                          : g,
-                      );
-                    selectionGroups.persistGroups(updated);
-                  }}
+                  onJiraResolved={selectionGroups.markResolved}
+                  onTicketCreated={selectionGroups.markTicketCreated}
                   onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
                   looseTicketDialog={looseTicketDialog()}
                   onLooseTicketDialogClose={() => setLooseTicketDialog(null)}

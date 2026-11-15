@@ -1,16 +1,15 @@
 import type { CommentItem } from "../../../types.js";
 
 /**
- * The single writer module for `selection.groupId`. Every mutation that
- * changes a selection's group membership must go through here.
+ * Low-level writers for `selection.groupId`. Only membership-policy.ts
+ * calls them, after the policy accepted the change.
  */
 
 export const assignSelection = (
   items: CommentItem[],
   itemId: string,
-  groupId: string | null,
-): CommentItem[] =>
-  items.map((i) => (i.id === itemId ? { ...i, groupId } : i));
+  groupId: string,
+): CommentItem[] => items.map((i) => (i.id === itemId ? { ...i, groupId } : i));
 
 export const bulkAssignSelections = (
   items: CommentItem[],
@@ -18,9 +17,3 @@ export const bulkAssignSelections = (
   groupId: string,
 ): CommentItem[] =>
   items.map((i) => (itemIds.has(i.id) ? { ...i, groupId } : i));
-
-export const unassignSelectionsInGroup = (
-  items: CommentItem[],
-  groupId: string,
-): CommentItem[] =>
-  items.map((i) => (i.groupId === groupId ? { ...i, groupId: null } : i));

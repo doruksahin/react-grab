@@ -8,7 +8,9 @@ import {
   groupForNewSelection,
   moveSelection,
   moveSelections,
+  removeSelection,
 } from "./membership-policy.js";
+import { ticketScopeFor } from "./membership.js";
 import { isSynthetic } from "./synthetic-group.js";
 
 const group = (
@@ -124,11 +126,24 @@ describe("moveSelection", () => {
     });
   });
 
-  it("lets an open selection leave its group", () => {
+  it("gives a selection that leaves a real group its own synthetic group", () => {
     const result = moveSelection(items, groups, "in-open-a", null);
     expect(result.status).toBe("moved");
-    if (result.status === "moved")
-      expect(groupOf(result.items, "in-open-a")).toBeNull();
+    if (result.status !== "moved") return;
+    const groupId = groupOf(result.items, "in-open-a");
+    const created = result.groups.find((g) => g.id === groupId);
+    expect(created && isSynthetic(created)).toBe(true);
+    expect(result.groups).toHaveLength(groups.length + 1);
+    const moved = result.items.find((i) => i.id === "in-open-a")!;
+    expect(ticketScopeFor(moved, result.groups, result.items)).toEqual({
+      group: created,
+      items: [moved],
+    });
+  });
+
+  it("leaves a loose selection where it is when moved to Ungrouped", () => {
+    const result = moveSelection(items, groups, "in-synthetic-open", null);
+    expect(result).toEqual({ status: "moved", items, groups });
   });
 
   it("refuses exactly the targets the query leaves out", () => {
@@ -180,12 +195,25 @@ describe("moveSelections", () => {
 });
 
 describe("deleteGroup", () => {
-  it("deletes an open group and leaves its selections ungrouped", () => {
-    const result = deleteGroup(items, groups, "open-a");
+  it("deletes an open group and gives each member its own synthetic group", () => {
+    const crowded = [...items, item("second-in-open-a", "open-a")];
+    const result = deleteGroup(crowded, groups, "open-a");
     expect(result.status).toBe("deleted");
     if (result.status !== "deleted") return;
     expect(result.groups.some((g) => g.id === "open-a")).toBe(false);
-    expect(groupOf(result.items, "in-open-a")).toBeNull();
+    const newGroupIds = ["in-open-a", "second-in-open-a"].map((id) =>
+      groupOf(result.items, id),
+    );
+    expect(new Set(newGroupIds).size).toBe(2);
+    for (const id of ["in-open-a", "second-in-open-a"]) {
+      const member = result.items.find((i) => i.id === id)!;
+      const scope = ticketScopeFor(member, result.groups, result.items);
+      expect(scope?.group.synthetic, id).toBe(true);
+      expect(scope?.items, id).toEqual([member]);
+    }
+    expect(
+      result.items.every((i) => i.groupId !== null || i.id === "ungrouped"),
+    ).toBe(true);
   });
 
   it("refuses to delete a ticketed group: its selections are locked to it", () => {
@@ -255,12 +283,35 @@ describe("synthetic single-member invariant", () => {
           target,
         );
         if (result.status === "moved")
-          state = { ...state, items: result.items };
+          state = { items: result.items, groups: result.groups };
       }
     }
     for (const synthetic of state.groups.filter(isSynthetic)) {
       const members = state.items.filter((i) => i.groupId === synthetic.id);
       expect(members.length, synthetic.id).toBeLessThanOrEqual(1);
     }
+  });
+});
+
+describe("removeSelection", () => {
+  it("removes an unlocked selection", () => {
+    const result = removeSelection(items, groups, "in-open-a");
+    expect(result.status).toBe("removed");
+    if (result.status === "removed")
+      expect(result.items.some((i) => i.id === "in-open-a")).toBe(false);
+  });
+
+  it("refuses a locked selection: removing it would orphan the ticket", () => {
+    expect(removeSelection(items, groups, "in-synthetic-8")).toEqual({
+      status: "refused",
+      reason: "selection-locked",
+    });
+  });
+
+  it("refuses a selection that does not exist", () => {
+    expect(removeSelection(items, groups, "gone")).toEqual({
+      status: "refused",
+      reason: "selection-not-found",
+    });
   });
 });

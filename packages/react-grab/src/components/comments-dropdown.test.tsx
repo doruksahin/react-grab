@@ -5,9 +5,11 @@ import type { CommentItem } from "../types.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
 import { GroupCollapsible } from "./selection-groups/group-collapsible.jsx";
 import { UngroupedSection } from "./selection-groups/ungrouped-section.jsx";
-import { isPresentedAsLoose } from "../features/selection-groups/business/membership.js";
+import {
+  isPresentedAsLoose,
+  presentedGroups,
+} from "../features/selection-groups/business/membership.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
-import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
 
 /**
  * Thin wrapper around the grouped-list section of comments-dropdown.tsx.
@@ -25,7 +27,7 @@ const GroupListHarness = (props: {
     props.selections.filter((item) =>
       isPresentedAsLoose(item, props.groups, props.selections),
     );
-  const visibleGroups = () => filterUserFacingGroups(props.groups);
+  const visibleGroups = () => presentedGroups(props.groups, props.selections);
   const grouped = () => groupComments(visibleGroups(), props.selections);
   return (
     <div data-react-grab-group-list>

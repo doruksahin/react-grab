@@ -21,8 +21,10 @@ import {
   groupComments,
   fuzzyMatchGroup,
 } from "../features/selection-groups/business/group-operations.js";
-import { isPresentedAsLoose } from "../features/selection-groups/business/membership.js";
-import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
+import {
+  isPresentedAsLoose,
+  presentedGroups,
+} from "../features/selection-groups/business/membership.js";
 import {
   assignableGroupsFor,
   canDeleteGroup,
@@ -121,7 +123,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
 
   let copyAllFeedbackTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  const visibleGroups = () => filterUserFacingGroups(props.groups ?? []);
+  const visibleGroups = () => presentedGroups(props.groups ?? [], props.items);
 
   const groupedItems = () => groupComments(visibleGroups(), props.items);
 

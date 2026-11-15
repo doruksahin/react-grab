@@ -34,7 +34,7 @@ import { StatusLegend } from "./status-legend.js";
 import { groupComments } from "../../features/selection-groups/business/group-operations.js";
 import { type GroupedEntry } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
-import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
+import { presentedGroups } from "../../features/selection-groups/business/membership.js";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 import { TabBar } from "./tab-bar.js";
 import { Tabs, TabsContent } from "../ui/tabs.js";
@@ -108,7 +108,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // filter chips, stats bar, empty-state guard). Loose selections appear
   // in the Selections tab via SelectionListTab + isPresentedAsLoose.
   const userFacingGroups = createMemo(() =>
-    filterUserFacingGroups(props.groups),
+    presentedGroups(props.groups, props.commentItems),
   );
 
   const [activeTab, setActiveTab] = createSignal<"groups" | "selections">(
