@@ -135,7 +135,7 @@ pnpm workspaces + Turborepo. Key packages:
 | `mcp` | MCP server for Claude Code / Cursor |
 | `gym` | Next.js 15 playground for testing agent integration |
 | `e2e-app` | Vite React app — Playwright test target |
-| `web-extension` | Chrome MV3 extension — WXT, `@webext-core/messaging`, WXT storage (ADR-0023) |
+| `web-extension` | Chrome MV3 extension (WXT) — overlay with sync on enabled sites; the service worker holds the token (ADR-0023) |
 | `design-system` | Shared Solid.js components (tsup) |
 | `website` | Next.js marketing site |
 
@@ -219,6 +219,7 @@ security find-generic-password -s react-grab-sync-prod -a SYNC_API_TOKEN -w
 |---|---|
 | Overlay in the host app | `initSync({ serverUrl, apiToken })` — usually from the host's gitignored `.env.local` |
 | Dashboard | `SYNC_API_TOKEN` in `packages/dashboard/.env.local` (the dev proxy adds it; it already targets the Worker) |
+| Browser extension (any site, ADR-0023) | the extension's options page; only its service worker reads it — see `packages/web-extension/README.md` |
 | Deployed Worker | `wrangler secret put SYNC_API_TOKEN` (set) |
 | `pnpm sync:dev`, when changing the server | `packages/sync-server/.dev.vars` — copy `.dev.vars.example`; also needs `JIRA_EMAIL` and `JIRA_API_TOKEN` (ADR-0018) |
 

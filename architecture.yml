@@ -125,24 +125,34 @@ packages:
       playground: packages/gym/app/playground/page.tsx
 
   web-extension:
-    description: Chrome MV3 extension on WXT (ADR-0023) — injects the overlay into every page and keeps its enabled flag and toolbar state in extension storage
+    description: Chrome MV3 extension on WXT (ADR-0023) — runs the overlay with sync on enabled sites; the service worker is the only holder of the token and the gateway to the sync server
     config: packages/web-extension/wxt.config.ts
+    readme: packages/web-extension/README.md
     entrypoints:
       background: packages/web-extension/src/entrypoints/background.ts
       overlay: packages/web-extension/src/entrypoints/overlay.content.ts
       relay: packages/web-extension/src/entrypoints/relay.content.ts
+      options: packages/web-extension/src/entrypoints/options/main.tsx
     background: packages/web-extension/src/background/register-background.ts
+    request_handlers: packages/web-extension/src/background/handle-overlay-requests.ts
+    gateway: packages/web-extension/src/gateway/sync-gateway.ts
+    sender_policy: packages/web-extension/src/gateway/sender-policy.ts
+    site_scripts: packages/web-extension/src/site-trust/sync-site-scripts.ts
+    settings: packages/web-extension/src/settings/settings-items.ts
+    settings_schema: packages/web-extension/src/settings/settings-schema.ts
     overlay: packages/web-extension/src/overlay/start-overlay.ts
+    overlay_ports: packages/web-extension/src/overlay/messaging-ports.ts
     relay: packages/web-extension/src/relay/start-relay.ts
-    request_policy: packages/web-extension/src/background/handle-overlay-requests.ts
     messaging:
+      port_requests: packages/web-extension/src/messaging/port-requests.ts
       request_protocol: packages/web-extension/src/messaging/overlay-request-protocol.ts
       event_protocol: packages/web-extension/src/messaging/overlay-event-protocol.ts
       page: packages/web-extension/src/messaging/page-messengers.ts
       extension: packages/web-extension/src/messaging/extension-messengers.ts
     storage: packages/web-extension/src/storage/overlay-items.ts
-    toolbar_state_schema: packages/web-extension/src/storage/toolbar-state-schema.ts
-    e2e: packages/web-extension/e2e/extension.spec.ts
+    e2e:
+      overlay: packages/web-extension/e2e/overlay.spec.ts
+      gateway: packages/web-extension/e2e/gateway.spec.ts
 
   design-system:
     description: Shared Solid.js component library (tsup)
@@ -433,6 +443,30 @@ features:
       - packages/react-grab/src/features/session-recording/business/gzip-json.ts
       - packages/react-grab/src/features/session-recording/business/recent-window.ts
       - packages/react-grab/src/features/session-recording/index.ts
+  overlay-on-any-site:
+    description: The browser extension runs the overlay with sync on sites the user enables; page calls reach the sync server only through the service worker gateway, which holds the token (ADR-0023)
+    status: implemented
+    adrs: [ADR-0020, ADR-0023]
+    files:
+      - packages/react-grab/src/features/sync/types.ts
+      - packages/react-grab/src/sync-http/index.ts
+      - packages/web-extension/src/background/handle-overlay-requests.ts
+      - packages/web-extension/src/background/register-background.ts
+      - packages/web-extension/src/gateway/sender-policy.ts
+      - packages/web-extension/src/gateway/sync-gateway.ts
+      - packages/web-extension/src/messaging/extension-messengers.ts
+      - packages/web-extension/src/messaging/overlay-request-protocol.ts
+      - packages/web-extension/src/messaging/page-messengers.ts
+      - packages/web-extension/src/messaging/port-requests.ts
+      - packages/web-extension/src/options/options-app.tsx
+      - packages/web-extension/src/overlay/messaging-ports.ts
+      - packages/web-extension/src/overlay/start-sync.ts
+      - packages/web-extension/src/relay/start-relay.ts
+      - packages/web-extension/src/settings/settings-items.ts
+      - packages/web-extension/src/settings/settings-schema.ts
+      - packages/web-extension/src/site-trust/apply-site-changes.ts
+      - packages/web-extension/src/site-trust/remove-revoked-sites.ts
+      - packages/web-extension/src/site-trust/sync-site-scripts.ts
   selection-label:
     description: TODO
     status: discovered
