@@ -340,9 +340,9 @@ features:
       - packages/react-grab/src/components/selection-label/error-view.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
       - packages/react-grab/src/components/selection-label/tag-badge.tsx
+      - packages/react-grab/src/components/ui/action-list.tsx
       - packages/react-grab/src/components/ui/button.tsx
       - packages/react-grab/src/components/ui/collapsible.tsx
-      - packages/react-grab/src/components/ui/menu-list.tsx
       - packages/react-grab/src/components/ui/tooltip.tsx
       - packages/sync-server/src/routes/jira.ts
       - packages/sync-server/src/services/jira.service.ts
@@ -777,7 +777,7 @@ data_attrs:
     overlay-canvas: {scope: overlay, src: 1, tests: 0}
     product: {scope: overlay, src: 1, tests: 61}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 63, tests: 6}
+    ignore-events: {scope: reserved, src: 62, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}

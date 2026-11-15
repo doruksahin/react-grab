@@ -16,11 +16,11 @@ export const DevInsightsSection: Component<DevInsightsSectionProps> = (
   return (
     <Show when={ctx.isDevMode() && props.tagName}>
       <DevInsights>
-        <DevInsights.Field label="tag" value={props.tagName} color="green" />
+        <DevInsights.Field label="tag" value={props.tagName} kind="tag" />
         <DevInsights.Field
           label="node"
           value={props.componentName}
-          color="purple"
+          kind="component"
         />
       </DevInsights>
     </Show>

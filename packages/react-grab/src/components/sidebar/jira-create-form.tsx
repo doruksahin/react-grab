@@ -93,7 +93,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
     <Show
       when={!configError()}
       fallback={
-        <div class="p-3 bg-danger/20 border border-danger/30 rounded text-meta text-danger-foreground">
+        <div class="p-3 bg-danger/20 border border-danger/30 rounded text-meta text-danger-text">
           <p class="font-semibold mb-1">Configuration error</p>
           <For each={configError()!}>{(err) => <p>{err}</p>}</For>
         </div>
@@ -265,7 +265,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
         <Show when={failure() !== null && !created()}>
           <div
             data-react-grab-jira-error
-            class="mb-3 p-2 bg-danger/20 border border-danger/30 rounded text-meta text-danger-foreground"
+            class="mb-3 p-2 bg-danger/20 border border-danger/30 rounded text-meta text-danger-text"
           >
             <p>Could not create the ticket. Your form is kept.</p>
             <Show when={failure()}>
@@ -277,7 +277,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           {(ticket) => (
             <div
               data-react-grab-jira-success
-              class="mb-3 p-2 bg-success/15 border border-success/30 rounded text-meta text-success-foreground"
+              class="mb-3 p-2 bg-success/15 border border-success/30 rounded text-meta text-success-text"
             >
               The ticket is in Jira. This group is now locked to{" "}
               {ticket().ticketId}.

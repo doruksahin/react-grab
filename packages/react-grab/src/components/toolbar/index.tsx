@@ -46,7 +46,7 @@ import {
   unfreeze,
   isFreezeActive,
 } from "react-grab-upstream/primitives";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip.js";
 import { Kbd } from "../kbd.jsx";
 import {} from "../../utils/toolbar-layout.js";
 import { ToolbarContent } from "./toolbar-content.js";
@@ -64,6 +64,7 @@ import { createToolbarDrag } from "../../utils/create-toolbar-drag.js";
 import { Badge } from "../ui/badge.js";
 import { Button } from "../ui/button.js";
 import { ToolbarButton } from "./toolbar-button.js";
+import { isKeyboardFocus } from "../../utils/is-keyboard-focus.js";
 
 interface ToolbarProps {
   isActive?: boolean;
@@ -119,7 +120,10 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
 
   const getElementRect = (selector: string): TargetRect | null => {
     if (!containerRef) return null;
-    const rootNode = containerRef.getRootNode() as Document | ShadowRoot;
+    const rootNode = containerRef.getRootNode();
+    if (!(rootNode instanceof Document || rootNode instanceof ShadowRoot)) {
+      return null;
+    }
     const element = rootNode.querySelector<HTMLElement>(selector);
     if (!element) return null;
     const rect = element.getBoundingClientRect();
@@ -266,6 +270,11 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
     setTooltipVisible: (visible: boolean) => void,
     options?: FreezeHandlersOptions,
   ) => ({
+    // Keyboard focus shows the tooltip like hover does (not script focus).
+    onFocus: (event: FocusEvent) => {
+      if (isKeyboardFocus(event)) setTooltipVisible(true);
+    },
+    onBlur: () => setTooltipVisible(false),
     onMouseEnter: () => {
       if (drag.isDragging()) return;
       safePolygonTracker.stop();
@@ -906,15 +915,11 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               vertical={isVertical()}
               data-react-grab-ignore-events
               data-react-grab-toolbar-toggle
-              aria-label={
-                props.isActive ? "Stop selecting element" : "Select element"
-              }
+              aria-label="Select element"
               aria-pressed={Boolean(props.isActive)}
               onClick={(event: MouseEvent) => {
                 setIsSelectTooltipVisible(false);
-                handleToggle(
-                  event as MouseEvent & { currentTarget: HTMLButtonElement },
-                );
+                handleToggle(event);
               }}
               onContextMenu={(event: MouseEvent) => {
                 event.preventDefault();
@@ -958,9 +963,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               aria-expanded={Boolean(props.isCommentsDropdownOpen)}
               onClick={(event: MouseEvent) => {
                 setIsCommentsTooltipVisible(false);
-                handleComments(
-                  event as MouseEvent & { currentTarget: HTMLButtonElement },
-                );
+                handleComments(event);
               }}
               {...createFreezeHandlers(
                 (visible) => {
@@ -1015,9 +1018,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               aria-label="Copy all comments"
               onClick={(event: MouseEvent) => {
                 setIsCopyAllTooltipVisible(false);
-                handleCopyAll(
-                  event as MouseEvent & { currentTarget: HTMLButtonElement },
-                );
+                handleCopyAll(event);
               }}
               {...createFreezeHandlers(setIsCopyAllTooltipVisible, {
                 onHoverChange: (isHovered) => props.onCopyAllHover?.(isHovered),
@@ -1049,19 +1050,19 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               variant="toolbar"
               data-react-grab-ignore-events
               data-react-grab-toolbar-devmode
-              aria-label={
-                props.isDevMode ? "DEV mode active" : "Toggle DEV mode"
-              }
+              aria-label="DEV mode"
               aria-pressed={Boolean(props.isDevMode)}
               class={cn("gap-1", isVertical() ? "my-0.5 flex-col" : "mx-0.5")}
               onClick={(event: MouseEvent) => {
                 setIsToggleTooltipVisible(false);
-                handleToggleDevMode(
-                  event as MouseEvent & { currentTarget: HTMLButtonElement },
-                );
+                handleToggleDevMode(event);
               }}
               onMouseEnter={() => setIsToggleTooltipVisible(true)}
               onMouseLeave={() => setIsToggleTooltipVisible(false)}
+              onFocus={(event: FocusEvent) => {
+                if (isKeyboardFocus(event)) setIsToggleTooltipVisible(true);
+              }}
+              onBlur={() => setIsToggleTooltipVisible(false)}
             >
               <span
                 class="text-meta font-extrabold tracking-wider leading-none"
@@ -1079,9 +1080,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 color="sky"
               />
             </TooltipTrigger>
-            <TooltipContent>
-              {props.isDevMode ? "DEV mode" : "DEV mode"}
-            </TooltipContent>
+            <TooltipContent>{"DEV mode"}</TooltipContent>
           </Tooltip>
         }
       />

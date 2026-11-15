@@ -36,7 +36,7 @@ export const DevInsightsShell: Component<DevInsightsShellProps> = (props) => {
           )}
         >
           <ChevronIcon class="collapsible-chevron text-muted-foreground size-2.5" />
-          <span class="w-[5px] h-[5px] rounded-full bg-dev shadow-glow-sky-soft" />
+          <span class="w-[5px] h-[5px] rounded-full bg-dev shadow-glow-dev-soft" />
           <span class="text-meta font-extrabold text-dev uppercase tracking-wide">
             Dev Insights
           </span>

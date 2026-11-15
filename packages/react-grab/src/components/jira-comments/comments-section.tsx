@@ -28,7 +28,7 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
           variant="inline"
           defaultOpen={true}
           trigger={
-            <span class="text-comments-foreground font-semibold text-meta uppercase tracking-wide">
+            <span class="text-comments-text font-semibold text-meta uppercase tracking-wide">
               Comments{" "}
               <span data-react-grab-comments-count>
                 ({mergedComments().length})

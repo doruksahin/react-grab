@@ -103,11 +103,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
       vertical={isVertical()}
       data-react-grab-ignore-events
       data-react-grab-toolbar-visibility
-      aria-label={
-        props.selectionsRevealed
-          ? "Hide all selections"
-          : "Reveal all selections"
-      }
+      aria-label="Reveal all selections"
       aria-pressed={props.selectionsRevealed}
       onClick={() => props.onToggleSelectionsRevealed?.()}
     >
@@ -235,9 +231,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
                   ref={props.onDashboardBtnRef}
                   data-react-grab-ignore-events
                   data-react-grab-toolbar-dashboard
-                  aria-label={
-                    props.sidebarOpen ? "Close dashboard" : "Open dashboard"
-                  }
+                  aria-label="Dashboard"
                   aria-pressed={Boolean(props.sidebarOpen)}
                   class={cn(props.sidebarOpen && "text-grab-pink")}
                   onClick={() => props.onToggleSidebar?.()}

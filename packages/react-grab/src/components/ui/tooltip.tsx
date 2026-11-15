@@ -1,4 +1,5 @@
-import type { ElementOf, PolymorphicProps } from "@kobalte/core/polymorphic";
+import type { PolymorphicProps } from "@kobalte/core/polymorphic";
+import { composeEventHandlers } from "@kobalte/utils";
 import {
   Tooltip as TooltipPrimitive,
   type TooltipTriggerProps,
@@ -14,8 +15,8 @@ import {
   splitProps,
   useContext,
 } from "solid-js";
-import { callEventHandler } from "../../utils/call-event-handler.js";
 import { cn } from "../../utils/cn.js";
+import { isKeyboardFocus } from "../../utils/is-keyboard-focus.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
 
 /**
@@ -107,24 +108,19 @@ const Tooltip: Component<TooltipRootProps> = (props) => {
 // A tooltip opens on hover and on keyboard focus, not when a dialog or focus
 // trap moves focus to the trigger by script (WAI-ARIA tooltip pattern).
 // Kobalte skips opening when the focus event is default-prevented.
+const preventScriptFocusOpen = (event: FocusEvent) => {
+  if (!isKeyboardFocus(event)) event.preventDefault();
+};
+
 const TooltipTrigger = <T extends ValidComponent = "button">(
   props: PolymorphicProps<T, TooltipTriggerProps<T>>,
-) => {
-  const handleFocus = (
-    event: FocusEvent & { currentTarget: ElementOf<T>; target: Element },
-  ) => {
-    callEventHandler(props.onFocus, event);
-    const trigger: unknown = event.currentTarget;
-    if (trigger instanceof Element && !trigger.matches(":focus-visible")) {
-      event.preventDefault();
-    }
-  };
-  return (
-    <TooltipPrimitive.Trigger<T>
-      {...mergeProps(props, { onFocus: handleFocus })}
-    />
-  );
-};
+) => (
+  <TooltipPrimitive.Trigger<T>
+    {...mergeProps(props, {
+      onFocus: composeEventHandlers([props.onFocus, preventScriptFocusOpen]),
+    })}
+  />
+);
 
 const TooltipPortal: Component<
   ComponentProps<typeof TooltipPrimitive.Portal>

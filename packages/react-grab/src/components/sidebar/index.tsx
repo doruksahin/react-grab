@@ -39,6 +39,7 @@ import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.j
 import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 import { TabBar } from "./tab-bar.js";
+import { Tabs, TabsContent } from "../ui/tabs.js";
 import { SelectionListTab } from "./selection-list-tab.js";
 import { BulkActionBar } from "./bulk-action-bar.js";
 import { BulkGroupPicker } from "./bulk-group-picker.js";
@@ -115,6 +116,9 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   const [activeTab, setActiveTab] = createSignal<"groups" | "selections">(
     "groups",
   );
+  const handleTabChange = (value: string) => {
+    if (value === "groups" || value === "selections") setActiveTab(value);
+  };
   const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
@@ -276,119 +280,123 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 groups={props.groups ?? []}
                 commentItems={props.commentItems ?? []}
               />
-              <TabBar
-                activeTab={activeTab()}
-                onTabChange={setActiveTab}
-                groupsCount={userFacingGroups().length}
-                selectionsCount={(props.commentItems ?? []).length}
-              />
-
-              <div
-                data-react-grab-sidebar-search
-                class="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-foreground/[0.01]"
+              <Tabs
+                value={activeTab()}
+                onChange={handleTabChange}
+                class="min-h-0 flex-1"
               >
-                <input
-                  type="text"
-                  placeholder="Search selections..."
-                  class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-caption text-foreground placeholder:text-muted-foreground outline-none focus:border-selection transition-colors"
-                  value={searchQuery()}
-                  onInput={(e) => setSearchQuery(e.currentTarget.value)}
-                  data-react-grab-ignore-events
+                <TabBar
+                  groupsCount={userFacingGroups().length}
+                  selectionsCount={(props.commentItems ?? []).length}
                 />
-                <FilterMenu
+
+                <div
+                  data-react-grab-sidebar-search
+                  class="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-foreground/[0.01]"
+                >
+                  <input
+                    type="text"
+                    placeholder="Search selections..."
+                    class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-caption text-foreground placeholder:text-muted-foreground outline-none focus:border-selection transition-colors"
+                    value={searchQuery()}
+                    onInput={(e) => setSearchQuery(e.currentTarget.value)}
+                    data-react-grab-ignore-events
+                  />
+                  <FilterMenu
+                    filter={filterState()}
+                    assignees={getDistinctAssignees(userFacingGroups())}
+                    reporters={getDistinctReporters(userFacingGroups())}
+                    labels={getDistinctLabels(userFacingGroups())}
+                    onFilterChange={setFilterState}
+                  />
+                  <IconButton
+                    label="Flagged only"
+                    variant="outline"
+                    size="icon-md"
+                    class={cn(
+                      "shrink-0",
+                      flaggedOnly() &&
+                        "border-flag bg-flag/8 hover:bg-flag/8 aria-pressed:bg-flag/8",
+                    )}
+                    aria-pressed={flaggedOnly()}
+                    onClick={() => setFlaggedOnly((prev) => !prev)}
+                  >
+                    <IconFlag
+                      size={14}
+                      class={
+                        flaggedOnly() ? "text-flag" : "text-muted-foreground"
+                      }
+                    />
+                  </IconButton>
+                </div>
+                <FilterChips
                   filter={filterState()}
-                  assignees={getDistinctAssignees(userFacingGroups())}
-                  reporters={getDistinctReporters(userFacingGroups())}
-                  labels={getDistinctLabels(userFacingGroups())}
                   onFilterChange={setFilterState}
                 />
-                <IconButton
-                  label="Flagged only"
-                  variant="outline"
-                  size="icon-md"
-                  class={cn(
-                    "shrink-0",
-                    flaggedOnly() &&
-                      "border-flag bg-flag/8 hover:bg-flag/8 aria-pressed:bg-flag/8",
-                  )}
-                  aria-pressed={flaggedOnly()}
-                  onClick={() => setFlaggedOnly((prev) => !prev)}
-                >
-                  <IconFlag
-                    size={14}
-                    class={
-                      flaggedOnly() ? "text-flag" : "text-muted-foreground"
+
+                <TabsContent value="groups">
+                  <Show
+                    when={
+                      userFacingGroups().length > 0 ||
+                      props.commentItems.length > 0
                     }
-                  />
-                </IconButton>
-              </div>
-              <FilterChips
-                filter={filterState()}
-                onFilterChange={setFilterState}
-              />
-
-              <Show when={activeTab() === "groups"}>
-                <Show
-                  when={
-                    userFacingGroups().length > 0 ||
-                    props.commentItems.length > 0
-                  }
-                  fallback={
-                    <EmptyState
-                      message="No selections yet."
-                      submessage="Select elements on the page to get started."
-                    />
-                  }
-                >
-                  <div class="flex-1 overflow-y-auto">
-                    <Show when={filteredGroups().length > 0}>
-                      <GroupList
-                        groupedItems={filteredGroups()}
-                        onGroupClick={(id: string, cardEl: HTMLElement) => {
-                          lastFocusedCard = cardEl;
-                          setActiveDetailGroupId(id);
-                        }}
-                      />
-                    </Show>
-
-                    {/* "No groups match" only makes sense when groups
-                          actually exist but are fully filtered out. */}
-                    <Show
-                      when={
-                        userFacingGroups().length > 0 &&
-                        filteredGroups().length === 0
-                      }
-                    >
+                    fallback={
                       <EmptyState
-                        message={"No groups match the active filters."}
+                        message="No selections yet."
+                        submessage="Select elements on the page to get started."
                       />
-                    </Show>
-                  </div>
-                </Show>
-              </Show>
+                    }
+                  >
+                    <div class="flex-1 overflow-y-auto">
+                      <Show when={filteredGroups().length > 0}>
+                        <GroupList
+                          groupedItems={filteredGroups()}
+                          onGroupClick={(id: string, cardEl: HTMLElement) => {
+                            lastFocusedCard = cardEl;
+                            setActiveDetailGroupId(id);
+                          }}
+                        />
+                      </Show>
 
-              <Show when={activeTab() === "selections"}>
-                <SelectionListTab
-                  commentItems={props.commentItems ?? []}
-                  groups={props.groups ?? []}
-                  filter={filterState()}
-                  selectedIds={selectedIds()}
-                  onToggleSelect={toggleSelect}
-                  searchQuery={searchQuery()}
-                  flaggedOnly={flaggedOnly()}
-                  syncServerUrl={props.syncServerUrl}
-                  syncWorkspace={props.syncWorkspace}
-                  onSubmitJiraComment={props.onSubmitJiraComment}
-                  onSearchJiraUsers={props.onSearchJiraUsers}
-                  onRefreshJiraStatus={props.onRefreshJiraStatus}
-                  commentEditorToolbarVisible={
-                    props.commentEditorToolbarVisible
-                  }
-                  onCreateTicket={props.onCreateTicketForLooseItem}
-                  onMoveItem={props.onMoveItem}
-                  onAddGroup={props.onAddGroup}
-                />
-              </Show>
+                      {/* "No groups match" only makes sense when groups
+                          actually exist but are fully filtered out. */}
+                      <Show
+                        when={
+                          userFacingGroups().length > 0 &&
+                          filteredGroups().length === 0
+                        }
+                      >
+                        <EmptyState
+                          message={"No groups match the active filters."}
+                        />
+                      </Show>
+                    </div>
+                  </Show>
+                </TabsContent>
+
+                <TabsContent value="selections">
+                  <SelectionListTab
+                    commentItems={props.commentItems ?? []}
+                    groups={props.groups ?? []}
+                    filter={filterState()}
+                    selectedIds={selectedIds()}
+                    onToggleSelect={toggleSelect}
+                    searchQuery={searchQuery()}
+                    flaggedOnly={flaggedOnly()}
+                    syncServerUrl={props.syncServerUrl}
+                    syncWorkspace={props.syncWorkspace}
+                    onSubmitJiraComment={props.onSubmitJiraComment}
+                    onSearchJiraUsers={props.onSearchJiraUsers}
+                    onRefreshJiraStatus={props.onRefreshJiraStatus}
+                    commentEditorToolbarVisible={
+                      props.commentEditorToolbarVisible
+                    }
+                    onCreateTicket={props.onCreateTicketForLooseItem}
+                    onMoveItem={props.onMoveItem}
+                    onAddGroup={props.onAddGroup}
+                  />
+                </TabsContent>
+              </Tabs>
             </>
           }
         >

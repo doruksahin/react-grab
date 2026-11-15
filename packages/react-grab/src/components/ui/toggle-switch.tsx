@@ -17,8 +17,11 @@ export const ToggleSwitch: Component<ToggleSwitchProps> = (props) => {
   const color = () => props.color ?? "default";
   const vertical = () => Boolean(props.vertical);
 
+  // A visual indicator only: the control that owns it carries the state
+  // (e.g. aria-pressed on the DEV button), so it is hidden from assistive tech.
   return (
     <div
+      aria-hidden="true"
       class={cn(
         "relative rounded-full transition-all",
         // Track sizing
@@ -50,7 +53,7 @@ export const ToggleSwitch: Component<ToggleSwitchProps> = (props) => {
           props.isOn && size() === "md" && "left-[11px]",
           // Dot color
           color() === "default" && "bg-popover",
-          color() === "sky" && props.isOn && "bg-dev shadow-glow-sky",
+          color() === "sky" && props.isOn && "bg-dev shadow-glow-dev",
           color() === "sky" && !props.isOn && "bg-muted-foreground",
         )}
       />

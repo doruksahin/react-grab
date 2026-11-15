@@ -51,7 +51,7 @@ export const DevInsightsAttributes: Component<DevInsightsAttributesProps> = (
           {(attr) => (
             <div class="text-meta leading-relaxed font-mono py-px">
               <span class="text-muted-foreground">{attr.name}</span>{" "}
-              <span class="text-code-amber">"{attr.value}"</span>
+              <span class="text-code-string">"{attr.value}"</span>
             </div>
           )}
         </For>

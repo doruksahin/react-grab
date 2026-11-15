@@ -2,18 +2,18 @@ import type { Component } from "solid-js";
 import { Show } from "solid-js";
 import { cn } from "../../utils/cn.js";
 
-const VALUE_COLORS = {
-  green: "text-code-green",
-  purple: "text-code-purple",
-  amber: "text-code-amber",
-} as const;
+const VALUE_KIND_CLASSES = {
+  tag: "text-code-tag",
+  component: "text-code-component",
+  string: "text-code-string",
+};
 
-type ValueColor = keyof typeof VALUE_COLORS;
+type ValueKind = keyof typeof VALUE_KIND_CLASSES;
 
 export interface DevInsightsFieldProps {
   label: string;
   value: string | undefined;
-  color?: ValueColor;
+  kind?: ValueKind;
   /** Use monospace font for value. @default true */
   mono?: boolean;
 }
@@ -21,7 +21,7 @@ export interface DevInsightsFieldProps {
 export const DevInsightsField: Component<DevInsightsFieldProps> = (props) => {
   const mono = () => props.mono ?? true;
   const colorClass = () =>
-    props.color ? VALUE_COLORS[props.color] : "text-foreground";
+    props.kind ? VALUE_KIND_CLASSES[props.kind] : "text-foreground";
 
   return (
     <Show when={props.value}>

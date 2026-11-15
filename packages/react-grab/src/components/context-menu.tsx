@@ -29,7 +29,7 @@ import { resolveActionEnabled } from "../utils/resolve-action-enabled.js";
 import { nativeRequestAnimationFrame } from "../utils/native-raf.js";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { registerOverlayDismiss } from "../utils/register-overlay-dismiss.js";
-import { MenuList, MenuListItem } from "./ui/menu-list.js";
+import { ActionList, ActionListItem } from "./ui/action-list.js";
 
 interface ContextMenuProps {
   position: Position | null;
@@ -267,10 +267,13 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
             />
           </div>
           <BottomSection>
-            <MenuList class="w-[calc(100%+16px)] -mx-2 -my-1.5">
+            <ActionList
+              label="Element actions"
+              class="w-[calc(100%+16px)] -mx-2 -my-1.5"
+            >
               <For each={menuItems()}>
                 {(item) => (
-                  <MenuListItem
+                  <ActionListItem
                     data-react-grab-ignore-events
                     data-react-grab-menu-item={item.label.toLowerCase()}
                     class="justify-between"
@@ -288,10 +291,10 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
                         </span>
                       )}
                     </Show>
-                  </MenuListItem>
+                  </ActionListItem>
                 )}
               </For>
-            </MenuList>
+            </ActionList>
           </BottomSection>
         </div>
       </div>

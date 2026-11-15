@@ -10,7 +10,7 @@ import { formatShortcut } from "../../utils/format-shortcut.js";
 import { suppressMenuEvent } from "../../utils/suppress-menu-event.js";
 import { createAnchoredDropdown } from "../../utils/create-anchored-dropdown.js";
 import { registerOverlayDismiss } from "../../utils/register-overlay-dismiss.js";
-import { MenuList, MenuListItem } from "../ui/menu-list.js";
+import { ActionList, ActionListItem } from "../ui/action-list.js";
 
 interface ToolbarMenuProps {
   position: DropdownAnchor | null;
@@ -76,13 +76,13 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
           )}
           style={{ "min-width": `${TOOLBAR_MENU_MIN_WIDTH_PX}px` }}
         >
-          <MenuList class="py-1">
+          <ActionList label="Toolbar actions" class="py-1">
             <For each={props.actions}>
               {(action) => {
                 const isDefault = () => action.id === props.defaultActionId;
 
                 return (
-                  <MenuListItem
+                  <ActionListItem
                     data-react-grab-ignore-events
                     data-react-grab-menu-item={action.id}
                     class="justify-between"
@@ -106,11 +106,11 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
                         </span>
                       )}
                     </Show>
-                  </MenuListItem>
+                  </ActionListItem>
                 );
               }}
             </For>
-          </MenuList>
+          </ActionList>
         </div>
       </div>
     </Show>

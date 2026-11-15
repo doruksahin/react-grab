@@ -3,7 +3,7 @@ import type { Component } from "solid-js";
 import type { ArrowNavigationItem } from "../../types.js";
 import { createMenuHighlight } from "../../utils/create-menu-highlight.js";
 import { BottomSection } from "./bottom-section.js";
-import { MenuList, MenuListItem } from "../ui/menu-list.js";
+import { ActionList, ActionListItem } from "../ui/action-list.js";
 
 interface ArrowNavigationMenuProps {
   items: ArrowNavigationItem[];
@@ -43,7 +43,8 @@ export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
 
   return (
     <BottomSection>
-      <MenuList
+      <ActionList
+        label="Element hierarchy"
         highlight={highlight}
         ref={(element) => {
           menuItemsRef = element;
@@ -55,7 +56,7 @@ export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
       >
         <For each={props.items}>
           {(item, itemIndex) => (
-            <MenuListItem
+            <ActionListItem
               data-react-grab-ignore-events
               data-react-grab-arrow-nav-item={item.tagName}
               data-react-grab-arrow-nav-index={itemIndex()}
@@ -87,10 +88,10 @@ export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
                 </Show>
                 {item.tagName}
               </span>
-            </MenuListItem>
+            </ActionListItem>
           )}
         </For>
-      </MenuList>
+      </ActionList>
     </BottomSection>
   );
 };

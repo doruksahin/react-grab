@@ -2,7 +2,14 @@ import { For, Show, onMount, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import { registerOverlayDismiss } from "../../utils/register-overlay-dismiss.js";
-import { MenuList, MenuListItem } from "../ui/menu-list.js";
+import { cn } from "../../utils/cn.js";
+import { IconCheck } from "../icons/icon-check.jsx";
+import { ActionList, ActionListItem } from "../ui/action-list.js";
+
+interface GroupRow {
+  id: string | null;
+  name: string;
+}
 
 interface GroupPickerFlyoutProps {
   groups: SelectionGroup[];
@@ -30,6 +37,12 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
   const visibleGroups = () =>
     props.groups.filter((g) => g.id !== props.excludeGroupId);
 
+  // "Ungrouped" (groupId null) is the first row; every row renders the same way.
+  const rows = (): GroupRow[] => [
+    { id: null, name: "Ungrouped" },
+    ...visibleGroups().map((group) => ({ id: group.id, name: group.name })),
+  ];
+
   const header = () =>
     props.excludeGroupId !== undefined ? "Move to group" : "Add to group";
 
@@ -47,84 +60,42 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
           {header()}
         </span>
       </div>
-      <MenuList class="border-t border-border py-1">
-        {/* Ungrouped row — selecting it sets groupId to null */}
-        <MenuListItem
-          data-react-grab-ignore-events
-          class="gap-2"
-          onClick={(e) => {
-            e.stopPropagation();
-            props.onSelect(null);
-          }}
-        >
-          <Show
-            when={props.activeGroupId == null}
-            fallback={<span class="w-[10px] shrink-0" />}
-          >
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 16 16"
-              class="text-muted-foreground shrink-0"
-            >
-              <path
-                fill="currentColor"
-                d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z"
-              />
-            </svg>
-          </Show>
-          <span
-            class={
-              props.activeGroupId == null
-                ? "text-caption font-medium text-popover-foreground"
-                : "text-caption text-muted-foreground"
-            }
-          >
-            Ungrouped
-          </span>
-        </MenuListItem>
-        <For each={visibleGroups()}>
-          {(group) => {
-            const isActive = () => group.id === props.activeGroupId;
+      <ActionList label="Groups" class="border-t border-border py-1">
+        <For each={rows()}>
+          {(row) => {
+            const isActive = () => row.id === (props.activeGroupId ?? null);
             return (
-              <MenuListItem
+              <ActionListItem
                 data-react-grab-ignore-events
                 class="gap-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  props.onSelect(group.id);
+                aria-pressed={isActive()}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  props.onSelect(row.id);
                 }}
               >
-                <Show
-                  when={isActive()}
-                  fallback={<span class="w-[10px] shrink-0" />}
-                >
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 16 16"
-                    class="text-muted-foreground shrink-0"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="m13.959 3.97-7.25 9a.75.75 0 0 1-1.163.007l-3.5-4.25 1.158-.954 2.914 3.539 6.673-8.283z"
-                    />
-                  </svg>
-                </Show>
+                <IconCheck
+                  size={10}
+                  class={cn(
+                    "shrink-0 text-muted-foreground",
+                    !isActive() && "invisible",
+                  )}
+                />
                 <span
-                  class={
+                  class={cn(
+                    "text-caption",
                     isActive()
-                      ? "text-caption font-medium text-popover-foreground"
-                      : "text-caption text-muted-foreground"
-                  }
+                      ? "font-medium text-popover-foreground"
+                      : "text-muted-foreground",
+                  )}
                 >
-                  {group.name}
+                  {row.name}
                 </span>
-              </MenuListItem>
+              </ActionListItem>
             );
           }}
         </For>
-      </MenuList>
+      </ActionList>
       <Show when={props.onAddGroup}>
         <div class="border-t border-border px-2 py-1.5">
           <div class="flex items-center gap-1.5">
@@ -145,6 +116,7 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
               data-react-grab-ignore-events
               type="text"
               placeholder="New group..."
+              aria-label="New group name"
               class="flex-1 text-caption bg-transparent outline-none placeholder:text-muted-foreground/50 text-popover-foreground"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && e.currentTarget.value.trim()) {

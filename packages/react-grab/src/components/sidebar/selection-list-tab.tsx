@@ -183,12 +183,12 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                   <DevInsights.Field
                     label="tag"
                     value={item.tagName}
-                    color="green"
+                    kind="tag"
                   />
                   <DevInsights.Field
                     label="node"
                     value={item.componentName ?? item.elementName}
-                    color="purple"
+                    kind="component"
                   />
                   <DevInsights.Attributes content={item.content} />
                   <Show when={item.elementSelectors?.[0]}>

@@ -33,7 +33,7 @@ import { createSafePolygonTracker } from "../utils/safe-polygon.js";
 import { cn } from "../utils/cn.js";
 import { IconTrash } from "./icons/icon-trash.jsx";
 import { IconCheck } from "./icons/icon-check.jsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip.js";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip.js";
 import { createMenuHighlight } from "../utils/create-menu-highlight.js";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { createAnchoredDropdown } from "../utils/create-anchored-dropdown.js";

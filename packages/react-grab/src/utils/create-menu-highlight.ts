@@ -1,15 +1,3 @@
-interface AnimatedBoundsFollowerOptions {
-  hiddenOpacity?: string;
-  visibleOpacity?: string;
-}
-
-interface AnimatedBoundsFollowerController {
-  containerRef: (containerElement: HTMLElement) => void;
-  followerRef: (followerElement: HTMLElement) => void;
-  followElement: (targetElement: HTMLElement | undefined) => void;
-  hideFollower: () => void;
-}
-
 export interface MenuHighlightController {
   containerRef: (containerElement: HTMLElement) => void;
   highlightRef: (highlightElement: HTMLElement) => void;
@@ -17,67 +5,41 @@ export interface MenuHighlightController {
   clearHighlight: () => void;
 }
 
-const DEFAULT_HIDDEN_OPACITY = "0";
-const DEFAULT_VISIBLE_OPACITY = "1";
-
-const createAnimatedBoundsFollower = ({
-  hiddenOpacity = DEFAULT_HIDDEN_OPACITY,
-  visibleOpacity = DEFAULT_VISIBLE_OPACITY,
-}: AnimatedBoundsFollowerOptions = {}): AnimatedBoundsFollowerController => {
+/**
+ * A highlight element that follows a target inside its container: it takes
+ * the target's bounds (relative to the container) and fades in, or fades out.
+ */
+export const createMenuHighlight = (): MenuHighlightController => {
   let containerElement: HTMLElement | undefined;
-  let followerElement: HTMLElement | undefined;
+  let highlightElement: HTMLElement | undefined;
 
-  const hideFollower = (): void => {
-    if (!followerElement) return;
-    followerElement.style.opacity = hiddenOpacity;
+  const clearHighlight = (): void => {
+    if (!highlightElement) return;
+    highlightElement.style.opacity = "0";
   };
 
-  const followElement = (targetElement: HTMLElement | undefined): void => {
-    if (!followerElement || !containerElement) return;
+  const updateHighlight = (targetElement: HTMLElement | undefined): void => {
+    if (!highlightElement || !containerElement) return;
     if (!targetElement) {
-      hideFollower();
+      clearHighlight();
       return;
     }
     const containerRect = containerElement.getBoundingClientRect();
     const targetRect = targetElement.getBoundingClientRect();
-    const targetTopWithinContainer =
-      targetRect.top - containerRect.top + containerElement.scrollTop;
-    const targetLeftWithinContainer =
-      targetRect.left - containerRect.left + containerElement.scrollLeft;
-    followerElement.style.opacity = visibleOpacity;
-    followerElement.style.top = `${targetTopWithinContainer}px`;
-    followerElement.style.left = `${targetLeftWithinContainer}px`;
-    followerElement.style.width = `${targetRect.width}px`;
-    followerElement.style.height = `${targetRect.height}px`;
-  };
-
-  const setContainerRef = (containerNode: HTMLElement): void => {
-    containerElement = containerNode;
-  };
-
-  const setFollowerRef = (followerNode: HTMLElement): void => {
-    followerElement = followerNode;
+    highlightElement.style.opacity = "1";
+    highlightElement.style.top = `${targetRect.top - containerRect.top + containerElement.scrollTop}px`;
+    highlightElement.style.left = `${targetRect.left - containerRect.left + containerElement.scrollLeft}px`;
+    highlightElement.style.width = `${targetRect.width}px`;
+    highlightElement.style.height = `${targetRect.height}px`;
   };
 
   return {
-    containerRef: setContainerRef,
-    followerRef: setFollowerRef,
-    followElement,
-    hideFollower,
-  };
-};
-
-export const createMenuHighlight = (): MenuHighlightController => {
-  const {
-    containerRef,
-    followerRef: highlightRef,
-    followElement: updateHighlight,
-    hideFollower: clearHighlight,
-  } = createAnimatedBoundsFollower();
-
-  return {
-    containerRef,
-    highlightRef,
+    containerRef: (element) => {
+      containerElement = element;
+    },
+    highlightRef: (element) => {
+      highlightElement = element;
+    },
     updateHighlight,
     clearHighlight,
   };

@@ -127,7 +127,28 @@
       ],
       "rules": {
         "react/forbid-elements": "off",
-        "overlay-ui/no-raw-styles": "off"
+        "overlay-ui/no-raw-styles": "off",
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "../[!.]*/**",
+                  "../*.js",
+                  "../*.jsx",
+                  "../../core/**",
+                  "../../features/**",
+                  "../../generated/**",
+                  "../../index.js",
+                  "../../primitives.js",
+                  "../../types.js"
+                ],
+                "message": "components/ui imports only ui/, utils/ and constants (ADR-0022)."
+              }
+            ]
+          }
+        ]
       }
     },
     {

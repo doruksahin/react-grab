@@ -112,12 +112,12 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
           <DevInsights.Field
             label="tag"
             value={props.item.tagName}
-            color="green"
+            kind="tag"
           />
           <DevInsights.Field
             label="node"
             value={props.item.componentName ?? props.item.elementName}
-            color="purple"
+            kind="component"
           />
           <DevInsights.Field
             label="file"
@@ -126,7 +126,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
                 ? `${filePath()!.path}${filePath()!.line !== null ? `:${filePath()!.line}` : ""}`
                 : undefined
             }
-            color="amber"
+            kind="string"
           />
           <DevInsights.Attributes content={props.item.content} />
           <Show when={props.item.elementSelectors?.[0]}>
