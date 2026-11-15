@@ -2535,6 +2535,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         boxId: string;
         labelId: string | null;
       }[] = commentsHoverPreviews,
+      options: { startExpanded?: boolean } = {},
     ) => {
       if (previewBounds.length === 0) return;
 
@@ -2570,6 +2571,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             timestamp: item.timestamp,
             hasElementScreenshot: Boolean(item.screenshotElement),
             hasFullPageScreenshot: Boolean(item.screenshotFullPage),
+            startExpanded: options.startExpanded,
           });
         }
 
@@ -2685,7 +2687,15 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       const previewBounds = connectedElements.map((element) =>
         createElementBounds(element),
       );
-      addCommentItemPreview(item, previewBounds, connectedElements, idPrefix);
+      // A hovered item in the comments menu previews its card, not a pin.
+      addCommentItemPreview(
+        item,
+        previewBounds,
+        connectedElements,
+        idPrefix,
+        commentsHoverPreviews,
+        { startExpanded: true },
+      );
     };
 
     // The dropdown follows the toolbar element itself (Floating UI
@@ -3139,10 +3149,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                 inspectNavigationState={inspectNavigationState()}
                 onInspectSelect={handleInspectSelect}
                 labelInstances={computedLabelInstancesWithStatus()}
-                collapsibleLabelsDefault={initialOptions.collapsibleLabels}
                 labelsStartCollapsedDefault={
                   initialOptions.labelsStartCollapsed ??
-                  initialOptions.collapsibleLabels
+                  initialOptions.collapsibleLabels ??
+                  true
                 }
                 dragVisible={dragVisible()}
                 dragBounds={dragBounds()}

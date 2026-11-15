@@ -1,4 +1,4 @@
-import { type Component, createMemo, For, Show } from "solid-js";
+import { type Component, createMemo, For, Show, untrack } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import {
@@ -39,6 +39,8 @@ interface SelectionListTabProps {
   onCreateTicket?: (item: CommentItem) => void;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
   onAddGroup?: (name: string) => void;
+  /** The selection to scroll to and mark, e.g. from a label's "Open thread". */
+  focusItemId?: string | null;
 }
 
 export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
@@ -122,7 +124,21 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
           };
 
           return (
-            <SelectionCard flagged={isFlagged()} selected={isSelected()}>
+            <SelectionCard
+              flagged={isFlagged()}
+              selected={isSelected()}
+              class={
+                item.id === props.focusItemId
+                  ? "ring-1 ring-selection"
+                  : undefined
+              }
+              ref={(element) => {
+                if (item.id !== untrack(() => props.focusItemId)) return;
+                queueMicrotask(() =>
+                  element.scrollIntoView({ block: "center" }),
+                );
+              }}
+            >
               <SelectionCardBody
                 leading={
                   props.onToggleSelect && checkable() ? (

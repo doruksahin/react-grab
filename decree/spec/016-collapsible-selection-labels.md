@@ -8,6 +8,9 @@ status: implemented
 
 # SPEC-016 Collapsible Selection Labels
 
+
+> **Amended (ADR-0022 step 3):** saved labels now start as pins by default (`collapsibleLabels` and `labelsStartCollapsed` default to `true`; set either to `false` for the old expanded default). The dot became a pin (`ui/pin.tsx`) with the status dot, ticket key and comment excerpt; pins of nearby elements stack (`features/selection-label/business/stack-pins.ts`). The expanded card no longer holds the Jira thread: it shows the latest comment and "Open thread" opens the sidebar on that selection.
+
 ## Overview
 
 Implements PRD-013: persistent label instances (renderer type #3) can collapse to a minimal purple dot and expand back to the full card. Feature-flagged via `Options.collapsibleLabels`. When the flag is off, behavior is unchanged — no dot, no collapse button.

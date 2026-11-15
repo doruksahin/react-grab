@@ -158,10 +158,11 @@ export const DROPDOWN_ANCHOR_GAP_PX = 8;
 // Floating UI defaults for overlays (utils/floating.ts).
 export const FLOATING_GAP_PX = 4;
 export const FLOATING_VIEWPORT_PADDING_PX = 8;
-// Collapsed label dot (components/collapsible-label/collapsed-dot.tsx).
-export const DOT_SIZE_PX = 10;
-export const DOT_GAP_PX = 6;
-export const DOT_PADDING_PX = 6;
+// Label pins (components/collapsible-label/collapsed-dot.tsx, ui/pin.tsx).
+export const PIN_HEIGHT_PX = 30;
+export const PIN_MAX_WIDTH_PX = 240;
+/** Between an element and its pin, and between stacked pins. */
+export const PIN_GAP_PX = 6;
 export const SAFE_POLYGON_BUFFER_PX = 8;
 export const DROPDOWN_ICON_SIZE_PX = 11;
 export const DROPDOWN_MIN_WIDTH_PX = 180;

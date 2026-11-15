@@ -82,6 +82,15 @@ test.describe("Overlay surfaces", { tag: ["@ADR-0022"] }, () => {
     await expectPageShot(page, "page-with-labels.png");
   });
 
+  test("label card", async ({ page }) => {
+    const pin = page
+      .locator("[data-react-grab-collapsed-dot]")
+      .filter({ hasText: "Navigation bar" });
+    await pin.click();
+    await expect(page.locator("[data-react-grab-open-thread]")).toBeVisible();
+    await expectPageShot(page, "label-card.png");
+  });
+
   test("comment composer", async ({ page, reactGrab }) => {
     await reactGrab.registerCommentAction();
     await reactGrab.enterPromptMode("li:nth-child(2)");

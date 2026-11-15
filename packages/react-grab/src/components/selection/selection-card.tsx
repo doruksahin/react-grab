@@ -5,6 +5,7 @@ export interface SelectionCardProps {
   flagged?: boolean;
   selected?: boolean;
   class?: string;
+  ref?: (element: HTMLDivElement) => void;
   children: JSX.Element;
 }
 

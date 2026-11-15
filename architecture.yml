@@ -573,6 +573,8 @@ data_attrs:
         - dev-insights
         - selection-header
         - selection-content
+        - latest-comment
+        - open-thread
 
     generation:
       description: Active generation flow inside a selection label (prompt textarea, submit, abort)
@@ -707,6 +709,7 @@ data_attrs:
         - status-dot
         - badge
         - chip
+        - pin
         - avatar
         - avatar-image
         - avatar-fallback
@@ -723,7 +726,7 @@ data_attrs:
     comment-avatar: {scope: comments, src: 3, tests: 0}
     comment-body: {scope: comments, src: 1, tests: 0}
     comment-cancel: {scope: comments, src: 1, tests: 0}
-    comment-composer: {scope: comments, src: 1, tests: 3}
+    comment-composer: {scope: comments, src: 1, tests: 5}
     comment-editor: {scope: comments, src: 1, tests: 2}
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
@@ -801,22 +804,24 @@ data_attrs:
     overlay-canvas: {scope: overlay, src: 1, tests: 0}
     product: {scope: overlay, src: 1, tests: 61}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 65, tests: 6}
+    ignore-events: {scope: reserved, src: 66, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
     collapse-label: {scope: selection, src: 1, tests: 2}
-    collapsed-dot: {scope: selection, src: 1, tests: 6}
+    collapsed-dot: {scope: selection, src: 1, tests: 8}
     collapsed-dot-preview: {scope: selection, src: 1, tests: 0}
     dev-insights: {scope: selection, src: 1, tests: 0}
+    latest-comment: {scope: selection, src: 1, tests: 1}
+    open-thread: {scope: selection, src: 1, tests: 1}
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 5}
+    selection-card: {scope: selection, src: 2, tests: 7}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 2, tests: 0}
-    selection-label: {scope: selection, src: 1, tests: 17}
+    selection-label: {scope: selection, src: 1, tests: 18}
     selection-remove: {scope: selection, src: 1, tests: 0}
     unread-indicator: {scope: selection, src: 1, tests: 0}
     active-group-picker: {scope: sidebar, src: 1, tests: 1}
@@ -848,7 +853,7 @@ data_attrs:
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 2, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 19}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 20}
     toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 1, tests: 4}
@@ -859,6 +864,7 @@ data_attrs:
     badge: {scope: ui, src: 1, tests: 0}
     chip: {scope: ui, src: 1, tests: 0}
     icon-button: {scope: ui, src: 1, tests: 0}
+    pin: {scope: ui, src: 1, tests: 0}
     status-chip: {scope: ui, src: 1, tests: 0}
     status-dot: {scope: ui, src: 1, tests: 0}
 

@@ -18,9 +18,11 @@ import * as fixtures from "../mocks/fixtures.js";
  * 2. Replace waitForTimeout() calls with expect.poll() for stability
  */
 
+// ADR-0022 step 3: the Jira thread lives in the sidebar only; labels on the
+// page link to it. The selection's card in the sidebar holds the editor.
 const selectionLabel = (page: Page) =>
   page
-    .locator("[data-react-grab-selection-label]")
+    .locator("[data-react-grab-selection-card]")
     .filter({ hasText: "Navigation bar is misaligned on mobile viewports" });
 const composer = (page: Page) =>
   selectionLabel(page).locator("[data-react-grab-comment-composer]").first();
@@ -31,6 +33,11 @@ test.describe("Jira editor current UI contract", () => {
   test.beforeEach(async ({ reactGrab, mockServer }) => {
     mockServer.override("listComments", [fixtures.comments[0]]);
     await reactGrab.triggerInitSync();
+    await reactGrab.page.locator("[data-react-grab-toolbar-dashboard]").click();
+    await reactGrab.page
+      .getByRole("dialog", { name: "React Grab Dashboard" })
+      .getByRole("tab", { name: /^Selections/ })
+      .click();
     await expect(
       selectionLabel(reactGrab.page).locator(
         '[data-react-grab-jira-comment-id="jira-cmt-1"]',

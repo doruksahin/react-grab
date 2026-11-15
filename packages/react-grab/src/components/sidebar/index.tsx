@@ -64,6 +64,9 @@ export interface SidebarProps {
   syncWorkspace?: string;
   jiraProjectKey?: string;
   onClose: () => void;
+  /** Selection the sidebar opens on, in the Selections tab where its Jira
+   *  thread is (a label's "Open thread"). */
+  initialFocusItemId?: string | null;
   onActiveDetailGroupChange: (groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
   onTicketCreated?: TicketCreatedCallback;
@@ -118,7 +121,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   );
 
   const [activeTab, setActiveTab] = createSignal<"groups" | "selections">(
-    "groups",
+    untrack(() => props.initialFocusItemId) ? "selections" : "groups",
   );
   const handleTabChange = (value: string) => {
     if (value === "groups" || value === "selections") setActiveTab(value);
@@ -393,6 +396,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   onCreateTicket={props.onCreateTicketForLooseItem}
                   onMoveItem={props.onMoveItem}
                   onAddGroup={props.onAddGroup}
+                  focusItemId={props.initialFocusItemId}
                 />
               </TabsContent>
             </Tabs>

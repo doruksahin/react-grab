@@ -43,11 +43,16 @@ const clickInShadow = async (page: Page, selector: string): Promise<void> => {
 
 test.describe("Collapsible Label", { tag: ["@SPEC-016"] }, () => {
   test(
-    "expanded default — copying preserves saved labels and their toggle dots",
+    "expanded when turned off — copying preserves saved labels and their toggle dots",
     {
       annotation: { type: "ac", description: "SPEC-016 AC1-AC3" },
     },
     async ({ page, reactGrab }) => {
+      // ADR-0022 step 3 makes pins the default; this covers the opt-out.
+      await reactGrab.reinitialize({ collapsibleLabels: false });
+      await expect
+        .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+        .toBe(true);
       await reactGrab.populate();
       await expect
         .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })

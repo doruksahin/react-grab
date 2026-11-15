@@ -391,13 +391,15 @@ export interface Options {
   sync?: SyncConfig;
   screenshot?: ScreenshotConfig;
   recording?: RecordingConfig;
-  /** When true, persistent labels expose the collapse affordance (dot + chevron). */
+  /**
+   * Saved labels show as pins that open their card on click (ADR-0022
+   * step 3). `false` starts them as open cards instead.
+   * @default true
+   */
   collapsibleLabels?: boolean;
   /**
-   * Controls the initial state of persistent labels when `collapsibleLabels` is on.
-   * - `true` (default when the feature is enabled): labels start collapsed as a dot.
-   * - `false`: labels start expanded; users can collapse them via the chevron.
-   * Ignored when `collapsibleLabels` is off.
+   * Whether saved labels start as pins. Overrides `collapsibleLabels`.
+   * @default true
    */
   labelsStartCollapsed?: boolean;
   /** When true, the comment editor toolbar is shown by default. @default false */
@@ -543,6 +545,8 @@ export interface SelectionLabelInstance extends JiraDisplayFields {
   error?: string;
   hideArrow?: boolean;
   groupId?: string;
+  /** Show the card rather than the pin, e.g. while previewing from a menu. */
+  startExpanded?: boolean;
   // From backing CommentItem — used by <SelectionCardBody> in the selection label
   commentText?: string;
   timestamp?: number;
@@ -570,8 +574,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   inspectNavigationState?: ArrowNavigationState;
   onInspectSelect?: (index: number) => void;
   labelInstances?: SelectionLabelInstance[];
-  /** When true, persistent label instances start collapsed */
-  collapsibleLabelsDefault?: boolean;
+  /** When true, saved labels start as pins (ADR-0022 step 3). */
   labelsStartCollapsedDefault?: boolean;
   dragVisible?: boolean;
   dragBounds?: OverlayBounds;

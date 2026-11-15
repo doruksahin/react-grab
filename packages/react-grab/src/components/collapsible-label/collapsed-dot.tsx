@@ -1,24 +1,29 @@
 import { Show, createSignal } from "solid-js";
-import type { Component, ParentComponent } from "solid-js";
+import type { Component } from "solid-js";
 import type { OverlayBounds } from "../../types.js";
-import { cn } from "../../utils/cn.js";
-import { Button } from "../ui/button.js";
 import { createFloating, virtualReference } from "../../utils/floating.js";
-import { DOT_GAP_PX, DOT_PADDING_PX, DOT_SIZE_PX } from "../../constants.js";
+import { PIN_GAP_PX, PIN_HEIGHT_PX } from "../../constants.js";
+import { Pin, PinKey, PinText } from "../ui/pin.js";
+import { StatusDot } from "../ui/status-dot.js";
 
 const PREVIEW_MAX_LENGTH = 48;
 
-/** Total height of the dot-only button (no preview text). */
-export const DOT_BUTTON_HEIGHT_PX = DOT_SIZE_PX + DOT_PADDING_PX * 2;
-/** Vertical space the dot occupies below selection bounds (gap + button). */
-export const DOT_TOTAL_OFFSET_PX = DOT_GAP_PX + DOT_BUTTON_HEIGHT_PX;
+/** Vertical space a pin takes below its element (gap + pin). */
+export const PIN_TOTAL_OFFSET_PX = PIN_GAP_PX + PIN_HEIGHT_PX;
 
 interface CollapsedDotProps {
   selectionBounds: OverlayBounds;
   onExpand: () => void;
+  /** The comment; its first words show on the pin. */
   inputValue?: string;
-  isExpanding?: boolean;
-  placement?: "above" | "below";
+  /** The ticket key, e.g. "ATT-101". */
+  ticketKey?: string;
+  /** The status dot's colour (features/sidebar/status-colors.ts). */
+  statusColor: string;
+  /** Whether the card it opens is showing. */
+  expanded: boolean;
+  /** How far below its own spot the pin sits, so it does not cover another pin. */
+  stackOffsetPx: number;
 }
 
 const toPreview = (value: string): string => {
@@ -27,40 +32,21 @@ const toPreview = (value: string): string => {
   return collapsed.slice(0, PREVIEW_MAX_LENGTH).trimEnd() + "…";
 };
 
-/* ── Slots ────────────────────────────────────────────────── */
-
-const DotIndicator: Component = () => (
-  <div
-    class="rounded-full bg-primary shrink-0"
-    style={{ width: `${DOT_SIZE_PX}px`, height: `${DOT_SIZE_PX}px` }}
-  />
-);
-
-const PreviewSlot: ParentComponent = (props) => (
-  <span
-    data-react-grab-collapsed-dot-preview
-    class="min-w-0 truncate text-meta leading-tight text-popover-foreground"
-  >
-    {props.children}
-  </span>
-);
-
-/* ── Shell ────────────────────────────────────────────────── */
-
+/** A saved comment on the page: a pin under its element's left edge. */
 export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
-  // Centred above or below its element (the side follows the label it
-  // replaces); shifted along the edge to stay inside the viewport.
-  const [dot, setDot] = createSignal<HTMLButtonElement>();
-  const dotReference = virtualReference(() => props.selectionBounds);
+  // Below the element's left edge, moved down by the stack offset and kept
+  // inside the viewport along the edge.
+  const [pin, setPin] = createSignal<HTMLButtonElement>();
+  const pinReference = virtualReference(() => props.selectionBounds);
   const floating = createFloating({
-    reference: () => dotReference,
-    floating: dot,
-    watch: () => props.selectionBounds,
+    reference: () => pinReference,
+    floating: pin,
+    watch: () => [props.selectionBounds, props.stackOffsetPx],
     options: () => ({
-      placement: props.placement === "above" ? "top" : "bottom",
+      placement: "bottom-start",
       flip: false,
-      offsetPx: DOT_GAP_PX,
-      paddingPx: DOT_GAP_PX,
+      offsetPx: PIN_GAP_PX + props.stackOffsetPx,
+      paddingPx: PIN_GAP_PX,
     }),
   });
 
@@ -71,27 +57,17 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
     return preview.length > 0 ? preview : null;
   };
 
-  const hasPreview = () => Boolean(previewText());
-
   return (
-    <Button
-      ref={setDot}
-      type="button"
-      variant="outline"
+    <Pin
+      ref={setPin}
       data-react-grab-ignore-events
       data-react-grab-collapsed-dot
-      class={cn(
-        "fixed h-auto rounded-full bg-popover shadow-md transition-all duration-150 ease-out hover:scale-105 hover:border-ring hover:shadow-lg",
-        hasPreview() ? "justify-between gap-3 pl-3 pr-1.5 py-1" : "p-1.5",
-        props.isExpanding
-          ? "animate-out fade-out-0 zoom-out-75 fill-mode-forwards ease-in"
-          : "animate-in fade-in-0 zoom-in-75 ease-out",
-      )}
+      aria-expanded={props.expanded}
+      class="fixed animate-in fade-in-0 zoom-in-95 ease-out"
       style={{
         ...floating.style(),
         "z-index": "var(--z-overlay)",
         "pointer-events": "auto",
-        "max-width": "240px",
       }}
       onClick={(event) => {
         event.stopImmediatePropagation();
@@ -99,11 +75,13 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
       }}
       onPointerDown={(event) => event.stopImmediatePropagation()}
     >
+      <StatusDot color={props.statusColor} />
+      <Show when={props.ticketKey}>{(key) => <PinKey>{key()}</PinKey>}</Show>
       <Show when={previewText()}>
-        {(text) => <PreviewSlot>{text()}</PreviewSlot>}
+        {(text) => (
+          <PinText data-react-grab-collapsed-dot-preview>{text()}</PinText>
+        )}
       </Show>
-
-      <DotIndicator />
-    </Button>
+    </Pin>
   );
 };

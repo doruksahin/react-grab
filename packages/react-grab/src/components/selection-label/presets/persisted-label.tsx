@@ -6,10 +6,6 @@ import type {
   JiraDisplayFields,
 } from "../../../types.js";
 import type { SelectionGroupWithJira } from "../../../features/selection-groups/types.js";
-import type {
-  SubmitCommentFn,
-  SearchJiraUsersFn,
-} from "../../../features/jira-comments/types.js";
 import { SelectionLabelRoot } from "../index.js";
 import { SelectionLabelHeader } from "../parts/header.js";
 import { SelectionLabelContent } from "../parts/content.js";
@@ -19,6 +15,7 @@ import { ErrorView } from "../error-view.js";
 import { CreateTicketButton } from "../../jira/create-ticket-button.js";
 import { SelectionCardBody } from "../../sidebar/selection-card-body.js";
 import { ActiveGroupPicker } from "../../selection-groups/active-group-picker.js";
+import { Button } from "../../ui/button.js";
 
 export interface PersistedLabelProps extends JiraDisplayFields {
   tagName?: string;
@@ -52,10 +49,9 @@ export interface PersistedLabelProps extends JiraDisplayFields {
   onShowContextMenu?: () => void;
   onHoverChange?: (isHovered: boolean) => void;
 
-  onSubmitJiraComment?: SubmitCommentFn;
-  onSearchJiraUsers?: SearchJiraUsersFn;
   onRefreshJiraStatus?: () => void;
-  commentEditorToolbarVisible?: boolean;
+  /** Opens the sidebar on this selection, where its Jira thread lives. */
+  onOpenThread?: () => void;
 
   isCollapsing?: boolean;
   onCollapse?: () => void;
@@ -65,6 +61,8 @@ export interface PersistedLabelProps extends JiraDisplayFields {
 
 export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
   const isCopying = () => props.status === "copying";
+  const comments = () => props.jiraComments ?? [];
+  const latestComment = () => comments()[comments().length - 1];
 
   return (
     <SelectionLabelRoot
@@ -136,15 +134,11 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
               jiraPriority={props.jiraPriority}
               jiraAssignee={props.jiraAssignee}
               jiraAssigneeAvatar={props.jiraAssigneeAvatar}
-              jiraComments={props.jiraComments}
-              onSubmitComment={props.onSubmitJiraComment}
-              onSearchUsers={props.onSearchJiraUsers}
               onRefreshStatus={
                 props.onRefreshJiraStatus
                   ? () => props.onRefreshJiraStatus?.()
                   : undefined
               }
-              commentEditorToolbarVisible={props.commentEditorToolbarVisible}
               hasElementScreenshot={props.hasElementScreenshot}
               hasFullPageScreenshot={props.hasFullPageScreenshot}
               noTicketAction={
@@ -156,6 +150,43 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
                 ) : undefined
               }
             />
+            {/* The thread itself lives in the sidebar; the card shows the
+                latest comment and opens it there (ADR-0022, Label S6.2). */}
+            <Show when={latestComment()}>
+              {(comment) => (
+                <div
+                  data-react-grab-latest-comment
+                  class="mt-2 flex w-full flex-col gap-0.5 rounded-md bg-muted px-2.5 py-2"
+                >
+                  <span class="text-caption text-muted-foreground">
+                    {comment().author}
+                    {comments().length > 1
+                      ? ` · latest of ${comments().length} comments`
+                      : ""}
+                  </span>
+                  <span class="line-clamp-2 text-body text-foreground">
+                    {comment().body}
+                  </span>
+                </div>
+              )}
+            </Show>
+            <Show when={props.onOpenThread}>
+              <Button
+                data-react-grab-ignore-events
+                data-react-grab-open-thread
+                type="button"
+                variant="inverse"
+                size="xs"
+                class="mt-2 h-7 px-3 text-caption"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  props.onOpenThread?.();
+                }}
+              >
+                Open thread
+              </Button>
+            </Show>
           </SelectionLabelContent>
           <DevInsightsSection
             tagName={props.tagName}
