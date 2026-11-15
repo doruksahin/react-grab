@@ -26,7 +26,7 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
   return (
     <div
       data-react-grab-selection-header
-      class="contain-layout shrink-0 flex items-baseline gap-1 pt-1.5 pb-1 h-fit px-2 w-full bg-[#252545] border-b border-white/10"
+      class="contain-layout shrink-0 flex items-baseline gap-1 pt-1.5 pb-1 h-fit px-2 w-full bg-muted border-b border-border"
       classList={{
         "py-1.5": !props.compactPadding,
         "pt-1.5 pb-1": Boolean(props.compactPadding),
@@ -56,7 +56,7 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
           />
         }
       >
-        <span class="text-[13px] leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-popover-foreground">
+        <span class="text-body leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-popover-foreground">
           {props.inputValue}
         </span>
       </Show>

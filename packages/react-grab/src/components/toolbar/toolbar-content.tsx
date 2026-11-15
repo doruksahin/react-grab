@@ -197,7 +197,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
       )}
     >
       <span
-        class="text-[7px] font-extrabold tracking-wider leading-none"
+        class="text-meta font-extrabold tracking-wider leading-none"
         classList={{
           "text-muted-foreground/60": !props.isDevMode,
           "text-sky-500": Boolean(props.isDevMode),

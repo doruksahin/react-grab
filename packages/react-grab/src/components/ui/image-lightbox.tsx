@@ -116,7 +116,7 @@ export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
           >
             <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-black/35 border border-white/10 backdrop-blur-sm">
               <span class="text-xs text-white/90">{props.caption}</span>
-              <span class="text-[10px] text-white/55 font-mono uppercase">
+              <span class="text-meta text-white/55 font-mono uppercase">
                 {mode() === "fit" ? "FIT" : "1:1"}
               </span>
             </div>
@@ -169,7 +169,7 @@ export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
           </div>
 
           {/* Bottom hint */}
-          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/35 border border-white/10 text-[11px] text-white/55 backdrop-blur-sm pointer-events-none z-10">
+          <div class="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/35 border border-white/10 text-meta text-white/55 backdrop-blur-sm pointer-events-none z-10">
             Click to toggle zoom · Esc to close
           </div>
         </div>

@@ -89,7 +89,7 @@ export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
               }}
             >
               <span
-                class="text-[13px] leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 transition-colors"
+                class="text-body leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0 transition-colors"
                 classList={{
                   "text-popover-foreground": itemIndex() === props.activeIndex,
                   "text-muted-foreground": itemIndex() !== props.activeIndex,

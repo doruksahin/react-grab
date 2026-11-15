@@ -196,11 +196,11 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
                           (props.actionCycleState?.items ?? []).length - 1,
                       }}
                     >
-                      <span class="text-[13px] leading-4 font-medium text-popover-foreground">
+                      <span class="text-body leading-4 font-medium text-popover-foreground">
                         {item.label}
                       </span>
                       <Show when={item.shortcut}>
-                        <span class="text-[11px] text-muted-foreground ml-4">
+                        <span class="text-meta text-muted-foreground ml-4">
                           {formatShortcut(item.shortcut!)}
                         </span>
                       </Show>

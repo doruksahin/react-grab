@@ -171,7 +171,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
     >
       <Show when={!didCopy() && (props.onDismiss || props.onUndo)}>
         <div class="contain-layout shrink-0 flex items-center justify-between gap-2 pt-1.5 pb-1 px-2 w-full h-fit">
-          <span class="text-popover-foreground text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+          <span class="text-popover-foreground text-body leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
             {displayStatusText()}
           </span>
           <div class="contain-layout shrink-0 flex items-center gap-2 h-fit">
@@ -184,7 +184,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
                 class="contain-layout shrink-0 flex items-center justify-center px-[3px] py-px rounded-sm bg-destructive/10 cursor-pointer transition-all hover:bg-destructive/20 press-scale h-[17px]"
                 onClick={() => props.onUndo?.()}
               >
-                <span class="text-destructive text-[13px] leading-3.5 font-medium">
+                <span class="text-destructive text-body leading-3.5 font-medium">
                   Undo
                 </span>
               </button>
@@ -196,7 +196,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
                 onClick={handleAccept}
                 disabled={didCopy()}
               >
-                <span class="text-popover-foreground text-[13px] leading-3.5 font-medium">
+                <span class="text-popover-foreground text-body leading-3.5 font-medium">
                   {props.dismissButtonText ?? "Keep"}
                 </span>
                 <Show when={!didCopy()}>
@@ -213,7 +213,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
             size={14}
             class="text-popover-foreground shrink-0 animate-success-pop"
           />
-          <span class="text-popover-foreground text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+          <span class="text-popover-foreground text-body leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
             {displayStatusText()}
           </span>
           <Show when={props.onShowContextMenu && !props.supportsFollowUp}>
@@ -228,7 +228,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
           <Show when={props.previousPrompt}>
             <div class="flex items-center gap-1 w-full mb-1 overflow-hidden">
               <IconReply size={10} class="text-muted-foreground shrink-0" />
-              <span class="text-muted-foreground text-[11px] leading-3 font-medium truncate italic">
+              <span class="text-muted-foreground text-meta leading-3 font-medium truncate italic">
                 {props.previousPrompt}
               </span>
             </div>
@@ -241,7 +241,7 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
               ref={inputRef}
               data-react-grab-ignore-events
               data-react-grab-followup-input
-              class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
+              class="text-popover-foreground text-body leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
               style={{
                 "field-sizing": "content",
                 "min-height": "16px",

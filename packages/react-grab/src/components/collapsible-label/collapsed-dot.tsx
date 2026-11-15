@@ -39,7 +39,7 @@ const DotIndicator: Component = () => (
 const PreviewSlot: ParentComponent = (props) => (
   <span
     data-react-grab-collapsed-dot-preview
-    class="min-w-0 truncate text-[11px] leading-tight text-popover-foreground"
+    class="min-w-0 truncate text-meta leading-tight text-popover-foreground"
   >
     {props.children}
   </span>

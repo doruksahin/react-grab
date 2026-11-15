@@ -29,9 +29,9 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
       class="absolute inset-0 z-50 bg-card/95 backdrop-blur-sm flex flex-col overflow-y-auto"
     >
       <div class="px-4 py-3 border-b border-border flex items-center justify-between">
-        <span class="text-[13px] font-semibold text-foreground">Status Legend</span>
+        <span class="text-body font-semibold text-foreground">Status Legend</span>
         <button
-          class="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+          class="text-meta text-muted-foreground hover:text-foreground cursor-pointer"
           onClick={props.onClose}
         >
           Got it
@@ -45,14 +45,14 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
             style={{ background: FLAGGED_COLOR.hex }}
           />
           <div>
-            <div class="text-[11px] font-medium text-foreground">Flagged / Blocked</div>
-            <div class="text-[10px] text-muted-foreground">
+            <div class="text-meta font-medium text-foreground">Flagged / Blocked</div>
+            <div class="text-meta text-muted-foreground">
               Ticket has an impediment — overrides status color on canvas and label border
             </div>
           </div>
         </div>
         <div class="relative border-t border-border my-2">
-          <span class="absolute -top-[8px] left-1/2 -translate-x-1/2 bg-card/95 px-2 text-[9px] font-bold text-flag tracking-wider">
+          <span class="absolute -top-[8px] left-1/2 -translate-x-1/2 bg-card/95 px-2 text-meta font-bold text-flag tracking-wider">
             OVERRIDES
           </span>
         </div>
@@ -68,15 +68,15 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
                   style={{ background: color.hex }}
                 />
                 <div>
-                  <div class="text-[11px] font-medium text-foreground">{status}</div>
-                  <div class="text-[10px] text-muted-foreground">{STATUS_DESCRIPTIONS[status]}</div>
+                  <div class="text-meta font-medium text-foreground">{status}</div>
+                  <div class="text-meta text-muted-foreground">{STATUS_DESCRIPTIONS[status]}</div>
                 </div>
               </div>
             );
           }}
         </For>
         <div class="mt-3 pt-3 border-t border-border">
-          <div class="text-[10px] text-muted-foreground leading-relaxed">
+          <div class="text-meta text-muted-foreground leading-relaxed">
             Lifecycle: No Task → To Do → In Progress → Code Review → Test → Test Passed → UAT → In Preprod → In Production → Done
           </div>
         </div>

@@ -30,7 +30,7 @@ export const SidebarHeader: Component<SidebarHeaderProps> = (props) => {
       </h2>
       <div class="flex items-center gap-1.5">
         <button
-          class="w-6 h-6 rounded-full border border-border text-[11px] text-muted-foreground hover:text-foreground hover:border-border cursor-pointer flex items-center justify-center"
+          class="w-6 h-6 rounded-full border border-border text-meta text-muted-foreground hover:text-foreground hover:border-border cursor-pointer flex items-center justify-center"
           onClick={() => props.onInfoClick?.()}
           title="Status legend"
         >

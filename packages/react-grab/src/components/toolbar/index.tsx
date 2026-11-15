@@ -836,7 +836,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       data-react-grab-ignore-events
       data-react-grab-toolbar
       class={cn(
-        "fixed left-0 top-0 text-[13px] antialiased select-none",
+        "fixed left-0 top-0 text-body antialiased select-none",
         getCursorClass(),
         getTransitionClass(),
         isVisible()
@@ -1001,7 +1001,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 <Show when={(props.commentItemCount ?? 0) > 0}>
                   <span
                     data-react-grab-unread-indicator
-                    class="absolute -top-1 -right-1 min-w-2.5 h-2.5 px-0.5 flex items-center justify-center rounded-full bg-black text-white text-[8px] font-semibold leading-none"
+                    class="absolute -top-1 -right-1 min-w-2.5 h-2.5 px-0.5 flex items-center justify-center rounded-full bg-black text-white text-meta font-semibold leading-none"
                   >
                     {props.commentItemCount}
                   </span>
@@ -1079,7 +1079,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               onMouseLeave={() => setIsToggleTooltipVisible(false)}
             >
               <span
-                class="text-[7px] font-extrabold tracking-wider leading-none"
+                class="text-meta font-extrabold tracking-wider leading-none"
                 classList={{
                   "text-muted-foreground/60": !props.isDevMode,
                   "text-sky-500": Boolean(props.isDevMode),

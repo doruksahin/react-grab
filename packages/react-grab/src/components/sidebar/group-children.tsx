@@ -25,7 +25,7 @@ export const GroupChildren: Component<GroupChildrenProps> = (props) => {
               <div class="absolute left-[15px] top-[18px] w-[7px] h-[7px] rounded-full bg-foreground/10 border border-foreground/20" />
 
               {/* Content */}
-              <div class="text-[11px] text-foreground/70 leading-relaxed mb-1.5">
+              <div class="text-meta text-foreground/70 leading-relaxed mb-1.5">
                 {item.commentText || item.componentName || item.tagName}
               </div>
 
@@ -40,7 +40,7 @@ export const GroupChildren: Component<GroupChildrenProps> = (props) => {
                 </div>
               </Show>
 
-              <div class="text-[9px] text-muted-foreground">
+              <div class="text-meta text-muted-foreground">
                 {relativeTime(item.timestamp)}
               </div>
             </div>

@@ -280,7 +280,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 <input
                   type="text"
                   placeholder="Search selections..."
-                  class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-400 transition-colors"
+                  class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-caption text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-400 transition-colors"
                   value={searchQuery()}
                   onInput={(e) => setSearchQuery(e.currentTarget.value)}
                   data-react-grab-ignore-events

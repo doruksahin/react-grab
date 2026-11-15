@@ -32,13 +32,13 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
           ←
         </button>
         <span
-          class="font-semibold text-[14px] text-foreground flex-1 truncate"
+          class="font-semibold text-title text-foreground flex-1 truncate"
           title={props.group.name}
         >
           {props.group.name}
         </span>
         <span
-          class="text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0"
+          class="text-meta px-2 py-0.5 rounded-full font-semibold shrink-0"
           style={{
             background: statusColor().bg,
             color: statusColor().text,
@@ -50,7 +50,7 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
       </div>
 
       <Show when={groupWithJira().jiraTicketId}>
-        <div class="flex gap-3 mt-1.5 pl-7 text-[11px]">
+        <div class="flex gap-3 mt-1.5 pl-7 text-meta">
           <a
             href={groupWithJira().jiraUrl ?? "#"}
             target="_blank"
@@ -61,7 +61,7 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
             {groupWithJira().jiraTicketId}
           </a>
           <Show when={groupWithJira().jiraAssignee}>
-            <span class="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <span class="flex items-center gap-1.5 text-meta text-muted-foreground">
               <UserAvatar
                 avatarUrl={groupWithJira().jiraAssigneeAvatar}
                 displayName={groupWithJira().jiraAssignee}
@@ -71,7 +71,7 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
             </span>
           </Show>
           <Show when={groupWithJira().jiraReporter}>
-            <span class="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <span class="flex items-center gap-1.5 text-meta text-muted-foreground">
               <UserAvatar
                 avatarUrl={groupWithJira().jiraReporterAvatar}
                 displayName={groupWithJira().jiraReporter}
@@ -85,7 +85,7 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
           <div class="flex flex-wrap gap-1 mt-1 pl-7">
             <For each={groupWithJira().jiraLabels}>
               {(lbl) => (
-                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-accent text-muted-foreground">
+                <span class="text-meta px-1.5 py-0.5 rounded-full bg-accent text-muted-foreground">
                   {lbl}
                 </span>
               )}

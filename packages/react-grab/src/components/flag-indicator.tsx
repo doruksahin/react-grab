@@ -38,7 +38,7 @@ export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
       >
         <IconFlag size={FLAGGED_ICON_SIZE} class="text-flag pointer-events-none" />
         <Show when={props.flaggedAt}>
-          <span class="text-[10px] text-flag leading-none underline decoration-dotted decoration-flag/40 underline-offset-2 pointer-events-none">
+          <span class="text-meta text-flag leading-none underline decoration-dotted decoration-flag/40 underline-offset-2 pointer-events-none">
             {relativeTime(new Date(props.flaggedAt!).getTime())}
           </span>
         </Show>
@@ -49,12 +49,12 @@ export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
         <div class="px-3 pt-2.5 pb-2">
           <div class="flex items-center gap-1.5 mb-2">
             <IconFlag size={14} class="text-flag" />
-            <span class="text-[11px] font-semibold text-flag">
+            <span class="text-meta font-semibold text-flag">
               Flagged / Blocked
             </span>
           </div>
           <Show when={props.flaggedBy}>
-            <span class="flex items-center gap-1 text-[10px] text-muted-foreground truncate">
+            <span class="flex items-center gap-1 text-meta text-muted-foreground truncate">
               <UserAvatar
                 avatarUrl={props.flaggedByAvatar}
                 displayName={props.flaggedBy}
@@ -64,7 +64,7 @@ export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
             </span>
           </Show>
           <Show when={props.flaggedAt}>
-            <span class="text-[10px] text-muted-foreground tabular-nums">
+            <span class="text-meta text-muted-foreground tabular-nums">
               {formatExactDate(props.flaggedAt!)}
             </span>
           </Show>

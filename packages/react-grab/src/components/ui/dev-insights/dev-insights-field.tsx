@@ -25,12 +25,12 @@ export const DevInsightsField: Component<DevInsightsFieldProps> = (props) => {
   return (
     <Show when={props.value}>
       <div class="flex gap-2 items-baseline py-px">
-        <span class="text-[9px] text-[#4a5568] font-medium min-w-[36px] shrink-0">
+        <span class="text-meta text-[#4a5568] font-medium min-w-[36px] shrink-0">
           {props.label}
         </span>
         <span
           class={cn(
-            "text-[10px] leading-relaxed break-all",
+            "text-meta leading-relaxed break-all",
             mono() && "font-mono",
             colorClass(),
           )}

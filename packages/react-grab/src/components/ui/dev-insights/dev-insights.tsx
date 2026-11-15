@@ -37,7 +37,7 @@ export const DevInsightsShell: Component<DevInsightsShellProps> = (props) => {
         >
           <ChevronIcon class="collapsible-chevron text-[#445] size-2.5" />
           <span class="w-[5px] h-[5px] rounded-full bg-sky-500 shadow-[0_0_6px_#38bdf820]" />
-          <span class="text-[9px] font-extrabold text-sky-500 uppercase tracking-wide">
+          <span class="text-meta font-extrabold text-sky-500 uppercase tracking-wide">
             Dev Insights
           </span>
         </CollapsibleTrigger>

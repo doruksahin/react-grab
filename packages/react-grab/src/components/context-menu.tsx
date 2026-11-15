@@ -230,7 +230,7 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-context-menu
-        class="fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none"
+        class="fixed text-body antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none"
         style={{
           top: `${computedPosition().top}px`,
           left: `${computedPosition().left}px`,
@@ -297,12 +297,12 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
                     onPointerLeave={clearHighlight}
                     onClick={(event) => handleAction(item, event)}
                   >
-                    <span class="text-[13px] leading-4 font-medium text-popover-foreground">
+                    <span class="text-body leading-4 font-medium text-popover-foreground">
                       {item.label}
                     </span>
                     <Show when={item.shortcut}>
                       {(shortcut) => (
-                        <span class="text-[11px] text-muted-foreground ml-4">
+                        <span class="text-meta text-muted-foreground ml-4">
                           {formatShortcut(shortcut())}
                         </span>
                       )}

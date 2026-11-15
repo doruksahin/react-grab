@@ -55,7 +55,7 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
       >
         <For each={chips()}>
           {(chip) => (
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent text-[10px] text-foreground">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent text-meta text-foreground">
               {chip.label}
               <button
                 class="text-muted-foreground hover:text-foreground cursor-pointer"

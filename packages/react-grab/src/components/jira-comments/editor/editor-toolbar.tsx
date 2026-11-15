@@ -33,10 +33,10 @@ export const EditorToolbar: Component<{
       <ToolbarSeparator />
 
       <ToolbarDropdown dataDropdown="headings" title="Headings" label={<span>H</span>}>
-        <button class="block w-full text-left px-2 py-1 text-[11px] rounded hover:bg-accent" onMouseDown={(e) => { e.preventDefault(); chain().setParagraph().run(); }}>Normal</button>
-        <button class="block w-full text-left px-2 py-1 text-[11px] rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); chain().toggleHeading({ level: 1 }).run(); }}>Heading 1</button>
-        <button class="block w-full text-left px-2 py-1 text-[11px] rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); chain().toggleHeading({ level: 2 }).run(); }}>Heading 2</button>
-        <button class="block w-full text-left px-2 py-1 text-[11px] rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); chain().toggleHeading({ level: 3 }).run(); }}>Heading 3</button>
+        <button class="block w-full text-left px-2 py-1 text-meta rounded hover:bg-accent" onMouseDown={(e) => { e.preventDefault(); chain().setParagraph().run(); }}>Normal</button>
+        <button class="block w-full text-left px-2 py-1 text-meta rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); chain().toggleHeading({ level: 1 }).run(); }}>Heading 1</button>
+        <button class="block w-full text-left px-2 py-1 text-meta rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); chain().toggleHeading({ level: 2 }).run(); }}>Heading 2</button>
+        <button class="block w-full text-left px-2 py-1 text-meta rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); chain().toggleHeading({ level: 3 }).run(); }}>Heading 3</button>
       </ToolbarDropdown>
 
       <ToolbarSeparator />

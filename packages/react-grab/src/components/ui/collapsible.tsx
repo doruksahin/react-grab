@@ -77,7 +77,7 @@ const rootStyles = {
 
 const triggerStyles = {
   card: "gap-2 px-3 py-2 text-sm font-medium text-card-foreground hover:bg-accent/50 rounded-lg",
-  inline: "gap-1.5 py-1 text-[11px] font-medium text-muted-foreground hover:opacity-100",
+  inline: "gap-1.5 py-1 text-meta font-medium text-muted-foreground hover:opacity-100",
 } as const;
 
 const contentStyles = {

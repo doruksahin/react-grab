@@ -18,7 +18,7 @@ export const SelectionCheckbox: Component<SelectionCheckboxProps> = (props) => (
     }}
   >
     <Show when={props.checked}>
-      <span class="text-white text-[9px] font-bold">{"\u2713"}</span>
+      <span class="text-white text-meta font-bold">{"\u2713"}</span>
     </Show>
   </div>
 );

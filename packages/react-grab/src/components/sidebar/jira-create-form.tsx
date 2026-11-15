@@ -51,9 +51,9 @@ interface JiraCreateFormProps {
 const noScrollRoot = () => null;
 
 const triggerClass =
-  "w-full text-[12px] bg-muted border-border text-foreground";
+  "w-full text-caption bg-muted border-border text-foreground";
 const textareaClass =
-  "w-full bg-muted text-foreground text-[12px] rounded px-2 py-1.5 border border-border resize-none";
+  "w-full bg-muted text-foreground text-caption rounded px-2 py-1.5 border border-border resize-none";
 
 export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
   const [issueTypes] = createResource(() =>
@@ -93,7 +93,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
     <Show
       when={!configError()}
       fallback={
-        <div class="p-3 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300">
+        <div class="p-3 bg-red-500/20 border border-red-500/30 rounded text-meta text-red-300">
           <p class="font-semibold mb-1">Configuration error</p>
           <For each={configError()!}>{(err) => <p>{err}</p>}</For>
         </div>
@@ -242,7 +242,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
                     href={ticket().url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    class="text-[12px] text-jira-create hover:underline px-2"
+                    class="text-caption text-jira-create hover:underline px-2"
                     style={{ "pointer-events": "auto" }}
                   >
                     Open in Jira ↗
@@ -265,7 +265,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
         <Show when={failure() !== null && !created()}>
           <div
             data-react-grab-jira-error
-            class="mb-3 p-2 bg-red-500/20 border border-red-500/30 rounded text-[11px] text-red-300"
+            class="mb-3 p-2 bg-red-500/20 border border-red-500/30 rounded text-meta text-red-300"
           >
             <p>Could not create the ticket. Your form is kept.</p>
             <Show when={failure()}>
@@ -277,7 +277,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           {(ticket) => (
             <div
               data-react-grab-jira-success
-              class="mb-3 p-2 bg-green-500/15 border border-green-500/30 rounded text-[11px] text-green-300"
+              class="mb-3 p-2 bg-green-500/15 border border-green-500/30 rounded text-meta text-green-300"
             >
               The ticket is in Jira. This group is now locked to{" "}
               {ticket().ticketId}.
@@ -287,7 +287,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
 
         {/* Issue type — pre-selected to "Task" */}
         <div class="mb-3">
-          <label class="flex justify-between text-[11px] text-muted-foreground mb-1">
+          <label class="flex justify-between text-meta text-muted-foreground mb-1">
             <span>Work Type *</span>
             <Show when={workTypeMissing()}>
               <span data-react-grab-jira-required class="text-red-400">
@@ -334,7 +334,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
 
         {/* Priority — pre-selected to "Medium" */}
         <div class="mb-3">
-          <label class="block text-[11px] text-muted-foreground mb-1">
+          <label class="block text-meta text-muted-foreground mb-1">
             Priority
           </label>
           <Show
@@ -374,7 +374,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
 
         {/* Labels — optional multi-select with search */}
         <div class="mb-3">
-          <label class="block text-[11px] text-muted-foreground mb-1">
+          <label class="block text-meta text-muted-foreground mb-1">
             Labels
           </label>
           <Show
@@ -397,7 +397,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
 
         {/* Summary */}
         <div class="mb-3">
-          <label class="flex justify-between text-[11px] text-muted-foreground mb-1">
+          <label class="flex justify-between text-meta text-muted-foreground mb-1">
             <span>Summary *</span>
             <Show when={summaryMissing()}>
               <span data-react-grab-jira-required class="text-red-400">
@@ -418,7 +418,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
 
         {/* Description */}
         <div class="mb-3">
-          <label class="block text-[11px] text-muted-foreground mb-1">
+          <label class="block text-meta text-muted-foreground mb-1">
             Description
           </label>
           <JiraEditor initialValue={description()} onChange={setDescription} />
@@ -426,11 +426,11 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
 
         {/* Attachments — screenshot previews */}
         <div class="mb-4">
-          <p class="text-[11px] text-muted-foreground mb-1">Screenshots</p>
+          <p class="text-meta text-muted-foreground mb-1">Screenshots</p>
           <Show
             when={itemsWithScreenshots().length > 0}
             fallback={
-              <p class="text-[10px] text-muted-foreground italic">
+              <p class="text-meta text-muted-foreground italic">
                 No screenshots
               </p>
             }

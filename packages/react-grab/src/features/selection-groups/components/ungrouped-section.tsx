@@ -35,11 +35,11 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
           >
             <path fill="currentColor" d="m14.53 6.03-6 6a.75.75 0 0 1-1.004.052l-.056-.052-6-6 1.06-1.06L8 10.44l5.47-5.47z" />
           </svg>
-          <span class="text-[12px] font-semibold text-foreground/70 truncate">
+          <span class="text-caption font-semibold text-foreground/70 truncate">
             Ungrouped
           </span>
         </div>
-        <span class="text-[10px] font-medium text-muted-foreground bg-foreground/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+        <span class="text-meta font-medium text-muted-foreground bg-foreground/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
           {props.items.length}
         </span>
       </div>
@@ -52,7 +52,7 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
           <Show
             when={props.items.length > 0}
             fallback={
-              <div class="px-2 py-2 text-[11px] text-muted-foreground text-center italic">
+              <div class="px-2 py-2 text-meta text-muted-foreground text-center italic">
                 No selections yet
               </div>
             }

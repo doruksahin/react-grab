@@ -19,12 +19,12 @@ export const JiraStatusBanner: Component<JiraStatusBannerProps> = (props) => {
           href={props.group.jiraUrl ?? "#"}
           target="_blank"
           rel="noopener noreferrer"
-          class="text-[12px] font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+          class="text-caption font-semibold text-blue-400 hover:text-blue-300 transition-colors"
           style={{ "pointer-events": "auto" }}
         >
           {props.group.jiraTicketId}
         </a>
-        <span class="text-[10px] text-muted-foreground">
+        <span class="text-meta text-muted-foreground">
           {props.group.jiraStatus ?? "—"}
         </span>
       </div>

@@ -18,7 +18,7 @@ export const ColorPicker: Component<{
     <button
       type="button"
       data-react-grab-color-reset
-      class="w-6 h-6 rounded border border-dashed border-muted-foreground flex items-center justify-center text-[10px] text-muted-foreground hover:border-foreground"
+      class="w-6 h-6 rounded border border-dashed border-muted-foreground flex items-center justify-center text-meta text-muted-foreground hover:border-foreground"
       title="Reset color"
       onMouseDown={(e) => {
         e.preventDefault();

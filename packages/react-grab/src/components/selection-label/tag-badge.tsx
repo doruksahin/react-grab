@@ -28,7 +28,7 @@ export const TagBadge: Component<TagBadgeProps> = (props) => {
       onMouseLeave={handleMouseLeave}
       onClick={props.onClick}
     >
-      <span class="text-[13px] leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
+      <span class="text-body leading-4 h-fit font-medium overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
         <Show when={props.componentName}>
           <span class="text-popover-foreground">{props.componentName}</span>
           <span class="text-muted-foreground">.{props.tagName}</span>

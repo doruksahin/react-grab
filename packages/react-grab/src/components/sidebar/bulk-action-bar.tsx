@@ -13,7 +13,7 @@ export const BulkActionBar: Component<BulkActionBarProps> = (props) => {
       data-react-grab-bulk-action-bar
       class="absolute bottom-0 left-0 right-0 bg-bulk-bar text-bulk-bar-foreground px-5 py-3.5 flex items-center justify-between z-10 shadow-[0_-10px_30px_rgba(0,0,0,0.3)] animate-in slide-in-from-bottom duration-300"
     >
-      <span class="text-[13px] font-semibold">
+      <span class="text-body font-semibold">
         {props.selectedCount} selected
       </span>
 

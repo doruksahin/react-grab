@@ -111,7 +111,7 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
       : dueDatePresetLabel(props.filter.dueDatePreset);
 
   const valueClass = (active: boolean) =>
-    `text-[11px] max-w-[120px] truncate ${active ? "text-primary" : "text-muted-foreground"}`;
+    `text-meta max-w-[120px] truncate ${active ? "text-primary" : "text-muted-foreground"}`;
 
   return (
     <>
@@ -138,7 +138,7 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
           <Show when={activeCount() > 0}>
             <span
               data-react-grab-filter-badge
-              class="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center ring-2 ring-background"
+              class="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-meta font-bold inline-flex items-center justify-center ring-2 ring-background"
             >
               {activeCount()}
             </span>
@@ -346,7 +346,7 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
         <Button
           variant="ghost"
           size="sm"
-          class="text-[10px] text-muted-foreground hover:text-foreground h-auto py-0.5 px-1.5 whitespace-nowrap"
+          class="text-meta text-muted-foreground hover:text-foreground h-auto py-0.5 px-1.5 whitespace-nowrap"
           onClick={handleClear}
           data-react-grab-filter-clear
         >

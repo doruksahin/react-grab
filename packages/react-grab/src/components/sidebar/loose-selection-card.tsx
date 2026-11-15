@@ -89,7 +89,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
                   href={props.jiraUrl}
                   target="_blank"
                   rel="noreferrer"
-                  class="text-[10px] font-medium text-blue-400 hover:underline"
+                  class="text-meta font-medium text-blue-400 hover:underline"
                 >
                   {props.jiraTicketId}
                 </a>
@@ -99,7 +99,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
           right={
             <>
               <span
-                class="text-[10px] font-semibold rounded-full px-2 py-0.5"
+                class="text-meta font-semibold rounded-full px-2 py-0.5"
                 style={{
                   color: props.statusColor.text,
                   background: props.statusColor.bg,
@@ -107,7 +107,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
               >
                 {props.statusLabel}
               </span>
-              <span class="text-[10px] text-muted-foreground">
+              <span class="text-meta text-muted-foreground">
                 {new Date(props.item.timestamp).toLocaleString()}
               </span>
             </>

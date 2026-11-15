@@ -22,7 +22,7 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
         variant="inline"
         defaultOpen={true}
         trigger={
-          <span class="text-violet-400 font-semibold text-[11px] uppercase tracking-wide">Comments <span data-react-grab-comments-count>({mergedComments().length})</span></span>
+          <span class="text-violet-400 font-semibold text-meta uppercase tracking-wide">Comments <span data-react-grab-comments-count>({mergedComments().length})</span></span>
         }
       >
         <div class="flex flex-col gap-1">
@@ -35,7 +35,7 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
           </div>
 
           <Show when={error()}>
-            <div data-react-grab-comments-error class="text-[10px] text-destructive px-1 py-0.5">{error()}</div>
+            <div data-react-grab-comments-error class="text-meta text-destructive px-1 py-0.5">{error()}</div>
           </Show>
 
           <Show when={mergedComments().length > 0}>

@@ -1,5 +1,5 @@
 import { test, expect, type ReactGrabPageObject } from "../fixtures.js";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 /**
  * ADR-0022: the overlay's look is reviewed by image. One screenshot per
@@ -18,13 +18,17 @@ test.use({ viewport: { width: 1440, height: 900 } });
 // may not be open; park it in a corner and wait for tooltips to close.
 // Comment avatars are mock URLs that fail to load at varying moments (the
 // Avatar primitive with a fallback replaces them, ADR-0022); they are masked.
-const expectPageShot = async (page: Page, name: string) => {
+const expectPageShot = async (
+  page: Page,
+  name: string,
+  extraMasks: Locator[] = [],
+) => {
   await page.mouse.move(1, 1);
   await expect(page.getByRole("tooltip")).toHaveCount(0);
   await expect(page).toHaveScreenshot(name, {
     animations: "disabled",
     caret: "hide",
-    mask: [page.locator("[data-react-grab-comment-avatar]")],
+    mask: [page.locator("[data-react-grab-comment-avatar]"), ...extraMasks],
     // The toolbar can still land a pixel or two apart (about 0.07% of the
     // page); it has its own strict element shot. Any token or layout change
     // moves far more than 0.1% of the page.
@@ -118,6 +122,10 @@ test.describe("Overlay surfaces", { tag: ["@ADR-0022"] }, () => {
       .locator("[data-react-grab-create-ticket]")
       .click();
     await expect(page.locator("[data-react-grab-jira-form]")).toBeVisible();
-    await expectPageShot(page, "jira-dialog.png");
+    // The list behind the dialog is still settling around the new card;
+    // the sidebar has its own shots, so only the dialog is compared here.
+    await expectPageShot(page, "jira-dialog.png", [
+      page.locator("[data-react-grab-sidebar]"),
+    ]);
   });
 });

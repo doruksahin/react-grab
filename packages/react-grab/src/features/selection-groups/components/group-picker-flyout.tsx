@@ -44,7 +44,7 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
       }}
     >
       <div class="px-2 pt-1.5 pb-1">
-        <span class="text-[11px] font-medium text-muted-foreground">{header()}</span>
+        <span class="text-meta font-medium text-muted-foreground">{header()}</span>
       </div>
       <div class="border-t border-border py-1">
         {/* Ungrouped row — selecting it sets groupId to null */}
@@ -72,8 +72,8 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
           <span
             class={
               props.activeGroupId == null
-                ? "text-[12px] font-medium text-popover-foreground"
-                : "text-[12px] text-muted-foreground"
+                ? "text-caption font-medium text-popover-foreground"
+                : "text-caption text-muted-foreground"
             }
           >
             Ungrouped
@@ -107,8 +107,8 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
                 <span
                   class={
                     isActive()
-                      ? "text-[12px] font-medium text-popover-foreground"
-                      : "text-[12px] text-muted-foreground"
+                      ? "text-caption font-medium text-popover-foreground"
+                      : "text-caption text-muted-foreground"
                   }
                 >
                   {group.name}
@@ -126,7 +126,7 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (
               data-react-grab-ignore-events
               type="text"
               placeholder="New group..."
-              class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-muted-foreground/50 text-popover-foreground"
+              class="flex-1 text-caption bg-transparent outline-none placeholder:text-muted-foreground/50 text-popover-foreground"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && e.currentTarget.value.trim()) {
                   props.onAddGroup?.(e.currentTarget.value.trim());

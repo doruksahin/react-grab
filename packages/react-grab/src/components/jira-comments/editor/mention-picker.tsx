@@ -38,7 +38,7 @@ const MentionList: Component<{
         }}
       >
         <Avatar name={user.displayName} url={user.avatarUrl} size={22} />
-        <span class="text-[12px] truncate">{user.displayName}</span>
+        <span class="text-caption truncate">{user.displayName}</span>
       </div>
     )}
   </For>

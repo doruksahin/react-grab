@@ -110,7 +110,7 @@ export const JiraCommentEditor: Component<JiraCommentEditorProps> = (props) => {
         ref={editorEl}
         data-react-grab-comment-editor
         data-react-grab-ignore-events
-        class="jira-editor-content px-3 py-2 min-h-[2rem] text-[12px] text-foreground outline-none"
+        class="jira-editor-content px-3 py-2 min-h-[2rem] text-caption text-foreground outline-none"
         style={{ "pointer-events": "auto" }}
       />
 

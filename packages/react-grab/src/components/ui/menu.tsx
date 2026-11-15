@@ -26,7 +26,7 @@ export const MenuTrigger: Component<
   return (
     <DropdownMenu.Trigger
       class={cn(
-        "relative inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-2 h-7 text-[11px] text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 data-[expanded]:border-primary/70 data-[expanded]:bg-accent/30",
+        "relative inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-2 h-7 text-meta text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 data-[expanded]:border-primary/70 data-[expanded]:bg-accent/30",
         local.class,
       )}
       {...rest}
@@ -63,7 +63,7 @@ export const MenuItem: Component<ComponentProps<typeof DropdownMenu.Item>> = (
   return (
     <DropdownMenu.Item
       class={cn(
-        "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-[12px] outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+        "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-caption outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
         local.class,
       )}
       {...rest}
@@ -94,7 +94,7 @@ export const MenuSubTrigger: Component<
         );
       }}
       class={cn(
-        "flex cursor-default select-none items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-[12px] outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[expanded]:bg-accent data-[expanded]:text-accent-foreground",
+        "flex cursor-default select-none items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-caption outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[expanded]:bg-accent data-[expanded]:text-accent-foreground",
         local.class,
       )}
       {...rest}
@@ -134,7 +134,7 @@ export const MenuRadioItem: Component<
   return (
     <DropdownMenu.RadioItem
       class={cn(
-        "relative flex cursor-default select-none items-center gap-2 rounded-sm py-1.5 pl-7 pr-2 text-[12px] outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+        "relative flex cursor-default select-none items-center gap-2 rounded-sm py-1.5 pl-7 pr-2 text-caption outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
         local.class,
       )}
       {...rest}

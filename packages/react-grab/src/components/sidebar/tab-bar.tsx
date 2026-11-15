@@ -32,7 +32,7 @@ export const TabBar: Component<TabBarProps> = (props) => {
         return (
           <button
             type="button"
-            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 font-semibold text-[11px] cursor-pointer border border-border transition-colors"
+            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 font-semibold text-meta cursor-pointer border border-border transition-colors"
             classList={{
               "rounded-l-lg border-r-0": isFirst,
               "rounded-r-lg": isLast,
@@ -43,7 +43,7 @@ export const TabBar: Component<TabBarProps> = (props) => {
           >
             {tab.label}
             <span
-              class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-medium leading-none"
+              class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-meta font-medium leading-none"
               classList={{
                 "text-purple-400 bg-purple-400/10": isActive(),
                 "text-muted-foreground bg-foreground/5": !isActive(),

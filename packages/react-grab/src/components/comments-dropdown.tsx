@@ -162,11 +162,11 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
       onBlur={clearHighlight}
     >
       <span class="flex flex-col min-w-0 flex-1">
-        <span class="text-[12px] leading-4 font-medium text-popover-foreground truncate">
+        <span class="text-caption leading-4 font-medium text-popover-foreground truncate">
           {getCommentItemDisplayName(item)}
         </span>
         <Show when={item.commentText}>
-          <span class="text-[11px] leading-3 text-muted-foreground truncate mt-0.5">
+          <span class="text-meta leading-3 text-muted-foreground truncate mt-0.5">
             {item.commentText}
           </span>
         </Show>
@@ -191,7 +191,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             </svg>
           </button>
         </Show>
-        <span class="text-[10px] text-muted-foreground flex items-center justify-end">
+        <span class="text-meta text-muted-foreground flex items-center justify-end">
           {formatRelativeTime(item.timestamp)}
         </span>
         <button
@@ -295,7 +295,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-comments-dropdown
-        class="fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
+        class="fixed text-body antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
         style={{
           top: `${dropdown.displayPosition().top}px`,
           left: `${dropdown.displayPosition().left}px`,
@@ -339,7 +339,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
           }}
         >
           <div class="contain-layout shrink-0 flex items-center justify-between px-2 pt-1.5 pb-1">
-            <span class="text-[11px] font-medium text-muted-foreground">Comments</span>
+            <span class="text-meta font-medium text-muted-foreground">Comments</span>
             <Show when={props.items.length > 0}>
               <div class="flex items-center gap-[5px]">
                 <Tooltip open={activeHeaderTooltip() === "clear"} placement="top">
@@ -390,7 +390,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                     <Show
                       when={isCopyAllConfirmed()}
                       fallback={
-                        <span class="text-popover-foreground text-[13px] leading-3.5 font-medium">
+                        <span class="text-popover-foreground text-body leading-3.5 font-medium">
                           {props.copyableCount != null && props.copyableCount < (props.items?.length ?? 0)
                             ? `Copy (${props.copyableCount})`
                             : "Copy"}
@@ -417,7 +417,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                   data-react-grab-ignore-events
                   type="text"
                   placeholder="Search groups..."
-                  class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-muted-foreground text-popover-foreground py-0.5"
+                  class="flex-1 text-caption bg-transparent outline-none placeholder:text-muted-foreground text-popover-foreground py-0.5"
                   onInput={(e) => setSearchQuery(e.currentTarget.value)}
                 />
               </div>
@@ -465,7 +465,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                 data-react-grab-ignore-events
                 type="text"
                 placeholder="New group..."
-                class="flex-1 text-[12px] bg-transparent outline-none placeholder:text-muted-foreground text-popover-foreground"
+                class="flex-1 text-caption bg-transparent outline-none placeholder:text-muted-foreground text-popover-foreground"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && e.currentTarget.value.trim()) {
                     props.onAddGroup?.(e.currentTarget.value.trim());

@@ -160,7 +160,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       subheader={props.subheader}
       summary={
         props.summary ? (
-          <div class="text-[12px] font-medium text-foreground truncate">
+          <div class="text-caption font-medium text-foreground truncate">
             {props.summary}
           </div>
         ) : undefined
@@ -168,7 +168,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       statusPill={
         <Show when={hasTicket()}>
           <span
-            class={`text-[9px] uppercase font-medium px-1.5 py-0.5 rounded ${getStatusPillClass(props.jiraStatusCategory)}`}
+            class={`text-meta uppercase font-medium px-1.5 py-0.5 rounded ${getStatusPillClass(props.jiraStatusCategory)}`}
           >
             {getStatusDisplayText(props.jiraStatus)}
           </span>
@@ -178,7 +178,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
         <Show when={props.jiraLabels?.length}>
           <For each={props.jiraLabels}>
             {(label) => (
-              <span class="bg-foreground/[0.06] text-muted-foreground text-[9px] font-medium px-1.5 py-0.5 rounded">
+              <span class="bg-foreground/[0.06] text-muted-foreground text-meta font-medium px-1.5 py-0.5 rounded">
                 {label}
               </span>
             )}
@@ -190,7 +190,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
           when={props.timestamp !== undefined ? props.timestamp : undefined}
         >
           {(timestamp) => (
-            <div class="flex items-center gap-1.5 mt-1.5 text-[10px] text-muted-foreground">
+            <div class="flex items-center gap-1.5 mt-1.5 text-meta text-muted-foreground">
               <svg width="12" height="12" viewBox="0 0 16 16">
                 <path
                   fill="currentColor"
@@ -259,7 +259,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
                 href={recordingUrl()}
                 target="_blank"
                 rel="noreferrer"
-                class="inline-flex items-center gap-1 mt-1.5 text-[10px] text-primary hover:underline"
+                class="inline-flex items-center gap-1 mt-1.5 text-meta text-primary hover:underline"
               >
                 Watch how we got here {"\u2197"}
               </a>
@@ -288,7 +288,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
                 displayName={props.jiraAssignee ?? undefined}
                 size={20}
               />
-              <span class="text-[10px] text-muted-foreground">
+              <span class="text-meta text-muted-foreground">
                 {props.jiraAssignee}
               </span>
             </div>

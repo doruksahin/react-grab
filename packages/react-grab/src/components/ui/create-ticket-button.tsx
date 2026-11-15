@@ -19,7 +19,7 @@ export const CreateTicketButton: Component<CreateTicketButtonProps> = (
       data-react-grab-ignore-events
       data-react-grab-create-ticket
       class={cn(
-        'h-6 px-2.5 w-full text-[10px] font-medium rounded-md bg-transparent text-jira-create border border-jira-create/40 hover:bg-jira-create/10 cursor-pointer flex items-center justify-center gap-1',
+        'h-6 px-2.5 w-full text-meta font-medium rounded-md bg-transparent text-jira-create border border-jira-create/40 hover:bg-jira-create/10 cursor-pointer flex items-center justify-center gap-1',
         props.class
       )}
       onPointerDown={(e) => e.stopPropagation()}

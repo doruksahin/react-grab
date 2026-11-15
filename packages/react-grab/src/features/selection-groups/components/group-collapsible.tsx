@@ -55,7 +55,7 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
                 ref={renameInputRef}
                 type="text"
                 value={props.group.name}
-                class="text-[12px] font-semibold text-foreground/70 bg-transparent outline-none border-b border-foreground/30 min-w-0 flex-1"
+                class="text-caption font-semibold text-foreground/70 bg-transparent outline-none border-b border-foreground/30 min-w-0 flex-1"
                 on:click={(e) => e.stopPropagation()}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleRenameSubmit();
@@ -65,7 +65,7 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
               />
             }
           >
-            <span class="text-[12px] font-semibold text-foreground/70 truncate">
+            <span class="text-caption font-semibold text-foreground/70 truncate">
               {props.group.name}
             </span>
           </Show>
@@ -136,7 +136,7 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
             )}
           </button>
           {/* Count badge */}
-          <span class="text-[10px] font-medium text-foreground/30 bg-foreground/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+          <span class="text-meta font-medium text-foreground/30 bg-foreground/[0.05] rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
             {props.items.length}
           </span>
         </div>
@@ -150,7 +150,7 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
           <Show
             when={props.items.length > 0}
             fallback={
-              <div class="px-2 py-2 text-[11px] text-foreground/30 text-center italic">
+              <div class="px-2 py-2 text-meta text-foreground/30 text-center italic">
                 No selections yet
               </div>
             }

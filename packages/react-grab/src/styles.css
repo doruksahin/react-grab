@@ -34,6 +34,13 @@
   --color-label-muted: #767676;
   --color-flag: #dc2626;
   --color-flag-hover: rgba(220, 38, 38, 0.08);
+  /* ADR-0022 type scale: five steps, nothing below 11 px. Font size only;
+     line heights stay as they are until the primitives own them. */
+  --text-meta: 11px;
+  --text-caption: 12px;
+  --text-body: 13px;
+  --text-title: 14px;
+  --text-heading: 16px;
   --transition-fast: 100ms;
   --transition-normal: 150ms;
   --transition-slow: 200ms;
@@ -90,7 +97,7 @@
    * bridge, which writes data-kb-theme="dark" on this host element when the
    * host page is in dark mode. See the :host([data-kb-theme="dark"]) block below.
    */
-  --radius: 0.375rem;
+  --radius: 0.5rem; /* ADR-0022: sm 4, md 6, lg 8, xl 12 px, the design system's scale */
   --editor-blockquote-border: oklch(0 0 0 / 20%);
   --editor-blockquote-text: oklch(0 0 0 / 60%);
   --editor-code-bg: oklch(0 0 0 / 6%);
@@ -255,29 +262,36 @@
  * mount at the shadow root level. One attribute, whole UI flips.
  */
 :host([data-kb-theme="dark"]) {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  /*
+   * ADR-0022: values from the AdCreative.ai Design System's dark palette
+   * (tokens/colors.css). Surfaces: background1/2/3/4; hairlines: border1/2/3.
+   * --muted-foreground is lighter than the system's colorText3 (#858290),
+   * which measures 4.5:1 on raised surfaces; #a9a6b4 keeps 11 px meta text
+   * at 6.4:1 or better on every surface, hover included.
+   */
+  --background: #0e0d10;
+  --foreground: #ffffff;
+  --card: #141216;
+  --card-foreground: #ffffff;
+  --popover: #141216;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #0e0d10;
+  --secondary: #1f1a24;
+  --secondary-foreground: #ffffff;
+  --muted: #1f1a24;
+  --muted-foreground: #a9a6b4;
+  --accent: #2b2430;
+  --accent-foreground: #ffffff;
+  --destructive: #fd7114;
   --editor-blockquote-border: oklch(1 0 0 / 20%);
   --editor-blockquote-text: oklch(1 0 0 / 60%);
   --editor-code-bg: oklch(1 0 0 / 10%);
   --editor-pre-bg: oklch(1 0 0 / 8%);
   --editor-placeholder-color: oklch(1 0 0 / 30%);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --border: #2f2a34;
+  --input: #38323f;
+  --ring: #514858;
   --bulk-bar: oklch(0.5 0.18 290);
   --bulk-bar-foreground: oklch(0.95 0 0);
   --jira-create: oklch(0.6 0.14 260);

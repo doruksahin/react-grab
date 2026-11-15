@@ -28,7 +28,7 @@ export const EditorActionBar: Component<{
     <button
       type="button"
       data-react-grab-comment-submit
-      class="px-3 py-1 rounded text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+      class="px-3 py-1 rounded text-meta font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
       onMouseDown={(e) => { e.preventDefault(); props.onSubmit(); }}
     >
       Save
@@ -37,14 +37,14 @@ export const EditorActionBar: Component<{
       <button
         type="button"
         data-react-grab-comment-cancel
-        class="px-3 py-1 rounded text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+        class="px-3 py-1 rounded text-meta font-medium text-muted-foreground hover:text-foreground transition-colors"
         onMouseDown={(e) => { e.preventDefault(); props.onCancel?.(); }}
       >
         Cancel
       </button>
     </Show>
-    <span data-react-grab-comment-hint class="ml-auto text-[10px] text-muted-foreground">
-      Tip: Type <kbd class="px-1 py-0.5 bg-muted rounded text-[9px]">@</kbd> to mention
+    <span data-react-grab-comment-hint class="ml-auto text-meta text-muted-foreground">
+      Tip: Type <kbd class="px-1 py-0.5 bg-muted rounded text-meta">@</kbd> to mention
     </span>
   </div>
 );

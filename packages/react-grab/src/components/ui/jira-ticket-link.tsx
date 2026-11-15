@@ -14,7 +14,7 @@ export const JiraTicketLink: Component<JiraTicketLinkProps> = (props) => {
       <Show
         when={props.url}
         fallback={
-          <span class="font-mono text-[10px] text-muted-foreground">
+          <span class="font-mono text-meta text-muted-foreground">
             {props.ticketId}
           </span>
         }
@@ -23,7 +23,7 @@ export const JiraTicketLink: Component<JiraTicketLinkProps> = (props) => {
           href={props.url}
           target="_blank"
           rel="noopener noreferrer"
-          class="font-mono text-[10px] text-blue-500 hover:text-blue-600 underline decoration-blue-500/40 hover:decoration-blue-600 transition-colors cursor-pointer"
+          class="font-mono text-meta text-blue-500 hover:text-blue-600 underline decoration-blue-500/40 hover:decoration-blue-600 transition-colors cursor-pointer"
         >
           {props.ticketId}
         </a>

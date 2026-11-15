@@ -73,15 +73,15 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
               flaggedByAvatar={props.jiraFlaggedByAvatar}
             />
           </Show>
-          <span class="text-[13px] font-semibold text-foreground truncate">
+          <span class="text-body font-semibold text-foreground truncate">
             {props.item.componentName || props.item.elementName}
           </span>
-          <span class="px-1.5 py-0.5 rounded bg-accent text-muted-foreground text-[10px] font-mono shrink-0">
+          <span class="px-1.5 py-0.5 rounded bg-accent text-muted-foreground text-meta font-mono shrink-0">
             {props.item.tagName}
           </span>
         </div>
         <div class="flex items-center gap-1.5 shrink-0 ml-2">
-          <span class="text-[10px] text-muted-foreground">
+          <span class="text-meta text-muted-foreground">
             {relativeTime(props.item.timestamp)}
           </span>
           {/* Ticket-lock gates visibility at the caller — if the prop is
@@ -94,7 +94,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
 
       {/* Row 2: comment text */}
       <Show when={props.item.commentText}>
-        <p class="text-[11px] text-foreground mb-1.5">
+        <p class="text-meta text-foreground mb-1.5">
           {props.item.commentText}
         </p>
       </Show>
@@ -133,13 +133,13 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
           <DevInsights.Attributes content={props.item.content} />
           <Show when={props.item.elementSelectors?.[0]}>
             <DevInsights.Section label="selector">
-              <span class="text-[9px] font-mono text-[#cbd5e1] break-all">
+              <span class="text-meta font-mono text-foreground/80 break-all">
                 {props.item.elementSelectors?.[0]}
               </span>
             </DevInsights.Section>
           </Show>
           <DevInsights.Section label="html">
-            <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
+            <pre class="text-meta font-mono text-foreground/80 whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
               {props.item.content}
             </pre>
           </DevInsights.Section>

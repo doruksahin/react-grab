@@ -685,7 +685,7 @@ data_attrs:
   # Format: attr-suffix → { scope, src: <count>, tests: <count> }
   inventory:
     comment-author: {scope: comments, src: 1, tests: 0}
-    comment-avatar: {scope: comments, src: 2, tests: 0}
+    comment-avatar: {scope: comments, src: 2, tests: 1}
     comment-body: {scope: comments, src: 1, tests: 0}
     comment-cancel: {scope: comments, src: 1, tests: 0}
     comment-composer: {scope: comments, src: 1, tests: 3}
@@ -742,12 +742,12 @@ data_attrs:
     generation-abort: {scope: generation, src: 1, tests: 1}
     generation-input: {scope: generation, src: 1, tests: 1}
     generation-submit: {scope: generation, src: 1, tests: 0}
-    create-ticket: {scope: jira, src: 1, tests: 4}
+    create-ticket: {scope: jira, src: 1, tests: 5}
     jira-create: {scope: jira, src: 1, tests: 0}
     jira-dialog: {scope: jira, src: 1, tests: 0}
     jira-dots: {scope: jira, src: 1, tests: 0}
     jira-error: {scope: jira, src: 1, tests: 2}
-    jira-form: {scope: jira, src: 1, tests: 5}
+    jira-form: {scope: jira, src: 1, tests: 6}
     jira-open-ticket: {scope: jira, src: 1, tests: 0}
     jira-required: {scope: jira, src: 2, tests: 3}
     jira-success: {scope: jira, src: 1, tests: 5}
@@ -773,7 +773,7 @@ data_attrs:
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 4}
+    selection-card: {scope: selection, src: 2, tests: 5}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 1, tests: 0}
@@ -796,18 +796,18 @@ data_attrs:
     loose-selection-list: {scope: sidebar, src: 1, tests: 0}
     progress-bar: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}
-    sidebar: {scope: sidebar, src: 1, tests: 0}
+    sidebar: {scope: sidebar, src: 1, tests: 1}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
     sidebar-search: {scope: sidebar, src: 1, tests: 2}
     stats-bar: {scope: sidebar, src: 1, tests: 0}
     status-legend: {scope: sidebar, src: 1, tests: 0}
     tab-bar: {scope: sidebar, src: 1, tests: 0}
     ungrouped-section: {scope: sidebar, src: 1, tests: 2}
-    toolbar: {scope: toolbar, src: 2, tests: 8}
+    toolbar: {scope: toolbar, src: 2, tests: 10}
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 3, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 3, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 17}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 18}
     toolbar-devmode: {scope: toolbar, src: 2, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 2, tests: 4}

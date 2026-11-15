@@ -151,7 +151,7 @@ export const JiraEditor: Component<JiraEditorProps> = (props) => {
       {/* Editor content area */}
       <div
         ref={editorEl}
-        class="jira-editor-content px-3 py-2 min-h-[140px] text-[12px] text-foreground outline-none"
+        class="jira-editor-content px-3 py-2 min-h-[140px] text-caption text-foreground outline-none"
         style={{ "pointer-events": "auto" }}
       />
     </div>

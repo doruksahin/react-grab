@@ -50,7 +50,7 @@ export const SelectionLabelContextInput: Component<
           ref={inputRef}
           data-react-grab-ignore-events
           data-react-grab-generation-input
-          class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
+          class="text-popover-foreground text-body leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
           classList={{
             "opacity-50": Boolean(props.disabled),
           }}

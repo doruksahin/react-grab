@@ -169,7 +169,7 @@ const LockedTrigger: Component<{
     data-react-grab-ignore-events
     data-react-grab-active-group-picker-locked
     class={cn(
-      'flex items-center gap-1 px-0.5 -mx-0.5 py-0 text-[11px] font-medium leading-none text-muted-foreground',
+      'flex items-center gap-1 px-0.5 -mx-0.5 py-0 text-meta font-medium leading-none text-muted-foreground',
       props.class
     )}
     title={`Locked — ${props.ticketId ?? 'ticketed'}`}
@@ -194,7 +194,7 @@ const InteractiveTrigger: Component<
       type="button"
       variant="ghost"
       class={cn(
-        'h-auto gap-1 px-0.5 -mx-0.5 py-0 text-[11px] font-medium leading-none text-muted-foreground rounded-sm shadow-none',
+        'h-auto gap-1 px-0.5 -mx-0.5 py-0 text-meta font-medium leading-none text-muted-foreground rounded-sm shadow-none',
         local.class
       )}
       aria-haspopup="listbox"

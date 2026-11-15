@@ -28,7 +28,7 @@ const ScreenshotSlot: Component<{
 
   return (
     <div class="flex-1 min-w-0" ref={containerRef}>
-      <div class="text-[9px] text-muted-foreground mb-0.5">{props.label}</div>
+      <div class="text-meta text-muted-foreground mb-0.5">{props.label}</div>
       <Show
         when={visible()}
         fallback={<div class="w-full h-20 rounded animate-pulse bg-muted" />}
@@ -36,7 +36,7 @@ const ScreenshotSlot: Component<{
         <Show
           when={props.src}
           fallback={
-            <div class="w-full h-8 rounded bg-muted flex items-center justify-center text-[9px] text-muted-foreground italic">
+            <div class="w-full h-8 rounded bg-muted flex items-center justify-center text-meta text-muted-foreground italic">
               No {props.label.toLowerCase()} screenshot
             </div>
           }

@@ -66,7 +66,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
           item={itemProps.item}
           class="relative flex w-full cursor-default select-none items-center justify-between rounded-sm py-1.5 px-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
         >
-          <Combobox.ItemLabel class="text-[12px]">
+          <Combobox.ItemLabel class="text-caption">
             {itemProps.item.rawValue}
           </Combobox.ItemLabel>
           <Show when={selected().includes(itemProps.item.rawValue)}>
@@ -83,12 +83,12 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
       <Combobox.Control<string> aria-label="Labels">
         {(_state) => (
           <div
-            class="flex flex-wrap gap-1 min-h-[36px] w-full px-2 py-1 rounded-md border border-border bg-muted text-[12px] text-foreground items-center"
+            class="flex flex-wrap gap-1 min-h-[36px] w-full px-2 py-1 rounded-md border border-border bg-muted text-caption text-foreground items-center"
             style={{ "pointer-events": "auto" }}
           >
             <For each={selected()}>
               {(lbl) => (
-                <span class="bg-accent text-accent-foreground text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                <span class="bg-accent text-accent-foreground text-meta px-1.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                   {lbl}
                   <button
                     type="button"
@@ -105,7 +105,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
             </For>
             <ComboboxInput
               ref={inputRef}
-              class="flex-1 min-w-[80px] text-[12px]"
+              class="flex-1 min-w-[80px] text-caption"
               style={{ "pointer-events": "auto" }}
               placeholder={
                 selected().length === 0 ? "Search or type a label…" : ""
@@ -138,7 +138,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
           <Show
             when={filteredOptions().length > 0}
             fallback={
-              <div class="px-3 py-2 text-[11px] text-muted-foreground italic">
+              <div class="px-3 py-2 text-meta text-muted-foreground italic">
                 No labels found — press Enter to add
               </div>
             }

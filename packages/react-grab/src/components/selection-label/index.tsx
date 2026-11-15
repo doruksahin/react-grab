@@ -335,7 +335,7 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (props) =>
         data-react-grab-ignore-events
         data-react-grab-selection-label
         class={cn(
-          'fixed text-[13px] antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out',
+          'fixed text-body antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-opacity duration-100 ease-out',
           props.isCollapsing
             ? 'animate-out fade-out-0 zoom-out-95 duration-150 ease-in fill-mode-forwards origin-top'
             : props.onCollapse &&

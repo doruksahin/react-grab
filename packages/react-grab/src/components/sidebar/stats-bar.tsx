@@ -75,7 +75,7 @@ const MetricRow: Component<MetricRowProps> = (props) => {
       class="grid items-center gap-1.5"
       style={{ "grid-template-columns": "75px 50px 70px 75px 1fr" }}
     >
-      <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+      <span class="text-meta font-bold uppercase tracking-wider text-muted-foreground">
         {props.label}
       </span>
       <span class="text-xs text-foreground">

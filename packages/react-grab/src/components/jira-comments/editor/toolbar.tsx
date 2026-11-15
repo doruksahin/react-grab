@@ -19,7 +19,7 @@ export const ToolbarButton: Component<{
       if (!props.disabled) props.onClick();
     }}
     class={[
-      "px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors",
+      "px-1.5 py-0.5 rounded text-meta font-medium transition-colors",
       props.active
         ? "bg-accent text-accent-foreground"
         : "text-muted-foreground hover:text-foreground hover:bg-accent",
@@ -53,11 +53,11 @@ export const ToolbarDropdown: Component<{
           e.preventDefault();
           setOpen((v) => !v);
         }}
-        class="px-1.5 py-0.5 rounded text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors flex items-center gap-0.5"
+        class="px-1.5 py-0.5 rounded text-meta font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors flex items-center gap-0.5"
         style={{ "pointer-events": "auto" }}
       >
         {props.label}
-        <span class="text-[8px] text-muted-foreground">▾</span>
+        <span class="text-meta text-muted-foreground">▾</span>
       </button>
       <Show when={open()}>
         <div

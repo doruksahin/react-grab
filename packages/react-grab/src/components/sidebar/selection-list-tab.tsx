@@ -88,7 +88,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
   return (
     <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2.5">
       <Show when={filteredItems().length === 0}>
-        <div class="py-8 text-center text-[12px] text-muted-foreground italic">
+        <div class="py-8 text-center text-caption text-muted-foreground italic">
           No matching selections
         </div>
       </Show>
@@ -193,13 +193,13 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                   <DevInsights.Attributes content={item.content} />
                   <Show when={item.elementSelectors?.[0]}>
                     <DevInsights.Section label="selector">
-                      <span class="text-[9px] font-mono text-[#cbd5e1] break-all">
+                      <span class="text-meta font-mono text-foreground/80 break-all">
                         {item.elementSelectors?.[0]}
                       </span>
                     </DevInsights.Section>
                   </Show>
                   <DevInsights.Section label="html">
-                    <pre class="text-[9px] font-mono text-[#cbd5e1] whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
+                    <pre class="text-meta font-mono text-foreground/80 whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
                       {item.content}
                     </pre>
                   </DevInsights.Section>

@@ -21,7 +21,7 @@ export const CopyingState: Component<CopyingStateProps> = (props) => {
     >
       <div class="contain-layout shrink-0 flex items-center gap-1 py-1.5 px-2 w-full h-fit">
         <IconLoader size={13} class="text-muted-foreground shrink-0" />
-        <span class="shimmer-text text-[13px] leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap">
+        <span class="shimmer-text text-body leading-4 font-medium h-fit tabular-nums overflow-hidden text-ellipsis whitespace-nowrap">
           {props.statusText ?? "Grabbing\u2026"}
         </span>
       </div>
@@ -30,7 +30,7 @@ export const CopyingState: Component<CopyingStateProps> = (props) => {
           <div class="shrink-0 flex justify-between items-end w-full min-h-4">
             <textarea
               data-react-grab-ignore-events
-              class="text-popover-foreground text-[13px] leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 opacity-50 wrap-break-word overflow-y-auto"
+              class="text-popover-foreground text-body leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 opacity-50 wrap-break-word overflow-y-auto"
               style={{
                 "field-sizing": "content",
                 "min-height": "16px",

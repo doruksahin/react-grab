@@ -22,8 +22,8 @@ export const CommentItem: Component<{
       <Avatar name={props.comment.author} url={props.comment.authorAvatar} size={props.isReply ? 20 : 24} />
       <div class="flex-1 min-w-0">
         <div class="flex flex-col">
-          <span data-react-grab-comment-author class="text-[12px] font-semibold text-popover-foreground leading-tight">{props.comment.author}</span>
-          <span data-react-grab-comment-time class="text-[10px] text-muted-foreground leading-tight">{props.comment.sending ? "sending..." : ts()}</span>
+          <span data-react-grab-comment-author class="text-caption font-semibold text-popover-foreground leading-tight">{props.comment.author}</span>
+          <span data-react-grab-comment-time class="text-meta text-muted-foreground leading-tight">{props.comment.sending ? "sending..." : ts()}</span>
         </div>
         <div class="mt-1">
           <CommentBody body={props.comment.body} />
