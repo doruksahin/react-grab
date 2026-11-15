@@ -4,7 +4,20 @@ import {
 } from "../messaging/page-messengers.js";
 import { isReactGrabApi } from "./is-react-grab-api.js";
 import { onDocumentReady } from "./on-document-ready.js";
-import { createOverlaySession } from "./overlay-session.js";
+import {
+  type OverlaySession,
+  createOverlaySession,
+} from "./overlay-session.js";
+import { startSync } from "./start-sync.js";
+
+const startSession = async (session: OverlaySession): Promise<void> => {
+  const [overlayState, site] = await Promise.all([
+    pageRequestMessenger.sendMessage("getOverlayState"),
+    pageRequestMessenger.sendMessage("getSiteSettings"),
+  ]);
+  await session.start(overlayState);
+  if (site && session.ownsApi()) await startSync(site);
+};
 
 export const startOverlay = (): void => {
   const session = createOverlaySession({
@@ -27,8 +40,8 @@ export const startOverlay = (): void => {
   });
 
   onDocumentReady(() => {
-    void pageRequestMessenger
-      .sendMessage("getOverlayState")
-      .then(session.start);
+    startSession(session).catch((error: unknown) => {
+      console.warn("[react-grab extension] overlay failed to start:", error);
+    });
   });
 };

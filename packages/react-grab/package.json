@@ -149,7 +149,7 @@
   "devDependencies": {
     "@babel/core": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
-    "@playwright/test": "^1.40.0",
+    "@playwright/test": "^1.65.1",
     "@solidjs/testing-library": "^0.8.10",
     "@tailwindcss/cli": "^4.1.17",
     "@types/node": "^20.19.23",

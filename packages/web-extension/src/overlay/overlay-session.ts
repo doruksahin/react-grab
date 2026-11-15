@@ -10,17 +10,19 @@ interface OverlaySessionDeps {
   saveToolbarState: (toolbarState: ToolbarState) => void;
 }
 
-interface OverlaySession {
+export interface OverlaySession {
   start: (overlayState: OverlayState) => Promise<void>;
   setEnabled: (enabled: boolean) => Promise<void>;
   applyToolbarState: (toolbarState: ToolbarState) => Promise<void>;
   adoptPageApi: (pageApi: ReactGrabAPI) => void;
+  ownsApi: () => boolean;
 }
 
 export const createOverlaySession = (
   deps: OverlaySessionDeps,
 ): OverlaySession => {
   let activeApi: ReactGrabAPI | null = null;
+  let extensionApi: ReactGrabAPI | null = null;
   let lastSavedToolbarState: ToolbarState | null = null;
   let isApplyingExternalState = false;
   let unsubscribeToolbarState: (() => void) | null = null;
@@ -56,10 +58,11 @@ export const createOverlaySession = (
       // HACK: a localhost app may load its own react-grab after this script; give it time to announce itself before reusing it
       await wait(LOCALHOST_PAGE_API_WAIT_MS);
       const pageApi = findExistingApi();
-      return pageApi ? attach(pageApi) : null;
+      if (pageApi) return attach(pageApi);
     }
 
-    return attach(createExtensionApi());
+    extensionApi = createExtensionApi();
+    return attach(extensionApi);
   };
 
   const applyWithoutEcho = (
@@ -98,5 +101,6 @@ export const createOverlaySession = (
       window.__REACT_GRAB__ = pageApi;
       attach(pageApi);
     },
+    ownsApi: () => activeApi !== null && activeApi === extensionApi,
   };
 };

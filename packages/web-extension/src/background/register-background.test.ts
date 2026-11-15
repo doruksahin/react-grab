@@ -6,6 +6,7 @@ import {
 } from "../messaging/extension-messengers.js";
 import { enabledItem, toolbarStateItem } from "../storage/overlay-items.js";
 import { TOOLBAR_STATE_FIXTURE } from "../test-fixtures.js";
+import { saveApiToken, saveSite } from "../settings/settings-items.js";
 import { registerBackground } from "./register-background.js";
 
 interface TestTabs {
@@ -26,12 +27,14 @@ const createTabs = async (): Promise<TestTabs> => {
   return { firstTabId: firstTab.id, secondTabId: secondTab.id };
 };
 
+const SITE_ORIGIN = "https://app.example.test";
+
 const sendAsOwnContentScript = (): void => {
   vi.spyOn(fakeBrowser.runtime, "sendMessage").mockImplementation(
     (message: unknown, sendResponse: unknown) => {
       void fakeBrowser.runtime.onMessage.trigger(
         message,
-        { id: fakeBrowser.runtime.id },
+        { id: fakeBrowser.runtime.id, frameId: 0, origin: SITE_ORIGIN },
         (response: unknown) => {
           if (typeof sendResponse === "function") sendResponse(response);
         },
@@ -46,6 +49,12 @@ const spyOnEvents = () =>
 describe("registerBackground", () => {
   beforeEach(() => {
     fakeBrowser.reset();
+    vi.spyOn(fakeBrowser.permissions.onRemoved, "addListener").mockReturnValue(
+      undefined,
+    );
+    vi.spyOn(fakeBrowser.storage.local, "setAccessLevel").mockResolvedValue(
+      undefined,
+    );
     registerBackground();
   });
 
@@ -171,9 +180,39 @@ describe("registerBackground", () => {
     expect(await toolbarStateItem.getValue()).toBeNull();
   });
 
+  it("restricts storage.local to the extension's own contexts", () => {
+    expect(fakeBrowser.storage.local.setAccessLevel).toHaveBeenCalledWith({
+      accessLevel: "TRUSTED_CONTEXTS",
+    });
+  });
+
+  it("answers getSiteSettings with the sender origin's site, never the token", async () => {
+    sendAsOwnContentScript();
+    await saveSite(SITE_ORIGIN, {
+      workspace: "app-workspace",
+      jiraProjectKey: "ATT",
+    });
+    await saveApiToken("unit-test-token");
+
+    expect(
+      await extensionRequestMessenger.sendMessage("getSiteSettings"),
+    ).toEqual({
+      workspace: "app-workspace",
+      jiraProjectKey: "ATT",
+    });
+  });
+
+  it("answers getSiteSettings with null for an origin that is not enabled", async () => {
+    sendAsOwnContentScript();
+
+    expect(
+      await extensionRequestMessenger.sendMessage("getSiteSettings"),
+    ).toBeNull();
+  });
+
   it("rejects requests from a sender outside this extension", async () => {
     await expect(
       extensionRequestMessenger.sendMessage("getOverlayState"),
-    ).rejects.toThrow("Rejected a request from outside this extension");
+    ).rejects.toThrow("the sender is not this extension");
   });
 });
