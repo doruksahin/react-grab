@@ -306,7 +306,9 @@ export const TEST_API_TOKEN = "e2e-sync-token-0123456789abcdef0123";
 export const itemWriteResponse = { status: "ok" } as const;
 
 /** Default response for PUT /workspaces/:id/screenshots/:id/:kind. */
-export const uploadScreenshotResponse = { ok: true } as const;
+export const uploadScreenshotResponse = {
+  key: "test-workspace/screenshots/sel-1/element.png",
+} as const;
 
 /** Default response for PUT /workspaces/:id/recordings/:commentId (SPEC-020). */
 export const RECORDING_URL =
