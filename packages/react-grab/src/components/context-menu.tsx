@@ -4,7 +4,6 @@ import {
   onMount,
   onCleanup,
   createSignal,
-  createEffect,
   createMemo,
 } from "solid-js";
 import type { Component } from "solid-js";
@@ -26,7 +25,8 @@ import { BottomSection } from "./selection-label/bottom-section.js";
 import { formatShortcut } from "../utils/format-shortcut.js";
 import { getTagDisplay } from "../utils/get-tag-display.js";
 import { resolveActionEnabled } from "../utils/resolve-action-enabled.js";
-import { nativeRequestAnimationFrame } from "../utils/native-raf.js";
+import { createFloating, virtualReference } from "../utils/floating.js";
+import type { ArrowPosition } from "../types.js";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { registerOverlayDismiss } from "../utils/register-overlay-dismiss.js";
 import { ActionList, ActionListItem } from "./ui/action-list.js";
@@ -50,11 +50,15 @@ interface MenuItem {
   shortcut?: string;
 }
 
-export const ContextMenu: Component<ContextMenuProps> = (props) => {
-  let containerRef: HTMLDivElement | undefined;
+interface MenuPosition {
+  left: number;
+  top: number;
+  arrowLeft: number;
+  arrowPosition: ArrowPosition;
+}
 
-  const [measuredWidth, setMeasuredWidth] = createSignal(0);
-  const [measuredHeight, setMeasuredHeight] = createSignal(0);
+export const ContextMenu: Component<ContextMenuProps> = (props) => {
+  const [container, setContainer] = createSignal<HTMLDivElement>();
 
   const isVisible = () => props.position !== null;
 
@@ -65,74 +69,47 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
     }),
   );
 
-  const measureContainer = () => {
-    if (containerRef) {
-      const rect = containerRef.getBoundingClientRect();
-      setMeasuredWidth(rect.width);
-      setMeasuredHeight(rect.height);
-    }
-  };
-
-  createEffect(() => {
-    if (isVisible()) {
-      nativeRequestAnimationFrame(measureContainer);
-    }
+  // Below the element at the cursor's x, flipping above when it does not fit.
+  const floatingPosition = createFloating({
+    reference: () => {
+      const bounds = props.selectionBounds;
+      const clickPosition = props.position;
+      if (!bounds || !clickPosition) return null;
+      const cursorX = clickPosition.x ?? bounds.x + bounds.width / 2;
+      return virtualReference(() => ({
+        x: cursorX,
+        y: bounds.y,
+        width: 0,
+        height: bounds.height,
+      }));
+    },
+    floating: container,
+    options: () => ({
+      placement: "bottom",
+      fallbackPlacements: ["top"],
+      offsetPx: ARROW_HEIGHT_PX + LABEL_GAP_PX,
+      paddingPx: LABEL_GAP_PX,
+      anchorPaddingPx: ARROW_HEIGHT_PX,
+    }),
   });
 
-  const computedPosition = createMemo(() => {
-    const bounds = props.selectionBounds;
-    const clickPosition = props.position;
-    const labelWidth = measuredWidth();
-    const labelHeight = measuredHeight();
-
-    if (labelWidth === 0 || labelHeight === 0 || !bounds || !clickPosition) {
+  const computedPosition = (): MenuPosition => {
+    const position = isVisible() ? floatingPosition() : null;
+    if (!position) {
       return {
         left: DROPDOWN_OFFSCREEN_POSITION.left,
         top: DROPDOWN_OFFSCREEN_POSITION.top,
         arrowLeft: 0,
-        arrowPosition: "bottom" as const,
+        arrowPosition: "bottom",
       };
     }
-
-    const cursorX = clickPosition.x ?? bounds.x + bounds.width / 2;
-    const positionLeft = Math.max(
-      LABEL_GAP_PX,
-      Math.min(
-        cursorX - labelWidth / 2,
-        window.innerWidth - labelWidth - LABEL_GAP_PX,
-      ),
-    );
-    const arrowLeft = Math.max(
-      ARROW_HEIGHT_PX,
-      Math.min(cursorX - positionLeft, labelWidth - ARROW_HEIGHT_PX),
-    );
-
-    const positionBelow =
-      bounds.y + bounds.height + ARROW_HEIGHT_PX + LABEL_GAP_PX;
-    const positionAbove =
-      bounds.y - labelHeight - ARROW_HEIGHT_PX - LABEL_GAP_PX;
-    const wouldOverflowBottom =
-      positionBelow + labelHeight > window.innerHeight;
-    const hasSpaceAbove = positionAbove >= 0;
-
-    const shouldFlipAbove = wouldOverflowBottom && hasSpaceAbove;
-    let positionTop = shouldFlipAbove ? positionAbove : positionBelow;
-    let arrowPosition: "top" | "bottom" = shouldFlipAbove ? "top" : "bottom";
-
-    if (wouldOverflowBottom && !hasSpaceAbove) {
-      const cursorY = clickPosition.y ?? bounds.y + bounds.height / 2;
-      positionTop = Math.max(
-        LABEL_GAP_PX,
-        Math.min(
-          cursorY + LABEL_GAP_PX,
-          window.innerHeight - labelHeight - LABEL_GAP_PX,
-        ),
-      );
-      arrowPosition = "top";
-    }
-
-    return { left: positionLeft, top: positionTop, arrowLeft, arrowPosition };
-  });
+    return {
+      left: position.x,
+      top: position.y,
+      arrowLeft: position.anchorOffsetX,
+      arrowPosition: position.placement.startsWith("top") ? "top" : "bottom",
+    };
+  };
 
   const menuItems = createMemo<MenuItem[]>(() => {
     const pluginActions = props.actions ?? [];
@@ -159,8 +136,6 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
   };
 
   onMount(() => {
-    measureContainer();
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isVisible()) return;
 
@@ -221,7 +196,7 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
   return (
     <Show when={isVisible()}>
       <div
-        ref={containerRef}
+        ref={setContainer}
         data-react-grab-ignore-events
         data-react-grab-context-menu
         class="fixed text-body antialiased drop-shadow-overlay select-none"

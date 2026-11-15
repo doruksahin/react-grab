@@ -412,6 +412,10 @@ features:
       - packages/react-grab/src/features/session-recording/business/gzip-json.ts
       - packages/react-grab/src/features/session-recording/business/recent-window.ts
       - packages/react-grab/src/features/session-recording/index.ts
+  selection-label:
+    description: TODO
+    status: discovered
+    files: []
 
 data_flows:
   sync_layer:
@@ -529,6 +533,7 @@ data_attrs:
         - due-date-filter
         - active-group-picker
         - active-group-picker-locked
+        - group-picker-flyout
         - detail-header
         - group-card
         - group-detail
@@ -777,7 +782,7 @@ data_attrs:
     overlay-canvas: {scope: overlay, src: 1, tests: 0}
     product: {scope: overlay, src: 1, tests: 61}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 62, tests: 6}
+    ignore-events: {scope: reserved, src: 63, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -792,10 +797,10 @@ data_attrs:
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 1, tests: 0}
-    selection-label: {scope: selection, src: 1, tests: 16}
+    selection-label: {scope: selection, src: 1, tests: 17}
     selection-remove: {scope: selection, src: 1, tests: 0}
     unread-indicator: {scope: selection, src: 1, tests: 0}
-    active-group-picker: {scope: sidebar, src: 1, tests: 0}
+    active-group-picker: {scope: sidebar, src: 1, tests: 1}
     active-group-picker-locked: {scope: sidebar, src: 1, tests: 0}
     bulk-action-bar: {scope: sidebar, src: 1, tests: 0}
     bulk-group-picker: {scope: sidebar, src: 1, tests: 0}
@@ -806,6 +811,7 @@ data_attrs:
     group-card: {scope: sidebar, src: 2, tests: 2}
     group-detail: {scope: sidebar, src: 1, tests: 0}
     group-list: {scope: sidebar, src: 2, tests: 3}
+    group-picker-flyout: {scope: sidebar, src: 1, tests: 1}
     jira-status-banner: {scope: sidebar, src: 1, tests: 0}
     loose-selection-card: {scope: sidebar, src: 1, tests: 0}
     loose-selection-list: {scope: sidebar, src: 1, tests: 0}

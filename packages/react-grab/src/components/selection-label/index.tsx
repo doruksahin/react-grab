@@ -13,12 +13,14 @@ import type { SelectionLabelRootProps } from "./types.js";
 import type { SelectionLabelContextValue } from "./context.js";
 import {
   VIEWPORT_MARGIN_PX,
-  ARROW_CENTER_PERCENT,
   ARROW_LABEL_MARGIN_PX,
   LABEL_GAP_PX,
   SELECTION_LABEL_OFFSCREEN_PX,
 } from "../../constants.js";
 import { getArrowSize } from "../../utils/get-arrow-size.js";
+import { createFloating, virtualReference } from "../../utils/floating.js";
+import type { Rect } from "@floating-ui/dom";
+import { resolveLabelAnchor } from "../../features/selection-label/business/resolve-label-anchor.js";
 import { isKeyboardEventTriggeredByInput } from "../../utils/is-keyboard-event-triggered-by-input.js";
 import { cn } from "../../utils/cn.js";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
@@ -35,25 +37,14 @@ import { DevInsightsSection } from "./parts/dev-insights-section.js";
 interface LabelPosition {
   left: number;
   top: number;
-  arrowLeftPercent: number;
-  arrowLeftOffset: number;
-  edgeOffsetX: number;
+  arrowOffsetX: number;
 }
 
 const DEFAULT_OFFSCREEN_POSITION: LabelPosition = {
   left: SELECTION_LABEL_OFFSCREEN_PX,
   top: SELECTION_LABEL_OFFSCREEN_PX,
-  arrowLeftPercent: ARROW_CENTER_PERCENT,
-  arrowLeftOffset: 0,
-  edgeOffsetX: 0,
+  arrowOffsetX: 0,
 };
-
-interface PositionResult {
-  position: LabelPosition;
-  computedArrowPosition: ArrowPosition | null;
-  hadValidBounds: boolean;
-  elementIdentity: string;
-}
 
 export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
   props,
@@ -62,6 +53,7 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
   let containerRef: HTMLDivElement | undefined;
   let panelRef: HTMLDivElement | undefined;
 
+  const [container, setContainer] = createSignal<HTMLDivElement>();
   const [measuredWidth, setMeasuredWidth] = createSignal(0);
   const [measuredHeight, setMeasuredHeight] = createSignal(0);
   const [panelWidth, setPanelWidth] = createSignal(0);
@@ -167,146 +159,83 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
   const elementIdentity = () =>
     `${props.tagName ?? ""}:${props.componentName ?? ""}`;
 
-  const positionComputation = createMemo(
-    (previousResult: PositionResult): PositionResult => {
-      viewportVersion();
-      const currentElementIdentity = elementIdentity();
-      const didReset =
-        currentElementIdentity !== previousResult.elementIdentity;
-      const cached: PositionResult = didReset
-        ? {
-            position: DEFAULT_OFFSCREEN_POSITION,
-            computedArrowPosition: null,
-            hadValidBounds: false,
-            elementIdentity: currentElementIdentity,
-          }
-        : previousResult;
+  const visibleViewport = (): Rect => {
+    viewportVersion();
+    const visualViewport = window.visualViewport;
+    return {
+      x: visualViewport?.offsetLeft ?? 0,
+      y: visualViewport?.offsetTop ?? 0,
+      width: visualViewport?.width ?? window.innerWidth,
+      height: visualViewport?.height ?? window.innerHeight,
+    };
+  };
 
-      const bounds = props.selectionBounds;
-      const labelWidth = measuredWidth();
-      const labelHeight = measuredHeight();
-      const hasMeasurements = labelWidth > 0 && labelHeight > 0;
-      const hasValidBounds = bounds && bounds.width > 0 && bounds.height > 0;
-
-      if (!hasMeasurements || !hasValidBounds) {
-        return {
-          position: cached.hadValidBounds
-            ? cached.position
-            : DEFAULT_OFFSCREEN_POSITION,
-          computedArrowPosition: cached.computedArrowPosition,
-          hadValidBounds: cached.hadValidBounds,
-          elementIdentity: currentElementIdentity,
-        };
-      }
-
-      const visualViewport = window.visualViewport;
-      const viewportLeft = visualViewport?.offsetLeft ?? 0;
-      const viewportTop = visualViewport?.offsetTop ?? 0;
-      const viewportRight =
-        viewportLeft + (visualViewport?.width ?? window.innerWidth);
-      const viewportBottom =
-        viewportTop + (visualViewport?.height ?? window.innerHeight);
-
-      const isSelectionVisibleInViewport =
-        bounds.x + bounds.width > viewportLeft &&
-        bounds.x < viewportRight &&
-        bounds.y + bounds.height > viewportTop &&
-        bounds.y < viewportBottom;
-
-      if (!isSelectionVisibleInViewport) {
-        return {
-          position: DEFAULT_OFFSCREEN_POSITION,
-          computedArrowPosition: cached.computedArrowPosition,
-          hadValidBounds: cached.hadValidBounds,
-          elementIdentity: currentElementIdentity,
-        };
-      }
-
-      const selectionCenterX = bounds.x + bounds.width / 2;
-      const cursorX = props.mouseX ?? selectionCenterX;
-      const selectionBottom = bounds.y + bounds.height;
-      const selectionTop = bounds.y;
-
-      const actualArrowHeight = props.hideArrow
-        ? 0
-        : getArrowSize(panelWidth());
-
-      // HACK: Use cursorX as anchor point, CSS transform handles centering via translateX(-50%)
-      const anchorX = cursorX;
-      let edgeOffsetX = 0;
-      const extraOffset = props.extraTopOffset ?? 0;
-      let positionTop =
-        selectionBottom + actualArrowHeight + LABEL_GAP_PX + extraOffset;
-
-      if (labelWidth > 0) {
-        const labelLeft = anchorX - labelWidth / 2;
-        const labelRight = anchorX + labelWidth / 2;
-
-        if (labelRight > viewportRight - VIEWPORT_MARGIN_PX) {
-          edgeOffsetX = viewportRight - VIEWPORT_MARGIN_PX - labelRight;
-        }
-        if (labelLeft + edgeOffsetX < viewportLeft + VIEWPORT_MARGIN_PX) {
-          edgeOffsetX = viewportLeft + VIEWPORT_MARGIN_PX - labelLeft;
-        }
-      }
-
-      const totalHeightNeeded =
-        labelHeight + actualArrowHeight + LABEL_GAP_PX + extraOffset;
-      const fitsBelow =
-        positionTop + labelHeight <= viewportBottom - VIEWPORT_MARGIN_PX;
-      let placement: "above" | "below" = "below";
-
-      if (!fitsBelow) {
-        positionTop = selectionTop - totalHeightNeeded;
-        placement = "above";
-      }
-
-      if (positionTop < viewportTop + VIEWPORT_MARGIN_PX) {
-        positionTop = viewportTop + VIEWPORT_MARGIN_PX;
-      }
-
-      props.onPlacementChange?.(placement);
-
-      const arrowLeftPercent = ARROW_CENTER_PERCENT;
-      const labelHalfWidth = labelWidth / 2;
-      const arrowCenterPx = labelHalfWidth - edgeOffsetX;
-      const arrowMinPx = Math.min(ARROW_LABEL_MARGIN_PX, labelHalfWidth);
-      const arrowMaxPx = Math.max(
-        labelWidth - ARROW_LABEL_MARGIN_PX,
-        labelHalfWidth,
-      );
-      const clampedArrowCenterPx = Math.max(
-        arrowMinPx,
-        Math.min(arrowMaxPx, arrowCenterPx),
-      );
-      const arrowLeftOffset = clampedArrowCenterPx - labelHalfWidth;
-
-      const computedArrowPosition: ArrowPosition = fitsBelow ? "bottom" : "top";
-
-      return {
-        position: {
-          left: anchorX,
-          top: positionTop,
-          arrowLeftPercent,
-          arrowLeftOffset,
-          edgeOffsetX,
-        },
-        computedArrowPosition,
-        hadValidBounds: true,
-        elementIdentity: currentElementIdentity,
-      };
-    },
-    {
-      position: DEFAULT_OFFSCREEN_POSITION,
-      computedArrowPosition: null,
-      hadValidBounds: false,
-      elementIdentity: "",
-    } satisfies PositionResult,
+  const anchor = createMemo(() =>
+    resolveLabelAnchor({
+      bounds: props.selectionBounds,
+      pointerX: props.mouseX,
+      viewport: visibleViewport(),
+      hasMeasurements: measuredWidth() > 0 && measuredHeight() > 0,
+    }),
   );
 
-  const arrowPosition = () =>
-    positionComputation().computedArrowPosition ?? "bottom";
-  const hadValidBounds = () => positionComputation().hadValidBounds;
+  // Whether the current element has been placed at least once; a new element
+  // starts hidden until it gets a position of its own.
+  const placedElement = createMemo(
+    (previous: { identity: string; wasPlaced: boolean }) => {
+      const identity = elementIdentity();
+      const wasPlaced =
+        (previous.identity === identity && previous.wasPlaced) ||
+        anchor().kind === "track";
+      return { identity, wasPlaced };
+    },
+    { identity: "", wasPlaced: false },
+  );
+  const hadValidBounds = () => placedElement().wasPlaced;
+
+  const arrowHeight = () => (props.hideArrow ? 0 : getArrowSize(panelWidth()));
+
+  // Below the element at the pointer's x, flipping above when it does not
+  // fit, kept inside the visible viewport.
+  const floatingPosition = createFloating({
+    reference: () => {
+      const current = anchor();
+      return current.kind === "track"
+        ? virtualReference(() => current.rect)
+        : null;
+    },
+    floating: container,
+    options: () => ({
+      placement: "bottom",
+      fallbackPlacements: ["top"],
+      offsetPx: arrowHeight() + LABEL_GAP_PX + (props.extraTopOffset ?? 0),
+      paddingPx: VIEWPORT_MARGIN_PX,
+      boundary: visibleViewport(),
+      anchorPaddingPx: ARROW_LABEL_MARGIN_PX,
+    }),
+  });
+
+  const labelPosition = (): LabelPosition => {
+    const current = anchor();
+    const position = floatingPosition();
+    const isPlaced =
+      current.kind === "track" || (current.kind === "keep" && hadValidBounds());
+    if (!isPlaced || !position) return DEFAULT_OFFSCREEN_POSITION;
+    return {
+      left: position.x,
+      top: position.y,
+      arrowOffsetX: position.anchorOffsetX,
+    };
+  };
+
+  const arrowPosition = (): ArrowPosition =>
+    floatingPosition()?.placement.startsWith("top") ? "top" : "bottom";
+
+  createEffect(
+    on(arrowPosition, (position) =>
+      props.onPlacementChange?.(position === "top" ? "above" : "below"),
+    ),
+  );
 
   createEffect(
     on(
@@ -335,7 +264,10 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
       }
     >
       <div
-        ref={containerRef}
+        ref={(element) => {
+          containerRef = element;
+          setContainer(element);
+        }}
         data-react-grab-ignore-events
         data-react-grab-selection-label
         class={cn(
@@ -346,9 +278,8 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
                 "animate-in fade-in-0 zoom-in-95 duration-200 ease-out origin-top",
         )}
         style={{
-          top: `${positionComputation().position.top}px`,
-          left: `${positionComputation().position.left}px`,
-          translate: `calc(-50% + ${positionComputation().position.edgeOffsetX}px) 0`,
+          top: `${labelPosition().top}px`,
+          left: `${labelPosition().left}px`,
           "z-index": "var(--z-overlay)",
           "pointer-events": shouldEnablePointerEvents() ? "auto" : "none",
           opacity: props.status === "fading" || isInternalFading() ? 0 : 1,
@@ -362,8 +293,8 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
         <Show when={!props.hideArrow}>
           <Arrow
             position={arrowPosition()}
-            leftPercent={positionComputation().position.arrowLeftPercent}
-            leftOffsetPx={positionComputation().position.arrowLeftOffset}
+            leftPercent={0}
+            leftOffsetPx={labelPosition().arrowOffsetX}
             labelWidth={panelWidth()}
           />
         </Show>

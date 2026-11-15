@@ -24,7 +24,6 @@ import {
   DROPDOWN_ICON_SIZE_PX,
   DROPDOWN_MAX_WIDTH_PX,
   DROPDOWN_MIN_WIDTH_PX,
-  DROPDOWN_VIEWPORT_PADDING_PX,
   FEEDBACK_DURATION_MS,
   ICON_BUTTON_TOOLTIP_OPEN_DELAY_MS,
   SAFE_POLYGON_BUFFER_PX,
@@ -104,6 +103,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
   const dropdown = createAnchoredDropdown(
     () => containerRef,
     () => props.position,
+    { fitHeight: true, maxWidthPx: DROPDOWN_MAX_WIDTH_PX },
   );
 
   const [isCopyAllConfirmed, setIsCopyAllConfirmed] = createSignal(false);
@@ -277,25 +277,10 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
     ),
   );
 
-  const clampedMaxWidth = () =>
-    Math.min(
-      DROPDOWN_MAX_WIDTH_PX,
-      window.innerWidth -
-        dropdown.displayPosition().left -
-        DROPDOWN_VIEWPORT_PADDING_PX,
-    );
-
-  const clampedMaxHeight = () =>
-    window.innerHeight -
-    dropdown.displayPosition().top -
-    DROPDOWN_VIEWPORT_PADDING_PX;
-
   const panelMinWidth = () =>
     Math.max(DROPDOWN_MIN_WIDTH_PX, props.position?.toolbarWidth ?? 0);
 
   onMount(() => {
-    dropdown.measure();
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!props.position) return;
       if (event.code === "Escape") {
@@ -321,7 +306,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-comments-dropdown
-        class="fixed text-body antialiased drop-shadow-overlay select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
+        class="fixed flex flex-col text-body antialiased drop-shadow-overlay select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
         style={{
           top: `${dropdown.displayPosition().top}px`,
           left: `${dropdown.displayPosition().left}px`,
@@ -355,13 +340,11 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
       >
         <div
           class={cn(
-            "contain-layout flex flex-col rounded-[10px] antialiased w-fit h-fit overflow-hidden [font-synthesis:none] [corner-shape:superellipse(1.25)]",
+            "contain-layout flex flex-col rounded-[10px] antialiased w-fit h-fit min-h-0 max-w-full overflow-hidden [font-synthesis:none] [corner-shape:superellipse(1.25)]",
             "bg-popover",
           )}
           style={{
             "min-width": `${panelMinWidth()}px`,
-            "max-width": `${clampedMaxWidth()}px`,
-            "max-height": `${clampedMaxHeight()}px`,
           }}
         >
           <div class="contain-layout shrink-0 flex items-center justify-between px-2 pt-1.5 pb-1">

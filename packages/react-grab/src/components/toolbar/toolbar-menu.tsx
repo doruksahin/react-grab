@@ -35,7 +35,6 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
   };
 
   onMount(() => {
-    dropdown.measure();
     const unregisterOverlayDismiss = registerOverlayDismiss({
       isOpen: () => Boolean(props.position),
       onDismiss: props.onDismiss,

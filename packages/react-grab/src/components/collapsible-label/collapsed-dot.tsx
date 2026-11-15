@@ -1,11 +1,13 @@
-import { Show } from "solid-js";
+import { Show, createSignal } from "solid-js";
 import type { Component, ParentComponent } from "solid-js";
 import type { OverlayBounds } from "../../types.js";
 import { cn } from "../../utils/cn.js";
 import { Button } from "../ui/button.js";
+import { createFloating, virtualReference } from "../../utils/floating.js";
 
 const DOT_SIZE_PX = 10;
 const DOT_GAP_PX = 6;
+const DOT_OFFSCREEN_PX = -9999;
 const DOT_PADDING_PX = 6;
 const PREVIEW_MAX_LENGTH = 48;
 
@@ -49,16 +51,29 @@ const PreviewSlot: ParentComponent = (props) => (
 /* ── Shell ────────────────────────────────────────────────── */
 
 export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
-  const position = () => {
-    const bounds = props.selectionBounds;
-    const isAbove = props.placement === "above";
-    return {
-      left: bounds.x + bounds.width / 2,
-      top: isAbove
-        ? bounds.y - DOT_GAP_PX - DOT_BUTTON_HEIGHT_PX
-        : bounds.y + bounds.height + DOT_GAP_PX,
-    };
-  };
+  // Centred above or below its element (the side follows the label it
+  // replaces); shifted along the edge to stay inside the viewport.
+  const [dot, setDot] = createSignal<HTMLButtonElement>();
+  const floatingPosition = createFloating({
+    reference: () => {
+      const bounds = props.selectionBounds;
+      return virtualReference(() => bounds);
+    },
+    floating: dot,
+    options: () => {
+      const placement = props.placement === "above" ? "top" : "bottom";
+      return {
+        placement,
+        fallbackPlacements: [placement],
+        offsetPx: DOT_GAP_PX,
+        paddingPx: DOT_GAP_PX,
+      };
+    },
+  });
+  const position = () => ({
+    left: floatingPosition()?.x ?? DOT_OFFSCREEN_PX,
+    top: floatingPosition()?.y ?? DOT_OFFSCREEN_PX,
+  });
 
   const previewText = () => {
     const raw = props.inputValue;
@@ -71,6 +86,7 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
 
   return (
     <Button
+      ref={setDot}
       type="button"
       variant="outline"
       data-react-grab-ignore-events
@@ -85,7 +101,6 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
       style={{
         left: `${position().left}px`,
         top: `${position().top}px`,
-        translate: "-50% 0",
         "z-index": "var(--z-overlay)",
         "pointer-events": "auto",
         "max-width": "240px",

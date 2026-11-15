@@ -1,4 +1,10 @@
-import { For, Show, onMount, onCleanup } from "solid-js";
+import { For, Show, createSignal, onMount, onCleanup } from "solid-js";
+import {
+  FLYOUT_OFFSCREEN_PX,
+  FLYOUT_OFFSET_PX,
+  FLYOUT_VIEWPORT_PADDING_PX,
+} from "../../constants.js";
+import { createFloating } from "../../utils/floating.js";
 import type { Component } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import { registerOverlayDismiss } from "../../utils/register-overlay-dismiss.js";
@@ -34,6 +40,20 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
     onCleanup(unregister);
   });
 
+  // Anchored to its trigger's wrapper (the parent element); flips and shifts
+  // so it stays inside the viewport, and its list scrolls when space is short.
+  const [flyout, setFlyout] = createSignal<HTMLDivElement>();
+  const position = createFloating({
+    reference: () => flyout()?.parentElement ?? null,
+    floating: flyout,
+    options: () => ({
+      placement: props.placement === "top" ? "top-start" : "bottom-start",
+      offsetPx: FLYOUT_OFFSET_PX,
+      paddingPx: FLYOUT_VIEWPORT_PADDING_PX,
+      fitHeight: true,
+    }),
+  });
+
   const visibleGroups = () =>
     props.groups.filter((g) => g.id !== props.excludeGroupId);
 
@@ -48,11 +68,13 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
 
   return (
     <div
+      ref={setFlyout}
       data-react-grab-ignore-events
-      class="absolute left-0 z-50 bg-popover text-popover-foreground rounded-[10px] overflow-hidden w-[180px] [font-synthesis:none] [corner-shape:superellipse(1.25)] shadow-md"
-      classList={{
-        "top-full mt-1": props.placement !== "top",
-        "bottom-full mb-1": props.placement === "top",
+      data-react-grab-group-picker-flyout
+      class="fixed z-50 flex flex-col bg-popover text-popover-foreground rounded-[10px] overflow-hidden w-[180px] [font-synthesis:none] [corner-shape:superellipse(1.25)] shadow-md"
+      style={{
+        left: `${position()?.x ?? FLYOUT_OFFSCREEN_PX}px`,
+        top: `${position()?.y ?? FLYOUT_OFFSCREEN_PX}px`,
       }}
     >
       <div class="px-2 pt-1.5 pb-1">
@@ -60,7 +82,10 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
           {header()}
         </span>
       </div>
-      <ActionList label="Groups" class="border-t border-border py-1">
+      <ActionList
+        label="Groups"
+        class="min-h-0 overflow-y-auto border-t border-border py-1"
+      >
         <For each={rows()}>
           {(row) => {
             const isActive = () => row.id === (props.activeGroupId ?? null);

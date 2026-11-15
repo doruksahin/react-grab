@@ -25,7 +25,6 @@ export const ClearCommentsPrompt: Component<ClearCommentsPromptProps> = (
   );
 
   onMount(() => {
-    dropdown.measure();
     const unregisterOverlayDismiss = registerOverlayDismiss({
       isOpen: () => Boolean(props.position),
       onDismiss: props.onCancel,
