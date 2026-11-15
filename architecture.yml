@@ -520,11 +520,12 @@ data_attrs:
         - sidebar
         - sidebar-header
         - sidebar-search
-        - stats-bar
+        - status-filter
+        - sync-offline-banner
+        - sync-retry
         - tab-bar
         - status-legend
         - filter-chips
-        - progress-bar
         - bulk-action-bar
         - bulk-group-picker
         - jira-status-banner
@@ -572,6 +573,7 @@ data_attrs:
         - generation-abort
         - generation-submit
         - context-input
+        - composer-footer
 
     completion:
       description: Selection-label completion view — streaming result, follow-up, undo/dismiss/more-options
@@ -692,6 +694,7 @@ data_attrs:
         - status-chip
         - status-dot
         - badge
+        - chip
         - avatar
         - avatar-image
         - avatar-fallback
@@ -758,10 +761,11 @@ data_attrs:
     filter-badge: {scope: filter, src: 1, tests: 0}
     filter-clear: {scope: filter, src: 1, tests: 0}
     filter-row: {scope: filter, src: 5, tests: 3}
+    composer-footer: {scope: generation, src: 1, tests: 0}
     context-input: {scope: generation, src: 1, tests: 0}
     generation-abort: {scope: generation, src: 1, tests: 1}
     generation-input: {scope: generation, src: 1, tests: 1}
-    generation-submit: {scope: generation, src: 1, tests: 0}
+    generation-submit: {scope: generation, src: 2, tests: 0}
     create-ticket: {scope: jira, src: 1, tests: 5}
     jira-create: {scope: jira, src: 1, tests: 0}
     jira-dialog: {scope: jira, src: 1, tests: 0}
@@ -782,7 +786,7 @@ data_attrs:
     overlay-canvas: {scope: overlay, src: 1, tests: 0}
     product: {scope: overlay, src: 1, tests: 61}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 63, tests: 6}
+    ignore-events: {scope: reserved, src: 66, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -796,7 +800,7 @@ data_attrs:
     selection-card: {scope: selection, src: 2, tests: 5}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
-    selection-header: {scope: selection, src: 1, tests: 0}
+    selection-header: {scope: selection, src: 2, tests: 0}
     selection-label: {scope: selection, src: 1, tests: 17}
     selection-remove: {scope: selection, src: 1, tests: 0}
     unread-indicator: {scope: selection, src: 1, tests: 0}
@@ -807,28 +811,29 @@ data_attrs:
     detail-header: {scope: sidebar, src: 1, tests: 1}
     due-date-filter: {scope: sidebar, src: 1, tests: 2}
     empty-state: {scope: sidebar, src: 1, tests: 0}
-    filter-chips: {scope: sidebar, src: 1, tests: 1}
-    group-card: {scope: sidebar, src: 2, tests: 2}
+    filter-chips: {scope: sidebar, src: 1, tests: 2}
+    group-card: {scope: sidebar, src: 2, tests: 5}
     group-detail: {scope: sidebar, src: 1, tests: 0}
     group-list: {scope: sidebar, src: 2, tests: 3}
     group-picker-flyout: {scope: sidebar, src: 1, tests: 1}
     jira-status-banner: {scope: sidebar, src: 1, tests: 0}
     loose-selection-card: {scope: sidebar, src: 1, tests: 0}
     loose-selection-list: {scope: sidebar, src: 1, tests: 0}
-    progress-bar: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}
     sidebar: {scope: sidebar, src: 1, tests: 2}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
     sidebar-search: {scope: sidebar, src: 1, tests: 2}
-    stats-bar: {scope: sidebar, src: 1, tests: 0}
+    status-filter: {scope: sidebar, src: 1, tests: 1}
     status-legend: {scope: sidebar, src: 1, tests: 0}
+    sync-offline-banner: {scope: sidebar, src: 1, tests: 2}
+    sync-retry: {scope: sidebar, src: 1, tests: 0}
     tab-bar: {scope: sidebar, src: 1, tests: 0}
     ungrouped-section: {scope: sidebar, src: 1, tests: 2}
     toolbar: {scope: toolbar, src: 2, tests: 10}
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 2, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 18}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 19}
     toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 1, tests: 4}
@@ -837,6 +842,7 @@ data_attrs:
     avatar-fallback: {scope: ui, src: 1, tests: 1}
     avatar-image: {scope: ui, src: 1, tests: 1}
     badge: {scope: ui, src: 1, tests: 0}
+    chip: {scope: ui, src: 1, tests: 0}
     icon-button: {scope: ui, src: 1, tests: 0}
     status-chip: {scope: ui, src: 1, tests: 0}
     status-dot: {scope: ui, src: 1, tests: 0}

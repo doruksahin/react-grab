@@ -73,6 +73,7 @@ export const createSyncLayer = () => {
   let adapterRef: StorageAdapter | null = null;
   let syncRevealedState = true;
   let pollIntervalId: ReturnType<typeof setInterval> | null = null;
+  let activeConfig: SyncConfig | null = null;
 
   // When revealed state is not synced, it lives in localStorage instead. Both
   // lists are saved together so writing one never wipes the other's flags.
@@ -234,6 +235,16 @@ export const createSyncLayer = () => {
       return;
     }
 
+    activeConfig = config;
+    await connect(config, { loadLocalOnFailure: true });
+  };
+
+  // Loads the server's state; on failure the status is "error" and the
+  // overlay keeps working on what it already has.
+  const connect = async (
+    config: SyncConfig,
+    options: { loadLocalOnFailure: boolean },
+  ) => {
     try {
       const httpAdapter = createHttpAdapter(config);
       adapterRef = httpAdapter;
@@ -250,14 +261,22 @@ export const createSyncLayer = () => {
       pollJira();
     } catch (error) {
       batch(() => {
-        storeHandle.setGroups(loadGroupsFromLocalStorage());
-        storeHandle.setComments(loadCommentsFromLocalStorage());
+        if (options.loadLocalOnFailure) {
+          storeHandle.setGroups(loadGroupsFromLocalStorage());
+          storeHandle.setComments(loadCommentsFromLocalStorage());
+        }
         storeHandle.setStatus("error", String(error));
       });
       config.onSyncError(
         error instanceof Error ? error : new Error(String(error)),
       );
     }
+  };
+
+  // Connects again with the config of the last init, after a failed one.
+  const retry = async () => {
+    if (!activeConfig || storeHandle.store.status !== "error") return;
+    await connect(activeConfig, { loadLocalOnFailure: false });
   };
 
   const dispose = () => {
@@ -307,6 +326,7 @@ export const createSyncLayer = () => {
     adapter: () => adapterRef,
 
     init,
+    retry,
     dispose,
     populate,
   };

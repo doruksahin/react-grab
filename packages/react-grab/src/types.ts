@@ -662,6 +662,8 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onToggleSelectionsRevealed?: () => void;
   onToggleCommentItemRevealed?: (commentItemId: string) => void;
   syncStatus?: SyncStatus;
+  /** Connects to the sync server again after a failed connection. */
+  onRetrySync?: () => Promise<void>;
   syncWorkspace?: string;
   syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
   jiraProjectKey?: string;

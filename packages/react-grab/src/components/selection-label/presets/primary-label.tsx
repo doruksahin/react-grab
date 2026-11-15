@@ -16,6 +16,9 @@ import { formatShortcut } from "../../../utils/format-shortcut.js";
 import { SelectionLabelRoot } from "../index.js";
 import { SelectionLabelHeader } from "../parts/header.js";
 import { SelectionLabelContextInput } from "../parts/context-input.js";
+import { SelectionLabelComposerHeader } from "../parts/composer-header.js";
+import { Kbd } from "../../kbd.js";
+import { Button } from "../../ui/button.js";
 import { DevInsightsSection } from "../parts/dev-insights-section.js";
 import { CopyingState } from "../parts/copying-state.js";
 import { DiscardPrompt } from "../discard-prompt.js";
@@ -85,6 +88,11 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
     props.status !== "copied" &&
     props.status !== "fading" &&
     props.status !== "error";
+
+  // A saved selection has Jira details or a ticket action to show; a new
+  // comment has only the input.
+  const hasSavedSelection = () =>
+    Boolean(props.itemId || props.jiraTicketId || props.onCreateTicket);
 
   const isArrowNavigationVisible = () =>
     Boolean(props.arrowNavigationState?.isVisible);
@@ -214,76 +222,108 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
         </div>
       </Show>
 
-      {/* Mode 4: Prompt mode (JIRA card + context input + dev insights) */}
+      {/* Mode 4: Prompt mode — the comment composer */}
       <Show
         when={canInteract() && props.isPromptMode && !props.isPendingDismiss}
       >
-        <div class="contain-layout shrink-0 flex flex-col justify-center items-stretch min-w-[150px] max-w-[280px]">
-          <SelectionLabelHeader
+        <div class="contain-layout flex w-[320px] shrink-0 flex-col items-stretch">
+          <SelectionLabelComposerHeader
             tagName={props.tagName}
             componentName={props.componentName}
             elementsCount={props.elementsCount}
             filePath={props.filePath}
-            inputValue={props.inputValue}
             onOpen={props.onOpen}
-            isContextMenuOpen={props.isContextMenuOpen}
+            onClose={props.onConfirmDismiss}
             jiraFlagged={props.jiraFlagged}
             jiraFlaggedAt={props.jiraFlaggedAt}
             jiraFlaggedBy={props.jiraFlaggedBy}
             jiraFlaggedByAvatar={props.jiraFlaggedByAvatar}
-            trailing={
-              <ActiveGroupPicker
-                groups={props.groups}
-                activeGroupId={props.activeGroupId}
-                onActiveGroupChange={props.onActiveGroupChange}
-                onAddGroup={props.onAddGroup}
-              >
-                <ActiveGroupPicker.Trigger />
-                <ActiveGroupPicker.Content />
-              </ActiveGroupPicker>
-            }
           />
-          <BottomSection>
-            <SelectionCardBody
-              timestamp={props.timestamp}
-              itemId={props.itemId}
-              syncServerUrl={props.syncServerUrl}
-              syncWorkspace={props.syncWorkspace}
-              jiraTicketId={props.jiraTicketId}
-              jiraUrl={props.jiraUrl}
-              jiraStatus={props.groupStatus}
-              jiraFlagged={props.jiraFlagged}
-              jiraLabels={props.jiraLabels}
-              jiraDueDate={props.jiraDueDate}
-              jiraIssueType={props.jiraIssueType}
-              jiraPriority={props.jiraPriority}
-              jiraAssignee={props.jiraAssignee}
-              jiraAssigneeAvatar={props.jiraAssigneeAvatar}
-              jiraComments={props.jiraComments}
-              onSubmitComment={props.onSubmitJiraComment}
-              onSearchUsers={props.onSearchJiraUsers}
-              onRefreshStatus={
-                props.onRefreshJiraStatus
-                  ? () => props.onRefreshJiraStatus?.()
-                  : undefined
-              }
-              noTicketAction={
-                canInteract() && props.onCreateTicket && !props.jiraTicketId ? (
-                  <CreateTicketButton
-                    onClick={() => props.onCreateTicket?.()}
-                    class="self-stretch"
-                  />
-                ) : undefined
-              }
-            />
+          <Show when={hasSavedSelection()}>
+            <div class="px-3.5 pt-2.5">
+              <SelectionCardBody
+                timestamp={props.timestamp}
+                itemId={props.itemId}
+                syncServerUrl={props.syncServerUrl}
+                syncWorkspace={props.syncWorkspace}
+                jiraTicketId={props.jiraTicketId}
+                jiraUrl={props.jiraUrl}
+                jiraStatus={props.groupStatus}
+                jiraFlagged={props.jiraFlagged}
+                jiraLabels={props.jiraLabels}
+                jiraDueDate={props.jiraDueDate}
+                jiraIssueType={props.jiraIssueType}
+                jiraPriority={props.jiraPriority}
+                jiraAssignee={props.jiraAssignee}
+                jiraAssigneeAvatar={props.jiraAssigneeAvatar}
+                jiraComments={props.jiraComments}
+                onSubmitComment={props.onSubmitJiraComment}
+                onSearchUsers={props.onSearchJiraUsers}
+                onRefreshStatus={
+                  props.onRefreshJiraStatus
+                    ? () => props.onRefreshJiraStatus?.()
+                    : undefined
+                }
+                noTicketAction={
+                  canInteract() &&
+                  props.onCreateTicket &&
+                  !props.jiraTicketId ? (
+                    <CreateTicketButton
+                      onClick={() => props.onCreateTicket?.()}
+                      class="self-stretch"
+                    />
+                  ) : undefined
+                }
+              />
+            </div>
+          </Show>
+          <div class="px-3.5 py-2.5">
             <SelectionLabelContextInput
+              variant="field"
+              label="Comment"
+              placeholder="Add a comment"
+              hideSubmit
               value={props.inputValue}
               onChange={props.onInputChange}
               onSubmit={props.onSubmit}
               onDismiss={props.onConfirmDismiss}
               autoFocus
             />
-          </BottomSection>
+          </div>
+          <div
+            data-react-grab-composer-footer
+            class="flex items-center gap-2 border-t border-border bg-muted/40 py-2.5 pr-3.5 pl-1.5 rounded-b-[10px]"
+          >
+            <ActiveGroupPicker
+              groups={props.groups}
+              activeGroupId={props.activeGroupId}
+              onActiveGroupChange={props.onActiveGroupChange}
+              onAddGroup={props.onAddGroup}
+            >
+              <ActiveGroupPicker.Trigger
+                variant="outline"
+                size="xs"
+                class="mx-0 h-7 px-2.5 text-caption leading-none"
+              />
+              <ActiveGroupPicker.Content />
+            </ActiveGroupPicker>
+            <span class="flex-1" />
+            <Kbd>↵</Kbd>
+            <Button
+              data-react-grab-ignore-events
+              data-react-grab-generation-submit
+              variant="inverse"
+              size="xs"
+              class="h-7 px-3 text-body"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                props.onSubmit?.();
+              }}
+            >
+              Save
+            </Button>
+          </div>
           <DevInsightsSection
             tagName={props.tagName}
             componentName={props.componentName}

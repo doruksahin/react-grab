@@ -489,6 +489,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           groups={(props.groups ?? []) as SelectionGroupWithJira[]}
           commentItems={props.commentItems ?? []}
           syncStatus={props.syncStatus ?? "local"}
+          onRetrySync={props.onRetrySync}
           syncServerUrl={props.syncServerUrl}
           syncWorkspace={props.syncWorkspace}
           jiraProjectKey={props.jiraProjectKey}

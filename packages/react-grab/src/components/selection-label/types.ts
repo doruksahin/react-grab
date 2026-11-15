@@ -75,6 +75,20 @@ export interface SelectionLabelHeaderProps {
   jiraFlaggedByAvatar?: string | null;
 }
 
+/** Composer header — element name, tag and file, open and close */
+export interface SelectionLabelComposerHeaderProps {
+  tagName?: string;
+  componentName?: string;
+  elementsCount?: number;
+  filePath?: string;
+  onOpen?: () => void;
+  onClose?: () => void;
+  jiraFlagged?: boolean;
+  jiraFlaggedAt?: string | null;
+  jiraFlaggedBy?: string | null;
+  jiraFlaggedByAvatar?: string | null;
+}
+
 /** Context input — textarea + submit/abort buttons */
 export interface SelectionLabelContextInputProps {
   value?: string;
@@ -84,6 +98,12 @@ export interface SelectionLabelContextInputProps {
   placeholder?: string;
   disabled?: boolean;
   autoFocus?: boolean;
+  /** "inline" sits in the label's text flow; "field" is a bordered input. */
+  variant?: "inline" | "field";
+  /** Accessible name of the textarea. */
+  label?: string;
+  /** Leaves out the inline submit button when the caller has its own. */
+  hideSubmit?: boolean;
 }
 
 /** Content wrapper — just children */

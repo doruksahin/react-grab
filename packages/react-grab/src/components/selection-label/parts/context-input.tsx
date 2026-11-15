@@ -8,6 +8,7 @@ import {
 } from "../../../constants.js";
 import type { SelectionLabelContextInputProps } from "../types.js";
 import { IconButton } from "../../ui/icon-button.js";
+import { Textarea } from "../../ui/textarea.js";
 
 export const SelectionLabelContextInput: Component<
   SelectionLabelContextInputProps
@@ -53,17 +54,14 @@ export const SelectionLabelContextInput: Component<
       data-react-grab-context-input
       class="shrink-0 flex justify-between items-end w-full min-h-4"
     >
-      <textarea
+      <Textarea
         ref={inputRef}
         data-react-grab-ignore-events
         data-react-grab-generation-input
-        class="text-popover-foreground text-body leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
-        classList={{
-          "opacity-50": Boolean(props.disabled),
-        }}
+        variant={props.variant}
+        aria-label={props.label}
         style={{
           "field-sizing": "content",
-          "min-height": "16px",
           "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px`,
           "scrollbar-width": "none",
         }}
@@ -75,7 +73,7 @@ export const SelectionLabelContextInput: Component<
         disabled={props.disabled}
         readOnly={!props.onSubmit}
       />
-      <Show when={props.onSubmit && !props.disabled}>
+      <Show when={props.onSubmit && !props.disabled && !props.hideSubmit}>
         <IconButton
           data-react-grab-ignore-events
           data-react-grab-generation-submit

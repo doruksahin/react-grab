@@ -127,3 +127,15 @@ test.describe("Overlay surfaces", { tag: ["@ADR-0022"] }, () => {
     ]);
   });
 });
+
+test.describe("Overlay surfaces offline", { tag: ["@ADR-0022"] }, () => {
+  test("sidebar offline banner", async ({ page, reactGrab, mockServer }) => {
+    mockServer.override("listGroups", () => null);
+    await startSynced(page, reactGrab);
+    const dashboard = await openDashboard(page);
+    await expect(
+      dashboard.locator("[data-react-grab-sync-offline-banner]"),
+    ).toBeVisible();
+    await expectPageShot(page, "sidebar-offline.png");
+  });
+});
