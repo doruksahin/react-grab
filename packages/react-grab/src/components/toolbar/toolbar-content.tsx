@@ -17,6 +17,7 @@ import {
 import type { SyncStatus } from "../../features/sync/types.js";
 import { SyncIndicator } from "../../features/sync/components/sync-indicator.jsx";
 import { ToggleSwitch } from "../ui/toggle-switch.jsx";
+import { Button } from "../ui/button.js";
 
 export interface ToolbarContentProps {
   isActive?: boolean;
@@ -107,16 +108,14 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
   };
 
   const defaultSelectButton = () => (
-    <button
+    <Button
+      variant="toolbar"
+      size="auto"
       data-react-grab-ignore-events
       data-react-grab-toolbar-toggle
       aria-label={props.isActive ? "Stop selecting element" : "Select element"}
       aria-pressed={Boolean(props.isActive)}
-      class={cn(
-        "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
-        buttonSpacingClass(),
-        hitboxConstraintClass(),
-      )}
+      class={cn("touch-hitbox", buttonSpacingClass(), hitboxConstraintClass())}
     >
       <IconSelect
         size={14}
@@ -125,76 +124,78 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
           props.isActive ? "text-popover-foreground" : "text-muted-foreground",
         )}
       />
-    </button>
+    </Button>
   );
 
   const defaultCommentsButton = () => (
-    <button
+    <Button
+      variant="toolbar"
+      size="auto"
       data-react-grab-ignore-events
       data-react-grab-toolbar-comments
       aria-label="Open comments"
-      class={cn(
-        "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
-        buttonSpacingClass(),
-        hitboxConstraintClass(),
-      )}
+      class={cn("touch-hitbox", buttonSpacingClass(), hitboxConstraintClass())}
     >
       <IconComment
         size={14}
         class={cn(
           "transition-colors",
-          props.isCommentsPinned ? "text-muted-foreground" : "text-muted-foreground",
+          props.isCommentsPinned
+            ? "text-muted-foreground"
+            : "text-muted-foreground",
         )}
       />
-    </button>
+    </Button>
   );
 
   const defaultCopyAllButton = () => (
-    <button
+    <Button
+      variant="toolbar"
+      size="auto"
       data-react-grab-ignore-events
       data-react-grab-toolbar-copy-all
       aria-label="Copy all comments"
-      class={cn(
-        "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
-        buttonSpacingClass(),
-        hitboxConstraintClass(),
-      )}
+      class={cn("touch-hitbox", buttonSpacingClass(), hitboxConstraintClass())}
     >
       <IconCopy size={14} class="text-muted-foreground transition-colors" />
-    </button>
+    </Button>
   );
 
   const defaultVisibilityButton = () => (
-    <button
+    <Button
+      variant="toolbar"
+      size="auto"
       data-react-grab-ignore-events
       data-react-grab-toolbar-visibility
-      aria-label={props.selectionsRevealed ? "Hide all selections" : "Reveal all selections"}
+      aria-label={
+        props.selectionsRevealed
+          ? "Hide all selections"
+          : "Reveal all selections"
+      }
       aria-pressed={props.selectionsRevealed}
-      class={cn(
-        "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
-        buttonSpacingClass(),
-        hitboxConstraintClass(),
-      )}
+      class={cn("touch-hitbox", buttonSpacingClass(), hitboxConstraintClass())}
       onClick={() => props.onToggleSelectionsRevealed?.()}
     >
       {props.selectionsRevealed ? (
-        <IconEyeFilled size={14} class="text-popover-foreground transition-colors" />
+        <IconEyeFilled
+          size={14}
+          class="text-popover-foreground transition-colors"
+        />
       ) : (
         <IconEyeOff size={14} class="text-muted-foreground transition-colors" />
       )}
-    </button>
+    </Button>
   );
 
   const defaultToggleButton = () => (
-    <button
+    <Button
+      variant="toolbar"
+      size="auto"
       data-react-grab-ignore-events
       data-react-grab-toolbar-devmode
       aria-label={props.isDevMode ? "DEV mode active" : "Toggle DEV mode"}
       aria-pressed={Boolean(props.isDevMode)}
-      class={cn(
-        "contain-layout flex items-center gap-1 cursor-pointer interactive-scale outline-none",
-        isVertical() ? "my-0.5 flex-col" : "mx-0.5",
-      )}
+      class={cn("gap-1", isVertical() ? "my-0.5 flex-col" : "mx-0.5")}
     >
       <span
         class="text-meta font-extrabold tracking-wider leading-none"
@@ -205,16 +206,23 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
       >
         DEV
       </span>
-      <ToggleSwitch isOn={Boolean(props.isDevMode)} size="sm" vertical={isVertical()} color="sky" />
-    </button>
+      <ToggleSwitch
+        isOn={Boolean(props.isDevMode)}
+        size="sm"
+        vertical={isVertical()}
+        color="sky"
+      />
+    </Button>
   );
 
   const defaultCollapseButton = () => (
-    <button
+    <Button
+      variant="toolbar"
+      size="auto"
       data-react-grab-ignore-events
       data-react-grab-toolbar-collapse
       aria-label={props.isCollapsed ? "Expand toolbar" : "Collapse toolbar"}
-      class="contain-layout shrink-0 flex items-center justify-center cursor-pointer interactive-scale"
+      class="shrink-0"
       onClick={props.onCollapseClick}
     >
       <IconChevron
@@ -224,13 +232,13 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
           chevronRotation(),
         )}
       />
-    </button>
+    </Button>
   );
 
   return (
     <div
       class={cn(
-        "flex items-center justify-center rounded-[10px] antialiased relative overflow-visible [font-synthesis:none] filter-[drop-shadow(0px_1px_2px_#51515140)] [corner-shape:superellipse(1.25)]",
+        "flex items-center justify-center rounded-[10px] antialiased relative overflow-visible [font-synthesis:none] drop-shadow-overlay [corner-shape:superellipse(1.25)]",
         isVertical() && "flex-col",
         "bg-popover",
         !props.isCollapsed &&
@@ -247,10 +255,12 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
           "grid relative overflow-visible",
           gridSizeTransitionClass(),
           props.isCollapsed
-            ? (isVertical()
-                ? "grid-rows-[0fr] pointer-events-none"
-                : "grid-cols-[0fr] pointer-events-none")
-            : (isVertical() ? "grid-rows-[1fr]" : "grid-cols-[1fr]"),
+            ? isVertical()
+              ? "grid-rows-[0fr] pointer-events-none"
+              : "grid-cols-[0fr] pointer-events-none"
+            : isVertical()
+              ? "grid-rows-[1fr]"
+              : "grid-cols-[1fr]",
         )}
       >
         <div
@@ -269,11 +279,7 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
             class={cn("flex items-center", isVertical() && "flex-col")}
           >
             <div
-              class={cn(
-                "grid",
-                gridTransitionClass(),
-                expandGridClass(true),
-              )}
+              class={cn("grid", gridTransitionClass(), expandGridClass(true))}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
                 {props.selectButton ?? defaultSelectButton()}
@@ -308,32 +314,28 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
               </div>
             </div>
             <div
-              class={cn(
-                "grid",
-                gridTransitionClass(),
-                expandGridClass(true),
-              )}
+              class={cn("grid", gridTransitionClass(), expandGridClass(true))}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
                 {props.visibilityButton ?? defaultVisibilityButton()}
               </div>
             </div>
             <div
-              class={cn(
-                "grid",
-                gridTransitionClass(),
-                expandGridClass(true),
-              )}
+              class={cn("grid", gridTransitionClass(), expandGridClass(true))}
             >
               <div class={cn("relative overflow-visible", minDimensionClass())}>
-                <button
+                <Button
+                  variant="toolbar"
+                  size="auto"
                   ref={props.onDashboardBtnRef}
                   data-react-grab-ignore-events
                   data-react-grab-toolbar-dashboard
-                  aria-label={props.sidebarOpen ? "Close dashboard" : "Open dashboard"}
+                  aria-label={
+                    props.sidebarOpen ? "Close dashboard" : "Open dashboard"
+                  }
                   aria-pressed={Boolean(props.sidebarOpen)}
                   class={cn(
-                    "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
+                    "touch-hitbox",
                     buttonSpacingClass(),
                     hitboxConstraintClass(),
                     props.sidebarOpen && "text-[var(--color-grab-pink)]",
@@ -344,10 +346,12 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
                     size={14}
                     class={cn(
                       "transition-colors",
-                      props.sidebarOpen ? "text-popover-foreground" : "text-muted-foreground",
+                      props.sidebarOpen
+                        ? "text-popover-foreground"
+                        : "text-muted-foreground",
                     )}
                   />
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -357,7 +361,10 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
         </div>
       </div>
       {props.collapseButton ?? defaultCollapseButton()}
-      <SyncIndicator status={props.syncStatus} workspace={props.syncWorkspace} />
+      <SyncIndicator
+        status={props.syncStatus}
+        workspace={props.syncWorkspace}
+      />
     </div>
   );
 };

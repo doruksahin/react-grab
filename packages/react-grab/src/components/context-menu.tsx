@@ -30,6 +30,7 @@ import { nativeRequestAnimationFrame } from "../utils/native-raf.js";
 import { createMenuHighlight } from "../utils/create-menu-highlight.js";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { registerOverlayDismiss } from "../utils/register-overlay-dismiss.js";
+import { Button } from "./ui/button.js";
 
 interface ContextMenuProps {
   position: Position | null;
@@ -230,7 +231,7 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-context-menu
-        class="fixed text-body antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none"
+        class="fixed text-body antialiased drop-shadow-overlay select-none"
         style={{
           top: `${computedPosition().top}px`,
           left: `${computedPosition().left}px`,
@@ -283,10 +284,12 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
               />
               <For each={menuItems()}>
                 {(item) => (
-                  <button
+                  <Button
                     data-react-grab-ignore-events
                     data-react-grab-menu-item={item.label.toLowerCase()}
-                    class="relative z-1 contain-layout flex items-center justify-between w-full px-2 py-1 cursor-pointer text-left border-none bg-transparent disabled:opacity-40 disabled:cursor-default"
+                    variant="menu-item"
+                    size="menu"
+                    class="justify-between"
                     disabled={!item.enabled}
                     onPointerDown={(event) => event.stopPropagation()}
                     onPointerEnter={(event) => {
@@ -307,7 +310,7 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
                         </span>
                       )}
                     </Show>
-                  </button>
+                  </Button>
                 )}
               </For>
             </div>

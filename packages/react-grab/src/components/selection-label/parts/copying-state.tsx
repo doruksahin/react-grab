@@ -3,6 +3,7 @@ import type { Component } from "solid-js";
 import { TEXTAREA_MAX_HEIGHT_PX } from "../../../constants.js";
 import { BottomSection } from "../bottom-section.js";
 import { IconLoader } from "../../icons/icon-loader.js";
+import { IconButton } from "../../ui/icon-button.js";
 
 export interface CopyingStateProps {
   statusText?: string;
@@ -43,10 +44,13 @@ export const CopyingState: Component<CopyingStateProps> = (props) => {
               disabled
             />
             <Show when={props.onAbort}>
-              <button
+              <IconButton
                 data-react-grab-ignore-events
                 data-react-grab-generation-abort
-                class="contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-popover-foreground cursor-pointer ml-1 interactive-scale"
+                label="Stop"
+                variant="inverse"
+                size="icon-2xs"
+                class="shrink-0 ml-1"
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
                   event.stopPropagation();
@@ -54,7 +58,7 @@ export const CopyingState: Component<CopyingStateProps> = (props) => {
                 }}
               >
                 <div class="size-1.5 bg-popover rounded-[1px]" />
-              </button>
+              </IconButton>
             </Show>
           </div>
         </BottomSection>

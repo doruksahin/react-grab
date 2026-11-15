@@ -2,6 +2,7 @@ import { Show } from "solid-js";
 import type { Component, ParentComponent } from "solid-js";
 import type { OverlayBounds } from "../../types.js";
 import { cn } from "../../utils/cn.js";
+import { Button } from "../ui/button.js";
 
 const DOT_SIZE_PX = 10;
 const DOT_GAP_PX = 6;
@@ -69,13 +70,14 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
   const hasPreview = () => Boolean(previewText());
 
   return (
-    <button
+    <Button
       type="button"
+      variant="floating"
+      size="auto"
       data-react-grab-ignore-events
       data-react-grab-collapsed-dot
       class={cn(
-        "fixed flex items-center rounded-full bg-popover border border-border shadow-md cursor-pointer",
-        "transition-all duration-150 ease-out hover:bg-accent hover:border-ring hover:shadow-lg hover:scale-105",
+        "fixed rounded-full duration-150 ease-out",
         hasPreview() ? "justify-between gap-3 pl-3 pr-1.5 py-1" : "p-1.5",
         props.isExpanding
           ? "animate-out fade-out-0 zoom-out-75 fill-mode-forwards ease-in"
@@ -96,14 +98,10 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
       onPointerDown={(event) => event.stopImmediatePropagation()}
     >
       <Show when={previewText()}>
-        {(text) => (
-          <PreviewSlot>
-            {text()}
-          </PreviewSlot>
-        )}
+        {(text) => <PreviewSlot>{text()}</PreviewSlot>}
       </Show>
 
       <DotIndicator />
-    </button>
+    </Button>
   );
 };

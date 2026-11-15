@@ -52,5 +52,5 @@ We want a consistent UI without touching domain logic, the test contract, or add
 - Good: the hand-written positioning code is removed in favour of the library ADR-0005 already chose.
 - Good: no new dependency.
 - Bad: migrating 50 raw buttons and the positioning utilities touches many files; screenshot tests are needed so the migration is reviewed by image, not by reading diffs.
-- Neutral: nothing enforces the rule mechanically yet. A lint rule (no raw `<button>` and no `text-[Npx]` outside `components/ui/`) is a follow-up once the migration is done, so it does not fail on day one.
+- Neutral: `pnpm lint` enforces the rule in `packages/react-grab/src/components/` outside `components/ui/` (`packages/react-grab/.oxlintrc.json`): oxlint's built-in `react/forbid-elements` rejects a raw `<button>`, and the JS plugin `scripts/oxlint/overlay-ui-plugin.mjs` rejects hex and `rgb()`/`hsl()` colours and `text-[Npx]` sizes in string literals. Jira's own colours (priority, issue type, editor text colours) are data and live in `features/`.
 - Neutral: primitives own their appearance, so a fixed pixel size inside `components/ui/` (for example the avatar initials) is allowed; the planned lint rule applies outside `components/ui/` only.

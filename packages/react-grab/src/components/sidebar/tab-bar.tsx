@@ -1,5 +1,6 @@
 import type { Component } from "solid-js";
 import { Badge } from "../ui/badge.js";
+import { Button } from "../ui/button.js";
 
 export interface TabBarProps {
   activeTab: "groups" | "selections";
@@ -31,16 +32,14 @@ export const TabBar: Component<TabBarProps> = (props) => {
         const isLast = index === tabs().length - 1;
 
         return (
-          <button
+          <Button
             type="button"
-            class="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 font-semibold text-meta cursor-pointer border border-border transition-colors"
+            variant="segment"
+            size="segment"
+            aria-pressed={isActive()}
             classList={{
               "rounded-l-lg border-r-0": isFirst,
               "rounded-r-lg": isLast,
-              "bg-accent text-foreground shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]":
-                isActive(),
-              "bg-accent/50 text-muted-foreground hover:bg-accent/70":
-                !isActive(),
             }}
             onClick={() => props.onTabChange(tab.id)}
           >
@@ -48,7 +47,7 @@ export const TabBar: Component<TabBarProps> = (props) => {
             <Badge variant="count" tone={isActive() ? "accent" : "neutral"}>
               {tab.count}
             </Badge>
-          </button>
+          </Button>
         );
       })}
     </div>

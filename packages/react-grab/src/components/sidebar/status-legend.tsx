@@ -2,6 +2,7 @@ import { type Component, For } from "solid-js";
 import { getStatusColor } from "../../features/sidebar/status-colors.js";
 import { FLAGGED_COLOR } from "../../features/sidebar/resolve-display-color.js";
 import { StatusDot } from "../ui/status-dot.js";
+import { Button } from "../ui/button.js";
 
 interface StatusLegendProps {
   onClose: () => void;
@@ -44,12 +45,9 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
         <span class="text-body font-semibold text-foreground">
           Status Legend
         </span>
-        <button
-          class="text-meta text-muted-foreground hover:text-foreground cursor-pointer"
-          onClick={props.onClose}
-        >
+        <Button variant="subtle" size="xs" onClick={props.onClose}>
           Got it
-        </button>
+        </Button>
       </div>
       <div class="px-4 py-3 space-y-2">
         {/* Flagged — cross-cutting override, shown above workflow statuses */}

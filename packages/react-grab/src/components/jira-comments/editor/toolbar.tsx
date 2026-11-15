@@ -1,4 +1,5 @@
 import { type Component, type JSX, createSignal, Show } from "solid-js";
+import { Button } from "../../ui/button.js";
 
 export const ToolbarButton: Component<{
   active?: boolean;
@@ -8,27 +9,25 @@ export const ToolbarButton: Component<{
   children: JSX.Element;
   dataAction?: string;
 }> = (props) => (
-  <button
+  <Button
     type="button"
+    variant="subtle"
+    size="xs"
     title={props.title}
+    aria-pressed={Boolean(props.active)}
     disabled={props.disabled}
     data-react-grab-ignore-events
-    {...(props.dataAction ? { "data-react-grab-editor-action": props.dataAction } : {})}
+    {...(props.dataAction
+      ? { "data-react-grab-editor-action": props.dataAction }
+      : {})}
     onMouseDown={(e) => {
       e.preventDefault();
       if (!props.disabled) props.onClick();
     }}
-    class={[
-      "px-1.5 py-0.5 rounded text-meta font-medium transition-colors",
-      props.active
-        ? "bg-accent text-accent-foreground"
-        : "text-muted-foreground hover:text-foreground hover:bg-accent",
-      props.disabled ? "opacity-30 cursor-not-allowed" : "",
-    ].join(" ")}
     style={{ "pointer-events": "auto" }}
   >
     {props.children}
-  </button>
+  </Button>
 );
 
 export const ToolbarSeparator: Component = () => (
@@ -45,20 +44,23 @@ export const ToolbarDropdown: Component<{
 
   return (
     <div class="relative" data-react-grab-ignore-events>
-      <button
+      <Button
         type="button"
+        variant="subtle"
+        size="xs"
         title={props.title}
-        {...(props.dataDropdown ? { "data-react-grab-editor-dropdown": props.dataDropdown } : {})}
+        {...(props.dataDropdown
+          ? { "data-react-grab-editor-dropdown": props.dataDropdown }
+          : {})}
         onMouseDown={(e) => {
           e.preventDefault();
           setOpen((v) => !v);
         }}
-        class="px-1.5 py-0.5 rounded text-meta font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors flex items-center gap-0.5"
         style={{ "pointer-events": "auto" }}
       >
         {props.label}
-        <span class="text-meta text-muted-foreground">▾</span>
-      </button>
+        <span class="text-muted-foreground">▾</span>
+      </Button>
       <Show when={open()}>
         <div
           class="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50 min-w-[120px] p-1"

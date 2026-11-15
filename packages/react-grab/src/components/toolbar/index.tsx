@@ -65,6 +65,7 @@ import {
 } from "../../utils/toolbar-position.js";
 import { createToolbarDrag } from "../../utils/create-toolbar-drag.js";
 import { Badge } from "../ui/badge.js";
+import { buttonVariants } from "../ui/button.js";
 
 interface ToolbarProps {
   isActive?: boolean;
@@ -918,7 +919,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               }
               aria-pressed={Boolean(props.isActive)}
               class={cn(
-                "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
+                buttonVariants({ variant: "toolbar", size: "auto" }),
+                "touch-hitbox",
                 buttonSpacingClass(),
                 hitboxConstraintClass(),
               )}
@@ -968,7 +970,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               aria-haspopup="menu"
               aria-expanded={Boolean(props.isCommentsDropdownOpen)}
               class={cn(
-                "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
+                buttonVariants({ variant: "toolbar", size: "auto" }),
+                "touch-hitbox",
                 buttonSpacingClass(),
                 hitboxConstraintClass(),
               )}
@@ -1026,7 +1029,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               data-react-grab-toolbar-copy-all
               aria-label="Copy all comments"
               class={cn(
-                "contain-layout flex items-center justify-center cursor-pointer interactive-scale touch-hitbox",
+                buttonVariants({ variant: "toolbar", size: "auto" }),
+                "touch-hitbox",
                 buttonSpacingClass(),
                 hitboxConstraintClass(),
               )}
@@ -1070,7 +1074,8 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
               }
               aria-pressed={Boolean(props.isDevMode)}
               class={cn(
-                "contain-layout flex items-center gap-1 cursor-pointer interactive-scale outline-none",
+                buttonVariants({ variant: "toolbar", size: "auto" }),
+                "gap-1",
                 isVertical() ? "my-0.5 flex-col" : "mx-0.5",
               )}
               onClick={(event: MouseEvent) => {

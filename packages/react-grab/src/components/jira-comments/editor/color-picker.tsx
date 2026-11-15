@@ -1,9 +1,6 @@
 import { type Component, For } from "solid-js";
-
-const COLORS = [
-  "#e74c3c", "#e67e22", "#f1c40f", "#2ecc71", "#1abc9c",
-  "#3498db", "#9b59b6", "#e91e63", "#95a5a6", "#2c3e50",
-];
+import { EDITOR_TEXT_COLORS } from "../../../features/jira-comments/editor-text-colors.js";
+import { Button } from "../../ui/button.js";
 
 export const ColorPicker: Component<{
   onSelect: (color: string | null) => void;
@@ -15,29 +12,32 @@ export const ColorPicker: Component<{
     style={{ "grid-template-columns": "repeat(5, 1fr)", "min-width": "140px" }}
     data-react-grab-ignore-events
   >
-    <button
+    <Button
       type="button"
       data-react-grab-color-reset
-      class="w-6 h-6 rounded border border-dashed border-muted-foreground flex items-center justify-center text-meta text-muted-foreground hover:border-foreground"
+      variant="outline"
+      size="icon-sm"
+      class="border-dashed text-meta"
       title="Reset color"
+      aria-label="Reset color"
       onMouseDown={(e) => {
         e.preventDefault();
         props.onSelect(null);
       }}
     >
       ↺
-    </button>
-    <For each={COLORS}>
+    </Button>
+    <For each={EDITOR_TEXT_COLORS}>
       {(color) => (
-        <button
+        <Button
           type="button"
           data-react-grab-color={color}
-          class={[
-            "w-6 h-6 rounded border-2 transition-all hover:scale-110",
-            props.activeColor === color ? "border-foreground" : "border-transparent",
-          ].join(" ")}
+          variant="swatch"
+          size="icon-sm"
+          aria-pressed={props.activeColor === color}
           style={{ background: color }}
           title={color}
+          aria-label={color}
           onMouseDown={(e) => {
             e.preventDefault();
             props.onSelect(color);

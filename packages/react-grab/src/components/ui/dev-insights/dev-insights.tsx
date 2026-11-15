@@ -23,20 +23,20 @@ export const DevInsightsShell: Component<DevInsightsShellProps> = (props) => {
     >
       <div
         data-react-grab-dev-insights
-        class="bg-[#0a0e14] border border-[#1c2433] rounded-lg overflow-hidden"
+        class="bg-background border border-border rounded-lg overflow-hidden"
       >
         {/* Header bar — clickable trigger inside the card */}
         <CollapsibleTrigger
           class={cn(
             "flex w-full items-center gap-1.5 px-2.5 py-1.5 cursor-pointer select-none transition-colors",
-            "bg-[#0d1117] border-b border-[#1c2433]",
+            "bg-card border-b border-border",
             "[&>svg.collapsible-chevron]:transition-transform [&>svg.collapsible-chevron]:duration-150",
             "[&[data-expanded]>svg.collapsible-chevron]:rotate-0",
             "[&[data-closed]>svg.collapsible-chevron]:-rotate-90",
           )}
         >
-          <ChevronIcon class="collapsible-chevron text-[#445] size-2.5" />
-          <span class="w-[5px] h-[5px] rounded-full bg-sky-500 shadow-[0_0_6px_#38bdf820]" />
+          <ChevronIcon class="collapsible-chevron text-muted-foreground size-2.5" />
+          <span class="w-[5px] h-[5px] rounded-full bg-sky-500 shadow-glow-sky-soft" />
           <span class="text-meta font-extrabold text-sky-500 uppercase tracking-wide">
             Dev Insights
           </span>

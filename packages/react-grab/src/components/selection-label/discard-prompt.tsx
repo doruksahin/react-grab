@@ -5,6 +5,7 @@ import { confirmationFocusManager } from "../../utils/confirmation-focus-manager
 import { isKeyboardEventTriggeredByInput } from "../../utils/is-keyboard-event-triggered-by-input.js";
 import { IconReturn } from "../icons/icon-return.jsx";
 import { BottomSection } from "./bottom-section.js";
+import { Button } from "../ui/button.js";
 
 export const DiscardPrompt: Component<DiscardPromptProps> = (props) => {
   const instanceId = Symbol();
@@ -54,25 +55,25 @@ export const DiscardPrompt: Component<DiscardPromptProps> = (props) => {
       </div>
       <BottomSection>
         <div class="contain-layout shrink-0 flex items-center justify-end gap-[5px] w-full h-fit">
-          <button
+          <Button
             data-react-grab-discard-no
-            class="contain-layout shrink-0 flex items-center justify-center px-[3px] py-px rounded-sm bg-popover [border-width:0.5px] border-solid border-border cursor-pointer transition-all hover:bg-accent press-scale h-[17px]"
+            variant="chip"
+            size="chip"
+            class="shrink-0"
             onClick={props.onCancel}
           >
-            <span class="text-popover-foreground text-body leading-3.5 font-medium">
-              No
-            </span>
-          </button>
-          <button
+            No
+          </Button>
+          <Button
             data-react-grab-discard-yes
-            class="contain-layout shrink-0 flex items-center justify-center gap-0.5 px-[3px] py-px rounded-sm bg-destructive/10 cursor-pointer transition-all hover:bg-destructive/20 press-scale h-[17px]"
+            variant="chip-destructive"
+            size="chip"
+            class="shrink-0"
             onClick={props.onConfirm}
           >
-            <span class="text-destructive text-body leading-3.5 font-medium">
-              Yes
-            </span>
+            Yes
             <IconReturn size={10} class="text-destructive/50" />
-          </button>
+          </Button>
         </div>
       </BottomSection>
     </div>

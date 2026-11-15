@@ -3,6 +3,7 @@ import type { Component } from "solid-js";
 import type { ArrowNavigationItem } from "../../types.js";
 import { createMenuHighlight } from "../../utils/create-menu-highlight.js";
 import { BottomSection } from "./bottom-section.js";
+import { Button } from "../ui/button.js";
 
 interface ArrowNavigationMenuProps {
   items: ArrowNavigationItem[];
@@ -63,11 +64,12 @@ export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
         />
         <For each={props.items}>
           {(item, itemIndex) => (
-            <button
+            <Button
               data-react-grab-ignore-events
               data-react-grab-arrow-nav-item={item.tagName}
               data-react-grab-arrow-nav-index={itemIndex()}
-              class="relative z-1 contain-layout flex items-center w-full px-2 py-1 cursor-pointer text-left border-none bg-transparent"
+              variant="menu-item"
+              size="menu"
               onPointerDown={(event) => event.stopPropagation()}
               onPointerEnter={(event) => {
                 updateHighlight(event.currentTarget);
@@ -101,7 +103,7 @@ export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
                 </Show>
                 {item.tagName}
               </span>
-            </button>
+            </Button>
           )}
         </For>
       </div>

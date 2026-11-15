@@ -2,6 +2,7 @@ import { type Component, Show, For } from "solid-js";
 import type { FilterState } from "../../features/sidebar/filter-state.js";
 import { DUE_DATE_PRESET_LABEL } from "../../features/sidebar/due-date/index.js";
 import { Badge } from "../ui/badge.js";
+import { IconButton } from "../ui/icon-button.js";
 
 interface FilterChipsProps {
   filter: FilterState;
@@ -61,12 +62,13 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
           {(chip) => (
             <Badge>
               {chip.label}
-              <button
-                class="text-muted-foreground hover:text-foreground cursor-pointer"
+              <IconButton
+                label={`Remove filter ${chip.label}`}
+                size="icon-2xs"
                 onClick={chip.onDismiss}
               >
                 ✕
-              </button>
+              </IconButton>
             </Badge>
           )}
         </For>

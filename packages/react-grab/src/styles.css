@@ -34,6 +34,14 @@
   --color-label-muted: #767676;
   --color-flag: #dc2626;
   --color-flag-hover: rgba(220, 38, 38, 0.08);
+  --color-mention: #7b8cf8;
+  --color-mention-surface: rgba(88, 101, 242, 0.2);
+  --color-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --shadow-bulk-bar: 0 -10px 30px rgba(0, 0, 0, 0.3);
+  --inset-shadow-tab: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  --drop-shadow-overlay: 0px 1px 2px #51515140;
+  --shadow-glow-sky: 0 0 8px rgba(14, 165, 233, 0.6);
+  --shadow-glow-sky-soft: 0 0 6px #38bdf820;
   /* ADR-0022 type scale: five steps, nothing below 11 px. Font size only;
      line heights stay as they are until the primitives own them. */
   --text-meta: 11px;
@@ -79,6 +87,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -131,6 +140,7 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.723 0.219 149.579);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -297,6 +307,7 @@
   --accent: #2b2430;
   --accent-foreground: #ffffff;
   --destructive: #fd7114;
+  --success: #22c55e;
   --editor-blockquote-border: oklch(1 0 0 / 20%);
   --editor-blockquote-text: oklch(1 0 0 / 60%);
   --editor-code-bg: oklch(1 0 0 / 10%);

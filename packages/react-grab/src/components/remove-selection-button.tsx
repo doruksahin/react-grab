@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 import { cn } from "../utils/cn.js";
 import { IconX } from "./icons/icon-x.jsx";
+import { IconButton } from "./ui/icon-button.js";
 
 /**
  * Shared red × button for removing a selection. Rendered by the
@@ -42,14 +43,15 @@ export const RemoveSelectionButton: Component<RemoveSelectionButtonProps> = (
   };
 
   return (
-    <button
+    <IconButton
       {...(isOverlay() ? { "data-react-grab-ignore-events": "" } : {})}
       data-react-grab-selection-remove
       type="button"
-      aria-label="Remove selection"
-      title="Remove selection"
+      label="Remove selection"
+      variant="destructive"
+      size="icon-2xs"
       class={cn(
-        "contain-layout shrink-0 flex items-center justify-center size-4 rounded-full bg-red-500 text-white cursor-pointer",
+        "contain-layout shrink-0",
         isOverlay() && "interactive-scale",
         props.class,
       )}
@@ -57,6 +59,6 @@ export const RemoveSelectionButton: Component<RemoveSelectionButtonProps> = (
       onClick={handleClick}
     >
       <IconX size={8} />
-    </button>
+    </IconButton>
   );
 };

@@ -4,6 +4,7 @@ import { createFilter } from "@kobalte/core";
 import { Combobox, ComboboxInput } from "../ui/combobox.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
 import { Badge } from "../ui/badge.js";
+import { IconButton } from "../ui/icon-button.js";
 
 interface LabelSelectProps {
   allLabels: string[];
@@ -91,16 +92,17 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
               {(lbl) => (
                 <Badge>
                   {lbl}
-                  <button
+                  <IconButton
                     type="button"
-                    class="leading-none hover:opacity-70"
+                    label={`Remove label ${lbl}`}
+                    size="icon-2xs"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       toggle(lbl);
                     }}
                   >
                     ×
-                  </button>
+                  </IconButton>
                 </Badge>
               )}
             </For>

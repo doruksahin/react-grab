@@ -29,7 +29,17 @@ const IconButton: Component<IconButtonProps> = (props) => {
     "class",
     "variant",
     "size",
+    "onFocus",
   ]);
+
+  // The tooltip shows on hover and keyboard focus, not when a dialog moves
+  // focus to the button programmatically (WAI-ARIA tooltip pattern).
+  const handleFocus: JSX.FocusEventHandler<HTMLButtonElement, FocusEvent> = (
+    event,
+  ) => {
+    if (typeof local.onFocus === "function") local.onFocus(event);
+    if (!event.currentTarget.matches(":focus-visible")) event.preventDefault();
+  };
 
   return (
     <Tooltip openDelay={ICON_BUTTON_TOOLTIP_OPEN_DELAY_MS}>
@@ -41,6 +51,7 @@ const IconButton: Component<IconButtonProps> = (props) => {
           local.class,
         )}
         {...rest}
+        onFocus={handleFocus}
       >
         {local.children}
       </TooltipTrigger>

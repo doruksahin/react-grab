@@ -5,6 +5,7 @@ import { TagBadge } from "../tag-badge.js";
 import { FlagIndicator } from "../../flag-indicator.js";
 import { IconChevron } from "../../icons/icon-chevron.js";
 import type { SelectionLabelHeaderProps } from "../types.js";
+import { IconButton } from "../../ui/icon-button.js";
 
 export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
   props,
@@ -49,9 +50,7 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
             onClick={handleTagClick}
             shrink={!props.trailing}
             forceShowIcon={
-              props.trailing
-                ? true
-                : Boolean(props.isContextMenuOpen)
+              props.trailing ? true : Boolean(props.isContextMenuOpen)
             }
           />
         }
@@ -61,11 +60,12 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
         </span>
       </Show>
       <Show when={props.onCollapse}>
-        <button
+        <IconButton
           data-react-grab-ignore-events
           data-react-grab-collapse-label
-          title="Collapse"
-          class="contain-layout shrink-0 flex items-center justify-center size-5 rounded-md text-popover-foreground opacity-60 hover:opacity-100 hover:bg-accent cursor-pointer transition-all ml-1"
+          label="Collapse"
+          size="icon-xs"
+          class="shrink-0 ml-1"
           onClick={(event) => {
             event.stopImmediatePropagation();
             props.onCollapse?.();
@@ -73,7 +73,7 @@ export const SelectionLabelHeader: Component<SelectionLabelHeaderProps> = (
           onPointerDown={(event) => event.stopImmediatePropagation()}
         >
           <IconChevron size={12} />
-        </button>
+        </IconButton>
       </Show>
       <Show when={props.trailing}>
         <span class="flex-1" />

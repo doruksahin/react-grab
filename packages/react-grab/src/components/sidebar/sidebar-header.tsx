@@ -2,6 +2,7 @@ import type { Component } from "solid-js";
 import type { SyncStatus } from "../../features/sync/types.js";
 import { APP_NAME } from "../../constants.js";
 import { cn } from "../../utils/cn.js";
+import { IconButton } from "../ui/icon-button.js";
 
 interface SidebarHeaderProps {
   syncStatus: SyncStatus;
@@ -29,20 +30,17 @@ export const SidebarHeader: Component<SidebarHeaderProps> = (props) => {
         {APP_NAME}
       </h2>
       <div class="flex items-center gap-1.5">
-        <button
-          class="w-6 h-6 rounded-full border border-border text-meta text-muted-foreground hover:text-foreground hover:border-border cursor-pointer flex items-center justify-center"
+        <IconButton
+          label="Status legend"
+          variant="outline"
+          class="rounded-full text-meta"
           onClick={() => props.onInfoClick?.()}
-          title="Status legend"
         >
           i
-        </button>
-        <button
-          class="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded cursor-pointer"
-          onClick={props.onClose}
-          aria-label="Close sidebar"
-        >
+        </IconButton>
+        <IconButton label="Close sidebar" onClick={props.onClose}>
           &times;
-        </button>
+        </IconButton>
       </div>
     </div>
   );

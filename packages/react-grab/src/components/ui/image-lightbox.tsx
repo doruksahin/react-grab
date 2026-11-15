@@ -1,6 +1,12 @@
-import { type Component, Show, createEffect, createSignal, on, onCleanup } from "solid-js";
+import {
+  type Component,
+  Show,
+  createEffect,
+  createSignal,
+  on,
+  onCleanup,
+} from "solid-js";
 import { Portal } from "solid-js/web";
-import type { ImageLightboxProps } from "../../features/image-lightbox/types.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
 import { cn } from "../../utils/cn.js";
 
@@ -11,6 +17,13 @@ interface DragStart {
   y: number;
   scrollLeft: number;
   scrollTop: number;
+}
+
+interface ImageLightboxProps {
+  open: boolean;
+  src: string;
+  caption: string;
+  onClose: () => void;
 }
 
 export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
@@ -45,7 +58,9 @@ export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
       }
     };
     document.addEventListener("keydown", handleKeyDown, true);
-    onCleanup(() => document.removeEventListener("keydown", handleKeyDown, true));
+    onCleanup(() =>
+      document.removeEventListener("keydown", handleKeyDown, true),
+    );
   });
 
   // Body scroll lock — restore previous overflow on close
@@ -84,7 +99,8 @@ export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
 
   const handlePointerMove = (event: PointerEvent) => {
     if (!dragging() || !dragStart || !viewportRef) return;
-    viewportRef.scrollLeft = dragStart.scrollLeft - (event.clientX - dragStart.x);
+    viewportRef.scrollLeft =
+      dragStart.scrollLeft - (event.clientX - dragStart.x);
     viewportRef.scrollTop = dragStart.scrollTop - (event.clientY - dragStart.y);
   };
 
@@ -177,3 +193,5 @@ export const ImageLightbox: Component<ImageLightboxProps> = (props) => {
     </Show>
   );
 };
+
+export type { ImageLightboxProps };

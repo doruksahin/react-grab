@@ -11,6 +11,7 @@ import { createMenuHighlight } from "../../utils/create-menu-highlight.js";
 import { suppressMenuEvent } from "../../utils/suppress-menu-event.js";
 import { createAnchoredDropdown } from "../../utils/create-anchored-dropdown.js";
 import { registerOverlayDismiss } from "../../utils/register-overlay-dismiss.js";
+import { Button } from "../ui/button.js";
 
 interface ToolbarMenuProps {
   position: DropdownAnchor | null;
@@ -59,7 +60,7 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
         ref={containerRef}
         data-react-grab-ignore-events
         data-react-grab-toolbar-menu
-        class="fixed text-body antialiased filter-[drop-shadow(0px_1px_2px_#51515140)] select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
+        class="fixed text-body antialiased drop-shadow-overlay select-none transition-[opacity,transform] duration-100 ease-out will-change-[opacity,transform]"
         style={{
           top: `${dropdown.displayPosition().top}px`,
           left: `${dropdown.displayPosition().left}px`,
@@ -92,10 +93,12 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
                 const isDefault = () => action.id === props.defaultActionId;
 
                 return (
-                  <button
+                  <Button
                     data-react-grab-ignore-events
                     data-react-grab-menu-item={action.id}
-                    class="relative z-1 contain-layout flex items-center justify-between w-full px-2 py-1 cursor-pointer text-left border-none bg-transparent"
+                    variant="menu-item"
+                    size="menu"
+                    class="justify-between"
                     onPointerDown={(event) => event.stopPropagation()}
                     onPointerEnter={(event) =>
                       updateHighlight(event.currentTarget)
@@ -106,7 +109,9 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
                     <span
                       class={cn(
                         "text-body leading-4 font-medium",
-                        isDefault() ? "text-popover-foreground" : "text-muted-foreground",
+                        isDefault()
+                          ? "text-popover-foreground"
+                          : "text-muted-foreground",
                       )}
                     >
                       {action.label}
@@ -118,7 +123,7 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
                         </span>
                       )}
                     </Show>
-                  </button>
+                  </Button>
                 );
               }}
             </For>

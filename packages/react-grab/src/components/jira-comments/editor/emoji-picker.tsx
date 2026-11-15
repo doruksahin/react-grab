@@ -1,9 +1,31 @@
 import { type Component, For } from "solid-js";
+import { Button } from "../../ui/button.js";
 
 const COMMON_EMOJI = [
-  "😀", "😂", "😍", "🤔", "👍", "👎", "🎉", "🔥",
-  "❤️", "💯", "✅", "❌", "⚡", "💡", "🚀", "👀",
-  "🙏", "👋", "💪", "🎯", "⭐", "📌", "🔑", "🛠️",
+  "😀",
+  "😂",
+  "😍",
+  "🤔",
+  "👍",
+  "👎",
+  "🎉",
+  "🔥",
+  "❤️",
+  "💯",
+  "✅",
+  "❌",
+  "⚡",
+  "💡",
+  "🚀",
+  "👀",
+  "🙏",
+  "👋",
+  "💪",
+  "🎯",
+  "⭐",
+  "📌",
+  "🔑",
+  "🛠️",
 ];
 
 export const EmojiPicker: Component<{
@@ -17,17 +39,19 @@ export const EmojiPicker: Component<{
   >
     <For each={COMMON_EMOJI}>
       {(emoji) => (
-        <button
+        <Button
           type="button"
           data-react-grab-emoji={emoji}
-          class="text-base p-1 rounded hover:bg-accent text-center leading-none"
+          variant="ghost"
+          size="icon-sm"
+          class="text-base leading-none"
           onMouseDown={(e) => {
             e.preventDefault();
             props.onSelect(emoji);
           }}
         >
           {emoji}
-        </button>
+        </Button>
       )}
     </For>
   </div>

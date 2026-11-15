@@ -48,6 +48,7 @@ import {
 import { ImageLightbox } from "../ui/image-lightbox.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { IconFlag } from "../icons/icon-flag.js";
+import { IconButton } from "../ui/icon-button.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -94,7 +95,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
 
   // Trap focus inside the sidebar for the duration it is mounted.
   // solid-focus-trap restores focus to the previously focused element on cleanup.
-  createFocusTrap({ element: () => containerRef ?? null, enabled: () => true });
+  // Focus starts on the dialog itself: its first control is the minor
+  // "Status legend" button (WAI-ARIA dialog pattern).
+  createFocusTrap({
+    element: () => containerRef ?? null,
+    initialFocusElement: () => containerRef ?? null,
+    enabled: () => true,
+  });
 
   // Synthetic groups are invisible in user-facing surfaces (GroupList,
   // filter chips, stats bar, empty-state guard). Loose selections appear
@@ -227,7 +234,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
       }}
       data-react-grab-sidebar
       data-react-grab-ignore-events
-      class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-card text-card-foreground animate-slide-in-left"
+      tabIndex={-1}
+      class="fixed top-0 left-0 w-[380px] h-screen flex flex-col bg-card text-card-foreground outline-none animate-slide-in-left"
       style={{
         "z-index": "var(--z-sidebar)",
         "pointer-events": "auto",
@@ -292,23 +300,21 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   labels={getDistinctLabels(userFacingGroups())}
                   onFilterChange={setFilterState}
                 />
-                <button
-                  class="inline-flex items-center justify-center rounded-md border h-7 w-7 shrink-0 cursor-pointer transition-all"
-                  classList={{
-                    "border-red-400 bg-red-400/[0.08]": flaggedOnly(),
-                    "border-border bg-muted hover:border-foreground/20":
-                      !flaggedOnly(),
-                  }}
+                <IconButton
+                  label="Flagged only"
+                  variant="outline"
+                  size="icon-md"
+                  class="shrink-0"
+                  aria-pressed={flaggedOnly()}
                   onClick={() => setFlaggedOnly((prev) => !prev)}
-                  title="Flagged only"
                 >
                   <IconFlag
                     size={14}
                     class={
-                      flaggedOnly() ? "text-red-400" : "text-muted-foreground"
+                      flaggedOnly() ? "text-flag" : "text-muted-foreground"
                     }
                   />
-                </button>
+                </IconButton>
               </div>
               <FilterChips
                 filter={filterState()}

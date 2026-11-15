@@ -20,12 +20,13 @@ export interface DevInsightsFieldProps {
 
 export const DevInsightsField: Component<DevInsightsFieldProps> = (props) => {
   const mono = () => props.mono ?? true;
-  const colorClass = () => (props.color ? VALUE_COLORS[props.color] : "text-[#cbd5e1]");
+  const colorClass = () =>
+    props.color ? VALUE_COLORS[props.color] : "text-foreground";
 
   return (
     <Show when={props.value}>
       <div class="flex gap-2 items-baseline py-px">
-        <span class="text-meta text-[#4a5568] font-medium min-w-[36px] shrink-0">
+        <span class="text-meta text-muted-foreground font-medium min-w-[36px] shrink-0">
           {props.label}
         </span>
         <span

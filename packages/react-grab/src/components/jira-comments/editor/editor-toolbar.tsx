@@ -3,6 +3,7 @@ import type { Editor } from "@tiptap/core";
 import { ToolbarButton, ToolbarSeparator, ToolbarDropdown } from "./toolbar.js";
 import { EmojiPicker } from "./emoji-picker.js";
 import { ColorPicker } from "./color-picker.js";
+import { Button } from "../../ui/button.js";
 
 export const EditorToolbar: Component<{
   editor: Editor;
@@ -13,52 +14,162 @@ export const EditorToolbar: Component<{
   const chain = () => props.editor.chain().focus();
 
   return (
-    <div data-react-grab-editor-toolbar class="flex flex-wrap gap-0.5 px-2 py-1.5 border-b border-border bg-muted/50" data-react-grab-ignore-events>
-      <ToolbarButton dataAction="bold" title="Bold" active={active("bold")} onClick={() => chain().toggleBold().run()}>
+    <div
+      data-react-grab-editor-toolbar
+      class="flex flex-wrap gap-0.5 px-2 py-1.5 border-b border-border bg-muted/50"
+      data-react-grab-ignore-events
+    >
+      <ToolbarButton
+        dataAction="bold"
+        title="Bold"
+        active={active("bold")}
+        onClick={() => chain().toggleBold().run()}
+      >
         <b>B</b>
       </ToolbarButton>
-      <ToolbarButton dataAction="italic" title="Italic" active={active("italic")} onClick={() => chain().toggleItalic().run()}>
+      <ToolbarButton
+        dataAction="italic"
+        title="Italic"
+        active={active("italic")}
+        onClick={() => chain().toggleItalic().run()}
+      >
         <i>I</i>
       </ToolbarButton>
-      <ToolbarButton dataAction="underline" title="Underline" active={active("underline")} onClick={() => chain().toggleUnderline().run()}>
+      <ToolbarButton
+        dataAction="underline"
+        title="Underline"
+        active={active("underline")}
+        onClick={() => chain().toggleUnderline().run()}
+      >
         <u>U</u>
       </ToolbarButton>
-      <ToolbarButton dataAction="strike" title="Strike" active={active("strike")} onClick={() => chain().toggleStrike().run()}>
+      <ToolbarButton
+        dataAction="strike"
+        title="Strike"
+        active={active("strike")}
+        onClick={() => chain().toggleStrike().run()}
+      >
         <s>S</s>
       </ToolbarButton>
-      <ToolbarButton dataAction="code" title="Inline code" active={active("code")} onClick={() => chain().toggleCode().run()}>
+      <ToolbarButton
+        dataAction="code"
+        title="Inline code"
+        active={active("code")}
+        onClick={() => chain().toggleCode().run()}
+      >
         {"<>"}
       </ToolbarButton>
 
       <ToolbarSeparator />
 
-      <ToolbarDropdown dataDropdown="headings" title="Headings" label={<span>H</span>}>
-        <button class="block w-full text-left px-2 py-1 text-meta rounded hover:bg-accent" onMouseDown={(e) => { e.preventDefault(); chain().setParagraph().run(); }}>Normal</button>
-        <button class="block w-full text-left px-2 py-1 text-meta rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); chain().toggleHeading({ level: 1 }).run(); }}>Heading 1</button>
-        <button class="block w-full text-left px-2 py-1 text-meta rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); chain().toggleHeading({ level: 2 }).run(); }}>Heading 2</button>
-        <button class="block w-full text-left px-2 py-1 text-meta rounded hover:bg-accent font-bold" onMouseDown={(e) => { e.preventDefault(); chain().toggleHeading({ level: 3 }).run(); }}>Heading 3</button>
+      <ToolbarDropdown
+        dataDropdown="headings"
+        title="Headings"
+        label={<span>H</span>}
+      >
+        <Button
+          variant="ghost"
+          size="menu"
+          class="w-full rounded text-meta"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            chain().setParagraph().run();
+          }}
+        >
+          Normal
+        </Button>
+        <Button
+          variant="ghost"
+          size="menu"
+          class="w-full rounded text-meta font-bold"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            chain().toggleHeading({ level: 1 }).run();
+          }}
+        >
+          Heading 1
+        </Button>
+        <Button
+          variant="ghost"
+          size="menu"
+          class="w-full rounded text-meta font-bold"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            chain().toggleHeading({ level: 2 }).run();
+          }}
+        >
+          Heading 2
+        </Button>
+        <Button
+          variant="ghost"
+          size="menu"
+          class="w-full rounded text-meta font-bold"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            chain().toggleHeading({ level: 3 }).run();
+          }}
+        >
+          Heading 3
+        </Button>
       </ToolbarDropdown>
 
       <ToolbarSeparator />
 
-      <ToolbarButton dataAction="bullet-list" title="Bullet list" active={active("bulletList")} onClick={() => chain().toggleBulletList().run()}>
+      <ToolbarButton
+        dataAction="bullet-list"
+        title="Bullet list"
+        active={active("bulletList")}
+        onClick={() => chain().toggleBulletList().run()}
+      >
         •—
       </ToolbarButton>
-      <ToolbarButton dataAction="ordered-list" title="Ordered list" active={active("orderedList")} onClick={() => chain().toggleOrderedList().run()}>
+      <ToolbarButton
+        dataAction="ordered-list"
+        title="Ordered list"
+        active={active("orderedList")}
+        onClick={() => chain().toggleOrderedList().run()}
+      >
         1.
       </ToolbarButton>
-      <ToolbarButton dataAction="blockquote" title="Blockquote" active={active("blockquote")} onClick={() => chain().toggleBlockquote().run()}>
+      <ToolbarButton
+        dataAction="blockquote"
+        title="Blockquote"
+        active={active("blockquote")}
+        onClick={() => chain().toggleBlockquote().run()}
+      >
         "
       </ToolbarButton>
-      <ToolbarButton dataAction="code-block" title="Code block" active={active("codeBlock")} onClick={() => chain().toggleCodeBlock().run()}>
+      <ToolbarButton
+        dataAction="code-block"
+        title="Code block"
+        active={active("codeBlock")}
+        onClick={() => chain().toggleCodeBlock().run()}
+      >
         {"{ }"}
       </ToolbarButton>
 
       <ToolbarSeparator />
 
-      <ToolbarDropdown dataDropdown="color" title="Text color" label={<span style={{ color: props.editor.getAttributes("textStyle")?.color ?? undefined }}>A</span>}>
+      <ToolbarDropdown
+        dataDropdown="color"
+        title="Text color"
+        label={
+          <span
+            style={{
+              color:
+                props.editor.getAttributes("textStyle")?.color ?? undefined,
+            }}
+          >
+            A
+          </span>
+        }
+      >
         <ColorPicker
-          activeColor={(props.editor.getAttributes("textStyle")?.color as string | undefined) ?? null}
+          activeColor={
+            (props.editor.getAttributes("textStyle")?.color as
+              | string
+              | undefined) ?? null
+          }
           onSelect={(color) => {
             if (color) chain().setColor(color).run();
             else chain().unsetColor().run();
@@ -66,27 +177,54 @@ export const EditorToolbar: Component<{
         />
       </ToolbarDropdown>
 
-      <ToolbarButton dataAction="link" title="Link" active={active("link")} onClick={() => {
-        if (active("link")) { chain().unsetLink().run(); }
-        else { const url = prompt("Enter URL:"); if (url) chain().setLink({ href: url }).run(); }
-      }}>
+      <ToolbarButton
+        dataAction="link"
+        title="Link"
+        active={active("link")}
+        onClick={() => {
+          if (active("link")) {
+            chain().unsetLink().run();
+          } else {
+            const url = prompt("Enter URL:");
+            if (url) chain().setLink({ href: url }).run();
+          }
+        }}
+      >
         🔗
       </ToolbarButton>
 
-      <ToolbarButton dataAction="image" title="Image" onClick={props.onImageClick}>
+      <ToolbarButton
+        dataAction="image"
+        title="Image"
+        onClick={props.onImageClick}
+      >
         🖼
       </ToolbarButton>
 
-      <ToolbarDropdown dataDropdown="emoji" title="Emoji" label={<span>😀</span>}>
+      <ToolbarDropdown
+        dataDropdown="emoji"
+        title="Emoji"
+        label={<span>😀</span>}
+      >
         <EmojiPicker onSelect={(emoji) => chain().insertContent(emoji).run()} />
       </ToolbarDropdown>
 
       <ToolbarSeparator />
 
-      <ToolbarButton dataAction="undo" title="Undo" disabled={!props.editor.can().undo()} onClick={() => chain().undo().run()}>
+      <ToolbarButton
+        dataAction="undo"
+        title="Undo"
+        disabled={!props.editor.can().undo()}
+        onClick={() => chain().undo().run()}
+      >
         ↩
       </ToolbarButton>
-      <ToolbarButton dataAction="redo" title="Redo" disabled={!props.editor.can().redo()} onClick={() => chain().redo().run()}>
+      <ToolbarButton
+        dataAction="redo"
+        title="Redo"
+        disabled={!props.editor.can().redo()}
+        onClick={() => chain().redo().run()}
+      >
         ↪
       </ToolbarButton>
     </div>
