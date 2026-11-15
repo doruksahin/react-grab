@@ -159,7 +159,6 @@ features:
       - packages/react-grab/src/features/sidebar/extract-file-path.ts
       - packages/react-grab/src/features/sidebar/index.ts
       - packages/react-grab/src/features/sidebar/relative-time.ts
-      - packages/react-grab/src/features/sidebar/screenshot-url.ts
       - packages/react-grab/src/features/sidebar/use-lazy-visible.ts
 
   selection-groups:
@@ -182,10 +181,12 @@ features:
     prds: [PRD-003]
     specs: [SPEC-005]
     files:
+      - packages/react-grab/src/features/screenshot/business/screenshot-refs.ts
       - packages/react-grab/src/features/screenshot/capture.ts
       - packages/react-grab/src/features/screenshot/index.ts
       - packages/react-grab/src/features/screenshot/orchestrate.ts
-      - packages/react-grab/src/features/screenshot/use-authenticated-image-url.ts
+      - packages/react-grab/src/features/screenshot/types.ts
+      - packages/react-grab/src/features/screenshot/use-screenshot-url.ts
       - packages/sync-server/src/repositories/r2.store.ts
       - packages/sync-server/src/routes/screenshots.ts
 
@@ -272,12 +273,11 @@ features:
     adrs: [ADR-0006]
     files:
       - packages/react-grab/src/core/index.tsx
-      - packages/react-grab/src/features/sync/adapter.ts
-      - packages/react-grab/src/features/sync/schemas.ts
       - packages/react-grab/src/features/sync/store/sync-store.ts
       - packages/react-grab/src/features/sync/sync-layer.ts
-      - packages/react-grab/src/features/sync/transforms.ts
       - packages/react-grab/src/features/sync/types.ts
+      - packages/react-grab/src/sync-http/http-jira-port.ts
+      - packages/react-grab/src/sync-http/request.ts
       - packages/sync-server/src/routes/jira.ts
       - packages/sync-server/src/services/jira.service.ts
 
@@ -843,7 +843,7 @@ data_attrs:
     loose-selection-card: {scope: sidebar, src: 1, tests: 0}
     loose-selection-list: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}
-    sidebar: {scope: sidebar, src: 1, tests: 2}
+    sidebar: {scope: sidebar, src: 1, tests: 3}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
     sidebar-search: {scope: sidebar, src: 1, tests: 2}
     status-filter: {scope: sidebar, src: 1, tests: 2}
