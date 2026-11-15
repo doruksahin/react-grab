@@ -436,6 +436,7 @@ data_flows:
         consumers:
           - packages/react-grab/src/core/index.tsx
           - packages/react-grab/src/features/sync/index.ts
+          - packages/react-grab/src/features/sync/sync-layer.test.ts
           - packages/react-grab/src/features/sync/sync-layer.ts
       comments:
         store_path: store.comments
@@ -444,6 +445,7 @@ data_flows:
         consumers:
           - packages/react-grab/src/core/index.tsx
           - packages/react-grab/src/features/sync/index.ts
+          - packages/react-grab/src/features/sync/sync-layer.test.ts
           - packages/react-grab/src/features/sync/sync-layer.ts
       jira_status:
         store_path: store.groups[i].jiraStatus (fine-grained per-group)
@@ -456,6 +458,7 @@ data_flows:
         consumers:
           - packages/react-grab/src/core/index.tsx
           - packages/react-grab/src/features/sync/index.ts
+          - packages/react-grab/src/features/sync/sync-layer.test.ts
           - packages/react-grab/src/features/sync/sync-layer.ts
 
 # ─── Data attributes catalog ──────────────────────────────────────────────────
@@ -758,14 +761,14 @@ data_attrs:
     error: {scope: error, src: 1, tests: 1}
     error-ok: {scope: error, src: 1, tests: 0}
     error-retry: {scope: error, src: 1, tests: 1}
-    filter-badge: {scope: filter, src: 1, tests: 0}
+    filter-badge: {scope: filter, src: 1, tests: 1}
     filter-clear: {scope: filter, src: 1, tests: 0}
     filter-row: {scope: filter, src: 5, tests: 3}
     composer-footer: {scope: generation, src: 1, tests: 0}
     context-input: {scope: generation, src: 1, tests: 0}
     generation-abort: {scope: generation, src: 1, tests: 1}
     generation-input: {scope: generation, src: 1, tests: 1}
-    generation-submit: {scope: generation, src: 2, tests: 0}
+    generation-submit: {scope: generation, src: 1, tests: 0}
     create-ticket: {scope: jira, src: 1, tests: 5}
     jira-create: {scope: jira, src: 1, tests: 0}
     jira-dialog: {scope: jira, src: 1, tests: 0}
@@ -786,7 +789,7 @@ data_attrs:
     overlay-canvas: {scope: overlay, src: 1, tests: 0}
     product: {scope: overlay, src: 1, tests: 61}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 66, tests: 6}
+    ignore-events: {scope: reserved, src: 65, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -811,7 +814,7 @@ data_attrs:
     detail-header: {scope: sidebar, src: 1, tests: 1}
     due-date-filter: {scope: sidebar, src: 1, tests: 2}
     empty-state: {scope: sidebar, src: 1, tests: 0}
-    filter-chips: {scope: sidebar, src: 1, tests: 2}
+    filter-chips: {scope: sidebar, src: 1, tests: 0}
     group-card: {scope: sidebar, src: 2, tests: 5}
     group-detail: {scope: sidebar, src: 1, tests: 0}
     group-list: {scope: sidebar, src: 2, tests: 3}
@@ -823,7 +826,7 @@ data_attrs:
     sidebar: {scope: sidebar, src: 1, tests: 2}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
     sidebar-search: {scope: sidebar, src: 1, tests: 2}
-    status-filter: {scope: sidebar, src: 1, tests: 1}
+    status-filter: {scope: sidebar, src: 1, tests: 2}
     status-legend: {scope: sidebar, src: 1, tests: 0}
     sync-offline-banner: {scope: sidebar, src: 1, tests: 2}
     sync-retry: {scope: sidebar, src: 1, tests: 0}

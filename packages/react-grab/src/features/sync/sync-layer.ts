@@ -1,7 +1,9 @@
 import { batch, untrack } from "solid-js";
+import { unwrap } from "solid-js/store";
 import { createSyncStore } from "./store/sync-store.js";
 import { createHttpAdapter } from "./adapter.js";
 import { itemChanges } from "./business/item-changes.js";
+import { applyItemChanges } from "./business/apply-item-changes.js";
 import {
   toCommentWire,
   toGroupWire,
@@ -74,6 +76,16 @@ export const createSyncLayer = () => {
   let syncRevealedState = true;
   let pollIntervalId: ReturnType<typeof setInterval> | null = null;
   let activeConfig: SyncConfig | null = null;
+  // Bumped by init and dispose, so a connection started before either one
+  // cannot apply its result afterwards.
+  let generation = 0;
+  let pendingRetry: Promise<void> | null = null;
+  // The lists as they were when the server became unreachable; the
+  // difference to the current lists is what changed while offline.
+  let offlineBaseline: {
+    comments: CommentItem[];
+    groups: SelectionGroup[];
+  } | null = null;
 
   // When revealed state is not synced, it lives in localStorage instead. Both
   // lists are saved together so writing one never wipes the other's flags.
@@ -211,6 +223,10 @@ export const createSyncLayer = () => {
       );
     }
 
+    generation += 1;
+    activeConfig = null;
+    offlineBaseline = null;
+
     if (config.serverUrl) {
       setApiBaseUrl(config.serverUrl);
     }
@@ -236,30 +252,68 @@ export const createSyncLayer = () => {
     }
 
     activeConfig = config;
-    await connect(config, { loadLocalOnFailure: true });
+    await connect(config, generation, { loadLocalOnFailure: true });
   };
 
-  // Loads the server's state; on failure the status is "error" and the
-  // overlay keeps working on what it already has.
+  // Sends what changed while offline and returns the server's lists with
+  // those changes applied. Groups go first: comments refer to them.
+  const replayOfflineChanges = (
+    adapter: StorageAdapter,
+    server: { groups: SelectionGroup[]; comments: CommentItem[] },
+  ) => {
+    const baseline = offlineBaseline;
+    if (!baseline) return server;
+    const groupChanges = itemChanges(
+      baseline.groups,
+      storeHandle.store.groups,
+      (group) => toGroupWire(group, syncRevealedState),
+    );
+    const commentChanges = itemChanges(
+      baseline.comments,
+      storeHandle.store.comments,
+      (item) => toCommentWire(item, syncRevealedState),
+    );
+    for (const group of groupChanges.upserts)
+      adapter.upsertGroup(group).catch(() => {});
+    for (const id of groupChanges.deletedIds)
+      adapter.deleteGroup(id).catch(() => {});
+    for (const item of commentChanges.upserts)
+      adapter.upsertComment(item).catch(() => {});
+    for (const id of commentChanges.deletedIds)
+      adapter.deleteComment(id).catch(() => {});
+    return {
+      groups: applyItemChanges(server.groups, groupChanges),
+      comments: applyItemChanges(server.comments, commentChanges),
+    };
+  };
+
+  // Loads the server's state. Writes go to the server only once it has
+  // answered; until then they are kept in localStorage.
   const connect = async (
     config: SyncConfig,
+    connectGeneration: number,
     options: { loadLocalOnFailure: boolean },
   ) => {
+    const httpAdapter = createHttpAdapter(config);
     try {
-      const httpAdapter = createHttpAdapter(config);
-      adapterRef = httpAdapter;
       const [groups, comments] = await Promise.all([
         httpAdapter.loadGroups(),
         httpAdapter.loadComments(),
       ]);
+      if (connectGeneration !== generation) return;
+      const next = replayOfflineChanges(httpAdapter, { groups, comments });
+      adapterRef = httpAdapter;
+      offlineBaseline = null;
       batch(() => {
-        storeHandle.setGroups(groups);
-        storeHandle.setComments(comments);
+        storeHandle.setGroups(next.groups);
+        storeHandle.setComments(next.comments);
         storeHandle.setStatus("synced");
       });
       startPolling();
       pollJira();
     } catch (error) {
+      if (connectGeneration !== generation) return;
+      adapterRef = null;
       batch(() => {
         if (options.loadLocalOnFailure) {
           storeHandle.setGroups(loadGroupsFromLocalStorage());
@@ -267,6 +321,10 @@ export const createSyncLayer = () => {
         }
         storeHandle.setStatus("error", String(error));
       });
+      offlineBaseline ??= {
+        groups: structuredClone(unwrap(storeHandle.store.groups)),
+        comments: structuredClone(unwrap(storeHandle.store.comments)),
+      };
       config.onSyncError(
         error instanceof Error ? error : new Error(String(error)),
       );
@@ -274,12 +332,23 @@ export const createSyncLayer = () => {
   };
 
   // Connects again with the config of the last init, after a failed one.
-  const retry = async () => {
-    if (!activeConfig || storeHandle.store.status !== "error") return;
-    await connect(activeConfig, { loadLocalOnFailure: false });
+  // Calls while a retry runs share it.
+  const retry = (): Promise<void> => {
+    const config = activeConfig;
+    if (!config || storeHandle.store.status !== "error") {
+      return pendingRetry ?? Promise.resolve();
+    }
+    pendingRetry ??= connect(config, generation, {
+      loadLocalOnFailure: false,
+    }).finally(() => {
+      pendingRetry = null;
+    });
+    return pendingRetry;
   };
 
   const dispose = () => {
+    generation += 1;
+    activeConfig = null;
     stopPolling();
   };
 

@@ -19,6 +19,7 @@ import { IconCheck } from "../icons/icon-check.jsx";
 import { BottomSection } from "./bottom-section.js";
 import { Button } from "../ui/button.js";
 import { IconButton } from "../ui/icon-button.js";
+import { Textarea } from "../ui/textarea.js";
 
 interface MoreOptionsButtonProps {
   onClick: () => void;
@@ -239,17 +240,11 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
             class="shrink-0 flex justify-between items-end w-full min-h-4"
             style={{ "padding-left": props.previousPrompt ? "14px" : "0" }}
           >
-            <textarea
+            <Textarea
               ref={inputRef}
               data-react-grab-ignore-events
               data-react-grab-followup-input
-              class="text-popover-foreground text-body leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 wrap-break-word overflow-y-auto"
-              style={{
-                "field-sizing": "content",
-                "min-height": "16px",
-                "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px`,
-                "scrollbar-width": "none",
-              }}
+              style={{ "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px` }}
               value={followUpInput()}
               onInput={(event) => {
                 autoResizeTextarea(event.target, TEXTAREA_MAX_HEIGHT_PX);

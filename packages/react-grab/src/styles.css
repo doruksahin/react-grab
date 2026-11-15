@@ -39,6 +39,8 @@
   --color-danger: #ef4444;
   --color-danger-light: #f87171;
   --color-danger-text: #fca5a5;
+  /* The AdCreative design system's orange: warnings here, and the dark
+     theme's --destructive below refers to it, so the hex lives once. */
   --color-warning: #fd7114;
   --color-warning-text: #fd9a5a;
   --color-selection: #c084fc;
@@ -327,7 +329,7 @@
   --muted-foreground: #a9a6b4;
   --accent: #2b2430;
   --accent-foreground: #ffffff;
-  --destructive: #fd7114;
+  --destructive: var(--color-warning);
   --editor-blockquote-border: oklch(1 0 0 / 20%);
   --editor-blockquote-text: oklch(1 0 0 / 60%);
   --editor-code-bg: oklch(1 0 0 / 10%);

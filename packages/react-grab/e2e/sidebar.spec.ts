@@ -120,12 +120,12 @@ test.describe("Sidebar", () => {
         "[role='dialog'][aria-label='React Grab Dashboard']",
       );
       if (!sidebar) return -1;
-      // StatsBar shows the group count as the first bold number inside the stats row.
-      const boldNums = Array.from(
-        sidebar.querySelectorAll<HTMLElement>(".text-lg.font-bold"),
-      );
-      const firstNum = boldNums[0];
-      return firstNum ? parseInt(firstNum.textContent ?? "0", 10) : 0;
+      // The Groups tab shows the group count.
+      const groupsTab = Array.from(
+        sidebar.querySelectorAll<HTMLElement>("[role='tab']"),
+      ).find((tab) => tab.textContent?.startsWith("Groups"));
+      if (!groupsTab) return -1;
+      return parseInt(groupsTab.textContent?.replace(/\D/g, "") ?? "0", 10);
     }, ATTR);
 
     // If the e2e fixture already has groups we cannot test the empty state — skip.
@@ -159,20 +159,25 @@ test.describe("Sidebar", () => {
       .toBe(true);
   });
 
-  test("status filter selection adds and removes a filter chip", async ({
+  test("a status picked in the filter menu shows as the pressed status chip", async ({
     reactGrab,
   }) => {
     const { page } = reactGrab;
     await clickShadowButton(page, "[data-react-grab-toolbar-dashboard]");
+    const statusChips = page.locator("[data-react-grab-status-filter]");
+    // No groups and no status filter: there is nothing to filter.
+    await expect(statusChips).toHaveCount(0);
     await page.getByRole("button", { name: "Filter", exact: true }).click();
     await page.locator('[data-react-grab-filter-row="status"]').hover();
     await page
       .getByRole("menuitemradio", { name: "In Progress", exact: true })
       .click();
-    const chips = page.locator("[data-react-grab-filter-chips]");
-    await expect(chips).toContainText("Status: In Progress");
-    await chips.getByRole("button").click();
-    await expect(chips).toHaveCount(0);
+    const inProgress = statusChips.getByRole("button", {
+      name: "In Progress (0)",
+    });
+    await expect(inProgress).toHaveAttribute("aria-pressed", "true");
+    await inProgress.click();
+    await expect(statusChips).toHaveCount(0);
   });
 });
 

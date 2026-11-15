@@ -4,6 +4,7 @@ import { TEXTAREA_MAX_HEIGHT_PX } from "../../../constants.js";
 import { BottomSection } from "../bottom-section.js";
 import { IconLoader } from "../../icons/icon-loader.js";
 import { IconButton } from "../../ui/icon-button.js";
+import { Textarea } from "../../ui/textarea.js";
 
 export interface CopyingStateProps {
   statusText?: string;
@@ -29,15 +30,9 @@ export const CopyingState: Component<CopyingStateProps> = (props) => {
       <Show when={hasInputValue()}>
         <BottomSection>
           <div class="shrink-0 flex justify-between items-end w-full min-h-4">
-            <textarea
+            <Textarea
               data-react-grab-ignore-events
-              class="text-popover-foreground text-body leading-4 font-medium bg-transparent border-none outline-none resize-none flex-1 p-0 m-0 opacity-50 wrap-break-word overflow-y-auto"
-              style={{
-                "field-sizing": "content",
-                "min-height": "16px",
-                "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px`,
-                "scrollbar-width": "none",
-              }}
+              style={{ "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px` }}
               value={props.inputValue ?? ""}
               placeholder="Add context"
               rows={1}

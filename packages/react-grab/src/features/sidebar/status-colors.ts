@@ -63,11 +63,17 @@ export function getStatusColor(
   return ATT_STATUS_COLORS[jiraStatus] ?? UNKNOWN_COLOR;
 }
 
+/**
+ * The Jira status a status label is coloured by: none for "No Task", which
+ * then gets the no-ticket colour.
+ */
+export function getColorStatus(statusLabel: string): string | undefined {
+  return statusLabel === NO_TASK_STATUS ? undefined : statusLabel;
+}
+
 /** The colour of a status label, as getStatusLabel returns it. */
 export function getStatusLabelColor(statusLabel: string): StatusColorConfig {
-  return getStatusColor(
-    statusLabel === NO_TASK_STATUS ? undefined : statusLabel,
-  );
+  return getStatusColor(getColorStatus(statusLabel));
 }
 
 export function getStatusLabel(

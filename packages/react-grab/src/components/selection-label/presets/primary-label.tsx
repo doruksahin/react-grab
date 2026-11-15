@@ -8,10 +8,6 @@ import type {
   JiraDisplayFields,
 } from "../../../types.js";
 import type { SelectionGroupsViewProps } from "../../../features/selection-groups/types.js";
-import type {
-  SubmitCommentFn,
-  SearchJiraUsersFn,
-} from "../../../features/jira-comments/types.js";
 import { formatShortcut } from "../../../utils/format-shortcut.js";
 import { SelectionLabelRoot } from "../index.js";
 import { SelectionLabelHeader } from "../parts/header.js";
@@ -25,8 +21,6 @@ import { DiscardPrompt } from "../discard-prompt.js";
 import { ErrorView } from "../error-view.js";
 import { ArrowNavigationMenu } from "../arrow-navigation-menu.js";
 import { BottomSection } from "../bottom-section.js";
-import { SelectionCardBody } from "../../sidebar/selection-card-body.js";
-import { CreateTicketButton } from "../../jira/create-ticket-button.js";
 import { ActiveGroupPicker } from "../../selection-groups/active-group-picker.js";
 
 export interface PrimaryLabelProps
@@ -71,15 +65,6 @@ export interface PrimaryLabelProps
   onRetry?: () => void;
   isContextMenuOpen?: boolean;
   onRemoveItem?: () => void;
-  onCreateTicket?: () => void;
-  itemId?: string;
-  timestamp?: number;
-  syncServerUrl?: string;
-  syncWorkspace?: string;
-  onSubmitJiraComment?: SubmitCommentFn;
-  onSearchJiraUsers?: SearchJiraUsersFn;
-  onRefreshJiraStatus?: () => void;
-  commentEditorToolbarVisible?: boolean;
 }
 
 export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
@@ -88,11 +73,6 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
     props.status !== "copied" &&
     props.status !== "fading" &&
     props.status !== "error";
-
-  // A saved selection has Jira details or a ticket action to show; a new
-  // comment has only the input.
-  const hasSavedSelection = () =>
-    Boolean(props.itemId || props.jiraTicketId || props.onCreateTicket);
 
   const isArrowNavigationVisible = () =>
     Boolean(props.arrowNavigationState?.isVisible);
@@ -239,50 +219,11 @@ export const PrimaryLabel: Component<PrimaryLabelProps> = (props) => {
             jiraFlaggedBy={props.jiraFlaggedBy}
             jiraFlaggedByAvatar={props.jiraFlaggedByAvatar}
           />
-          <Show when={hasSavedSelection()}>
-            <div class="px-3.5 pt-2.5">
-              <SelectionCardBody
-                timestamp={props.timestamp}
-                itemId={props.itemId}
-                syncServerUrl={props.syncServerUrl}
-                syncWorkspace={props.syncWorkspace}
-                jiraTicketId={props.jiraTicketId}
-                jiraUrl={props.jiraUrl}
-                jiraStatus={props.groupStatus}
-                jiraFlagged={props.jiraFlagged}
-                jiraLabels={props.jiraLabels}
-                jiraDueDate={props.jiraDueDate}
-                jiraIssueType={props.jiraIssueType}
-                jiraPriority={props.jiraPriority}
-                jiraAssignee={props.jiraAssignee}
-                jiraAssigneeAvatar={props.jiraAssigneeAvatar}
-                jiraComments={props.jiraComments}
-                onSubmitComment={props.onSubmitJiraComment}
-                onSearchUsers={props.onSearchJiraUsers}
-                onRefreshStatus={
-                  props.onRefreshJiraStatus
-                    ? () => props.onRefreshJiraStatus?.()
-                    : undefined
-                }
-                noTicketAction={
-                  canInteract() &&
-                  props.onCreateTicket &&
-                  !props.jiraTicketId ? (
-                    <CreateTicketButton
-                      onClick={() => props.onCreateTicket?.()}
-                      class="self-stretch"
-                    />
-                  ) : undefined
-                }
-              />
-            </div>
-          </Show>
           <div class="px-3.5 py-2.5">
             <SelectionLabelContextInput
               variant="field"
               label="Comment"
               placeholder="Add a comment"
-              hideSubmit
               value={props.inputValue}
               onChange={props.onInputChange}
               onSubmit={props.onSubmit}

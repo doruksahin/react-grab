@@ -51,8 +51,8 @@ test.describe(
 
         // The chips and the filter menu share one filter state.
         await expect(
-          dashboard.locator("[data-react-grab-filter-chips]"),
-        ).toContainText("Status: In Progress");
+          dashboard.locator("[data-react-grab-filter-badge]"),
+        ).toHaveText("1");
 
         await chips.getByRole("button", { name: "No Task (1)" }).click();
         await expect(groupCards).toHaveCount(1);

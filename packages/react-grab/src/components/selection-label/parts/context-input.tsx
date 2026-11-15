@@ -1,13 +1,11 @@
-import { Show, onMount } from "solid-js";
+import { onMount } from "solid-js";
 import type { Component } from "solid-js";
 import { autoResizeTextarea } from "../../../utils/auto-resize-textarea.js";
-import { IconSubmit } from "../../icons/icon-submit.js";
 import {
   IME_COMPOSING_KEY_CODE,
   TEXTAREA_MAX_HEIGHT_PX,
 } from "../../../constants.js";
 import type { SelectionLabelContextInputProps } from "../types.js";
-import { IconButton } from "../../ui/icon-button.js";
 import { Textarea } from "../../ui/textarea.js";
 
 export const SelectionLabelContextInput: Component<
@@ -60,11 +58,7 @@ export const SelectionLabelContextInput: Component<
         data-react-grab-generation-input
         variant={props.variant}
         aria-label={props.label}
-        style={{
-          "field-sizing": "content",
-          "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px`,
-          "scrollbar-width": "none",
-        }}
+        style={{ "max-height": `${TEXTAREA_MAX_HEIGHT_PX}px` }}
         value={props.value ?? ""}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
@@ -73,23 +67,6 @@ export const SelectionLabelContextInput: Component<
         disabled={props.disabled}
         readOnly={!props.onSubmit}
       />
-      <Show when={props.onSubmit && !props.disabled && !props.hideSubmit}>
-        <IconButton
-          data-react-grab-ignore-events
-          data-react-grab-generation-submit
-          label="Submit"
-          variant="inverse"
-          size="icon-2xs"
-          class="shrink-0 ml-1"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => {
-            event.stopPropagation();
-            props.onSubmit?.();
-          }}
-        >
-          <IconSubmit size={10} class="text-popover" />
-        </IconButton>
-      </Show>
     </div>
   );
 };

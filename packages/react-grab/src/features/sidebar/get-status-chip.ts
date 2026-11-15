@@ -1,6 +1,10 @@
 import type { SelectionGroupWithJira } from "./jira-types.js";
 import { resolveDisplayColor } from "./resolve-display-color.js";
-import { type StatusColorConfig, getStatusLabel } from "./status-colors.js";
+import {
+  type StatusColorConfig,
+  getColorStatus,
+  getStatusLabel,
+} from "./status-colors.js";
 
 export interface StatusChipData {
   label: string;
@@ -14,9 +18,8 @@ export const getStatusChip = (
   >,
 ): StatusChipData => {
   const label = getStatusLabel(group);
-  const statusForColor = group.jiraTicketId ? label : undefined;
   return {
     label,
-    color: resolveDisplayColor(statusForColor, group.jiraFlagged),
+    color: resolveDisplayColor(getColorStatus(label), group.jiraFlagged),
   };
 };

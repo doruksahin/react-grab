@@ -418,6 +418,8 @@ There is no `onStatusUpdate` prop. Polling is owned by core (`createJiraStatusPo
 
 ### Component Tree (Phase 3 additions)
 
+> **Superseded (ADR-0022 step 3):** the StatsBar and its `stats-bar` and `progress-bar` attributes are removed. Status chips (`status-filter`, `components/sidebar/status-filter.tsx`) take their place and filter the groups. A sync error now shows an inline banner (`sync-offline-banner`) above the list, not a full-panel EmptyState.
+
 ```
 core/index.tsx
 ├── createJiraStatusPoller                          NEW — runs on init, polls all ticketed groups

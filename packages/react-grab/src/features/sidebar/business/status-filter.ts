@@ -20,6 +20,9 @@ export interface StatusFilterOptions {
   options: StatusFilterOption[];
 }
 
+/** The filter value that shows every status. */
+export const ALL_STATUSES_VALUE = "all-statuses";
+
 const STATUS_ORDER = [NO_TASK_STATUS, ...ALL_ATT_STATUSES];
 
 const statusRank = (status: string): number => {

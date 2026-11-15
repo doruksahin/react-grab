@@ -12,16 +12,7 @@ interface FilterChipsProps {
 export const FilterChips: Component<FilterChipsProps> = (props) => {
   const chips = () => {
     const result: { label: string; onDismiss: () => void }[] = [];
-    for (const status of props.filter.statuses) {
-      result.push({
-        label: `Status: ${status}`,
-        onDismiss: () => {
-          const next = new Set(props.filter.statuses);
-          next.delete(status);
-          props.onFilterChange({ ...props.filter, statuses: next });
-        },
-      });
-    }
+    // The selected status shows as the pressed status chip (status-filter.tsx).
     if (props.filter.assignee) {
       result.push({
         label: `Assignee: ${props.filter.assignee}`,

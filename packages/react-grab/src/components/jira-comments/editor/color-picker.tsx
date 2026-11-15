@@ -1,7 +1,7 @@
 import { type Component, For } from "solid-js";
 import { EDITOR_TEXT_COLORS } from "../../../features/jira-comments/editor-text-colors.js";
 import { IconButton } from "../../ui/icon-button.js";
-import { SwatchGroup, SwatchGroupItem } from "../../ui/swatch-group.js";
+import { ToggleGroup, ToggleGroupItem } from "../../ui/toggle-group.js";
 
 export const ColorPicker: Component<{
   onSelect: (color: string | null) => void;
@@ -25,7 +25,8 @@ export const ColorPicker: Component<{
     >
       ↺
     </IconButton>
-    <SwatchGroup
+    <ToggleGroup
+      variant="swatch"
       aria-label="Text color"
       value={props.activeColor ?? null}
       // Clicking the active swatch re-applies its colour, as before; only
@@ -34,7 +35,7 @@ export const ColorPicker: Component<{
     >
       <For each={EDITOR_TEXT_COLORS}>
         {(color) => (
-          <SwatchGroupItem
+          <ToggleGroupItem
             value={color.value}
             color={color.value}
             data-react-grab-color={color.value}
@@ -43,6 +44,6 @@ export const ColorPicker: Component<{
           />
         )}
       </For>
-    </SwatchGroup>
+    </ToggleGroup>
   </div>
 );

@@ -102,8 +102,6 @@ export interface SelectionLabelContextInputProps {
   variant?: "inline" | "field";
   /** Accessible name of the textarea. */
   label?: string;
-  /** Leaves out the inline submit button when the caller has its own. */
-  hideSubmit?: boolean;
 }
 
 /** Content wrapper — just children */

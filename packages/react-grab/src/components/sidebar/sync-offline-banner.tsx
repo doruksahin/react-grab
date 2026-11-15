@@ -26,8 +26,8 @@ export const SyncOfflineBanner: Component<SyncOfflineBannerProps> = (props) => {
       <IconAlertCircle class="mt-0.5 shrink-0" />
       <div class="flex flex-col items-start gap-2">
         <span>
-          Offline · the sync server can't be reached. Changes made now are not
-          saved to it.
+          Offline · your changes are kept on this device and sent when the
+          server is back.
         </span>
         <Button
           data-react-grab-sync-retry

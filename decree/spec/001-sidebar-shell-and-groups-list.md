@@ -174,6 +174,8 @@ Displays workspace connection status (carried from dashboard layout) and close b
 
 ### StatsBar
 
+> **Superseded (ADR-0022 step 3):** the StatsBar and its `stats-bar` and `progress-bar` attributes are removed. Status chips (`status-filter`, `components/sidebar/status-filter.tsx`) take their place and filter the groups. A sync error now shows an inline banner (`sync-offline-banner`) above the list, not a full-panel EmptyState.
+
 Derives stats from the signals — no API calls:
 
 Note: `props.groups` and `props.commentItems` are already resolved arrays (not signal accessors) since `core/index.tsx` passes `groups={selectionGroups.groups()}`. The `groupComments` utility is imported from `features/selection-groups/business/group-operations.ts`.

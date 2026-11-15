@@ -1,12 +1,23 @@
 import { type Component, For, Show } from "solid-js";
-import type { FilterState } from "../../features/sidebar/filter-state.js";
+import {
+  type FilterState,
+  EMPTY_FILTER,
+} from "../../features/sidebar/filter-state.js";
+import {
+  ALL_STATUSES_VALUE,
+  getSelectedStatus,
+  selectStatus,
+} from "../../features/sidebar/business/status-filter.js";
 import {
   type DueDatePreset,
   DUE_DATE_PRESET_ORDER,
   DUE_DATE_PRESET_LABEL_ALL,
   dueDatePresetLabel,
 } from "../../features/sidebar/due-date/index.js";
-import { ALL_ATT_STATUSES } from "../../features/sidebar/status-colors.js";
+import {
+  ALL_ATT_STATUSES,
+  NO_TASK_STATUS,
+} from "../../features/sidebar/status-colors.js";
 import { Button } from "../ui/button.js";
 import {
   Menu,
@@ -38,14 +49,6 @@ const countActive = (filter: FilterState): number => {
   return n;
 };
 
-const emptyFilter = (): FilterState => ({
-  statuses: new Set(),
-  assignee: null,
-  reporter: null,
-  label: null,
-  dueDatePreset: null,
-});
-
 const ChevronRight = () => (
   <svg width="12" height="12" viewBox="0 0 16 16">
     <path
@@ -57,18 +60,17 @@ const ChevronRight = () => (
 
 export const FilterMenu: Component<FilterMenuProps> = (props) => {
   const activeCount = () => countActive(props.filter);
-  const handleClear = () => props.onFilterChange(emptyFilter());
+  const handleClear = () => props.onFilterChange(EMPTY_FILTER);
 
   // Status
-  const STATUS_ALL = "";
   const handleStatusChange = (value: string) => {
-    const statuses =
-      value === STATUS_ALL ? new Set<string>() : new Set([value]);
-    props.onFilterChange({ ...props.filter, statuses });
+    props.onFilterChange(
+      selectStatus(props.filter, value === ALL_STATUSES_VALUE ? null : value),
+    );
   };
-  const currentStatus = () => [...props.filter.statuses][0] ?? STATUS_ALL;
-  const currentStatusLabel = () =>
-    currentStatus() === STATUS_ALL ? "All" : currentStatus();
+  const currentStatus = () =>
+    getSelectedStatus(props.filter) ?? ALL_STATUSES_VALUE;
+  const currentStatusLabel = () => getSelectedStatus(props.filter) ?? "All";
 
   // Assignee
   const handleAssigneeChange = (value: string) => {
@@ -180,8 +182,12 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
                 value={currentStatus()}
                 onChange={handleStatusChange}
               >
-                <MenuRadioItem value="">All Statuses</MenuRadioItem>
-                <MenuRadioItem value="No Task">No Task</MenuRadioItem>
+                <MenuRadioItem value={ALL_STATUSES_VALUE}>
+                  All Statuses
+                </MenuRadioItem>
+                <MenuRadioItem value={NO_TASK_STATUS}>
+                  {NO_TASK_STATUS}
+                </MenuRadioItem>
                 <For each={ALL_ATT_STATUSES}>
                   {(status) => (
                     <MenuRadioItem value={status}>{status}</MenuRadioItem>

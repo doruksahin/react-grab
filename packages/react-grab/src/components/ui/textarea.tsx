@@ -4,7 +4,7 @@ import { splitProps } from "solid-js";
 import { cn } from "../../utils/cn.js";
 
 const textareaVariants = cva({
-  base: "m-0 resize-none wrap-break-word text-popover-foreground outline-none placeholder:text-muted-foreground disabled:opacity-50",
+  base: "m-0 resize-none wrap-break-word [field-sizing:content] [scrollbar-width:none] text-popover-foreground outline-none placeholder:text-muted-foreground disabled:opacity-50",
   variants: {
     variant: {
       inline:
