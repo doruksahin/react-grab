@@ -739,6 +739,28 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
       onCleanup(unsubscribe);
     }
 
+    // The remembered position is a ratio along the edge, turned into pixels
+    // with the toolbar's size. That size grows after mount (the sync dot, a
+    // comment count), so re-measure when it changes and re-apply the same ratio.
+    const sizeObserver = new ResizeObserver(() => {
+      if (isCollapsed() || isCollapseAnimating() || drag.isDragging()) return;
+      const currentRect = containerRef?.getBoundingClientRect();
+      if (!currentRect) return;
+      if (
+        currentRect.width === expandedDimensions.width &&
+        currentRect.height === expandedDimensions.height
+      ) {
+        return;
+      }
+      expandedDimensions = {
+        width: currentRect.width,
+        height: currentRect.height,
+      };
+      recalculatePosition();
+    });
+    if (containerRef) sizeObserver.observe(containerRef);
+    onCleanup(() => sizeObserver.disconnect());
+
     window.addEventListener("resize", handleResize);
     window.visualViewport?.addEventListener("resize", handleResize);
     window.visualViewport?.addEventListener("scroll", handleResize);
