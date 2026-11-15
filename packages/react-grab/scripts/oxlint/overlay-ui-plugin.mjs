@@ -42,6 +42,16 @@ const noRawStyles = {
       TemplateElement(node) {
         check(node, node.value.raw);
       },
+      // A polymorphic trigger rendered as a raw <button> bypasses Button.
+      JSXAttribute(node) {
+        if (node.name?.name === "as" && node.value?.value === "button") {
+          context.report({
+            node,
+            message:
+              'Use as={Button} (or IconButton), not as="button" (ADR-0022).',
+          });
+        }
+      },
     };
   },
 };

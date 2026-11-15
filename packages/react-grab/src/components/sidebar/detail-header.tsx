@@ -45,7 +45,7 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
             href={groupWithJira().jiraUrl ?? "#"}
             target="_blank"
             rel="noopener noreferrer"
-            class="text-blue-400 hover:text-blue-300 transition-colors font-semibold"
+            class="text-link hover:text-link-hover transition-colors font-semibold"
             style={{ "pointer-events": "auto" }}
           >
             {groupWithJira().jiraTicketId}

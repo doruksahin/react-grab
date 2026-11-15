@@ -91,7 +91,7 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
                   href={props.jiraUrl}
                   target="_blank"
                   rel="noreferrer"
-                  class="text-meta font-medium text-blue-400 hover:underline"
+                  class="text-meta font-medium text-link hover:underline"
                 >
                   {props.jiraTicketId}
                 </a>

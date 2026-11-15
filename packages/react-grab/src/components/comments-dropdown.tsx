@@ -26,6 +26,7 @@ import {
   DROPDOWN_MIN_WIDTH_PX,
   DROPDOWN_VIEWPORT_PADDING_PX,
   FEEDBACK_DURATION_MS,
+  ICON_BUTTON_TOOLTIP_OPEN_DELAY_MS,
   SAFE_POLYGON_BUFFER_PX,
 } from "../constants.js";
 import { createSafePolygonTracker } from "../utils/safe-polygon.js";
@@ -38,7 +39,7 @@ import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { createAnchoredDropdown } from "../utils/create-anchored-dropdown.js";
 import { formatRelativeTime } from "../utils/format-relative-time.js";
 import { IconButton } from "./ui/icon-button.js";
-import { buttonVariants } from "./ui/button.js";
+import { Button } from "./ui/button.js";
 
 interface CommentsDropdownProps extends Pick<
   SelectionGroupsViewProps,
@@ -105,9 +106,6 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
     () => props.position,
   );
 
-  const [activeHeaderTooltip, setActiveHeaderTooltip] = createSignal<
-    "clear" | "copy" | null
-  >(null);
   const [isCopyAllConfirmed, setIsCopyAllConfirmed] = createSignal(false);
   const [searchQuery, setSearchQuery] = createSignal("");
   const [hoveredItemId, setHoveredItemId] = createSignal<string | null>(null);
@@ -214,7 +212,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
               width="12"
               height="12"
               viewBox="0 0 16 16"
-              class="text-purple-500"
+              class="text-selection-strong"
             >
               <path
                 fill="currentColor"
@@ -372,48 +370,28 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             </span>
             <Show when={props.items.length > 0}>
               <div class="flex items-center gap-[5px]">
-                <Tooltip
-                  open={activeHeaderTooltip() === "clear"}
-                  placement="top"
+                <IconButton
+                  data-react-grab-ignore-events
+                  data-react-grab-comments-clear
+                  label="Clear all"
+                  variant="chip-destructive"
+                  class="shrink-0"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    props.onClearAll?.();
+                  }}
                 >
+                  <IconTrash size={DROPDOWN_ICON_SIZE_PX} />
+                </IconButton>
+                <Tooltip openDelay={ICON_BUTTON_TOOLTIP_OPEN_DELAY_MS}>
                   <TooltipTrigger
-                    as="button"
-                    data-react-grab-ignore-events
-                    data-react-grab-comments-clear
-                    class={cn(
-                      buttonVariants({
-                        variant: "chip-destructive",
-                        size: "chip",
-                      }),
-                      "shrink-0",
-                    )}
-                    onClick={(event: MouseEvent) => {
-                      event.stopPropagation();
-                      setActiveHeaderTooltip(null);
-                      props.onClearAll?.();
-                    }}
-                    onMouseEnter={() => setActiveHeaderTooltip("clear")}
-                    onMouseLeave={() => setActiveHeaderTooltip(null)}
-                  >
-                    <IconTrash size={DROPDOWN_ICON_SIZE_PX} />
-                  </TooltipTrigger>
-                  <TooltipContent>Clear all</TooltipContent>
-                </Tooltip>
-                <Tooltip
-                  open={activeHeaderTooltip() === "copy"}
-                  placement="top"
-                >
-                  <TooltipTrigger
-                    as="button"
+                    as={Button}
                     data-react-grab-ignore-events
                     data-react-grab-comments-copy-all
-                    class={cn(
-                      buttonVariants({ variant: "chip", size: "chip" }),
-                      "shrink-0",
-                    )}
+                    variant="chip"
+                    class="shrink-0"
                     onClick={(event: MouseEvent) => {
                       event.stopPropagation();
-                      setActiveHeaderTooltip(null);
                       props.onCopyAll?.();
                       setIsCopyAllConfirmed(true);
                       clearTimeout(copyAllFeedbackTimeout);
@@ -422,15 +400,11 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                       }, FEEDBACK_DURATION_MS);
                     }}
                     onMouseEnter={() => {
-                      setActiveHeaderTooltip("copy");
                       if (!isCopyAllConfirmed()) {
                         props.onCopyAllHover?.(true);
                       }
                     }}
-                    onMouseLeave={() => {
-                      setActiveHeaderTooltip(null);
-                      props.onCopyAllHover?.(false);
-                    }}
+                    onMouseLeave={() => props.onCopyAllHover?.(false)}
                   >
                     <Show
                       when={isCopyAllConfirmed()}

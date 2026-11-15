@@ -37,14 +37,17 @@ export const StatsBar: Component<StatsBarProps> = (props) => {
   };
 
   return (
-    <div data-react-grab-stats-bar class="border-b border-border px-3 py-2.5 space-y-1.5">
+    <div
+      data-react-grab-stats-bar
+      class="border-b border-border px-3 py-2.5 space-y-1.5"
+    >
       <MetricRow
         label="Groups"
         total={groupStats().total}
         linked={groupStats().linked}
         linkedLabel="Linked"
         flagged={groupStats().flagged}
-        progressColor="bg-green-400"
+        progressColor="bg-success-light"
       />
       <MetricRow
         label="Selections"
@@ -52,7 +55,7 @@ export const StatsBar: Component<StatsBarProps> = (props) => {
         linked={selectionStats().ticketed}
         linkedLabel="Ticketed"
         flagged={selectionStats().flagged}
-        progressColor="bg-purple-400"
+        progressColor="bg-selection"
       />
     </div>
   );
@@ -78,13 +81,13 @@ const MetricRow: Component<MetricRowProps> = (props) => {
       <span class="text-meta font-bold uppercase tracking-wider text-muted-foreground">
         {props.label}
       </span>
-      <span class="text-xs text-foreground">
+      <span class="text-caption leading-4 text-foreground">
         Total <span class="font-bold">{props.total}</span>
       </span>
-      <span class="text-xs text-foreground">
+      <span class="text-caption leading-4 text-foreground">
         {props.linkedLabel} <span class="font-bold">{props.linked}</span>
       </span>
-      <span class="text-xs text-red-400">
+      <span class="text-caption leading-4 text-danger-light">
         Flagged <span class="font-bold">{props.flagged}</span>
       </span>
       <ProgressBar value={ratio()} colorClass={props.progressColor} />

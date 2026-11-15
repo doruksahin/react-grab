@@ -222,6 +222,10 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
 
   const isVertical = () => snapEdge() === "left" || snapEdge() === "right";
 
+  // Toolbar tooltips stay controlled (open={…}): they must not open while the
+  // toolbar is dragged or collapsed, or while one of its menus or prompts is
+  // open (createFreezeHandlers, isTooltipAllowed). Kobalte's hover state does
+  // not know about those rules.
   const isTooltipAllowed = () =>
     !isCollapsed() &&
     !props.isCommentsDropdownOpen &&
@@ -1043,7 +1047,6 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
             <TooltipTrigger
               as={Button}
               variant="toolbar"
-              size="auto"
               data-react-grab-ignore-events
               data-react-grab-toolbar-devmode
               aria-label={
@@ -1064,7 +1067,7 @@ export const Toolbar: Component<ToolbarProps> = (props) => {
                 class="text-meta font-extrabold tracking-wider leading-none"
                 classList={{
                   "text-muted-foreground/60": !props.isDevMode,
-                  "text-sky-500": Boolean(props.isDevMode),
+                  "text-dev": Boolean(props.isDevMode),
                 }}
               >
                 DEV

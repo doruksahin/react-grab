@@ -12,7 +12,7 @@ const badgeVariants = cva({
     },
     tone: {
       neutral: "bg-foreground/[0.06] text-muted-foreground",
-      accent: "bg-purple-400/10 text-purple-400",
+      accent: "bg-selection/10 text-selection",
       primary: "bg-primary text-primary-foreground font-bold",
       inverse: "bg-black text-white font-semibold",
     },

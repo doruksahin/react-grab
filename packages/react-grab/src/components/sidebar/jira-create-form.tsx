@@ -93,7 +93,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
     <Show
       when={!configError()}
       fallback={
-        <div class="p-3 bg-red-500/20 border border-red-500/30 rounded text-meta text-red-300">
+        <div class="p-3 bg-danger/20 border border-danger/30 rounded text-meta text-danger-foreground">
           <p class="font-semibold mb-1">Configuration error</p>
           <For each={configError()!}>{(err) => <p>{err}</p>}</For>
         </div>
@@ -265,7 +265,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
         <Show when={failure() !== null && !created()}>
           <div
             data-react-grab-jira-error
-            class="mb-3 p-2 bg-red-500/20 border border-red-500/30 rounded text-meta text-red-300"
+            class="mb-3 p-2 bg-danger/20 border border-danger/30 rounded text-meta text-danger-foreground"
           >
             <p>Could not create the ticket. Your form is kept.</p>
             <Show when={failure()}>
@@ -277,7 +277,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           {(ticket) => (
             <div
               data-react-grab-jira-success
-              class="mb-3 p-2 bg-green-500/15 border border-green-500/30 rounded text-meta text-green-300"
+              class="mb-3 p-2 bg-success/15 border border-success/30 rounded text-meta text-success-foreground"
             >
               The ticket is in Jira. This group is now locked to{" "}
               {ticket().ticketId}.
@@ -290,7 +290,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           <label class="flex justify-between text-meta text-muted-foreground mb-1">
             <span>Work Type *</span>
             <Show when={workTypeMissing()}>
-              <span data-react-grab-jira-required class="text-red-400">
+              <span data-react-grab-jira-required class="text-danger-light">
                 Required
               </span>
             </Show>
@@ -400,7 +400,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           <label class="flex justify-between text-meta text-muted-foreground mb-1">
             <span>Summary *</span>
             <Show when={summaryMissing()}>
-              <span data-react-grab-jira-required class="text-red-400">
+              <span data-react-grab-jira-required class="text-danger-light">
                 Required
               </span>
             </Show>

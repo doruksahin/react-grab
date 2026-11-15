@@ -72,12 +72,11 @@ export const CollapsedDot: Component<CollapsedDotProps> = (props) => {
   return (
     <Button
       type="button"
-      variant="floating"
-      size="auto"
+      variant="outline"
       data-react-grab-ignore-events
       data-react-grab-collapsed-dot
       class={cn(
-        "fixed rounded-full duration-150 ease-out",
+        "fixed h-auto rounded-full bg-popover shadow-md transition-all duration-150 ease-out hover:scale-105 hover:border-ring hover:shadow-lg",
         hasPreview() ? "justify-between gap-3 pl-3 pr-1.5 py-1" : "p-1.5",
         props.isExpanding
           ? "animate-out fade-out-0 zoom-out-75 fill-mode-forwards ease-in"

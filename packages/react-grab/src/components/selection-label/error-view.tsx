@@ -68,7 +68,6 @@ export const ErrorView: Component<ErrorViewProps> = (props) => {
             <Button
               data-react-grab-error-retry
               variant="chip"
-              size="chip"
               class="shrink-0"
               onClick={props.onRetry}
             >
@@ -78,7 +77,6 @@ export const ErrorView: Component<ErrorViewProps> = (props) => {
             <Button
               data-react-grab-error-ok
               variant="chip"
-              size="chip"
               class="shrink-0"
               onClick={props.onAcknowledge}
             >

@@ -13,9 +13,11 @@ export const EmptyState: Component<EmptyStateProps> = (props) => {
       data-react-grab-empty-state
       class="flex flex-col items-center justify-center py-12 px-4 text-center"
     >
-      <p class="text-sm text-foreground">{props.message}</p>
+      <p class="text-title leading-5 text-foreground">{props.message}</p>
       {props.submessage && (
-        <p class="text-xs text-muted-foreground mt-1">{props.submessage}</p>
+        <p class="text-caption leading-4 text-muted-foreground mt-1">
+          {props.submessage}
+        </p>
       )}
       {props.action && (
         <Button

@@ -1,17 +1,14 @@
 import type { Component, ComponentProps, JSX } from "solid-js";
 import { splitProps } from "solid-js";
-import { cva, type VariantProps } from "cva";
+import type { VariantProps } from "cva";
 import { ICON_BUTTON_TOOLTIP_OPEN_DELAY_MS } from "../../constants.js";
 import { cn } from "../../utils/cn.js";
-import { buttonVariantDefinitions } from "./button.js";
+import { createButtonVariants } from "./button.js";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip.js";
 
-const iconButtonVariants = cva({
-  ...buttonVariantDefinitions,
-  defaultVariants: {
-    variant: "subtle",
-    size: "icon-sm",
-  },
+const iconButtonVariants = createButtonVariants({
+  variant: "subtle",
+  size: "icon-sm",
 });
 
 interface IconButtonProps
@@ -29,17 +26,7 @@ const IconButton: Component<IconButtonProps> = (props) => {
     "class",
     "variant",
     "size",
-    "onFocus",
   ]);
-
-  // The tooltip shows on hover and keyboard focus, not when a dialog moves
-  // focus to the button programmatically (WAI-ARIA tooltip pattern).
-  const handleFocus: JSX.FocusEventHandler<HTMLButtonElement, FocusEvent> = (
-    event,
-  ) => {
-    if (typeof local.onFocus === "function") local.onFocus(event);
-    if (!event.currentTarget.matches(":focus-visible")) event.preventDefault();
-  };
 
   return (
     <Tooltip openDelay={ICON_BUTTON_TOOLTIP_OPEN_DELAY_MS}>
@@ -51,7 +38,6 @@ const IconButton: Component<IconButtonProps> = (props) => {
           local.class,
         )}
         {...rest}
-        onFocus={handleFocus}
       >
         {local.children}
       </TooltipTrigger>

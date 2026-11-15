@@ -23,7 +23,7 @@ export const JiraTicketLink: Component<JiraTicketLinkProps> = (props) => {
           href={props.url}
           target="_blank"
           rel="noopener noreferrer"
-          class="font-mono text-meta text-blue-500 hover:text-blue-600 underline decoration-blue-500/40 hover:decoration-blue-600 transition-colors cursor-pointer"
+          class="font-mono text-meta text-ticket-link hover:text-ticket-link-hover underline decoration-ticket-link/40 hover:decoration-ticket-link-hover transition-colors cursor-pointer"
         >
           {props.ticketId}
         </a>

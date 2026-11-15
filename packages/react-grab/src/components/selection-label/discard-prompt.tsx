@@ -58,7 +58,6 @@ export const DiscardPrompt: Component<DiscardPromptProps> = (props) => {
           <Button
             data-react-grab-discard-no
             variant="chip"
-            size="chip"
             class="shrink-0"
             onClick={props.onCancel}
           >
@@ -67,7 +66,6 @@ export const DiscardPrompt: Component<DiscardPromptProps> = (props) => {
           <Button
             data-react-grab-discard-yes
             variant="chip-destructive"
-            size="chip"
             class="shrink-0"
             onClick={props.onConfirm}
           >

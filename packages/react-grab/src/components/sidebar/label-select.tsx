@@ -66,7 +66,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
       itemComponent={(itemProps) => (
         <Combobox.Item
           item={itemProps.item}
-          class="relative flex w-full cursor-default select-none items-center justify-between rounded-sm py-1.5 px-2 text-sm outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
+          class="relative flex w-full cursor-default select-none items-center justify-between rounded-sm py-1.5 px-2 text-title leading-5 outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
         >
           <Combobox.ItemLabel class="text-caption">
             {itemProps.item.rawValue}

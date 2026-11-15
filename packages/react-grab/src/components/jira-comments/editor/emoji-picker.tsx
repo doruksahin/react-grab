@@ -44,7 +44,7 @@ export const EmojiPicker: Component<{
           data-react-grab-emoji={emoji}
           variant="ghost"
           size="icon-sm"
-          class="text-base leading-none"
+          class="text-heading leading-6 leading-none"
           onMouseDown={(e) => {
             e.preventDefault();
             props.onSelect(emoji);

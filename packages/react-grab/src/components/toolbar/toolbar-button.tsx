@@ -20,7 +20,6 @@ export const ToolbarButton: Component<ToolbarButtonProps> = (props) => {
   return (
     <Button
       variant="toolbar"
-      size="auto"
       class={cn(
         "touch-hitbox",
         getButtonSpacingClass(local.vertical),

@@ -1,16 +1,18 @@
-import type { Component } from "solid-js";
+import { type Component, For } from "solid-js";
 import { Badge } from "../ui/badge.js";
-import { Button } from "../ui/button.js";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs.js";
+
+type TabId = "groups" | "selections";
 
 export interface TabBarProps {
-  activeTab: "groups" | "selections";
-  onTabChange: (tab: "groups" | "selections") => void;
+  activeTab: TabId;
+  onTabChange: (tab: TabId) => void;
   groupsCount: number;
   selectionsCount: number;
 }
 
 interface TabConfig {
-  id: "groups" | "selections";
+  id: TabId;
   label: string;
   count: number;
 }
@@ -21,35 +23,33 @@ export const TabBar: Component<TabBarProps> = (props) => {
     { id: "selections", label: "Selections", count: props.selectionsCount },
   ];
 
-  return (
-    <div
-      data-react-grab-tab-bar
-      class="flex border-b border-border px-2 py-1.5"
-    >
-      {tabs().map((tab, index) => {
-        const isActive = () => props.activeTab === tab.id;
-        const isFirst = index === 0;
-        const isLast = index === tabs().length - 1;
+  const handleChange = (value: string) => {
+    const tab = tabs().find((candidate) => candidate.id === value);
+    if (tab) props.onTabChange(tab.id);
+  };
 
-        return (
-          <Button
-            type="button"
-            variant="segment"
-            size="segment"
-            aria-pressed={isActive()}
-            classList={{
-              "rounded-l-lg border-r-0": isFirst,
-              "rounded-r-lg": isLast,
-            }}
-            onClick={() => props.onTabChange(tab.id)}
-          >
-            {tab.label}
-            <Badge variant="count" tone={isActive() ? "accent" : "neutral"}>
-              {tab.count}
-            </Badge>
-          </Button>
-        );
-      })}
-    </div>
+  return (
+    <Tabs
+      data-react-grab-tab-bar
+      value={props.activeTab}
+      onChange={handleChange}
+      class="border-b border-border px-2 py-1.5"
+    >
+      <TabsList aria-label="Dashboard view">
+        <For each={tabs()}>
+          {(tab) => (
+            <TabsTrigger value={tab.id}>
+              {tab.label}
+              <Badge
+                variant="count"
+                tone={props.activeTab === tab.id ? "accent" : "neutral"}
+              >
+                {tab.count}
+              </Badge>
+            </TabsTrigger>
+          )}
+        </For>
+      </TabsList>
+    </Tabs>
   );
 };

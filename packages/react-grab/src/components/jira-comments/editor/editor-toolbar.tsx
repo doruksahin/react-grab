@@ -1,9 +1,21 @@
-import type { Component } from "solid-js";
+import { type Component, For } from "solid-js";
 import type { Editor } from "@tiptap/core";
 import { ToolbarButton, ToolbarSeparator, ToolbarDropdown } from "./toolbar.js";
 import { EmojiPicker } from "./emoji-picker.js";
 import { ColorPicker } from "./color-picker.js";
-import { Button } from "../../ui/button.js";
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "../../ui/menu.js";
+
+interface HeadingOption {
+  label: string;
+  level: 1 | 2 | 3 | null;
+}
+
+const HEADING_OPTIONS: ReadonlyArray<HeadingOption> = [
+  { label: "Normal", level: null },
+  { label: "Heading 1", level: 1 },
+  { label: "Heading 2", level: 2 },
+  { label: "Heading 3", level: 3 },
+];
 
 export const EditorToolbar: Component<{
   editor: Editor;
@@ -62,56 +74,33 @@ export const EditorToolbar: Component<{
 
       <ToolbarSeparator />
 
-      <ToolbarDropdown
-        dataDropdown="headings"
-        title="Headings"
-        label={<span>H</span>}
-      >
-        <Button
-          variant="ghost"
-          size="menu"
-          class="w-full rounded text-meta"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            chain().setParagraph().run();
-          }}
+      <Menu>
+        <MenuTrigger
+          data-react-grab-editor-dropdown="headings"
+          title="Headings"
+          variant="toolbar"
         >
-          Normal
-        </Button>
-        <Button
-          variant="ghost"
-          size="menu"
-          class="w-full rounded text-meta font-bold"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            chain().toggleHeading({ level: 1 }).run();
-          }}
-        >
-          Heading 1
-        </Button>
-        <Button
-          variant="ghost"
-          size="menu"
-          class="w-full rounded text-meta font-bold"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            chain().toggleHeading({ level: 2 }).run();
-          }}
-        >
-          Heading 2
-        </Button>
-        <Button
-          variant="ghost"
-          size="menu"
-          class="w-full rounded text-meta font-bold"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            chain().toggleHeading({ level: 3 }).run();
-          }}
-        >
-          Heading 3
-        </Button>
-      </ToolbarDropdown>
+          <span>H</span>
+          <span class="text-muted-foreground">▾</span>
+        </MenuTrigger>
+        <MenuContent class="min-w-[120px]">
+          <For each={HEADING_OPTIONS}>
+            {(option) => (
+              <MenuItem
+                class={
+                  option.level === null ? "text-meta" : "text-meta font-bold"
+                }
+                onSelect={() => {
+                  if (option.level === null) chain().setParagraph().run();
+                  else chain().toggleHeading({ level: option.level }).run();
+                }}
+              >
+                {option.label}
+              </MenuItem>
+            )}
+          </For>
+        </MenuContent>
+      </Menu>
 
       <ToolbarSeparator />
 

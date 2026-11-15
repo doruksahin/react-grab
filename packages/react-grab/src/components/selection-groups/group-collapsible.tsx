@@ -170,7 +170,7 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
                 width="12"
                 height="12"
                 viewBox="0 0 16 16"
-                class="text-purple-500"
+                class="text-selection-strong"
               >
                 <path
                   fill="currentColor"

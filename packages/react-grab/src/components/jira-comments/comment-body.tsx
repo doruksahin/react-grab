@@ -11,10 +11,7 @@ export const CommentBody: Component<{ body: string }> = (props) => (
         seg.kind === "text" ? (
           <span>{seg.text}</span>
         ) : seg.kind === "mention" ? (
-          <span
-            data-react-grab-mention
-            class="bg-mention-surface text-mention px-1 py-px rounded text-meta font-medium"
-          >
+          <span data-react-grab-mention class="mention-chip text-meta">
             @{seg.name}
           </span>
         ) : (

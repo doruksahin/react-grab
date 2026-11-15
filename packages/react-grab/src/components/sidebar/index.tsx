@@ -8,6 +8,7 @@ import {
   untrack,
 } from "solid-js";
 import createFocusTrap from "solid-focus-trap";
+import { cn } from "../../utils/cn.js";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import type { SyncStatus } from "../../features/sync/types.js";
 import type {
@@ -289,7 +290,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 <input
                   type="text"
                   placeholder="Search selections..."
-                  class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-caption text-foreground placeholder:text-muted-foreground outline-none focus:border-purple-400 transition-colors"
+                  class="flex-1 bg-foreground/[0.03] border border-border rounded-lg px-3 py-1.5 text-caption text-foreground placeholder:text-muted-foreground outline-none focus:border-selection transition-colors"
                   value={searchQuery()}
                   onInput={(e) => setSearchQuery(e.currentTarget.value)}
                   data-react-grab-ignore-events
@@ -305,7 +306,11 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   label="Flagged only"
                   variant="outline"
                   size="icon-md"
-                  class="shrink-0"
+                  class={cn(
+                    "shrink-0",
+                    flaggedOnly() &&
+                      "border-flag bg-flag/8 hover:bg-flag/8 aria-pressed:bg-flag/8",
+                  )}
                   aria-pressed={flaggedOnly()}
                   onClick={() => setFlaggedOnly((prev) => !prev)}
                 >

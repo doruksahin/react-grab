@@ -38,7 +38,7 @@ export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
     <Tooltip openDelay={200} closeDelay={300}>
       <TooltipTrigger
         as="span"
-        class="inline-flex items-center justify-center gap-1 shrink-0 cursor-help rounded px-1 py-0.5 transition-colors duration-fast hover:bg-flag-hover"
+        class="inline-flex items-center justify-center gap-1 shrink-0 cursor-help rounded px-1 py-0.5 transition-colors duration-fast hover:bg-flag/8"
       >
         <IconFlag
           size={FLAGGED_ICON_SIZE}
@@ -50,7 +50,7 @@ export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {
           </span>
         </Show>
       </TooltipTrigger>
-      <TooltipContent class="bg-popover text-popover-foreground border border-border rounded-lg p-0 text-xs shadow-lg w-[240px] overflow-visible">
+      <TooltipContent class="bg-popover text-popover-foreground border border-border rounded-lg p-0 text-caption leading-4 shadow-lg w-[240px] overflow-visible">
         <div class="px-3 pt-2.5 pb-2">
           <div class="flex items-center gap-1.5 mb-2">
             <IconFlag size={14} class="text-flag" />

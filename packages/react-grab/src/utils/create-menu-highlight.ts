@@ -10,7 +10,7 @@ interface AnimatedBoundsFollowerController {
   hideFollower: () => void;
 }
 
-interface MenuHighlightController {
+export interface MenuHighlightController {
   containerRef: (containerElement: HTMLElement) => void;
   highlightRef: (highlightElement: HTMLElement) => void;
   updateHighlight: (targetElement: HTMLElement | undefined) => void;

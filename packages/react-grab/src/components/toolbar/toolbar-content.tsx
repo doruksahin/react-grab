@@ -125,7 +125,6 @@ export const ToolbarContent: Component<ToolbarContentProps> = (props) => {
   const collapseButton = () => (
     <Button
       variant="toolbar"
-      size="auto"
       data-react-grab-ignore-events
       data-react-grab-toolbar-collapse
       aria-label={props.isCollapsed ? "Expand toolbar" : "Collapse toolbar"}

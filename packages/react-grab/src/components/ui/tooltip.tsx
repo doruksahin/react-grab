@@ -1,14 +1,20 @@
-import { Tooltip as TooltipPrimitive } from "@kobalte/core/tooltip";
-import type { Component, ComponentProps } from "solid-js";
+import type { ElementOf, PolymorphicProps } from "@kobalte/core/polymorphic";
+import {
+  Tooltip as TooltipPrimitive,
+  type TooltipTriggerProps,
+} from "@kobalte/core/tooltip";
+import type { Component, ComponentProps, ValidComponent } from "solid-js";
 import {
   createContext,
   createEffect,
   createSignal,
+  mergeProps,
   onCleanup,
   Show,
   splitProps,
   useContext,
 } from "solid-js";
+import { callEventHandler } from "../../utils/call-event-handler.js";
 import { cn } from "../../utils/cn.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
 
@@ -98,7 +104,27 @@ const Tooltip: Component<TooltipRootProps> = (props) => {
   );
 };
 
-const TooltipTrigger = TooltipPrimitive.Trigger;
+// A tooltip opens on hover and on keyboard focus, not when a dialog or focus
+// trap moves focus to the trigger by script (WAI-ARIA tooltip pattern).
+// Kobalte skips opening when the focus event is default-prevented.
+const TooltipTrigger = <T extends ValidComponent = "button">(
+  props: PolymorphicProps<T, TooltipTriggerProps<T>>,
+) => {
+  const handleFocus = (
+    event: FocusEvent & { currentTarget: ElementOf<T>; target: Element },
+  ) => {
+    callEventHandler(props.onFocus, event);
+    const trigger: unknown = event.currentTarget;
+    if (trigger instanceof Element && !trigger.matches(":focus-visible")) {
+      event.preventDefault();
+    }
+  };
+  return (
+    <TooltipPrimitive.Trigger<T>
+      {...mergeProps(props, { onFocus: handleFocus })}
+    />
+  );
+};
 
 const TooltipPortal: Component<
   ComponentProps<typeof TooltipPrimitive.Portal>
@@ -116,7 +142,7 @@ const TooltipContent: Component<
       <TooltipPortal>
         <TooltipPrimitive.Content
           class={cn(
-            "z-50 overflow-hidden rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
+            "z-50 overflow-hidden rounded-md bg-primary px-3 py-1.5 text-caption leading-4 text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95",
             local.class,
           )}
           {...rest}

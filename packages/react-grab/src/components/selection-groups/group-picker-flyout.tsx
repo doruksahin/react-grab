@@ -2,7 +2,7 @@ import { For, Show, onMount, onCleanup } from "solid-js";
 import type { Component } from "solid-js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import { registerOverlayDismiss } from "../../utils/register-overlay-dismiss.js";
-import { Button } from "../ui/button.js";
+import { MenuList, MenuListItem } from "../ui/menu-list.js";
 
 interface GroupPickerFlyoutProps {
   groups: SelectionGroup[];
@@ -47,13 +47,11 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
           {header()}
         </span>
       </div>
-      <div class="border-t border-border py-1">
+      <MenuList class="border-t border-border py-1">
         {/* Ungrouped row — selecting it sets groupId to null */}
-        <Button
+        <MenuListItem
           data-react-grab-ignore-events
-          variant="ghost"
-          size="menu"
-          class="w-full justify-start"
+          class="gap-2"
           onClick={(e) => {
             e.stopPropagation();
             props.onSelect(null);
@@ -84,16 +82,14 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
           >
             Ungrouped
           </span>
-        </Button>
+        </MenuListItem>
         <For each={visibleGroups()}>
           {(group) => {
             const isActive = () => group.id === props.activeGroupId;
             return (
-              <Button
+              <MenuListItem
                 data-react-grab-ignore-events
-                variant="ghost"
-                size="menu"
-                class="w-full justify-start"
+                class="gap-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   props.onSelect(group.id);
@@ -124,11 +120,11 @@ export const GroupPickerFlyout: Component<GroupPickerFlyoutProps> = (props) => {
                 >
                   {group.name}
                 </span>
-              </Button>
+              </MenuListItem>
             );
           }}
         </For>
-      </div>
+      </MenuList>
       <Show when={props.onAddGroup}>
         <div class="border-t border-border px-2 py-1.5">
           <div class="flex items-center gap-1.5">

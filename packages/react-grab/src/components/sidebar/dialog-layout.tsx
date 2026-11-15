@@ -9,7 +9,9 @@ interface DialogHeaderProps {
 export const DialogHeader: Component<DialogHeaderProps> = (props) => {
   return (
     <div class="flex items-center justify-between">
-      <h2 class="text-sm font-semibold text-foreground">{props.title}</h2>
+      <h2 class="text-title leading-5 font-semibold text-foreground">
+        {props.title}
+      </h2>
       <Button
         type="button"
         variant="ghost"
@@ -19,12 +21,11 @@ export const DialogHeader: Component<DialogHeaderProps> = (props) => {
         aria-label="Close dialog"
         style={{ "pointer-events": "auto" }}
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 16 16"
-        >
-          <path fill="currentColor" d="M14.03 3.03 9.06 8l4.97 4.97-1.06 1.06L8 9.06l-4.97 4.97-1.06-1.06L6.94 8 1.97 3.03l1.06-1.06L8 6.94l4.97-4.97z" />
+        <svg width="14" height="14" viewBox="0 0 16 16">
+          <path
+            fill="currentColor"
+            d="M14.03 3.03 9.06 8l4.97 4.97-1.06 1.06L8 9.06l-4.97 4.97-1.06-1.06L6.94 8 1.97 3.03l1.06-1.06L8 6.94l4.97-4.97z"
+          />
         </svg>
       </Button>
     </div>

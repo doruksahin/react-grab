@@ -3,7 +3,7 @@ import type { Component } from "solid-js";
 import type { ArrowNavigationItem } from "../../types.js";
 import { createMenuHighlight } from "../../utils/create-menu-highlight.js";
 import { BottomSection } from "./bottom-section.js";
-import { Button } from "../ui/button.js";
+import { MenuList, MenuListItem } from "../ui/menu-list.js";
 
 interface ArrowNavigationMenuProps {
   items: ArrowNavigationItem[];
@@ -14,12 +14,7 @@ interface ArrowNavigationMenuProps {
 export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
   props,
 ) => {
-  const {
-    containerRef: highlightContainerRef,
-    highlightRef,
-    updateHighlight,
-    clearHighlight,
-  } = createMenuHighlight();
+  const highlight = createMenuHighlight();
 
   let menuItemsRef: HTMLDivElement | undefined;
   let didPointerMove = false;
@@ -42,48 +37,37 @@ export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
   createEffect(() => {
     const activeMenuItem = getMenuItemByIndex(props.activeIndex);
     if (activeMenuItem) {
-      updateHighlight(activeMenuItem);
+      highlight.updateHighlight(activeMenuItem);
     }
   });
 
   return (
     <BottomSection>
-      <div
+      <MenuList
+        highlight={highlight}
         ref={(element) => {
           menuItemsRef = element;
-          highlightContainerRef(element);
         }}
-        class="relative flex flex-col w-[calc(100%+16px)] -mx-2 -my-1.5"
+        class="w-[calc(100%+16px)] -mx-2 -my-1.5"
         onPointerMove={() => {
           didPointerMove = true;
         }}
       >
-        <div
-          ref={highlightRef}
-          class="pointer-events-none absolute bg-accent opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
-        />
         <For each={props.items}>
           {(item, itemIndex) => (
-            <Button
+            <MenuListItem
               data-react-grab-ignore-events
               data-react-grab-arrow-nav-item={item.tagName}
               data-react-grab-arrow-nav-index={itemIndex()}
-              variant="menu-item"
-              size="menu"
               onPointerDown={(event) => event.stopPropagation()}
-              onPointerEnter={(event) => {
-                updateHighlight(event.currentTarget);
+              onPointerEnter={() => {
                 if (didPointerMove) {
                   props.onSelect(itemIndex());
                 }
               }}
               onPointerLeave={() => {
                 const activeMenuItem = getMenuItemByIndex(props.activeIndex);
-                if (activeMenuItem) {
-                  updateHighlight(activeMenuItem);
-                } else {
-                  clearHighlight();
-                }
+                if (activeMenuItem) highlight.updateHighlight(activeMenuItem);
               }}
               onClick={(event) => {
                 event.stopPropagation();
@@ -103,10 +87,10 @@ export const ArrowNavigationMenu: Component<ArrowNavigationMenuProps> = (
                 </Show>
                 {item.tagName}
               </span>
-            </Button>
+            </MenuListItem>
           )}
         </For>
-      </div>
+      </MenuList>
     </BottomSection>
   );
 };

@@ -28,7 +28,7 @@ export const ToggleSwitch: Component<ToggleSwitchProps> = (props) => {
         // Track color
         color() === "default" && props.isOn && "bg-popover-foreground",
         color() === "default" && !props.isOn && "bg-muted-foreground",
-        color() === "sky" && props.isOn && "bg-sky-500/20 border-sky-500/50",
+        color() === "sky" && props.isOn && "bg-dev/20 border-dev/50",
         color() === "sky" &&
           !props.isOn &&
           "bg-foreground/10 border-foreground/20",
@@ -50,7 +50,7 @@ export const ToggleSwitch: Component<ToggleSwitchProps> = (props) => {
           props.isOn && size() === "md" && "left-[11px]",
           // Dot color
           color() === "default" && "bg-popover",
-          color() === "sky" && props.isOn && "bg-sky-500 shadow-glow-sky",
+          color() === "sky" && props.isOn && "bg-dev shadow-glow-sky",
           color() === "sky" && !props.isOn && "bg-muted-foreground",
         )}
       />

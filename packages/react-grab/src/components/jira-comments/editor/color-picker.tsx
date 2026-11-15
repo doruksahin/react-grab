@@ -1,6 +1,7 @@
 import { type Component, For } from "solid-js";
 import { EDITOR_TEXT_COLORS } from "../../../features/jira-comments/editor-text-colors.js";
 import { Button } from "../../ui/button.js";
+import { SwatchGroup, SwatchGroupItem } from "../../ui/swatch-group.js";
 
 export const ColorPicker: Component<{
   onSelect: (color: string | null) => void;
@@ -8,8 +9,8 @@ export const ColorPicker: Component<{
 }> = (props) => (
   <div
     data-react-grab-color-picker
-    class="grid gap-1 p-2"
-    style={{ "grid-template-columns": "repeat(5, 1fr)", "min-width": "140px" }}
+    class="flex flex-col gap-1 p-2"
+    style={{ "min-width": "140px" }}
     data-react-grab-ignore-events
   >
     <Button
@@ -27,23 +28,23 @@ export const ColorPicker: Component<{
     >
       ↺
     </Button>
-    <For each={EDITOR_TEXT_COLORS}>
-      {(color) => (
-        <Button
-          type="button"
-          data-react-grab-color={color}
-          variant="swatch"
-          size="icon-sm"
-          aria-pressed={props.activeColor === color}
-          style={{ background: color }}
-          title={color}
-          aria-label={color}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            props.onSelect(color);
-          }}
-        />
-      )}
-    </For>
+    <SwatchGroup
+      aria-label="Text color"
+      value={props.activeColor ?? null}
+      onChange={(color) => props.onSelect(color)}
+    >
+      <For each={EDITOR_TEXT_COLORS}>
+        {(color) => (
+          <SwatchGroupItem
+            value={color}
+            color={color}
+            data-react-grab-color={color}
+            title={color}
+            aria-label={color}
+            onMouseDown={(e) => e.preventDefault()}
+          />
+        )}
+      </For>
+    </SwatchGroup>
   </div>
 );

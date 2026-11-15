@@ -27,10 +27,9 @@ import { formatShortcut } from "../utils/format-shortcut.js";
 import { getTagDisplay } from "../utils/get-tag-display.js";
 import { resolveActionEnabled } from "../utils/resolve-action-enabled.js";
 import { nativeRequestAnimationFrame } from "../utils/native-raf.js";
-import { createMenuHighlight } from "../utils/create-menu-highlight.js";
 import { suppressMenuEvent } from "../utils/suppress-menu-event.js";
 import { registerOverlayDismiss } from "../utils/register-overlay-dismiss.js";
-import { Button } from "./ui/button.js";
+import { MenuList, MenuListItem } from "./ui/menu-list.js";
 
 interface ContextMenuProps {
   position: Position | null;
@@ -53,12 +52,6 @@ interface MenuItem {
 
 export const ContextMenu: Component<ContextMenuProps> = (props) => {
   let containerRef: HTMLDivElement | undefined;
-  const {
-    containerRef: highlightContainerRef,
-    highlightRef,
-    updateHighlight,
-    clearHighlight,
-  } = createMenuHighlight();
 
   const [measuredWidth, setMeasuredWidth] = createSignal(0);
   const [measuredHeight, setMeasuredHeight] = createSignal(0);
@@ -274,30 +267,15 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
             />
           </div>
           <BottomSection>
-            <div
-              ref={highlightContainerRef}
-              class="relative flex flex-col w-[calc(100%+16px)] -mx-2 -my-1.5"
-            >
-              <div
-                ref={highlightRef}
-                class="pointer-events-none absolute bg-accent opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
-              />
+            <MenuList class="w-[calc(100%+16px)] -mx-2 -my-1.5">
               <For each={menuItems()}>
                 {(item) => (
-                  <Button
+                  <MenuListItem
                     data-react-grab-ignore-events
                     data-react-grab-menu-item={item.label.toLowerCase()}
-                    variant="menu-item"
-                    size="menu"
                     class="justify-between"
                     disabled={!item.enabled}
                     onPointerDown={(event) => event.stopPropagation()}
-                    onPointerEnter={(event) => {
-                      if (item.enabled) {
-                        updateHighlight(event.currentTarget);
-                      }
-                    }}
-                    onPointerLeave={clearHighlight}
                     onClick={(event) => handleAction(item, event)}
                   >
                     <span class="text-body leading-4 font-medium text-popover-foreground">
@@ -310,10 +288,10 @@ export const ContextMenu: Component<ContextMenuProps> = (props) => {
                         </span>
                       )}
                     </Show>
-                  </Button>
+                  </MenuListItem>
                 )}
               </For>
-            </div>
+            </MenuList>
           </BottomSection>
         </div>
       </div>

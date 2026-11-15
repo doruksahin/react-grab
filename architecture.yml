@@ -342,6 +342,7 @@ features:
       - packages/react-grab/src/components/selection-label/tag-badge.tsx
       - packages/react-grab/src/components/ui/button.tsx
       - packages/react-grab/src/components/ui/collapsible.tsx
+      - packages/react-grab/src/components/ui/menu-list.tsx
       - packages/react-grab/src/components/ui/tooltip.tsx
       - packages/sync-server/src/routes/jira.ts
       - packages/sync-server/src/services/jira.service.ts
@@ -740,7 +741,7 @@ data_attrs:
     color-picker: {scope: editor, src: 1, tests: 0}
     color-reset: {scope: editor, src: 1, tests: 0}
     editor-action: {scope: editor, src: 1, tests: 0}
-    editor-dropdown: {scope: editor, src: 1, tests: 0}
+    editor-dropdown: {scope: editor, src: 2, tests: 0}
     editor-image-input: {scope: editor, src: 1, tests: 1}
     editor-toolbar: {scope: editor, src: 1, tests: 0}
     editor-toolbar-toggle: {scope: editor, src: 1, tests: 0}

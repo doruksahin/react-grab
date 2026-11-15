@@ -16,14 +16,14 @@ export const SidebarHeader: Component<SidebarHeaderProps> = (props) => {
       data-react-grab-sidebar-header
       class="flex items-center justify-between px-4 py-3 border-b border-border"
     >
-      <h2 class="flex items-center gap-2 text-sm font-semibold text-foreground">
+      <h2 class="flex items-center gap-2 text-title leading-5 font-semibold text-foreground">
         <span
           class={cn(
             "w-2 h-2 rounded-full",
             props.syncStatus === "synced"
-              ? "bg-green-500"
+              ? "bg-success"
               : props.syncStatus === "error"
-                ? "bg-red-500"
+                ? "bg-danger"
                 : "bg-muted-foreground",
           )}
         />

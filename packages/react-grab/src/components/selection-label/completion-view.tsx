@@ -186,7 +186,6 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
               <Button
                 data-react-grab-completion-undo
                 variant="chip-destructive"
-                size="chip"
                 class="shrink-0"
                 onClick={() => props.onUndo?.()}
               >
@@ -197,7 +196,6 @@ export const CompletionView: Component<CompletionViewProps> = (props) => {
               <Button
                 data-react-grab-completion-dismiss
                 variant="chip"
-                size="chip"
                 class="shrink-0"
                 onClick={handleAccept}
                 disabled={didCopy()}

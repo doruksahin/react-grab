@@ -76,7 +76,7 @@ export const GroupCard: Component<GroupCardProps> = (props) => {
           <span>{comments().length} selections</span>
           <span>{relativeTime(props.entry.group.createdAt)}</span>
           <Show when={props.entry.group.jiraTicketId}>
-            <span class="text-blue-400">{props.entry.group.jiraTicketId}</span>
+            <span class="text-link">{props.entry.group.jiraTicketId}</span>
           </Show>
         </div>
 

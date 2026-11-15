@@ -25,8 +25,9 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
         local.class,
       )}
       classList={{
-        "border-l-[3px] border-l-red-400 pl-[13px]": local.flagged === true,
-        "bg-purple-400/[0.03] border-l-[3px] border-l-purple-400 pl-[13px]":
+        "border-l-[3px] border-l-danger-light pl-[13px]":
+          local.flagged === true,
+        "bg-selection/[0.03] border-l-[3px] border-l-selection pl-[13px]":
           local.selected === true && !local.flagged,
       }}
       {...rest}

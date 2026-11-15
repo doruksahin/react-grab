@@ -3,9 +3,9 @@ import { Show } from "solid-js";
 import { cn } from "../../utils/cn.js";
 
 const VALUE_COLORS = {
-  green: "text-emerald-400",
-  purple: "text-purple-400",
-  amber: "text-amber-400",
+  green: "text-code-green",
+  purple: "text-code-purple",
+  amber: "text-code-amber",
 } as const;
 
 type ValueColor = keyof typeof VALUE_COLORS;

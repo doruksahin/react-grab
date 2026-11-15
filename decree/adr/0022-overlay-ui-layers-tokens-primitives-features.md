@@ -34,7 +34,7 @@ We want a consistent UI without touching domain logic, the test contract, or add
 | Layer | Owns | Built with | Never contains |
 |---|---|---|---|
 | Tokens (`styles.css` `@theme`) | colour, type scale, radius, spacing, shadow values | Tailwind v4 `@theme` | component structure |
-| Primitives (`components/ui/`) | how a control looks and behaves: Button, IconButton, StatusChip, StatusDot, Badge, Avatar, Pin, Menu, Select, Tooltip, Popover, Toast | Kobalte for behaviour and accessibility, `cva` for variants, `@floating-ui/dom` for placement (ADR-0005) | domain rules, data fetching |
+| Primitives (`components/ui/`) | how a control looks and behaves: Button, IconButton, StatusChip, StatusDot, Badge, Avatar, Tabs, SwatchGroup, MenuList, Pin, Menu, Select, Tooltip, Popover, Toast | Kobalte for behaviour and accessibility, `cva` for variants, `@floating-ui/dom` for placement (ADR-0005) | domain rules, data fetching |
 | Feature components (`components/<feature>/`) | which primitives a screen uses and in what order | the primitives | hex colours, arbitrary `px` text sizes, raw `<button>` styling, positioning maths |
 | Domain (`features/<feature>/business`) | rules, including which colour a status gets (ADR-0006) | plain TypeScript | JSX, signals |
 
@@ -53,4 +53,5 @@ We want a consistent UI without touching domain logic, the test contract, or add
 - Good: no new dependency.
 - Bad: migrating 50 raw buttons and the positioning utilities touches many files; screenshot tests are needed so the migration is reviewed by image, not by reading diffs.
 - Neutral: `pnpm lint` enforces the rule in `packages/react-grab/src/components/` outside `components/ui/` (`packages/react-grab/.oxlintrc.json`): oxlint's built-in `react/forbid-elements` rejects a raw `<button>`, and the JS plugin `scripts/oxlint/overlay-ui-plugin.mjs` rejects hex and `rgb()`/`hsl()` colours and `text-[Npx]` sizes in string literals. Jira's own colours (priority, issue type, editor text colours) are data and live in `features/`.
+- Neutral: `styles.css` resets Tailwind's default palette and text sizes (`--color-*: initial`, `--text-*: initial`) and declares only the overlay's tokens, so an off-token class such as `bg-red-500` or `text-sm` generates nothing.
 - Neutral: primitives own their appearance, so a fixed pixel size inside `components/ui/` (for example the avatar initials) is allowed; the planned lint rule applies outside `components/ui/` only.

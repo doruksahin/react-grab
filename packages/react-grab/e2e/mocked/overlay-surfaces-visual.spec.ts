@@ -103,7 +103,7 @@ test.describe("Overlay surfaces", { tag: ["@ADR-0022"] }, () => {
 
   test("sidebar selections", async ({ page }) => {
     const dashboard = await openDashboard(page);
-    await dashboard.getByRole("button", { name: /^Selections/ }).click();
+    await dashboard.getByRole("tab", { name: /^Selections/ }).click();
     await expectPageShot(page, "sidebar-selections.png");
   });
 
@@ -113,7 +113,7 @@ test.describe("Overlay surfaces", { tag: ["@ADR-0022"] }, () => {
     await reactGrab.typeInInput("Checkout button does nothing on Safari");
     await reactGrab.submitInput();
     const dashboard = await openDashboard(page);
-    await dashboard.getByRole("button", { name: /^Selections/ }).click();
+    await dashboard.getByRole("tab", { name: /^Selections/ }).click();
     await page
       .locator("[data-react-grab-selection-card]")
       .filter({ hasText: "Checkout button" })

@@ -51,7 +51,7 @@ export const StatusLegend: Component<StatusLegendProps> = (props) => {
       </div>
       <div class="px-4 py-3 space-y-2">
         {/* Flagged — cross-cutting override, shown above workflow statuses */}
-        <div class="flex items-start gap-2.5 bg-flag-hover rounded-md p-1.5 -mx-1.5 border-l-[3px] border-l-flag">
+        <div class="flex items-start gap-2.5 bg-flag/8 rounded-md p-1.5 -mx-1.5 border-l-[3px] border-l-flag">
           <StatusDot size="md" class="mt-0.5" color={FLAGGED_COLOR.hex} />
           <div>
             <div class="text-meta font-medium text-foreground">

@@ -7,11 +7,10 @@ import {
 } from "../../constants.js";
 import { cn } from "../../utils/cn.js";
 import { formatShortcut } from "../../utils/format-shortcut.js";
-import { createMenuHighlight } from "../../utils/create-menu-highlight.js";
 import { suppressMenuEvent } from "../../utils/suppress-menu-event.js";
 import { createAnchoredDropdown } from "../../utils/create-anchored-dropdown.js";
 import { registerOverlayDismiss } from "../../utils/register-overlay-dismiss.js";
-import { Button } from "../ui/button.js";
+import { MenuList, MenuListItem } from "../ui/menu-list.js";
 
 interface ToolbarMenuProps {
   position: DropdownAnchor | null;
@@ -23,12 +22,6 @@ interface ToolbarMenuProps {
 
 export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
   let containerRef: HTMLDivElement | undefined;
-  const {
-    containerRef: highlightContainerRef,
-    highlightRef,
-    updateHighlight,
-    clearHighlight,
-  } = createMenuHighlight();
 
   const dropdown = createAnchoredDropdown(
     () => containerRef,
@@ -83,27 +76,17 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
           )}
           style={{ "min-width": `${TOOLBAR_MENU_MIN_WIDTH_PX}px` }}
         >
-          <div ref={highlightContainerRef} class="relative flex flex-col py-1">
-            <div
-              ref={highlightRef}
-              class="pointer-events-none absolute bg-accent opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
-            />
+          <MenuList class="py-1">
             <For each={props.actions}>
               {(action) => {
                 const isDefault = () => action.id === props.defaultActionId;
 
                 return (
-                  <Button
+                  <MenuListItem
                     data-react-grab-ignore-events
                     data-react-grab-menu-item={action.id}
-                    variant="menu-item"
-                    size="menu"
                     class="justify-between"
                     onPointerDown={(event) => event.stopPropagation()}
-                    onPointerEnter={(event) =>
-                      updateHighlight(event.currentTarget)
-                    }
-                    onPointerLeave={clearHighlight}
                     onClick={(event) => handleActionClick(action, event)}
                   >
                     <span
@@ -123,11 +106,11 @@ export const ToolbarMenu: Component<ToolbarMenuProps> = (props) => {
                         </span>
                       )}
                     </Show>
-                  </Button>
+                  </MenuListItem>
                 );
               }}
             </For>
-          </div>
+          </MenuList>
         </div>
       </div>
     </Show>

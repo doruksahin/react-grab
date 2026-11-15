@@ -20,6 +20,33 @@
   --font-mono:
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
     monospace;
+  /* ADR-0022: colours and type sizes come from the overlay's tokens only.
+     Tailwind's default palette and text sizes are removed, so a class such
+     as bg-red-500 or text-sm generates nothing. Each colour below has the
+     value of the palette colour it replaced. */
+  --color-*: initial;
+  --text-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-link: #60a5fa;
+  --color-link-hover: #93c5fd;
+  --color-ticket-link: #3b82f6;
+  --color-ticket-link-hover: #2563eb;
+  --color-info: #60a5fa;
+  --color-success: #22c55e;
+  --color-success-light: #4ade80;
+  --color-success-foreground: #86efac;
+  --color-danger: #ef4444;
+  --color-danger-light: #f87171;
+  --color-danger-foreground: #fca5a5;
+  --color-selection: #c084fc;
+  --color-selection-strong: #a855f7;
+  --color-comments: #8b5cf6;
+  --color-comments-foreground: #a78bfa;
+  --color-dev: #0ea5e9;
+  --color-code-green: #34d399;
+  --color-code-purple: #c084fc;
+  --color-code-amber: #fbbf24;
   --color-grab-pink: #b21c8e;
   --color-grab-pink-light: #fde7f7;
   --color-grab-pink-border: #f7c5ec;
@@ -33,7 +60,6 @@
   --color-label-divider: #dedede;
   --color-label-muted: #767676;
   --color-flag: #dc2626;
-  --color-flag-hover: rgba(220, 38, 38, 0.08);
   --color-mention: #7b8cf8;
   --color-mention-surface: rgba(88, 101, 242, 0.2);
   --color-scrollbar-thumb: rgba(0, 0, 0, 0.15);
@@ -52,6 +78,18 @@
   --transition-fast: 100ms;
   --transition-normal: 150ms;
   --transition-slow: 200ms;
+}
+
+/* Mention chip: the comment editor (.ProseMirror .mention) and the rendered
+   comment body (comment-body.tsx) share this one style. */
+@utility mention-chip {
+  background-color: var(--color-mention-surface);
+  color: var(--color-mention);
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* Avatar initials backgrounds (ADR-0022). `static` keeps them in the build:
@@ -87,7 +125,6 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
-  --color-success: var(--success);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -140,7 +177,6 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --success: oklch(0.723 0.219 149.579);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -233,13 +269,7 @@
 
 /* Mention chip */
 .jira-editor-content .ProseMirror .mention {
-  background: rgba(88, 101, 242, 0.2);
-  color: hsl(var(--primary));
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-weight: 500;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
+  @apply mention-chip;
 }
 
 /* Images in comment editor */
@@ -247,18 +277,18 @@
   max-width: 200px;
   border-radius: 4px;
   margin: 0.25em 0;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid var(--color-border);
   display: block;
   cursor: pointer;
 }
 .jira-editor-content .ProseMirror img.ProseMirror-selectednode {
-  outline: 2px solid hsl(var(--primary));
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* Link styles */
 .jira-editor-content .ProseMirror a {
-  color: hsl(var(--primary));
+  color: var(--color-primary);
   text-decoration: underline;
 }
 
@@ -268,7 +298,7 @@
 /* Horizontal rule */
 .jira-editor-content .ProseMirror hr {
   border: none;
-  border-top: 1px solid hsl(var(--border));
+  border-top: 1px solid var(--color-border);
   margin: 0.75em 0;
 }
 
@@ -307,7 +337,6 @@
   --accent: #2b2430;
   --accent-foreground: #ffffff;
   --destructive: #fd7114;
-  --success: #22c55e;
   --editor-blockquote-border: oklch(1 0 0 / 20%);
   --editor-blockquote-text: oklch(1 0 0 / 60%);
   --editor-code-bg: oklch(1 0 0 / 10%);
