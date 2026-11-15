@@ -175,3 +175,75 @@ test.describe(
     );
   },
 );
+
+test.describe(
+  "Jira create dialog — layout",
+  { tag: ["@ADR-0022", "@S5.1"] },
+  () => {
+    test.beforeEach(async ({ reactGrab, mockServer: _mockServer }) => {
+      await reactGrab.triggerInitSync();
+      await expect
+        .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+        .toBe(true);
+    });
+
+    test(
+      "the summary starts from the comment and the dialog says where the ticket goes",
+      {
+        annotation: {
+          type: "ac",
+          description:
+            "ADR-0022 step 3, Jira board S5.1: summary first, destination",
+        },
+      },
+      async ({ page, reactGrab }) => {
+        const form = await openCreateDialog(page, reactGrab);
+        await expect(form.getByRole("textbox").first()).toHaveValue(
+          COMMENT_TEXT,
+        );
+        await expect(
+          form.locator("[data-react-grab-jira-destination]"),
+        ).toHaveText("Into ATT on adcreative.atlassian.net · 1 selection");
+      },
+    );
+
+    test(
+      "the description shows as a preview, and Edit shows the markdown that is sent",
+      {
+        annotation: {
+          type: "ac",
+          description:
+            "ADR-0022 step 3, Jira board S5.1: preview-first description",
+        },
+      },
+      async ({ page, reactGrab, mockServer }) => {
+        const form = await openCreateDialog(page, reactGrab);
+        const preview = form.locator(
+          "[data-react-grab-jira-description-preview]",
+        );
+        await expect(preview).toContainText(COMMENT_TEXT);
+        await expect(
+          form.locator("[data-react-grab-jira-description-input]"),
+        ).toHaveCount(0);
+
+        await form.getByRole("tab", { name: "Edit" }).click();
+        const input = form.locator("[data-react-grab-jira-description-input]");
+        await expect(input).toHaveValue(/^## Selections/m);
+        await input.fill("Edited description");
+
+        await form.getByRole("tab", { name: "Preview" }).click();
+        await expect(preview).toHaveText("Edited description");
+
+        await form.getByRole("button", { name: "Create ticket" }).click();
+        await expect(
+          form.locator("[data-react-grab-jira-success]"),
+        ).toBeVisible({ timeout: 5000 });
+        const [request] = mockServer.requests("createJiraTicket");
+        expect(request.body).toMatchObject({
+          summary: COMMENT_TEXT,
+          description: "Edited description",
+        });
+      },
+    );
+  },
+);

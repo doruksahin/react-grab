@@ -9,6 +9,7 @@ const alertVariants = cva({
   variants: {
     tone: {
       warning: "border-warning/35 bg-warning/12 [&_svg]:text-warning-text",
+      success: "border-success/30 bg-success/15 [&_svg]:text-success-text",
     },
   },
   defaultVariants: {

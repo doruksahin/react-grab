@@ -85,7 +85,7 @@ export const LabelSelect: Component<LabelSelectProps> = (props) => {
       <Combobox.Control<string> aria-label="Labels">
         {(_state) => (
           <div
-            class="flex flex-wrap gap-1 min-h-[36px] w-full px-2 py-1 rounded-md border border-border bg-muted text-caption text-foreground items-center"
+            class="flex flex-wrap gap-1 min-h-9 w-full px-2 py-1 rounded-md border border-input bg-muted text-body text-foreground items-center"
             style={{ "pointer-events": "auto" }}
           >
             <For each={selected()}>

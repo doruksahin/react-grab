@@ -620,6 +620,9 @@ data_attrs:
         - jira-open-ticket
         - create-ticket
         - jira-ticket-link
+        - jira-destination
+        - jira-description-preview
+        - jira-description-input
 
     comments:
       description: JIRA comment authoring, display, mention picker, comment thread
@@ -771,13 +774,16 @@ data_attrs:
     generation-submit: {scope: generation, src: 1, tests: 0}
     create-ticket: {scope: jira, src: 1, tests: 5}
     jira-create: {scope: jira, src: 1, tests: 0}
+    jira-description-input: {scope: jira, src: 1, tests: 2}
+    jira-description-preview: {scope: jira, src: 1, tests: 1}
+    jira-destination: {scope: jira, src: 1, tests: 1}
     jira-dialog: {scope: jira, src: 1, tests: 0}
     jira-dots: {scope: jira, src: 1, tests: 0}
     jira-error: {scope: jira, src: 1, tests: 2}
     jira-form: {scope: jira, src: 1, tests: 6}
     jira-open-ticket: {scope: jira, src: 1, tests: 0}
-    jira-required: {scope: jira, src: 2, tests: 3}
-    jira-success: {scope: jira, src: 1, tests: 5}
+    jira-required: {scope: jira, src: 1, tests: 3}
+    jira-success: {scope: jira, src: 1, tests: 6}
     jira-ticket-link: {scope: jira, src: 1, tests: 0}
     image-lightbox: {scope: lightbox, src: 1, tests: 3}
     lightbox-close: {scope: lightbox, src: 1, tests: 1}

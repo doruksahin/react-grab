@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { defaultDescription } from "./jira-defaults.js";
+import { defaultDescription, defaultSummary } from "./jira-defaults.js";
 import type { SelectionGroup } from "../selection-groups/types.js";
 import type { CommentItem } from "../../types.js";
 
@@ -117,6 +117,48 @@ describe("defaultDescription recording link (SPEC-020)", () => {
   it("adds no recording line when there is no recording", () => {
     expect(defaultDescription(group, [makeItem()])).not.toContain(
       "**Recording:**",
+    );
+  });
+});
+
+describe("defaultSummary (ADR-0022 step 3, S5.1)", () => {
+  const loose: SelectionGroup = {
+    ...group,
+    name: "PriceLabel",
+    synthetic: true,
+  };
+
+  it("keeps the name of a group the user named", () => {
+    expect(defaultSummary(group, [makeItem()])).toBe("Billing");
+  });
+
+  it("starts a loose selection's summary from its comment", () => {
+    expect(defaultSummary(loose, [makeItem()])).toBe(
+      "Price label overlaps the badge",
+    );
+  });
+
+  it("uses the first non-empty line, with spaces collapsed", () => {
+    expect(
+      defaultSummary(loose, [
+        makeItem({
+          commentText: "\n  Checkout   button does nothing\nOn Safari",
+        }),
+      ]),
+    ).toBe("Checkout button does nothing");
+  });
+
+  it("cuts a long comment at a word boundary", () => {
+    const summary = defaultSummary(loose, [
+      makeItem({ commentText: "word ".repeat(40) }),
+    ]);
+    expect(summary.length).toBeLessThanOrEqual(80);
+    expect(summary.endsWith("word…")).toBe(true);
+  });
+
+  it("falls back to the group name without comment text", () => {
+    expect(defaultSummary(loose, [makeItem({ commentText: "  " })])).toBe(
+      "PriceLabel",
     );
   });
 });

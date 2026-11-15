@@ -28,6 +28,7 @@ import { CommentsDropdown } from "./comments-dropdown.js";
 import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
+import { getJiraSiteHost } from "../features/sidebar/jira-site-host.js";
 import { DevModeProvider } from "../features/dev-mode/index.js";
 import type { SelectionGroupWithJira } from "../features/sidebar/jira-types.js";
 import { useCollapsibleLabel } from "../features/collapsible-label/index.js";
@@ -474,6 +475,10 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             group={state().group}
             commentItems={state().items}
             jiraProjectKey={props.jiraProjectKey ?? ""}
+            // The groups carry the Jira fields at runtime, as for <Sidebar>.
+            jiraSiteHost={getJiraSiteHost(
+              (props.groups ?? []) as SelectionGroupWithJira[],
+            )}
             onTicketCreated={(groupId, ticketId, ticketUrl) => {
               // The dialog stays open to confirm the ticket; it closes via
               // its own Done button, which calls onClose.

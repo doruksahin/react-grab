@@ -39,6 +39,7 @@ import { type GroupedEntry } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/sidebar/jira-types.js";
 import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
+import { getJiraSiteHost } from "../../features/sidebar/jira-site-host.js";
 import { TabBar } from "./tab-bar.js";
 import { Tabs, TabsContent } from "../ui/tabs.js";
 import { SelectionListTab } from "./selection-list-tab.js";
@@ -422,6 +423,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             group={state().group}
             commentItems={state().items}
             jiraProjectKey={props.jiraProjectKey ?? ""}
+            jiraSiteHost={getJiraSiteHost(props.groups)}
             onTicketCreated={(groupId, ticketId, ticketUrl) => {
               // The dialog stays open to confirm the ticket; it closes via
               // its own Done button, which calls onClose.

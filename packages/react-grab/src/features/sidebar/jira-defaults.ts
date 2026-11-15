@@ -6,11 +6,36 @@ import { extractFilePath } from "./extract-file-path.js";
 
 const RAW_HTML_MAX_CHARS = 1000;
 
+const SUMMARY_MAX_CHARS = 80;
+
+/** The first line of a text, cut at a word boundary to fit the summary. */
+function toSummaryLine(text: string): string {
+  const line = (text.split("\n").find((part) => part.trim()) ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (line.length <= SUMMARY_MAX_CHARS) return line;
+  const cut = line.slice(0, SUMMARY_MAX_CHARS - 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  const wordCut =
+    lastSpace > SUMMARY_MAX_CHARS / 2 ? cut.slice(0, lastSpace) : cut;
+  return `${wordCut.trimEnd()}…`;
+}
+
 /**
- * Generates the default JIRA ticket summary from the group name.
+ * Generates the default JIRA ticket summary. A group the user named keeps
+ * its name; a single loose selection (synthetic group) starts from what the
+ * user wrote, since its name is only the component name. Falls back to the
+ * group name when there is no comment text.
  */
-export function defaultSummary(group: SelectionGroup): string {
-  return group.name;
+export function defaultSummary(
+  group: SelectionGroup,
+  items: CommentItem[],
+): string {
+  if (!isSynthetic(group)) return group.name;
+  const commentText = items.find((item) =>
+    item.commentText?.trim(),
+  )?.commentText;
+  return commentText ? toSummaryLine(commentText) : group.name;
 }
 
 /**
