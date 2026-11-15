@@ -1,6 +1,5 @@
 import {
   Show,
-  For,
   Index,
   createSignal,
   createEffect,
@@ -36,7 +35,7 @@ import { useLabelPins } from "../features/selection-label/hooks/use-label-pins.j
 import { useSidebarSession } from "../features/sidebar/hooks/use-sidebar-session.js";
 import { LABEL_EXIT_ANIMATION_MS } from "../constants.js";
 import { useSyncContext } from "../features/sync/sync-context.js";
-import { createKeyedById } from "../utils/create-keyed-by-id.js";
+import { Key } from "@solid-primitives/keyed";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const sidebar = useSidebarSession();
@@ -55,10 +54,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
     startClosed: () => Boolean(props.labelPinsStartClosed),
     previewedItemId: () => props.previewedItemId,
   });
-  // Keyed by label id, not position: a label keeps its DOM node (and does not
-  // replay its entry animation) when another label is added or removed.
-  const pinnedLabels = createKeyedById(labelPins.pinned);
-  const labelCards = createKeyedById(() => props.labelInstances ?? []);
   const [activeDetailGroupId, setActiveDetailGroupId] = createSignal<
     string | null
   >(null);
@@ -248,169 +243,157 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       {/* Pins first and cards after: on the same layer the later element
           is on top, so an open card covers the pins of nearby elements. */}
-      <For each={pinnedLabels.ids()}>
-        {(id) => (
-          <Show when={pinnedLabels.byId().get(id)}>
-            {(instance) => {
-              const [element, setElement] = createSignal<HTMLButtonElement>();
-              createEffect(() => {
-                const pinElement = element();
-                if (!pinElement) return;
-                onCleanup(labelPins.registerPin(instance().id, pinElement));
-              });
-              return (
-                <LabelPin
-                  ref={setElement}
-                  selectionBounds={instance().selectionBounds}
-                  onToggle={() =>
-                    labelPins.setOpen(
-                      instance().id,
-                      !labelPins.isOpen(instance()),
-                    )
-                  }
-                  inputValue={instance().inputValue}
-                  ticketKey={instance().jiraTicketId}
-                  statusColor={labelPins.statusColor(instance())}
-                  expanded={labelPins.isOpen(instance())}
-                  stackOffsetPx={labelPins.stackOffset(instance().id)}
-                />
-              );
-            }}
-          </Show>
-        )}
-      </For>
+      {/* Keyed by label id, not position: a label keeps its DOM node (and does
+          not replay its entry animation) when another label comes or goes. */}
+      <Key each={labelPins.pinned()} by="id">
+        {(instance) => {
+          const [element, setElement] = createSignal<HTMLButtonElement>();
+          createEffect(() => {
+            const pinElement = element();
+            if (!pinElement) return;
+            onCleanup(labelPins.registerPin(instance().id, pinElement));
+          });
+          return (
+            <LabelPin
+              ref={setElement}
+              selectionBounds={instance().selectionBounds}
+              onToggle={() =>
+                labelPins.setOpen(instance().id, !labelPins.isOpen(instance()))
+              }
+              inputValue={instance().inputValue}
+              ticketKey={instance().jiraTicketId}
+              statusColor={labelPins.statusColor(instance())}
+              expanded={labelPins.isOpen(instance())}
+              stackOffsetPx={labelPins.stackOffset(instance().id)}
+            />
+          );
+        }}
+      </Key>
 
-      <For each={labelCards.ids()}>
-        {(id) => (
-          <Show when={labelCards.byId().get(id)}>
-            {(instance) => {
-              // A pin's card plays its closing animation before it goes.
-              const [isLabelExiting, setIsLabelExiting] = createSignal(false);
-              const shown = createMemo(() => labelPins.isCardShown(instance()));
-              const [isMounted, setIsMounted] = createSignal(shown());
-              createEffect(
-                on(
-                  shown,
-                  (isShown) => {
-                    if (isShown) {
-                      setIsLabelExiting(false);
-                      setIsMounted(true);
-                      return;
-                    }
-                    setIsLabelExiting(true);
-                    const timeoutId = setTimeout(() => {
-                      setIsMounted(false);
-                      setIsLabelExiting(false);
-                    }, LABEL_EXIT_ANIMATION_MS);
-                    onCleanup(() => clearTimeout(timeoutId));
-                  },
-                  { defer: true },
-                ),
-              );
+      <Key each={props.labelInstances ?? []} by="id">
+        {(instance) => {
+          // A pin's card plays its closing animation before it goes.
+          const [isLabelExiting, setIsLabelExiting] = createSignal(false);
+          const shown = createMemo(() => labelPins.isCardShown(instance()));
+          const [isMounted, setIsMounted] = createSignal(shown());
+          createEffect(
+            on(
+              shown,
+              (isShown) => {
+                if (isShown) {
+                  setIsLabelExiting(false);
+                  setIsMounted(true);
+                  return;
+                }
+                setIsLabelExiting(true);
+                const timeoutId = setTimeout(() => {
+                  setIsMounted(false);
+                  setIsLabelExiting(false);
+                }, LABEL_EXIT_ANIMATION_MS);
+                onCleanup(() => clearTimeout(timeoutId));
+              },
+              { defer: true },
+            ),
+          );
 
-              return (
-                <Show when={isMounted()}>
-                  <PersistedLabel
-                    anchorElement={
-                      labelPins.isPinned(instance())
-                        ? labelPins.pinElement(instance().id)
-                        : undefined
-                    }
-                    tagName={instance().tagName}
-                    componentName={instance().componentName}
-                    elementsCount={instance().elementsCount}
-                    selectionBounds={instance().selectionBounds}
-                    mouseX={instance().mouseX}
-                    status={instance().status}
-                    statusText={instance().statusText}
-                    hasAgent={Boolean(instance().statusText)}
-                    isPromptMode={instance().isPromptMode}
-                    inputValue={instance().inputValue}
-                    error={instance().error}
-                    hideArrow={instance().hideArrow}
-                    groupStatus={instance().groupStatus}
-                    jiraTicketId={instance().jiraTicketId}
-                    jiraUrl={instance().jiraUrl}
-                    jiraAssignee={instance().jiraAssignee}
-                    jiraReporter={instance().jiraReporter}
-                    jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
-                    jiraReporterAvatar={instance().jiraReporterAvatar}
-                    jiraLabels={instance().jiraLabels}
-                    jiraComments={instance().jiraComments}
-                    jiraFlagged={instance().jiraFlagged}
-                    jiraFlaggedAt={instance().jiraFlaggedAt}
-                    jiraFlaggedBy={instance().jiraFlaggedBy}
-                    jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
-                    jiraPriority={instance().jiraPriority}
-                    jiraIssueType={instance().jiraIssueType}
-                    jiraDueDate={instance().jiraDueDate}
-                    itemId={instance().itemId}
-                    commentText={instance().commentText}
-                    timestamp={instance().timestamp}
-                    hasElementScreenshot={instance().hasElementScreenshot}
-                    hasFullPageScreenshot={instance().hasFullPageScreenshot}
-                    groups={props.groups ?? []}
-                    activeGroupId={instance().groupId}
-                    onActiveGroupChange={(groupId) => {
-                      const itemId = instance().itemId;
-                      if (!itemId) return;
-                      props.onMoveItem?.(itemId, groupId ?? null);
-                    }}
-                    onAddGroup={props.onAddGroup}
-                    onShowContextMenu={
-                      (instance().status === "copied" ||
-                        instance().status === "fading") &&
-                      isElementConnected(instance().element)
-                        ? () => props.onShowContextMenuInstance?.(instance().id)
-                        : undefined
-                    }
-                    onHoverChange={(isHovered) =>
-                      props.onLabelInstanceHoverChange?.(
-                        instance().id,
-                        isHovered,
-                      )
-                    }
-                    onRemoveItem={
-                      instance().itemId && props.onRemoveItem
-                        ? () => {
-                            const itemId = instance().itemId;
-                            if (itemId) props.onRemoveItem?.(itemId);
-                          }
-                        : undefined
-                    }
-                    onCreateTicket={
-                      instance().itemId && props.onCreateTicketForLooseItem
-                        ? () => {
-                            const itemId = instance().itemId;
-                            if (!itemId) return;
-                            const item = (props.commentItems ?? []).find(
-                              (ci) => ci.id === itemId,
-                            );
-                            if (item) props.onCreateTicketForLooseItem?.(item);
-                          }
-                        : undefined
-                    }
-                    onOpenThread={
-                      instance().itemId && instance().jiraTicketId
-                        ? () => {
-                            const itemId = instance().itemId;
-                            if (!itemId) return;
-                            sidebar.openOnItem(
-                              itemId,
-                              labelPins.pinElement(instance().id) ?? null,
-                            );
-                          }
-                        : undefined
-                    }
-                    onRefreshJiraStatus={refreshStatusFor(instance().groupId)}
-                    isCollapsing={isLabelExiting()}
-                  />
-                </Show>
-              );
-            }}
-          </Show>
-        )}
-      </For>
+          return (
+            <Show when={isMounted()}>
+              <PersistedLabel
+                anchorElement={
+                  labelPins.isPinned(instance())
+                    ? labelPins.pinElement(instance().id)
+                    : undefined
+                }
+                tagName={instance().tagName}
+                componentName={instance().componentName}
+                elementsCount={instance().elementsCount}
+                selectionBounds={instance().selectionBounds}
+                mouseX={instance().mouseX}
+                status={instance().status}
+                statusText={instance().statusText}
+                hasAgent={Boolean(instance().statusText)}
+                isPromptMode={instance().isPromptMode}
+                inputValue={instance().inputValue}
+                error={instance().error}
+                hideArrow={instance().hideArrow}
+                groupStatus={instance().groupStatus}
+                jiraTicketId={instance().jiraTicketId}
+                jiraUrl={instance().jiraUrl}
+                jiraAssignee={instance().jiraAssignee}
+                jiraReporter={instance().jiraReporter}
+                jiraAssigneeAvatar={instance().jiraAssigneeAvatar}
+                jiraReporterAvatar={instance().jiraReporterAvatar}
+                jiraLabels={instance().jiraLabels}
+                jiraComments={instance().jiraComments}
+                jiraFlagged={instance().jiraFlagged}
+                jiraFlaggedAt={instance().jiraFlaggedAt}
+                jiraFlaggedBy={instance().jiraFlaggedBy}
+                jiraFlaggedByAvatar={instance().jiraFlaggedByAvatar}
+                jiraPriority={instance().jiraPriority}
+                jiraIssueType={instance().jiraIssueType}
+                jiraDueDate={instance().jiraDueDate}
+                itemId={instance().itemId}
+                commentText={instance().commentText}
+                timestamp={instance().timestamp}
+                hasElementScreenshot={instance().hasElementScreenshot}
+                hasFullPageScreenshot={instance().hasFullPageScreenshot}
+                groups={props.groups ?? []}
+                activeGroupId={instance().groupId}
+                onActiveGroupChange={(groupId) => {
+                  const itemId = instance().itemId;
+                  if (!itemId) return;
+                  props.onMoveItem?.(itemId, groupId ?? null);
+                }}
+                onAddGroup={props.onAddGroup}
+                onShowContextMenu={
+                  (instance().status === "copied" ||
+                    instance().status === "fading") &&
+                  isElementConnected(instance().element)
+                    ? () => props.onShowContextMenuInstance?.(instance().id)
+                    : undefined
+                }
+                onHoverChange={(isHovered) =>
+                  props.onLabelInstanceHoverChange?.(instance().id, isHovered)
+                }
+                onRemoveItem={
+                  instance().itemId && props.onRemoveItem
+                    ? () => {
+                        const itemId = instance().itemId;
+                        if (itemId) props.onRemoveItem?.(itemId);
+                      }
+                    : undefined
+                }
+                onCreateTicket={
+                  instance().itemId && props.onCreateTicketForLooseItem
+                    ? () => {
+                        const itemId = instance().itemId;
+                        if (!itemId) return;
+                        const item = (props.commentItems ?? []).find(
+                          (ci) => ci.id === itemId,
+                        );
+                        if (item) props.onCreateTicketForLooseItem?.(item);
+                      }
+                    : undefined
+                }
+                onOpenThread={
+                  instance().itemId && instance().jiraTicketId
+                    ? () => {
+                        const itemId = instance().itemId;
+                        if (!itemId) return;
+                        sidebar.openOnItem(
+                          itemId,
+                          labelPins.pinElement(instance().id) ?? null,
+                        );
+                      }
+                    : undefined
+                }
+                onRefreshJiraStatus={refreshStatusFor(instance().groupId)}
+                isCollapsing={isLabelExiting()}
+              />
+            </Show>
+          );
+        }}
+      </Key>
 
       <Show when={props.toolbarVisible !== false}>
         <Toolbar

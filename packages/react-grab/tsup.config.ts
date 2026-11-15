@@ -66,6 +66,7 @@ const DEFAULT_OPTIONS: Options = {
     "react-grab-upstream",
     /^@kobalte\//,
     "solid-focus-trap",
+    "@solid-primitives/keyed",
   ],
   onSuccess: process.env.COPY ? "pbcopy < ./dist/index.global.js" : undefined,
   outDir: "./dist",

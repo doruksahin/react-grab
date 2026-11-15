@@ -50,6 +50,7 @@ import { createSelectionGroups } from "../features/selection-groups/index.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
 import { isPinnedLabel } from "../features/selection-label/business/is-pinned-label.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
+import { toPreviewLabelFields } from "../features/selection-visibility/business/preview-label-fields.js";
 import { createSyncLayer } from "../features/sync/sync-layer.js";
 import type { SyncConfig, SyncStatus } from "../features/sync/types.js";
 import {
@@ -2583,20 +2584,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             // carries no item id and never becomes a pin.
             itemId: labelKind === "saved" ? item.id : undefined,
             selectionBounds: bounds,
-            tagName: item.tagName,
-            componentName: item.componentName,
-            elementsCount: item.elementsCount,
+            ...toPreviewLabelFields(item),
             status: "idle",
-            isPromptMode: Boolean(item.commentText),
-            inputValue: item.commentText ?? undefined,
             createdAt: 0,
             element: previewElement,
             mouseX: bounds.x + bounds.width / 2,
-            groupId: item.groupId ?? undefined,
-            commentText: item.commentText,
-            timestamp: item.timestamp,
-            hasElementScreenshot: Boolean(item.screenshotElement),
-            hasFullPageScreenshot: Boolean(item.screenshotFullPage),
           });
         }
 

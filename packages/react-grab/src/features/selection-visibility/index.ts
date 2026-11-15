@@ -1,10 +1,12 @@
 import {
+  type Accessor,
   createEffect,
   createMemo,
-  mapArray,
   onCleanup,
   untrack,
 } from "solid-js";
+import { keyArray } from "@solid-primitives/keyed";
+import type { CommentItem } from "../../types.js";
 import type {
   PreviewEntry,
   SelectionVisibilityAPI,
@@ -12,7 +14,6 @@ import type {
 } from "./types.js";
 import { saveLocalRevealedStates } from "../sync/store/local-revealed-state.js";
 import { isSamePreview, type PreviewSource } from "./business/same-preview.js";
-import { isSameIdList } from "../../utils/is-same-id-list.js";
 
 const REVEAL_PREFIX = "reveal-pinned";
 
@@ -23,34 +24,37 @@ export function createSelectionVisibility(
     () => deps.currentToolbarState()?.selectionsRevealed ?? false,
   );
 
-  // Ids of the selections to draw: revealed and with their elements on the
-  // page. disconnectedItemIds follows DOM mutations (domMutationVersion in core).
-  const revealedIds = createMemo(
-    () => {
-      const disconnected = deps.disconnectedItemIds();
-      return deps
-        .commentItems()
-        .filter((item) => item.revealed && !disconnected.has(item.id))
-        .map((item) => item.id);
-    },
-    [],
-    { equals: isSameIdList },
-  );
+  // The selections to draw: revealed and with their elements on the page.
+  // disconnectedItemIds follows DOM mutations (domMutationVersion in core).
+  const revealedItems = createMemo(() => {
+    const disconnected = deps.disconnectedItemIds();
+    return deps
+      .commentItems()
+      .filter((item) => item.revealed && !disconnected.has(item.id));
+  });
 
-  // One reactive scope per revealed selection, keyed by id (mapArray, the
-  // primitive behind <For>). A selection keeps its box and label while other
-  // selections change; its scope ends — and its preview goes — when it is
-  // hidden, disconnected or removed. External bridge: the overlay store.
-  const drawPreview = (itemId: string) => {
-    const source = createMemo<PreviewSource | null>(
+  // One reactive scope per revealed selection, keyed by id (keyArray from
+  // @solid-primitives/keyed): items are rebuilt as new objects on every edit
+  // or sync, and the scope receives the current one as an accessor. A
+  // selection keeps its box and label while other selections change; its
+  // scope ends — and its preview goes — when it is hidden, disconnected or
+  // removed. External bridge: the overlay store.
+  const drawPreview = (item: Accessor<CommentItem>) => {
+    const source = createMemo<PreviewSource | undefined>(
       () => {
         void deps.disconnectedItemIds();
-        const item = deps.commentItems().find((entry) => entry.id === itemId);
-        if (!item) return null;
-        return { item, elements: deps.getConnectedCommentElements(item) };
+        return {
+          item: item(),
+          elements: deps.getConnectedCommentElements(item()),
+        };
       },
-      null,
-      { equals: isSamePreview },
+      undefined,
+      {
+        equals: (previous, next) =>
+          previous !== undefined &&
+          next !== undefined &&
+          isSamePreview(previous, next),
+      },
     );
 
     createEffect(() => {
@@ -74,7 +78,7 @@ export function createSelectionVisibility(
       });
     });
   };
-  createMemo(mapArray(revealedIds, drawPreview));
+  createMemo(keyArray(revealedItems, (item) => item.id, drawPreview));
 
   // Persistence, separate from drawing: revealed flags survive sync round-trips.
   createEffect(() => {
