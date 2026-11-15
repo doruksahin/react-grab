@@ -1053,4 +1053,8 @@ decree:
     ADR-0022:
       title: "Overlay UI in three layers: tokens, primitives, feature components"
       file: decree/adr/0022-overlay-ui-layers-tokens-primitives-features.md
-      status: proposed
+      status: accepted
+    ADR-0023:
+      title: Run the overlay with sync on any site through the browser extension
+      file: decree/adr/0023-overlay-on-any-site-through-the-browser-extension.md
+      status: accepted

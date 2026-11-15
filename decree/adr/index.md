@@ -21,4 +21,5 @@
 | ADR-0019 | ADR-0019 Write comments and groups one item at a time | accepted | 2026-11-13 |  |
 | ADR-0020 | ADR-0020 Protect the sync server with a bearer token and an origin allowlist | accepted | 2026-11-13 |  |
 | ADR-0021 | ADR-0021 Record how the user got to a selection with rrweb, and share it by a capability link | accepted | 2026-11-13 |  |
-| ADR-0022 | ADR-0022 Overlay UI in three layers: tokens, primitives, feature components | proposed | 2026-11-15 |  |
+| ADR-0022 | ADR-0022 Overlay UI in three layers: tokens, primitives, feature components | accepted | 2026-11-15 |  |
+| ADR-0023 | ADR-0023 Run the overlay with sync on any site through the browser extension | accepted | 2026-11-15 |  |
