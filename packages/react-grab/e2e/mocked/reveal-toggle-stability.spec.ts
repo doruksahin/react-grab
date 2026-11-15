@@ -3,12 +3,18 @@ import { test, expect } from "../fixtures.js";
 
 /**
  * Hiding one revealed selection from the comments panel must leave the
- * other revealed selections' pins mounted. They used to be removed and
- * re-added on every change to the selections, which replayed their entry
- * animation (the "flash").
+ * other revealed selection's pin mounted. Pins used to be removed and
+ * re-added on every change to the selections, and listed by position, which
+ * replayed their entry animation (the "flash"). Both orders are covered, so
+ * the test does not depend on which pin comes first.
  */
 
+const NAV = "Navigation bar is misaligned";
+const LOGO = "Logo overlaps";
+
 const pins = (page: Page) => page.locator("[data-react-grab-collapsed-dot]");
+const pinFor = (page: Page, text: string) =>
+  pins(page).filter({ hasText: text });
 const panelRow = (page: Page, text: string) =>
   page
     .locator(
@@ -27,35 +33,39 @@ test.describe(
         .toBe(true);
     });
 
-    test(
-      "hiding one selection leaves the other's pin as the same element",
-      {
-        annotation: {
-          type: "ac",
-          description:
-            "SPEC-010: revealed selections stay anchored; a reveal toggle redraws only the toggled selection",
+    for (const [hidden, kept] of [
+      [NAV, LOGO],
+      [LOGO, NAV],
+    ] as const) {
+      test(
+        `hiding "${hidden}" leaves the "${kept}" pin as the same element`,
+        {
+          annotation: {
+            type: "ac",
+            description:
+              "SPEC-010: revealed selections stay anchored; a reveal toggle redraws only the toggled selection",
+          },
         },
-      },
-      async ({ page, reactGrab }) => {
-        await expect(pins(page)).toHaveCount(2);
-        const logoPin = pins(page).filter({ hasText: "Logo overlaps" });
-        await logoPin.evaluate((element) =>
-          element.setAttribute("data-e2e-kept", "original"),
-        );
+        async ({ page, reactGrab }) => {
+          await expect(pins(page)).toHaveCount(2);
+          await pinFor(page, kept).evaluate((element) =>
+            element.setAttribute("data-e2e-kept", "original"),
+          );
 
-        await reactGrab.clickCommentsButton();
-        const navRow = panelRow(page, "Navigation bar is misaligned");
-        await navRow.hover();
-        await navRow
-          .getByRole("button", { name: "Hide this selection" })
-          .click();
-        await reactGrab.screenshot("after-hiding-one", "page");
+          await reactGrab.clickCommentsButton();
+          const row = panelRow(page, hidden);
+          await row.hover();
+          await row
+            .getByRole("button", { name: "Hide this selection" })
+            .click();
 
-        await expect(pins(page)).toHaveCount(1);
-        await expect(
-          pins(page).filter({ hasText: "Logo overlaps" }),
-        ).toHaveAttribute("data-e2e-kept", "original");
-      },
-    );
+          await expect(pins(page)).toHaveCount(1);
+          await expect(pinFor(page, kept)).toHaveAttribute(
+            "data-e2e-kept",
+            "original",
+          );
+        },
+      );
+    }
   },
 );
