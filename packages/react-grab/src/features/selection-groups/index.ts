@@ -6,16 +6,25 @@ import type {
 } from "./types.js";
 import type { CommentItem } from "../../types.js";
 import {
-  assignSelection,
-  bulkAssignSelections,
-  unassignSelectionsInGroup,
-} from "./business/selection-assignment.js";
-import {
-  ensureGroupForItem,
-  gcEmptySyntheticGroups,
-} from "./business/synthetic-group.js";
+  deleteGroup,
+  groupForNewSelection,
+  moveSelection,
+  moveSelections,
+} from "./business/membership-policy.js";
+import { gcEmptySyntheticGroups } from "./business/synthetic-group.js";
 import { canRemoveSelection } from "./business/ticket-lock.js";
 import { generateId } from "../../utils/generate-id.js";
+import { logRecoverableError } from "../../utils/log-recoverable-error.js";
+
+/*
+ * Membership changes go through the commands in business/membership-policy.ts;
+ * this orchestrator persists what they accept and returns their result. The
+ * surfaces offer only what `assignableGroupsFor` allows, so a refusal means a
+ * stale view or a caller bug: it is returned to the caller and logged, never
+ * applied.
+ */
+const reportRefusal = (command: string, reason: string) =>
+  logRecoverableError(`${command} refused`, new Error(reason));
 
 export function createSelectionGroups(
   deps: SelectionGroupsDeps,
@@ -35,15 +44,18 @@ export function createSelectionGroups(
     );
   };
 
-  const handleDeleteGroup = (groupId: string) => {
-    const remainingComments = unassignSelectionsInGroup(
-      deps.commentItems(),
-      groupId,
-    );
-    deps.persistCommentItems(remainingComments);
-
-    deps.persistGroups(deps.groups().filter((g) => g.id !== groupId));
+  const handleDeleteGroup: SelectionGroupsAPI["handleDeleteGroup"] = (
+    groupId,
+  ) => {
+    const result = deleteGroup(deps.commentItems(), deps.groups(), groupId);
+    if (result.status === "refused") {
+      reportRefusal("Group delete", result.reason);
+      return result;
+    }
+    deps.persistCommentItems(result.items);
+    deps.persistGroups(result.groups);
     if (activeGroupId() === groupId) setActiveGroupId(null);
+    return result;
   };
 
   const reconcileSyntheticGroups = (nextItems: CommentItem[]) => {
@@ -57,16 +69,45 @@ export function createSelectionGroups(
     }
   };
 
-  const handleMoveItem = (itemId: string, groupId: string | null) => {
-    const updated = assignSelection(deps.commentItems(), itemId, groupId);
-    deps.persistCommentItems(updated);
-    reconcileSyntheticGroups(updated);
+  const handleMoveItem: SelectionGroupsAPI["handleMoveItem"] = (
+    itemId,
+    groupId,
+  ) => {
+    const result = moveSelection(
+      deps.commentItems(),
+      deps.groups(),
+      itemId,
+      groupId,
+    );
+    if (result.status === "refused") {
+      reportRefusal("Selection move", result.reason);
+      return result;
+    }
+    deps.persistCommentItems(result.items);
+    reconcileSyntheticGroups(result.items);
+    return result;
   };
 
-  const handleMoveItems = (itemIds: Set<string>, groupId: string) => {
-    const updated = bulkAssignSelections(deps.commentItems(), itemIds, groupId);
-    deps.persistCommentItems(updated);
-    reconcileSyntheticGroups(updated);
+  const handleMoveItems: SelectionGroupsAPI["handleMoveItems"] = (
+    itemIds,
+    groupId,
+  ) => {
+    const result = moveSelections(
+      deps.commentItems(),
+      deps.groups(),
+      itemIds,
+      groupId,
+    );
+    if (result.status === "refused") {
+      reportRefusal("Selection move", result.reason);
+      return result;
+    }
+    for (const { itemId, reason } of result.refused) {
+      reportRefusal(`Selection move of ${itemId}`, reason);
+    }
+    deps.persistCommentItems(result.items);
+    reconcileSyntheticGroups(result.items);
+    return result;
   };
 
   const handleRemoveItem = (itemId: string): boolean => {
@@ -85,7 +126,7 @@ export function createSelectionGroups(
     item: { componentName?: string; elementName: string },
     selectedGroupId = activeGroupId(),
   ): string => {
-    const result = ensureGroupForItem(item, selectedGroupId, deps.groups());
+    const result = groupForNewSelection(item, selectedGroupId, deps.groups());
     if (result.groups !== deps.groups()) {
       deps.persistGroups(result.groups);
     }

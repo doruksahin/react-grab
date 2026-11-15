@@ -41,10 +41,8 @@ import { Tabs, TabsContent } from "../ui/tabs.js";
 import { SelectionListTab } from "./selection-list-tab.js";
 import { BulkActionBar } from "./bulk-action-bar.js";
 import { BulkGroupPicker } from "./bulk-group-picker.js";
-import {
-  assignableGroupsFor,
-  isSelectionLocked,
-} from "../../features/selection-groups/business/ticket-lock.js";
+import { isSelectionLocked } from "../../features/selection-groups/business/ticket-lock.js";
+import { assignableGroupsFor } from "../../features/selection-groups/business/membership-policy.js";
 import { ImageLightbox } from "../ui/image-lightbox.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { IconFlag } from "../icons/icon-flag.js";

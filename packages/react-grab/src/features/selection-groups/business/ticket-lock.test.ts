@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   isTicketed,
   isSelectionLocked,
-  assignableGroupsFor,
   canRemoveSelection,
 } from "./ticket-lock.js";
+import { assignableGroupsFor } from "./membership-policy.js";
 import type { SelectionGroup } from "../types.js";
 
 const mkGroup = (over: Partial<SelectionGroup>): SelectionGroup =>

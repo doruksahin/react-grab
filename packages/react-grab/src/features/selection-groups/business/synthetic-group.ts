@@ -45,29 +45,6 @@ export const createSyntheticGroupForItem = (
 });
 
 /**
- * Guarantee every item has a group. If `activeGroupId` is set (user picked
- * a group in the picker), returns it — no new group needed. Otherwise
- * creates a synthetic group so the item is never ungrouped.
- *
- * Pure function — does NOT persist. Returns the (possibly augmented) groups
- * array and the groupId to assign. The caller persists if `groups` changed.
- */
-export const ensureGroupForItem = (
-  item: SyntheticGroupSeed,
-  activeGroupId: string | null,
-  currentGroups: SelectionGroup[],
-): { groups: SelectionGroup[]; groupId: string } => {
-  if (activeGroupId) {
-    return { groups: currentGroups, groupId: activeGroupId };
-  }
-  const syntheticGroup = createSyntheticGroupForItem(item);
-  return {
-    groups: [...currentGroups, syntheticGroup],
-    groupId: syntheticGroup.id,
-  };
-};
-
-/**
  * Predicate for "is this a synthetic group?" — used by every filter that
  * needs to hide synthetic groups from user-facing lists.
  */

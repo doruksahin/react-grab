@@ -245,3 +245,77 @@ describe("createSelectionGroups.handleRemoveItem", () => {
     });
   });
 });
+
+describe("createSelectionGroups membership commands", () => {
+  const liveGroups = (): SelectionGroup[] => [
+    { id: "open", name: "Open", createdAt: 0, revealed: false },
+    {
+      id: "synthetic-8",
+      name: "Header",
+      createdAt: 0,
+      revealed: false,
+      synthetic: true,
+      jiraTicketId: "SCRUM-8",
+    },
+    {
+      id: "synthetic-9",
+      name: "Button",
+      createdAt: 0,
+      revealed: false,
+      synthetic: true,
+      jiraTicketId: "SCRUM-9",
+    },
+  ];
+  const liveItems = () =>
+    [
+      { id: "header", groupId: "synthetic-8" },
+      { id: "button", groupId: "synthetic-9" },
+    ] as unknown as CommentItem[];
+
+  it("refuses to move a locked selection and keeps its ticketed synthetic group", () => {
+    createRoot((dispose) => {
+      const deps = makeDeps(liveItems(), liveGroups());
+      const api = createSelectionGroups(deps);
+
+      const result = api.handleMoveItem("header", "synthetic-9");
+
+      expect(result).toEqual({ status: "refused", reason: "selection-locked" });
+      expect(deps.rawItems().find((i) => i.id === "header")?.groupId).toBe(
+        "synthetic-8",
+      );
+      expect(deps.rawGroups().map((g) => g.id)).toContain("synthetic-8");
+      dispose();
+    });
+  });
+
+  it("refuses a bulk move into a synthetic group and changes nothing", () => {
+    createRoot((dispose) => {
+      const deps = makeDeps(
+        [{ id: "loose", groupId: "open" }] as unknown as CommentItem[],
+        liveGroups(),
+      );
+      const api = createSelectionGroups(deps);
+
+      expect(api.handleMoveItems(new Set(["loose"]), "synthetic-9")).toEqual({
+        status: "refused",
+        reason: "target-ticketed",
+      });
+      expect(deps.rawItems()[0]?.groupId).toBe("open");
+      dispose();
+    });
+  });
+
+  it("refuses to delete a ticketed group", () => {
+    createRoot((dispose) => {
+      const deps = makeDeps(liveItems(), liveGroups());
+      const api = createSelectionGroups(deps);
+
+      expect(api.handleDeleteGroup("synthetic-8")).toEqual({
+        status: "refused",
+        reason: "group-ticketed",
+      });
+      expect(deps.rawItems()[0]?.groupId).toBe("synthetic-8");
+      dispose();
+    });
+  });
+});

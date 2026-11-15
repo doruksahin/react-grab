@@ -2,6 +2,11 @@ import type { Accessor, Setter } from "solid-js";
 import type { ServerSelectionGroup } from "../../generated/types.js";
 import type { CommentItem } from "../../shared-types.js";
 import type { JiraComment } from "../jira-comments/types.js";
+import type {
+  BulkMoveResult,
+  DeleteGroupResult,
+  MoveResult,
+} from "./business/membership-policy.js";
 
 /**
  * Application-level group type. Extends the server type with UI-only fields.
@@ -82,9 +87,9 @@ export interface SelectionGroupsAPI {
   setActiveGroupId: Setter<string | null>;
   handleAddGroup: (name: string) => void;
   handleRenameGroup: (groupId: string, name: string) => void;
-  handleDeleteGroup: (groupId: string) => void;
-  handleMoveItem: (itemId: string, groupId: string | null) => void;
-  handleMoveItems: (itemIds: Set<string>, groupId: string) => void;
+  handleDeleteGroup: (groupId: string) => DeleteGroupResult;
+  handleMoveItem: (itemId: string, groupId: string | null) => MoveResult;
+  handleMoveItems: (itemIds: Set<string>, groupId: string) => BulkMoveResult;
   /** Remove a selection. Gated by ticket-lock — returns false if the
    *  selection is in a ticketed group. GCs empty synthetic groups. */
   handleRemoveItem: (itemId: string) => boolean;
