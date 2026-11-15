@@ -5,8 +5,6 @@ import { EmptyState } from "./empty-state.js";
 
 interface SelectionListProps {
   items: CommentItem[];
-  syncServerUrl?: string;
-  syncWorkspace?: string;
   /** Remove handler. Undefined disables the × button for every card —
    *  GroupDetailView passes undefined when the group is ticketed. */
   onRemoveItem?: (itemId: string) => void;
@@ -39,8 +37,6 @@ export const SelectionList: Component<SelectionListProps> = (props) => {
           {(item) => (
             <SelectionCard
               item={item}
-              syncServerUrl={props.syncServerUrl}
-              syncWorkspace={props.syncWorkspace}
               scrollRoot={() => scrollContainerRef ?? null}
               onRemoveItem={
                 props.onRemoveItem

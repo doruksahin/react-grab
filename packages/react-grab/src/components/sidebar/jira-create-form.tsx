@@ -1,11 +1,4 @@
-import {
-  type Component,
-  type JSX,
-  createResource,
-  createSignal,
-  For,
-  Show,
-} from "solid-js";
+import { type Component, type JSX, createSignal, For, Show } from "solid-js";
 import { Alert } from "../ui/alert.js";
 import { Button } from "../ui/button.js";
 import { Textarea } from "../ui/textarea.js";
@@ -15,7 +8,7 @@ import { IconCheck } from "../icons/icon-check.js";
 import { DialogLayout, DialogHeader } from "./dialog-layout.js";
 import { MarkdownPreview } from "./markdown-preview.js";
 import { ScreenshotPair } from "./screenshot-pair.js";
-import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
+import { screenshotRefs } from "../../features/screenshot/index.js";
 import {
   Select,
   SelectContent,
@@ -24,12 +17,6 @@ import {
   SelectValue,
 } from "../ui/select.js";
 import { LabelSelect } from "./label-select.js";
-import {
-  listJiraIssueTypes,
-  listJiraPriorities,
-  listJiraLabels,
-  createJiraTicket,
-} from "../../generated/sync-api.js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import {
@@ -37,14 +24,16 @@ import {
   normalizeSummary,
 } from "../../features/jira-ticket/business/default-summary.js";
 import { defaultDescription } from "../../features/jira-ticket/business/default-description.js";
+import { describeCreateFailure } from "../../features/jira-ticket/business/describe-create-failure.js";
+import {
+  useJiraTicketCreation,
+  type JiraTicketCreation,
+} from "../../features/jira-ticket/hooks/use-jira-ticket-creation.js";
 
 const DEFAULT_ISSUE_TYPE = "Task";
 const DEFAULT_PRIORITY = "Medium";
 
 interface JiraCreateFormProps {
-  /** Workspace ID — the `id` param in Orval-generated createJiraTicket(id, groupId, body) */
-  workspaceId: string;
-  syncServerUrl?: string;
   groupId: string;
   group: SelectionGroup;
   commentItems: CommentItem[];
@@ -60,28 +49,11 @@ const noScrollRoot = () => null;
 const TRIGGER_CLASS = "bg-muted text-body text-foreground";
 
 export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
-  const [issueTypes] = createResource(() =>
-    listJiraIssueTypes({ projectKey: props.jiraProjectKey }).then((r) => {
-      if (r.status !== 200) throw new Error("Failed to load issue types");
-      return r.data;
-    }),
-  );
-  const [priorities] = createResource(() =>
-    listJiraPriorities().then((r) => {
-      if (r.status !== 200) throw new Error("Failed to load priorities");
-      return r.data;
-    }),
-  );
-  const [labels] = createResource(() =>
-    listJiraLabels({ projectKey: props.jiraProjectKey }).then((r) => {
-      if (r.status !== 200) return [] as string[];
-      return r.data;
-    }),
-  );
+  const creation = useJiraTicketCreation(() => props.jiraProjectKey);
 
   const configError = () => {
-    const types = issueTypes();
-    const prios = priorities();
+    const types = creation.issueTypes();
+    const prios = creation.priorities();
     if (!types || !prios) return null;
     const errors: string[] = [];
     if (!types.find((t) => t.name === DEFAULT_ISSUE_TYPE))
@@ -108,12 +80,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
         </Alert>
       }
     >
-      <JiraCreateFormInner
-        {...props}
-        issueTypes={issueTypes}
-        priorities={priorities}
-        labels={labels}
-      />
+      <JiraCreateFormInner {...props} creation={creation} />
     </Show>
   );
 };
@@ -124,9 +91,7 @@ interface CreatedTicket {
 }
 
 interface JiraCreateFormInnerProps extends JiraCreateFormProps {
-  issueTypes: () => Array<{ id: string; name: string }> | undefined;
-  priorities: () => Array<{ id: string; name: string }> | undefined;
-  labels: () => string[] | undefined;
+  creation: JiraTicketCreation;
 }
 
 const FieldLabel: Component<{ children: JSX.Element }> = (props) => (
@@ -181,8 +146,8 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
     !created() &&
     !summaryMissing() &&
     !workTypeMissing() &&
-    Boolean(props.issueTypes()) &&
-    Boolean(props.priorities());
+    Boolean(props.creation.issueTypes()) &&
+    Boolean(props.creation.priorities());
 
   const submitLabel = () => {
     if (submitting()) return "Creating…";
@@ -195,7 +160,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
     setSubmitting(true);
     setFailure(null);
     try {
-      const result = await createJiraTicket(props.workspaceId, props.groupId, {
+      const ticket = await props.creation.createTicket(props.groupId, {
         projectKey,
         issueType: issueType(),
         priority: priority(),
@@ -203,21 +168,10 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
         description: description(),
         labels: selectedLabels().length > 0 ? selectedLabels() : undefined,
       });
-      if (result.status === 200) {
-        setCreated({
-          ticketId: result.data.jiraTicketId,
-          url: result.data.jiraUrl,
-        });
-        props.onSuccess(
-          props.groupId,
-          result.data.jiraTicketId,
-          result.data.jiraUrl,
-        );
-      } else {
-        setFailure(result.data.error);
-      }
-    } catch {
-      setFailure("Check your connection and try again.");
+      setCreated({ ticketId: ticket.jiraTicketId, url: ticket.jiraUrl });
+      props.onSuccess(props.groupId, ticket.jiraTicketId, ticket.jiraUrl);
+    } catch (error) {
+      setFailure(describeCreateFailure(error));
     } finally {
       setSubmitting(false);
     }
@@ -362,7 +316,10 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
                 <RequiredMark />
               </Show>
             </FieldLabel>
-            <Show when={props.issueTypes()} fallback={<LoadingField />}>
+            <Show
+              when={props.creation.issueTypes()}
+              fallback={<LoadingField />}
+            >
               {(types) => (
                 <Select
                   defaultValue={DEFAULT_ISSUE_TYPE}
@@ -394,7 +351,10 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           {/* Priority — pre-selected to "Medium" */}
           <div class="flex min-w-0 flex-col gap-1.5">
             <FieldLabel>Priority</FieldLabel>
-            <Show when={props.priorities()} fallback={<LoadingField />}>
+            <Show
+              when={props.creation.priorities()}
+              fallback={<LoadingField />}
+            >
               {(prios) => (
                 <Select
                   defaultValue={DEFAULT_PRIORITY}
@@ -427,11 +387,11 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           <div class="flex min-w-0 flex-col gap-1.5">
             <FieldLabel>Labels</FieldLabel>
             <Show
-              when={props.labels() !== undefined}
+              when={props.creation.labels() !== undefined}
               fallback={<LoadingField />}
             >
               <LabelSelect
-                allLabels={props.labels() ?? []}
+                allLabels={props.creation.labels() ?? []}
                 value={selectedLabels()}
                 onChange={setSelectedLabels}
               />
@@ -490,26 +450,8 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
             <For each={itemsWithScreenshots()}>
               {(item) => (
                 <ScreenshotPair
-                  elementSrc={
-                    item.screenshotElement && props.syncServerUrl
-                      ? screenshotUrl(
-                          props.syncServerUrl,
-                          props.workspaceId,
-                          item.id,
-                          "element",
-                        )
-                      : undefined
-                  }
-                  fullPageSrc={
-                    item.screenshotFullPage && props.syncServerUrl
-                      ? screenshotUrl(
-                          props.syncServerUrl,
-                          props.workspaceId,
-                          item.id,
-                          "full",
-                        )
-                      : undefined
-                  }
+                  element={screenshotRefs(item).element}
+                  fullPage={screenshotRefs(item).fullPage}
                   scrollRoot={noScrollRoot}
                 />
               )}

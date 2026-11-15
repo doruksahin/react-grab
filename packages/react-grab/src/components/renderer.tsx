@@ -326,8 +326,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
                 timestamp={instance().timestamp}
                 hasElementScreenshot={instance().hasElementScreenshot}
                 hasFullPageScreenshot={instance().hasFullPageScreenshot}
-                syncServerUrl={props.syncServerUrl}
-                syncWorkspace={props.syncWorkspace}
                 groups={props.groups ?? []}
                 activeGroupId={instance().groupId}
                 onActiveGroupChange={(groupId) => {
@@ -482,8 +480,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       <Show when={props.looseTicketDialog}>
         {(state) => (
           <JiraCreateDialog
-            workspaceId={props.syncWorkspace ?? ""}
-            syncServerUrl={props.syncServerUrl}
             groupId={state().group.id}
             group={state().group}
             commentItems={state().items}
@@ -507,8 +503,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           syncStatus={props.syncStatus ?? "local"}
           onRetrySync={props.onRetrySync}
           jiraSiteHost={props.jiraSiteHost}
-          syncServerUrl={props.syncServerUrl}
-          syncWorkspace={props.syncWorkspace}
           jiraProjectKey={props.jiraProjectKey}
           onActiveDetailGroupChange={setActiveDetailGroupId}
           onJiraResolved={props.onJiraResolved}

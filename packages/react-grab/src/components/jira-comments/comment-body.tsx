@@ -25,7 +25,7 @@ export const CommentBody: Component<CommentBodyProps> = (props) => (
           <span data-react-grab-mention class="mention-chip text-meta">
             @{seg.name}
           </span>
-        ) : props.compact ? (
+        ) : seg.kind === "attachment" || props.compact ? (
           <span class="italic">{seg.alt || "image"}</span>
         ) : (
           <div class="inline-block my-1 border border-border rounded-lg overflow-hidden max-w-[180px]">

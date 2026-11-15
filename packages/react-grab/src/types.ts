@@ -2,6 +2,7 @@ import type { CommentItem, OverlayBounds } from "./shared-types.js";
 export type { CommentItem, OverlayBounds } from "./shared-types.js";
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
 import type { SelectionGroup } from "./features/selection-groups/types.js";
+import type { JiraPort, StorageAdapter } from "./features/sync/types.js";
 import type {
   JiraComment,
   RefreshGroupStatusFn,
@@ -672,7 +673,6 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   /** Connects to the sync server again after a failed connection. */
   onRetrySync?: () => Promise<void>;
   syncWorkspace?: string;
-  syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
   jiraProjectKey?: string;
   /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
   jiraSiteHost?: string;
@@ -784,8 +784,6 @@ export interface SelectionLabelProps
   timestamp?: number;
   hasElementScreenshot?: boolean;
   hasFullPageScreenshot?: boolean;
-  syncServerUrl?: string;
-  syncWorkspace?: string;
   mouseX?: number;
   visible?: boolean;
   isPromptMode?: boolean;
@@ -860,6 +858,13 @@ export interface SyncConfig {
    * development builds, so it never ships in a production bundle.
    */
   apiToken?: string;
+  /**
+   * The storage port to use instead of the HTTP one (ADR-0023). When both
+   * ports are given, `serverUrl` and `apiToken` are not used.
+   */
+  storage?: StorageAdapter;
+  /** The Jira port to use instead of the HTTP one (ADR-0023). */
+  jira?: JiraPort;
   syncRevealedState: boolean;
   onSyncError: (error: Error) => void;
   /** Options forwarded to init() — use this to set screenshot config etc. */

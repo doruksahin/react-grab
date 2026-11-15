@@ -1,5 +1,8 @@
 export { captureAndUploadScreenshots } from "./orchestrate.js";
-export { useAuthenticatedImageUrl } from "./use-authenticated-image-url.js";
+export { useScreenshotUrl } from "./use-screenshot-url.js";
+export { screenshotRefs } from "./business/screenshot-refs.js";
+export type { CommentScreenshots } from "./business/screenshot-refs.js";
+export type { ScreenshotRef } from "./types.js";
 export {
   captureElement,
   captureFullPage,

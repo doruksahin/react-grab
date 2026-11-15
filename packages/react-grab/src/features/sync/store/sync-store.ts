@@ -1,7 +1,7 @@
 import { createStore } from "solid-js/store";
 import type { CommentItem } from "../../../types.js";
 import type { SelectionGroupWithJira } from "../../selection-groups/types.js";
-import type { GetJiraTicketStatus200 } from "../../../generated/sync-api.js";
+import type { JiraTicketStatus } from "../types.js";
 
 export interface SyncStoreShape {
   groups: SelectionGroupWithJira[];
@@ -55,7 +55,7 @@ export const createSyncStore = () => {
     },
     // Fine-grained per-group JIRA status update — uses path-based setStore
     // so only the affected group's properties change in the store.
-    updateJiraStatus: (groupId: string, status: GetJiraTicketStatus200) => {
+    updateJiraStatus: (groupId: string, status: JiraTicketStatus) => {
       const resolved = status.statusCategory.toLowerCase() === "done";
       setStore("groups", (g) => g.id === groupId, {
         jiraStatus: status.status,

@@ -128,4 +128,21 @@ const libraryBuildConfig: Options = {
   ],
 };
 
-export default defineConfig([browserBuildConfig, libraryBuildConfig]);
+// The HTTP implementation of the overlay's ports (ADR-0023). Built on its own
+// so it carries no Solid and no DOM code: the extension's service worker runs it.
+const syncHttpBuildConfig: Options = {
+  ...DEFAULT_OPTIONS,
+  clean: false,
+  entry: { "sync-http": "./src/sync-http/index.ts" },
+  format: ["cjs", "esm"],
+  noExternal: [],
+  outDir: "./dist",
+  platform: "neutral",
+  splitting: false,
+};
+
+export default defineConfig([
+  browserBuildConfig,
+  libraryBuildConfig,
+  syncHttpBuildConfig,
+]);

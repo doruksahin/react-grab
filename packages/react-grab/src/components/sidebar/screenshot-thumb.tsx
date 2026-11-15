@@ -1,10 +1,12 @@
 import { type Component, Show } from "solid-js";
 import { useLazyVisible } from "../../features/sidebar/index.js";
-import { useAuthenticatedImageUrl } from "../../features/screenshot/index.js";
+import {
+  useScreenshotUrl,
+  type ScreenshotRef,
+} from "../../features/screenshot/index.js";
 
 interface ScreenshotThumbProps {
-  /** Screenshot URL on the sync server. */
-  src: string;
+  screenshot: ScreenshotRef;
   label: "Element" | "Full page";
   class: string;
   /** Opens the screenshot larger; receives the URL that is actually displayed. */
@@ -12,14 +14,14 @@ interface ScreenshotThumbProps {
 }
 
 /**
- * A small screenshot thumbnail. Loads only once it scrolls into view, and
- * fetches with the API token because the sync server requires it (ADR-0020).
+ * A small screenshot thumbnail. Loads through the storage port only once it
+ * scrolls into view.
  */
 export const ScreenshotThumb: Component<ScreenshotThumbProps> = (props) => {
   let containerRef: HTMLSpanElement | undefined;
   const visible = useLazyVisible(() => containerRef);
-  const imageUrl = useAuthenticatedImageUrl(() =>
-    visible() ? props.src : undefined,
+  const imageUrl = useScreenshotUrl(() =>
+    visible() ? props.screenshot : undefined,
   );
 
   return (

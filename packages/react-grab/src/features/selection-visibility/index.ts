@@ -4,7 +4,7 @@ import type {
   SelectionVisibilityAPI,
   SelectionVisibilityDeps,
 } from "./types.js";
-import { saveLocalRevealedStates } from "../sync/transforms.js";
+import { saveLocalRevealedStates } from "../sync/store/local-revealed-state.js";
 
 const REVEAL_PREFIX = "reveal-pinned";
 

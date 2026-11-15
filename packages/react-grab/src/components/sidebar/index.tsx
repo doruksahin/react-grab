@@ -62,8 +62,6 @@ export interface SidebarProps {
   onRetrySync?: () => Promise<void>;
   /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
   jiraSiteHost?: string;
-  syncServerUrl?: string;
-  syncWorkspace?: string;
   jiraProjectKey?: string;
   onClose: () => void;
   /** Open on this selection, in the Selections tab where its Jira thread
@@ -402,8 +400,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   onToggleSelect={toggleSelect}
                   searchQuery={searchQuery()}
                   flaggedOnly={flaggedOnly()}
-                  syncServerUrl={props.syncServerUrl}
-                  syncWorkspace={props.syncWorkspace}
                   onSubmitJiraComment={props.onSubmitJiraComment}
                   onSearchJiraUsers={props.onSearchJiraUsers}
                   onRefreshJiraStatus={props.onRefreshJiraStatus}
@@ -426,8 +422,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           }}
           group={activeGroup()!}
           commentItems={props.commentItems}
-          syncServerUrl={props.syncServerUrl}
-          syncWorkspace={props.syncWorkspace}
           onBack={() => setActiveDetailGroupId(null)}
           onCreateTicket={(group, items) =>
             setGroupTicketDialog({ group, items })
@@ -439,8 +433,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
       <Show when={groupTicketDialog()}>
         {(state) => (
           <JiraCreateDialog
-            workspaceId={props.syncWorkspace ?? ""}
-            syncServerUrl={props.syncServerUrl}
             groupId={state().group.id}
             group={state().group}
             commentItems={state().items}

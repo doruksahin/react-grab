@@ -9,7 +9,7 @@ import { PriorityIcon } from "./priority-icon.jsx";
 import { Avatar } from "../ui/avatar.jsx";
 import { CommentsSection } from "../jira-comments/comments-section.jsx";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
-import { screenshotUrl } from "../../features/sidebar/screenshot-url.js";
+import { useSyncPorts } from "../../features/sync/sync-ports-context.js";
 import { ScreenshotThumb } from "./screenshot-thumb.js";
 import { StatusChip } from "../ui/status-chip.jsx";
 import { getStatusChip } from "../../features/sidebar/get-status-chip.js";
@@ -96,12 +96,10 @@ export interface SelectionCardBodyProps {
   timestamp?: number;
   jiraDueDate?: string | null;
 
-  // Screenshot row (item-scoped) — requires itemId + sync config to render
+  // Screenshot row (item-scoped) — requires itemId and a storage port to render
   itemId?: string;
   hasElementScreenshot?: boolean;
   hasFullPageScreenshot?: boolean;
-  syncServerUrl?: string;
-  syncWorkspace?: string;
 
   // Link to the replay of how the user got here (SPEC-020)
   recordingUrl?: string;
@@ -137,14 +135,13 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       jiraStatus: props.jiraStatus,
       jiraFlagged: props.jiraFlagged,
     });
-  const screenshotContext = () => {
-    const serverUrl = props.syncServerUrl;
-    const workspace = props.syncWorkspace;
+  const { storage } = useSyncPorts();
+  const screenshotItemId = () => {
     const itemId = props.itemId;
-    if (!serverUrl || !workspace || !itemId) return undefined;
+    if (!itemId || !storage()) return undefined;
     if (!props.hasElementScreenshot && !props.hasFullPageScreenshot)
       return undefined;
-    return { serverUrl, workspace, itemId };
+    return itemId;
   };
 
   return (
@@ -196,8 +193,8 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       }
       screenshots={
         <>
-          <Show when={screenshotContext()}>
-            {(ctx) => {
+          <Show when={screenshotItemId()}>
+            {(itemId) => {
               const clickable = () => Boolean(props.onScreenshotClick);
               const thumbClass = () =>
                 clickable()
@@ -207,12 +204,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
                 <div class="flex gap-1.5 mt-1.5">
                   <Show when={props.hasElementScreenshot}>
                     <ScreenshotThumb
-                      src={screenshotUrl(
-                        ctx().serverUrl,
-                        ctx().workspace,
-                        ctx().itemId,
-                        "element",
-                      )}
+                      screenshot={{ selectionId: itemId(), kind: "element" }}
                       label="Element"
                       class={thumbClass()}
                       onOpen={clickable() ? props.onScreenshotClick : undefined}
@@ -220,12 +212,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
                   </Show>
                   <Show when={props.hasFullPageScreenshot}>
                     <ScreenshotThumb
-                      src={screenshotUrl(
-                        ctx().serverUrl,
-                        ctx().workspace,
-                        ctx().itemId,
-                        "full",
-                      )}
+                      screenshot={{ selectionId: itemId(), kind: "full" }}
                       label="Full page"
                       class={thumbClass()}
                       onOpen={clickable() ? props.onScreenshotClick : undefined}

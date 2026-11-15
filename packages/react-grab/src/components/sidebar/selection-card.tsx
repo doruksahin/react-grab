@@ -2,11 +2,9 @@
 import { type Component, createMemo, Show } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
-import {
-  extractFilePath,
-  relativeTime,
-  screenshotUrl,
-} from "../../features/sidebar/index.js";
+import { extractFilePath, relativeTime } from "../../features/sidebar/index.js";
+import { screenshotRefs } from "../../features/screenshot/index.js";
+import { useSyncPorts } from "../../features/sync/sync-ports-context.js";
 import { ScreenshotPair } from "./screenshot-pair.js";
 import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 import { FlagIndicator } from "../flag-indicator.js";
@@ -16,8 +14,6 @@ import { DevInsights } from "../dev-insights/index.js";
 
 export interface SelectionCardProps {
   item: CommentItem;
-  syncServerUrl?: string;
-  syncWorkspace?: string;
   scrollRoot: () => Element | null;
   /** Pre-curried remove handler. When undefined, the × button is not
    *  rendered — the caller gates this on the ticket-lock rule. */
@@ -32,26 +28,9 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
   const isDevMode = useDevMode();
   const filePath = createMemo(() => extractFilePath(props.item.content ?? ""));
 
-  const elementSrc = createMemo(() =>
-    props.syncServerUrl && props.syncWorkspace && props.item.screenshotElement
-      ? screenshotUrl(
-          props.syncServerUrl,
-          props.syncWorkspace,
-          props.item.id,
-          "element",
-        )
-      : undefined,
-  );
-
-  const fullPageSrc = createMemo(() =>
-    props.syncServerUrl && props.syncWorkspace && props.item.screenshotFullPage
-      ? screenshotUrl(
-          props.syncServerUrl,
-          props.syncWorkspace,
-          props.item.id,
-          "full",
-        )
-      : undefined,
+  const { storage } = useSyncPorts();
+  const screenshots = createMemo(() =>
+    storage() ? screenshotRefs(props.item) : {},
   );
 
   return (
@@ -98,10 +77,10 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
       </Show>
 
       {/* Screenshots — hidden entirely when both are absent (A-018) */}
-      <Show when={elementSrc() || fullPageSrc()}>
+      <Show when={screenshots().element || screenshots().fullPage}>
         <ScreenshotPair
-          elementSrc={elementSrc()}
-          fullPageSrc={fullPageSrc()}
+          element={screenshots().element}
+          fullPage={screenshots().fullPage}
           scrollRoot={props.scrollRoot}
         />
       </Show>

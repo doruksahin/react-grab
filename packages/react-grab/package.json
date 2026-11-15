@@ -70,6 +70,16 @@
         "default": "./dist/primitives.cjs"
       }
     },
+    "./sync-http": {
+      "import": {
+        "types": "./dist/sync-http.d.ts",
+        "default": "./dist/sync-http.js"
+      },
+      "require": {
+        "types": "./dist/sync-http.d.cts",
+        "default": "./dist/sync-http.cjs"
+      }
+    },
     "./src/*": "./src/*",
     "./styles.css": "./dist/styles.css",
     "./dist/styles.css": "./dist/styles.css",

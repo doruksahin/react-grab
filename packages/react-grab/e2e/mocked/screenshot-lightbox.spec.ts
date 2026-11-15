@@ -1,5 +1,6 @@
 import type { ReactGrabPageObject } from "../fixtures.js";
 import { test, expect } from "../fixtures.js";
+import type { MockServerHandle } from "../mocks/routes.js";
 import { comments as defaultComments } from "../mocks/fixtures.js";
 
 /**
@@ -84,6 +85,23 @@ const clickThumbnailByLabel = async (
     .click();
 };
 
+/**
+ * The URL a sidebar thumbnail displays. Screenshots load through the storage
+ * port with the API token and show from blob URLs (ADR-0020, ADR-0023), so the
+ * lightbox must show the same URL as the thumbnail that opened it.
+ */
+const thumbnailSrc = async (
+  page: import("@playwright/test").Page,
+  label: string,
+): Promise<string> => {
+  const src = await page
+    .locator(`[data-react-grab-sidebar] img[alt='${label} screenshot']`)
+    .first()
+    .getAttribute("src");
+  expect(src).toMatch(/^blob:/);
+  return src ?? "";
+};
+
 const clickLightboxImage = async (page: import("@playwright/test").Page) => {
   await page.evaluate((attrName) => {
     const host = document.querySelector(`[${attrName}]`);
@@ -115,7 +133,7 @@ const openSidebar = async (page: import("@playwright/test").Page) => {
 };
 
 // ---------------------------------------------------------------------------
-// Test fixture: comments seeded with screenshot keys
+// Test fixture: the mock server's comments, the first with screenshot keys
 // ---------------------------------------------------------------------------
 
 const commentsWithScreenshots = defaultComments.map((c, i) =>
@@ -128,8 +146,12 @@ const commentsWithScreenshots = defaultComments.map((c, i) =>
     : c,
 );
 
-const seedAndOpen = async (reactGrab: ReactGrabPageObject) => {
-  await reactGrab.populate({ comments: commentsWithScreenshots });
+const seedAndOpen = async (
+  reactGrab: ReactGrabPageObject,
+  mockServer: MockServerHandle,
+) => {
+  mockServer.override("listComments", commentsWithScreenshots);
+  await reactGrab.triggerInitSync();
   await expect
     .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
     .toBe(true);
@@ -160,9 +182,10 @@ const seedAndOpen = async (reactGrab: ReactGrabPageObject) => {
 test.describe("Screenshot Lightbox", { tag: ["@SPEC-017"] }, () => {
   test("AC13-14, AC34-36: clicking thumbnail opens lightbox with correct caption + data attrs", async ({
     reactGrab,
+    mockServer,
   }) => {
     const { page } = reactGrab;
-    await seedAndOpen(reactGrab);
+    await seedAndOpen(reactGrab, mockServer);
     await reactGrab.screenshot("sidebar-with-thumbs", "page");
 
     // Open via Element thumbnail
@@ -173,7 +196,7 @@ test.describe("Screenshot Lightbox", { tag: ["@SPEC-017"] }, () => {
 
     const elementState = await getLightboxState(page);
     expect(elementState?.caption).toBe("Element");
-    expect(elementState?.src).toContain("cmt-1/element");
+    expect(elementState?.src).toBe(await thumbnailSrc(page, "Element"));
     expect(elementState?.mode).toBe("fit");
     await reactGrab.screenshot("lightbox-element-fit", "page");
 
@@ -191,7 +214,7 @@ test.describe("Screenshot Lightbox", { tag: ["@SPEC-017"] }, () => {
 
     const fullPageState = await getLightboxState(page);
     expect(fullPageState?.caption).toBe("Full page");
-    expect(fullPageState?.src).toContain("cmt-1/full");
+    expect(fullPageState?.src).toBe(await thumbnailSrc(page, "Full page"));
 
     // Cleanup
     await page.keyboard.press("Escape");
@@ -199,9 +222,10 @@ test.describe("Screenshot Lightbox", { tag: ["@SPEC-017"] }, () => {
 
   test("AC15, AC17, AC18: lightbox closes via Esc and × button — but NOT image click", async ({
     reactGrab,
+    mockServer,
   }) => {
     const { page } = reactGrab;
-    await seedAndOpen(reactGrab);
+    await seedAndOpen(reactGrab, mockServer);
 
     // AC18: image click does NOT close (toggles zoom instead)
     await clickThumbnailByLabel(page, "Element");
@@ -243,9 +267,10 @@ test.describe("Screenshot Lightbox", { tag: ["@SPEC-017"] }, () => {
 
   test("AC21-23, AC36: zoom toggle FIT ↔ 1:1 updates data-mode", async ({
     reactGrab,
+    mockServer,
   }) => {
     const { page } = reactGrab;
-    await seedAndOpen(reactGrab);
+    await seedAndOpen(reactGrab, mockServer);
 
     await clickThumbnailByLabel(page, "Full page");
     await expect
@@ -272,9 +297,10 @@ test.describe("Screenshot Lightbox", { tag: ["@SPEC-017"] }, () => {
 
   test("AC20, AC26: opening second thumbnail swaps src and resets mode to fit", async ({
     reactGrab,
+    mockServer,
   }) => {
     const { page } = reactGrab;
-    await seedAndOpen(reactGrab);
+    await seedAndOpen(reactGrab, mockServer);
 
     // Open Element, toggle to actual size
     await clickThumbnailByLabel(page, "Element");
@@ -282,8 +308,10 @@ test.describe("Screenshot Lightbox", { tag: ["@SPEC-017"] }, () => {
       .poll(() => isLightboxVisible(page), { timeout: 3000 })
       .toBe(true);
     await clickLightboxImage(page); // → actual
+    const elementSrc = await thumbnailSrc(page, "Element");
+    const fullPageSrc = await thumbnailSrc(page, "Full page");
     let state = await getLightboxState(page);
-    expect(state?.src).toContain("cmt-1/element");
+    expect(state?.src).toBe(elementSrc);
     expect(state?.mode).toBe("actual");
 
     // HACK: Trigger the source change behind the modal to verify the existing lightbox resets its mode.
@@ -297,7 +325,7 @@ test.describe("Screenshot Lightbox", { tag: ["@SPEC-017"] }, () => {
       });
     await expect
       .poll(async () => (await getLightboxState(page))?.src, { timeout: 3000 })
-      .toContain("cmt-1/full");
+      .toBe(fullPageSrc);
 
     state = await getLightboxState(page);
     expect(state?.caption).toBe("Full page");
@@ -311,9 +339,10 @@ test.describe("Screenshot Lightbox", { tag: ["@SPEC-017"] }, () => {
 
   test("AC30-32: body scroll lock applied while open, restored on close", async ({
     reactGrab,
+    mockServer,
   }) => {
     const { page } = reactGrab;
-    await seedAndOpen(reactGrab);
+    await seedAndOpen(reactGrab, mockServer);
 
     const beforeOpen = await page.evaluate(() => document.body.style.overflow);
 

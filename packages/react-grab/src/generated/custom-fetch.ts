@@ -1,38 +1,31 @@
-// Custom fetch mutator for Orval-generated API functions.
-// Prepends the sync-server base URL (set at runtime) to relative paths.
+/**
+ * Request options for the Orval-generated functions. The fetch client types
+ * its options argument as `RequestInit`, so the server URL rides along as an
+ * extra field that the generated functions spread through to this mutator.
+ * Callers build it with `createSyncRequest` (src/sync-http/request.ts), which
+ * also adds the Authorization header (ADR-0020). Nothing is kept in module
+ * state: every call names its own server and token (ADR-0023).
+ */
+export interface SyncRequestInit extends RequestInit {
+  serverUrl?: string;
+}
 
-let _baseUrl = "";
-let _apiToken = "";
-
-/** Call once during init to set the sync-server URL for all generated API calls. */
-export const setApiBaseUrl = (url: string) => {
-  _baseUrl = url.replace(/\/$/, ""); // strip trailing slash
-};
-
-export const getApiBaseUrl = () => _baseUrl;
-
-/** Call once during init. Every request to the sync server carries it (ADR-0020). */
-export const setApiToken = (token: string) => {
-  _apiToken = token;
-};
-
-/** The Authorization header for sync-server requests, or none before init. */
-export const apiAuthHeaders = (): Record<string, string> =>
-  _apiToken ? { Authorization: `Bearer ${_apiToken}` } : {};
-
-/** Orval custom mutator — wraps fetch with the runtime base URL and token. */
+/** Orval custom mutator: resolves the relative path against the caller's server URL. */
 export const customFetch = async <T>(
-  url: string,
-  options: RequestInit,
+  path: string,
+  options: SyncRequestInit,
 ): Promise<T> => {
-  const fullUrl = url.startsWith("/") ? `${_baseUrl}${url}` : url;
-  const headers = new Headers(options.headers);
-  for (const [name, value] of Object.entries(apiAuthHeaders())) {
-    headers.set(name, value);
+  const { serverUrl, ...init } = options;
+  if (!serverUrl) {
+    throw new Error(
+      `react-grab: no sync server URL for ${path}; call the generated functions through createSyncRequest()`,
+    );
   }
-  const response = await fetch(fullUrl, { ...options, headers });
+  const response = await fetch(`${serverUrl}${path}`, init);
   const body = await response.text();
-  const data = body ? JSON.parse(body) : {};
+  const data: unknown = body ? JSON.parse(body) : {};
+  // HACK: Orval's mutator contract returns the generated response union `T`,
+  // which it cannot express in the mutator's own signature.
   return { data, status: response.status, headers: response.headers } as T;
 };
 

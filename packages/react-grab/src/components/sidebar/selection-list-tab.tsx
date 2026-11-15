@@ -41,8 +41,6 @@ interface SelectionListTabProps {
   onToggleSelect?: (id: string) => void;
   searchQuery?: string;
   flaggedOnly?: boolean;
-  syncServerUrl?: string;
-  syncWorkspace?: string;
   onSubmitJiraComment?: SubmitGroupCommentFn;
   onSearchJiraUsers?: SearchJiraUsersFn;
   onRefreshJiraStatus?: RefreshGroupStatusFn;
@@ -224,8 +222,6 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 hasElementScreenshot={Boolean(item.screenshotElement)}
                 hasFullPageScreenshot={Boolean(item.screenshotFullPage)}
                 recordingUrl={item.recordingUrl}
-                syncServerUrl={props.syncServerUrl}
-                syncWorkspace={props.syncWorkspace}
                 jiraTicketId={group()?.jiraTicketId}
                 jiraUrl={group()?.jiraUrl}
                 jiraStatus={group()?.jiraStatus}
