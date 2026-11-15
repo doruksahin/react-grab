@@ -65,7 +65,7 @@ In the overlay, server calls are only partly behind a port:
 |---|---|---|
 | Build, manifest, entrypoints, options page | WXT 0.21 + `@wxt-dev/module-solid` | vite-plugin-web-extension README; wxt.dev |
 | Per-site injection | `defineContentScript({ registration: "runtime", world: "MAIN" })`, registered when a site is enabled; `optional_host_permissions` requested then | WXT content scripts guide; Chrome `scripting`, `permissions` |
-| MAIN ↔ ISOLATED | `@webext-core/messaging` window messenger (structured clone, so `Blob` passes), with a fixed namespace | webext-core.aklinker1.io/messaging |
+| MAIN ↔ ISOLATED | `@webext-core/messaging` CustomEvent messenger, with a fixed namespace. It works only within one document, so iframes cannot send. The window messenger was rejected: version 4.0.1 never checks `event.source`. A `Blob` passes (verified in the extension E2E test) | webext-core.aklinker1.io/messaging |
 | ISOLATED ↔ service worker | `@webext-core/messaging` extension messenger, with `"message_serialization": "structured_clone"` and `minimum_chrome_version: "148"` | Chrome *Structured clone messaging* |
 | Settings | `@wxt-dev/storage` items in `storage.local`: server URL, token, and a map from site origin to `{ workspace, jiraProjectKey }` | wxt.dev/storage |
 
