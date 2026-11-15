@@ -992,3 +992,7 @@ decree:
       title: Record how the user got to a selection with rrweb, and share it by a capability link
       file: decree/adr/0021-record-sessions-with-rrweb-and-share-them-by-capability-link.md
       status: accepted
+    ADR-0022:
+      title: "Overlay UI in three layers: tokens, primitives, feature components"
+      file: decree/adr/0022-overlay-ui-layers-tokens-primitives-features.md
+      status: proposed
