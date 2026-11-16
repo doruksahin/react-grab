@@ -3,8 +3,9 @@ import type { SelectionGroup } from "../features/selection-groups/types.js";
 import type {
   JiraIssueType,
   JiraPort,
+  JiraDestination,
+  JiraErrorCode,
   JiraPriority,
-  JiraSite,
   JiraTicketStatus,
   JiraUser,
   ScreenshotKind,
@@ -71,7 +72,13 @@ export const createFakeStorage = (
 };
 
 export interface FakeJiraData {
-  site?: JiraSite;
+  destination?: JiraDestination;
+  /**
+   * The server's coded failure for every destination-scoped call (ADR-0027),
+   * e.g. "jira-account-rejected". Thrown as an error carrying `code`, as the
+   * HTTP port's SyncHttpError arrives across the extension's channels.
+   */
+  destinationFailure?: { code: JiraErrorCode; message: string };
   issueTypes?: JiraIssueType[];
   priorities?: JiraPriority[];
   labels?: string[];
@@ -86,21 +93,40 @@ export const createFakeJiraPort = (data: FakeJiraData = {}): JiraPort => {
   );
   let nextId = 1;
   const newId = () => `fake-${nextId++}`;
+  // A coded failure fails every destination-scoped call, as the server does.
+  const failIfRejected = () => {
+    if (data.destinationFailure) {
+      throw Object.assign(new Error(data.destinationFailure.message), {
+        code: data.destinationFailure.code,
+      });
+    }
+  };
+  const destination = async (): Promise<JiraDestination> => {
+    failIfRejected();
+    return data.destination
+      ? copy(data.destination)
+      : notFound("Jira destination");
+  };
+  const listed = async <Value>(values: Value[] | undefined) => {
+    failIfRejected();
+    return copy(values ?? []);
+  };
 
   return {
-    getSite: async () => (data.site ? copy(data.site) : notFound("Jira site")),
-    listIssueTypes: async () => copy(data.issueTypes ?? []),
-    listPriorities: async () => copy(data.priorities ?? []),
-    listLabels: async () => copy(data.labels ?? []),
+    getDestination: destination,
+    listIssueTypes: () => listed(data.issueTypes),
+    listPriorities: () => listed(data.priorities),
+    listLabels: () => listed(data.labels),
     getTicketStatus: async (groupId) => {
       const status = ticketStatuses.get(groupId);
       return status ? copy(status) : notFound(`ticket for group ${groupId}`);
     },
-    createTicket: async (_groupId, ticket) => {
-      const jiraTicketId = `${ticket.projectKey}-${newId()}`;
+    createTicket: async () => {
+      const { projectKey, siteUrl } = await destination();
+      const jiraTicketId = `${projectKey}-${newId()}`;
       return copy({
         jiraTicketId,
-        jiraUrl: `${data.site?.siteUrl ?? "https://jira.invalid"}/browse/${jiraTicketId}`,
+        jiraUrl: `${siteUrl}/browse/${jiraTicketId}`,
       });
     },
     addComment: async (groupId, comment) => {

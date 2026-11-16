@@ -10,7 +10,6 @@ import {
   persistedCommentFields,
   persistedGroupFields,
 } from "./business/persisted-fields.js";
-import { getSiteHost } from "../jira-ticket/business/site-host.js";
 import { migrateLegacyDefaultGroup } from "../../utils/migrate-legacy-groups.js";
 import { logRecoverableError } from "../../utils/log-recoverable-error.js";
 import type {
@@ -226,17 +225,6 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     await Promise.all(ticketed.map((g) => refreshJiraStatus(g.id)));
   };
 
-  // An older Worker has no /jira/site; the dialog then names the project only.
-  const loadJiraSite = async () => {
-    const jiraPort = jira();
-    if (!jiraPort) return;
-    try {
-      storeHandle.setJiraSiteUrl((await jiraPort.getSite()).siteUrl);
-    } catch {
-      storeHandle.setJiraSiteUrl(null);
-    }
-  };
-
   const startPolling = () => {
     if (pollIntervalId) return;
     pollIntervalId = setInterval(pollJira, POLL_INTERVAL_MS);
@@ -251,9 +239,9 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
 
   // --- Init ---
   const init = async (config: SyncConfig) => {
-    if (!config.jiraProjectKey) {
-      throw new Error(
-        "react-grab: SyncConfig.jiraProjectKey is required (e.g. 'ATT')",
+    if (config.jiraProjectKey !== undefined) {
+      console.warn(
+        "react-grab: SyncConfig.jiraProjectKey is deprecated and used only for a workspace without a Jira destination. Choose the workspace's Jira account and project in the extension's settings (ADR-0027).",
       );
     }
 
@@ -266,7 +254,7 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     setJira(ports.jira);
 
     batch(() => {
-      storeHandle.setConfig(config.workspace, config.jiraProjectKey);
+      storeHandle.setWorkspace(config.workspace);
       storeHandle.setStatus("loading");
     });
 
@@ -342,7 +330,6 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
       });
       startPolling();
       pollJira();
-      loadJiraSite();
     } catch (error) {
       if (connectGeneration !== generation) return;
       setAdapter(null);
@@ -383,12 +370,11 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
 
   const populate = (data: {
     workspace: string;
-    jiraProjectKey: string;
     groups?: SelectionGroupWithJira[];
     comments?: CommentItem[];
   }) => {
     batch(() => {
-      storeHandle.setConfig(data.workspace, data.jiraProjectKey);
+      storeHandle.setWorkspace(data.workspace);
       if (data.groups) storeHandle.setGroups(data.groups);
       if (data.comments) storeHandle.setComments(data.comments);
       storeHandle.setStatus("local");
@@ -400,8 +386,6 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     groups: () => storeHandle.store.groups,
     comments: () => storeHandle.store.comments,
     workspace: () => storeHandle.store.workspace,
-    jiraProjectKey: () => storeHandle.store.jiraProjectKey,
-    jiraSiteHost: () => getSiteHost(storeHandle.store.jiraSiteUrl),
     status: () => storeHandle.store.status,
 
     setGroups: storeHandle.setGroups,

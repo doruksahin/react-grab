@@ -22,7 +22,8 @@ export const createMessagingStorageAdapter = (): StorageAdapter => ({
 });
 
 export const createMessagingJiraPort = (): JiraPort => ({
-  getSite: () => pageRequestMessenger.sendMessage("jira.getSite", []),
+  getDestination: () =>
+    pageRequestMessenger.sendMessage("jira.getDestination", []),
   listIssueTypes: (...args) =>
     pageRequestMessenger.sendMessage("jira.listIssueTypes", args),
   listPriorities: () =>

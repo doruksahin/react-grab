@@ -115,7 +115,6 @@ describe("path parameters (ADR-0023)", () => {
   const TRAVERSAL = "../../../workspaces/other/comments/x";
   const blob = new Blob(["x"], { type: "image/png" });
   const draft = {
-    projectKey: "ATT",
     issueType: "Task",
     priority: "High",
     summary: "s",
@@ -222,7 +221,6 @@ describe("error mapping", () => {
       jsonResponse(400, { error: "JIRA rejected the request" }),
     );
     const failure = createHttpJiraPort(config).createTicket("group-1", {
-      projectKey: "ATT",
       issueType: "Task",
       priority: "Medium",
       summary: "Price label overlaps",
@@ -244,9 +242,9 @@ describe("error mapping", () => {
 
   it("lets a network failure through as the TypeError fetch raised", async () => {
     fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
-    await expect(createHttpJiraPort(config).getSite()).rejects.toBeInstanceOf(
-      TypeError,
-    );
+    await expect(
+      createHttpJiraPort(config).getDestination(),
+    ).rejects.toBeInstanceOf(TypeError);
   });
 
   it("maps a failed binary request too", async () => {
@@ -339,16 +337,56 @@ describe("Jira port", () => {
     });
   });
 
-  it("passes the project to the user search only when given", async () => {
+  it("scopes every picker to the workspace and names no project (ADR-0027)", async () => {
     fetchMock.mockImplementation(async () => jsonResponse(200, []));
     const port = createHttpJiraPort(config);
-    await port.searchUsers("ali", "ATT");
     await port.searchUsers("ali");
+    await port.listIssueTypes();
+    await port.listLabels();
+    await port.listPriorities();
 
     expect(recorded().map((request) => request.url)).toEqual([
-      "https://sync.example.com/jira/users?query=ali&project=ATT",
-      "https://sync.example.com/jira/users?query=ali",
+      "https://sync.example.com/workspaces/team%20space/jira/users?query=ali",
+      "https://sync.example.com/workspaces/team%20space/jira/issue-types",
+      "https://sync.example.com/workspaces/team%20space/jira/labels",
+      "https://sync.example.com/workspaces/team%20space/jira/priorities",
     ]);
+  });
+
+  it("sends the deprecated project key only when configured", async () => {
+    fetchMock.mockImplementation(async () =>
+      jsonResponse(200, {
+        siteUrl: "https://acme.atlassian.net",
+        projectKey: "OLD",
+        signsInAs: null,
+      }),
+    );
+    await createHttpJiraPort({
+      ...config,
+      jiraProjectKey: "OLD",
+    }).getDestination();
+    expect(recorded()[0].url).toBe(
+      "https://sync.example.com/workspaces/team%20space/jira?projectKey=OLD",
+    );
+  });
+
+  it("carries the server's Jira error code as an own property (ADR-0027)", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(409, {
+        error: "No destination",
+        code: "jira-destination-missing",
+      }),
+    );
+    const error: unknown = await createHttpJiraPort(config)
+      .getDestination()
+      .catch((caught: unknown) => caught);
+    // A coded 409 is a Jira failure, not a refused write.
+    expect(error).toBeInstanceOf(SyncHttpError);
+    // The extension's channels copy own enumerable properties of an error.
+    expect(Object.assign({}, error)).toMatchObject({
+      code: "jira-destination-missing",
+      status: 409,
+    });
   });
 });
 
@@ -408,13 +446,12 @@ const callEveryMethod = async (
     uploadScreenshot: await storage.uploadScreenshot("c", "full", blob),
     loadScreenshot: await storage.loadScreenshot("c", "full"),
     uploadRecording: await storage.uploadRecording("c", blob),
-    getSite: await jira.getSite(),
-    listIssueTypes: await jira.listIssueTypes("ATT"),
+    getDestination: await jira.getDestination(),
+    listIssueTypes: await jira.listIssueTypes(),
     listPriorities: await jira.listPriorities(),
-    listLabels: await jira.listLabels("ATT"),
+    listLabels: await jira.listLabels(),
     getTicketStatus: await jira.getTicketStatus("g"),
     createTicket: await jira.createTicket("g", {
-      projectKey: "ATT",
       issueType: "Task",
       priority: "Medium",
       summary: "S",
@@ -504,7 +541,7 @@ describe("structured clone contract", () => {
       groups: [{ id: "g", name: "G", createdAt: 1 }],
     });
     const jira = createFakeJiraPort({
-      site: { siteUrl: "https://j" },
+      destination: { siteUrl: "https://j", projectKey: "ATT", signsInAs: null },
       issueTypes: [{ id: "1", name: "Task" }],
       priorities: [{ id: "1", name: "Medium" }],
       labels: ["ui"],
@@ -518,7 +555,7 @@ describe("structured clone contract", () => {
   it("keeps the server's message on a cloned error", async () => {
     fetchMock.mockResolvedValue(jsonResponse(400, { error: "JIRA said no" }));
     const error: unknown = await createHttpJiraPort(config)
-      .getSite()
+      .getDestination()
       .catch((caught: unknown) => caught);
     expect(structuredClone(error)).toMatchObject({ message: "JIRA said no" });
   });

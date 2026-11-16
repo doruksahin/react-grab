@@ -277,13 +277,13 @@ interface SyncConnectionConfig {
   enabled?: boolean;
   workspace: string;
   serverUrl: string;
-  jiraProjectKey: string;
+  /** Deprecated (ADR-0027): sent only for a workspace without a destination. */
+  jiraProjectKey?: string;
   apiToken?: string;
 }
 
 interface SeedPayload {
   workspace: string;
-  jiraProjectKey: string;
   groups: SelectionGroupWithJira[];
   comments: CommentItem[];
   /** Data for the in-memory Jira port populate() injects (src/test-support/fake-ports.ts). */
@@ -292,9 +292,8 @@ interface SeedPayload {
 
 const DEFAULT_SEED: SeedPayload = {
   workspace: "test-workspace",
-  jiraProjectKey: "ATT",
   jira: {
-    site: mockFixtures.jiraSite,
+    destination: mockFixtures.jiraDestination,
     issueTypes: mockFixtures.jiraIssueTypes,
     priorities: mockFixtures.jiraPriorities,
     labels: mockFixtures.jiraLabels,
@@ -2546,7 +2545,9 @@ const createReactGrabPageObject = (
             enabled: cfg.enabled ?? true,
             serverUrl: cfg.serverUrl ?? "http://localhost:9999",
             workspace: cfg.workspace ?? "test-workspace",
-            jiraProjectKey: cfg.jiraProjectKey ?? "ATT",
+            ...(cfg.jiraProjectKey === undefined
+              ? {}
+              : { jiraProjectKey: cfg.jiraProjectKey }),
             apiToken: cfg.apiToken ?? defaultToken,
             syncRevealedState: true,
             onSyncError: (err: Error) =>

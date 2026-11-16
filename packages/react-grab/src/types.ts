@@ -676,9 +676,6 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   /** Connects to the sync server again after a failed connection. */
   onRetrySync?: () => Promise<void>;
   syncWorkspace?: string;
-  jiraProjectKey?: string;
-  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
-  jiraSiteHost?: string;
   onFilterVisibilityChange?: (
     visibleIds: Set<string>,
     allGroupIds: string[],
@@ -842,7 +839,12 @@ export interface SyncConfig {
   /** Required when an HTTP port has to be built (no injected `storage` or `jira`). */
   serverUrl?: string;
   workspace: string;
-  jiraProjectKey: string;
+  /**
+   * @deprecated The workspace's Jira destination decides the project; choose
+   * it in the extension's settings (ADR-0027). Used only for a workspace
+   * without a destination until the cut-over, then removed in a major version.
+   */
+  jiraProjectKey?: string;
   /**
    * Bearer token the sync server requires on every request (ADR-0020).
    * Required when `enabled` is true. Read it from the host app's own env

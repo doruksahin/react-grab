@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addRecordingSettings } from "./migrate-sites.js";
+import { addRecordingSettings, dropJiraProjectKey } from "./migrate-sites.js";
 
 describe("addRecordingSettings", () => {
   it("turns step capture and session recording off for existing sites", () => {
@@ -10,7 +10,6 @@ describe("addRecordingSettings", () => {
     ).toEqual({
       "https://app.example.test": {
         workspace: "app",
-        jiraProjectKey: "ATT",
         recordSteps: false,
         recordSession: false,
       },
@@ -25,11 +24,31 @@ describe("addRecordingSettings", () => {
     const sites = {
       "https://app.example.test": {
         workspace: "app",
-        jiraProjectKey: "ATT",
         recordSteps: true,
         recordSession: true,
       },
     };
     expect(addRecordingSettings(sites)).toEqual(sites);
+  });
+});
+
+describe("dropJiraProjectKey (storage version 3, ADR-0027)", () => {
+  it("drops the project key and keeps everything else", () => {
+    expect(
+      dropJiraProjectKey({
+        "https://app.example.test": {
+          workspace: "app",
+          jiraProjectKey: "ATT",
+          recordSteps: true,
+          recordSession: false,
+        },
+      }),
+    ).toEqual({
+      "https://app.example.test": {
+        workspace: "app",
+        recordSteps: true,
+        recordSession: false,
+      },
+    });
   });
 });

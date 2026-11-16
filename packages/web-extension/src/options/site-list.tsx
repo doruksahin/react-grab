@@ -34,7 +34,6 @@ export const SiteList = (props: SiteListProps) => {
             <tr>
               <th scope="col">Site</th>
               <th scope="col">Workspace</th>
-              <th scope="col">Jira project</th>
               <th scope="col">Steps</th>
               <th scope="col">Session</th>
               <th scope="col">
@@ -48,7 +47,6 @@ export const SiteList = (props: SiteListProps) => {
                 <tr>
                   <td>{origin}</td>
                   <td>{site.workspace}</td>
-                  <td>{site.jiraProjectKey}</td>
                   <td>{site.recordSteps ? "Recorded" : "Off"}</td>
                   <td>{site.recordSession ? "Recorded" : "Off"}</td>
                   <td>

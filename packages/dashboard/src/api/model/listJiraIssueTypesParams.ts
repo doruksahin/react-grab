@@ -8,7 +8,7 @@
 
 export type ListJiraIssueTypesParams = {
 /**
- * Project key (e.g. ATT)
+ * Deprecated: used only for a workspace without a Jira destination
  */
-projectKey: string;
+projectKey?: string;
 };

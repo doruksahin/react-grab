@@ -3,6 +3,7 @@ import { fakeBrowser } from "wxt/testing/fake-browser";
 import {
   readSyncSettings,
   removeSites,
+  saveAdminToken,
   saveApiToken,
   saveServerUrl,
   saveSite,
@@ -17,6 +18,7 @@ describe("settings items", () => {
     expect(await readSyncSettings()).toEqual({
       serverUrl: null,
       apiToken: null,
+      adminToken: null,
       sites: {},
     });
   });
@@ -25,7 +27,6 @@ describe("settings items", () => {
     await saveServerUrl("https://sync.example.test/");
     await saveSite("https://app.example.test/some/page", {
       workspace: " app ",
-      jiraProjectKey: "ATT",
       recordSteps: false,
       recordSession: false,
     });
@@ -33,7 +34,11 @@ describe("settings items", () => {
     expect(await readSyncSettings()).toMatchObject({
       serverUrl: "https://sync.example.test",
       sites: {
-        "https://app.example.test": { workspace: "app", jiraProjectKey: "ATT", recordSteps: false, recordSession: false },
+        "https://app.example.test": {
+          workspace: "app",
+          recordSteps: false,
+          recordSession: false,
+        },
       },
     });
   });
@@ -71,22 +76,31 @@ describe("settings items", () => {
     await expect(saveApiToken("   ")).rejects.toThrow();
     await expect(
       saveSite("https://app.example.test", {
-        workspace: "app",
-        jiraProjectKey: "not a key",
+        workspace: "   ",
         recordSteps: false,
         recordSession: false,
       }),
     ).rejects.toThrow();
+    await expect(saveAdminToken("  ")).rejects.toThrow();
     expect(await readSyncSettings()).toEqual({
       serverUrl: null,
       apiToken: null,
+      adminToken: null,
       sites: {},
     });
   });
 
   it("removes only the given sites", async () => {
-    await saveSite("https://a.test", { workspace: "a", jiraProjectKey: "A", recordSteps: false, recordSession: false });
-    await saveSite("https://b.test", { workspace: "b", jiraProjectKey: "B", recordSteps: false, recordSession: false });
+    await saveSite("https://a.test", {
+      workspace: "a",
+      recordSteps: false,
+      recordSession: false,
+    });
+    await saveSite("https://b.test", {
+      workspace: "b",
+      recordSteps: false,
+      recordSession: false,
+    });
 
     await removeSites(["https://a.test"]);
 

@@ -53,13 +53,11 @@ describe("sync gateway", () => {
     await saveApiToken(TEST_API_TOKEN);
     await saveSite(SITE_ORIGIN, {
       workspace: "app-workspace",
-      jiraProjectKey: "ATT",
       recordSteps: false,
       recordSession: false,
     });
     await saveSite(OTHER_SITE_ORIGIN, {
       workspace: "other-workspace",
-      jiraProjectKey: "OTH",
       recordSteps: false,
       recordSession: false,
     });
@@ -69,7 +67,7 @@ describe("sync gateway", () => {
     const { gateway, jiraConfigs } = createRecordingGateway();
 
     await expect(
-      gateway.callJira("listLabels", ["ATT"], senderFrom()),
+      gateway.callJira("listLabels", [], senderFrom()),
     ).resolves.toEqual(JIRA_LABELS);
     expect(jiraConfigs).toEqual([
       {
@@ -168,9 +166,9 @@ describe("sync gateway", () => {
       createJira: () => createFakeJiraPort(),
     });
 
-    await expect(gateway.callJira("getSite", [], senderFrom())).rejects.toThrow(
-      "Jira site not found",
-    );
+    await expect(
+      gateway.callJira("getDestination", [], senderFrom()),
+    ).rejects.toThrow("Jira destination not found");
   });
 
   describe("argument validation", () => {
@@ -256,45 +254,23 @@ describe("sync gateway", () => {
       ).resolves.toEqual([comment]);
     });
 
-    it("binds every Jira project key to the site's project", async () => {
-      const projectKeys: Array<string | undefined> = [];
-      const gateway = createSyncGateway({
-        createStorage: () => createFakeStorage(),
-        createJira: () => ({
-          ...createFakeJiraPort(),
-          listIssueTypes: async (projectKey) => {
-            projectKeys.push(projectKey);
-            return [];
-          },
-          listLabels: async (projectKey) => {
-            projectKeys.push(projectKey);
-            return [];
-          },
-          searchUsers: async (_query, projectKey) => {
-            projectKeys.push(projectKey);
-            return [];
-          },
-          createTicket: async (_groupId, ticket) => {
-            projectKeys.push(ticket.projectKey);
-            return {
-              jiraTicketId: "ATT-1",
-              jiraUrl: "https://jira.test/ATT-1",
-            };
-          },
-        }),
-      });
+    it("refuses a Jira project key from the page: the workspace's destination decides it (ADR-0027)", async () => {
+      const { gateway, jiraConfigs } = createRecordingGateway();
 
-      await gateway.callJira("listIssueTypes", ["OTHER"], senderFrom());
-      await gateway.callJira("listLabels", ["OTHER"], senderFrom());
-      await gateway.callJira("searchUsers", ["ann", "OTHER"], senderFrom());
-      await gateway.callJira("searchUsers", ["ann"], senderFrom());
-      await gateway.callJira(
-        "createTicket",
-        ["g1", { ...draft, projectKey: "OTHER" }],
-        senderFrom(),
-      );
-
-      expect(projectKeys).toEqual(["ATT", "ATT", "ATT", "ATT", "ATT"]);
+      await expect(
+        gateway.callJira("listIssueTypes", ["OTHER"], senderFrom()),
+      ).rejects.toThrow("jira.listIssueTypes got invalid arguments");
+      await expect(
+        gateway.callJira("searchUsers", ["ann", "OTHER"], senderFrom()),
+      ).rejects.toThrow("jira.searchUsers got invalid arguments");
+      await expect(
+        gateway.callJira(
+          "createTicket",
+          ["g1", { ...draft, projectKey: "OTHER" }],
+          senderFrom(),
+        ),
+      ).rejects.toThrow("jira.createTicket got invalid arguments");
+      expect(jiraConfigs).toEqual([]);
     });
   });
 });

@@ -16,7 +16,8 @@ const COMMENT_TEXT = "Price label overlaps the badge";
 const TICKET_ID = "ATT-103";
 const TICKET_URL = "https://adcreative.atlassian.net/browse/ATT-103";
 
-const openCreateDialog = async (page: Page, reactGrab: ReactGrabPageObject) => {
+/** Opens the create dialog, whatever it shows: the form, or why it cannot create. */
+const openDialogShell = async (page: Page, reactGrab: ReactGrabPageObject) => {
   await reactGrab.registerCommentAction();
   await reactGrab.enterPromptMode("li:first-child");
   await reactGrab.typeInInput(COMMENT_TEXT);
@@ -28,7 +29,13 @@ const openCreateDialog = async (page: Page, reactGrab: ReactGrabPageObject) => {
     .filter({ hasText: COMMENT_TEXT })
     .locator("[data-react-grab-create-ticket]")
     .click();
+  await expect(page.locator("[data-react-grab-jira-dialog]")).toBeVisible({
+    timeout: 5000,
+  });
+};
 
+const openCreateDialog = async (page: Page, reactGrab: ReactGrabPageObject) => {
+  await openDialogShell(page, reactGrab);
   const form = page.locator("[data-react-grab-jira-form]");
   await expect(form).toBeVisible({ timeout: 5000 });
   return form;
@@ -199,8 +206,16 @@ test.describe(
         );
         await expect(
           form.locator("[data-react-grab-jira-destination]"),
-        ).toHaveText("Into ATT on adcreative.atlassian.net · 1 selection");
-        expect(mockServer.requests("getJiraSite")).toHaveLength(1);
+        ).toHaveText(
+          "Into ATT on adcreative.atlassian.net, as Test Bot · 1 selection",
+        );
+        expect(mockServer.requests("getJiraDestination")).toHaveLength(1);
+        // The page never names a project: the workspace's destination does (ADR-0027).
+        expect(
+          new URL(
+            mockServer.requests("getJiraDestination")[0].url,
+          ).searchParams.has("projectKey"),
+        ).toBe(false);
       },
     );
 
@@ -246,34 +261,100 @@ test.describe(
 );
 
 test.describe(
-  "Jira create dialog — older sync server",
-  { tag: ["@ADR-0022", "@S5.1"] },
+  "Jira create dialog — the workspace's destination",
+  { tag: ["@ADR-0027"] },
   () => {
-    test.beforeEach(async ({ reactGrab, mockServer }) => {
-      // A Worker deployed before GET /jira/site answers 404.
-      mockServer.override("getJiraSite", () => null);
-      await reactGrab.triggerInitSync();
-      await expect
-        .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
-        .toBe(true);
-    });
-
     test(
-      "without the site the destination names the project only",
+      "when Jira rejects the account, the dialog says so and Create stays disabled",
       {
         annotation: {
           type: "ac",
-          description: "ADR-0022 step 3, Jira board S5.1: destination fallback",
+          description: "ADR-0027 user flow 3: account rejected",
         },
       },
-      async ({ page, reactGrab }) => {
-        const form = await openCreateDialog(page, reactGrab);
+      async ({ page, reactGrab, mockServer: _mockServer }) => {
+        // Registered after the mock server, so it takes precedence.
+        await page.route("**/workspaces/*/jira*", (route) =>
+          route.fulfill({
+            status: 502,
+            contentType: "application/json",
+            body: JSON.stringify({
+              error: "Jira rejected the account",
+              code: "jira-account-rejected",
+            }),
+          }),
+        );
+        await reactGrab.triggerInitSync();
+        await expect
+          .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+          .toBe(true);
+        await openDialogShell(page, reactGrab);
+
+        const problem = page.locator(
+          "[data-react-grab-jira-destination-problem]",
+        );
+        await expect(problem).toBeVisible({ timeout: 5000 });
+        await expect(problem).toHaveAttribute(
+          "data-code",
+          "jira-account-rejected",
+        );
+        await expect(problem).toContainText("Jira rejected the account");
+        await expect(problem).toContainText("extension's settings");
         await expect(
-          form.locator("[data-react-grab-jira-destination]"),
-        ).toHaveText("Into ATT · 1 selection");
+          page
+            .locator("[data-react-grab-jira-dialog]")
+            .getByRole("button", { name: "Create ticket" }),
+        ).toBeDisabled();
+        await reactGrab.screenshot("jira-create-account-rejected", "page");
+      },
+    );
+
+    test(
+      "a workspace without a destination is told to choose one",
+      {
+        annotation: {
+          type: "ac",
+          description: "ADR-0027: jira-destination-missing",
+        },
+      },
+      async ({ page, reactGrab, mockServer: _mockServer }) => {
+        await page.route("**/workspaces/*/jira*", (route) =>
+          route.fulfill({
+            status: 409,
+            contentType: "application/json",
+            body: JSON.stringify({
+              error: "No destination",
+              code: "jira-destination-missing",
+            }),
+          }),
+        );
+        await reactGrab.triggerInitSync();
+        await expect
+          .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+          .toBe(true);
+        await openDialogShell(page, reactGrab);
         await expect(
-          form.getByRole("button", { name: "Create ticket" }),
-        ).toBeEnabled();
+          page.locator("[data-react-grab-jira-destination-problem]"),
+        ).toHaveAttribute("data-code", "jira-destination-missing");
+      },
+    );
+
+    test(
+      "the deprecated project key is sent only as a fallback hint",
+      {
+        annotation: {
+          type: "ac",
+          description: "ADR-0027 rollout: client project key until cut-over",
+        },
+      },
+      async ({ page, reactGrab, mockServer }) => {
+        await reactGrab.triggerInitSync({ jiraProjectKey: "OLD" });
+        await expect
+          .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+          .toBe(true);
+        await openCreateDialog(page, reactGrab);
+        const [request] = mockServer.requests("getJiraDestination");
+        expect(new URL(request.url).searchParams.get("projectKey")).toBe("OLD");
       },
     );
   },

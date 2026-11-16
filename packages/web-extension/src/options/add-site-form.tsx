@@ -1,32 +1,69 @@
-import { createSignal } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
+import type {
+  JiraAccountSummary,
+  WorkspaceSummary,
+} from "react-grab/sync-http";
 import {
   siteOriginSchema,
   siteSettingsSchema,
 } from "../settings/settings-schema.js";
 import { settingsMessenger } from "../messaging/extension-messengers.js";
+import { describeDestination } from "./describe-destination.js";
 import { describeError } from "./describe-error.js";
 import { formCheckbox, formField } from "./form-field.js";
+import { JiraDestinationFields } from "./jira-destination-fields.jsx";
 import { requestOriginPermission } from "./request-origin-permission.js";
 
+// A workspace id is never empty (siteSettingsSchema), so "" cannot collide.
+const NEW_WORKSPACE = "";
+
 interface AddSiteFormProps {
+  workspaces: WorkspaceSummary[];
+  accounts: JiraAccountSummary[];
+  /** False when the admin token is missing: only existing workspaces can be chosen. */
+  canManageJira: boolean;
   onSaved: () => void;
 }
 
 export const AddSiteForm = (props: AddSiteFormProps) => {
   const [status, setStatus] = createSignal("");
+  const [choice, setChoice] = createSignal(
+    props.workspaces[0]?.id ?? NEW_WORKSPACE,
+  );
+  const chosenWorkspace = () =>
+    props.workspaces.find((workspace) => workspace.id === choice());
 
   const save = async (form: HTMLFormElement): Promise<void> => {
     const origin = siteOriginSchema.parse(formField(form, "origin"));
+    const isNew = props.canManageJira && choice() === NEW_WORKSPACE;
+    const workspace = !props.canManageJira
+      ? formField(form, "workspace")
+      : isNew
+        ? formField(form, "newWorkspace")
+        : choice();
+    if (isNew && props.workspaces.some((known) => known.id === workspace)) {
+      throw new Error(
+        `${workspace} already exists. Choose it from the list, or change it under Workspaces.`,
+      );
+    }
     const site = siteSettingsSchema.parse({
-      workspace: formField(form, "workspace"),
-      jiraProjectKey: formField(form, "jiraProjectKey"),
+      workspace,
       recordSteps: formCheckbox(form, "recordSteps"),
       recordSession: formCheckbox(form, "recordSession"),
     });
     await requestOriginPermission(origin);
+    if (isNew) {
+      // The server checks the project before the workspace is created.
+      await settingsMessenger.sendMessage("setJiraDestination", {
+        workspaceId: site.workspace,
+        jiraAccountId: formField(form, "jiraAccountId"),
+        projectKey: formField(form, "projectKey"),
+      });
+    }
     await settingsMessenger.sendMessage("saveSite", { origin, site });
     form.reset();
-    setStatus(`Enabled ${origin}.`);
+    setChoice(props.workspaces[0]?.id ?? NEW_WORKSPACE);
+    setStatus(`Enabled ${origin} for ${site.workspace}.`);
     props.onSaved();
   };
 
@@ -39,7 +76,11 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="add-site-heading">
+    <form
+      onSubmit={handleSubmit}
+      aria-labelledby="add-site-heading"
+      data-add-site
+    >
       <fieldset>
         <legend id="add-site-heading">Enable a site</legend>
         <label>
@@ -51,14 +92,60 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
             placeholder="https://app.example.com"
           />
         </label>
-        <label>
-          Workspace
-          <input name="workspace" required />
-        </label>
-        <label>
-          Jira project key
-          <input name="jiraProjectKey" required placeholder="ATT" />
-        </label>
+        <Show
+          when={props.canManageJira}
+          fallback={
+            <label>
+              Workspace
+              <input name="workspace" required />
+            </label>
+          }
+        >
+          <label>
+            Workspace
+            <select
+              name="workspace"
+              value={choice()}
+              onChange={(event) => setChoice(event.currentTarget.value)}
+            >
+              <For each={props.workspaces}>
+                {(workspace) => (
+                  <option value={workspace.id}>{workspace.id}</option>
+                )}
+              </For>
+              <option value={NEW_WORKSPACE}>New workspace…</option>
+            </select>
+          </label>
+        </Show>
+        <Show
+          when={props.canManageJira && choice() === NEW_WORKSPACE}
+          fallback={
+            <Show when={chosenWorkspace()}>
+              {(workspace) => (
+                <p data-workspace-destination>
+                  Tickets go to{" "}
+                  {describeDestination(workspace(), props.accounts)}. Change it
+                  under Workspaces.
+                </p>
+              )}
+            </Show>
+          }
+        >
+          <label>
+            Workspace name
+            <input
+              name="newWorkspace"
+              required
+              placeholder="my-app-workspace"
+            />
+          </label>
+          <Show
+            when={props.accounts.length > 0}
+            fallback={<p role="alert">Add a Jira account first.</p>}
+          >
+            <JiraDestinationFields accounts={props.accounts} />
+          </Show>
+        </Show>
         <label>
           <input name="recordSteps" type="checkbox" />
           Record steps: save the clicks and field changes that led to each

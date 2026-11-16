@@ -11,7 +11,26 @@ export {
   AuthEnvSchema,
   parseAuthEnv,
   type AuthEnv,
+  parseAdminEnv,
+  parseCredentialEnv,
+  type CredentialEnv,
 } from "./env.js";
+export {
+  JiraSiteUrl,
+  JiraAccountIdParam,
+  JiraAccountSummary,
+  AddJiraAccountRequest,
+  ReplaceJiraCredentialRequest,
+  ReencryptResponse,
+  JiraErrorCode,
+  JiraErrorResponse,
+} from "./jira-account.js";
+export {
+  JiraDestination,
+  WorkspaceSummary,
+  SetJiraDestinationRequest,
+  LegacyProjectKeyQuery,
+} from "./workspace.js";
 export { CommentItem, CommentItemArray, SelectionStatus } from "./comment.js";
 export {
   ReproduceStep,

@@ -1,11 +1,12 @@
 import { storage } from "wxt/utils/storage";
 import {
+  adminTokenSchema,
   apiTokenSchema,
   serverUrlSchema,
   siteOriginSchema,
   siteSettingsSchema,
 } from "./settings-schema.js";
-import { addRecordingSettings } from "./migrate-sites.js";
+import { addRecordingSettings, dropJiraProjectKey } from "./migrate-sites.js";
 import type {
   SiteSettings,
   SiteSettingsByOrigin,
@@ -18,22 +19,28 @@ export const serverUrlItem = storage.defineItem<string>(
 
 export const apiTokenItem = storage.defineItem<string>("local:sync_api_token");
 
+/** The admin token (ADR-0027). storage.local is closed to content scripts. */
+export const adminTokenItem = storage.defineItem<string>(
+  "local:sync_admin_token",
+);
+
 export const sitesItem = storage.defineItem<SiteSettingsByOrigin>(
   "local:sync_sites",
   {
     fallback: {},
-    version: 2,
-    migrations: { 2: addRecordingSettings },
+    version: 3,
+    migrations: { 2: addRecordingSettings, 3: dropJiraProjectKey },
   },
 );
 
 export const readSyncSettings = async (): Promise<SyncSettings> => {
-  const [serverUrl, apiToken, sites] = await Promise.all([
+  const [serverUrl, apiToken, adminToken, sites] = await Promise.all([
     serverUrlItem.getValue(),
     apiTokenItem.getValue(),
+    adminTokenItem.getValue(),
     sitesItem.getValue(),
   ]);
-  return { serverUrl, apiToken, sites };
+  return { serverUrl, apiToken, adminToken, sites };
 };
 
 export const saveServerUrl = async (serverUrl: string): Promise<void> => {
@@ -42,6 +49,10 @@ export const saveServerUrl = async (serverUrl: string): Promise<void> => {
 
 export const saveApiToken = async (apiToken: string): Promise<void> => {
   await apiTokenItem.setValue(apiTokenSchema.parse(apiToken));
+};
+
+export const saveAdminToken = async (adminToken: string): Promise<void> => {
+  await adminTokenItem.setValue(adminTokenSchema.parse(adminToken));
 };
 
 export const saveSite = async (

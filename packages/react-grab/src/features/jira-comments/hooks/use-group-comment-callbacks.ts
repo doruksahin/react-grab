@@ -20,10 +20,7 @@ export const useGroupCommentCallbacks = (): Accessor<
         jira.addComment(groupId, { body: markdown, mentions, parentId }),
       onSearchUsers: async (query) => {
         try {
-          return await jira.searchUsers(
-            query,
-            sync.jiraProjectKey() ?? undefined,
-          );
+          return await jira.searchUsers(query);
         } catch {
           return [];
         }

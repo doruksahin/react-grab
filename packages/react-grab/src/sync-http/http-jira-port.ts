@@ -2,7 +2,7 @@ import type { JiraPort } from "../features/sync/types.js";
 import {
   addJiraComment,
   createJiraTicket,
-  getJiraSite,
+  getJiraDestination,
   getJiraTicketStatus,
   listJiraIssueTypes,
   listJiraLabels,
@@ -12,31 +12,43 @@ import {
 import { createSyncRequest, successData } from "./request.js";
 import type { SyncHttpConfig } from "./types.js";
 
-/** The Jira port over HTTP. Group-scoped calls use the configured workspace. */
+/**
+ * The Jira port over HTTP, for the configured workspace. The workspace's
+ * destination decides the project (ADR-0027); the deprecated project key is
+ * sent only so a workspace without a destination keeps working until the
+ * cut-over.
+ */
 export const createHttpJiraPort = (config: SyncHttpConfig): JiraPort => {
   const request = createSyncRequest(config);
   const { workspace } = config;
+  const legacy =
+    config.jiraProjectKey === undefined
+      ? {}
+      : { projectKey: config.jiraProjectKey };
 
   return {
-    getSite: async () =>
-      successData("GET /jira/site", await getJiraSite(request.options())),
-
-    listIssueTypes: async (projectKey) =>
+    getDestination: async () =>
       successData(
-        "GET /jira/issue-types",
-        await listJiraIssueTypes({ projectKey }, request.options()),
+        "GET /workspaces/:id/jira",
+        await getJiraDestination(workspace, legacy, request.options()),
+      ),
+
+    listIssueTypes: async () =>
+      successData(
+        "GET /workspaces/:id/jira/issue-types",
+        await listJiraIssueTypes(workspace, legacy, request.options()),
       ),
 
     listPriorities: async () =>
       successData(
-        "GET /jira/priorities",
-        await listJiraPriorities(request.options()),
+        "GET /workspaces/:id/jira/priorities",
+        await listJiraPriorities(workspace, legacy, request.options()),
       ),
 
-    listLabels: async (projectKey) =>
+    listLabels: async () =>
       successData(
-        "GET /jira/labels",
-        await listJiraLabels({ projectKey }, request.options()),
+        "GET /workspaces/:id/jira/labels",
+        await listJiraLabels(workspace, legacy, request.options()),
       ),
 
     getTicketStatus: async (groupId) =>
@@ -48,7 +60,12 @@ export const createHttpJiraPort = (config: SyncHttpConfig): JiraPort => {
     createTicket: async (groupId, ticket) =>
       successData(
         "POST /groups/:groupId/jira-ticket",
-        await createJiraTicket(workspace, groupId, ticket, request.options()),
+        await createJiraTicket(
+          workspace,
+          groupId,
+          { ...ticket, ...legacy },
+          request.options(),
+        ),
       ),
 
     addComment: async (groupId, comment) =>
@@ -57,11 +74,12 @@ export const createHttpJiraPort = (config: SyncHttpConfig): JiraPort => {
         await addJiraComment(workspace, groupId, comment, request.options()),
       ),
 
-    searchUsers: async (query, projectKey) =>
+    searchUsers: async (query) =>
       successData(
-        "GET /jira/users",
+        "GET /workspaces/:id/jira/users",
         await searchJiraUsers(
-          projectKey === undefined ? { query } : { query, project: projectKey },
+          workspace,
+          { query, ...legacy },
           request.options(),
         ),
       ),

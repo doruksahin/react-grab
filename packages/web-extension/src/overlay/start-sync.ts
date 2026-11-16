@@ -9,7 +9,6 @@ export const startSync = (site: SiteSettings): Promise<void> =>
   initSync({
     enabled: true,
     workspace: site.workspace,
-    jiraProjectKey: site.jiraProjectKey,
     storage: createMessagingStorageAdapter(),
     jira: createMessagingJiraPort(),
     syncRevealedState: true,

@@ -9,9 +9,6 @@ interface JiraCreateDialogProps {
   groupId: string;
   group: SelectionGroup;
   commentItems: CommentItem[];
-  jiraProjectKey: string;
-  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
-  jiraSiteHost?: string;
   onTicketCreated: TicketCreatedCallback;
   onClose: () => void;
 }
@@ -38,8 +35,6 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
             groupId={props.groupId}
             group={props.group}
             commentItems={props.commentItems}
-            jiraProjectKey={props.jiraProjectKey}
-            jiraSiteHost={props.jiraSiteHost}
             onSuccess={props.onTicketCreated}
             onClose={props.onClose}
           />

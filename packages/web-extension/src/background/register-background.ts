@@ -10,6 +10,7 @@ import { broadcastEnabled } from "./broadcast-enabled.js";
 import { broadcastToolbarState } from "./broadcast-toolbar-state.js";
 import { handleOverlayRequests } from "./handle-overlay-requests.js";
 import { handleSettingsRequests } from "./handle-settings-requests.js";
+import { handleJiraAdminRequests } from "./handle-jira-admin-requests.js";
 import { siteTrustQueue } from "./queues.js";
 import { restrictStorageToExtension } from "./restrict-storage-to-extension.js";
 import { showEnabledState } from "./show-enabled-state.js";
@@ -77,4 +78,5 @@ export const registerBackground = (gateway?: SyncGateway): void => {
 
   handleOverlayRequests(storageRestricted, gateway);
   handleSettingsRequests(storageRestricted);
+  handleJiraAdminRequests(storageRestricted);
 };

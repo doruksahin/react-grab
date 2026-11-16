@@ -1,17 +1,30 @@
 import { z } from "@hono/zod-openapi";
 
 export const CreateJiraTicketRequest = z.object({
-  projectKey: z.string().openapi({ example: "ATT" }),
+  projectKey: z.string().optional().openapi({
+    description:
+      "Deprecated: used only for a workspace without a Jira destination (ADR-0027)",
+    example: "ATT",
+  }),
   issueType: z.string().openapi({ example: "Bug" }),
   priority: z.string().openapi({ example: "Medium" }),
-  summary: z.string().openapi({ example: "CardDescription text overflow on mobile" }),
-  description: z.string().openapi({ example: "The tagline text overflows on mobile viewports." }),
-  labels: z.array(z.string()).optional().openapi({ example: ["ui-ticket-manager"] }),
+  summary: z
+    .string()
+    .openapi({ example: "CardDescription text overflow on mobile" }),
+  description: z
+    .string()
+    .openapi({ example: "The tagline text overflows on mobile viewports." }),
+  labels: z
+    .array(z.string())
+    .optional()
+    .openapi({ example: ["ui-ticket-manager"] }),
 });
 
 export const CreateJiraTicketResponse = z.object({
   jiraTicketId: z.string().openapi({ example: "ATT-123" }),
-  jiraUrl: z.string().openapi({ example: "https://appier.atlassian.net/browse/ATT-123" }),
+  jiraUrl: z
+    .string()
+    .openapi({ example: "https://appier.atlassian.net/browse/ATT-123" }),
 });
 
 /** The Jira site every ticket is created on (JIRA_BASE_URL, ADR-0018). */
@@ -42,7 +55,10 @@ export const JiraComment = z.object({
     example: "10000",
   }),
   author: z.string().openapi({ example: "Alice Cooper" }),
-  authorAvatar: z.string().nullable().openapi({ example: "https://x/avatar.png" }),
+  authorAvatar: z
+    .string()
+    .nullable()
+    .openapi({ example: "https://x/avatar.png" }),
   body: z.string().openapi({
     description: "Markdown rendering of the Jira ADF comment body",
     example: "**Looks good** to me",
@@ -70,12 +86,28 @@ export const JiraTicketStatus = z.object({
 });
 
 export const AddJiraCommentRequest = z.object({
-  body: z.string().openapi({ description: "Comment text (Markdown)", example: "Looks good to me!" }),
-  parentId: z.string().optional().openapi({ description: "Parent comment ID for threaded replies", example: "10001" }),
-  mentions: z.array(z.object({
-    text: z.string().openapi({ example: "@Alice Cooper" }),
-    accountId: z.string().openapi({ example: "5b10ac8d82e05b22cc7d4ef5" }),
-  })).optional().openapi({ description: "Mention mappings for ADF injection" }),
+  body: z
+    .string()
+    .openapi({
+      description: "Comment text (Markdown)",
+      example: "Looks good to me!",
+    }),
+  parentId: z
+    .string()
+    .optional()
+    .openapi({
+      description: "Parent comment ID for threaded replies",
+      example: "10001",
+    }),
+  mentions: z
+    .array(
+      z.object({
+        text: z.string().openapi({ example: "@Alice Cooper" }),
+        accountId: z.string().openapi({ example: "5b10ac8d82e05b22cc7d4ef5" }),
+      }),
+    )
+    .optional()
+    .openapi({ description: "Mention mappings for ADF injection" }),
 });
 
 export const AddJiraCommentResponse = z.object({

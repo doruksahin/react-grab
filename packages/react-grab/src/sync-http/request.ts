@@ -6,17 +6,39 @@ import type { SyncServerConnection } from "./types.js";
 import { WriteRefusedError } from "../features/sync/business/write-refused-error.js";
 
 const HTTP_STATUS_OK = 200;
+const HTTP_STATUS_CREATED = 201;
+const HTTP_STATUS_NO_CONTENT = 204;
+type SuccessStatus =
+  | typeof HTTP_STATUS_OK
+  | typeof HTTP_STATUS_CREATED
+  | typeof HTTP_STATUS_NO_CONTENT;
+const SUCCESS_STATUSES: ReadonlySet<number> = new Set<SuccessStatus>([
+  HTTP_STATUS_OK,
+  HTTP_STATUS_CREATED,
+  HTTP_STATUS_NO_CONTENT,
+]);
 // The server's answer for a write that a rule forbids (ADR-0008).
 const HTTP_STATUS_CONFLICT = 409;
 
-/** A response the sync server answered with something other than 200. */
+/** A response the sync server answered with something other than 2xx. */
 export class SyncHttpError extends Error {
   readonly status: number;
+  /**
+   * The server's reason, for a Jira failure (ADR-0027). An own property, so
+   * it survives the extension's message channels, which drop the class.
+   */
+  readonly code?: string;
 
-  constructor(operation: string, status: number, serverMessage?: string) {
+  constructor(
+    operation: string,
+    status: number,
+    serverMessage?: string,
+    code?: string,
+  ) {
     super(serverMessage ?? `${operation} failed: ${status}`);
     this.name = "SyncHttpError";
     this.status = status;
+    if (code !== undefined) this.code = code;
   }
 }
 
@@ -27,11 +49,12 @@ interface GeneratedResponse {
 
 type SuccessOf<Response extends GeneratedResponse> = Extract<
   Response,
-  { status: typeof HTTP_STATUS_OK }
+  { status: SuccessStatus }
 >;
 
 interface ErrorBody {
   error: string;
+  code?: unknown;
 }
 
 const isErrorBody = (data: unknown): data is ErrorBody =>
@@ -42,10 +65,10 @@ const isErrorBody = (data: unknown): data is ErrorBody =>
 
 const isSuccess = <Response extends GeneratedResponse>(
   response: Response,
-): response is SuccessOf<Response> => response.status === HTTP_STATUS_OK;
+): response is SuccessOf<Response> => SUCCESS_STATUSES.has(response.status);
 
 /**
- * The data of a 200 response from a generated function, or a SyncHttpError
+ * The data of a 2xx response from a generated function, or a SyncHttpError
  * carrying the server's `{ error }` message when it sent one.
  */
 export const successData = <Response extends GeneratedResponse>(
@@ -56,6 +79,14 @@ export const successData = <Response extends GeneratedResponse>(
   const serverMessage = isErrorBody(response.data)
     ? response.data.error
     : undefined;
+  const code =
+    isErrorBody(response.data) && typeof response.data.code === "string"
+      ? response.data.code
+      : undefined;
+  // A coded answer is a Jira failure, even a 409 (no destination), not a refused write.
+  if (code !== undefined) {
+    throw new SyncHttpError(operation, response.status, serverMessage, code);
+  }
   if (response.status === HTTP_STATUS_CONFLICT) {
     throw new WriteRefusedError(serverMessage ?? `${operation} was refused`);
   }
@@ -112,6 +143,9 @@ export const createSyncRequest = (
         operation,
         response.status,
         isErrorBody(data) ? data.error : undefined,
+        isErrorBody(data) && typeof data.code === "string"
+          ? data.code
+          : undefined,
       );
     },
   };

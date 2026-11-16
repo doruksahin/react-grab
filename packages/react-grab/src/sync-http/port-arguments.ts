@@ -3,7 +3,6 @@ import type { JiraPort, StorageAdapter } from "../features/sync/types.js";
 import {
   AddJiraCommentBody,
   CreateJiraTicketBody,
-  ListJiraIssueTypesQueryParams,
   SearchJiraUsersQueryParams,
   UploadScreenshotParams,
   UpsertCommentBody,
@@ -29,7 +28,6 @@ export const pathIdSchema = z
 
 const screenshotKindSchema = UploadScreenshotParams.shape.type;
 const blobSchema = z.instanceof(Blob);
-const projectKeySchema = ListJiraIssueTypesQueryParams.shape.projectKey;
 
 type PortArguments<Port> = {
   [Method in keyof Port]: Port[Method] extends (...args: infer Args) => unknown
@@ -54,16 +52,20 @@ export const STORAGE_ARGUMENTS = {
   uploadRecording: z.tuple([pathIdSchema, blobSchema]),
 } satisfies PortArguments<StorageAdapter>;
 
+/*
+ * No Jira argument names a project: the workspace's destination decides it
+ * (ADR-0027), so a page cannot send tickets anywhere else.
+ */
 export const JIRA_ARGUMENTS = {
-  getSite: z.tuple([]),
-  listIssueTypes: z.tuple([projectKeySchema]),
+  getDestination: z.tuple([]),
+  listIssueTypes: z.tuple([]),
   listPriorities: z.tuple([]),
-  listLabels: z.tuple([projectKeySchema]),
+  listLabels: z.tuple([]),
   getTicketStatus: z.tuple([pathIdSchema]),
-  createTicket: z.tuple([pathIdSchema, CreateJiraTicketBody]),
-  addComment: z.tuple([pathIdSchema, AddJiraCommentBody]),
-  searchUsers: z.tuple([
-    SearchJiraUsersQueryParams.shape.query,
-    projectKeySchema.optional(),
+  createTicket: z.tuple([
+    pathIdSchema,
+    CreateJiraTicketBody.omit({ projectKey: true }).strict(),
   ]),
+  addComment: z.tuple([pathIdSchema, AddJiraCommentBody]),
+  searchUsers: z.tuple([SearchJiraUsersQueryParams.shape.query]),
 } satisfies PortArguments<JiraPort>;

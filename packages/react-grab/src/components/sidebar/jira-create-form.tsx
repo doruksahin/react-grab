@@ -29,6 +29,10 @@ import {
   useJiraTicketCreation,
   type JiraTicketCreation,
 } from "../../features/jira-ticket/hooks/use-jira-ticket-creation.js";
+import { useJiraDestination } from "../../features/jira-ticket/hooks/use-jira-destination.js";
+import { describeDestinationProblem } from "../../features/jira-ticket/business/describe-destination-problem.js";
+import { getSiteHost } from "../../features/jira-ticket/business/site-host.js";
+import type { JiraDestination } from "../../features/sync/types.js";
 
 const DEFAULT_ISSUE_TYPE = "Task";
 const DEFAULT_PRIORITY = "Medium";
@@ -37,9 +41,6 @@ interface JiraCreateFormProps {
   groupId: string;
   group: SelectionGroup;
   commentItems: CommentItem[];
-  jiraProjectKey: string;
-  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
-  jiraSiteHost?: string | null;
   onSuccess: TicketCreatedCallback;
   onClose: () => void;
 }
@@ -48,8 +49,129 @@ const noScrollRoot = () => null;
 
 const TRIGGER_CLASS = "bg-muted text-body text-foreground";
 
+const selectionCountText = (count: number) =>
+  `${count} ${count === 1 ? "selection" : "selections"}`;
+
+/** "Into SCRUM on acme.atlassian.net, as Ada · 2 selections" (ADR-0027). */
+const DestinationLine: Component<{
+  destination: JiraDestination;
+  selectionCount: number;
+}> = (props) => (
+  <span data-react-grab-jira-destination>
+    Into{" "}
+    <strong class="font-semibold text-foreground">
+      {props.destination.projectKey}
+    </strong>
+    <Show when={getSiteHost(props.destination.siteUrl)}>
+      {(host) => <> on {host()}</>}
+    </Show>
+    <Show when={props.destination.signsInAs}>
+      {(name) => (
+        <>
+          , as <span data-react-grab-jira-signs-in-as>{name()}</span>
+        </>
+      )}
+    </Show>
+    {` · ${selectionCountText(props.selectionCount)}`}
+  </span>
+);
+
+/**
+ * The dialog while the destination loads or cannot be used: the reason, a
+ * pointer to the settings, and a Create button that stays disabled.
+ */
+const DestinationGate: Component<{
+  title: string;
+  onClose: () => void;
+  children: JSX.Element;
+}> = (props) => (
+  <DialogLayout
+    header={
+      <DialogHeader
+        title="Create Jira ticket"
+        subtitle={props.title}
+        onClose={props.onClose}
+      />
+    }
+    footer={
+      <div class="flex items-center justify-end gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          style={{ "pointer-events": "auto" }}
+          onClick={props.onClose}
+        >
+          Cancel
+        </Button>
+        <Button type="button" variant="inverse" size="sm" disabled>
+          Create ticket
+        </Button>
+      </div>
+    }
+  >
+    {props.children}
+  </DialogLayout>
+);
+
 export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
-  const creation = useJiraTicketCreation(() => props.jiraProjectKey);
+  const destination = useJiraDestination();
+  const problem = () =>
+    destination.state === "errored"
+      ? describeDestinationProblem(destination.error)
+      : null;
+
+  return (
+    <Show
+      when={destination.state === "ready" ? destination() : undefined}
+      keyed
+      fallback={
+        <Show
+          when={problem()}
+          fallback={
+            <DestinationGate
+              title="Loading the Jira destination…"
+              onClose={props.onClose}
+            >
+              <LoadingField />
+            </DestinationGate>
+          }
+        >
+          {(reason) => (
+            <DestinationGate
+              title="Cannot create a ticket"
+              onClose={props.onClose}
+            >
+              <Alert
+                data-react-grab-jira-destination-problem
+                data-code={reason().code ?? undefined}
+              >
+                <IconAlertCircle class="mt-0.5 shrink-0" />
+                <div class="flex flex-col gap-1">
+                  <p class="font-semibold">{reason().title}</p>
+                  <p class="text-caption">{reason().detail}</p>
+                </div>
+              </Alert>
+            </DestinationGate>
+          )}
+        </Show>
+      }
+    >
+      {(ready) => (
+        <JiraCreateFormForDestination {...props} destination={ready} />
+      )}
+    </Show>
+  );
+};
+
+interface JiraCreateFormForDestinationProps extends JiraCreateFormProps {
+  destination: JiraDestination;
+}
+
+const JiraCreateFormForDestination: Component<
+  JiraCreateFormForDestinationProps
+> = (props) => {
+  const creation = useJiraTicketCreation();
 
   const configError = () => {
     const types = creation.issueTypes();
@@ -58,7 +180,7 @@ export const JiraCreateForm: Component<JiraCreateFormProps> = (props) => {
     const errors: string[] = [];
     if (!types.find((t) => t.name === DEFAULT_ISSUE_TYPE))
       errors.push(
-        `Issue type "${DEFAULT_ISSUE_TYPE}" not found in ${props.jiraProjectKey}`,
+        `Issue type "${DEFAULT_ISSUE_TYPE}" not found in ${props.destination.projectKey}`,
       );
     if (!prios.find((p) => p.name === DEFAULT_PRIORITY))
       errors.push(`Priority "${DEFAULT_PRIORITY}" not found in JIRA`);
@@ -90,7 +212,7 @@ interface CreatedTicket {
   url: string;
 }
 
-interface JiraCreateFormInnerProps extends JiraCreateFormProps {
+interface JiraCreateFormInnerProps extends JiraCreateFormForDestinationProps {
   creation: JiraTicketCreation;
 }
 
@@ -113,7 +235,6 @@ const LoadingField: Component = () => (
 );
 
 const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
-  const projectKey = props.jiraProjectKey;
   const [issueType, setIssueType] = createSignal(DEFAULT_ISSUE_TYPE);
   const [priority, setPriority] = createSignal(DEFAULT_PRIORITY);
   const [summary, setSummary] = createSignal(
@@ -133,11 +254,6 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
     props.commentItems.filter(
       (item) => item.screenshotElement || item.screenshotFullPage,
     );
-
-  const selectionCount = () => {
-    const count = props.commentItems.length;
-    return `${count} ${count === 1 ? "selection" : "selections"}`;
-  };
 
   const summaryMissing = () => summary().trim().length === 0;
   const workTypeMissing = () => !issueType();
@@ -161,7 +277,6 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
     setFailure(null);
     try {
       const ticket = await props.creation.createTicket(props.groupId, {
-        projectKey,
         issueType: issueType(),
         priority: priority(),
         summary: normalizeSummary(summary()),
@@ -192,16 +307,10 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
                 : "Create Jira ticket"
             }
             subtitle={
-              <span data-react-grab-jira-destination>
-                Into{" "}
-                <strong class="font-semibold text-foreground">
-                  {projectKey}
-                </strong>
-                <Show when={props.jiraSiteHost}>
-                  {(host) => <> on {host()}</>}
-                </Show>
-                {` · ${selectionCount()}`}
-              </span>
+              <DestinationLine
+                destination={props.destination}
+                selectionCount={props.commentItems.length}
+              />
             }
             onClose={props.onClose}
           />

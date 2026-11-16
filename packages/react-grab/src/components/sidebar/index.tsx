@@ -48,9 +48,6 @@ export interface SidebarProps {
   commentItems: CommentItem[];
   syncStatus: SyncStatus;
   onRetrySync?: () => Promise<void>;
-  /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
-  jiraSiteHost?: string;
-  jiraProjectKey?: string;
   onClose: () => void;
   /** Open on this selection, where its Jira thread is (a label's "Open
    *  thread"); a new object for every request. */
@@ -376,8 +373,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             groupId={state().group.id}
             group={state().group}
             commentItems={state().items}
-            jiraProjectKey={props.jiraProjectKey ?? ""}
-            jiraSiteHost={props.jiraSiteHost}
             onTicketCreated={(groupId, ticketId, ticketUrl) => {
               // The dialog stays open to confirm the ticket; it closes via
               // its own Done button, which calls onClose.

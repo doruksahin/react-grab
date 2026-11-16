@@ -26,4 +26,5 @@
 | ADR-0024 | ADR-0024 Show where a selection was made when its element is not on the page | accepted | 2026-11-16 |  |
 | ADR-0025 | ADR-0025 Capture the steps to a selection as a Chrome Recorder flow | accepted | 2026-11-16 |  |
 | ADR-0026 | ADR-0026 Guide the user back to a selection, step by step | accepted | 2026-11-16 |  |
+| ADR-0027 | ADR-0027 Jira accounts per workspace, set up in the extension | accepted | 2026-11-16 |  |
 | ADR-0028 | ADR-0028 Show selections as one tree in the sidebar and the comments menu | accepted | 2026-11-16 |  |

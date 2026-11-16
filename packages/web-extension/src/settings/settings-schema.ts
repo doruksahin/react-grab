@@ -38,12 +38,13 @@ export const serverUrlSchema = z
 
 export const apiTokenSchema = z.string().trim().min(1, "Enter the API token");
 
+export const adminTokenSchema = z
+  .string()
+  .trim()
+  .min(1, "Enter the admin token");
+
 export const siteSettingsSchema = z.strictObject({
-  workspace: z.string().trim().min(1, "Enter a workspace"),
-  jiraProjectKey: z
-    .string()
-    .trim()
-    .regex(/^[A-Z][A-Z0-9_]*$/, "Enter a Jira project key, for example ATT"),
+  workspace: z.string().trim().min(1, "Choose a workspace"),
   recordSteps: z.boolean(),
   recordSession: z.boolean(),
 }) satisfies z.ZodType<SiteSettings>;

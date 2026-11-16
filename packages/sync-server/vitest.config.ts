@@ -24,6 +24,12 @@ export default defineConfig({
           JIRA_API_TOKEN: "test-token",
           // Fake API token for the access-control tests (ADR-0020).
           SYNC_API_TOKEN: "test-sync-token-0123456789abcdef0123",
+          // Fake admin token and credential key ring (ADR-0027). Test-only values.
+          SYNC_ADMIN_TOKEN: "test-admin-token-0123456789abcdef012",
+          JIRA_CREDENTIAL_KEYS: JSON.stringify({
+            v1: "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+          }),
+          JIRA_CREDENTIAL_KEY_CURRENT: "v1",
           ALLOWED_ORIGINS: "https://staging.example.com",
         },
       },

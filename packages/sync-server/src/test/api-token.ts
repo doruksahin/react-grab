@@ -7,3 +7,11 @@ export const authorized = (
   Authorization: `Bearer ${env.SYNC_API_TOKEN}`,
   ...extra,
 });
+
+/** Headers that pass the admin token check (ADR-0027). */
+export const asAdmin = (
+  extra: Record<string, string> = {},
+): Record<string, string> => ({
+  Authorization: `Bearer ${env.SYNC_ADMIN_TOKEN}`,
+  ...extra,
+});

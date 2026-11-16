@@ -201,17 +201,7 @@ const isDetailViewVisible = async (
 
 /** Sets up mock JIRA API responses for the sync-server proxy endpoints. */
 async function setupJiraMocks(page: import("@playwright/test").Page) {
-  await page.route("**/jira/projects", (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify([
-        { key: "ATT", name: "Attain" },
-        { key: "PROD", name: "Production" },
-      ]),
-    }),
-  );
-  await page.route("**/jira/issue-types", (route) =>
+  await page.route("**/workspaces/*/jira/issue-types*", (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -221,7 +211,7 @@ async function setupJiraMocks(page: import("@playwright/test").Page) {
       ]),
     }),
   );
-  await page.route("**/jira/priorities", (route) =>
+  await page.route("**/workspaces/*/jira/priorities*", (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",

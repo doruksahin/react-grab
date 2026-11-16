@@ -38,24 +38,37 @@ export const JiraEnvSchema = z.object({
 export type JiraEnv = z.infer<typeof JiraEnvSchema>;
 
 /**
- * Validates the Jira configuration, naming every problem at once.
+ * Validates one part of the environment, naming every problem at once.
  *
- * Called per request from the composition root rather than cached at module
- * scope: Cloudflare may reuse an isolate when only bindings change, so a
- * cached value can outlive a rotated secret.
+ * Called per request rather than cached at module scope: Cloudflare may reuse
+ * an isolate when only bindings change, so a cached value can outlive a
+ * rotated secret.
  */
-export const parseJiraEnv = (env: unknown): JiraEnv => {
-  const result = JiraEnvSchema.safeParse(env);
+const parseEnvPart = <Schema extends z.ZodType>(
+  schema: Schema,
+  env: unknown,
+  what: string,
+  seeAlso: string,
+): z.infer<Schema> => {
+  const result = schema.safeParse(env);
   if (result.success) return result.data;
 
   const problems = result.error.issues
     .map((issue) => `  ${issue.path.join(".")} ${issue.message}`)
     .join("\n");
   throw new Error(
-    `Jira is not configured correctly:\n${problems}\n` +
-      "See packages/sync-server/.dev.vars.example and ADR-0018.",
+    `${what} is not configured correctly:\n${problems}\n` +
+      `See packages/sync-server/.dev.vars.example and ${seeAlso}.`,
   );
 };
+
+/**
+ * Validates the environment Jira account. Since ADR-0027 it serves only
+ * workspaces without a destination and tickets without an origin, until the
+ * cut-over removes it.
+ */
+export const parseJiraEnv = (env: unknown): JiraEnv =>
+  parseEnvPart(JiraEnvSchema, env, "Jira", "ADR-0018");
 
 /**
  * Access-control configuration (ADR-0020).
@@ -81,15 +94,78 @@ export const AuthEnvSchema = z.object({
 export type AuthEnv = z.infer<typeof AuthEnvSchema>;
 
 /** Validates the access-control configuration. Fails closed: no token, no API. */
-export const parseAuthEnv = (env: unknown): AuthEnv => {
-  const result = AuthEnvSchema.safeParse(env);
-  if (result.success) return result.data;
+export const parseAuthEnv = (env: unknown): AuthEnv =>
+  parseEnvPart(AuthEnvSchema, env, "Access control", "ADR-0020");
 
-  const problems = result.error.issues
-    .map((issue) => `  ${issue.path.join(".")} ${issue.message}`)
-    .join("\n");
-  throw new Error(
-    `Access control is not configured correctly:\n${problems}\n` +
-      "See packages/sync-server/.dev.vars.example and ADR-0020.",
+/**
+ * The admin token (ADR-0027): needed to add Jira accounts and to choose where
+ * a workspace's tickets go. Only the extension's service worker and the
+ * dashboard proxy hold it; host apps hold only SYNC_API_TOKEN.
+ */
+export const AdminEnvSchema = z.object({
+  SYNC_ADMIN_TOKEN: z
+    .string()
+    .min(
+      32,
+      "is missing or shorter than 32 characters — run `wrangler secret put SYNC_ADMIN_TOKEN` with a random value, or add it to .dev.vars for local dev",
+    ),
+});
+
+export type AdminEnv = z.infer<typeof AdminEnvSchema>;
+
+/** Validates the admin token. Fails closed: no token, no admin routes. */
+export const parseAdminEnv = (env: unknown): AdminEnv =>
+  parseEnvPart(AdminEnvSchema, env, "Admin access", "ADR-0027");
+
+const AES_256_KEY_BYTES = 32;
+
+const credentialKey = z
+  .string()
+  .refine(
+    (value) => Buffer.from(value, "base64").byteLength === AES_256_KEY_BYTES,
+    "must be 32 random bytes in base64, e.g. `openssl rand -base64 32`",
   );
-};
+
+/**
+ * The key ring that encrypts Jira credentials at rest (ADR-0027).
+ *
+ *   JIRA_CREDENTIAL_KEYS        — secret JSON `{ "<version>": "<base64 key>" }`
+ *   JIRA_CREDENTIAL_KEY_CURRENT — the version new writes use; not secret
+ *
+ * Rotation: add a version, make it current, re-encrypt, remove the old one.
+ */
+export const CredentialEnvSchema = z
+  .object({
+    JIRA_CREDENTIAL_KEYS: z
+      .string()
+      .transform((value, context) => {
+        try {
+          const parsed: unknown = JSON.parse(value);
+          return parsed;
+        } catch {
+          context.addIssue({ code: "custom", message: "must be JSON" });
+          return z.NEVER;
+        }
+      })
+      .pipe(z.record(z.string().min(1), credentialKey)),
+    JIRA_CREDENTIAL_KEY_CURRENT: z.string().min(1),
+  })
+  .refine(
+    (env) =>
+      Object.hasOwn(env.JIRA_CREDENTIAL_KEYS, env.JIRA_CREDENTIAL_KEY_CURRENT),
+    {
+      message: "names a version that JIRA_CREDENTIAL_KEYS does not have",
+      path: ["JIRA_CREDENTIAL_KEY_CURRENT"],
+    },
+  );
+
+export type CredentialEnv = z.infer<typeof CredentialEnvSchema>;
+
+/** Validates the credential key ring. */
+export const parseCredentialEnv = (env: unknown): CredentialEnv =>
+  parseEnvPart(
+    CredentialEnvSchema,
+    env,
+    "Jira credential encryption",
+    "ADR-0027",
+  );

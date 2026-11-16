@@ -1,5 +1,14 @@
 export { createHttpAdapter } from "./http-storage-adapter.js";
 export { createHttpJiraPort } from "./http-jira-port.js";
+export {
+  createHttpJiraAdminPort,
+  type JiraAdminPort,
+  type JiraAccountSummary,
+  type JiraDestinationChoice,
+  type JiraProjectSummary,
+  type NewJiraAccount,
+  type WorkspaceSummary,
+} from "./http-jira-admin-port.js";
 export { SyncHttpError } from "./request.js";
 export {
   JIRA_ARGUMENTS,
@@ -12,8 +21,9 @@ export type {
   JiraCommentDraft,
   JiraIssueType,
   JiraPort,
+  JiraDestination,
+  JiraErrorCode,
   JiraPriority,
-  JiraSite,
   JiraTicketDraft,
   JiraTicketStatus,
   JiraUser,

@@ -29,27 +29,26 @@ import type {
 
 import type {
   AddJiraComment200,
-  AddJiraComment400,
-  AddJiraComment404,
   AddJiraCommentBody,
   CreateJiraTicket200,
-  CreateJiraTicket400,
   CreateJiraTicketBody,
-  GetJiraSite200,
   GetJiraTicketStatus200,
-  GetJiraTicketStatus404,
+  GetLegacyJiraSite200,
+  JiraErrorResponse,
   ListJiraIssueTypes200Item,
-  ListJiraIssueTypes500,
   ListJiraIssueTypesParams,
-  ListJiraLabels500,
   ListJiraLabelsParams,
   ListJiraPriorities200Item,
-  ListJiraPriorities500,
-  ListJiraProjects200Item,
-  ListJiraProjects500,
+  ListJiraPrioritiesParams,
+  ListLegacyJiraIssueTypes200Item,
+  ListLegacyJiraIssueTypesParams,
+  ListLegacyJiraLabelsParams,
+  ListLegacyJiraPriorities200Item,
+  ListLegacyJiraProjects200Item,
   SearchJiraUsers200Item,
-  SearchJiraUsers500,
-  SearchJiraUsersParams
+  SearchJiraUsersParams,
+  SearchLegacyJiraUsers200Item,
+  SearchLegacyJiraUsersParams
 } from '../../model';
 
 
@@ -57,22 +56,37 @@ import type {
 
 
 /**
- * @summary Create a JIRA ticket from a group
+ * @summary Create a Jira ticket from a group, in the workspace's destination
  */
 export type createJiraTicketResponse200 = {
   data: CreateJiraTicket200
   status: 200
 }
 
-export type createJiraTicketResponse400 = {
-  data: CreateJiraTicket400
-  status: 400
+export type createJiraTicketResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type createJiraTicketResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type createJiraTicketResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type createJiraTicketResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type createJiraTicketResponseSuccess = (createJiraTicketResponse200) & {
   headers: Headers;
 };
-export type createJiraTicketResponseError = (createJiraTicketResponse400) & {
+export type createJiraTicketResponseError = (createJiraTicketResponse404 | createJiraTicketResponse409 | createJiraTicketResponse422 | createJiraTicketResponse502) & {
   headers: Headers;
 };
 
@@ -110,7 +124,7 @@ export const createJiraTicket = async (id: string,
 
 
 
-export const getCreateJiraTicketMutationOptions = <TError = CreateJiraTicket400,
+export const getCreateJiraTicketMutationOptions = <TError = JiraErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJiraTicket>>, TError,{id: string;groupId: string;data: CreateJiraTicketBody}, TContext>, fetch?: RequestInit}
 ): UseMutationOptions<Awaited<ReturnType<typeof createJiraTicket>>, TError,{id: string;groupId: string;data: CreateJiraTicketBody}, TContext> => {
 
@@ -139,12 +153,12 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
     export type CreateJiraTicketMutationResult = NonNullable<Awaited<ReturnType<typeof createJiraTicket>>>
     export type CreateJiraTicketMutationBody = CreateJiraTicketBody
-    export type CreateJiraTicketMutationError = CreateJiraTicket400
+    export type CreateJiraTicketMutationError = JiraErrorResponse
 
     /**
- * @summary Create a JIRA ticket from a group
+ * @summary Create a Jira ticket from a group, in the workspace's destination
  */
-export const useCreateJiraTicket = <TError = CreateJiraTicket400,
+export const useCreateJiraTicket = <TError = JiraErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createJiraTicket>>, TError,{id: string;groupId: string;data: CreateJiraTicketBody}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createJiraTicket>>,
@@ -155,7 +169,7 @@ export const useCreateJiraTicket = <TError = CreateJiraTicket400,
       return useMutation(getCreateJiraTicketMutationOptions(options), queryClient);
     }
     /**
- * @summary Get JIRA ticket status for a group
+ * @summary Get the Jira ticket status for a group
  */
 export type getJiraTicketStatusResponse200 = {
   data: GetJiraTicketStatus200
@@ -163,14 +177,29 @@ export type getJiraTicketStatusResponse200 = {
 }
 
 export type getJiraTicketStatusResponse404 = {
-  data: GetJiraTicketStatus404
+  data: JiraErrorResponse
   status: 404
+}
+
+export type getJiraTicketStatusResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type getJiraTicketStatusResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type getJiraTicketStatusResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type getJiraTicketStatusResponseSuccess = (getJiraTicketStatusResponse200) & {
   headers: Headers;
 };
-export type getJiraTicketStatusResponseError = (getJiraTicketStatusResponse404) & {
+export type getJiraTicketStatusResponseError = (getJiraTicketStatusResponse404 | getJiraTicketStatusResponse409 | getJiraTicketStatusResponse422 | getJiraTicketStatusResponse502) & {
   headers: Headers;
 };
 
@@ -215,7 +244,7 @@ export const getGetJiraTicketStatusQueryKey = (id: string,
     }
 
 
-export const getGetJiraTicketStatusQueryOptions = <TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = GetJiraTicketStatus404>(id: string,
+export const getGetJiraTicketStatusQueryOptions = <TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = JiraErrorResponse>(id: string,
     groupId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraTicketStatus>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
@@ -235,10 +264,10 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type GetJiraTicketStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getJiraTicketStatus>>>
-export type GetJiraTicketStatusQueryError = GetJiraTicketStatus404
+export type GetJiraTicketStatusQueryError = JiraErrorResponse
 
 
-export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = GetJiraTicketStatus404>(
+export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = JiraErrorResponse>(
  id: string,
     groupId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraTicketStatus>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -249,7 +278,7 @@ export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJira
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = GetJiraTicketStatus404>(
+export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = JiraErrorResponse>(
  id: string,
     groupId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraTicketStatus>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -260,16 +289,16 @@ export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJira
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = GetJiraTicketStatus404>(
+export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = JiraErrorResponse>(
  id: string,
     groupId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraTicketStatus>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get JIRA ticket status for a group
+ * @summary Get the Jira ticket status for a group
  */
 
-export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = GetJiraTicketStatus404>(
+export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = JiraErrorResponse>(
  id: string,
     groupId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraTicketStatus>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
@@ -285,7 +314,7 @@ export function useGetJiraTicketStatus<TData = Awaited<ReturnType<typeof getJira
 
 
 
-export const getGetJiraTicketStatusSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = GetJiraTicketStatus404>(id: string,
+export const getGetJiraTicketStatusSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = JiraErrorResponse>(id: string,
     groupId: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraTicketStatus>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
@@ -305,29 +334,29 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type GetJiraTicketStatusSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getJiraTicketStatus>>>
-export type GetJiraTicketStatusSuspenseQueryError = GetJiraTicketStatus404
+export type GetJiraTicketStatusSuspenseQueryError = JiraErrorResponse
 
 
-export function useGetJiraTicketStatusSuspense<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = GetJiraTicketStatus404>(
+export function useGetJiraTicketStatusSuspense<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = JiraErrorResponse>(
  id: string,
     groupId: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraTicketStatus>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJiraTicketStatusSuspense<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = GetJiraTicketStatus404>(
+export function useGetJiraTicketStatusSuspense<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = JiraErrorResponse>(
  id: string,
     groupId: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraTicketStatus>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJiraTicketStatusSuspense<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = GetJiraTicketStatus404>(
+export function useGetJiraTicketStatusSuspense<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = JiraErrorResponse>(
  id: string,
     groupId: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraTicketStatus>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get JIRA ticket status for a group
+ * @summary Get the Jira ticket status for a group
  */
 
-export function useGetJiraTicketStatusSuspense<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = GetJiraTicketStatus404>(
+export function useGetJiraTicketStatusSuspense<TData = Awaited<ReturnType<typeof getJiraTicketStatus>>, TError = JiraErrorResponse>(
  id: string,
     groupId: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraTicketStatus>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
@@ -344,27 +373,37 @@ export function useGetJiraTicketStatusSuspense<TData = Awaited<ReturnType<typeof
 
 
 /**
- * @summary Add a comment to a JIRA ticket linked to a group
+ * @summary Add a comment to the Jira ticket linked to a group
  */
 export type addJiraCommentResponse200 = {
   data: AddJiraComment200
   status: 200
 }
 
-export type addJiraCommentResponse400 = {
-  data: AddJiraComment400
-  status: 400
+export type addJiraCommentResponse404 = {
+  data: JiraErrorResponse
+  status: 404
 }
 
-export type addJiraCommentResponse404 = {
-  data: AddJiraComment404
-  status: 404
+export type addJiraCommentResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type addJiraCommentResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type addJiraCommentResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type addJiraCommentResponseSuccess = (addJiraCommentResponse200) & {
   headers: Headers;
 };
-export type addJiraCommentResponseError = (addJiraCommentResponse400 | addJiraCommentResponse404) & {
+export type addJiraCommentResponseError = (addJiraCommentResponse404 | addJiraCommentResponse409 | addJiraCommentResponse422 | addJiraCommentResponse502) & {
   headers: Headers;
 };
 
@@ -402,7 +441,7 @@ export const addJiraComment = async (id: string,
 
 
 
-export const getAddJiraCommentMutationOptions = <TError = AddJiraComment400 | AddJiraComment404,
+export const getAddJiraCommentMutationOptions = <TError = JiraErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addJiraComment>>, TError,{id: string;groupId: string;data: AddJiraCommentBody}, TContext>, fetch?: RequestInit}
 ): UseMutationOptions<Awaited<ReturnType<typeof addJiraComment>>, TError,{id: string;groupId: string;data: AddJiraCommentBody}, TContext> => {
 
@@ -431,12 +470,12 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
     export type AddJiraCommentMutationResult = NonNullable<Awaited<ReturnType<typeof addJiraComment>>>
     export type AddJiraCommentMutationBody = AddJiraCommentBody
-    export type AddJiraCommentMutationError = AddJiraComment400 | AddJiraComment404
+    export type AddJiraCommentMutationError = JiraErrorResponse
 
     /**
- * @summary Add a comment to a JIRA ticket linked to a group
+ * @summary Add a comment to the Jira ticket linked to a group
  */
-export const useAddJiraComment = <TError = AddJiraComment400 | AddJiraComment404,
+export const useAddJiraComment = <TError = JiraErrorResponse,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addJiraComment>>, TError,{id: string;groupId: string;data: AddJiraCommentBody}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof addJiraComment>>,
@@ -447,373 +486,44 @@ export const useAddJiraComment = <TError = AddJiraComment400 | AddJiraComment404
       return useMutation(getAddJiraCommentMutationOptions(options), queryClient);
     }
     /**
- * @summary The Jira site tickets are created on
- */
-export type getJiraSiteResponse200 = {
-  data: GetJiraSite200
-  status: 200
-}
-
-export type getJiraSiteResponseSuccess = (getJiraSiteResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getJiraSiteResponse = (getJiraSiteResponseSuccess)
-
-export const getGetJiraSiteUrl = () => {
-
-
-
-
-  return `/jira/site`
-}
-
-export const getJiraSite = async ( options?: RequestInit): Promise<getJiraSiteResponse> => {
-
-  const res = await fetch(getGetJiraSiteUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: getJiraSiteResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as getJiraSiteResponse
-}
-
-
-
-
-
-export const getGetJiraSiteQueryKey = () => {
-    return [
-    `/jira/site`
-    ] as const;
-    }
-
-
-export const getGetJiraSiteQueryOptions = <TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
-) => {
-
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetJiraSiteQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJiraSite>>> = ({ signal }) => getJiraSite({ signal, ...fetchOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetJiraSiteQueryResult = NonNullable<Awaited<ReturnType<typeof getJiraSite>>>
-export type GetJiraSiteQueryError = unknown
-
-
-export function useGetJiraSite<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getJiraSite>>,
-          TError,
-          Awaited<ReturnType<typeof getJiraSite>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJiraSite<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getJiraSite>>,
-          TError,
-          Awaited<ReturnType<typeof getJiraSite>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJiraSite<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary The Jira site tickets are created on
- */
-
-export function useGetJiraSite<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetJiraSiteQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-export const getGetJiraSiteSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
-) => {
-
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetJiraSiteQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJiraSite>>> = ({ signal }) => getJiraSite({ signal, ...fetchOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetJiraSiteSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getJiraSite>>>
-export type GetJiraSiteSuspenseQueryError = unknown
-
-
-export function useGetJiraSiteSuspense<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJiraSiteSuspense<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJiraSiteSuspense<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary The Jira site tickets are created on
- */
-
-export function useGetJiraSiteSuspense<TData = Awaited<ReturnType<typeof getJiraSite>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraSite>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetJiraSiteSuspenseQueryOptions(options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-/**
- * @summary List JIRA projects
- */
-export type listJiraProjectsResponse200 = {
-  data: ListJiraProjects200Item[]
-  status: 200
-}
-
-export type listJiraProjectsResponse500 = {
-  data: ListJiraProjects500
-  status: 500
-}
-
-export type listJiraProjectsResponseSuccess = (listJiraProjectsResponse200) & {
-  headers: Headers;
-};
-export type listJiraProjectsResponseError = (listJiraProjectsResponse500) & {
-  headers: Headers;
-};
-
-export type listJiraProjectsResponse = (listJiraProjectsResponseSuccess | listJiraProjectsResponseError)
-
-export const getListJiraProjectsUrl = () => {
-
-
-
-
-  return `/jira/projects`
-}
-
-export const listJiraProjects = async ( options?: RequestInit): Promise<listJiraProjectsResponse> => {
-
-  const res = await fetch(getListJiraProjectsUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-)
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: listJiraProjectsResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as listJiraProjectsResponse
-}
-
-
-
-
-
-export const getListJiraProjectsQueryKey = () => {
-    return [
-    `/jira/projects`
-    ] as const;
-    }
-
-
-export const getListJiraProjectsQueryOptions = <TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
-) => {
-
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListJiraProjectsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraProjects>>> = ({ signal }) => listJiraProjects({ signal, ...fetchOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListJiraProjectsQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraProjects>>>
-export type ListJiraProjectsQueryError = ListJiraProjects500
-
-
-export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listJiraProjects>>,
-          TError,
-          Awaited<ReturnType<typeof listJiraProjects>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listJiraProjects>>,
-          TError,
-          Awaited<ReturnType<typeof listJiraProjects>>
-        > , 'initialData'
-      >, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List JIRA projects
- */
-
-export function useListJiraProjects<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getListJiraProjectsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-export const getListJiraProjectsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
-) => {
-
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListJiraProjectsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraProjects>>> = ({ signal }) => listJiraProjects({ signal, ...fetchOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListJiraProjectsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraProjects>>>
-export type ListJiraProjectsSuspenseQueryError = ListJiraProjects500
-
-
-export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary List JIRA projects
- */
-
-export function useListJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listJiraProjects>>, TError = ListJiraProjects500>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraProjects>>, TError, TData>>, fetch?: RequestInit}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getListJiraProjectsSuspenseQueryOptions(options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-/**
- * @summary List JIRA issue types for a project
+ * @summary Issue types of the workspace's Jira project
  */
 export type listJiraIssueTypesResponse200 = {
   data: ListJiraIssueTypes200Item[]
   status: 200
 }
 
-export type listJiraIssueTypesResponse500 = {
-  data: ListJiraIssueTypes500
-  status: 500
+export type listJiraIssueTypesResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listJiraIssueTypesResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listJiraIssueTypesResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listJiraIssueTypesResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type listJiraIssueTypesResponseSuccess = (listJiraIssueTypesResponse200) & {
   headers: Headers;
 };
-export type listJiraIssueTypesResponseError = (listJiraIssueTypesResponse500) & {
+export type listJiraIssueTypesResponseError = (listJiraIssueTypesResponse404 | listJiraIssueTypesResponse409 | listJiraIssueTypesResponse422 | listJiraIssueTypesResponse502) & {
   headers: Headers;
 };
 
 export type listJiraIssueTypesResponse = (listJiraIssueTypesResponseSuccess | listJiraIssueTypesResponseError)
 
-export const getListJiraIssueTypesUrl = (params: ListJiraIssueTypesParams,) => {
+export const getListJiraIssueTypesUrl = (id: string,
+    params?: ListJiraIssueTypesParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -825,12 +535,13 @@ export const getListJiraIssueTypesUrl = (params: ListJiraIssueTypesParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/jira/issue-types?${stringifiedParams}` : `/jira/issue-types`
+  return stringifiedParams.length > 0 ? `/workspaces/${id}/jira/issue-types?${stringifiedParams}` : `/workspaces/${id}/jira/issue-types`
 }
 
-export const listJiraIssueTypes = async (params: ListJiraIssueTypesParams, options?: RequestInit): Promise<listJiraIssueTypesResponse> => {
+export const listJiraIssueTypes = async (id: string,
+    params?: ListJiraIssueTypesParams, options?: RequestInit): Promise<listJiraIssueTypesResponse> => {
 
-  const res = await fetch(getListJiraIssueTypesUrl(params),
+  const res = await fetch(getListJiraIssueTypesUrl(id,params),
   {
     ...options,
     method: 'GET'
@@ -849,37 +560,40 @@ export const listJiraIssueTypes = async (params: ListJiraIssueTypesParams, optio
 
 
 
-export const getListJiraIssueTypesQueryKey = (params?: ListJiraIssueTypesParams,) => {
+export const getListJiraIssueTypesQueryKey = (id: string,
+    params?: ListJiraIssueTypesParams,) => {
     return [
-    `/jira/issue-types`, ...(params ? [params] : [])
+    `/workspaces/${id}/jira/issue-types`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListJiraIssueTypesQueryOptions = <TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(params: ListJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraIssueTypesQueryOptions = <TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = JiraErrorResponse>(id: string,
+    params?: ListJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListJiraIssueTypesQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListJiraIssueTypesQueryKey(id,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraIssueTypes>>> = ({ signal }) => listJiraIssueTypes(params, { signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraIssueTypes>>> = ({ signal }) => listJiraIssueTypes(id,params, { signal, ...fetchOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type ListJiraIssueTypesQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraIssueTypes>>>
-export type ListJiraIssueTypesQueryError = ListJiraIssueTypes500
+export type ListJiraIssueTypesQueryError = JiraErrorResponse
 
 
-export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
- params: ListJiraIssueTypesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>> & Pick<
+export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = JiraErrorResponse>(
+ id: string,
+    params: undefined |  ListJiraIssueTypesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraIssueTypes>>,
           TError,
@@ -888,8 +602,9 @@ export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJira
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
- params: ListJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>> & Pick<
+export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraIssueTypes>>,
           TError,
@@ -898,20 +613,22 @@ export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJira
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
- params: ListJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary List JIRA issue types for a project
+ * @summary Issue types of the workspace's Jira project
  */
 
-export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
- params: ListJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListJiraIssueTypesQueryOptions(params,options)
+  const queryOptions = getListJiraIssueTypesQueryOptions(id,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -921,16 +638,17 @@ export function useListJiraIssueTypes<TData = Awaited<ReturnType<typeof listJira
 
 
 
-export const getListJiraIssueTypesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(params: ListJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraIssueTypesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = JiraErrorResponse>(id: string,
+    params?: ListJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListJiraIssueTypesQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListJiraIssueTypesQueryKey(id,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraIssueTypes>>> = ({ signal }) => listJiraIssueTypes(params, { signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraIssueTypes>>> = ({ signal }) => listJiraIssueTypes(id,params, { signal, ...fetchOptions });
 
 
 
@@ -940,31 +658,35 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type ListJiraIssueTypesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraIssueTypes>>>
-export type ListJiraIssueTypesSuspenseQueryError = ListJiraIssueTypes500
+export type ListJiraIssueTypesSuspenseQueryError = JiraErrorResponse
 
 
-export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
- params: ListJiraIssueTypesParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = JiraErrorResponse>(
+ id: string,
+    params: undefined |  ListJiraIssueTypesParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
- params: ListJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
- params: ListJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary List JIRA issue types for a project
+ * @summary Issue types of the workspace's Jira project
  */
 
-export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = ListJiraIssueTypes500>(
- params: ListJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listJiraIssueTypes>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListJiraIssueTypesSuspenseQueryOptions(params,options)
+  const queryOptions = getListJiraIssueTypesSuspenseQueryOptions(id,params,options)
 
   const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -975,38 +697,62 @@ export function useListJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof 
 
 
 /**
- * @summary List JIRA priorities
+ * @summary Priorities on the workspace's Jira site
  */
 export type listJiraPrioritiesResponse200 = {
   data: ListJiraPriorities200Item[]
   status: 200
 }
 
-export type listJiraPrioritiesResponse500 = {
-  data: ListJiraPriorities500
-  status: 500
+export type listJiraPrioritiesResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listJiraPrioritiesResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listJiraPrioritiesResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listJiraPrioritiesResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type listJiraPrioritiesResponseSuccess = (listJiraPrioritiesResponse200) & {
   headers: Headers;
 };
-export type listJiraPrioritiesResponseError = (listJiraPrioritiesResponse500) & {
+export type listJiraPrioritiesResponseError = (listJiraPrioritiesResponse404 | listJiraPrioritiesResponse409 | listJiraPrioritiesResponse422 | listJiraPrioritiesResponse502) & {
   headers: Headers;
 };
 
 export type listJiraPrioritiesResponse = (listJiraPrioritiesResponseSuccess | listJiraPrioritiesResponseError)
 
-export const getListJiraPrioritiesUrl = () => {
+export const getListJiraPrioritiesUrl = (id: string,
+    params?: ListJiraPrioritiesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/jira/priorities`
+  return stringifiedParams.length > 0 ? `/workspaces/${id}/jira/priorities?${stringifiedParams}` : `/workspaces/${id}/jira/priorities`
 }
 
-export const listJiraPriorities = async ( options?: RequestInit): Promise<listJiraPrioritiesResponse> => {
+export const listJiraPriorities = async (id: string,
+    params?: ListJiraPrioritiesParams, options?: RequestInit): Promise<listJiraPrioritiesResponse> => {
 
-  const res = await fetch(getListJiraPrioritiesUrl(),
+  const res = await fetch(getListJiraPrioritiesUrl(id,params),
   {
     ...options,
     method: 'GET'
@@ -1025,37 +771,40 @@ export const listJiraPriorities = async ( options?: RequestInit): Promise<listJi
 
 
 
-export const getListJiraPrioritiesQueryKey = () => {
+export const getListJiraPrioritiesQueryKey = (id: string,
+    params?: ListJiraPrioritiesParams,) => {
     return [
-    `/jira/priorities`
+    `/workspaces/${id}/jira/priorities`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListJiraPrioritiesQueryOptions = <TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraPrioritiesQueryOptions = <TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = JiraErrorResponse>(id: string,
+    params?: ListJiraPrioritiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListJiraPrioritiesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListJiraPrioritiesQueryKey(id,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraPriorities>>> = ({ signal }) => listJiraPriorities({ signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraPriorities>>> = ({ signal }) => listJiraPriorities(id,params, { signal, ...fetchOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type ListJiraPrioritiesQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraPriorities>>>
-export type ListJiraPrioritiesQueryError = ListJiraPriorities500
+export type ListJiraPrioritiesQueryError = JiraErrorResponse
 
 
-export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>> & Pick<
+export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = JiraErrorResponse>(
+ id: string,
+    params: undefined |  ListJiraPrioritiesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraPriorities>>,
           TError,
@@ -1064,8 +813,9 @@ export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJira
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>> & Pick<
+export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraPrioritiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraPriorities>>,
           TError,
@@ -1074,20 +824,22 @@ export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJira
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraPrioritiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary List JIRA priorities
+ * @summary Priorities on the workspace's Jira site
  */
 
-export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraPrioritiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListJiraPrioritiesQueryOptions(options)
+  const queryOptions = getListJiraPrioritiesQueryOptions(id,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1097,16 +849,17 @@ export function useListJiraPriorities<TData = Awaited<ReturnType<typeof listJira
 
 
 
-export const getListJiraPrioritiesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraPrioritiesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = JiraErrorResponse>(id: string,
+    params?: ListJiraPrioritiesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListJiraPrioritiesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListJiraPrioritiesQueryKey(id,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraPriorities>>> = ({ signal }) => listJiraPriorities({ signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraPriorities>>> = ({ signal }) => listJiraPriorities(id,params, { signal, ...fetchOptions });
 
 
 
@@ -1116,31 +869,35 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type ListJiraPrioritiesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraPriorities>>>
-export type ListJiraPrioritiesSuspenseQueryError = ListJiraPriorities500
+export type ListJiraPrioritiesSuspenseQueryError = JiraErrorResponse
 
 
-export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = JiraErrorResponse>(
+ id: string,
+    params: undefined |  ListJiraPrioritiesParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraPrioritiesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraPrioritiesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary List JIRA priorities
+ * @summary Priorities on the workspace's Jira site
  */
 
-export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = ListJiraPriorities500>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listJiraPriorities>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraPrioritiesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListJiraPrioritiesSuspenseQueryOptions(options)
+  const queryOptions = getListJiraPrioritiesSuspenseQueryOptions(id,params,options)
 
   const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1151,28 +908,44 @@ export function useListJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof 
 
 
 /**
- * @summary List JIRA labels used in a project
+ * @summary Labels used in the workspace's Jira project
  */
 export type listJiraLabelsResponse200 = {
   data: string[]
   status: 200
 }
 
-export type listJiraLabelsResponse500 = {
-  data: ListJiraLabels500
-  status: 500
+export type listJiraLabelsResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listJiraLabelsResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listJiraLabelsResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listJiraLabelsResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type listJiraLabelsResponseSuccess = (listJiraLabelsResponse200) & {
   headers: Headers;
 };
-export type listJiraLabelsResponseError = (listJiraLabelsResponse500) & {
+export type listJiraLabelsResponseError = (listJiraLabelsResponse404 | listJiraLabelsResponse409 | listJiraLabelsResponse422 | listJiraLabelsResponse502) & {
   headers: Headers;
 };
 
 export type listJiraLabelsResponse = (listJiraLabelsResponseSuccess | listJiraLabelsResponseError)
 
-export const getListJiraLabelsUrl = (params: ListJiraLabelsParams,) => {
+export const getListJiraLabelsUrl = (id: string,
+    params?: ListJiraLabelsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1184,12 +957,13 @@ export const getListJiraLabelsUrl = (params: ListJiraLabelsParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/jira/labels?${stringifiedParams}` : `/jira/labels`
+  return stringifiedParams.length > 0 ? `/workspaces/${id}/jira/labels?${stringifiedParams}` : `/workspaces/${id}/jira/labels`
 }
 
-export const listJiraLabels = async (params: ListJiraLabelsParams, options?: RequestInit): Promise<listJiraLabelsResponse> => {
+export const listJiraLabels = async (id: string,
+    params?: ListJiraLabelsParams, options?: RequestInit): Promise<listJiraLabelsResponse> => {
 
-  const res = await fetch(getListJiraLabelsUrl(params),
+  const res = await fetch(getListJiraLabelsUrl(id,params),
   {
     ...options,
     method: 'GET'
@@ -1208,37 +982,40 @@ export const listJiraLabels = async (params: ListJiraLabelsParams, options?: Req
 
 
 
-export const getListJiraLabelsQueryKey = (params?: ListJiraLabelsParams,) => {
+export const getListJiraLabelsQueryKey = (id: string,
+    params?: ListJiraLabelsParams,) => {
     return [
-    `/jira/labels`, ...(params ? [params] : [])
+    `/workspaces/${id}/jira/labels`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListJiraLabelsQueryOptions = <TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = ListJiraLabels500>(params: ListJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraLabelsQueryOptions = <TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = JiraErrorResponse>(id: string,
+    params?: ListJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListJiraLabelsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListJiraLabelsQueryKey(id,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraLabels>>> = ({ signal }) => listJiraLabels(params, { signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraLabels>>> = ({ signal }) => listJiraLabels(id,params, { signal, ...fetchOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type ListJiraLabelsQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraLabels>>>
-export type ListJiraLabelsQueryError = ListJiraLabels500
+export type ListJiraLabelsQueryError = JiraErrorResponse
 
 
-export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = ListJiraLabels500>(
- params: ListJiraLabelsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>> & Pick<
+export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = JiraErrorResponse>(
+ id: string,
+    params: undefined |  ListJiraLabelsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraLabels>>,
           TError,
@@ -1247,8 +1024,9 @@ export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabe
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = ListJiraLabels500>(
- params: ListJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>> & Pick<
+export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof listJiraLabels>>,
           TError,
@@ -1257,20 +1035,22 @@ export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabe
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = ListJiraLabels500>(
- params: ListJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary List JIRA labels used in a project
+ * @summary Labels used in the workspace's Jira project
  */
 
-export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = ListJiraLabels500>(
- params: ListJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListJiraLabelsQueryOptions(params,options)
+  const queryOptions = getListJiraLabelsQueryOptions(id,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1280,16 +1060,17 @@ export function useListJiraLabels<TData = Awaited<ReturnType<typeof listJiraLabe
 
 
 
-export const getListJiraLabelsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = ListJiraLabels500>(params: ListJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+export const getListJiraLabelsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = JiraErrorResponse>(id: string,
+    params?: ListJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListJiraLabelsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListJiraLabelsQueryKey(id,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraLabels>>> = ({ signal }) => listJiraLabels(params, { signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listJiraLabels>>> = ({ signal }) => listJiraLabels(id,params, { signal, ...fetchOptions });
 
 
 
@@ -1299,31 +1080,35 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type ListJiraLabelsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listJiraLabels>>>
-export type ListJiraLabelsSuspenseQueryError = ListJiraLabels500
+export type ListJiraLabelsSuspenseQueryError = JiraErrorResponse
 
 
-export function useListJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = ListJiraLabels500>(
- params: ListJiraLabelsParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = JiraErrorResponse>(
+ id: string,
+    params: undefined |  ListJiraLabelsParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = ListJiraLabels500>(
- params: ListJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = ListJiraLabels500>(
- params: ListJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary List JIRA labels used in a project
+ * @summary Labels used in the workspace's Jira project
  */
 
-export function useListJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = ListJiraLabels500>(
- params: ListJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+export function useListJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listJiraLabels>>, TError = JiraErrorResponse>(
+ id: string,
+    params?: ListJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listJiraLabels>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListJiraLabelsSuspenseQueryOptions(params,options)
+  const queryOptions = getListJiraLabelsSuspenseQueryOptions(id,params,options)
 
   const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1334,28 +1119,44 @@ export function useListJiraLabelsSuspense<TData = Awaited<ReturnType<typeof list
 
 
 /**
- * @summary Search JIRA users for mentions
+ * @summary Search assignable users in the workspace's Jira project
  */
 export type searchJiraUsersResponse200 = {
   data: SearchJiraUsers200Item[]
   status: 200
 }
 
-export type searchJiraUsersResponse500 = {
-  data: SearchJiraUsers500
-  status: 500
+export type searchJiraUsersResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type searchJiraUsersResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type searchJiraUsersResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type searchJiraUsersResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type searchJiraUsersResponseSuccess = (searchJiraUsersResponse200) & {
   headers: Headers;
 };
-export type searchJiraUsersResponseError = (searchJiraUsersResponse500) & {
+export type searchJiraUsersResponseError = (searchJiraUsersResponse404 | searchJiraUsersResponse409 | searchJiraUsersResponse422 | searchJiraUsersResponse502) & {
   headers: Headers;
 };
 
 export type searchJiraUsersResponse = (searchJiraUsersResponseSuccess | searchJiraUsersResponseError)
 
-export const getSearchJiraUsersUrl = (params: SearchJiraUsersParams,) => {
+export const getSearchJiraUsersUrl = (id: string,
+    params: SearchJiraUsersParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1367,12 +1168,13 @@ export const getSearchJiraUsersUrl = (params: SearchJiraUsersParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/jira/users?${stringifiedParams}` : `/jira/users`
+  return stringifiedParams.length > 0 ? `/workspaces/${id}/jira/users?${stringifiedParams}` : `/workspaces/${id}/jira/users`
 }
 
-export const searchJiraUsers = async (params: SearchJiraUsersParams, options?: RequestInit): Promise<searchJiraUsersResponse> => {
+export const searchJiraUsers = async (id: string,
+    params: SearchJiraUsersParams, options?: RequestInit): Promise<searchJiraUsersResponse> => {
 
-  const res = await fetch(getSearchJiraUsersUrl(params),
+  const res = await fetch(getSearchJiraUsersUrl(id,params),
   {
     ...options,
     method: 'GET'
@@ -1391,37 +1193,40 @@ export const searchJiraUsers = async (params: SearchJiraUsersParams, options?: R
 
 
 
-export const getSearchJiraUsersQueryKey = (params?: SearchJiraUsersParams,) => {
+export const getSearchJiraUsersQueryKey = (id: string,
+    params?: SearchJiraUsersParams,) => {
     return [
-    `/jira/users`, ...(params ? [params] : [])
+    `/workspaces/${id}/jira/users`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getSearchJiraUsersQueryOptions = <TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = SearchJiraUsers500>(params: SearchJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+export const getSearchJiraUsersQueryOptions = <TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = JiraErrorResponse>(id: string,
+    params: SearchJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSearchJiraUsersQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getSearchJiraUsersQueryKey(id,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchJiraUsers>>> = ({ signal }) => searchJiraUsers(params, { signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchJiraUsers>>> = ({ signal }) => searchJiraUsers(id,params, { signal, ...fetchOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type SearchJiraUsersQueryResult = NonNullable<Awaited<ReturnType<typeof searchJiraUsers>>>
-export type SearchJiraUsersQueryError = SearchJiraUsers500
+export type SearchJiraUsersQueryError = JiraErrorResponse
 
 
-export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = SearchJiraUsers500>(
- params: SearchJiraUsersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>> & Pick<
+export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = JiraErrorResponse>(
+ id: string,
+    params: SearchJiraUsersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof searchJiraUsers>>,
           TError,
@@ -1430,8 +1235,9 @@ export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraU
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = SearchJiraUsers500>(
- params: SearchJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>> & Pick<
+export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = JiraErrorResponse>(
+ id: string,
+    params: SearchJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof searchJiraUsers>>,
           TError,
@@ -1440,20 +1246,22 @@ export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraU
       >, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = SearchJiraUsers500>(
- params: SearchJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = JiraErrorResponse>(
+ id: string,
+    params: SearchJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Search JIRA users for mentions
+ * @summary Search assignable users in the workspace's Jira project
  */
 
-export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = SearchJiraUsers500>(
- params: SearchJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = JiraErrorResponse>(
+ id: string,
+    params: SearchJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSearchJiraUsersQueryOptions(params,options)
+  const queryOptions = getSearchJiraUsersQueryOptions(id,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1463,16 +1271,17 @@ export function useSearchJiraUsers<TData = Awaited<ReturnType<typeof searchJiraU
 
 
 
-export const getSearchJiraUsersSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = SearchJiraUsers500>(params: SearchJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+export const getSearchJiraUsersSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = JiraErrorResponse>(id: string,
+    params: SearchJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSearchJiraUsersQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getSearchJiraUsersQueryKey(id,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchJiraUsers>>> = ({ signal }) => searchJiraUsers(params, { signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchJiraUsers>>> = ({ signal }) => searchJiraUsers(id,params, { signal, ...fetchOptions });
 
 
 
@@ -1482,31 +1291,1220 @@ const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 }
 
 export type SearchJiraUsersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof searchJiraUsers>>>
-export type SearchJiraUsersSuspenseQueryError = SearchJiraUsers500
+export type SearchJiraUsersSuspenseQueryError = JiraErrorResponse
 
 
-export function useSearchJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = SearchJiraUsers500>(
- params: SearchJiraUsersParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+export function useSearchJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = JiraErrorResponse>(
+ id: string,
+    params: SearchJiraUsersParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = SearchJiraUsers500>(
- params: SearchJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+export function useSearchJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = JiraErrorResponse>(
+ id: string,
+    params: SearchJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = SearchJiraUsers500>(
- params: SearchJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+export function useSearchJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = JiraErrorResponse>(
+ id: string,
+    params: SearchJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Search JIRA users for mentions
+ * @summary Search assignable users in the workspace's Jira project
  */
 
-export function useSearchJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = SearchJiraUsers500>(
- params: SearchJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+export function useSearchJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchJiraUsers>>, TError = JiraErrorResponse>(
+ id: string,
+    params: SearchJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchJiraUsers>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSearchJiraUsersSuspenseQueryOptions(params,options)
+  const queryOptions = getSearchJiraUsersSuspenseQueryOptions(id,params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: the environment account's Jira site
+ */
+export type getLegacyJiraSiteResponse200 = {
+  data: GetLegacyJiraSite200
+  status: 200
+}
+
+export type getLegacyJiraSiteResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type getLegacyJiraSiteResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type getLegacyJiraSiteResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type getLegacyJiraSiteResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type getLegacyJiraSiteResponseSuccess = (getLegacyJiraSiteResponse200) & {
+  headers: Headers;
+};
+export type getLegacyJiraSiteResponseError = (getLegacyJiraSiteResponse404 | getLegacyJiraSiteResponse409 | getLegacyJiraSiteResponse422 | getLegacyJiraSiteResponse502) & {
+  headers: Headers;
+};
+
+export type getLegacyJiraSiteResponse = (getLegacyJiraSiteResponseSuccess | getLegacyJiraSiteResponseError)
+
+export const getGetLegacyJiraSiteUrl = () => {
+
+
+
+
+  return `/jira/site`
+}
+
+export const getLegacyJiraSite = async ( options?: RequestInit): Promise<getLegacyJiraSiteResponse> => {
+
+  const res = await fetch(getGetLegacyJiraSiteUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getLegacyJiraSiteResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getLegacyJiraSiteResponse
+}
+
+
+
+
+
+export const getGetLegacyJiraSiteQueryKey = () => {
+    return [
+    `/jira/site`
+    ] as const;
+    }
+
+
+export const getGetLegacyJiraSiteQueryOptions = <TData = Awaited<ReturnType<typeof getLegacyJiraSite>>, TError = JiraErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLegacyJiraSiteQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLegacyJiraSite>>> = ({ signal }) => getLegacyJiraSite({ signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetLegacyJiraSiteQueryResult = NonNullable<Awaited<ReturnType<typeof getLegacyJiraSite>>>
+export type GetLegacyJiraSiteQueryError = JiraErrorResponse
+
+
+export function useGetLegacyJiraSite<TData = Awaited<ReturnType<typeof getLegacyJiraSite>>, TError = JiraErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLegacyJiraSite>>,
+          TError,
+          Awaited<ReturnType<typeof getLegacyJiraSite>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLegacyJiraSite<TData = Awaited<ReturnType<typeof getLegacyJiraSite>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLegacyJiraSite>>,
+          TError,
+          Awaited<ReturnType<typeof getLegacyJiraSite>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLegacyJiraSite<TData = Awaited<ReturnType<typeof getLegacyJiraSite>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: the environment account's Jira site
+ */
+
+export function useGetLegacyJiraSite<TData = Awaited<ReturnType<typeof getLegacyJiraSite>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetLegacyJiraSiteQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+export const getGetLegacyJiraSiteSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof getLegacyJiraSite>>, TError = JiraErrorResponse>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLegacyJiraSiteQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLegacyJiraSite>>> = ({ signal }) => getLegacyJiraSite({ signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetLegacyJiraSiteSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getLegacyJiraSite>>>
+export type GetLegacyJiraSiteSuspenseQueryError = JiraErrorResponse
+
+
+export function useGetLegacyJiraSiteSuspense<TData = Awaited<ReturnType<typeof getLegacyJiraSite>>, TError = JiraErrorResponse>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLegacyJiraSiteSuspense<TData = Awaited<ReturnType<typeof getLegacyJiraSite>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLegacyJiraSiteSuspense<TData = Awaited<ReturnType<typeof getLegacyJiraSite>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: the environment account's Jira site
+ */
+
+export function useGetLegacyJiraSiteSuspense<TData = Awaited<ReturnType<typeof getLegacyJiraSite>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getLegacyJiraSite>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetLegacyJiraSiteSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: projects of the environment account
+ */
+export type listLegacyJiraProjectsResponse200 = {
+  data: ListLegacyJiraProjects200Item[]
+  status: 200
+}
+
+export type listLegacyJiraProjectsResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listLegacyJiraProjectsResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listLegacyJiraProjectsResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listLegacyJiraProjectsResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type listLegacyJiraProjectsResponseSuccess = (listLegacyJiraProjectsResponse200) & {
+  headers: Headers;
+};
+export type listLegacyJiraProjectsResponseError = (listLegacyJiraProjectsResponse404 | listLegacyJiraProjectsResponse409 | listLegacyJiraProjectsResponse422 | listLegacyJiraProjectsResponse502) & {
+  headers: Headers;
+};
+
+export type listLegacyJiraProjectsResponse = (listLegacyJiraProjectsResponseSuccess | listLegacyJiraProjectsResponseError)
+
+export const getListLegacyJiraProjectsUrl = () => {
+
+
+
+
+  return `/jira/projects`
+}
+
+export const listLegacyJiraProjects = async ( options?: RequestInit): Promise<listLegacyJiraProjectsResponse> => {
+
+  const res = await fetch(getListLegacyJiraProjectsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listLegacyJiraProjectsResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as listLegacyJiraProjectsResponse
+}
+
+
+
+
+
+export const getListLegacyJiraProjectsQueryKey = () => {
+    return [
+    `/jira/projects`
+    ] as const;
+    }
+
+
+export const getListLegacyJiraProjectsQueryOptions = <TData = Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError = JiraErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLegacyJiraProjectsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLegacyJiraProjects>>> = ({ signal }) => listLegacyJiraProjects({ signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLegacyJiraProjectsQueryResult = NonNullable<Awaited<ReturnType<typeof listLegacyJiraProjects>>>
+export type ListLegacyJiraProjectsQueryError = JiraErrorResponse
+
+
+export function useListLegacyJiraProjects<TData = Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError = JiraErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLegacyJiraProjects>>,
+          TError,
+          Awaited<ReturnType<typeof listLegacyJiraProjects>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraProjects<TData = Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLegacyJiraProjects>>,
+          TError,
+          Awaited<ReturnType<typeof listLegacyJiraProjects>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraProjects<TData = Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: projects of the environment account
+ */
+
+export function useListLegacyJiraProjects<TData = Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLegacyJiraProjectsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+export const getListLegacyJiraProjectsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError = JiraErrorResponse>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLegacyJiraProjectsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLegacyJiraProjects>>> = ({ signal }) => listLegacyJiraProjects({ signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLegacyJiraProjectsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listLegacyJiraProjects>>>
+export type ListLegacyJiraProjectsSuspenseQueryError = JiraErrorResponse
+
+
+export function useListLegacyJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError = JiraErrorResponse>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: projects of the environment account
+ */
+
+export function useListLegacyJiraProjectsSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraProjects>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLegacyJiraProjectsSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: issue types through the environment account
+ */
+export type listLegacyJiraIssueTypesResponse200 = {
+  data: ListLegacyJiraIssueTypes200Item[]
+  status: 200
+}
+
+export type listLegacyJiraIssueTypesResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listLegacyJiraIssueTypesResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listLegacyJiraIssueTypesResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listLegacyJiraIssueTypesResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type listLegacyJiraIssueTypesResponseSuccess = (listLegacyJiraIssueTypesResponse200) & {
+  headers: Headers;
+};
+export type listLegacyJiraIssueTypesResponseError = (listLegacyJiraIssueTypesResponse404 | listLegacyJiraIssueTypesResponse409 | listLegacyJiraIssueTypesResponse422 | listLegacyJiraIssueTypesResponse502) & {
+  headers: Headers;
+};
+
+export type listLegacyJiraIssueTypesResponse = (listLegacyJiraIssueTypesResponseSuccess | listLegacyJiraIssueTypesResponseError)
+
+export const getListLegacyJiraIssueTypesUrl = (params: ListLegacyJiraIssueTypesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/jira/issue-types?${stringifiedParams}` : `/jira/issue-types`
+}
+
+export const listLegacyJiraIssueTypes = async (params: ListLegacyJiraIssueTypesParams, options?: RequestInit): Promise<listLegacyJiraIssueTypesResponse> => {
+
+  const res = await fetch(getListLegacyJiraIssueTypesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listLegacyJiraIssueTypesResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as listLegacyJiraIssueTypesResponse
+}
+
+
+
+
+
+export const getListLegacyJiraIssueTypesQueryKey = (params?: ListLegacyJiraIssueTypesParams,) => {
+    return [
+    `/jira/issue-types`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListLegacyJiraIssueTypesQueryOptions = <TData = Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError = JiraErrorResponse>(params: ListLegacyJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLegacyJiraIssueTypesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>> = ({ signal }) => listLegacyJiraIssueTypes(params, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLegacyJiraIssueTypesQueryResult = NonNullable<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>>
+export type ListLegacyJiraIssueTypesQueryError = JiraErrorResponse
+
+
+export function useListLegacyJiraIssueTypes<TData = Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraIssueTypesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>,
+          TError,
+          Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraIssueTypes<TData = Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>,
+          TError,
+          Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraIssueTypes<TData = Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: issue types through the environment account
+ */
+
+export function useListLegacyJiraIssueTypes<TData = Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraIssueTypesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLegacyJiraIssueTypesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+export const getListLegacyJiraIssueTypesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError = JiraErrorResponse>(params: ListLegacyJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLegacyJiraIssueTypesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>> = ({ signal }) => listLegacyJiraIssueTypes(params, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLegacyJiraIssueTypesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>>
+export type ListLegacyJiraIssueTypesSuspenseQueryError = JiraErrorResponse
+
+
+export function useListLegacyJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraIssueTypesParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: issue types through the environment account
+ */
+
+export function useListLegacyJiraIssueTypesSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraIssueTypesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraIssueTypes>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLegacyJiraIssueTypesSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: priorities through the environment account
+ */
+export type listLegacyJiraPrioritiesResponse200 = {
+  data: ListLegacyJiraPriorities200Item[]
+  status: 200
+}
+
+export type listLegacyJiraPrioritiesResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listLegacyJiraPrioritiesResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listLegacyJiraPrioritiesResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listLegacyJiraPrioritiesResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type listLegacyJiraPrioritiesResponseSuccess = (listLegacyJiraPrioritiesResponse200) & {
+  headers: Headers;
+};
+export type listLegacyJiraPrioritiesResponseError = (listLegacyJiraPrioritiesResponse404 | listLegacyJiraPrioritiesResponse409 | listLegacyJiraPrioritiesResponse422 | listLegacyJiraPrioritiesResponse502) & {
+  headers: Headers;
+};
+
+export type listLegacyJiraPrioritiesResponse = (listLegacyJiraPrioritiesResponseSuccess | listLegacyJiraPrioritiesResponseError)
+
+export const getListLegacyJiraPrioritiesUrl = () => {
+
+
+
+
+  return `/jira/priorities`
+}
+
+export const listLegacyJiraPriorities = async ( options?: RequestInit): Promise<listLegacyJiraPrioritiesResponse> => {
+
+  const res = await fetch(getListLegacyJiraPrioritiesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listLegacyJiraPrioritiesResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as listLegacyJiraPrioritiesResponse
+}
+
+
+
+
+
+export const getListLegacyJiraPrioritiesQueryKey = () => {
+    return [
+    `/jira/priorities`
+    ] as const;
+    }
+
+
+export const getListLegacyJiraPrioritiesQueryOptions = <TData = Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError = JiraErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLegacyJiraPrioritiesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLegacyJiraPriorities>>> = ({ signal }) => listLegacyJiraPriorities({ signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLegacyJiraPrioritiesQueryResult = NonNullable<Awaited<ReturnType<typeof listLegacyJiraPriorities>>>
+export type ListLegacyJiraPrioritiesQueryError = JiraErrorResponse
+
+
+export function useListLegacyJiraPriorities<TData = Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError = JiraErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLegacyJiraPriorities>>,
+          TError,
+          Awaited<ReturnType<typeof listLegacyJiraPriorities>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraPriorities<TData = Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLegacyJiraPriorities>>,
+          TError,
+          Awaited<ReturnType<typeof listLegacyJiraPriorities>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraPriorities<TData = Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: priorities through the environment account
+ */
+
+export function useListLegacyJiraPriorities<TData = Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLegacyJiraPrioritiesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+export const getListLegacyJiraPrioritiesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError = JiraErrorResponse>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLegacyJiraPrioritiesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLegacyJiraPriorities>>> = ({ signal }) => listLegacyJiraPriorities({ signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLegacyJiraPrioritiesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listLegacyJiraPriorities>>>
+export type ListLegacyJiraPrioritiesSuspenseQueryError = JiraErrorResponse
+
+
+export function useListLegacyJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError = JiraErrorResponse>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: priorities through the environment account
+ */
+
+export function useListLegacyJiraPrioritiesSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError = JiraErrorResponse>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraPriorities>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLegacyJiraPrioritiesSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: labels through the environment account
+ */
+export type listLegacyJiraLabelsResponse200 = {
+  data: string[]
+  status: 200
+}
+
+export type listLegacyJiraLabelsResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listLegacyJiraLabelsResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listLegacyJiraLabelsResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listLegacyJiraLabelsResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type listLegacyJiraLabelsResponseSuccess = (listLegacyJiraLabelsResponse200) & {
+  headers: Headers;
+};
+export type listLegacyJiraLabelsResponseError = (listLegacyJiraLabelsResponse404 | listLegacyJiraLabelsResponse409 | listLegacyJiraLabelsResponse422 | listLegacyJiraLabelsResponse502) & {
+  headers: Headers;
+};
+
+export type listLegacyJiraLabelsResponse = (listLegacyJiraLabelsResponseSuccess | listLegacyJiraLabelsResponseError)
+
+export const getListLegacyJiraLabelsUrl = (params: ListLegacyJiraLabelsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/jira/labels?${stringifiedParams}` : `/jira/labels`
+}
+
+export const listLegacyJiraLabels = async (params: ListLegacyJiraLabelsParams, options?: RequestInit): Promise<listLegacyJiraLabelsResponse> => {
+
+  const res = await fetch(getListLegacyJiraLabelsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: listLegacyJiraLabelsResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as listLegacyJiraLabelsResponse
+}
+
+
+
+
+
+export const getListLegacyJiraLabelsQueryKey = (params?: ListLegacyJiraLabelsParams,) => {
+    return [
+    `/jira/labels`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListLegacyJiraLabelsQueryOptions = <TData = Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError = JiraErrorResponse>(params: ListLegacyJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLegacyJiraLabelsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLegacyJiraLabels>>> = ({ signal }) => listLegacyJiraLabels(params, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLegacyJiraLabelsQueryResult = NonNullable<Awaited<ReturnType<typeof listLegacyJiraLabels>>>
+export type ListLegacyJiraLabelsQueryError = JiraErrorResponse
+
+
+export function useListLegacyJiraLabels<TData = Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraLabelsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLegacyJiraLabels>>,
+          TError,
+          Awaited<ReturnType<typeof listLegacyJiraLabels>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraLabels<TData = Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLegacyJiraLabels>>,
+          TError,
+          Awaited<ReturnType<typeof listLegacyJiraLabels>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraLabels<TData = Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: labels through the environment account
+ */
+
+export function useListLegacyJiraLabels<TData = Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraLabelsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLegacyJiraLabelsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+export const getListLegacyJiraLabelsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError = JiraErrorResponse>(params: ListLegacyJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLegacyJiraLabelsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLegacyJiraLabels>>> = ({ signal }) => listLegacyJiraLabels(params, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLegacyJiraLabelsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof listLegacyJiraLabels>>>
+export type ListLegacyJiraLabelsSuspenseQueryError = JiraErrorResponse
+
+
+export function useListLegacyJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraLabelsParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLegacyJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: labels through the environment account
+ */
+
+export function useListLegacyJiraLabelsSuspense<TData = Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError = JiraErrorResponse>(
+ params: ListLegacyJiraLabelsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof listLegacyJiraLabels>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLegacyJiraLabelsSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: user search through the environment account
+ */
+export type searchLegacyJiraUsersResponse200 = {
+  data: SearchLegacyJiraUsers200Item[]
+  status: 200
+}
+
+export type searchLegacyJiraUsersResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type searchLegacyJiraUsersResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type searchLegacyJiraUsersResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type searchLegacyJiraUsersResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type searchLegacyJiraUsersResponseSuccess = (searchLegacyJiraUsersResponse200) & {
+  headers: Headers;
+};
+export type searchLegacyJiraUsersResponseError = (searchLegacyJiraUsersResponse404 | searchLegacyJiraUsersResponse409 | searchLegacyJiraUsersResponse422 | searchLegacyJiraUsersResponse502) & {
+  headers: Headers;
+};
+
+export type searchLegacyJiraUsersResponse = (searchLegacyJiraUsersResponseSuccess | searchLegacyJiraUsersResponseError)
+
+export const getSearchLegacyJiraUsersUrl = (params: SearchLegacyJiraUsersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/jira/users?${stringifiedParams}` : `/jira/users`
+}
+
+export const searchLegacyJiraUsers = async (params: SearchLegacyJiraUsersParams, options?: RequestInit): Promise<searchLegacyJiraUsersResponse> => {
+
+  const res = await fetch(getSearchLegacyJiraUsersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: searchLegacyJiraUsersResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as searchLegacyJiraUsersResponse
+}
+
+
+
+
+
+export const getSearchLegacyJiraUsersQueryKey = (params?: SearchLegacyJiraUsersParams,) => {
+    return [
+    `/jira/users`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchLegacyJiraUsersQueryOptions = <TData = Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError = JiraErrorResponse>(params: SearchLegacyJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchLegacyJiraUsersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchLegacyJiraUsers>>> = ({ signal }) => searchLegacyJiraUsers(params, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SearchLegacyJiraUsersQueryResult = NonNullable<Awaited<ReturnType<typeof searchLegacyJiraUsers>>>
+export type SearchLegacyJiraUsersQueryError = JiraErrorResponse
+
+
+export function useSearchLegacyJiraUsers<TData = Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError = JiraErrorResponse>(
+ params: SearchLegacyJiraUsersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchLegacyJiraUsers>>,
+          TError,
+          Awaited<ReturnType<typeof searchLegacyJiraUsers>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchLegacyJiraUsers<TData = Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError = JiraErrorResponse>(
+ params: SearchLegacyJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchLegacyJiraUsers>>,
+          TError,
+          Awaited<ReturnType<typeof searchLegacyJiraUsers>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchLegacyJiraUsers<TData = Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError = JiraErrorResponse>(
+ params: SearchLegacyJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: user search through the environment account
+ */
+
+export function useSearchLegacyJiraUsers<TData = Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError = JiraErrorResponse>(
+ params: SearchLegacyJiraUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSearchLegacyJiraUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+export const getSearchLegacyJiraUsersSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError = JiraErrorResponse>(params: SearchLegacyJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchLegacyJiraUsersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchLegacyJiraUsers>>> = ({ signal }) => searchLegacyJiraUsers(params, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SearchLegacyJiraUsersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof searchLegacyJiraUsers>>>
+export type SearchLegacyJiraUsersSuspenseQueryError = JiraErrorResponse
+
+
+export function useSearchLegacyJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError = JiraErrorResponse>(
+ params: SearchLegacyJiraUsersParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchLegacyJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError = JiraErrorResponse>(
+ params: SearchLegacyJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchLegacyJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError = JiraErrorResponse>(
+ params: SearchLegacyJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @deprecated
+ * @summary Deprecated: user search through the environment account
+ */
+
+export function useSearchLegacyJiraUsersSuspense<TData = Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError = JiraErrorResponse>(
+ params: SearchLegacyJiraUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof searchLegacyJiraUsers>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSearchLegacyJiraUsersSuspenseQueryOptions(params,options)
 
   const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

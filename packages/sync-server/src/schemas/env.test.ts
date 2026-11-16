@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseJiraEnv } from "./env.js";
+import { parseAdminEnv, parseCredentialEnv, parseJiraEnv } from "./env.js";
 
 const valid = {
   JIRA_BASE_URL: "https://acme.atlassian.net",
@@ -48,5 +48,53 @@ describe("parseJiraEnv", () => {
       expect(message).toContain("JIRA_EMAIL");
       expect(message).toContain("JIRA_API_TOKEN");
     }
+  });
+});
+
+describe("parseCredentialEnv (ADR-0027)", () => {
+  const KEY = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
+
+  it("accepts a key ring whose current version exists", () => {
+    expect(
+      parseCredentialEnv({
+        JIRA_CREDENTIAL_KEYS: JSON.stringify({ v1: KEY }),
+        JIRA_CREDENTIAL_KEY_CURRENT: "v1",
+      }).JIRA_CREDENTIAL_KEYS,
+    ).toEqual({ v1: KEY });
+  });
+
+  it("refuses a key that is not 32 bytes", () => {
+    expect(() =>
+      parseCredentialEnv({
+        JIRA_CREDENTIAL_KEYS: JSON.stringify({ v1: "c2hvcnQ=" }),
+        JIRA_CREDENTIAL_KEY_CURRENT: "v1",
+      }),
+    ).toThrow(/32 random bytes/);
+  });
+
+  it("refuses a current version the ring does not have", () => {
+    expect(() =>
+      parseCredentialEnv({
+        JIRA_CREDENTIAL_KEYS: JSON.stringify({ v1: KEY }),
+        JIRA_CREDENTIAL_KEY_CURRENT: "v2",
+      }),
+    ).toThrow(/JIRA_CREDENTIAL_KEY_CURRENT names a version/);
+  });
+
+  it("refuses a key ring that is not JSON", () => {
+    expect(() =>
+      parseCredentialEnv({
+        JIRA_CREDENTIAL_KEYS: "nope",
+        JIRA_CREDENTIAL_KEY_CURRENT: "v1",
+      }),
+    ).toThrow(/must be JSON/);
+  });
+});
+
+describe("parseAdminEnv (ADR-0027)", () => {
+  it("fails closed without a long enough admin token", () => {
+    expect(() => parseAdminEnv({ SYNC_ADMIN_TOKEN: "short" })).toThrow(
+      /SYNC_ADMIN_TOKEN is missing or shorter/,
+    );
   });
 });

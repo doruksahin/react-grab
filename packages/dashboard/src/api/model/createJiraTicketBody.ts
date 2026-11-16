@@ -7,7 +7,8 @@
  */
 
 export type CreateJiraTicketBody = {
-  projectKey: string;
+  /** Deprecated: used only for a workspace without a Jira destination (ADR-0027) */
+  projectKey?: string;
   issueType: string;
   priority: string;
   summary: string;

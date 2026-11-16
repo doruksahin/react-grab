@@ -6,7 +6,8 @@ import type {
   AddJiraCommentBody,
   CreateJiraTicket200,
   CreateJiraTicketBody,
-  GetJiraSite200,
+  JiraDestination as GeneratedJiraDestination,
+  JiraErrorResponseCode,
   GetJiraTicketStatus200,
   ListJiraIssueTypes200Item,
   ListJiraPriorities200Item,
@@ -54,26 +55,31 @@ export interface StorageAdapter {
   uploadRecording: (commentId: string, gzipBlob: Blob) => Promise<string>;
 }
 
-export type JiraSite = GetJiraSite200;
+/** Where the workspace's new tickets go, and as whom (ADR-0027). */
+export type JiraDestination = GeneratedJiraDestination;
+/** Why a Jira request failed, as the sync server names it (ADR-0027). */
+export type JiraErrorCode = JiraErrorResponseCode;
 export type JiraIssueType = ListJiraIssueTypes200Item;
 export type JiraPriority = ListJiraPriorities200Item;
 export type JiraTicketStatus = GetJiraTicketStatus200;
-export type JiraTicketDraft = CreateJiraTicketBody;
+/** A ticket to create; the workspace's destination decides the project (ADR-0027). */
+export type JiraTicketDraft = Omit<CreateJiraTicketBody, "projectKey">;
 export type CreatedJiraTicket = CreateJiraTicket200;
 export type JiraCommentDraft = AddJiraCommentBody;
 export type PostedJiraComment = AddJiraComment200;
 export type JiraUser = SearchJiraUsers200Item;
 
 /**
- * Jira through the sync server. Group-scoped calls use the workspace the port
- * is bound to. The HTTP implementation is `createHttpJiraPort` in
- * `react-grab/sync-http`.
+ * Jira through the sync server, for the workspace the port is bound to. The
+ * workspace's destination decides the site, account and project; a ticket is
+ * read through the account that created it (ADR-0027). The HTTP
+ * implementation is `createHttpJiraPort` in `react-grab/sync-http`.
  */
 export interface JiraPort {
-  getSite: () => Promise<JiraSite>;
-  listIssueTypes: (projectKey: string) => Promise<JiraIssueType[]>;
+  getDestination: () => Promise<JiraDestination>;
+  listIssueTypes: () => Promise<JiraIssueType[]>;
   listPriorities: () => Promise<JiraPriority[]>;
-  listLabels: (projectKey: string) => Promise<string[]>;
+  listLabels: () => Promise<string[]>;
   getTicketStatus: (groupId: string) => Promise<JiraTicketStatus>;
   createTicket: (
     groupId: string,
@@ -83,7 +89,7 @@ export interface JiraPort {
     groupId: string,
     comment: JiraCommentDraft,
   ) => Promise<PostedJiraComment>;
-  searchUsers: (query: string, projectKey?: string) => Promise<JiraUser[]>;
+  searchUsers: (query: string) => Promise<JiraUser[]>;
 }
 
 /** What an HTTP port needs to reach the sync server (ADR-0020). */
@@ -91,6 +97,11 @@ export interface SyncServerConfig {
   serverUrl: string;
   apiToken: string;
   workspace: string;
+  /**
+   * @deprecated Sent only for a workspace without a Jira destination, until
+   * the ADR-0027 cut-over. The workspace's destination decides the project.
+   */
+  jiraProjectKey?: string;
 }
 
 /**
