@@ -1,38 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { describeStep, stepParts } from "./describe-step.js";
 
-describe("stepParts", () => {
-  it("marks a page, a readable name and a bare selector apart", () => {
-    expect(stepParts({ type: "navigate", url: "https://a.example/x" })).toEqual(
-      { verb: "Open", target: "/x", targetKind: "page" },
-    );
-    expect(
-      stepParts({
-        type: "click",
-        selectors: ['aria/Billing[role="tab"]'],
-        offsetX: 1,
-        offsetY: 1,
-      }),
-    ).toEqual({
-      verb: "Click",
-      target: "Billing",
-      targetKind: "name",
-      role: "tab",
-      destination: undefined,
-      details: "tab",
-    });
-    expect(
-      stepParts({ type: "change", selectors: ["#coupon"], value: "" }),
-    ).toEqual({
-      verb: "Change",
-      target: "#coupon",
-      targetKind: "selector",
-      valueNotSaved: true,
-      details: "value not saved",
-    });
-  });
-});
-
 describe("describeStep", () => {
   it("names the page a navigate opens", () => {
     expect(
@@ -48,8 +16,6 @@ describe("describeStep", () => {
       describeStep({
         type: "click",
         selectors: ['aria/Billing[role="tab"]', "#billing", "text/Billing"],
-        offsetX: 1,
-        offsetY: 1,
       }),
     ).toBe("Click “Billing” (tab)");
   });
@@ -59,16 +25,12 @@ describe("describeStep", () => {
       describeStep({
         type: "click",
         selectors: ["#save", "text/Save draft"],
-        offsetX: 1,
-        offsetY: 1,
       }),
     ).toBe("Click “Save draft”");
     expect(
       describeStep({
         type: "click",
         selectors: ["ul > li:nth-child(2)"],
-        offsetX: 1,
-        offsetY: 1,
       }),
     ).toBe("Click “ul > li:nth-child(2)”");
   });
@@ -78,8 +40,6 @@ describe("describeStep", () => {
       describeStep({
         type: "click",
         selectors: ["aria/Billing"],
-        offsetX: 1,
-        offsetY: 1,
         assertedEvents: [
           {
             type: "navigation",
@@ -95,7 +55,6 @@ describe("describeStep", () => {
       describeStep({
         type: "change",
         selectors: ['aria/Coupon[role="textbox"]', "#coupon"],
-        value: "",
       }),
     ).toBe("Change “Coupon” (textbox, value not saved)");
   });
@@ -103,8 +62,6 @@ describe("describeStep", () => {
   const click = (selectors: string[]) => ({
     type: "click" as const,
     selectors,
-    offsetX: 1,
-    offsetY: 1,
   });
 
   it("names an aria selector without a role", () => {
@@ -129,9 +86,9 @@ describe("describeStep", () => {
   });
 
   it("describes a change without a role", () => {
-    expect(
-      describeStep({ type: "change", selectors: ["#coupon"], value: "" }),
-    ).toBe("Change “#coupon” (value not saved)");
+    expect(describeStep({ type: "change", selectors: ["#coupon"] })).toBe(
+      "Change “#coupon” (value not saved)",
+    );
   });
 
   it("keeps a hash route", () => {
@@ -147,5 +104,58 @@ describe("describeStep", () => {
     expect(describeStep({ type: "navigate", url: "not a url" })).toBe(
       "Open not a url",
     );
+  });
+});
+
+describe("stepParts", () => {
+  it("marks a page, a readable name and a bare selector apart", () => {
+    expect(stepParts({ type: "navigate", url: "https://a.example/x" })).toEqual(
+      { verb: "Open", target: "/x", targetKind: "page" },
+    );
+    expect(
+      stepParts({ type: "click", selectors: ['aria/Billing[role="tab"]'] }),
+    ).toEqual({
+      verb: "Click",
+      target: "Billing",
+      targetKind: "name",
+      role: "tab",
+      destination: undefined,
+      details: "tab",
+    });
+    expect(stepParts({ type: "change", selectors: ["#coupon"] })).toEqual({
+      verb: "Change",
+      target: "#coupon",
+      targetKind: "selector",
+      valueNotSaved: true,
+      details: "value not saved",
+    });
+  });
+
+  it("marks a CSS-only target as a selector", () => {
+    expect(
+      stepParts({ type: "click", selectors: ['[data-layout="regular"]'] }),
+    ).toMatchObject({
+      target: '[data-layout="regular"]',
+      targetKind: "selector",
+    });
+  });
+
+  it("calls the fallback target a name, not a selector", () => {
+    expect(stepParts({ type: "click", selectors: [] })).toMatchObject({
+      target: "element",
+      targetKind: "name",
+    });
+  });
+
+  it("gives a click the page it led to", () => {
+    expect(
+      stepParts({
+        type: "click",
+        selectors: ["text/Next"],
+        assertedEvents: [
+          { type: "navigation", url: "https://app.example.com/step-2" },
+        ],
+      }),
+    ).toMatchObject({ targetKind: "name", destination: "/step-2" });
   });
 });

@@ -255,7 +255,8 @@ export const CreateJiraTicketBody = zod.object({
   "issueType": zod.string(),
   "priority": zod.string(),
   "summary": zod.string(),
-  "description": zod.string(),
+  "note": zod.string().optional().describe('The reporter\'s own text (Markdown), shown above the selections the server adds (ADR-0029)'),
+  "description": zod.string().optional().describe('Deprecated: the whole description as Markdown, sent by clients built before ADR-0029. Used only when `note` is absent'),
   "labels": zod.array(zod.string()).optional()
 })
 

@@ -1,7 +1,7 @@
 import { type Component, createMemo, Show } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
-import { sourceLocation } from "../../features/sidebar/index.js";
+import { sourceLocation } from "@react-grab/selection-text";
 import { DevInsights } from "./index.js";
 
 export interface SelectionDevInsightsProps {

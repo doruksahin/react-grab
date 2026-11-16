@@ -1,8 +1,6 @@
 import { type Component, Show } from "solid-js";
-import {
-  type ReproduceStep,
-  stepParts,
-} from "../../features/reproduce-steps/index.js";
+import { stepParts } from "@react-grab/selection-text";
+import type { ReproduceStep } from "../../features/reproduce-steps/index.js";
 
 export interface StepLineProps {
   step: ReproduceStep;

@@ -10,6 +10,9 @@ export type CreateJiraTicketBody = {
   issueType: string;
   priority: string;
   summary: string;
-  description: string;
+  /** The reporter's own text (Markdown), shown above the selections the server adds (ADR-0029) */
+  note?: string;
+  /** Deprecated: the whole description as Markdown, sent by clients built before ADR-0029. Used only when `note` is absent */
+  description?: string;
   labels?: string[];
 };

@@ -154,6 +154,7 @@
     "@babel/preset-typescript": "^7.28.5",
     "@playwright/test": "^1.65.1",
     "@puppeteer/replay": "4.0.2",
+    "@react-grab/selection-text": "workspace:*",
     "@solidjs/testing-library": "^0.8.10",
     "@tailwindcss/cli": "^4.1.17",
     "@types/dom-navigation": "1.0.7",

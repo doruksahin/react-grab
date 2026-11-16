@@ -70,6 +70,8 @@ Implement `buildDescription` by directly constructing the ADF JSON structure, ma
 
 ## Decision Outcome
 
+> ADR-0029 amends this decision for the ticket description: the sync server now builds it as ADF. `marklassian` still converts the reporter's note and every Jira comment.
+
 **Option A: `marklassian`**, because:
 
 1. **Workers-safe and lightweight.** At 12.9 kB gzip with one transitive dependency (`marked`), it is the smallest viable option for addition to `packages/sync-server`. The Atlaskit transformer (Option B) is an order of magnitude larger with uncertain Workers compatibility. [R-002](../../docs/risks.md)

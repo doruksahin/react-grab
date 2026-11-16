@@ -23,7 +23,6 @@ import {
   defaultSummary,
   normalizeSummary,
 } from "../../features/jira-ticket/business/default-summary.js";
-import { defaultDescription } from "../../features/jira-ticket/business/default-description.js";
 import { describeCreateFailure } from "../../features/jira-ticket/business/describe-create-failure.js";
 import {
   useJiraTicketCreation,
@@ -237,10 +236,8 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
   const [summary, setSummary] = createSignal(
     defaultSummary(props.group, props.commentItems),
   );
-  const [description, setDescription] = createSignal(
-    defaultDescription(props.group, props.commentItems),
-  );
-  const [descriptionView, setDescriptionView] = createSignal("preview");
+  const [note, setNote] = createSignal("");
+  const [noteView, setNoteView] = createSignal("edit");
   const [selectedLabels, setSelectedLabels] = createSignal<string[]>([]);
   const [submitting, setSubmitting] = createSignal(false);
   /** Detail of the last failed submit, or null when the last submit did not fail. */
@@ -277,7 +274,7 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
         issueType: issueType(),
         priority: priority(),
         summary: normalizeSummary(summary()),
-        description: description(),
+        note: note(),
         labels: selectedLabels().length > 0 ? selectedLabels() : undefined,
       });
       setCreated({ ticketId: ticket.jiraTicketId, url: ticket.jiraUrl });
@@ -505,41 +502,45 @@ const JiraCreateFormInner: Component<JiraCreateFormInnerProps> = (props) => {
           </div>
         </div>
 
-        {/* Description — the formatted preview first, the markdown on Edit */}
-        <Tabs
-          value={descriptionView()}
-          onChange={setDescriptionView}
-          class="gap-1.5"
-        >
+        {/* Note — the reporter's own text; the server adds the selections (ADR-0029) */}
+        <Tabs value={noteView()} onChange={setNoteView} class="gap-1.5">
           <div class="flex items-center gap-2">
             <span class="flex-1 text-caption font-medium text-muted-foreground">
-              Description
+              Note (optional)
             </span>
-            <TabsList aria-label="Description view" class="w-36">
-              <TabsTrigger value="preview">Preview</TabsTrigger>
+            <TabsList aria-label="Note view" class="w-36">
               <TabsTrigger value="edit">Edit</TabsTrigger>
+              <TabsTrigger value="preview">Preview</TabsTrigger>
             </TabsList>
           </div>
-          <TabsContent value="preview">
-            <MarkdownPreview
-              data-react-grab-jira-description-preview
-              markdown={description()}
-              class="max-h-64 overflow-y-auto rounded-lg border border-border bg-muted/60 px-3.5 py-3"
-            />
-          </TabsContent>
           <TabsContent value="edit">
             <Textarea
-              data-react-grab-jira-description-input
+              data-react-grab-jira-note-input
               variant="field"
-              aria-label="Description"
+              aria-label="Note"
+              placeholder="Anything the selections do not say"
               class="max-h-64 font-mono text-caption"
               style={{ "pointer-events": "auto" }}
-              rows={10}
-              value={description()}
-              onInput={(e) => setDescription(e.currentTarget.value)}
+              rows={4}
+              value={note()}
+              onInput={(e) => setNote(e.currentTarget.value)}
               readOnly={Boolean(created())}
             />
           </TabsContent>
+          <TabsContent value="preview">
+            <MarkdownPreview
+              data-react-grab-jira-note-preview
+              markdown={note()}
+              class="max-h-64 overflow-y-auto rounded-lg border border-border bg-muted/60 px-3.5 py-3"
+            />
+          </TabsContent>
+          <p
+            data-react-grab-jira-note-hint
+            class="text-caption text-muted-foreground"
+          >
+            The ticket also gets each selection's comment, steps, recording and
+            page.
+          </p>
         </Tabs>
 
         {/* Attachments — screenshot previews */}

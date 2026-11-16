@@ -137,6 +137,7 @@ pnpm workspaces + Turborepo. Key packages:
 | `e2e-app` | Vite React app — Playwright test target |
 | `web-extension` | Chrome MV3 extension (WXT) — overlay with sync on enabled sites; the service worker holds the token (ADR-0023) |
 | `design-system` | Shared Solid.js components (tsup) |
+| `selection-text` | Step sentences and source file path, shared by the overlay and the sync server. Source-only internal package (SPEC-021) |
 | `website` | Next.js marketing site |
 
 ### API contract flow
@@ -351,6 +352,7 @@ test.describe('JIRA comment write-back', { tag: ['@SPEC-013'] }, () => {
 | `@ADR-0024` | Where a selection is | `selection-location.spec.ts` |
 | `@ADR-0025` | Record steps, steps on the card | `reproduce-steps.spec.ts`, `reproduce-steps-sidebar.spec.ts` |
 | `@ADR-0026` | Step guide | `step-guide.spec.ts` |
+| `@SPEC-021` | Jira ticket description as ADF | `jira-create-dialog.spec.ts` |
 
 A feature decided by an ADR with no SPEC is tagged with that ADR.
 

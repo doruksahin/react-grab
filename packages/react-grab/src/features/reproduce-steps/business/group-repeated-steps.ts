@@ -1,5 +1,5 @@
 import type { ReproduceStep } from "../types.js";
-import { describeStep } from "./describe-step.js";
+import { describeStep } from "@react-grab/selection-text";
 
 /** A run of identical consecutive steps, shown as one row. */
 export interface StepRun {

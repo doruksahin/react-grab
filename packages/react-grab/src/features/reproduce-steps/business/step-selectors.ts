@@ -10,7 +10,7 @@ import {
   collapseWhitespace,
   toAriaSelector,
   toTextSelector,
-} from "./recorder-selector.js";
+} from "@react-grab/selection-text";
 
 // A field's name comes from its label, so it is safe; any other element's
 // name may include the value of a field inside it.

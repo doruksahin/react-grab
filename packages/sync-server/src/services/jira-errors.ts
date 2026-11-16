@@ -15,6 +15,7 @@ const STATUS_BY_CODE = {
   "jira-account-mismatch": 409,
   "jira-account-not-found": 404,
   "jira-project-not-found": 422,
+  "jira-description-invalid": 500,
 } as const satisfies Record<JiraErrorCodeValue, number>;
 
 export type JiraErrorStatus = (typeof STATUS_BY_CODE)[JiraErrorCodeValue];

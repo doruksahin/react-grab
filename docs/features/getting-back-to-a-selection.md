@@ -89,7 +89,7 @@ A card with steps shows a collapsed **Steps (N)** list. Each step is one sentenc
 3. Click **Import recording**, then select the file.
 4. Click **Replay**. Type the values that the flow did not save.
 
-The default Jira description lists the same sentences under **Steps to reproduce**. Text from the page is escaped in the description. It cannot become a link or formatting in the ticket.
+The Jira ticket lists the same sentences under **Steps to reproduce**, after a link to the recording. A CSS selector shows as code. The sync server builds the description as ADF from the saved comment (ADR-0029), so text from the page is always plain text. It cannot become a link or formatting in the ticket.
 
 ## Step guide
 

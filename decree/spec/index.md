@@ -22,3 +22,4 @@
 | SPEC-007 | SPEC-007 Group Dropdown Consistency — Unified New Group Action | draft | 2026-04-06 |
 | SPEC-017 | SPEC-017 Enlargeable Screenshot Viewer | draft | 2026-04-16 |
 | SPEC-020 | SPEC-020 Session recording: show how the user got to a selection | implemented | 2026-11-13 |
+| SPEC-021 | SPEC-021 Jira ticket description as ADF | draft | 2026-11-16 |

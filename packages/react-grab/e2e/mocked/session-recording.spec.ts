@@ -4,8 +4,9 @@ import * as fixtures from "../mocks/fixtures.js";
 
 /**
  * SPEC-020: with recording enabled, saving a comment uploads the recent
- * rrweb window, the comment keeps the returned link, and both the card and
- * the Jira description point to it.
+ * rrweb window, the comment keeps the returned link, and the card points to
+ * it. The sync server puts the link in the Jira description (SPEC-021), so
+ * AC-3 is tested there: jira-ticket-description.test.ts.
  */
 
 const NEW_COMMENT = "Checkout button does nothing";
@@ -80,33 +81,6 @@ test.describe("Session recording", { tag: ["@SPEC-020"] }, () => {
       await expect(
         card.locator("[data-react-grab-recording-link]"),
       ).toHaveAttribute("href", fixtures.RECORDING_URL);
-    },
-  );
-
-  test(
-    "the Jira description links the recording",
-    { annotation: { type: "ac", description: "SPEC-020 AC-3" } },
-    async ({ page, reactGrab, mockServer }) => {
-      await startWithRecording(reactGrab, true);
-      await addComment(reactGrab);
-      await expect
-        .poll(() => savedRecordingUrls(mockServer.requests("upsertComment")), {
-          timeout: 5000,
-        })
-        .toContain(fixtures.RECORDING_URL);
-
-      const card = await openSelectionCard(page);
-      await card.locator("[data-react-grab-create-ticket]").click();
-      const form = page.locator("[data-react-grab-jira-form]");
-      await form.getByRole("button", { name: "Create Ticket" }).click();
-      await expect(form.locator("[data-react-grab-jira-success]")).toBeVisible({
-        timeout: 5000,
-      });
-
-      const [ticket] = mockServer.requests("createJiraTicket");
-      expect(JSON.stringify(ticket.body)).toContain(
-        `[Watch how we got here](${fixtures.RECORDING_URL})`,
-      );
     },
   );
 

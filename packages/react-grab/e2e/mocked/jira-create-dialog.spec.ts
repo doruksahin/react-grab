@@ -218,33 +218,38 @@ test.describe(
         ).toBe(false);
       },
     );
+  },
+);
+
+test.describe(
+  "Jira create dialog — the reporter's note",
+  { tag: ["@SPEC-021"] },
+  () => {
+    test.beforeEach(async ({ reactGrab, mockServer: _mockServer }) => {
+      await reactGrab.triggerInitSync();
+      await expect
+        .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+        .toBe(true);
+    });
 
     test(
-      "the description shows as a preview, and Edit shows the markdown that is sent",
-      {
-        annotation: {
-          type: "ac",
-          description:
-            "ADR-0022 step 3, Jira board S5.1: preview-first description",
-        },
-      },
+      "AC-1: the note starts empty and is the only text the dialog sends",
+      { annotation: { type: "ac", description: "SPEC-021 create dialog" } },
       async ({ page, reactGrab, mockServer }) => {
         const form = await openCreateDialog(page, reactGrab);
-        const preview = form.locator(
-          "[data-react-grab-jira-description-preview]",
-        );
-        await expect(preview).toContainText(COMMENT_TEXT);
+        const input = form.locator("[data-react-grab-jira-note-input]");
+        await expect(input).toHaveValue("");
+        await expect(form).toContainText("Note (optional)");
         await expect(
-          form.locator("[data-react-grab-jira-description-input]"),
-        ).toHaveCount(0);
+          form.locator("[data-react-grab-jira-note-hint]"),
+        ).toBeVisible();
+        await reactGrab.screenshot("jira-create-note", "page");
 
-        await form.getByRole("tab", { name: "Edit" }).click();
-        const input = form.locator("[data-react-grab-jira-description-input]");
-        await expect(input).toHaveValue(/^## Selections/m);
-        await input.fill("Edited description");
-
+        await input.fill("Only on **Safari**");
         await form.getByRole("tab", { name: "Preview" }).click();
-        await expect(preview).toHaveText("Edited description");
+        await expect(
+          form.locator("[data-react-grab-jira-note-preview]"),
+        ).toHaveText("Only on Safari");
 
         await form.getByRole("button", { name: "Create ticket" }).click();
         await expect(
@@ -253,8 +258,9 @@ test.describe(
         const [request] = mockServer.requests("createJiraTicket");
         expect(request.body).toMatchObject({
           summary: COMMENT_TEXT,
-          description: "Edited description",
+          note: "Only on **Safari**",
         });
+        expect(request.body).not.toHaveProperty("description");
       },
     );
   },
