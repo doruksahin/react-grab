@@ -115,7 +115,7 @@ test.describe("Overlay surfaces", { tag: ["@ADR-0022"] }, () => {
     await reactGrab.enterPromptMode("li:first-child");
     await reactGrab.typeInInput("Checkout button does nothing on Safari");
     await reactGrab.submitInput();
-    const dashboard = await openDashboard(page);
+    await openDashboard(page);
     await page
       .locator("[data-react-grab-selection-card]")
       .filter({ hasText: "Checkout button" })

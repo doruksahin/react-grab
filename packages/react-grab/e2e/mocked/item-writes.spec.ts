@@ -64,9 +64,6 @@ test.describe("Authenticated screenshots", { tag: ["@ADR-0020"] }, () => {
       .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
       .toBe(true);
 
-    const dashboard = page.getByRole("dialog", {
-      name: "React Grab Dashboard",
-    });
     await page.locator("[data-react-grab-toolbar-dashboard]").click();
 
     const thumb = page.locator("[data-react-grab-screenshot-thumb]").first();
