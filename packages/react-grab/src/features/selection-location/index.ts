@@ -1,5 +1,14 @@
 export { locateSelection, ON_PAGE } from "./business/locate-selection.js";
-export { describeLocation } from "./business/describe-location.js";
+export {
+  describeLocation,
+  describeLocationNotice,
+  describeLocationShort,
+  type LocationNotice,
+} from "./business/describe-location.js";
+export {
+  useLocationView,
+  type LocationView,
+} from "./hooks/use-location-view.js";
 export { openSelectionPage } from "./open-page.js";
 export { createCurrentPageUrl } from "./hooks/create-current-page-url.js";
 export {

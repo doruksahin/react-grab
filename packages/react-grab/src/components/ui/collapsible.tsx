@@ -1,5 +1,5 @@
 import type { ComponentProps, JSX, ValidComponent } from "solid-js";
-import { splitProps } from "solid-js";
+import { Show, splitProps } from "solid-js";
 import { Collapsible as CollapsiblePrimitive } from "@kobalte/core/collapsible";
 
 import { cn } from "../../utils/cn.js";
@@ -52,8 +52,13 @@ interface CollapsibleCardProps {
   trigger: JSX.Element;
   /** Body content revealed on expand. */
   children: JSX.Element;
-  /** "card" = bordered card with shadow. "inline" = no chrome, flush with parent. @default "card" */
-  variant?: "card" | "inline";
+  /**
+   * "card" = bordered card with shadow. "inline" = no chrome, flush with
+   * parent. "panel" = a muted section inside a card. @default "card"
+   */
+  variant?: "card" | "inline" | "panel";
+  /** Shown under the trigger whether the card is open or closed. */
+  preview?: JSX.Element;
   /** Additional class on the outer card wrapper. */
   class?: string;
   /** Additional class on the trigger row. */
@@ -73,17 +78,27 @@ interface CollapsibleCardProps {
 const rootStyles = {
   card: "rounded-lg border border-border bg-card shadow-sm",
   inline: "",
+  panel: "rounded-lg border border-border bg-muted",
 } as const;
 
 const triggerStyles = {
   card: "gap-2 px-3 py-2 text-title leading-5 font-medium text-card-foreground hover:bg-accent/50 rounded-lg",
   inline:
     "gap-1.5 py-1 text-meta font-medium text-muted-foreground hover:opacity-100",
+  panel:
+    "gap-1.5 rounded-lg px-2.5 py-2 text-caption leading-4 font-medium text-foreground",
+} as const;
+
+const previewStyles = {
+  card: "px-3 pb-2",
+  inline: "pb-1",
+  panel: "px-2.5 pb-2.5",
 } as const;
 
 const contentStyles = {
   card: "px-3 pb-3",
   inline: "pt-1",
+  panel: "px-2.5 pb-2.5",
 } as const;
 
 export const CollapsibleCard = (props: CollapsibleCardProps) => {
@@ -101,7 +116,7 @@ export const CollapsibleCard = (props: CollapsibleCardProps) => {
       <CollapsiblePrimitive.Trigger
         data-slot="collapsible-card-trigger"
         class={cn(
-          "flex w-full items-center cursor-pointer select-none transition-colors",
+          "flex w-full items-center cursor-pointer select-none transition-colors data-[disabled]:cursor-default",
           "[&>svg.collapsible-chevron]:transition-transform [&>svg.collapsible-chevron]:duration-150",
           "[&[data-expanded]>svg.collapsible-chevron]:rotate-0",
           "[&[data-closed]>svg.collapsible-chevron]:-rotate-90",
@@ -109,9 +124,20 @@ export const CollapsibleCard = (props: CollapsibleCardProps) => {
           props.triggerClass,
         )}
       >
-        <ChevronIcon class="collapsible-chevron text-muted-foreground" />
+        <Show when={!props.disabled}>
+          <ChevronIcon class="collapsible-chevron text-muted-foreground" />
+        </Show>
         {props.trigger}
       </CollapsiblePrimitive.Trigger>
+
+      <Show when={props.preview}>
+        <div
+          data-slot="collapsible-card-preview"
+          class={previewStyles[variant()]}
+        >
+          {props.preview}
+        </div>
+      </Show>
 
       <CollapsiblePrimitive.Content
         data-slot="collapsible-card-content"

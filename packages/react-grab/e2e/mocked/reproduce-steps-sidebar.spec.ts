@@ -63,14 +63,14 @@ test.describe("Reproduce steps in the sidebar", { tag: ["@ADR-0025"] }, () => {
     const card = page
       .locator("[data-react-grab-selection-card]")
       .filter({ hasText: "Plan price is cut off" });
-    await card.getByRole("button", { name: "Steps (3)" }).click();
+    await card.getByRole("button", { name: /How we got here/ }).click();
 
     await expect(
       card.locator("[data-react-grab-reproduce-steps-item]"),
     ).toHaveText([
-      "Open /settings",
-      "Click “Billing” (tab) → /settings/billing",
-      "Change “Coupon” (textbox, value not saved)",
+      /Open \/settings$/,
+      /Click “Billing” \(tab\) → \/settings\/billing$/,
+      /Change “Coupon” \(textbox, value not saved\)$/,
     ]);
     await reactGrab.screenshot("steps-open", "page");
   });
@@ -91,7 +91,7 @@ test.describe("Reproduce steps in the sidebar", { tag: ["@ADR-0025"] }, () => {
     const card = page
       .locator("[data-react-grab-selection-card]")
       .filter({ hasText: "Plan price is cut off" });
-    await card.getByRole("button", { name: "Steps (3)" }).click();
+    await card.getByRole("button", { name: /How we got here/ }).click();
 
     const [download] = await Promise.all([
       page.waitForEvent("download"),

@@ -4,8 +4,10 @@ import { IconX } from "./icons/icon-x.jsx";
 import { IconButton } from "./ui/icon-button.js";
 
 /**
- * Shared red × button for removing a selection. Rendered by the saved
- * selection-label and by the sidebar selection cards. Presentational only:
+ * Shared × button for removing a selection: neutral at rest, destructive on
+ * hover, so it never reads as the loudest control. Rendered by the saved
+ * selection-label and the comments menu rows; sidebar cards remove through
+ * their menu (SelectionCardMenu). Presentational only:
  * a caller renders it only when the membership policy allows the removal
  * (`canRemoveItem`, ADR-0008).
  *
@@ -48,8 +50,8 @@ export const RemoveSelectionButton: Component<RemoveSelectionButtonProps> = (
       data-react-grab-selection-remove
       type="button"
       label="Remove selection"
-      variant="destructive"
-      size="icon-2xs"
+      variant="subtle-destructive"
+      size="icon-xs"
       class={cn(
         "contain-layout shrink-0",
         isOverlay() && "interactive-scale",
@@ -58,7 +60,7 @@ export const RemoveSelectionButton: Component<RemoveSelectionButtonProps> = (
       onPointerDown={handlePointerDown}
       onClick={handleClick}
     >
-      <IconX size={8} />
+      <IconX size={10} />
     </IconButton>
   );
 };

@@ -31,7 +31,7 @@ Chosen option: **1**.
 
 ### When it is offered
 
-"Guide me" is shown next to the reason of ADR-0024 (`LocationNote`) when all three are true:
+"Guide me" is shown in the sidebar card's notice of ADR-0024 (`LocationNotice`) when all three are true:
 - the selection is not on the page (`other-page` or `gone`);
 - it has steps;
 - its first step (the `navigate`) is an http(s) page with the current origin. Other schemes never count, so a stored `javascript:` or `data:` URL is never opened (the same `parseWebUrl` as ADR-0024).
@@ -75,7 +75,7 @@ A step can cause a full page load. The guide keeps `{ selectionId, stepIndex }` 
 - **Page events:** `hooks/create-page-events.ts`, shared with step capture.
 - **Context:** the hook's API reaches the UI through a Solid context next to `SelectionLocationProvider`, as in ADR-0024.
 - **Highlight:** the hook exposes the element it points at; core adds it to the derived grabbed-box list, so it follows the theme switch like every other box. The hook's only effects are the interval, the scroll and the session store.
-- **UI:** `components/reproduce-steps/guide-bar.tsx`; the "Guide me" button sits in `components/selection-location/location-note.tsx`, next to the reason it acts on.
+- **UI:** `components/reproduce-steps/guide-bar.tsx`; the "Guide me" button sits in `components/selection-location/location-notice.tsx`, next to the reason it acts on. A guide started from the sidebar closes the sidebar first (`components/renderer.tsx` gives the sidebar a guide whose `start` does that), so the page the guide points at is not covered.
 
 ### Consequences
 

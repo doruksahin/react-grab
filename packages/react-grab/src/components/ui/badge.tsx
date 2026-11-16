@@ -14,6 +14,7 @@ const badgeVariants = cva({
       neutral: "bg-foreground/[0.06] text-muted-foreground",
       primary: "bg-primary text-primary-foreground font-bold",
       inverse: "bg-black text-white font-semibold",
+      dev: "bg-dev/15 text-dev font-semibold tracking-wide",
     },
     size: {
       default: "",

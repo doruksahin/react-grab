@@ -40,7 +40,10 @@ import { createAnchoredDropdown } from "../utils/create-anchored-dropdown.js";
 import { formatRelativeTime } from "../utils/format-relative-time.js";
 import { IconButton } from "./ui/icon-button.js";
 import { Button } from "./ui/button.js";
-import { LocationNote } from "./selection-location/location-note.jsx";
+import { LocationChip } from "./selection-location/location-chip.jsx";
+import { IconFolder } from "./icons/icon-folder.jsx";
+import { IconEyeOff } from "./icons/icon-eye-off.jsx";
+import { IconEyeFilled } from "./icons/icon-eye-filled.jsx";
 import { RemoveSelectionButton } from "./remove-selection-button.jsx";
 import type { ClearCounts } from "../features/selection-groups/business/membership-policy.js";
 
@@ -110,7 +113,6 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
 
   const [isCopyAllConfirmed, setIsCopyAllConfirmed] = createSignal(false);
   const [searchQuery, setSearchQuery] = createSignal("");
-  const [hoveredItemId, setHoveredItemId] = createSignal<string | null>(null);
   const [openMoveId, setOpenMoveId] = createSignal<string | null>(null);
 
   let copyAllFeedbackTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -124,12 +126,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
     <div
       data-react-grab-ignore-events
       data-react-grab-comment-item
-      class="group relative z-1 contain-layout flex items-start justify-between w-full px-2 py-1 cursor-pointer text-left gap-2"
-      classList={{
-        "opacity-40 hover:opacity-100": Boolean(
-          props.disconnectedItemIds?.has(item.id),
-        ),
-      }}
+      class="group/row relative z-1 contain-layout flex items-start justify-between w-full px-2 py-1 cursor-pointer text-left gap-2"
       tabindex="0"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => {
@@ -147,12 +144,10 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         if (!props.disconnectedItemIds?.has(item.id)) {
           props.onItemHover?.(item.id);
         }
-        setHoveredItemId(item.id);
         updateHighlight(event.currentTarget);
       }}
       onMouseLeave={() => {
         props.onItemHover?.(null);
-        setHoveredItemId(null);
         clearHighlight();
       }}
       onFocus={(event) => updateHighlight(event.currentTarget)}
@@ -169,16 +164,35 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             </span>
           )}
         </Show>
-        <LocationNote selectionId={item.id} class="mt-0.5" />
+        <LocationChip
+          selectionId={item.id}
+          class="mt-1 max-w-full min-w-0 shrink self-start"
+        />
       </span>
-      <div class="flex items-center gap-1 shrink-0">
-        <Show when={moveTargetsFor(item).length > 0}>
-          <GroupPickerPopover
-            open={openMoveId() === item.id}
-            onOpenChange={(open) => setOpenMoveId(open ? item.id : null)}
-          >
-            <Show
-              when={hoveredItemId() === item.id || openMoveId() === item.id}
+      <div class="grid shrink-0 [&>*]:col-start-1 [&>*]:row-start-1">
+        <span
+          class={cn(
+            "flex h-4 items-center justify-end gap-1 text-meta text-muted-foreground group-hover/row:invisible group-focus-within/row:invisible",
+            openMoveId() === item.id && "invisible",
+          )}
+        >
+          <Show when={!item.revealed}>
+            <span title="Hidden on the page" class="flex">
+              <IconEyeOff size={12} />
+            </span>
+          </Show>
+          {formatRelativeTime(item.timestamp)}
+        </span>
+        <div
+          class={cn(
+            "flex h-4 items-center justify-end gap-1 opacity-0 pointer-events-none group-hover/row:opacity-100 group-hover/row:pointer-events-auto group-focus-within/row:opacity-100 group-focus-within/row:pointer-events-auto",
+            openMoveId() === item.id && "opacity-100 pointer-events-auto",
+          )}
+        >
+          <Show when={moveTargetsFor(item).length > 0}>
+            <GroupPickerPopover
+              open={openMoveId() === item.id}
+              onOpenChange={(open) => setOpenMoveId(open ? item.id : null)}
             >
               <GroupPickerTrigger
                 as={IconButton}
@@ -187,83 +201,41 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                 size="icon-xs"
                 onClick={(event: MouseEvent) => event.stopPropagation()}
               >
-                <svg width="10" height="10" viewBox="0 0 16 16">
-                  <path
-                    fill="currentColor"
-                    fill-rule="evenodd"
-                    d="M3 2.5a.5.5 0 0 0-.5.5v3h11V4.75a.5.5 0 0 0-.5-.5H7.69L5.94 2.5zm10.5 5h-11V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5zM1 3a2 2 0 0 1 2-2h3.56l1.75 1.75H13a2 2 0 0 1 2 2V13a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
+                <IconFolder size={10} />
               </GroupPickerTrigger>
-            </Show>
-            <GroupPickerFlyout
-              groups={moveTargetsFor(item)}
-              excludeGroupId={item.groupId ?? undefined}
-              onSelect={(groupId) => {
-                props.onMoveItem?.(item.id, groupId);
-                setOpenMoveId(null);
-              }}
+              <GroupPickerFlyout
+                groups={moveTargetsFor(item)}
+                excludeGroupId={item.groupId ?? undefined}
+                onSelect={(groupId) => {
+                  props.onMoveItem?.(item.id, groupId);
+                  setOpenMoveId(null);
+                }}
+              />
+            </GroupPickerPopover>
+          </Show>
+          <Show when={props.canRemoveItem?.(item.id)}>
+            <RemoveSelectionButton
+              variant="overlay"
+              onRemove={() => props.onRemoveItem?.(item.id)}
             />
-          </GroupPickerPopover>
-        </Show>
-        <span class="text-meta text-muted-foreground flex items-center justify-end">
-          {formatRelativeTime(item.timestamp)}
-        </span>
-        <Show
-          when={hoveredItemId() === item.id && props.canRemoveItem?.(item.id)}
-        >
-          <RemoveSelectionButton
-            variant="overlay"
-            onRemove={() => props.onRemoveItem?.(item.id)}
-          />
-        </Show>
-        <IconButton
-          data-react-grab-ignore-events
-          label={
-            item.revealed ? "Hide this selection" : "Reveal this selection"
-          }
-          size="icon-xs"
-          on:click={(event) => {
-            event.stopPropagation();
-            props.onToggleItemRevealed?.(item.id);
-          }}
-          on:pointerdown={(event) => event.stopPropagation()}
-        >
-          {item.revealed ? (
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 16 16"
-              class="text-selection-strong"
-            >
-              <path
-                fill="currentColor"
-                d="M5.75 8a2.25 2.25 0 1 1 4.5 0 2.25 2.25 0 0 1-4.5 0"
-              />
-              <path
-                fill="currentColor"
-                fill-rule="evenodd"
-                d="M8 2C4.433 2 1.319 4.232.167 7.38c-.146.4-.146.84 0 1.24C1.32 11.768 4.433 14 8 14c3.566 0 6.681-2.232 7.833-5.38.146-.4.146-.84 0-1.24C14.68 4.232 11.566 2 8 2m0 2.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5"
-                clip-rule="evenodd"
-              />
-            </svg>
-          ) : (
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 16 16"
-              class="text-muted-foreground group-hover:text-popover-foreground transition-colors"
-            >
-              <path
-                fill="currentColor"
-                fill-rule="evenodd"
-                d="M8 3.5c-2.943 0-5.49 1.845-6.424 4.396a.3.3 0 0 0 0 .208C2.509 10.655 5.057 12.5 8 12.5s5.49-1.845 6.424-4.396a.3.3 0 0 0 0-.208C13.491 5.345 10.943 3.5 8 3.5M.167 7.38C1.32 4.232 4.433 2 8 2c3.566 0 6.681 2.232 7.833 5.38.146.4.146.84 0 1.24C14.68 11.768 11.566 14 8 14 4.433 14 1.319 11.768.167 8.62a1.8 1.8 0 0 1 0-1.24M8 6.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M5 8a3 3 0 1 1 6 0 3 3 0 0 1-6 0"
-                clip-rule="evenodd"
-              />
-            </svg>
-          )}
-        </IconButton>
+          </Show>
+          <IconButton
+            data-react-grab-ignore-events
+            label={
+              item.revealed ? "Hide this selection" : "Reveal this selection"
+            }
+            size="icon-xs"
+            on:click={(event) => {
+              event.stopPropagation();
+              props.onToggleItemRevealed?.(item.id);
+            }}
+            on:pointerdown={(event) => event.stopPropagation()}
+          >
+            <Show when={item.revealed} fallback={<IconEyeOff size={12} />}>
+              <IconEyeFilled size={12} class="text-selection-strong" />
+            </Show>
+          </IconButton>
+        </div>
       </div>
     </div>
   );
@@ -378,7 +350,8 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                         ? "Clear comments without a ticket"
                         : "Clear all"
                     }
-                    variant="chip-destructive"
+                    variant="subtle-destructive"
+                    size="icon-xs"
                     class="shrink-0"
                     onClick={(event) => {
                       event.stopPropagation();
@@ -416,8 +389,9 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                       fallback={
                         <span>
                           {props.copyableCount != null &&
+                          props.copyableCount > 0 &&
                           props.copyableCount < (props.items?.length ?? 0)
-                            ? `Copy (${props.copyableCount})`
+                            ? `Copy ${props.copyableCount} visible`
                             : "Copy"}
                         </span>
                       }

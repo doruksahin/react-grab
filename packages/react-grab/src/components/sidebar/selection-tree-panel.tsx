@@ -21,15 +21,15 @@ import { isSelectionLocked } from "../../features/selection-groups/business/tick
 import { SelectionCardBody } from "./selection-card-body.js";
 import { SelectionCheckbox } from "../ui/selection-checkbox.js";
 import { SelectionCard } from "../selection/selection-card.js";
+import { cn } from "../../utils/cn.js";
 import type { SidebarFocusRequest } from "../../features/sidebar/hooks/use-sidebar-session.js";
 import { SIDEBAR_FOCUS_HIGHLIGHT_MS } from "../../constants.js";
 import { CreateTicketButton } from "../jira/create-ticket-button.js";
-import { DevInsights } from "../dev-insights/index.js";
-import { useDevMode } from "../../features/dev-mode/index.js";
+import { SelectionDevInsights } from "../dev-insights/selection-dev-insights.jsx";
 import { ActiveGroupPicker } from "../selection-groups/active-group-picker.js";
-import { StepList } from "../reproduce-steps/step-list.jsx";
-import { RemoveSelectionButton } from "../remove-selection-button.jsx";
-import { LocationNote } from "../selection-location/location-note.jsx";
+import { ReproducePanel } from "../reproduce-steps/reproduce-panel.jsx";
+import { LocationNotice } from "../selection-location/location-notice.jsx";
+import { SelectionCardMenu } from "./selection-card-menu.jsx";
 import { SelectionTreeView } from "../selection-groups/selection-tree-view.jsx";
 import { selectionTree } from "../../features/selection-groups/business/selection-tree.js";
 import { narrowSelectionTree } from "../../features/selection-groups/business/narrow-selection-tree.js";
@@ -68,7 +68,6 @@ interface SelectionTreePanelProps {
 export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
   props,
 ) => {
-  const isDevMode = useDevMode();
   const lightbox = useImageLightbox();
 
   // Cards by selection id, for a focus request to scroll to.
@@ -144,7 +143,8 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
     const checkable = () =>
       !isSelectionLocked({ groupId: item.groupId }, props.groups);
     const isSelected = () => props.selectedIds?.has(item.id) === true;
-    const summary = () => selectionRowFields(item).title;
+    const rowFields = () => selectionRowFields(item);
+    const isBulkSelecting = () => (props.selectedIds?.size ?? 0) > 0;
 
     const boundComments = () => {
       const g = group();
@@ -178,29 +178,35 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
               props.onToggleSelect && checkable() ? (
                 <SelectionCheckbox
                   checked={isSelected()}
+                  label="Select for bulk actions"
                   onToggle={() => props.onToggleSelect?.(item.id)}
+                  class={cn(
+                    "mt-[3px] transition-opacity",
+                    !isBulkSelecting() &&
+                      "opacity-0 group-hover/card:opacity-100 focus-within:opacity-100",
+                  )}
                 />
               ) : undefined
             }
+            actions={
+              <Show when={props.canRemoveItem?.(item.id)}>
+                <SelectionCardMenu
+                  onRemove={() => props.onRemoveItem?.(item.id)}
+                />
+              </Show>
+            }
             subheader={
-              <>
-                <ActiveGroupPicker
-                  groups={props.groups}
-                  activeGroupId={item.groupId}
-                  onActiveGroupChange={(groupId) =>
-                    props.onMoveItem?.(item.id, groupId)
-                  }
-                  onAddGroup={props.onAddGroup}
-                >
-                  <ActiveGroupPicker.Trigger />
-                  <ActiveGroupPicker.Content />
-                </ActiveGroupPicker>
-                <Show when={props.canRemoveItem?.(item.id)}>
-                  <RemoveSelectionButton
-                    onRemove={() => props.onRemoveItem?.(item.id)}
-                  />
-                </Show>
-              </>
+              <ActiveGroupPicker
+                groups={props.groups}
+                activeGroupId={item.groupId}
+                onActiveGroupChange={(groupId) =>
+                  props.onMoveItem?.(item.id, groupId)
+                }
+                onAddGroup={props.onAddGroup}
+              >
+                <ActiveGroupPicker.Trigger />
+                <ActiveGroupPicker.Content />
+              </ActiveGroupPicker>
             }
             noTicketAction={
               !group()?.jiraTicketId && props.onCreateTicket ? (
@@ -210,14 +216,15 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
                 />
               ) : undefined
             }
-            summary={summary()}
+            summary={rowFields().title}
+            detail={rowFields().detail}
             timestamp={item.timestamp}
             itemId={item.id}
             hasElementScreenshot={Boolean(item.screenshotElement)}
             hasFullPageScreenshot={Boolean(item.screenshotFullPage)}
-            recordingUrl={item.recordingUrl}
-            reproduceSteps={<StepList item={item} />}
-            locationNote={<LocationNote selectionId={item.id} class="mt-1.5" />}
+            reproduceSteps={<ReproducePanel item={item} />}
+            locationNote={<LocationNotice selectionId={item.id} />}
+            devInsights={<SelectionDevInsights item={item} />}
             jiraTicketId={group()?.jiraTicketId}
             jiraUrl={group()?.jiraUrl}
             jiraStatus={group()?.jiraStatus}
@@ -235,29 +242,6 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
             commentEditorToolbarVisible={props.commentEditorToolbarVisible}
             onScreenshotClick={(src, label) => lightbox.open(src, label)}
           />
-          <Show when={isDevMode()}>
-            <DevInsights>
-              <DevInsights.Field label="tag" value={item.tagName} kind="tag" />
-              <DevInsights.Field
-                label="node"
-                value={item.componentName ?? item.elementName}
-                kind="component"
-              />
-              <DevInsights.Attributes content={item.content} />
-              <Show when={item.elementSelectors?.[0]}>
-                <DevInsights.Section label="selector">
-                  <span class="text-meta font-mono text-foreground/80 break-all">
-                    {item.elementSelectors?.[0]}
-                  </span>
-                </DevInsights.Section>
-              </Show>
-              <DevInsights.Section label="html">
-                <pre class="text-meta font-mono text-foreground/80 whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto leading-relaxed">
-                  {item.content}
-                </pre>
-              </DevInsights.Section>
-            </DevInsights>
-          </Show>
         </SelectionCard>
       </div>
     );

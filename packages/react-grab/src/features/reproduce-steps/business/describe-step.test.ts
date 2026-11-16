@@ -1,5 +1,37 @@
 import { describe, expect, it } from "vitest";
-import { describeStep } from "./describe-step.js";
+import { describeStep, stepParts } from "./describe-step.js";
+
+describe("stepParts", () => {
+  it("marks a page, a readable name and a bare selector apart", () => {
+    expect(stepParts({ type: "navigate", url: "https://a.example/x" })).toEqual(
+      { verb: "Open", target: "/x", targetKind: "page" },
+    );
+    expect(
+      stepParts({
+        type: "click",
+        selectors: ['aria/Billing[role="tab"]'],
+        offsetX: 1,
+        offsetY: 1,
+      }),
+    ).toEqual({
+      verb: "Click",
+      target: "Billing",
+      targetKind: "name",
+      role: "tab",
+      destination: undefined,
+      details: "tab",
+    });
+    expect(
+      stepParts({ type: "change", selectors: ["#coupon"], value: "" }),
+    ).toEqual({
+      verb: "Change",
+      target: "#coupon",
+      targetKind: "selector",
+      valueNotSaved: true,
+      details: "value not saved",
+    });
+  });
+});
 
 describe("describeStep", () => {
   it("names the page a navigate opens", () => {

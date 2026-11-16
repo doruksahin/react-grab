@@ -53,7 +53,7 @@ The reason text comes from one function, `describeLocation`, so the panel and th
 - `createCurrentPageUrl` gives the current URL as a signal. It listens to the Navigation API's `currententrychange` event, which fires for every same-document navigation, `pushState` included. The Navigation API is in all major engines (Chrome 102, Safari 26.2, Firefox 147); its types come from `@types/dom-navigation`, because TypeScript's DOM library does not include them yet. Without the API it falls back to the existing `domMutationVersion` signal, which misses a navigation that changes no nodes. The memo returns a string, so an unchanged URL notifies nobody.
 - Core computes a `selectionLocations` memo from that URL, the existing disconnected-items memo and the items. It is rebuilt only when one of them changes, not on every DOM mutation.
 - The UI reads it through a Solid context, `SelectionLocationProvider`, mounted next to `SyncProvider`. The sidebar cards are three levels away from core, and context is Solid's standard way to give a value to a subtree without threading props.
-- `LocationNote` (`components/selection-location/`) shows the reason and, for `other-page`, the "Open page" button. The comments panel row and the sidebar selection card both use it.
+- `components/selection-location/` has two views over one hook (`useLocationView`): `LocationChip`, a comments panel row's status (the path, the host, or the reason, from `describeLocationShort`), and `LocationNotice`, the sidebar card's notice (a heading and a detail from `describeLocationNotice`, with "Open page" for `other-page`). The row only says where; the way back is in the card. Before the card redesign both used one `LocationNote` with the button in the row.
 
 ### "Open page"
 
