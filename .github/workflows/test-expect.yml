@@ -1,11 +1,9 @@
 name: Test Expect
 
+# Manual only: the AI test needs Claude credentials this fork does not keep
+# as a secret, and it checks upstream's overlay behaviour.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
   test-expect:
