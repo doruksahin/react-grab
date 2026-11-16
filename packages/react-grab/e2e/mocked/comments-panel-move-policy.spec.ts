@@ -150,8 +150,12 @@ test.describe("Comments panel — move policy", { tag: ["@SPEC-011"] }, () => {
       const header = row(page, "Header locked");
       await header.hover();
       await reactGrab.screenshot("locked-row-hovered", "page");
+      await header.getByRole("button", { name: "Selection actions" }).click();
       await expect(
-        header.getByRole("button", { name: "Selection actions" }),
+        page.getByRole("menuitem", { name: "Open in sidebar" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("menuitem", { name: "Move to group" }),
       ).toHaveCount(0);
     },
   );

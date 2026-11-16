@@ -27,6 +27,7 @@ import {
 import { createSafePolygonTracker } from "../utils/safe-polygon.js";
 import { cn } from "../utils/cn.js";
 import { IconTrash } from "./icons/icon-trash.jsx";
+import { IconDashboard } from "./icons/icon-dashboard.jsx";
 import { IconCheck } from "./icons/icon-check.jsx";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip.js";
 import { createMenuHighlight } from "../utils/create-menu-highlight.js";
@@ -68,6 +69,8 @@ interface CommentsDropdownProps extends Pick<
   onToggleItemRevealed?: (commentItemId: string) => void;
   onCopyGroup?: (groupId: string) => void;
   copyableCount?: number;
+  /** Opens the sidebar, on this selection's card when one is given. */
+  onOpenInSidebar?: (itemId: string | null) => void;
 }
 
 export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
@@ -185,11 +188,17 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         >
           <Show
             when={
+              props.onOpenInSidebar ||
               moveDestinationsFor(item).length > 0 ||
               props.canRemoveItem?.(item.id)
             }
           >
             <SelectionMenu
+              onOpenInSidebar={
+                props.onOpenInSidebar
+                  ? () => props.onOpenInSidebar?.(item.id)
+                  : undefined
+              }
               open={openMenuId() === item.id}
               onOpenChange={(open) => setOpenMenuId(open ? item.id : null)}
               destinations={moveDestinationsFor(item)}
@@ -327,6 +336,21 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             </span>
             <Show when={props.items.length > 0}>
               <div class="flex items-center gap-[5px]">
+                <Show when={props.onOpenInSidebar}>
+                  <IconButton
+                    data-react-grab-ignore-events
+                    data-react-grab-comments-open-sidebar
+                    label="Open in sidebar"
+                    size="icon-xs"
+                    class="shrink-0"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      props.onOpenInSidebar?.(null);
+                    }}
+                  >
+                    <IconDashboard size={DROPDOWN_ICON_SIZE_PX} />
+                  </IconButton>
+                </Show>
                 <Show when={(props.clearCounts?.removed ?? 0) > 0}>
                   <IconButton
                     data-react-grab-ignore-events

@@ -501,6 +501,12 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onCopyGroup={props.onCopyGroup}
         copyableCount={props.copyableCount}
         onMoveItem={props.onMoveItem}
+        onOpenInSidebar={(itemId) => {
+          // The menu gives way to the sidebar, where the full card is.
+          props.onCommentsDismiss?.();
+          if (itemId) sidebar.openOnItem(itemId);
+          else sidebar.open();
+        }}
       />
 
       {/* Single JIRA create-ticket dialog mount. Driven by the core's

@@ -52,3 +52,7 @@ The "Bad" consequence above, a long tree needs a lot of scrolling, is addressed 
 - **Headers stay.** Section headers stick while their section scrolls; Ungrouped shows how many of its selections are in each status.
 - **Comments start closed** on a card, except on a card opened by a focus request ("Open thread").
 - The rules are pure functions in `features/sidebar/business/` (`selectionStatus`, `needsAttention`, `orderSelections`, `sectionsByStatus`, `getStatusFilterOptions`), and `useSidebarSelections` computes the list once for the chips and the panel.
+
+### Update: from the comments menu to the sidebar (2026-11-16)
+
+The comments menu is the quick list; the full card lives in the sidebar. A row's ⋯ menu has "Open in sidebar", which closes the menu and opens the sidebar on that selection's card (the same focus request as a pin's "Open thread"), and the menu's header has an "Open in sidebar" button that opens the sidebar plainly.
