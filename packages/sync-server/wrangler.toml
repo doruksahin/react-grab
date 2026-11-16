@@ -8,12 +8,10 @@ compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
 # Non-secret configuration. Secrets never belong here — see .dev.vars.example
-# for the full list of what the Worker needs, and ADR-0018 for why.
-#
-# JIRA_BASE_URL decides which Jira site every ticket is created on.
+# for the full list of what the Worker needs, and ADR-0018 for why. Jira
+# accounts are stored in D1 and entered in the extension (ADR-0027).
 [vars]
 ENVIRONMENT = "development"
-JIRA_BASE_URL = "https://doruksahin.atlassian.net"
 
 # D1 database binding
 [[d1_databases]]

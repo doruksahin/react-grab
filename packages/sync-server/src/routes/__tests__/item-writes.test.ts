@@ -2,6 +2,7 @@ import { SELF, env } from "cloudflare:test";
 import { drizzle } from "drizzle-orm/d1";
 import { beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
+import { seedJiraAccount } from "../../test/seed-jira-account.js";
 import { D1SyncRepository } from "../../repositories/d1.repo.js";
 import { authorized } from "../../test/api-token.js";
 
@@ -82,7 +83,7 @@ describe("per-item routes", () => {
   it("ignores ticket fields a client sends in a group write", async () => {
     const repo = new D1SyncRepository(drizzle(env.DB, { schema }));
     await repo.upsertGroup(WORKSPACE, { id: "g-1", name: "G", createdAt: 1 });
-    await repo.updateGroupJira(WORKSPACE, "g-1", "UI-128", null);
+    await repo.updateGroupJira(WORKSPACE, "g-1", "UI-128", await seedJiraAccount("account-1"));
 
     const response = await SELF.fetch(
       `${BASE}/groups/g-1`,

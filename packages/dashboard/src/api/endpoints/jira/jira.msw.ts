@@ -21,14 +21,9 @@ import type {
   AddJiraComment200,
   CreateJiraTicket200,
   GetJiraTicketStatus200,
-  GetLegacyJiraSite200,
   ListJiraIssueTypes200Item,
   ListJiraPriorities200Item,
-  ListLegacyJiraIssueTypes200Item,
-  ListLegacyJiraPriorities200Item,
-  ListLegacyJiraProjects200Item,
-  SearchJiraUsers200Item,
-  SearchLegacyJiraUsers200Item
+  SearchJiraUsers200Item
 } from '../../model';
 
 
@@ -45,18 +40,6 @@ export const getListJiraPrioritiesResponseMock = (): ListJiraPriorities200Item[]
 export const getListJiraLabelsResponseMock = (): string[] => (Array.from({length: faker.number.int({min: 1, max: 10})}, () => faker.word.sample()))
 
 export const getSearchJiraUsersResponseMock = (): SearchJiraUsers200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({accountId: faker.string.alpha({length: {min: 10, max: 20}}), displayName: faker.string.alpha({length: {min: 10, max: 20}}), avatarUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null])})))
-
-export const getGetLegacyJiraSiteResponseMock = (overrideResponse: Partial<Extract<GetLegacyJiraSite200, object>> = {}): GetLegacyJiraSite200 => ({siteUrl: faker.internet.url(), ...overrideResponse})
-
-export const getListLegacyJiraProjectsResponseMock = (): ListLegacyJiraProjects200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({key: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}})})))
-
-export const getListLegacyJiraIssueTypesResponseMock = (): ListLegacyJiraIssueTypes200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}})})))
-
-export const getListLegacyJiraPrioritiesResponseMock = (): ListLegacyJiraPriorities200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}})})))
-
-export const getListLegacyJiraLabelsResponseMock = (): string[] => (Array.from({length: faker.number.int({min: 1, max: 10})}, () => faker.word.sample()))
-
-export const getSearchLegacyJiraUsersResponseMock = (): SearchLegacyJiraUsers200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({accountId: faker.string.alpha({length: {min: 10, max: 20}}), displayName: faker.string.alpha({length: {min: 10, max: 20}}), avatarUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null])})))
 
 
 export const getCreateJiraTicketMockHandler = (overrideResponse?: CreateJiraTicket200 | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CreateJiraTicket200> | CreateJiraTicket200), options?: RequestHandlerOptions) => {
@@ -142,78 +125,6 @@ export const getSearchJiraUsersMockHandler = (overrideResponse?: SearchJiraUsers
       })
   }, options)
 }
-
-export const getGetLegacyJiraSiteMockHandler = (overrideResponse?: GetLegacyJiraSite200 | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<GetLegacyJiraSite200> | GetLegacyJiraSite200), options?: RequestHandlerOptions) => {
-  return http.get('*/jira/site', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getGetLegacyJiraSiteResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getListLegacyJiraProjectsMockHandler = (overrideResponse?: ListLegacyJiraProjects200Item[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<ListLegacyJiraProjects200Item[]> | ListLegacyJiraProjects200Item[]), options?: RequestHandlerOptions) => {
-  return http.get('*/jira/projects', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListLegacyJiraProjectsResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getListLegacyJiraIssueTypesMockHandler = (overrideResponse?: ListLegacyJiraIssueTypes200Item[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<ListLegacyJiraIssueTypes200Item[]> | ListLegacyJiraIssueTypes200Item[]), options?: RequestHandlerOptions) => {
-  return http.get('*/jira/issue-types', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListLegacyJiraIssueTypesResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getListLegacyJiraPrioritiesMockHandler = (overrideResponse?: ListLegacyJiraPriorities200Item[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<ListLegacyJiraPriorities200Item[]> | ListLegacyJiraPriorities200Item[]), options?: RequestHandlerOptions) => {
-  return http.get('*/jira/priorities', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListLegacyJiraPrioritiesResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getListLegacyJiraLabelsMockHandler = (overrideResponse?: string[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<string[]> | string[]), options?: RequestHandlerOptions) => {
-  return http.get('*/jira/labels', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListLegacyJiraLabelsResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
-
-export const getSearchLegacyJiraUsersMockHandler = (overrideResponse?: SearchLegacyJiraUsers200Item[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<SearchLegacyJiraUsers200Item[]> | SearchLegacyJiraUsers200Item[]), options?: RequestHandlerOptions) => {
-  return http.get('*/jira/users', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getSearchLegacyJiraUsersResponseMock(),
-      { status: 200
-      })
-  }, options)
-}
 export const getJiraMock = () => [
   getCreateJiraTicketMockHandler(),
   getGetJiraTicketStatusMockHandler(),
@@ -221,11 +132,5 @@ export const getJiraMock = () => [
   getListJiraIssueTypesMockHandler(),
   getListJiraPrioritiesMockHandler(),
   getListJiraLabelsMockHandler(),
-  getSearchJiraUsersMockHandler(),
-  getGetLegacyJiraSiteMockHandler(),
-  getListLegacyJiraProjectsMockHandler(),
-  getListLegacyJiraIssueTypesMockHandler(),
-  getListLegacyJiraPrioritiesMockHandler(),
-  getListLegacyJiraLabelsMockHandler(),
-  getSearchLegacyJiraUsersMockHandler()
+  getSearchJiraUsersMockHandler()
 ]

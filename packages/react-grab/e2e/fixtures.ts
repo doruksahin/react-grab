@@ -277,8 +277,6 @@ interface SyncConnectionConfig {
   enabled?: boolean;
   workspace: string;
   serverUrl: string;
-  /** Deprecated (ADR-0027): sent only for a workspace without a destination. */
-  jiraProjectKey?: string;
   apiToken?: string;
 }
 
@@ -2545,9 +2543,6 @@ const createReactGrabPageObject = (
             enabled: cfg.enabled ?? true,
             serverUrl: cfg.serverUrl ?? "http://localhost:9999",
             workspace: cfg.workspace ?? "test-workspace",
-            ...(cfg.jiraProjectKey === undefined
-              ? {}
-              : { jiraProjectKey: cfg.jiraProjectKey }),
             apiToken: cfg.apiToken ?? defaultToken,
             syncRevealedState: true,
             onSyncError: (err: Error) =>

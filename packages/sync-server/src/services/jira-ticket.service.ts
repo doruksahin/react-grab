@@ -63,10 +63,7 @@ export class JiraTicketService {
         jiraUrl: jira.browseUrl(origin.jiraTicketId),
       };
     }
-    const destination = await this.deps.clients.forWorkspace(
-      workspaceId,
-      input.projectKey,
-    );
+    const destination = await this.deps.clients.forWorkspace(workspaceId);
     return withJiraErrors(
       () =>
         destination.jira.createTicketFromGroup(
@@ -121,12 +118,8 @@ export class JiraTicketService {
 
   async listIssueTypes(
     workspaceId: string,
-    legacyProjectKey?: string,
   ): Promise<z.infer<typeof JiraIssueType>[]> {
-    const { jira, projectKey } = await this.deps.clients.forWorkspace(
-      workspaceId,
-      legacyProjectKey,
-    );
+    const { jira, projectKey } = await this.deps.clients.forWorkspace(workspaceId);
     return withJiraErrors(
       () => jira.getIssueTypes(projectKey),
       "Failed to list Jira issue types",
@@ -135,12 +128,8 @@ export class JiraTicketService {
 
   async listPriorities(
     workspaceId: string,
-    legacyProjectKey?: string,
   ): Promise<z.infer<typeof JiraPriority>[]> {
-    const { jira } = await this.deps.clients.forWorkspace(
-      workspaceId,
-      legacyProjectKey,
-    );
+    const { jira } = await this.deps.clients.forWorkspace(workspaceId);
     return withJiraErrors(
       () => jira.getPriorities(),
       "Failed to list Jira priorities",
@@ -149,12 +138,8 @@ export class JiraTicketService {
 
   async listLabels(
     workspaceId: string,
-    legacyProjectKey?: string,
   ): Promise<string[]> {
-    const { jira, projectKey } = await this.deps.clients.forWorkspace(
-      workspaceId,
-      legacyProjectKey,
-    );
+    const { jira, projectKey } = await this.deps.clients.forWorkspace(workspaceId);
     return withJiraErrors(
       () => jira.getLabels(projectKey),
       "Failed to list Jira labels",
@@ -164,12 +149,8 @@ export class JiraTicketService {
   async searchUsers(
     workspaceId: string,
     query: string,
-    legacyProjectKey?: string,
   ): Promise<z.infer<typeof JiraUser>[]> {
-    const { jira, projectKey } = await this.deps.clients.forWorkspace(
-      workspaceId,
-      legacyProjectKey,
-    );
+    const { jira, projectKey } = await this.deps.clients.forWorkspace(workspaceId);
     return withJiraErrors(
       () => jira.searchUsers(query, projectKey),
       "Failed to search Jira users",

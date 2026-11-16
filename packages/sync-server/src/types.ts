@@ -11,10 +11,6 @@ export type Bindings = {
   DB: D1Database;
   BUCKET: R2Bucket;
   ENVIRONMENT: string;
-  // The environment Jira account (ADR-0018); only a fallback until the ADR-0027 cut-over.
-  JIRA_BASE_URL?: string; // e.g. "https://acme.atlassian.net"
-  JIRA_EMAIL?: string; // e.g. "bot@company.com"
-  JIRA_API_TOKEN?: string; // API token (secret)
   JIRA_CREDENTIAL_KEYS?: string; // JSON key ring that encrypts Jira credentials (secret, ADR-0027)
   JIRA_CREDENTIAL_KEY_CURRENT?: string; // key version new writes use (ADR-0027)
   SYNC_API_TOKEN: string; // bearer token for every API request (secret, ADR-0020)

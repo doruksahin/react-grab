@@ -228,7 +228,7 @@ export class JiraService {
     groupId: string,
     repo: SyncRepository,
     screenshots: ScreenshotStore,
-    jiraAccountId: string | null,
+    jiraAccountId: string,
   ): Promise<CreateTicketResult> {
     // 1. Load the group and its comments: the description and the screenshot
     // attachments below are built from them (SPEC-021).

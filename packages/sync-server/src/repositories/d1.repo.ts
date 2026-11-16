@@ -156,7 +156,7 @@ export class D1SyncRepository implements SyncRepository {
     workspaceId: string,
     groupId: string,
     jiraTicketId: string,
-    jiraAccountId: string | null,
+    jiraAccountId: string,
   ): Promise<void> {
     await this.db
       .update(schema.groups)

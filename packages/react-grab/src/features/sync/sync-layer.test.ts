@@ -219,18 +219,6 @@ describe("sync layer ports", () => {
     layer.dispose();
   });
 
-  it("warns that jiraProjectKey is deprecated, and still connects (ADR-0027)", async () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const layer = createSyncLayer(factories);
-    await layer.init(makeConfig({ jiraProjectKey: "OLD" }));
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining("jiraProjectKey is deprecated"),
-    );
-    expect(layer.status()).toBe("synced");
-    warn.mockRestore();
-    layer.dispose();
-  });
-
   it("reports a failed write to onSyncError and keeps the local change", async () => {
     const onSyncError = vi.fn();
     adapter.upsertComment.mockRejectedValue(new Error("PUT failed: 500"));

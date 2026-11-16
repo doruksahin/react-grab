@@ -14,23 +14,12 @@ import {
 import { JiraTicketService } from "../services/jira-ticket.service.js";
 import { JiraAccountService } from "../services/jira-account.service.js";
 import { WorkspaceService } from "../services/workspace.service.js";
-import { JiraService, type JiraConfig } from "../services/jira.service.js";
-import { JiraEnvSchema, parseCredentialEnv } from "../schemas/env.js";
+import { JiraService } from "../services/jira.service.js";
+import { parseCredentialEnv } from "../schemas/env.js";
 import type { AppEnv } from "../types.js";
 
 const createJiraService: CreateJiraService = (config) =>
   new JiraService(config);
-
-/** The environment account (ADR-0018), or null where it is not configured. */
-const environmentJiraConfig = (env: unknown): JiraConfig | null => {
-  const result = JiraEnvSchema.safeParse(env);
-  if (!result.success) return null;
-  return {
-    baseUrl: result.data.JIRA_BASE_URL,
-    email: result.data.JIRA_EMAIL,
-    apiToken: result.data.JIRA_API_TOKEN,
-  };
-};
 
 export const injectRepos = createMiddleware<AppEnv>(async (c, next) => {
   const db = drizzle(c.env.DB, { schema });
@@ -52,7 +41,6 @@ export const injectRepos = createMiddleware<AppEnv>(async (c, next) => {
     accounts,
     workspaces,
     vault: getVault,
-    environment: () => environmentJiraConfig(c.env),
     createJiraService,
   });
   c.set("jiraClients", clients);

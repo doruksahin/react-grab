@@ -1,6 +1,6 @@
 /**
  * The host name of the Jira site (e.g. "acme.atlassian.net") from the site
- * URL the sync server reports (GET /jira/site). Null when it is missing or
+ * URL of the workspace's destination (GET /workspaces/{id}/jira). Null when it is missing or
  * not a URL.
  */
 export const getSiteHost = (

@@ -9,9 +9,6 @@
 export interface JiraDestination {
   siteUrl: string;
   projectKey: string;
-  /**
-     * Display name of the account tickets are created as; null for the environment account
-     * @nullable
-     */
-  signsInAs: string | null;
+  /** Display name of the account tickets are created as */
+  signsInAs: string;
 }
