@@ -36,10 +36,6 @@ const savedRecordingUrls = (
 
 const openSelectionCard = async (page: Page) => {
   await page.locator("[data-react-grab-toolbar-dashboard]").click();
-  await page
-    .getByRole("dialog", { name: "React Grab Dashboard" })
-    .getByRole("tab", { name: /^Selections/ })
-    .click();
   return page
     .locator("[data-react-grab-selection-card]")
     .filter({ hasText: NEW_COMMENT });

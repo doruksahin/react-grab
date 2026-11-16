@@ -105,15 +105,9 @@ test.describe("Overlay surfaces", { tag: ["@ADR-0022"] }, () => {
     await expectPageShot(page, "comments-menu.png");
   });
 
-  test("sidebar groups", async ({ page }) => {
+  test("sidebar selection tree", async ({ page }) => {
     await openDashboard(page);
-    await expectPageShot(page, "sidebar-groups.png");
-  });
-
-  test("sidebar selections", async ({ page }) => {
-    const dashboard = await openDashboard(page);
-    await dashboard.getByRole("tab", { name: /^Selections/ }).click();
-    await expectPageShot(page, "sidebar-selections.png");
+    await expectPageShot(page, "sidebar-tree.png");
   });
 
   test("Jira create dialog", async ({ page, reactGrab }) => {
@@ -122,7 +116,6 @@ test.describe("Overlay surfaces", { tag: ["@ADR-0022"] }, () => {
     await reactGrab.typeInInput("Checkout button does nothing on Safari");
     await reactGrab.submitInput();
     const dashboard = await openDashboard(page);
-    await dashboard.getByRole("tab", { name: /^Selections/ }).click();
     await page
       .locator("[data-react-grab-selection-card]")
       .filter({ hasText: "Checkout button" })

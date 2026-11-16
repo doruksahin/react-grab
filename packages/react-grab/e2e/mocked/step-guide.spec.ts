@@ -193,16 +193,12 @@ test.describe("Step guide", { tag: ["@ADR-0026"] }, () => {
     await expect(page.getByTestId("modal-content")).toHaveCount(0);
   });
 
-  test("the Selections tab card says where it is and offers the guide", async ({
+  test("the sidebar card says where it is and offers the guide", async ({
     page,
     reactGrab,
   }) => {
     await seed(reactGrab, { ...insideModal(`${ORIGIN}/`), groupId: null });
     await page.locator("[data-react-grab-toolbar-dashboard]").click();
-    await page
-      .getByRole("dialog", { name: "React Grab Dashboard" })
-      .getByRole("tab", { name: /^Selections/ })
-      .click();
 
     const card = page
       .locator("[data-react-grab-selection-card]")

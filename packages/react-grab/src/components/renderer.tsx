@@ -528,6 +528,10 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onMoveItem={props.onMoveItem}
           onMoveItems={props.onMoveItems}
           onAddGroup={props.onAddGroup}
+          onRenameGroup={props.onRenameGroup}
+          onDeleteGroup={props.onDeleteGroup}
+          onToggleGroupRevealed={props.onToggleGroupRevealed}
+          onCopyGroup={props.onCopyGroup}
           looseTicketDialog={props.looseTicketDialog}
           onLooseTicketDialogClose={props.onLooseTicketDialogClose}
           commentEditorToolbarVisible={props.commentEditorToolbarVisible}

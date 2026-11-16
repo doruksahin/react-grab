@@ -160,7 +160,7 @@ test.describe(
       ).toHaveCount(0);
     });
 
-    test("the Selections tab card removes a selection without a ticket", async ({
+    test("a sidebar card removes a selection without a ticket", async ({
       page,
       reactGrab,
     }) => {
@@ -172,10 +172,6 @@ test.describe(
         ],
       });
       await page.locator("[data-react-grab-toolbar-dashboard]").click();
-      await page
-        .getByRole("dialog", { name: "React Grab Dashboard" })
-        .getByRole("tab", { name: /^Selections/ })
-        .click();
       const card = page
         .locator("[data-react-grab-selection-card]")
         .filter({ hasText: "Loose one" });

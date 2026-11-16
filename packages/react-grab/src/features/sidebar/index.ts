@@ -1,4 +1,3 @@
-export { type GroupedEntry } from "./derive-status.js";
 export { relativeTime } from "./relative-time.js";
 export { extractFilePath } from "./extract-file-path.js";
 export { useLazyVisible } from "./use-lazy-visible.js";

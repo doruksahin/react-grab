@@ -34,10 +34,6 @@ const isObjectBody = (body: unknown): body is WriteBody =>
 const openTicketDialog = async (page: Page) => {
   await page.locator("[data-react-grab-toolbar-dashboard]").click();
   await page
-    .getByRole("dialog", { name: "React Grab Dashboard" })
-    .getByRole("tab", { name: /^Selections/ })
-    .click();
-  await page
     .locator("[data-react-grab-selection-card]")
     .filter({ hasText: NEW_COMMENT })
     .locator("[data-react-grab-create-ticket]")
@@ -72,7 +68,6 @@ test.describe("Authenticated screenshots", { tag: ["@ADR-0020"] }, () => {
       name: "React Grab Dashboard",
     });
     await page.locator("[data-react-grab-toolbar-dashboard]").click();
-    await dashboard.getByRole("tab", { name: /^Selections/ }).click();
 
     const thumb = page.locator("[data-react-grab-screenshot-thumb]").first();
     await expect(thumb).toHaveAttribute("src", /^blob:/, { timeout: 5000 });

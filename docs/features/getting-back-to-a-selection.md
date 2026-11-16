@@ -31,7 +31,7 @@ The reason shows in three places:
 
 - the row in the comments panel;
 - the card in the group detail view;
-- the card on the Selections tab of the dashboard.
+- the card under its group in the dashboard.
 
 **Open page** goes to the saved address only on the same site. Only `http:` and `https:` addresses count as pages. For this reason, a saved `javascript:` or `data:` address can never run.
 

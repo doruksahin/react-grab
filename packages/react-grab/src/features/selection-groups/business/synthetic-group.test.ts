@@ -26,7 +26,11 @@ describe("synthetic-group", () => {
       expect(inferSyntheticGroupName(noComp)).toBe("h3");
     });
     it("falls back to 'Untitled' when both are missing", () => {
-      const bare = { ...item, componentName: undefined, elementName: "" } as CommentItem;
+      const bare = {
+        ...item,
+        componentName: undefined,
+        elementName: "",
+      } as CommentItem;
       expect(inferSyntheticGroupName(bare)).toBe("Untitled");
     });
   });
@@ -50,23 +54,57 @@ describe("synthetic-group", () => {
 
   describe("isSynthetic", () => {
     it("is true for groups with synthetic === true", () => {
-      const g = { id: "g1", name: "x", createdAt: 0, revealed: false, synthetic: true } as SelectionGroup;
+      const g = {
+        id: "g1",
+        name: "x",
+        createdAt: 0,
+        revealed: false,
+        synthetic: true,
+      } as SelectionGroup;
       expect(isSynthetic(g)).toBe(true);
     });
     it("is false for groups without the flag", () => {
-      const g = { id: "g1", name: "x", createdAt: 0, revealed: false } as SelectionGroup;
+      const g = {
+        id: "g1",
+        name: "x",
+        createdAt: 0,
+        revealed: false,
+      } as SelectionGroup;
       expect(isSynthetic(g)).toBe(false);
     });
     it("is false for groups with synthetic === false", () => {
-      const g = { id: "g1", name: "x", createdAt: 0, revealed: false, synthetic: false } as SelectionGroup;
+      const g = {
+        id: "g1",
+        name: "x",
+        createdAt: 0,
+        revealed: false,
+        synthetic: false,
+      } as SelectionGroup;
       expect(isSynthetic(g)).toBe(false);
     });
   });
 
   describe("gcEmptySyntheticGroups", () => {
-    const real = { id: "r1", name: "R", createdAt: 0, revealed: false } as SelectionGroup;
-    const synthA = { id: "s1", name: "A", createdAt: 0, revealed: false, synthetic: true } as SelectionGroup;
-    const synthB = { id: "s2", name: "B", createdAt: 0, revealed: false, synthetic: true } as SelectionGroup;
+    const real = {
+      id: "r1",
+      name: "R",
+      createdAt: 0,
+      revealed: false,
+    } as SelectionGroup;
+    const synthA = {
+      id: "s1",
+      name: "A",
+      createdAt: 0,
+      revealed: false,
+      synthetic: true,
+    } as SelectionGroup;
+    const synthB = {
+      id: "s2",
+      name: "B",
+      createdAt: 0,
+      revealed: false,
+      synthetic: true,
+    } as SelectionGroup;
 
     it("keeps real groups even when empty", () => {
       const result = gcEmptySyntheticGroups([real], []);
