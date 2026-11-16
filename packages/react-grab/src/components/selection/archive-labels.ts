@@ -1,9 +1,12 @@
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
 
+// A real group's comments share one ticket, so they are archived and
+// restored together and the label says so; a loose comment's own ticket is
+// just that comment (ADR-0030).
 const scopeText = (group: SelectionGroup, selectionCount: number): string =>
-  group.synthetic || selectionCount <= 1
+  group.synthetic
     ? ""
-    : ` group (${selectionCount} comments)`;
+    : ` group (${selectionCount} ${selectionCount === 1 ? "comment" : "comments"})`;
 
 /** "Archive", or "Archive group (3 comments)" when the ticket is a group's. */
 export const archiveLabel = (

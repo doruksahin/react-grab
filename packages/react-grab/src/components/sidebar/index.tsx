@@ -410,6 +410,15 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           }
           onRemoveItem={props.onRemoveItem}
           canRemoveItem={props.canRemoveItem}
+          onArchive={
+            props.onArchiveGroup
+              ? (groupId) => {
+                  // The group leaves the board, so its detail view closes.
+                  setActiveDetailGroupId(null);
+                  props.onArchiveGroup?.(groupId);
+                }
+              : undefined
+          }
         />
       </Show>
 

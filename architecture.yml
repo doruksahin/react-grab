@@ -199,6 +199,7 @@ features:
     prds: [PRD-002]
     specs: [SPEC-001]
     files:
+      - packages/react-grab/src/features/selection-groups/business/archive-policy.ts
       - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
       - packages/react-grab/src/features/selection-groups/business/membership.ts
       - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
@@ -723,6 +724,7 @@ data_attrs:
         - selection-restore
         - archived-section
         - group-archive
+        - group-detail-archive
         - open-in-sidebar
         - move-destination
         - selection-card-facts
@@ -982,7 +984,7 @@ data_attrs:
     step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 75, tests: 6}
+    ignore-events: {scope: reserved, src: 76, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     archived-section: {scope: selection, src: 1, tests: 1}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
@@ -992,6 +994,7 @@ data_attrs:
     collapsed-dot-preview: {scope: selection, src: 1, tests: 0}
     dev-insights: {scope: selection, src: 1, tests: 0}
     group-archive: {scope: selection, src: 1, tests: 0}
+    group-detail-archive: {scope: selection, src: 1, tests: 1}
     jira-open: {scope: selection, src: 1, tests: 0}
     latest-comment: {scope: selection, src: 1, tests: 1}
     move-destination: {scope: selection, src: 1, tests: 2}
@@ -1026,8 +1029,8 @@ data_attrs:
     due-date-filter: {scope: sidebar, src: 1, tests: 2}
     empty-state: {scope: sidebar, src: 1, tests: 0}
     filter-chips: {scope: sidebar, src: 1, tests: 0}
-    group-collapsible: {scope: sidebar, src: 1, tests: 12}
-    group-detail: {scope: sidebar, src: 1, tests: 0}
+    group-collapsible: {scope: sidebar, src: 1, tests: 13}
+    group-detail: {scope: sidebar, src: 1, tests: 1}
     group-list: {scope: sidebar, src: 1, tests: 3}
     group-picker-flyout: {scope: sidebar, src: 1, tests: 1}
     group-ticket-summary: {scope: sidebar, src: 2, tests: 2}
@@ -1051,7 +1054,7 @@ data_attrs:
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 2, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 27}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 29}
     toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 1, tests: 4}
