@@ -3,13 +3,15 @@ import type { ADFEntity } from "@atlaskit/adf-utils/types";
 import { markdownToAdf } from "marklassian";
 import { createJiraAccountsHarness } from "../../test/jira-accounts-setup.js";
 import { adfError } from "../adf-validation.js";
+import { JiraService } from "../jira.service.js";
 
 /*
- * SPEC-021 over real D1 and the real jira.js client. Only fetch is stubbed:
- * it answers Jira's create-issue call and records the body it was sent.
+ * SPEC-021 over real D1 and the real jira.js client. Account checks are
+ * stubbed on JiraService; fetch answers Jira's create-issue call and records
+ * the body it was sent.
  */
 
-const ENV_SITE = "https://env.atlassian.net";
+const SITE = "https://ada.atlassian.net";
 const TICKET_KEY = "SCRUM-7";
 
 let harness: ReturnType<typeof createJiraAccountsHarness>;
@@ -17,24 +19,36 @@ let workspaceId: string;
 let issueBodies: Array<{ fields: { description: ADFEntity } }>;
 
 beforeEach(async () => {
-  harness = createJiraAccountsHarness({
-    baseUrl: ENV_SITE,
-    email: "env@example.com",
-    apiToken: "token-env",
-  });
+  harness = createJiraAccountsHarness();
   workspaceId = `ws-${crypto.randomUUID()}`;
   issueBodies = [];
+  // Storage is shared per test file, so each test signs in as its own user.
+  vi.spyOn(JiraService.prototype, "getMyself").mockResolvedValue({
+    accountId: `atl-${workspaceId}`,
+    displayName: "Ada",
+  });
+  vi.spyOn(JiraService.prototype, "hasProject").mockResolvedValue(true);
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
     const request = new Request(input, init);
     if (
       request.method === "POST" &&
-      request.url === `${ENV_SITE}/rest/api/3/issue`
+      request.url === `${SITE}/rest/api/3/issue`
     ) {
       issueBodies.push(await request.json());
       return Response.json({ id: "10001", key: TICKET_KEY });
     }
     return new Response("unexpected request", { status: 500 });
   });
+  const account = await harness.accountService.add({
+    siteUrl: SITE,
+    email: "ada@example.com",
+    apiToken: "token-ada",
+  });
+  await harness.workspaceService.setDestination(
+    workspaceId,
+    account.id,
+    "SCRUM",
+  );
   await harness.repo.upsertGroup(workspaceId, {
     id: "g-1",
     name: "Checkout",
@@ -57,7 +71,6 @@ afterEach(() => {
 });
 
 const ticketInput = {
-  projectKey: "SCRUM",
   issueType: "Bug",
   priority: "Medium",
   summary: "Pay button",
