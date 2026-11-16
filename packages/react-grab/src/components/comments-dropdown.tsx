@@ -49,6 +49,7 @@ import { createAnchoredDropdown } from "../utils/create-anchored-dropdown.js";
 import { formatRelativeTime } from "../utils/format-relative-time.js";
 import { IconButton } from "./ui/icon-button.js";
 import { Button } from "./ui/button.js";
+import { LocationNote } from "./selection-location/location-note.jsx";
 
 interface CommentsDropdownProps extends Pick<
   SelectionGroupsViewProps,
@@ -184,6 +185,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             {item.commentText}
           </span>
         </Show>
+        <LocationNote selectionId={item.id} class="mt-0.5" />
       </span>
       <div class="flex items-center gap-1 shrink-0">
         <Show when={moveTargetsFor(item).length > 0}>

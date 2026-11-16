@@ -11,6 +11,7 @@ import { FlagIndicator } from "../flag-indicator.js";
 import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";
 import { cn } from "../../utils/cn.js";
 import { DevInsights } from "../dev-insights/index.js";
+import { LocationNote } from "../selection-location/location-note.jsx";
 
 export interface SelectionCardProps {
   item: CommentItem;
@@ -70,6 +71,8 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
           </Show>
         </div>
       </div>
+
+      <LocationNote selectionId={props.item.id} class="mb-1.5" />
 
       {/* Row 2: comment text */}
       <Show when={props.item.commentText}>

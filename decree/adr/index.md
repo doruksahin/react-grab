@@ -23,3 +23,4 @@
 | ADR-0021 | ADR-0021 Record how the user got to a selection with rrweb, and share it by a capability link | accepted | 2026-11-13 |  |
 | ADR-0022 | ADR-0022 Overlay UI in three layers: tokens, primitives, feature components | accepted | 2026-11-15 |  |
 | ADR-0023 | ADR-0023 Run the overlay with sync on any site through the browser extension | accepted | 2026-11-15 |  |
+| ADR-0024 | ADR-0024 Show where a selection was made when its element is not on the page | accepted | 2026-11-16 |  |

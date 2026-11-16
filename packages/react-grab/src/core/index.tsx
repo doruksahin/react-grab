@@ -99,6 +99,13 @@ import {
 } from "../utils/create-element-bounds.js";
 import { createElementSelector } from "../utils/create-element-selector.js";
 import { getPageContext } from "../utils/get-page-context.js";
+import {
+  createCurrentPageUrl,
+  locateSelection,
+  ON_PAGE,
+  SelectionLocationProvider,
+  type LocateSelectionById,
+} from "../features/selection-location/index.js";
 import { generateId } from "../utils/generate-id.js";
 import { generateSnippet } from "../utils/generate-snippet.js";
 import { getAncestorElements } from "../utils/get-ancestor-elements.js";
@@ -476,6 +483,27 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         },
       },
     );
+
+    // Where each selection is relative to this page (ADR-0024). Rebuilt only
+    // when the URL, the disconnected set or the items change.
+    const currentPageUrl = createCurrentPageUrl(domMutationVersion);
+    const selectionLocations = createMemo(() => {
+      const disconnected = commentsDisconnectedItemIds();
+      const currentUrl = currentPageUrl();
+      return new Map(
+        commentItems().map((item) => [
+          item.id,
+          locateSelection({
+            pageUrl: item.pageUrl,
+            currentUrl,
+            isOnPage: !disconnected.has(item.id),
+          }),
+        ]),
+      );
+    });
+
+    const locateSelectionById: LocateSelectionById = (selectionId) =>
+      selectionLocations().get(selectionId) ?? ON_PAGE;
 
     const copyableItemCount = createMemo(() => {
       const disconnected = commentsDisconnectedItemIds();
@@ -3149,182 +3177,184 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           disposeRenderer = render(() => {
             return (
               <SyncProvider value={syncContext}>
-                <ReactGrabRenderer
-                  selectionVisible={selectionVisible()}
-                  selectionBounds={selectionBounds()}
-                  selectionBoundsMultiple={selectionBoundsMultiple()}
-                  selectionShouldSnap={
-                    store.frozenElements.length > 0 ||
-                    dragPreviewBounds().length > 0
-                  }
-                  inspectVisible={isInspectMode() && inspectBounds().length > 0}
-                  inspectBounds={inspectBounds()}
-                  selectionElementsCount={store.frozenElements.length}
-                  selectionFilePath={store.selectionFilePath ?? undefined}
-                  selectionLineNumber={store.selectionLineNumber ?? undefined}
-                  selectionTagName={selectionTagName()}
-                  selectionComponentName={resolvedComponentName()}
-                  selectionLabelVisible={selectionLabelVisible()}
-                  selectionLabelStatus="idle"
-                  selectionActionCycleState={actionCycleState()}
-                  selectionArrowNavigationState={arrowNavigationState()}
-                  onArrowNavigationSelect={handleArrowNavigationSelect}
-                  inspectNavigationState={inspectNavigationState()}
-                  onInspectSelect={handleInspectSelect}
-                  labelInstances={computedLabelInstancesWithStatus()}
-                  labelPinsEnabled={Boolean(initialOptions.collapsibleLabels)}
-                  labelPinsStartClosed={Boolean(
-                    initialOptions.labelsStartCollapsed,
-                  )}
-                  previewedItemId={previewedItemId()}
-                  dragVisible={dragVisible()}
-                  dragBounds={dragBounds()}
-                  grabbedBoxes={computedGrabbedBoxes()}
-                  mouseX={
-                    store.frozenElements.length > 1
-                      ? undefined
-                      : cursorPosition().x
-                  }
-                  isFrozen={
-                    isFrozenPhase() || isActivated() || isToolbarSelectHovered()
-                  }
-                  inputValue={store.inputText}
-                  isPromptMode={isPromptMode()}
-                  hasAgent={store.hasAgentProvider}
-                  agentSessions={agentManager.sessions()}
-                  supportsUndo={store.supportsUndo}
-                  supportsFollowUp={store.supportsFollowUp}
-                  dismissButtonText={store.dismissButtonText}
-                  onDismissSession={agentManager.session.dismiss}
-                  onUndoSession={agentManager.session.undo}
-                  onFollowUpSubmitSession={handleFollowUpSubmit}
-                  onAcknowledgeSessionError={handleAcknowledgeError}
-                  onRetrySession={agentManager.session.retry}
-                  onShowContextMenuInstance={handleShowContextMenuInstance}
-                  onLabelInstanceHoverChange={handleLabelInstanceHoverChange}
-                  onInputChange={actions.setInputText}
-                  onInputSubmit={() => void handleInputSubmit()}
-                  onToggleExpand={handleToggleExpand}
-                  isPendingDismiss={isPendingDismiss()}
-                  selectionLabelShakeCount={selectionLabelShakeCount()}
-                  onConfirmDismiss={handleConfirmDismiss}
-                  onCancelDismiss={handleCancelDismiss}
-                  pendingAbortSessionId={store.pendingAbortSessionId}
-                  onRequestAbortSession={(sessionId) =>
-                    actions.setPendingAbortSessionId(sessionId)
-                  }
-                  onAbortSession={handleAgentAbort}
-                  toolbarVisible={pluginRegistry.store.theme.toolbar.enabled}
-                  isActive={isActivated()}
-                  onToggleActive={handleToggleActive}
-                  enabled={isEnabled()}
-                  onToggleEnabled={handleToggleEnabled}
-                  isDevMode={isDevMode()}
-                  onToggleDevMode={handleToggleDevMode}
-                  shakeCount={toolbarShakeCount()}
-                  onToolbarStateChange={(state) => {
-                    setCurrentToolbarState(state);
-                    toolbarStateChangeCallbacks.forEach((callback) =>
-                      callback(state),
-                    );
-                  }}
-                  onSubscribeToToolbarStateChanges={(callback) => {
-                    toolbarStateChangeCallbacks.add(callback);
-                    return () => {
-                      toolbarStateChangeCallbacks.delete(callback);
-                    };
-                  }}
-                  onToolbarSelectHoverChange={setIsToolbarSelectHovered}
-                  onToolbarRef={(element) => {
-                    toolbarElement = element;
-                  }}
-                  contextMenuPosition={contextMenuPosition()}
-                  contextMenuBounds={contextMenuBounds()}
-                  contextMenuTagName={contextMenuTagName()}
-                  contextMenuComponentName={contextMenuComponentName()}
-                  contextMenuHasFilePath={Boolean(
-                    contextMenuFilePath()?.filePath,
-                  )}
-                  actions={pluginRegistry.store.actions}
-                  actionContext={contextMenuActionContext()}
-                  onContextMenuDismiss={handleContextMenuDismiss}
-                  onContextMenuHide={deferHideContextMenu}
-                  commentItems={commentItems()}
-                  commentsDisconnectedItemIds={commentsDisconnectedItemIds()}
-                  commentItemCount={commentItems().length}
-                  clockFlashTrigger={clockFlashTrigger()}
-                  commentsDropdownPosition={commentsDropdownPosition()}
-                  isCommentsPinned={
-                    commentsDropdownPosition() !== null &&
-                    !isCommentsHoverOpen()
-                  }
-                  onToggleComments={handleToggleComments}
-                  onCopyAll={handleCommentsCopyAll}
-                  onCopyAllHover={handleCommentsCopyAllHover}
-                  onCommentsButtonHover={handleCommentsButtonHover}
-                  onCommentItemSelect={handleCommentItemSelect}
-                  onCommentItemHover={handleCommentItemHover}
-                  onCommentsCopyAll={handleCommentsCopyAll}
-                  onCommentsCopyAllHover={handleCommentsCopyAllHover}
-                  onCommentsClear={handleCommentsClear}
-                  copyableCount={copyableItemCount()}
-                  onCopyGroup={handleCopyGroup}
-                  onCommentsDismiss={dismissCommentsDropdown}
-                  onCommentsDropdownHover={handleCommentsDropdownHover}
-                  toolbarMenuPosition={toolbarMenuPosition()}
-                  toolbarMenuActions={pluginRegistry.store.actions.filter(
-                    (action) => action.showInToolbarMenu === true,
-                  )}
-                  defaultActionId={
-                    currentToolbarState()?.defaultAction ?? DEFAULT_ACTION_ID
-                  }
-                  onSetDefaultAction={handleSetDefaultAction}
-                  onToggleToolbarMenu={handleToggleToolbarMenu}
-                  onToolbarMenuDismiss={dismissToolbarMenu}
-                  clearPromptPosition={clearPromptPosition()}
-                  onClearCommentsConfirm={() => {
-                    confirmClear();
-                    dismissClearPrompt();
-                    handleCommentsClear();
-                  }}
-                  onClearCommentsCancel={dismissClearPrompt}
-                  selectionsRevealed={visibility.selectionsRevealed()}
-                  onToggleSelectionsRevealed={visibility.handleToggleParent}
-                  onToggleCommentItemRevealed={visibility.handleToggleItem}
-                  syncStatus={derivedSyncStatus()}
-                  onRetrySync={syncLayer.retry}
-                  syncWorkspace={syncLayer.workspace() ?? undefined}
-                  jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
-                  jiraSiteHost={syncLayer.jiraSiteHost() ?? undefined}
-                  groups={selectionGroups.groups()}
-                  activeGroupId={selectionGroups.activeGroupId()}
-                  onAddGroup={selectionGroups.handleAddGroup}
-                  onRenameGroup={selectionGroups.handleRenameGroup}
-                  onDeleteGroup={selectionGroups.handleDeleteGroup}
-                  onActiveGroupChange={(groupId) => {
-                    selectionGroups.setActiveGroupId(groupId);
-                    // If the active selection backs a saved CommentItem,
-                    // persist the group change via handleMoveItem (server),
-                    // not just the "next new selection" default.
-                    const itemId = findFocusedCommentItemId();
-                    if (itemId) selectionGroups.handleMoveItem(itemId, groupId);
-                  }}
-                  onMoveItem={selectionGroups.handleMoveItem}
-                  onMoveItems={selectionGroups.handleMoveItems}
-                  onRemoveItem={(itemId) => {
-                    selectionGroups.handleRemoveItem(itemId);
-                  }}
-                  onToggleGroupRevealed={visibility.handleToggleGroup}
-                  onFilterVisibilityChange={visibility.setGroupsRevealed}
-                  onJiraResolved={selectionGroups.markResolved}
-                  onTicketCreated={selectionGroups.markTicketCreated}
-                  onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
-                  looseTicketDialog={looseTicketDialog()}
-                  onLooseTicketDialogClose={() => setLooseTicketDialog(null)}
-                  commentEditorToolbarVisible={
-                    initialOptions.commentEditorToolbarVisible
-                  }
-                />
+                <SelectionLocationProvider value={locateSelectionById}>
+                  <ReactGrabRenderer
+                    selectionVisible={selectionVisible()}
+                    selectionBounds={selectionBounds()}
+                    selectionBoundsMultiple={selectionBoundsMultiple()}
+                    selectionShouldSnap={
+                      store.frozenElements.length > 0 ||
+                      dragPreviewBounds().length > 0
+                    }
+                    inspectVisible={isInspectMode() && inspectBounds().length > 0}
+                    inspectBounds={inspectBounds()}
+                    selectionElementsCount={store.frozenElements.length}
+                    selectionFilePath={store.selectionFilePath ?? undefined}
+                    selectionLineNumber={store.selectionLineNumber ?? undefined}
+                    selectionTagName={selectionTagName()}
+                    selectionComponentName={resolvedComponentName()}
+                    selectionLabelVisible={selectionLabelVisible()}
+                    selectionLabelStatus="idle"
+                    selectionActionCycleState={actionCycleState()}
+                    selectionArrowNavigationState={arrowNavigationState()}
+                    onArrowNavigationSelect={handleArrowNavigationSelect}
+                    inspectNavigationState={inspectNavigationState()}
+                    onInspectSelect={handleInspectSelect}
+                    labelInstances={computedLabelInstancesWithStatus()}
+                    labelPinsEnabled={Boolean(initialOptions.collapsibleLabels)}
+                    labelPinsStartClosed={Boolean(
+                      initialOptions.labelsStartCollapsed,
+                    )}
+                    previewedItemId={previewedItemId()}
+                    dragVisible={dragVisible()}
+                    dragBounds={dragBounds()}
+                    grabbedBoxes={computedGrabbedBoxes()}
+                    mouseX={
+                      store.frozenElements.length > 1
+                        ? undefined
+                        : cursorPosition().x
+                    }
+                    isFrozen={
+                      isFrozenPhase() || isActivated() || isToolbarSelectHovered()
+                    }
+                    inputValue={store.inputText}
+                    isPromptMode={isPromptMode()}
+                    hasAgent={store.hasAgentProvider}
+                    agentSessions={agentManager.sessions()}
+                    supportsUndo={store.supportsUndo}
+                    supportsFollowUp={store.supportsFollowUp}
+                    dismissButtonText={store.dismissButtonText}
+                    onDismissSession={agentManager.session.dismiss}
+                    onUndoSession={agentManager.session.undo}
+                    onFollowUpSubmitSession={handleFollowUpSubmit}
+                    onAcknowledgeSessionError={handleAcknowledgeError}
+                    onRetrySession={agentManager.session.retry}
+                    onShowContextMenuInstance={handleShowContextMenuInstance}
+                    onLabelInstanceHoverChange={handleLabelInstanceHoverChange}
+                    onInputChange={actions.setInputText}
+                    onInputSubmit={() => void handleInputSubmit()}
+                    onToggleExpand={handleToggleExpand}
+                    isPendingDismiss={isPendingDismiss()}
+                    selectionLabelShakeCount={selectionLabelShakeCount()}
+                    onConfirmDismiss={handleConfirmDismiss}
+                    onCancelDismiss={handleCancelDismiss}
+                    pendingAbortSessionId={store.pendingAbortSessionId}
+                    onRequestAbortSession={(sessionId) =>
+                      actions.setPendingAbortSessionId(sessionId)
+                    }
+                    onAbortSession={handleAgentAbort}
+                    toolbarVisible={pluginRegistry.store.theme.toolbar.enabled}
+                    isActive={isActivated()}
+                    onToggleActive={handleToggleActive}
+                    enabled={isEnabled()}
+                    onToggleEnabled={handleToggleEnabled}
+                    isDevMode={isDevMode()}
+                    onToggleDevMode={handleToggleDevMode}
+                    shakeCount={toolbarShakeCount()}
+                    onToolbarStateChange={(state) => {
+                      setCurrentToolbarState(state);
+                      toolbarStateChangeCallbacks.forEach((callback) =>
+                        callback(state),
+                      );
+                    }}
+                    onSubscribeToToolbarStateChanges={(callback) => {
+                      toolbarStateChangeCallbacks.add(callback);
+                      return () => {
+                        toolbarStateChangeCallbacks.delete(callback);
+                      };
+                    }}
+                    onToolbarSelectHoverChange={setIsToolbarSelectHovered}
+                    onToolbarRef={(element) => {
+                      toolbarElement = element;
+                    }}
+                    contextMenuPosition={contextMenuPosition()}
+                    contextMenuBounds={contextMenuBounds()}
+                    contextMenuTagName={contextMenuTagName()}
+                    contextMenuComponentName={contextMenuComponentName()}
+                    contextMenuHasFilePath={Boolean(
+                      contextMenuFilePath()?.filePath,
+                    )}
+                    actions={pluginRegistry.store.actions}
+                    actionContext={contextMenuActionContext()}
+                    onContextMenuDismiss={handleContextMenuDismiss}
+                    onContextMenuHide={deferHideContextMenu}
+                    commentItems={commentItems()}
+                    commentsDisconnectedItemIds={commentsDisconnectedItemIds()}
+                    commentItemCount={commentItems().length}
+                    clockFlashTrigger={clockFlashTrigger()}
+                    commentsDropdownPosition={commentsDropdownPosition()}
+                    isCommentsPinned={
+                      commentsDropdownPosition() !== null &&
+                      !isCommentsHoverOpen()
+                    }
+                    onToggleComments={handleToggleComments}
+                    onCopyAll={handleCommentsCopyAll}
+                    onCopyAllHover={handleCommentsCopyAllHover}
+                    onCommentsButtonHover={handleCommentsButtonHover}
+                    onCommentItemSelect={handleCommentItemSelect}
+                    onCommentItemHover={handleCommentItemHover}
+                    onCommentsCopyAll={handleCommentsCopyAll}
+                    onCommentsCopyAllHover={handleCommentsCopyAllHover}
+                    onCommentsClear={handleCommentsClear}
+                    copyableCount={copyableItemCount()}
+                    onCopyGroup={handleCopyGroup}
+                    onCommentsDismiss={dismissCommentsDropdown}
+                    onCommentsDropdownHover={handleCommentsDropdownHover}
+                    toolbarMenuPosition={toolbarMenuPosition()}
+                    toolbarMenuActions={pluginRegistry.store.actions.filter(
+                      (action) => action.showInToolbarMenu === true,
+                    )}
+                    defaultActionId={
+                      currentToolbarState()?.defaultAction ?? DEFAULT_ACTION_ID
+                    }
+                    onSetDefaultAction={handleSetDefaultAction}
+                    onToggleToolbarMenu={handleToggleToolbarMenu}
+                    onToolbarMenuDismiss={dismissToolbarMenu}
+                    clearPromptPosition={clearPromptPosition()}
+                    onClearCommentsConfirm={() => {
+                      confirmClear();
+                      dismissClearPrompt();
+                      handleCommentsClear();
+                    }}
+                    onClearCommentsCancel={dismissClearPrompt}
+                    selectionsRevealed={visibility.selectionsRevealed()}
+                    onToggleSelectionsRevealed={visibility.handleToggleParent}
+                    onToggleCommentItemRevealed={visibility.handleToggleItem}
+                    syncStatus={derivedSyncStatus()}
+                    onRetrySync={syncLayer.retry}
+                    syncWorkspace={syncLayer.workspace() ?? undefined}
+                    jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
+                    jiraSiteHost={syncLayer.jiraSiteHost() ?? undefined}
+                    groups={selectionGroups.groups()}
+                    activeGroupId={selectionGroups.activeGroupId()}
+                    onAddGroup={selectionGroups.handleAddGroup}
+                    onRenameGroup={selectionGroups.handleRenameGroup}
+                    onDeleteGroup={selectionGroups.handleDeleteGroup}
+                    onActiveGroupChange={(groupId) => {
+                      selectionGroups.setActiveGroupId(groupId);
+                      // If the active selection backs a saved CommentItem,
+                      // persist the group change via handleMoveItem (server),
+                      // not just the "next new selection" default.
+                      const itemId = findFocusedCommentItemId();
+                      if (itemId) selectionGroups.handleMoveItem(itemId, groupId);
+                    }}
+                    onMoveItem={selectionGroups.handleMoveItem}
+                    onMoveItems={selectionGroups.handleMoveItems}
+                    onRemoveItem={(itemId) => {
+                      selectionGroups.handleRemoveItem(itemId);
+                    }}
+                    onToggleGroupRevealed={visibility.handleToggleGroup}
+                    onFilterVisibilityChange={visibility.setGroupsRevealed}
+                    onJiraResolved={selectionGroups.markResolved}
+                    onTicketCreated={selectionGroups.markTicketCreated}
+                    onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
+                    looseTicketDialog={looseTicketDialog()}
+                    onLooseTicketDialogClose={() => setLooseTicketDialog(null)}
+                    commentEditorToolbarVisible={
+                      initialOptions.commentEditorToolbarVisible
+                    }
+                  />
+                </SelectionLocationProvider>
               </SyncProvider>
             );
           }, rendererRoot);
