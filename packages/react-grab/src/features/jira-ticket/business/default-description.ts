@@ -2,6 +2,7 @@ import type { SelectionGroup } from "../../selection-groups/types.js";
 import type { CommentItem } from "../../../types.js";
 import { isSynthetic } from "../../selection-groups/business/synthetic-group.js";
 import { extractFilePath } from "../../sidebar/extract-file-path.js";
+import { describeStep } from "../../reproduce-steps/index.js";
 
 const RAW_HTML_MAX_CHARS = 1000;
 
@@ -14,6 +15,13 @@ const renderMarkdownLink = (url: string, text?: string): string => {
   const href = url.replace(/\(/g, "%28").replace(/\)/g, "%29");
   return `[${label}](${href})`;
 };
+
+// CommonMark lets any ASCII punctuation be escaped with a backslash (spec
+// 2.4), so page text cannot become a link, emphasis or a heading.
+const MARKDOWN_PUNCTUATION = /[!-/:-@[-`{-~]/g;
+
+const escapeMarkdown = (text: string): string =>
+  text.replace(MARKDOWN_PUNCTUATION, "\\$&");
 
 /**
  * Builds the markdown block for a single selection: heading, optional
@@ -52,6 +60,15 @@ const renderSelection = (item: CommentItem, index: number): string => {
   const selector = item.elementSelectors?.[0];
   if (selector) {
     lines.push(`- **Selector:** \`${selector}\``);
+  }
+
+  if (item.steps?.length) {
+    lines.push("");
+    lines.push("**Steps to reproduce:**");
+    lines.push("");
+    item.steps.forEach((step, stepIndex) => {
+      lines.push(`${stepIndex + 1}. ${escapeMarkdown(describeStep(step))}`);
+    });
   }
 
   if (item.content) {

@@ -78,6 +78,16 @@ A comment gets an optional `steps` field: an array of Recorder steps. Only three
 - **Deploy order.** Run the migration (`pnpm --filter @react-grab/sync-server db:migrate:prod`) before deploying the new Worker. A new Worker without the column fails every comment read and write.
 - **Older writers.** Comment writes replace the whole comment (ADR-0019), so a writer that does not know `steps` clears them: an older overlay build, or an older extension whose gateway drops the field. This is the same rule as `recordingUrl`. It lasts only until every writer is updated.
 
+### Display and export (phase 3, 2026-11-16)
+
+- **One readable sentence per step**, from one pure function (`describeStep`), used by the sidebar and the Jira description alike:
+  - `navigate` → "Open /settings"
+  - `click` → "Click “Billing” (tab)", and "→ /settings/billing" when it asserts a navigation
+  - `change` → "Change “Coupon” (textbox, value not saved)"
+  - The label comes from the step's own selectors: the ARIA name first, then the text, then the CSS selector. Nothing else is stored or looked up. Paths leave out the query; a hash route (`#/…`) is kept.
+- **Sidebar.** A selection card with steps shows a collapsed "Steps (N)" list and a "Download Chrome Recorder flow" button. The Recorder imports recordings only from a JSON file (Recorder reference, "Edit user flows"), so the button downloads one: `{ title, steps }`, the Recorder's user-flow shape, saved with FileSaver.js (`file-saver`), which handles the browser differences of Blob downloads. In DevTools: Recorder → Import recording → choose the file → Replay.
+- **Jira.** The default description lists the steps under each selection as "Steps to reproduce". Step text comes from the page, so it is escaped with CommonMark backslash escapes (spec 2.4) before it reaches Markdown; it cannot become a link, emphasis or a heading in the ticket. The JSON flow is not put in the ticket: it is long, and the readable list is what a ticket reader needs.
+
 ### Consequences
 
 - Good: each new comment carries a readable, replayable path in a standard format, even with video recording off.
@@ -98,4 +108,6 @@ A comment gets an optional `steps` field: an array of Recorder steps. Only three
 - rrweb custom events: https://github.com/rrweb-io/rrweb/blob/master/docs/recipes/customize-event.md
 - Sentry writes breadcrumbs into rrweb as custom events: https://github.com/getsentry/sentry-javascript/pull/7395
 - WXT storage versioning and migrations: https://wxt.dev/storage#versioning-with-migrations
+- CommonMark backslash escapes: https://spec.commonmark.org/0.31.2/#backslash-escapes
+- FileSaver.js: https://github.com/eligrey/FileSaver.js
 - MDN `Event.isTrusted`: https://developer.mozilla.org/en-US/docs/Web/API/Event/isTrusted

@@ -12,6 +12,7 @@ import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-col
 import { cn } from "../../utils/cn.js";
 import { DevInsights } from "../dev-insights/index.js";
 import { LocationNote } from "../selection-location/location-note.jsx";
+import { StepList } from "../reproduce-steps/step-list.jsx";
 
 export interface SelectionCardProps {
   item: CommentItem;
@@ -87,6 +88,8 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
           scrollRoot={props.scrollRoot}
         />
       </Show>
+
+      <StepList item={props.item} />
 
       {/* Dev Insights — unified technical metadata (visible in DEV mode only) */}
       <Show when={isDevMode()}>

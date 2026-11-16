@@ -28,6 +28,7 @@ import { CreateTicketButton } from "../jira/create-ticket-button.js";
 import { DevInsights } from "../dev-insights/index.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
 import { ActiveGroupPicker } from "../selection-groups/active-group-picker.js";
+import { StepList } from "../reproduce-steps/step-list.jsx";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];
@@ -206,6 +207,7 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 hasElementScreenshot={Boolean(item.screenshotElement)}
                 hasFullPageScreenshot={Boolean(item.screenshotFullPage)}
                 recordingUrl={item.recordingUrl}
+                reproduceSteps={<StepList item={item} />}
                 jiraTicketId={group()?.jiraTicketId}
                 jiraUrl={group()?.jiraUrl}
                 jiraStatus={group()?.jiraStatus}

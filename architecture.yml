@@ -231,11 +231,14 @@ features:
     adrs: [ADR-0025, ADR-0021, ADR-0023]
     files:
       - packages/react-grab/src/features/reproduce-steps/business/build-step.ts
+      - packages/react-grab/src/features/reproduce-steps/business/describe-step.ts
       - packages/react-grab/src/features/reproduce-steps/business/selection-press.ts
       - packages/react-grab/src/features/reproduce-steps/business/step-buffer.ts
       - packages/react-grab/src/features/reproduce-steps/business/step-selectors.ts
       - packages/react-grab/src/features/reproduce-steps/business/to-reproduce-steps.ts
+      - packages/react-grab/src/features/reproduce-steps/business/to-user-flow.ts
       - packages/react-grab/src/features/reproduce-steps/business/user-input.ts
+      - packages/react-grab/src/features/reproduce-steps/download-user-flow.ts
       - packages/react-grab/src/features/reproduce-steps/hooks/create-step-capture.ts
       - packages/react-grab/src/features/reproduce-steps/index.ts
       - packages/react-grab/src/features/reproduce-steps/limits.ts
@@ -601,6 +604,14 @@ data_attrs:
   # `data-react-grab-`). An attr is valid if its suffix matches one entry in
   # some scope's `owns` list, or appears in `reserved`.
   scopes:
+    reproduce-steps:
+      description: Step list on a selection card and its Chrome Recorder flow download (ADR-0025)
+      owning_feature: reproduce-steps
+      owns:
+        - reproduce-steps
+        - reproduce-steps-item
+        - reproduce-steps-download
+
     selection-location:
       description: Reason a selection is not on the page, and its Open page action (comments panel row, sidebar card)
       owning_feature: selection-location
@@ -916,6 +927,9 @@ data_attrs:
     menu-item: {scope: overlay, src: 2, tests: 8}
     overlay-canvas: {scope: overlay, src: 1, tests: 0}
     product: {scope: overlay, src: 1, tests: 61}
+    reproduce-steps: {scope: reproduce-steps, src: 1, tests: 1}
+    reproduce-steps-download: {scope: reproduce-steps, src: 1, tests: 1}
+    reproduce-steps-item: {scope: reproduce-steps, src: 1, tests: 1}
     ignore: {scope: reserved, src: 2, tests: 0}
     ignore-events: {scope: reserved, src: 65, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
@@ -930,7 +944,7 @@ data_attrs:
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 10}
+    selection-card: {scope: selection, src: 2, tests: 13}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 3, tests: 0}
@@ -970,7 +984,7 @@ data_attrs:
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 2, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 21}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 22}
     toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 1, tests: 4}

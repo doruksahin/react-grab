@@ -104,6 +104,9 @@ export interface SelectionCardBodyProps {
   // Link to the replay of how the user got here (SPEC-020)
   recordingUrl?: string;
 
+  // The steps that led to the selection and their export (ADR-0025).
+  reproduceSteps?: JSX.Element;
+
   // Bottom meta row
   jiraIssueType?: string | null;
   jiraPriority?: string | null;
@@ -235,6 +238,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
               </a>
             )}
           </Show>
+          {props.reproduceSteps}
         </>
       }
       meta={

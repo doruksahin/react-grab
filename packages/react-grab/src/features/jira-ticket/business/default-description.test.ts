@@ -119,4 +119,47 @@ describe("defaultDescription recording link (SPEC-020)", () => {
       "**Recording:**",
     );
   });
+
+  it("lists the steps that led to a selection (ADR-0025)", () => {
+    const description = defaultDescription(group, [
+      makeItem({
+        steps: [
+          { type: "navigate", url: "https://app.example.com/settings" },
+          {
+            type: "click",
+            selectors: ['aria/Billing[role="tab"]'],
+            offsetX: 1,
+            offsetY: 1,
+          },
+        ],
+      }),
+    ]);
+    expect(description).toContain(
+      "**Steps to reproduce:**\n\n1. Open \\/settings\n2. Click “Billing” \\(tab\\)",
+    );
+  });
+
+  it("has no steps section without steps", () => {
+    expect(defaultDescription(group, [makeItem()])).not.toContain(
+      "Steps to reproduce",
+    );
+  });
+
+  it("escapes page text in steps, so it cannot become Markdown", () => {
+    const description = defaultDescription(group, [
+      makeItem({
+        steps: [
+          {
+            type: "click",
+            selectors: ["text/[Open](https://e.example) *now* #1"],
+            offsetX: 1,
+            offsetY: 1,
+          },
+        ],
+      }),
+    ]);
+    expect(description).toContain(
+      "1. Click “\\[Open\\]\\(https\\:\\/\\/e\\.example\\) \\*now\\* \\#1”",
+    );
+  });
 });
