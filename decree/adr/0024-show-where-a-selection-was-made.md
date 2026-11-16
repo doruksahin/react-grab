@@ -41,8 +41,8 @@ Chosen option: **1**.
 | `on-page` | The element is on the page | nothing (row not dimmed) |
 | `other-page` | Same origin, different path | "Made on /settings/billing" and "Open page" |
 | `other-site` | Different origin | "Made on localhost:3000, another site" |
-| `gone` | Same origin and path, element missing | "No longer on this page" |
-| `unknown` | No stored `pageUrl`, it does not parse, or either URL is not http(s) | "Not on this page" |
+| `gone` | Same origin and path, element missing (usually hidden by UI state such as a closed dialog, menu or tab; sometimes removed) | "Not visible here"; the card's notice is "Not visible on this page", says it may be inside a closed dialog, menu or tab, or removed, and names "Guide me" only when a guide can run |
+| `unknown` | No stored `pageUrl`, it does not parse, or either URL is not http(s) | "Page unknown" |
 
 URLs are parsed with the WHATWG `URL` API, and only `http:` and `https:` URLs count as pages. Other schemes are `unknown`: `javascript:`, `data:` and `file:` have an opaque origin, and a `blob:` URL takes the origin of its creator but is not a page. Two URLs are the same site when their `origin` is equal, and the same page when their `origin` and `pathname` are equal. Query and fragment are ignored, because they usually hold state (filters, tracking, scroll anchors), not a different page. A hash-routed app (`/#/settings`) therefore reads as `gone` instead of `other-page`; we accept this and revisit it if a hash-routed host appears.
 

@@ -24,8 +24,8 @@ When the element of a selection is not on the page, the overlay dims its row and
 |---|---|---|
 | Another page of this site | Made on /settings/billing | **Open page** |
 | Another site | Made on localhost:3000, another site | None |
-| This page, but the element is not there | No longer on this page | **Guide me**, if the selection has steps |
-| No saved page address | Not on this page | None |
+| This page, but the element is not there (for example inside a closed dialog, menu or tab, or removed) | Not visible here | **Guide me**, if the selection has steps |
+| No saved page address | Page unknown | None |
 
 The reason shows in three places:
 
@@ -97,7 +97,7 @@ The guide takes you back to a selection on the live page. It never clicks or typ
 
 **Guide me** shows when all of these are true:
 
-- the selection is on another page of this site, or it is no longer on this page;
+- the selection is on another page of this site, or it is not visible on this page;
 - the selection has steps;
 - its first step is a page on this site.
 
@@ -119,7 +119,7 @@ The guide tries the saved selectors in the order of the Recorder: accessible nam
 
 - A flow on a multi-page site starts at the last full page load.
 - The steps do not include hover, scroll, keys, double clicks, iframes, or elements in a shadow root.
-- A hash-routed app shows "No longer on this page" for a selection on another route, not "Made on …".
+- A hash-routed app shows "Not visible here" for a selection on another route, not "Made on …".
 - A writer that does not know `steps` clears them when it saves the comment. Older overlay builds are such writers.
 - The guide highlight uses the standard selection box of the overlay. On some backgrounds this box is hard to see. The guide scrolls the element into view to compensate.
 - A selection from another site gets no **Open page** and no guide.

@@ -91,9 +91,7 @@ test.describe("Selection location", { tag: ["@ADR-0024"] }, () => {
       "Made on /settings/billing",
     );
     await expect(note(page, "Made locally")).toHaveText("localhost:3000");
-    await expect(note(page, "Element removed")).toHaveText(
-      "No longer on this page",
-    );
+    await expect(note(page, "Element removed")).toHaveText("Not visible here");
     await expect(note(page, "Todo list here")).toHaveCount(0);
     await reactGrab.screenshot("location-reasons", "page");
   });

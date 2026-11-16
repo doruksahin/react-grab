@@ -12,9 +12,9 @@ export const describeLocation = (
     case "other-site":
       return `Made on ${location.host}, another site`;
     case "gone":
-      return "No longer on this page";
+      return "Not visible here";
     case "unknown":
-      return "Not on this page";
+      return "Page unknown";
   }
 };
 
@@ -24,9 +24,18 @@ export interface LocationNotice {
   detail?: string;
 }
 
+export interface LocationNoticeOptions {
+  /** A step guide can lead back to it, so the detail may point to it. */
+  canGuide: boolean;
+}
+
+const GONE_DETAIL =
+  "It may be inside a closed dialog, menu or tab, or it was removed.";
+
 /** What a card says when its selection is not on the page (ADR-0024). */
 export const describeLocationNotice = (
   location: SelectionLocation,
+  { canGuide }: LocationNoticeOptions,
 ): LocationNotice | undefined => {
   switch (location.kind) {
     case "on-page":
@@ -37,17 +46,19 @@ export const describeLocationNotice = (
       return { title: "Made on another site", detail: location.host };
     case "gone":
       return {
-        title: "No longer on this page",
-        detail: "It was removed or hidden after it was selected.",
+        title: "Not visible on this page",
+        detail: canGuide
+          ? `${GONE_DETAIL} "Guide me" repeats the steps that showed it.`
+          : GONE_DETAIL,
       };
     case "unknown":
-      return { title: "Not on this page" };
+      return { title: "Page unknown" };
   }
 };
 
 /**
  * The few words a list row shows: the host of another site, else the
- * reason sentence ("Made on /boards", "No longer on this page").
+ * reason sentence ("Made on /boards", "Not visible here").
  */
 export const describeLocationShort = (
   location: SelectionLocation,

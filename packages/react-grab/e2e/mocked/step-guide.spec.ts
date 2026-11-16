@@ -205,9 +205,11 @@ test.describe("Step guide", { tag: ["@ADR-0026"] }, () => {
     const card = page
       .locator("[data-react-grab-selection-card]")
       .filter({ hasText: "Button inside the modal" });
-    await expect(
-      card.locator("[data-react-grab-selection-location]"),
-    ).toContainText("No longer on this page");
+    const notice = card.locator("[data-react-grab-selection-location]");
+    await expect(notice).toContainText("Not visible on this page");
+    await expect(notice).toContainText(
+      '"Guide me" repeats the steps that showed it.',
+    );
 
     await card.locator("[data-react-grab-step-guide-start]").click();
     await expect(bar(page)).toHaveAttribute(
