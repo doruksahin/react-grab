@@ -14,7 +14,7 @@ export interface DevInsightsShellProps {
 export const DevInsightsShell: Component<DevInsightsShellProps> = (props) => (
   <div data-react-grab-dev-insights class={props.class}>
     <CollapsibleCard
-      variant="panel"
+      variant="row"
       defaultOpen={props.defaultOpen ?? false}
       trigger={
         <>

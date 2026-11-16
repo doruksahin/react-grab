@@ -720,7 +720,8 @@ data_attrs:
         - selection-card-header
         - selection-menu
         - move-destination
-        - selection-card-ticket
+        - selection-card-facts
+        - jira-open
         - selection-card-time
         - selection-checkbox
         - selection-row
@@ -968,7 +969,7 @@ data_attrs:
     step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 71, tests: 6}
+    ignore-events: {scope: reserved, src: 72, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -976,6 +977,7 @@ data_attrs:
     collapsed-dot: {scope: selection, src: 1, tests: 9}
     collapsed-dot-preview: {scope: selection, src: 1, tests: 0}
     dev-insights: {scope: selection, src: 1, tests: 0}
+    jira-open: {scope: selection, src: 1, tests: 0}
     latest-comment: {scope: selection, src: 1, tests: 1}
     move-destination: {scope: selection, src: 1, tests: 2}
     open-thread: {scope: selection, src: 1, tests: 1}
@@ -984,8 +986,8 @@ data_attrs:
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
     selection-card: {scope: selection, src: 3, tests: 12}
     selection-card-body: {scope: selection, src: 1, tests: 1}
+    selection-card-facts: {scope: selection, src: 1, tests: 0}
     selection-card-header: {scope: selection, src: 1, tests: 0}
-    selection-card-ticket: {scope: selection, src: 1, tests: 0}
     selection-card-time: {scope: selection, src: 1, tests: 0}
     selection-checkbox: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}

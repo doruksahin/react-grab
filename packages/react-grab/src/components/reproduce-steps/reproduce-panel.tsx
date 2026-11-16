@@ -34,7 +34,7 @@ export const ReproducePanel: Component<ReproducePanelProps> = (props) => {
     <Show when={hasContent()}>
       <div data-react-grab-reproduce-steps>
         <CollapsibleCard
-          variant="panel"
+          variant="row"
           defaultOpen={false}
           disabled={!flow()}
           trigger={
@@ -49,8 +49,8 @@ export const ReproducePanel: Component<ReproducePanelProps> = (props) => {
               </Show>
             </>
           }
-          preview={
-            <div class="flex flex-wrap gap-1.5">
+          actions={
+            <>
               <Show when={props.item.recordingUrl}>
                 {(recordingUrl) => (
                   <a
@@ -58,12 +58,13 @@ export const ReproducePanel: Component<ReproducePanelProps> = (props) => {
                     href={recordingUrl()}
                     target="_blank"
                     rel="noreferrer"
+                    title="Watch the replay of how we got here"
                     class={cn(
                       buttonVariants({ variant: "outline", size: "xs" }),
                     )}
                   >
                     <IconPlay size={11} />
-                    Watch replay
+                    Replay
                   </a>
                 )}
               </Show>
@@ -74,16 +75,18 @@ export const ReproducePanel: Component<ReproducePanelProps> = (props) => {
                     type="button"
                     variant="outline"
                     size="xs"
+                    aria-label="Download the Chrome Recorder flow"
+                    title="Download the Chrome Recorder flow"
                     onClick={() =>
                       downloadUserFlow(userFlow(), userFlowFileName(props.item))
                     }
                   >
                     <IconDownload size={12} />
-                    Recorder flow
+                    Flow
                   </Button>
                 )}
               </Show>
-            </div>
+            </>
           }
         >
           <ol class="flex flex-col gap-0.5">
