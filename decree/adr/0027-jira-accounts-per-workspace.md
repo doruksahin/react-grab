@@ -5,7 +5,7 @@ references:
 - ADR-0019
 - ADR-0020
 - ADR-0023
-status: proposed
+status: accepted
 ---
 
 # ADR-0027 Jira accounts per workspace, set up in the extension

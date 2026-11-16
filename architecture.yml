@@ -1215,4 +1215,4 @@ decree:
     ADR-0027:
       title: Jira accounts per workspace, set up in the extension
       file: decree/adr/0027-jira-accounts-per-workspace.md
-      status: proposed
+      status: accepted
