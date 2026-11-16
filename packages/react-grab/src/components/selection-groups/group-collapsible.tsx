@@ -1,4 +1,4 @@
-import { createSignal, For, Show } from "solid-js";
+import { createEffect, createSignal, For, on, Show } from "solid-js";
 import type { Component, JSX } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
@@ -16,10 +16,26 @@ interface GroupCollapsibleProps {
   onDelete?: (groupId: string) => void;
   onToggleRevealed: (groupId: string) => void;
   onCopy?: (groupId: string) => void;
+  /** Extra header content, such as the sidebar's ticket status (ADR-0028). */
+  headerExtra?: JSX.Element;
+  /** Opens the section when it holds this selection (a focus request). */
+  revealItemId?: string | null;
 }
 
 export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
   const [isOpen, setIsOpen] = createSignal(true);
+  // A focus request is a user action from elsewhere: the card it targets
+  // must be visible, so its section opens.
+  createEffect(
+    on(
+      () => props.revealItemId,
+      (itemId) => {
+        if (itemId && props.items.some((item) => item.id === itemId)) {
+          setIsOpen(true);
+        }
+      },
+    ),
+  );
   const [isRenaming, setIsRenaming] = createSignal(false);
   let renameInputRef: HTMLInputElement | undefined;
 
@@ -82,6 +98,7 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
           </Show>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
+          {props.headerExtra}
           {/* Hover actions — all groups are user groups now */}
           <div class="flex items-center gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
             <IconButton

@@ -120,12 +120,8 @@ test.describe("Sidebar", () => {
         "[role='dialog'][aria-label='React Grab Dashboard']",
       );
       if (!sidebar) return -1;
-      // The Groups tab shows the group count.
-      const groupsTab = Array.from(
-        sidebar.querySelectorAll<HTMLElement>("[role='tab']"),
-      ).find((tab) => tab.textContent?.startsWith("Groups"));
-      if (!groupsTab) return -1;
-      return parseInt(groupsTab.textContent?.replace(/\D/g, "") ?? "0", 10);
+      return sidebar.querySelectorAll("[data-react-grab-group-collapsible]")
+        .length;
     }, ATTR);
 
     // If the e2e fixture already has groups we cannot test the empty state — skip.
@@ -338,7 +334,7 @@ test.describe("Sidebar — Group Detail View", () => {
       .toBe(true);
   });
 
-  test("clicking a group card navigates to the detail view", async ({
+  test("Open detail view on a group header navigates to the detail view", async ({
     page,
   }) => {
     // The group card should be present with the group name
@@ -394,7 +390,9 @@ test.describe("Sidebar — Group Detail View", () => {
     expect(headerText).toBe(true);
   });
 
-  test("back button returns to the groups list", async ({ page }) => {
+  test("back button returns to the tree and focuses the group's button", async ({
+    page,
+  }) => {
     // Navigate to detail
     await openGroupDetail(page, TEST_GROUP.name);
 
@@ -407,7 +405,7 @@ test.describe("Sidebar — Group Detail View", () => {
       const host = document.querySelector(`[${attrName}]`);
       const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
       const backBtn = root?.querySelector<HTMLButtonElement>(
-        "[aria-label='Back to groups list']",
+        "[aria-label='Back to selections']",
       );
       backBtn?.click();
     }, ATTR);
@@ -419,6 +417,11 @@ test.describe("Sidebar — Group Detail View", () => {
     await expect
       .poll(() => isSidebarVisible(page), { timeout: 3000 })
       .toBe(true);
+    await expect(
+      page
+        .locator(`[data-react-grab-group-ticket-summary="${TEST_GROUP.id}"]`)
+        .getByRole("button", { name: "Open detail view" }),
+    ).toBeFocused();
   });
 
   test("detail view back button is clickable (pointer-events not blocked)", async ({
@@ -436,7 +439,7 @@ test.describe("Sidebar — Group Detail View", () => {
       const host = document.querySelector(`[${attrName}]`);
       const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
       const btn = root?.querySelector<HTMLButtonElement>(
-        "[aria-label='Back to groups list']",
+        "[aria-label='Back to selections']",
       );
       if (!btn) return null;
       const r = btn.getBoundingClientRect();
@@ -637,7 +640,7 @@ test.describe("Sidebar — JIRA integration", () => {
       .toBe(true);
   });
 
-  test("group card shows assignee avatar img and reporter initials after status poll", async ({
+  test("group detail shows assignee avatar img and reporter initials after status poll", async ({
     page,
     reactGrab,
     mockServer,
@@ -663,6 +666,7 @@ test.describe("Sidebar — JIRA integration", () => {
     await expect
       .poll(() => mockServer.requests("getJiraTicketStatus").length)
       .toBeGreaterThan(0);
+    await openGroupDetail(page, TEST_GROUP.name);
 
     // Assignee avatar: URL provided → img renders
     // Poll inside the shadow root since waitForSelector cannot pierce shadow DOM
@@ -674,7 +678,9 @@ test.describe("Sidebar — JIRA integration", () => {
             const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
             return (
               root
-                ?.querySelector("[data-react-grab-avatar-image]")
+                ?.querySelector(
+                  "[data-react-grab-detail-header] [data-react-grab-avatar-image]",
+                )
                 ?.getAttribute("src") ?? null
             );
           }, ATTR),
@@ -688,7 +694,9 @@ test.describe("Sidebar — JIRA integration", () => {
       const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
       return (
         root
-          ?.querySelector("[data-react-grab-avatar-fallback]")
+          ?.querySelector(
+            "[data-react-grab-detail-header] [data-react-grab-avatar-fallback]",
+          )
           ?.textContent?.trim() ?? null
       );
     }, ATTR);

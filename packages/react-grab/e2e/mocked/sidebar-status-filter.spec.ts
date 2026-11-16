@@ -35,7 +35,9 @@ test.describe(
       async ({ page }) => {
         const dashboard = await openDashboard(page);
         const chips = dashboard.locator("[data-react-grab-status-filter]");
-        const groupCards = dashboard.locator("[data-react-grab-group-card]");
+        const groupCards = dashboard.locator(
+          "[data-react-grab-group-collapsible]",
+        );
 
         await expect(
           chips.getByRole("button", { name: "All (3)" }),
@@ -94,10 +96,10 @@ test.describe("Sidebar offline banner", { tag: ["@ADR-0022"] }, () => {
       await expect(banner).toHaveAttribute("role", "alert");
       // The list stays usable under the banner.
       await expect(
-        dashboard.getByRole("tab", { name: /^Groups/ }),
+        dashboard.locator("[data-react-grab-sidebar-search]"),
       ).toBeVisible();
       await expect(
-        dashboard.locator("[data-react-grab-group-card]"),
+        dashboard.locator("[data-react-grab-group-collapsible]"),
       ).toHaveCount(0);
 
       // Still down: the banner stays.
@@ -113,7 +115,7 @@ test.describe("Sidebar offline banner", { tag: ["@ADR-0022"] }, () => {
       await dashboard.getByRole("button", { name: "Retry" }).click();
       await expect(banner).toHaveCount(0);
       await expect(
-        dashboard.locator("[data-react-grab-group-card]"),
+        dashboard.locator("[data-react-grab-group-collapsible]"),
       ).toHaveCount(3);
       expect(mockServer.requests("listGroups")).toHaveLength(3);
     },

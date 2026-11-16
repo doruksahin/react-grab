@@ -1,34 +1,25 @@
 import {
   Show,
-  For,
   onMount,
   onCleanup,
   createSignal,
   createEffect,
+  createMemo,
   on,
 } from "solid-js";
 import type { Component } from "solid-js";
 import type { CommentItem, DropdownAnchor } from "../types.js";
 import type { SelectionGroupsViewProps } from "../features/selection-groups/types.js";
-import { GroupCollapsible } from "./selection-groups/group-collapsible.jsx";
 import {
   GroupPickerFlyout,
   GroupPickerPopover,
   GroupPickerTrigger,
 } from "./selection-groups/group-picker-flyout.jsx";
-import { UngroupedSection } from "./selection-groups/ungrouped-section.jsx";
-import {
-  groupComments,
-  fuzzyMatchGroup,
-} from "../features/selection-groups/business/group-operations.js";
-import {
-  isPresentedAsLoose,
-  presentedGroups,
-} from "../features/selection-groups/business/membership.js";
-import {
-  assignableGroupsFor,
-  canDeleteGroup,
-} from "../features/selection-groups/business/membership-policy.js";
+import { SelectionTreeView } from "./selection-groups/selection-tree-view.jsx";
+import { fuzzyMatchGroup } from "../features/selection-groups/business/group-operations.js";
+import { assignableGroupsFor } from "../features/selection-groups/business/membership-policy.js";
+import { selectionTree } from "../features/selection-groups/business/selection-tree.js";
+import { selectionRowFields } from "../features/selection-groups/business/selection-row-fields.js";
 import {
   DROPDOWN_EDGE_TRANSFORM_ORIGIN,
   DROPDOWN_ICON_SIZE_PX,
@@ -82,13 +73,6 @@ interface CommentsDropdownProps extends Pick<
   copyableCount?: number;
 }
 
-const getCommentItemDisplayName = (item: CommentItem): string => {
-  if (item.elementsCount && item.elementsCount > 1) {
-    return `${item.elementsCount} elements`;
-  }
-  return item.componentName ?? item.tagName;
-};
-
 export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
   let containerRef: HTMLDivElement | undefined;
   const {
@@ -131,20 +115,11 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
 
   let copyAllFeedbackTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  const visibleGroups = () => presentedGroups(props.groups ?? [], props.items);
-
-  const groupedItems = () => groupComments(visibleGroups(), props.items);
-
   // A locked selection has no targets, so it gets no move action at all.
   const moveTargetsFor = (item: CommentItem) =>
     assignableGroupsFor(item, props.groups ?? []);
 
-  const ungroupedItems = () =>
-    props.items.filter((item) =>
-      isPresentedAsLoose(item, props.groups ?? [], props.items),
-    );
-
-  // Shared row renderer used by both UngroupedSection and GroupCollapsible.
+  // The menu's row; the tree around it is SelectionTreeView (ADR-0028).
   const renderRow = (item: CommentItem) => (
     <div
       data-react-grab-ignore-events
@@ -185,12 +160,14 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
     >
       <span class="flex flex-col min-w-0 flex-1">
         <span class="text-caption leading-4 font-medium text-popover-foreground truncate">
-          {getCommentItemDisplayName(item)}
+          {selectionRowFields(item).title}
         </span>
-        <Show when={item.commentText}>
-          <span class="text-meta leading-3 text-muted-foreground truncate mt-0.5">
-            {item.commentText}
-          </span>
+        <Show when={selectionRowFields(item).detail}>
+          {(detail) => (
+            <span class="text-meta leading-3 text-muted-foreground truncate mt-0.5">
+              {detail()}
+            </span>
+          )}
         </Show>
         <LocationNote selectionId={item.id} class="mt-0.5" />
       </span>
@@ -291,13 +268,18 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
     </div>
   );
 
-  const filteredGroupedItems = () => {
+  // The group search narrows the group sections; Ungrouped always shows.
+  const visibleTree = createMemo(() => {
+    const tree = selectionTree(props.items, props.groups ?? []);
     const query = searchQuery();
-    if (!query) return groupedItems();
-    return groupedItems().filter((entry) =>
-      fuzzyMatchGroup(entry.group.name, query),
-    );
-  };
+    if (!query) return tree;
+    return {
+      ...tree,
+      groups: tree.groups.filter((section) =>
+        fuzzyMatchGroup(section.group.name, query),
+      ),
+    };
+  });
 
   // HACK: mouseenter doesn't fire when an element appears under the cursor, so we check :hover after the enter animation commits
   createEffect(
@@ -489,35 +471,14 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                 ref={highlightRef}
                 class="pointer-events-none absolute bg-accent opacity-0 transition-[top,left,width,height,opacity] duration-75 ease-out"
               />
-              <Show when={ungroupedItems().length > 0}>
-                <UngroupedSection
-                  items={ungroupedItems()}
-                  isFirst={true}
-                  renderItem={renderRow}
-                />
-              </Show>
-              <For each={filteredGroupedItems()}>
-                {(entry, index) => (
-                  <GroupCollapsible
-                    group={entry.group}
-                    items={entry.items}
-                    isFirst={index() === 0 && ungroupedItems().length === 0}
-                    onRename={(groupId, name) =>
-                      props.onRenameGroup?.(groupId, name)
-                    }
-                    onDelete={
-                      canDeleteGroup(entry.group)
-                        ? (groupId) => props.onDeleteGroup?.(groupId)
-                        : undefined
-                    }
-                    onToggleRevealed={(groupId) =>
-                      props.onToggleGroupRevealed?.(groupId)
-                    }
-                    onCopy={(groupId) => props.onCopyGroup?.(groupId)}
-                    renderItem={renderRow}
-                  />
-                )}
-              </For>
+              <SelectionTreeView
+                tree={visibleTree()}
+                renderItem={renderRow}
+                onRenameGroup={props.onRenameGroup}
+                onDeleteGroup={props.onDeleteGroup}
+                onToggleGroupRevealed={props.onToggleGroupRevealed}
+                onCopyGroup={props.onCopyGroup}
+              />
             </div>
           </div>
 

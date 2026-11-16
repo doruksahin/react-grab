@@ -39,14 +39,14 @@ const isSidebarVisible = async (
     );
   }, ATTR);
 
-const countVisibleGroupCards = async (
+const countVisibleGroupSections = async (
   page: import("@playwright/test").Page,
 ): Promise<number> =>
   page.evaluate((attrName) => {
     const host = document.querySelector(`[${attrName}]`);
     const root = host?.shadowRoot?.querySelector(`[${attrName}]`);
     return root
-      ? root.querySelectorAll("[data-react-grab-group-card]").length
+      ? root.querySelectorAll("[data-react-grab-group-collapsible]").length
       : 0;
   }, ATTR);
 
@@ -288,7 +288,7 @@ test.describe("Due date filter (SPEC-018)", { tag: ["@SPEC-018"] }, () => {
     const { page } = reactGrab;
     await openSidebar(page);
     await expect
-      .poll(() => countVisibleGroupCards(page), { timeout: 3000 })
+      .poll(() => countVisibleGroupSections(page), { timeout: 3000 })
       .toBe(6);
   });
 
@@ -298,7 +298,7 @@ test.describe("Due date filter (SPEC-018)", { tag: ["@SPEC-018"] }, () => {
     await openDueDateFilter(page);
     await pickDueDateOption(page, "Overdue");
     await expect
-      .poll(() => countVisibleGroupCards(page), { timeout: 3000 })
+      .poll(() => countVisibleGroupSections(page), { timeout: 3000 })
       .toBe(1);
   });
 
@@ -308,7 +308,7 @@ test.describe("Due date filter (SPEC-018)", { tag: ["@SPEC-018"] }, () => {
     await openDueDateFilter(page);
     await pickDueDateOption(page, "Due today");
     await expect
-      .poll(() => countVisibleGroupCards(page), { timeout: 3000 })
+      .poll(() => countVisibleGroupSections(page), { timeout: 3000 })
       .toBe(1);
   });
 
@@ -321,7 +321,7 @@ test.describe("Due date filter (SPEC-018)", { tag: ["@SPEC-018"] }, () => {
     await pickDueDateOption(page, "Next 7 days");
     // today (0), this-wk (+1), next-7 (+6) — all within [today, today+7]
     await expect
-      .poll(() => countVisibleGroupCards(page), { timeout: 3000 })
+      .poll(() => countVisibleGroupSections(page), { timeout: 3000 })
       .toBe(3);
   });
 
@@ -333,7 +333,7 @@ test.describe("Due date filter (SPEC-018)", { tag: ["@SPEC-018"] }, () => {
     await openDueDateFilter(page);
     await pickDueDateOption(page, "No due date");
     await expect
-      .poll(() => countVisibleGroupCards(page), { timeout: 3000 })
+      .poll(() => countVisibleGroupSections(page), { timeout: 3000 })
       .toBe(1);
   });
 
@@ -346,7 +346,7 @@ test.describe("Due date filter (SPEC-018)", { tag: ["@SPEC-018"] }, () => {
     await openDueDateFilter(page);
     await pickDueDateOption(page, "Overdue");
     await expect
-      .poll(() => countVisibleGroupCards(page), { timeout: 3000 })
+      .poll(() => countVisibleGroupSections(page), { timeout: 3000 })
       .toBe(1);
 
     // Clicking the shared "✕ Clear" button restores the full list, proving the
@@ -354,7 +354,7 @@ test.describe("Due date filter (SPEC-018)", { tag: ["@SPEC-018"] }, () => {
     // the other four filters.
     await clickClearFilters(page);
     await expect
-      .poll(() => countVisibleGroupCards(page), { timeout: 3000 })
+      .poll(() => countVisibleGroupSections(page), { timeout: 3000 })
       .toBe(6);
   });
 

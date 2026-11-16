@@ -84,9 +84,6 @@ test.describe("Label pins", { tag: ["@ADR-0022"] }, () => {
       const dashboard = page.getByRole("dialog", {
         name: "React Grab Dashboard",
       });
-      await expect(
-        dashboard.getByRole("tab", { name: /^Selections/ }),
-      ).toHaveAttribute("aria-selected", "true");
       const thread = dashboard
         .locator("[data-react-grab-selection-card]")
         .filter({ hasText: "Navigation bar is misaligned" });
