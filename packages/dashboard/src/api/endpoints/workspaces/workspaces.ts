@@ -28,7 +28,6 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  GetJiraDestinationParams,
   JiraDestination,
   JiraErrorResponse,
   SetJiraDestinationBody,
@@ -332,26 +331,17 @@ export type getJiraDestinationResponseError = (getJiraDestinationResponse404 | g
 
 export type getJiraDestinationResponse = (getJiraDestinationResponseSuccess | getJiraDestinationResponseError)
 
-export const getGetJiraDestinationUrl = (id: string,
-    params?: GetJiraDestinationParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getGetJiraDestinationUrl = (id: string,) => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/workspaces/${id}/jira?${stringifiedParams}` : `/workspaces/${id}/jira`
+  return `/workspaces/${id}/jira`
 }
 
-export const getJiraDestination = async (id: string,
-    params?: GetJiraDestinationParams, options?: RequestInit): Promise<getJiraDestinationResponse> => {
+export const getJiraDestination = async (id: string, options?: RequestInit): Promise<getJiraDestinationResponse> => {
 
-  const res = await fetch(getGetJiraDestinationUrl(id,params),
+  const res = await fetch(getGetJiraDestinationUrl(id),
   {
     ...options,
     method: 'GET'
@@ -370,25 +360,23 @@ export const getJiraDestination = async (id: string,
 
 
 
-export const getGetJiraDestinationQueryKey = (id: string,
-    params?: GetJiraDestinationParams,) => {
+export const getGetJiraDestinationQueryKey = (id: string,) => {
     return [
-    `/workspaces/${id}/jira`, ...(params ? [params] : [])
+    `/workspaces/${id}/jira`
     ] as const;
     }
 
 
-export const getGetJiraDestinationQueryOptions = <TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(id: string,
-    params?: GetJiraDestinationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
+export const getGetJiraDestinationQueryOptions = <TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetJiraDestinationQueryKey(id,params);
+  const queryKey =  queryOptions?.queryKey ?? getGetJiraDestinationQueryKey(id);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJiraDestination>>> = ({ signal }) => getJiraDestination(id,params, { signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJiraDestination>>> = ({ signal }) => getJiraDestination(id, { signal, ...fetchOptions });
 
 
 
@@ -402,8 +390,7 @@ export type GetJiraDestinationQueryError = JiraErrorResponse
 
 
 export function useGetJiraDestination<TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(
- id: string,
-    params: undefined |  GetJiraDestinationParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>> & Pick<
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getJiraDestination>>,
           TError,
@@ -413,8 +400,7 @@ export function useGetJiraDestination<TData = Awaited<ReturnType<typeof getJiraD
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetJiraDestination<TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(
- id: string,
-    params?: GetJiraDestinationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>> & Pick<
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getJiraDestination>>,
           TError,
@@ -424,8 +410,7 @@ export function useGetJiraDestination<TData = Awaited<ReturnType<typeof getJiraD
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetJiraDestination<TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(
- id: string,
-    params?: GetJiraDestinationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -433,12 +418,11 @@ export function useGetJiraDestination<TData = Awaited<ReturnType<typeof getJiraD
  */
 
 export function useGetJiraDestination<TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(
- id: string,
-    params?: GetJiraDestinationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetJiraDestinationQueryOptions(id,params,options)
+  const queryOptions = getGetJiraDestinationQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -448,17 +432,16 @@ export function useGetJiraDestination<TData = Awaited<ReturnType<typeof getJiraD
 
 
 
-export const getGetJiraDestinationSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(id: string,
-    params?: GetJiraDestinationParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
+export const getGetJiraDestinationSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(id: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
 ) => {
 
 const {query: queryOptions, fetch: fetchOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetJiraDestinationQueryKey(id,params);
+  const queryKey =  queryOptions?.queryKey ?? getGetJiraDestinationQueryKey(id);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJiraDestination>>> = ({ signal }) => getJiraDestination(id,params, { signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJiraDestination>>> = ({ signal }) => getJiraDestination(id, { signal, ...fetchOptions });
 
 
 
@@ -472,18 +455,15 @@ export type GetJiraDestinationSuspenseQueryError = JiraErrorResponse
 
 
 export function useGetJiraDestinationSuspense<TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(
- id: string,
-    params: undefined |  GetJiraDestinationParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
+ id: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetJiraDestinationSuspense<TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(
- id: string,
-    params?: GetJiraDestinationParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
+ id: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetJiraDestinationSuspense<TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(
- id: string,
-    params?: GetJiraDestinationParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
+ id: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
   ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -491,12 +471,11 @@ export function useGetJiraDestinationSuspense<TData = Awaited<ReturnType<typeof 
  */
 
 export function useGetJiraDestinationSuspense<TData = Awaited<ReturnType<typeof getJiraDestination>>, TError = JiraErrorResponse>(
- id: string,
-    params?: GetJiraDestinationParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
+ id: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraDestination>>, TError, TData>>, fetch?: RequestInit}
  , queryClient?: QueryClient
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetJiraDestinationSuspenseQueryOptions(id,params,options)
+  const queryOptions = getGetJiraDestinationSuspenseQueryOptions(id,options)
 
   const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

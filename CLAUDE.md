@@ -221,7 +221,7 @@ security find-generic-password -s react-grab-sync-prod -a SYNC_API_TOKEN -w
 | Dashboard | `SYNC_API_TOKEN` in `packages/dashboard/.env.local` (the dev proxy adds it; it already targets the Worker) |
 | Browser extension (any site, ADR-0023) | the extension's options page; only its service worker reads it — see `packages/web-extension/README.md` |
 | Deployed Worker | `wrangler secret put SYNC_API_TOKEN` (set) |
-| `pnpm sync:dev`, when changing the server | `packages/sync-server/.dev.vars` — copy `.dev.vars.example`; also needs `JIRA_EMAIL` and `JIRA_API_TOKEN` (ADR-0018) |
+| `pnpm sync:dev`, when changing the server | `packages/sync-server/.dev.vars` — copy `.dev.vars.example`; Jira accounts come from D1, entered in the extension (ADR-0027) |
 
 A host app's `.env.local`, for example:
 

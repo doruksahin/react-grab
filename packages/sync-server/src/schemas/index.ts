@@ -5,9 +5,6 @@ export {
   ErrorResponse,
 } from "./common.js";
 export {
-  JiraEnvSchema,
-  parseJiraEnv,
-  type JiraEnv,
   AuthEnvSchema,
   parseAuthEnv,
   type AuthEnv,
@@ -29,7 +26,6 @@ export {
   JiraDestination,
   WorkspaceSummary,
   SetJiraDestinationRequest,
-  LegacyProjectKeyQuery,
 } from "./workspace.js";
 export { CommentItem, CommentItemArray, SelectionStatus } from "./comment.js";
 export {
@@ -50,7 +46,6 @@ export {
   AddJiraCommentResponse,
   JiraUser,
   JiraProject,
-  JiraSite,
   JiraIssueType,
   JiraPriority,
   JiraTicketStatus,

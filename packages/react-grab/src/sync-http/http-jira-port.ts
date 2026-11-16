@@ -14,41 +14,35 @@ import type { SyncHttpConfig } from "./types.js";
 
 /**
  * The Jira port over HTTP, for the configured workspace. The workspace's
- * destination decides the project (ADR-0027); the deprecated project key is
- * sent only so a workspace without a destination keeps working until the
- * cut-over.
+ * destination decides the account and project (ADR-0027).
  */
 export const createHttpJiraPort = (config: SyncHttpConfig): JiraPort => {
   const request = createSyncRequest(config);
   const { workspace } = config;
-  const legacy =
-    config.jiraProjectKey === undefined
-      ? {}
-      : { projectKey: config.jiraProjectKey };
 
   return {
     getDestination: async () =>
       successData(
         "GET /workspaces/:id/jira",
-        await getJiraDestination(workspace, legacy, request.options()),
+        await getJiraDestination(workspace, request.options()),
       ),
 
     listIssueTypes: async () =>
       successData(
         "GET /workspaces/:id/jira/issue-types",
-        await listJiraIssueTypes(workspace, legacy, request.options()),
+        await listJiraIssueTypes(workspace, request.options()),
       ),
 
     listPriorities: async () =>
       successData(
         "GET /workspaces/:id/jira/priorities",
-        await listJiraPriorities(workspace, legacy, request.options()),
+        await listJiraPriorities(workspace, request.options()),
       ),
 
     listLabels: async () =>
       successData(
         "GET /workspaces/:id/jira/labels",
-        await listJiraLabels(workspace, legacy, request.options()),
+        await listJiraLabels(workspace, request.options()),
       ),
 
     getTicketStatus: async (groupId) =>
@@ -63,7 +57,7 @@ export const createHttpJiraPort = (config: SyncHttpConfig): JiraPort => {
         await createJiraTicket(
           workspace,
           groupId,
-          { ...ticket, ...legacy },
+          ticket,
           request.options(),
         ),
       ),
@@ -79,7 +73,7 @@ export const createHttpJiraPort = (config: SyncHttpConfig): JiraPort => {
         "GET /workspaces/:id/jira/users",
         await searchJiraUsers(
           workspace,
-          { query, ...legacy },
+          { query },
           request.options(),
         ),
       ),

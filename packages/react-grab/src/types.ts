@@ -840,12 +840,6 @@ export interface SyncConfig {
   serverUrl?: string;
   workspace: string;
   /**
-   * @deprecated The workspace's Jira destination decides the project; choose
-   * it in the extension's settings (ADR-0027). Used only for a workspace
-   * without a destination until the cut-over, then removed in a major version.
-   */
-  jiraProjectKey?: string;
-  /**
    * Bearer token the sync server requires on every request (ADR-0020).
    * Required when `enabled` is true. Read it from the host app's own env
    * (for example `VITE_REACT_GRAB_SYNC_TOKEN`); `initSync()` runs only in

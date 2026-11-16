@@ -63,7 +63,7 @@ export type JiraIssueType = ListJiraIssueTypes200Item;
 export type JiraPriority = ListJiraPriorities200Item;
 export type JiraTicketStatus = GetJiraTicketStatus200;
 /** A ticket to create; the workspace's destination decides the project (ADR-0027). */
-export type JiraTicketDraft = Omit<CreateJiraTicketBody, "projectKey">;
+export type JiraTicketDraft = CreateJiraTicketBody;
 export type CreatedJiraTicket = CreateJiraTicket200;
 export type JiraCommentDraft = AddJiraCommentBody;
 export type PostedJiraComment = AddJiraComment200;
@@ -97,11 +97,6 @@ export interface SyncServerConfig {
   serverUrl: string;
   apiToken: string;
   workspace: string;
-  /**
-   * @deprecated Sent only for a workspace without a Jira destination, until
-   * the ADR-0027 cut-over. The workspace's destination decides the project.
-   */
-  jiraProjectKey?: string;
 }
 
 /**

@@ -36,7 +36,6 @@ export function createApp(options?: CreateAppOptions) {
   // Everything that reads or writes data needs the API token (ADR-0020).
   // /health, /doc and /ui stay public.
   app.use("/workspaces/*", requireApiToken);
-  app.use("/jira/*", requireApiToken);
   // Jira accounts and workspace destinations need the admin token (ADR-0027).
   app.use("/jira-accounts/*", requireAdminToken);
   app.on(["PUT", "DELETE"], "/workspaces/:id/jira", requireAdminToken);
@@ -45,7 +44,6 @@ export function createApp(options?: CreateAppOptions) {
   // /health means a missing Jira secret cannot take the health check down.
   for (const mw of options?.middleware ?? []) {
     app.use("/workspaces/*", mw);
-    app.use("/jira/*", mw);
     app.use("/jira-accounts/*", mw);
     // Recording links: storage, but no token; the share id is the credential (ADR-0021).
     app.use("/r/*", mw);

@@ -65,13 +65,10 @@ const DestinationLine: Component<{
     <Show when={getSiteHost(props.destination.siteUrl)}>
       {(host) => <> on {host()}</>}
     </Show>
-    <Show when={props.destination.signsInAs}>
-      {(name) => (
-        <>
-          , as <span data-react-grab-jira-signs-in-as>{name()}</span>
-        </>
-      )}
-    </Show>
+    , as{" "}
+    <span data-react-grab-jira-signs-in-as>
+      {props.destination.signsInAs}
+    </span>
     {` · ${selectionCountText(props.selectionCount)}`}
   </span>
 );
