@@ -14,6 +14,7 @@ import { ScreenshotThumb } from "./screenshot-thumb.js";
 import { StatusChip } from "../ui/status-chip.jsx";
 import { getStatusChip } from "../../features/sidebar/get-status-chip.js";
 import { Badge } from "../ui/badge.jsx";
+import { IconCalendar } from "../icons/icon-calendar.jsx";
 
 const formatDueDate = (dueDate: string): string =>
   new Date(dueDate).toLocaleDateString("en-US", {
@@ -23,99 +24,112 @@ const formatDueDate = (dueDate: string): string =>
   });
 
 interface SelectionCardBodySlots {
-  /** Optional element rendered before the summary text (e.g. a multi-select checkbox). */
+  /** Before the title (e.g. a multi-select checkbox). */
   leading?: JSX.Element;
-  /** Summary text element — pass undefined when omitted so the header is hidden. */
+  /** The title; the header is omitted when there is none (the overlay label). */
   summary?: JSX.Element;
-  /** Element rendered between the header and the labels/status row (e.g. group picker). */
+  /** The element the selection points at, under the title. */
+  detail?: JSX.Element;
+  /** Trailing header controls (e.g. the card's menu). */
+  actions?: JSX.Element;
+  /** The header's last row: group picker, then the time. */
   subheader?: JSX.Element;
-  statusPill?: JSX.Element;
-  labels?: JSX.Element;
-  dates?: JSX.Element;
-  screenshots?: JSX.Element;
-  meta?: JSX.Element;
+  time?: JSX.Element;
+  ticket?: JSX.Element;
+  sections?: JSX.Element;
   comments?: JSX.Element;
-  /** Footer action rendered at the very bottom (e.g. Create Ticket button). */
+  /** The card's main action (e.g. Create Jira ticket). */
   footer?: JSX.Element;
 }
 
+/**
+ * The card in three zones: a header (title, element, group and time), a body
+ * of sections, and a footer with the main action. Spacing lives here, so a
+ * section never sets its own margin.
+ */
 const SelectionCardBodyLayout: Component<SelectionCardBodySlots> = (props) => {
-  const hasHeader = () =>
-    props.leading !== undefined ||
-    props.summary !== undefined ||
-    props.subheader !== undefined;
+  const hasHeader = () => props.summary !== undefined;
 
   return (
-    <div data-react-grab-selection-card-body class="w-full">
-      <Show when={hasHeader()}>
-        <div class="flex items-center gap-2">
-          {props.leading}
-          {props.summary}
-          <span class="flex-1" />
-          {props.subheader}
+    <div data-react-grab-selection-card-body class="flex w-full flex-col">
+      <Show
+        when={hasHeader()}
+        fallback={
+          <Show when={props.time}>
+            <div class="pb-2.5 text-meta text-muted-foreground">
+              {props.time}
+            </div>
+          </Show>
+        }
+      >
+        <div data-react-grab-selection-card-header class="flex flex-col gap-2">
+          <div class="flex items-start gap-2">
+            {props.leading}
+            <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+              {props.summary}
+              {props.detail}
+            </div>
+            {props.actions}
+          </div>
+          <div class="flex min-w-0 items-center gap-2 text-meta text-muted-foreground">
+            {props.subheader}
+            {props.time}
+          </div>
         </div>
-        <hr class="border-border my-2" />
       </Show>
-      <div class="flex items-center justify-between gap-2">
-        <div class="flex flex-wrap gap-1.5">{props.labels}</div>
-        {props.statusPill}
+      <div
+        class="flex flex-col gap-2.5 [&:not(:has(*))]:hidden"
+        classList={{ "mt-3 border-t border-border pt-3": hasHeader() }}
+      >
+        {props.ticket}
+        {props.sections}
+        {props.comments}
       </div>
-      {props.dates}
-      {props.screenshots}
-      {props.meta}
-      <Show when={props.comments || props.footer}>
-        <hr class="border-border/40 mt-2.5 mb-1" />
+      <Show when={props.footer}>
+        <div class="mt-3 border-t border-border pt-3">{props.footer}</div>
       </Show>
-      {props.comments}
-      {props.footer}
     </div>
   );
 };
 
 export interface SelectionCardBodyProps {
-  // Status pill (labels row, right-aligned)
+  // Ticket (status chip, labels, link, priority, assignee, due date)
   jiraTicketId?: string;
   jiraUrl?: string;
   jiraStatus?: string;
   jiraFlagged?: boolean;
+  jiraLabels?: readonly string[];
+  jiraDueDate?: string | null;
+  jiraIssueType?: string | null;
+  jiraPriority?: string | null;
+  jiraAssignee?: string | null;
+  jiraAssigneeAvatar?: string | null;
 
-  // Leading slot — optional element before the summary (e.g. multi-select checkbox)
+  // Header — omitted when there is no summary (the overlay label has its own)
   leading?: JSX.Element;
-
-  // Summary row — omitted when not provided (e.g. inside the overlay label)
   summary?: string;
-
-  // Subheader — rendered between header and labels row (e.g. group picker)
+  detail?: string;
+  actions?: JSX.Element;
   subheader?: JSX.Element;
 
-  // Labels row
-  jiraLabels?: readonly string[];
-
-  // Date row — omitted when timestamp is undefined (e.g. primary-selection
-  // label that has a ticket but isn't persisted yet)
+  // When the selection was made — omitted when undefined (e.g. a
+  // primary-selection label that has a ticket but isn't persisted yet)
   timestamp?: number;
-  jiraDueDate?: string | null;
 
   // Screenshot row (item-scoped) — requires itemId and a storage port to render
   itemId?: string;
   hasElementScreenshot?: boolean;
   hasFullPageScreenshot?: boolean;
 
-  // Link to the replay of how the user got here (SPEC-020)
-  recordingUrl?: string;
-
-  // The steps that led to the selection and their export (ADR-0025).
-  reproduceSteps?: JSX.Element;
-
   // Where the selection is when it is not on the page, and the way back
   // (ADR-0024, ADR-0026).
   locationNote?: JSX.Element;
 
-  // Bottom meta row
-  jiraIssueType?: string | null;
-  jiraPriority?: string | null;
-  jiraAssignee?: string | null;
-  jiraAssigneeAvatar?: string | null;
+  // How the user got here: replay, steps and their export (SPEC-020, ADR-0025).
+  reproduceSteps?: JSX.Element;
+
+  // Technical details, shown in dev mode.
+  devInsights?: JSX.Element;
 
   // Comments
   jiraComments?: ReadonlyArray<JiraComment>;
@@ -129,8 +143,7 @@ export interface SelectionCardBodyProps {
   // omits it so thumbnails remain inert.
   onScreenshotClick?: (src: string, label: string) => void;
 
-  // Slot rendered in the status pill area when no ticket exists.
-  // When undefined, nothing renders (replaces the old "no ticket" text).
+  // The footer's main action when no ticket exists.
   noTicketAction?: JSX.Element;
 }
 
@@ -154,61 +167,88 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
   return (
     <SelectionCardBodyLayout
       leading={props.leading}
+      actions={props.actions}
       subheader={props.subheader}
       summary={
         props.summary ? (
-          <div class="text-caption font-medium text-foreground truncate">
+          <div class="line-clamp-2 text-body leading-5 font-medium text-foreground">
             {props.summary}
           </div>
         ) : undefined
       }
-      statusPill={
+      detail={
+        props.detail ? (
+          <div class="truncate font-mono text-meta text-muted-foreground">
+            {props.detail}
+          </div>
+        ) : undefined
+      }
+      time={
+        props.timestamp !== undefined ? (
+          <span data-react-grab-selection-card-time class="shrink-0">
+            {relativeTime(props.timestamp)}
+          </span>
+        ) : undefined
+      }
+      ticket={
         <Show when={hasTicket()}>
-          <StatusChip {...statusChip()} />
-        </Show>
-      }
-      labels={
-        <Show when={props.jiraLabels?.length}>
-          <For each={props.jiraLabels}>{(label) => <Badge>{label}</Badge>}</For>
-        </Show>
-      }
-      dates={
-        <Show
-          when={props.timestamp !== undefined ? props.timestamp : undefined}
-        >
-          {(timestamp) => (
-            <div class="flex items-center gap-1.5 mt-1.5 text-meta text-muted-foreground">
-              <svg width="12" height="12" viewBox="0 0 16 16">
-                <path
-                  fill="currentColor"
-                  fill-rule="evenodd"
-                  d="M4.5 2.5v2H6v-2h4v2h1.5v-2H13a.5.5 0 0 1 .5.5v3h-11V3a.5.5 0 0 1 .5-.5zm-2 5V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V7.5zm9-6.5H13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1.5V0H6v1h4V0h1.5z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <span>{relativeTime(timestamp())}</span>
-              <span class="text-muted-foreground/50">{"\u2192"}</span>
-              <Show
-                when={props.jiraDueDate}
-                fallback={<span class="italic">No due date</span>}
-              >
-                {(dueDate) => <span>{formatDueDate(dueDate())}</span>}
+          <div
+            data-react-grab-selection-card-ticket
+            class="flex flex-col gap-1.5"
+          >
+            <div class="flex items-center gap-1.5">
+              <JiraTicketLink
+                ticketId={props.jiraTicketId!}
+                url={props.jiraUrl}
+                issueType={props.jiraIssueType}
+              />
+              <span class="flex-1" />
+              <StatusChip {...statusChip()} />
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5 [&:not(:has(*))]:hidden">
+              <For each={props.jiraLabels ?? []}>
+                {(label) => <Badge>{label}</Badge>}
+              </For>
+              <Show when={props.jiraDueDate}>
+                {(dueDate) => (
+                  <Badge>
+                    <IconCalendar size={10} />
+                    Due {formatDueDate(dueDate())}
+                  </Badge>
+                )}
+              </Show>
+              <Show when={props.jiraPriority || props.jiraAssignee}>
+                <span class="flex flex-1 items-center justify-end gap-1.5">
+                  <PriorityIcon priority={props.jiraPriority ?? undefined} />
+                  <Show when={props.jiraAssignee}>
+                    <Avatar
+                      name={props.jiraAssignee}
+                      src={props.jiraAssigneeAvatar}
+                      size="md"
+                    />
+                    <span class="text-meta text-muted-foreground">
+                      {props.jiraAssignee}
+                    </span>
+                  </Show>
+                </span>
               </Show>
             </div>
-          )}
+          </div>
         </Show>
       }
-      screenshots={
+      sections={
         <>
+          {props.locationNote}
+          {props.reproduceSteps}
           <Show when={screenshotItemId()}>
             {(itemId) => {
               const clickable = () => Boolean(props.onScreenshotClick);
               const thumbClass = () =>
                 clickable()
-                  ? "w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04] cursor-zoom-in hover:border-primary/60 transition-colors"
-                  : "w-[52px] h-[34px] object-cover border border-border rounded bg-foreground/[0.04]";
+                  ? "w-[64px] h-[40px] object-cover border border-border rounded-md bg-foreground/[0.04] cursor-zoom-in hover:border-primary/60 transition-colors"
+                  : "w-[64px] h-[40px] object-cover border border-border rounded-md bg-foreground/[0.04]";
               return (
-                <div class="flex gap-1.5 mt-1.5">
+                <div class="flex gap-1.5">
                   <Show when={props.hasElementScreenshot}>
                     <ScreenshotThumb
                       screenshot={{ selectionId: itemId(), kind: "element" }}
@@ -229,50 +269,8 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
               );
             }}
           </Show>
-          {props.locationNote}
-          <Show when={props.recordingUrl}>
-            {(recordingUrl) => (
-              <a
-                data-react-grab-recording-link
-                href={recordingUrl()}
-                target="_blank"
-                rel="noreferrer"
-                class="inline-flex items-center gap-1 mt-1.5 text-meta text-primary hover:underline"
-              >
-                Watch how we got here {"\u2197"}
-              </a>
-            )}
-          </Show>
-          {props.reproduceSteps}
+          {props.devInsights}
         </>
-      }
-      meta={
-        <div class="flex items-center gap-1.5 mt-1.5">
-          <Show when={props.jiraTicketId}>
-            <JiraTicketLink
-              ticketId={props.jiraTicketId!}
-              url={props.jiraUrl}
-              issueType={props.jiraIssueType}
-            />
-          </Show>
-
-          <span class="flex-1" />
-
-          <PriorityIcon priority={props.jiraPriority ?? undefined} />
-
-          <Show when={props.jiraAssignee}>
-            <div class="flex items-center gap-1">
-              <Avatar
-                name={props.jiraAssignee}
-                src={props.jiraAssigneeAvatar}
-                size="md"
-              />
-              <span class="text-meta text-muted-foreground">
-                {props.jiraAssignee}
-              </span>
-            </div>
-          </Show>
-        </div>
       }
       comments={
         <Show when={hasTicket() && props.onSubmitComment}>
@@ -287,12 +285,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
           )}
         </Show>
       }
-      footer={
-        <Show when={props.noTicketAction}>
-          <hr class="border-border mt-2 mb-1.5" />
-          {props.noTicketAction}
-        </Show>
-      }
+      footer={props.noTicketAction}
     />
   );
 };

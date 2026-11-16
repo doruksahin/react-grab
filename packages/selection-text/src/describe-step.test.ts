@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeStep, describeStepParts } from "./describe-step.js";
+import { describeStep, stepParts } from "./describe-step.js";
 
 describe("describeStep", () => {
   it("names the page a navigate opens", () => {
@@ -107,54 +107,49 @@ describe("describeStep", () => {
   });
 });
 
-describe("describeStepParts", () => {
-  it("marks a navigate target as a page", () => {
+describe("stepParts", () => {
+  it("marks a page, a readable name and a bare selector apart", () => {
+    expect(stepParts({ type: "navigate", url: "https://a.example/x" })).toEqual(
+      { verb: "Open", target: "/x", targetKind: "page" },
+    );
     expect(
-      describeStepParts({ type: "navigate", url: "https://app.example.com/a" }),
-    ).toEqual({ verb: "Open", target: "/a", targetKind: "page" });
-  });
-
-  it("marks an accessible name with its role", () => {
-    expect(
-      describeStepParts({
-        type: "click",
-        selectors: ['aria/Billing[role="tab"]', "#billing"],
-      }),
+      stepParts({ type: "click", selectors: ['aria/Billing[role="tab"]'] }),
     ).toEqual({
       verb: "Click",
       target: "Billing",
       targetKind: "name",
-      detail: "(tab)",
+      role: "tab",
       destination: undefined,
+      details: "tab",
+    });
+    expect(stepParts({ type: "change", selectors: ["#coupon"] })).toEqual({
+      verb: "Change",
+      target: "#coupon",
+      targetKind: "selector",
+      valueNotSaved: true,
+      details: "value not saved",
     });
   });
 
   it("marks a CSS-only target as a selector", () => {
     expect(
-      describeStepParts({
-        type: "click",
-        selectors: ['[data-layout="regular"]'],
-      }),
+      stepParts({ type: "click", selectors: ['[data-layout="regular"]'] }),
     ).toMatchObject({
       target: '[data-layout="regular"]',
       targetKind: "selector",
     });
   });
 
-  it("gives a change its value note", () => {
-    expect(
-      describeStepParts({ type: "change", selectors: ["#coupon"] }),
-    ).toEqual({
-      verb: "Change",
-      target: "#coupon",
-      targetKind: "selector",
-      detail: "(value not saved)",
+  it("calls the fallback target a name, not a selector", () => {
+    expect(stepParts({ type: "click", selectors: [] })).toMatchObject({
+      target: "element",
+      targetKind: "name",
     });
   });
 
   it("gives a click the page it led to", () => {
     expect(
-      describeStepParts({
+      stepParts({
         type: "click",
         selectors: ["text/Next"],
         assertedEvents: [

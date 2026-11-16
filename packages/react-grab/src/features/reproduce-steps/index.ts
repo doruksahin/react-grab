@@ -3,6 +3,10 @@ export { createStepGuide } from "./hooks/create-step-guide.js";
 export { StepGuideProvider, useStepGuide } from "./context.js";
 export { toReproduceSteps } from "./business/to-reproduce-steps.js";
 export {
+  groupRepeatedSteps,
+  type StepRun,
+} from "./business/group-repeated-steps.js";
+export {
   toUserFlow,
   userFlowFileName,
   type UserFlow,

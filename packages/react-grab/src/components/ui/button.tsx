@@ -19,6 +19,8 @@ const buttonVariantOptions = {
       "text-foreground hover:bg-accent hover:text-accent-foreground aria-pressed:bg-accent aria-pressed:text-accent-foreground",
     subtle:
       "text-muted-foreground hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground",
+    "subtle-destructive":
+      "text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
     chip: "contain-layout border-solid border-border bg-popover text-popover-foreground transition-all [border-width:0.5px] hover:bg-accent press-scale",
     "chip-destructive":
       "contain-layout bg-destructive/10 text-destructive transition-all hover:bg-destructive/20 press-scale",

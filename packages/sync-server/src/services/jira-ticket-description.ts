@@ -19,7 +19,7 @@ import {
 import { PanelType } from "@atlaskit/adf-schema/panel";
 import type { TextDefinition } from "@atlaskit/adf-schema/text";
 import type { ADFEntity } from "@atlaskit/adf-utils/types";
-import { describeStepParts, extractFilePath } from "@react-grab/selection-text";
+import { sourceLocation, stepParts } from "@react-grab/selection-text";
 import { markdownToAdf } from "marklassian";
 import type { Comment } from "../repositories/types.js";
 
@@ -116,11 +116,12 @@ const recordingPanel = (recordingUrl: string): Block =>
   );
 
 const stepItem = (step: NonNullable<Comment["steps"]>[number]) => {
-  const { verb, target, targetKind, detail, destination } =
-    describeStepParts(step);
+  const { verb, target, targetKind, details, destination } = stepParts(step);
   const targetNode =
     targetKind === "name" ? text(`“${target}”`) : codeText(target);
-  const tail = [detail ? ` ${detail}` : "", destination ? ` → ` : ""].join("");
+  const tail = [details ? ` (${details})` : "", destination ? ` → ` : ""].join(
+    "",
+  );
   const inline: TextDefinition[] = [text(`${verb} `), targetNode];
   if (tail) inline.push(text(tail));
   if (destination) inline.push(codeText(destination));
@@ -152,11 +153,8 @@ const whereSection = (comment: DescriptionComment): Block[] => {
       ),
     );
   }
-  const filePath = extractFilePath(comment.content);
-  if (filePath) {
-    const line = filePath.line === null ? "" : `:${filePath.line}`;
-    rows.push(whereRow("File", codeText(`${filePath.path}${line}`)));
-  }
+  const file = sourceLocation(comment.content);
+  if (file) rows.push(whereRow("File", codeText(file)));
   const selector = comment.elementSelectors?.[0];
   if (selector) rows.push(whereRow("Selector", codeText(selector)));
   if (rows.length === 0) return [];

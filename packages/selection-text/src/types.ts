@@ -16,16 +16,22 @@ export interface TargetStepFields {
 
 export type StepFields = NavigateStepFields | TargetStepFields;
 
-/** What a step's target is: a page path, a readable name, or a CSS selector. */
+/**
+ * What a step's target is: a page path, a name a person reads on screen
+ * (ARIA or text), or only a CSS selector.
+ */
 export type StepTargetKind = "page" | "name" | "selector";
 
-/** The parts of a step sentence, for renderers that style the target. */
+/** A step split into the parts a view styles separately. */
 export interface StepParts {
   verb: "Open" | "Click" | "Change";
   target: string;
   targetKind: StepTargetKind;
-  /** Role and value note, in parentheses, e.g. "(textbox, value not saved)". */
-  detail?: string;
+  role?: string;
   /** The page a click led to. */
   destination?: string;
+  /** A change step's value is never stored. */
+  valueNotSaved?: boolean;
+  /** Role and notes, as the sentence shows them in parentheses. */
+  details?: string;
 }

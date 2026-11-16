@@ -40,11 +40,12 @@ packages/selection-text/
   src/describe-step.ts  — moved from react-grab/features/reproduce-steps/business/
   src/recorder-selector.ts — the parse functions describe-step needs, moved with it
   src/extract-file-path.ts — moved from react-grab/features/sidebar/
+  src/source-location.ts — moved from react-grab/features/sidebar/business/
   src/*.test.ts         — the existing unit tests, moved with their files
 ```
 
 - The step type in the package is structural: the fields `describeStep` reads (`type`, `url`, `selectors`, `assertedEvents`). Both `ReproduceStep` in the overlay and `ReproduceStepValue` in the server satisfy it, so neither side duplicates the other's type.
-- `describeStep` gains one more export, `describeStepParts(step)`, that returns `{ verb, target, targetIsSelector, role, destination }`. `describeStep` becomes a join of these parts, so the sidebar and the step guide do not change. The ADF builder uses the parts to put a CSS selector target in a `code` mark.
+- `stepParts(step)` returns `{ verb, target, targetKind, role, destination, valueNotSaved, details }`, and `describeStep` joins these parts. The overlay's step lines (card redesign, PR #13) and the ADF builder both style the target from them; the builder puts a CSS selector target in a `code` mark. `sourceLocation` (`path:line`, from the same PR) moved here too.
 - The package is source-only: `exports` points at `src/index.ts`, with no build step (Turborepo calls this a just-in-time internal package). The sources keep `.js` import suffixes so `react-grab`'s `NodeNext` resolution reads them.
 - `react-grab` adds it as a `devDependency`, so tsup bundles it (tsup leaves only `dependencies` external) and the published package never names it. `sync-server` adds it as a dependency; Wrangler bundles it for the Worker.
 - The old paths in `react-grab` re-export nothing. Every import moves to the package.
@@ -85,7 +86,7 @@ Per comment, in this order. A part is left out when its data is missing.
 | Comment | `panel` `note`, one `paragraph` per line | `comment_text` |
 | Steps heading | `heading` level 3 "Steps to reproduce", when there are steps or a recording | `steps`, `recording_url` |
 | Recording | `panel` `info`: "Watch the recording" with a `link` mark, then "The last 5–10 minutes before this comment." | `recording_url` |
-| Steps | `orderedList`, one `listItem` per step from `describeStepParts`; a selector target in `code` | `steps` |
+| Steps | `orderedList`, one `listItem` per step from `stepParts`; a selector target in `code` | `steps` |
 | Where | `heading` level 3 "Where", then a `table` whose first column is a `strong` label: Page (the page title with a `link` mark, or plain text when the URL is not `http(s)`), File (`code`, from `extractFilePath(content)`), Selector (`code`, first of `element_selectors`). A row with no value is left out | `page_url`, `page_title`, `content`, `element_selectors` |
 | Agent context | `expand` titled "Context for coding agents", holding `codeBlock` with `language: "html"` and `content` unchanged | `content` |
 
@@ -162,7 +163,7 @@ New `services/__tests__/jira-ticket-description.test.ts`. Every case runs the ou
 
 ### Unit — `@react-grab/selection-text`
 
-The moved tests of `describeStep`, `recorder-selector` and `extractFilePath` pass unchanged from the new place. New cases for `describeStepParts`: navigate, click with ARIA name, click with CSS only, change, click with navigation.
+The moved tests of `describeStep`, `recorder-selector` and `extractFilePath` pass unchanged from the new place. New cases for `stepParts`: navigate, click with ARIA name, click with CSS only, change, click with navigation.
 
 ### Service — `sync-server`
 
@@ -184,9 +185,9 @@ Create one ticket on the real Worker from Cognograph with a selection that has a
 
 ## Acceptance Criteria
 
-- [x] `packages/selection-text` exists with `describeStep`, `describeStepParts`, the recorder selector parsers and `extractFilePath`
+- [x] `packages/selection-text` exists with `describeStep`, `stepParts`, the recorder selector parsers, `extractFilePath` and `sourceLocation`
 - [x] `react-grab` imports these from `@react-grab/selection-text`; the old files are gone
-- [x] The moved unit tests and the new `describeStepParts` tests pass
+- [x] The moved unit tests and the new `stepParts` tests pass
 - [x] `CreateJiraTicketRequest` has optional `note` and deprecated optional `description`
 - [x] `openapi.json`, the `react-grab` client and the `dashboard` client are regenerated; `pnpm check:codegen` passes
 - [x] `buildTicketDescription` exists in `services/jira-ticket-description.ts` and the 11 unit cases pass

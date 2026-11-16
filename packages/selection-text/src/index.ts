@@ -1,5 +1,6 @@
-export { describeStep, describeStepParts } from "./describe-step.js";
+export { describeStep, stepParts } from "./describe-step.js";
 export { extractFilePath } from "./extract-file-path.js";
+export { sourceLocation } from "./source-location.js";
 export {
   collapseWhitespace,
   isCssSelector,

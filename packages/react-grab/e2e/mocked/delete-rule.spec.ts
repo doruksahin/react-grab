@@ -104,7 +104,7 @@ test.describe(
         .filter({ hasText: "Has a ticket" });
       await expect(lockedCard).toBeVisible();
       await expect(
-        lockedCard.getByRole("button", { name: /remove/i }),
+        lockedCard.getByRole("button", { name: "Selection actions" }),
       ).toHaveCount(0);
     });
 
@@ -116,7 +116,8 @@ test.describe(
       const freeCard = page
         .locator("[data-react-grab-selection-card]")
         .filter({ hasText: "No ticket yet" });
-      await freeCard.getByRole("button", { name: /remove/i }).click();
+      await freeCard.getByRole("button", { name: "Selection actions" }).click();
+      await page.getByRole("menuitem", { name: "Remove selection" }).click();
       await expect(freeCard).toHaveCount(0);
     });
 
@@ -175,7 +176,8 @@ test.describe(
       const card = page
         .locator("[data-react-grab-selection-card]")
         .filter({ hasText: "Loose one" });
-      await card.getByRole("button", { name: "Remove selection" }).click();
+      await card.getByRole("button", { name: "Selection actions" }).click();
+      await page.getByRole("menuitem", { name: "Remove selection" }).click();
       await expect(card).toHaveCount(0);
     });
   },

@@ -3,12 +3,7 @@ import {
   parseAriaSelector,
   parseTextSelector,
 } from "./recorder-selector.js";
-import type {
-  StepFields,
-  StepParts,
-  StepTargetKind,
-  TargetStepFields,
-} from "./types.js";
+import type { StepFields, StepParts, TargetStepFields } from "./types.js";
 
 // A hash router keeps its route in the fragment (`/#/settings`).
 const HASH_ROUTE_PREFIX = "#/";
@@ -32,61 +27,59 @@ const firstDefined = <Value>(
   return undefined;
 };
 
-interface StepTarget {
-  name: string;
-  role?: string;
-  kind: StepTargetKind;
-}
-
-/** The best human label among a step's own selectors: ARIA, then text, then CSS. */
-const targetOf = (step: TargetStepFields): StepTarget => {
+/** The best target among a step's own selectors: ARIA, then text, then CSS. */
+const targetOf = (
+  step: TargetStepFields,
+): Pick<StepParts, "target" | "targetKind" | "role"> => {
   const aria = firstDefined(step.selectors, parseAriaSelector);
-  if (aria) return { ...aria, kind: "name" };
+  if (aria) return { target: aria.name, targetKind: "name", role: aria.role };
   const text = firstDefined(step.selectors, parseTextSelector);
-  if (text) return { name: text, kind: "name" };
+  if (text) return { target: text, targetKind: "name" };
   const css = step.selectors.find(isCssSelector);
   return css
-    ? { name: css, kind: "selector" }
-    : { name: FALLBACK_TARGET, kind: "name" };
+    ? { target: css, targetKind: "selector" }
+    : { target: FALLBACK_TARGET, targetKind: "name" };
 };
 
-/** The parts of a step's sentence (ADR-0025), for renderers that style them. */
-export const describeStepParts = (step: StepFields): StepParts => {
+const partsOf = (step: StepFields): StepParts => {
   if (step.type === "navigate") {
     return { verb: "Open", target: pageOf(step.url), targetKind: "page" };
   }
-
-  const { name, role, kind } = targetOf(step);
   if (step.type === "change") {
-    return {
-      verb: "Change",
-      target: name,
-      targetKind: kind,
-      detail: role ? `(${role}, value not saved)` : "(value not saved)",
-    };
+    return { verb: "Change", ...targetOf(step), valueNotSaved: true };
   }
-
   const navigation = step.assertedEvents?.find(
     (event) => event.type === "navigation",
   );
   return {
     verb: "Click",
-    target: name,
-    targetKind: kind,
-    detail: role ? `(${role})` : undefined,
+    ...targetOf(step),
     destination: navigation ? pageOf(navigation.url) : undefined,
   };
 };
 
+const withDetails = (parts: StepParts): StepParts => {
+  const details = [
+    parts.role,
+    parts.valueNotSaved ? "value not saved" : undefined,
+  ].filter(Boolean);
+  return details.length > 0 ? { ...parts, details: details.join(", ") } : parts;
+};
+
+/** One step as parts: verb, target and what kind of target (ADR-0025). */
+export const stepParts = (step: StepFields): StepParts =>
+  withDetails(partsOf(step));
+
 /**
  * One readable, plain-text sentence for a step (ADR-0025, phase 3). Shared
- * by the sidebar's step list, the guide and the Jira description.
+ * by the overlay's guide and step lists, and by the sync server's Jira
+ * description (SPEC-021).
  */
 export const describeStep = (step: StepFields): string => {
-  const { verb, target, targetKind, detail, destination } =
-    describeStepParts(step);
-  const targetText = targetKind === "page" ? target : `“${target}”`;
-  const detailText = detail ? ` ${detail}` : "";
-  const destinationText = destination ? ` → ${destination}` : "";
-  return `${verb} ${targetText}${detailText}${destinationText}`;
+  const parts = stepParts(step);
+  if (parts.targetKind === "page") return `${parts.verb} ${parts.target}`;
+
+  const detailText = parts.details ? ` (${parts.details})` : "";
+  const destination = parts.destination ? ` → ${parts.destination}` : "";
+  return `${parts.verb} “${parts.target}”${detailText}${destination}`;
 };

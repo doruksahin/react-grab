@@ -44,10 +44,12 @@ const insideModal = (navigateTo: string): CommentItem => ({
 
 const bar = (page: Page) => page.locator("[data-react-grab-step-guide]");
 
-const openGuide = async (page: Page, reactGrab: ReactGrabPageObject) => {
-  await reactGrab.clickCommentsButton();
+// The guide starts from the card's notice; a comments row only shows where
+// the selection is.
+const openGuide = async (page: Page, _reactGrab: ReactGrabPageObject) => {
+  await page.locator("[data-react-grab-toolbar-dashboard]").click();
   await page
-    .locator("[data-react-grab-comment-item]")
+    .locator("[data-react-grab-selection-card]")
     .filter({ hasText: "Button inside the modal" })
     .locator("[data-react-grab-step-guide-start]")
     .click();
