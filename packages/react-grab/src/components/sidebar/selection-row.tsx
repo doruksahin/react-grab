@@ -1,4 +1,4 @@
-import { type Component, type JSX, Show } from "solid-js";
+import { type Component, type JSX, Show, children } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import { selectionRowFields } from "../../features/selection-groups/business/selection-row-fields.js";
 import { relativeTime } from "../../features/sidebar/relative-time.js";
@@ -12,6 +12,10 @@ import { StatusDot } from "../ui/status-dot.js";
 import { LocationChip } from "../selection-location/location-chip.jsx";
 import { IconFlag } from "../icons/icon-flag.jsx";
 import { IconPlay } from "../icons/icon-play.jsx";
+import {
+  SELECTION_ROW_TEXT_INSET_NO_LEADING_PX,
+  SELECTION_ROW_TEXT_INSET_PX,
+} from "../../constants.js";
 
 interface SelectionRowProps {
   item: CommentItem;
@@ -38,6 +42,9 @@ interface SelectionRowProps {
  */
 export const SelectionRow: Component<SelectionRowProps> = (props) => {
   const fields = () => selectionRowFields(props.item);
+  // Read once: each read of a JSX prop would build the checkbox again.
+  const leading = children(() => props.leading);
+  const statusColor = () => getStatusLabelColor(props.status).hex;
 
   return (
     <Collapsible
@@ -46,23 +53,21 @@ export const SelectionRow: Component<SelectionRowProps> = (props) => {
       onOpenChange={props.onOpenChange}
       data-react-grab-selection-card
       tabIndex={-1}
-      class="border-b border-border/60 outline-none"
+      class="border-b border-border/60 outline-none transition-colors data-[expanded]:bg-foreground/[0.035] data-[expanded]:shadow-[inset_2px_0_0_var(--row-status)]"
       classList={{ "ring-1 ring-inset ring-selection": props.highlighted }}
+      style={{ "--row-status": statusColor() }}
     >
-      <div class="group/row relative flex items-stretch">
-        <Show when={props.leading}>
+      <div class="group/row relative flex items-stretch transition-colors hover:bg-foreground/[0.03]">
+        <Show when={leading()}>
           <div class="flex shrink-0 items-start pt-[11px] pl-3">
-            {props.leading}
+            {leading()}
           </div>
         </Show>
         <CollapsibleTrigger
           data-react-grab-selection-row
-          class="grid min-w-0 flex-1 cursor-pointer grid-cols-[6px_minmax(0,1fr)_auto] items-baseline gap-x-2.5 gap-y-0.5 px-3 py-2 text-left outline-none transition-colors hover:bg-foreground/[0.03] focus-visible:bg-foreground/[0.05] data-[expanded]:bg-foreground/[0.04]"
+          class="grid min-w-0 flex-1 cursor-pointer grid-cols-[6px_minmax(0,1fr)_auto] items-baseline gap-x-2.5 gap-y-0.5 px-3 py-2 text-left outline-none focus-visible:bg-foreground/[0.05]"
         >
-          <StatusDot
-            color={getStatusLabelColor(props.status).hex}
-            class="self-center"
-          />
+          <StatusDot color={statusColor()} class="self-center" />
           <span class="truncate text-body leading-5 font-medium text-foreground">
             {fields().title}
           </span>
@@ -106,7 +111,19 @@ export const SelectionRow: Component<SelectionRowProps> = (props) => {
         </Show>
       </div>
       <CollapsibleContent>
-        <div class="px-3 pt-1 pb-3">{props.children}</div>
+        {/* Starts where the row's text starts, so card and row read as one. */}
+        <div
+          class="pt-0.5 pr-3 pb-3"
+          style={{
+            "padding-left": `${
+              leading()
+                ? SELECTION_ROW_TEXT_INSET_PX
+                : SELECTION_ROW_TEXT_INSET_NO_LEADING_PX
+            }px`,
+          }}
+        >
+          {props.children}
+        </div>
       </CollapsibleContent>
     </Collapsible>
   );

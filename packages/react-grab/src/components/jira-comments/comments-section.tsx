@@ -24,7 +24,7 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
   return (
     <div data-react-grab-comments-section data-react-grab-ignore-events>
       <CollapsibleCard
-        variant="panel"
+        variant="row"
         defaultOpen={props.defaultOpen ?? true}
         trigger={
           <>

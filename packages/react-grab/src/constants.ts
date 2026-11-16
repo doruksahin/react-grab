@@ -293,3 +293,9 @@ export const COMMENTS_LOADED_SYNC_STATUSES: ReadonlySet<string> = new Set([
   "local",
   "error",
 ]);
+
+// Where a sidebar row's text starts, so an open card lines up with it:
+// leading pad (12) + checkbox (14) + trigger pad (12) + status dot (6) + gap (10).
+export const SELECTION_ROW_TEXT_INSET_PX = 54;
+// The same without the checkbox column: trigger pad (12) + dot (6) + gap (10).
+export const SELECTION_ROW_TEXT_INSET_NO_LEADING_PX = 28;

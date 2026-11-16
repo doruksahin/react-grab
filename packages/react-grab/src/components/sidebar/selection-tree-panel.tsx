@@ -194,6 +194,7 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
         }
       >
         <SelectionCardBody
+          ticketDisplay="link"
           subheader={
             <ActiveGroupPicker
               groups={props.groups}
