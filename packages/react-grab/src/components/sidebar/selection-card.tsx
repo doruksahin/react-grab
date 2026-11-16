@@ -9,7 +9,7 @@ import { SelectionDevInsights } from "../dev-insights/selection-dev-insights.jsx
 import { LocationNotice } from "../selection-location/location-notice.jsx";
 import { ReproducePanel } from "../reproduce-steps/reproduce-panel.jsx";
 import { SelectionCardBody } from "./selection-card-body.js";
-import { SelectionCardMenu } from "./selection-card-menu.jsx";
+import { SelectionMenu } from "../selection/selection-menu.jsx";
 
 export interface SelectionCardProps {
   item: CommentItem;
@@ -53,7 +53,12 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
         detail={rowFields().detail}
         actions={
           <Show when={props.onRemoveItem}>
-            {(onRemove) => <SelectionCardMenu onRemove={onRemove()} />}
+            {(onRemove) => (
+              <SelectionMenu
+                class="-mt-0.5 -mr-1 shrink-0"
+                onRemove={onRemove()}
+              />
+            )}
           </Show>
         }
         timestamp={props.item.timestamp}

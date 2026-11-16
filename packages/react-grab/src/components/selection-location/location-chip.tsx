@@ -10,8 +10,8 @@ export interface LocationChipProps {
 }
 
 /**
- * A list row's status for a selection that is not on the page: the path or
- * host it was made on, else why it is missing. The way back lives in the
+ * A list row's status for a selection that is not on the page: where it was
+ * made, or why it is missing. The way back lives in the
  * card's notice (ADR-0024).
  */
 export const LocationChip: Component<LocationChipProps> = (props) => {
@@ -23,7 +23,6 @@ export const LocationChip: Component<LocationChipProps> = (props) => {
         <Badge
           data-react-grab-selection-location
           data-react-grab-selection-location-kind={view.location().kind}
-          title={view.label()}
           class={props.class}
         >
           <Show

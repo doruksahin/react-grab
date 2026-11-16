@@ -10,14 +10,9 @@ import {
 import type { Component } from "solid-js";
 import type { CommentItem, DropdownAnchor } from "../types.js";
 import type { SelectionGroupsViewProps } from "../features/selection-groups/types.js";
-import {
-  GroupPickerFlyout,
-  GroupPickerPopover,
-  GroupPickerTrigger,
-} from "./selection-groups/group-picker-flyout.jsx";
 import { SelectionTreeView } from "./selection-groups/selection-tree-view.jsx";
 import { fuzzyMatchGroup } from "../features/selection-groups/business/group-operations.js";
-import { assignableGroupsFor } from "../features/selection-groups/business/membership-policy.js";
+import { moveDestinations } from "../features/selection-groups/business/move-destinations.js";
 import { selectionTree } from "../features/selection-groups/business/selection-tree.js";
 import { selectionRowFields } from "../features/selection-groups/business/selection-row-fields.js";
 import {
@@ -41,10 +36,9 @@ import { formatRelativeTime } from "../utils/format-relative-time.js";
 import { IconButton } from "./ui/icon-button.js";
 import { Button } from "./ui/button.js";
 import { LocationChip } from "./selection-location/location-chip.jsx";
-import { IconFolder } from "./icons/icon-folder.jsx";
 import { IconEyeOff } from "./icons/icon-eye-off.jsx";
 import { IconEyeFilled } from "./icons/icon-eye-filled.jsx";
-import { RemoveSelectionButton } from "./remove-selection-button.jsx";
+import { SelectionMenu } from "./selection/selection-menu.jsx";
 import type { ClearCounts } from "../features/selection-groups/business/membership-policy.js";
 
 interface CommentsDropdownProps extends Pick<
@@ -113,13 +107,13 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
 
   const [isCopyAllConfirmed, setIsCopyAllConfirmed] = createSignal(false);
   const [searchQuery, setSearchQuery] = createSignal("");
-  const [openMoveId, setOpenMoveId] = createSignal<string | null>(null);
+  const [openMenuId, setOpenMenuId] = createSignal<string | null>(null);
 
   let copyAllFeedbackTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  // A locked selection has no targets, so it gets no move action at all.
-  const moveTargetsFor = (item: CommentItem) =>
-    assignableGroupsFor(item, props.groups ?? []);
+  // A locked selection has no destinations, so its menu has no move.
+  const moveDestinationsFor = (item: CommentItem) =>
+    moveDestinations(item, props.groups ?? []);
 
   // The menu's row; the tree around it is SelectionTreeView (ADR-0028).
   const renderRow = (item: CommentItem) => (
@@ -173,7 +167,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         <span
           class={cn(
             "flex h-4 items-center justify-end gap-1 text-meta text-muted-foreground group-hover/row:invisible group-focus-within/row:invisible",
-            openMoveId() === item.id && "invisible",
+            openMenuId() === item.id && "invisible",
           )}
         >
           <Show when={!item.revealed}>
@@ -186,37 +180,25 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         <div
           class={cn(
             "flex h-4 items-center justify-end gap-1 opacity-0 pointer-events-none group-hover/row:opacity-100 group-hover/row:pointer-events-auto group-focus-within/row:opacity-100 group-focus-within/row:pointer-events-auto",
-            openMoveId() === item.id && "opacity-100 pointer-events-auto",
+            openMenuId() === item.id && "opacity-100 pointer-events-auto",
           )}
         >
-          <Show when={moveTargetsFor(item).length > 0}>
-            <GroupPickerPopover
-              open={openMoveId() === item.id}
-              onOpenChange={(open) => setOpenMoveId(open ? item.id : null)}
-            >
-              <GroupPickerTrigger
-                as={IconButton}
-                data-react-grab-ignore-events
-                label="Move to group"
-                size="icon-xs"
-                onClick={(event: MouseEvent) => event.stopPropagation()}
-              >
-                <IconFolder size={10} />
-              </GroupPickerTrigger>
-              <GroupPickerFlyout
-                groups={moveTargetsFor(item)}
-                excludeGroupId={item.groupId ?? undefined}
-                onSelect={(groupId) => {
-                  props.onMoveItem?.(item.id, groupId);
-                  setOpenMoveId(null);
-                }}
-              />
-            </GroupPickerPopover>
-          </Show>
-          <Show when={props.canRemoveItem?.(item.id)}>
-            <RemoveSelectionButton
-              variant="overlay"
-              onRemove={() => props.onRemoveItem?.(item.id)}
+          <Show
+            when={
+              moveDestinationsFor(item).length > 0 ||
+              props.canRemoveItem?.(item.id)
+            }
+          >
+            <SelectionMenu
+              open={openMenuId() === item.id}
+              onOpenChange={(open) => setOpenMenuId(open ? item.id : null)}
+              destinations={moveDestinationsFor(item)}
+              onMove={(groupId) => props.onMoveItem?.(item.id, groupId)}
+              onRemove={
+                props.canRemoveItem?.(item.id)
+                  ? () => props.onRemoveItem?.(item.id)
+                  : undefined
+              }
             />
           </Show>
           <IconButton
@@ -272,6 +254,8 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
   onMount(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!props.position) return;
+      // An open row menu takes Escape itself and closes only the menu.
+      if (openMenuId() !== null) return;
       if (event.code === "Escape") {
         event.preventDefault();
         event.stopPropagation();
@@ -314,6 +298,8 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
           props.onDropdownHover?.(true);
         }}
         onMouseLeave={(event: MouseEvent) => {
+          // A row menu opens outside the panel; using it is not leaving.
+          if (openMenuId() !== null) return;
           const targetRects = getToolbarTargetRects();
           if (targetRects) {
             safePolygonTracker.start(

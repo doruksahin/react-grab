@@ -67,14 +67,14 @@ describe("describeLocationNotice", () => {
 });
 
 describe("describeLocationShort", () => {
-  it("names the path or host, else why it is missing", () => {
+  it("names the host of another site, else says where or why", () => {
     expect(
       describeLocationShort({
         kind: "other-page",
-        url: "https://app.example.com/boards",
-        path: "/boards",
+        url: "https://app.example.com/",
+        path: "/",
       }),
-    ).toBe("/boards");
+    ).toBe("Made on /");
     expect(
       describeLocationShort({ kind: "other-site", host: "localhost:3000" }),
     ).toBe("localhost:3000");

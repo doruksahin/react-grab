@@ -45,16 +45,11 @@ export const describeLocationNotice = (
   }
 };
 
-/** The few words a list row shows: where it was made, else why it is missing. */
+/**
+ * The few words a list row shows: the host of another site, else the
+ * reason sentence ("Made on /boards", "No longer on this page").
+ */
 export const describeLocationShort = (
   location: SelectionLocation,
-): string | undefined => {
-  switch (location.kind) {
-    case "other-page":
-      return location.path;
-    case "other-site":
-      return location.host;
-    default:
-      return describeLocation(location);
-  }
-};
+): string | undefined =>
+  location.kind === "other-site" ? location.host : describeLocation(location);

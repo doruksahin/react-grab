@@ -713,7 +713,8 @@ data_attrs:
         - latest-comment
         - open-thread
         - selection-card-header
-        - selection-card-menu
+        - selection-menu
+        - move-destination
         - selection-card-ticket
         - selection-card-time
         - selection-checkbox
@@ -961,7 +962,7 @@ data_attrs:
     step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 69, tests: 6}
+    ignore-events: {scope: reserved, src: 70, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -970,6 +971,7 @@ data_attrs:
     collapsed-dot-preview: {scope: selection, src: 1, tests: 0}
     dev-insights: {scope: selection, src: 1, tests: 0}
     latest-comment: {scope: selection, src: 1, tests: 1}
+    move-destination: {scope: selection, src: 1, tests: 1}
     open-thread: {scope: selection, src: 1, tests: 1}
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
@@ -977,13 +979,13 @@ data_attrs:
     selection-card: {scope: selection, src: 2, tests: 18}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-card-header: {scope: selection, src: 1, tests: 0}
-    selection-card-menu: {scope: selection, src: 1, tests: 0}
     selection-card-ticket: {scope: selection, src: 1, tests: 0}
     selection-card-time: {scope: selection, src: 1, tests: 0}
     selection-checkbox: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 3, tests: 0}
     selection-label: {scope: selection, src: 1, tests: 19}
+    selection-menu: {scope: selection, src: 1, tests: 0}
     selection-remove: {scope: selection, src: 2, tests: 0}
     unread-indicator: {scope: selection, src: 1, tests: 0}
     selection-location: {scope: selection-location, src: 2, tests: 4}
@@ -1000,7 +1002,7 @@ data_attrs:
     group-collapsible: {scope: sidebar, src: 1, tests: 10}
     group-detail: {scope: sidebar, src: 1, tests: 0}
     group-list: {scope: sidebar, src: 1, tests: 3}
-    group-picker-flyout: {scope: sidebar, src: 1, tests: 2}
+    group-picker-flyout: {scope: sidebar, src: 1, tests: 1}
     group-ticket-summary: {scope: sidebar, src: 2, tests: 2}
     jira-status-banner: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}

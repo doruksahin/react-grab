@@ -96,15 +96,44 @@ test.describe("Comments panel — move policy", { tag: ["@SPEC-011"] }, () => {
     async ({ page, reactGrab }) => {
       const price = row(page, "Price is open");
       await price.hover();
-      await price.getByRole("button", { name: "Move to group" }).click();
+      await price.getByRole("button", { name: "Selection actions" }).click();
+      await page.getByRole("menuitem", { name: "Move to group" }).click();
 
-      const flyout = page.locator("[data-react-grab-group-picker-flyout]");
-      await expect(flyout).toBeVisible();
+      const destinations = page.locator("[data-react-grab-move-destination]");
+      await expect(destinations).toHaveText(["Ungrouped", "Checkout"]);
       await reactGrab.screenshot("move-picker", "page");
-      await expect(flyout.getByRole("button")).toHaveText([
-        "Ungrouped",
-        "Checkout",
-      ]);
+    },
+  );
+
+  test(
+    "picking a group in the menu moves the selection without selecting it",
+    {
+      annotation: {
+        type: "ac",
+        description: "SPEC-011 amendment AC-1: the move goes where it was told",
+      },
+    },
+    async ({ page, reactGrab }) => {
+      const price = row(page, "Price is open");
+      await price.hover();
+      await price.getByRole("button", { name: "Selection actions" }).click();
+      await page.getByRole("menuitem", { name: "Move to group" }).click();
+      await page
+        .locator("[data-react-grab-move-destination]")
+        .filter({ hasText: "Checkout" })
+        .click();
+
+      const checkout = page
+        .locator("[data-react-grab-group-collapsible]")
+        .filter({ hasText: "Checkout" });
+      await expect(checkout).toContainText("Price is open");
+      // Selecting a row whose element is on the page opens its comment.
+      expect(await reactGrab.isPromptModeActive()).toBe(false);
+
+      // Control: selecting the row does open it, so the check above means
+      // something.
+      await row(page, "Price is open").click();
+      await expect.poll(() => reactGrab.isPromptModeActive()).toBe(true);
     },
   );
 
@@ -122,7 +151,7 @@ test.describe("Comments panel — move policy", { tag: ["@SPEC-011"] }, () => {
       await header.hover();
       await reactGrab.screenshot("locked-row-hovered", "page");
       await expect(
-        header.getByRole("button", { name: "Move to group" }),
+        header.getByRole("button", { name: "Selection actions" }),
       ).toHaveCount(0);
     },
   );

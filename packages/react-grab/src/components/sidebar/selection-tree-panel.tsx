@@ -29,7 +29,7 @@ import { SelectionDevInsights } from "../dev-insights/selection-dev-insights.jsx
 import { ActiveGroupPicker } from "../selection-groups/active-group-picker.js";
 import { ReproducePanel } from "../reproduce-steps/reproduce-panel.jsx";
 import { LocationNotice } from "../selection-location/location-notice.jsx";
-import { SelectionCardMenu } from "./selection-card-menu.jsx";
+import { SelectionMenu } from "../selection/selection-menu.jsx";
 import { SelectionTreeView } from "../selection-groups/selection-tree-view.jsx";
 import { selectionTree } from "../../features/selection-groups/business/selection-tree.js";
 import { narrowSelectionTree } from "../../features/selection-groups/business/narrow-selection-tree.js";
@@ -190,7 +190,8 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
             }
             actions={
               <Show when={props.canRemoveItem?.(item.id)}>
-                <SelectionCardMenu
+                <SelectionMenu
+                  class="-mt-0.5 -mr-1 shrink-0"
                   onRemove={() => props.onRemoveItem?.(item.id)}
                 />
               </Show>

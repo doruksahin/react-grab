@@ -87,9 +87,7 @@ test.describe("Selection location", { tag: ["@ADR-0024"] }, () => {
   });
 
   test("each row not on the page says where", async ({ page, reactGrab }) => {
-    await expect(note(page, "Made on billing")).toHaveText("/settings/billing");
-    await expect(note(page, "Made on billing")).toHaveAttribute(
-      "title",
+    await expect(note(page, "Made on billing")).toHaveText(
       "Made on /settings/billing",
     );
     await expect(note(page, "Made locally")).toHaveText("localhost:3000");
