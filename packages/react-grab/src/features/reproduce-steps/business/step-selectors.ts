@@ -6,12 +6,11 @@ import {
 } from "../../../constants.js";
 import { STEP_SELECTOR_MAX_LENGTH_CHARS } from "../limits.js";
 import { isNativeField, mayContainUserInput } from "./user-input.js";
-
-// Characters that end or quote parts of a Puppeteer ARIA selector.
-const ARIA_SELECTOR_SYNTAX = /[[\]"]/;
-
-const collapseWhitespace = (value: string): string =>
-  value.replace(/\s+/g, " ").trim();
+import {
+  collapseWhitespace,
+  toAriaSelector,
+  toTextSelector,
+} from "./recorder-selector.js";
 
 // A field's name comes from its label, so it is safe; any other element's
 // name may include the value of a field inside it.
@@ -20,19 +19,15 @@ const ariaSelector = (element: Element): string | undefined => {
     return undefined;
   }
   const name = collapseWhitespace(computeAccessibleName(element));
-  if (!name || name.length > STEP_ACCESSIBLE_NAME_MAX_LENGTH_CHARS) {
-    return undefined;
-  }
-  if (ARIA_SELECTOR_SYNTAX.test(name)) return undefined;
-  const role = getRole(element);
-  return role ? `aria/${name}[role="${role}"]` : `aria/${name}`;
+  if (name.length > STEP_ACCESSIBLE_NAME_MAX_LENGTH_CHARS) return undefined;
+  return toAriaSelector({ name, role: getRole(element) ?? undefined });
 };
 
 const textSelector = (element: Element): string | undefined => {
   if (mayContainUserInput(element)) return undefined;
   const text = collapseWhitespace(element.textContent ?? "");
   if (!text || text.length > STEP_TEXT_MAX_LENGTH_CHARS) return undefined;
-  return `text/${text}`;
+  return toTextSelector(text);
 };
 
 /**

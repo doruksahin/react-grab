@@ -228,20 +228,28 @@ features:
   reproduce-steps:
     description: Captures the clicks and field changes that lead to each new comment as Chrome DevTools Recorder steps, stored on the comment; values never stored; markers in the rrweb recording (ADR-0025)
     status: implemented
-    adrs: [ADR-0025, ADR-0021, ADR-0023]
+    adrs: [ADR-0025, ADR-0026, ADR-0021, ADR-0023]
     files:
       - packages/react-grab/src/features/reproduce-steps/business/build-step.ts
       - packages/react-grab/src/features/reproduce-steps/business/describe-step.ts
+      - packages/react-grab/src/features/reproduce-steps/business/find-step-target.ts
+      - packages/react-grab/src/features/reproduce-steps/business/guide-progress.ts
+      - packages/react-grab/src/features/reproduce-steps/business/page-key.ts
+      - packages/react-grab/src/features/reproduce-steps/business/recorder-selector.ts
       - packages/react-grab/src/features/reproduce-steps/business/selection-press.ts
       - packages/react-grab/src/features/reproduce-steps/business/step-buffer.ts
       - packages/react-grab/src/features/reproduce-steps/business/step-selectors.ts
       - packages/react-grab/src/features/reproduce-steps/business/to-reproduce-steps.ts
       - packages/react-grab/src/features/reproduce-steps/business/to-user-flow.ts
       - packages/react-grab/src/features/reproduce-steps/business/user-input.ts
+      - packages/react-grab/src/features/reproduce-steps/context.ts
       - packages/react-grab/src/features/reproduce-steps/download-user-flow.ts
+      - packages/react-grab/src/features/reproduce-steps/hooks/create-page-events.ts
       - packages/react-grab/src/features/reproduce-steps/hooks/create-step-capture.ts
+      - packages/react-grab/src/features/reproduce-steps/hooks/create-step-guide.ts
       - packages/react-grab/src/features/reproduce-steps/index.ts
       - packages/react-grab/src/features/reproduce-steps/limits.ts
+      - packages/react-grab/src/features/reproduce-steps/store/guide-session.ts
       - packages/react-grab/src/features/reproduce-steps/types.ts
       - packages/sync-server/src/schemas/reproduce-step.ts
       - packages/web-extension/src/overlay/capture-options.ts
@@ -605,12 +613,18 @@ data_attrs:
   # some scope's `owns` list, or appears in `reserved`.
   scopes:
     reproduce-steps:
-      description: Step list on a selection card and its Chrome Recorder flow download (ADR-0025)
+      description: Step list on a selection card, its Chrome Recorder flow download (ADR-0025), and the step guide (ADR-0026)
       owning_feature: reproduce-steps
       owns:
         - reproduce-steps
         - reproduce-steps-item
         - reproduce-steps-download
+        - step-guide
+        - step-guide-status
+        - step-guide-text
+        - step-guide-skip
+        - step-guide-stop
+        - step-guide-start
 
     selection-location:
       description: Reason a selection is not on the page, and its Open page action (comments panel row, sidebar card)
@@ -854,7 +868,7 @@ data_attrs:
     comment-editor: {scope: comments, src: 1, tests: 1}
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
-    comment-item: {scope: comments, src: 1, tests: 6}
+    comment-item: {scope: comments, src: 1, tests: 7}
     comment-reply: {scope: comments, src: 1, tests: 0}
     comment-submit: {scope: comments, src: 1, tests: 1}
     comment-thread: {scope: comments, src: 1, tests: 0}
@@ -930,8 +944,14 @@ data_attrs:
     reproduce-steps: {scope: reproduce-steps, src: 1, tests: 1}
     reproduce-steps-download: {scope: reproduce-steps, src: 1, tests: 1}
     reproduce-steps-item: {scope: reproduce-steps, src: 1, tests: 1}
+    step-guide: {scope: reproduce-steps, src: 1, tests: 1}
+    step-guide-skip: {scope: reproduce-steps, src: 1, tests: 1}
+    step-guide-start: {scope: reproduce-steps, src: 1, tests: 1}
+    step-guide-status: {scope: reproduce-steps, src: 1, tests: 9}
+    step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
+    step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 65, tests: 6}
+    ignore-events: {scope: reserved, src: 67, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -1193,4 +1213,8 @@ decree:
     ADR-0025:
       title: Capture the steps to a selection as a Chrome Recorder flow
       file: decree/adr/0025-capture-reproduce-steps-as-a-chrome-recorder-flow.md
+      status: accepted
+    ADR-0026:
+      title: Guide the user back to a selection, step by step
+      file: decree/adr/0026-guide-the-user-back-to-a-selection-step-by-step.md
       status: accepted

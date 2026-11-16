@@ -1,19 +1,13 @@
 import { isAcceptedStep } from "../limits.js";
 import type { CapturedStep, ReproduceStep } from "../types.js";
-
-// A page is its origin and path: query and fragment changes (a search box
-// updating ?q=, an anchor) are not navigations a click caused.
-const pageOf = (url: string): string | undefined =>
-  URL.canParse(url)
-    ? `${new URL(url).origin}${new URL(url).pathname}`
-    : undefined;
+import { pageKey } from "./page-key.js";
 
 const withNavigation = (
   captured: CapturedStep,
   nextPageUrl: string,
 ): ReproduceStep => {
   const { step, pageUrl } = captured;
-  if (step.type !== "click" || pageOf(nextPageUrl) === pageOf(pageUrl)) {
+  if (step.type !== "click" || pageKey(nextPageUrl) === pageKey(pageUrl)) {
     return step;
   }
   const asserted: ReproduceStep = {

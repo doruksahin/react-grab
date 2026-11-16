@@ -1,12 +1,5 @@
 import type { LocateSelectionInput, SelectionLocation } from "../types.js";
-
-const WEB_PROTOCOLS = new Set(["http:", "https:"]);
-
-const parseWebUrl = (value: string | undefined): URL | undefined => {
-  if (!value || !URL.canParse(value)) return undefined;
-  const url = new URL(value);
-  return WEB_PROTOCOLS.has(url.protocol) ? url : undefined;
-};
+import { parseWebUrl } from "../../../utils/parse-web-url.js";
 
 /**
  * Where a selection is relative to the current page (ADR-0024). Only http(s)

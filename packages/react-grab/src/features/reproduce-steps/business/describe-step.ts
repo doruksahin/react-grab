@@ -1,17 +1,13 @@
 import type { ChangeStep, ClickStep, ReproduceStep } from "../types.js";
+import {
+  type AriaTarget,
+  isCssSelector,
+  parseAriaSelector,
+  parseTextSelector,
+} from "./recorder-selector.js";
 
-const ARIA_PREFIX = "aria/";
-const TEXT_PREFIX = "text/";
-// `aria/<name>` with an optional `[role="<role>"]` (Puppeteer ARIA selector).
-// A name never holds `[`, `]` or `"`: capture leaves such names out.
-const ARIA_SELECTOR = /^aria\/([^[\]"]+)(?:\[role="([^"]+)"\])?$/;
 // A hash router keeps its route in the fragment (`/#/settings`).
 const HASH_ROUTE_PREFIX = "#/";
-
-interface StepTarget {
-  label: string;
-  role?: string;
-}
 
 /** The page part of a URL: its path, plus a hash route. Query is left out. */
 const pageOf = (url: string): string => {
@@ -20,37 +16,38 @@ const pageOf = (url: string): string => {
   return hash.startsWith(HASH_ROUTE_PREFIX) ? `${pathname}${hash}` : pathname;
 };
 
-const isCssSelector = (selector: string): boolean =>
-  !selector.startsWith(ARIA_PREFIX) && !selector.startsWith(TEXT_PREFIX);
+const firstDefined = <Value>(
+  selectors: string[],
+  parse: (selector: string) => Value | undefined,
+): Value | undefined => {
+  for (const selector of selectors) {
+    const value = parse(selector);
+    if (value !== undefined) return value;
+  }
+  return undefined;
+};
 
 /** The best human label among a step's own selectors: ARIA, then text, then CSS. */
-const targetOf = (step: ClickStep | ChangeStep): StepTarget => {
-  const aria = step.selectors.find((selector) =>
-    selector.startsWith(ARIA_PREFIX),
-  );
-  const ariaParts = aria?.match(ARIA_SELECTOR);
-  if (ariaParts?.[1]) return { label: ariaParts[1], role: ariaParts[2] };
-
-  const text = step.selectors.find((selector) =>
-    selector.startsWith(TEXT_PREFIX),
-  );
-  if (text && text.length > TEXT_PREFIX.length) {
-    return { label: text.slice(TEXT_PREFIX.length) };
-  }
-  return { label: step.selectors.find(isCssSelector) ?? "element" };
+const targetOf = (step: ClickStep | ChangeStep): AriaTarget => {
+  const aria = firstDefined(step.selectors, parseAriaSelector);
+  if (aria) return aria;
+  const text = firstDefined(step.selectors, parseTextSelector);
+  if (text) return { name: text };
+  return { name: step.selectors.find(isCssSelector) ?? "element" };
 };
 
 /**
  * One readable, plain-text sentence for a step (ADR-0025, phase 3). Shared
- * by the sidebar's step list and the Jira description, which escapes it.
+ * by the sidebar's step list, the guide and the Jira description, which
+ * escapes it.
  */
 export const describeStep = (step: ReproduceStep): string => {
   if (step.type === "navigate") return `Open ${pageOf(step.url)}`;
 
-  const { label, role } = targetOf(step);
+  const { name, role } = targetOf(step);
   if (step.type === "change") {
     const detail = role ? `${role}, value not saved` : "value not saved";
-    return `Change “${label}” (${detail})`;
+    return `Change “${name}” (${detail})`;
   }
 
   const roleText = role ? ` (${role})` : "";
@@ -58,5 +55,5 @@ export const describeStep = (step: ReproduceStep): string => {
     (event) => event.type === "navigation",
   );
   const destination = navigation ? ` → ${pageOf(navigation.url)}` : "";
-  return `Click “${label}”${roleText}${destination}`;
+  return `Click “${name}”${roleText}${destination}`;
 };

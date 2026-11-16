@@ -30,6 +30,7 @@ import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
 import { DevModeProvider } from "../features/dev-mode/index.js";
+import { GuideBar } from "./reproduce-steps/guide-bar.js";
 import { LabelPin } from "./selection-label/label-pin.js";
 import { useLabelPins } from "../features/selection-label/hooks/use-label-pins.js";
 import { useSidebarSession } from "../features/sidebar/hooks/use-sidebar-session.js";
@@ -451,6 +452,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onSetDefaultAction={props.onSetDefaultAction ?? (() => {})}
         onDismiss={props.onToolbarMenuDismiss ?? (() => {})}
       />
+
+      <GuideBar />
 
       <ClearCommentsPrompt
         position={props.clearPromptPosition ?? null}
