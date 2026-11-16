@@ -14,6 +14,7 @@ import { ChevronIcon } from "../ui/chevron-icon.jsx";
 import { IconEllipsis } from "../icons/icon-ellipsis.jsx";
 import { IconFolder } from "../icons/icon-folder.jsx";
 import { IconTrash } from "../icons/icon-trash.jsx";
+import { IconDashboard } from "../icons/icon-dashboard.jsx";
 
 interface SelectionMenuProps {
   /** Where the selection can move; omitted or empty hides "Move to group". */
@@ -21,6 +22,8 @@ interface SelectionMenuProps {
   onMove?: (groupId: string | null) => void;
   /** Shown only when the membership policy allows it (ADR-0008). */
   onRemove?: () => void;
+  /** Opens the selection's full card in the sidebar. */
+  onOpenInSidebar?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   class?: string;
@@ -63,6 +66,22 @@ export const SelectionMenu: Component<SelectionMenuProps> = (props) => {
         onPointerDown={stopBubbling}
         onClick={stopBubbling}
       >
+        <Show when={props.onOpenInSidebar}>
+          {(openInSidebar) => (
+            <>
+              <MenuItem
+                data-react-grab-open-in-sidebar
+                onSelect={() => openInSidebar()()}
+              >
+                <IconDashboard size={12} />
+                Open in sidebar
+              </MenuItem>
+              <Show when={canMove() || props.onRemove}>
+                <MenuSeparator class="-mx-1 my-1 border-border" />
+              </Show>
+            </>
+          )}
+        </Show>
         <Show when={canMove()}>
           <MenuSub>
             <MenuSubTrigger>

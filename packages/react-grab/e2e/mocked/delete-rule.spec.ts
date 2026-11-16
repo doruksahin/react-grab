@@ -157,8 +157,12 @@ test.describe(
       await reactGrab.clickCommentsButton();
       const locked = panelRow(page, "Has a ticket");
       await locked.hover();
+      await locked.getByRole("button", { name: "Selection actions" }).click();
       await expect(
-        locked.getByRole("button", { name: "Selection actions" }),
+        page.getByRole("menuitem", { name: "Open in sidebar" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("menuitem", { name: "Remove selection" }),
       ).toHaveCount(0);
     });
 
