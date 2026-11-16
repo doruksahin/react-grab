@@ -108,6 +108,40 @@ describe("buildTicketDescription", () => {
     expect(textOf(context)).toBe(fullComment.content);
   });
 
+  it("links the recording under its own label (SPEC-020 AC-3)", () => {
+    const description = build({ comments: [fullComment] });
+    const recording = description.content[3];
+    expect(findAll(recording, "text")[0]).toEqual({
+      type: "text",
+      text: "Watch the recording",
+      marks: [{ type: "link", attrs: { href: RECORDING_URL } }],
+    });
+  });
+
+  it("links the page under its title (S5.6 AC-2)", () => {
+    const description = build({ comments: [fullComment] });
+    const pageLink = findAll(description, "text").find(
+      (node) => node.text === "Cognograph",
+    );
+    expect(pageLink).toEqual({
+      type: "text",
+      text: "Cognograph",
+      marks: [{ type: "link", attrs: { href: "https://app.example.com/" } }],
+    });
+  });
+
+  it("names the page by its address when it has no title", () => {
+    const description = build({
+      comments: [{ ...fullComment, pageTitle: undefined }],
+    });
+    const pageLink = findAll(description, "text").find(
+      (node) => node.text === "https://app.example.com/",
+    );
+    expect(pageLink?.marks).toEqual([
+      { type: "link", attrs: { href: "https://app.example.com/" } },
+    ]);
+  });
+
   it("leaves out the steps section without steps or a recording", () => {
     const description = build({ comments: [bareComment] });
     expect(types(description.content)).toEqual(["heading", "expand"]);
