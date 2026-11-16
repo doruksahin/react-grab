@@ -17,6 +17,20 @@ test.describe(
   "overlay on an enabled non-localhost site",
   { tag: ["@ADR-0023"] },
   () => {
+    test("copies an element that has no text, such as an input", async ({
+      page,
+    }) => {
+      await page.goto(TEST_PAGE_URL);
+      await waitForOverlay(page);
+
+      const copied = await page.evaluate(async () => {
+        const input = document.querySelector("input");
+        if (!input || !window.__REACT_GRAB__) return false;
+        return window.__REACT_GRAB__.copyElement(input);
+      });
+      expect(copied).toBe(true);
+    });
+
     test("mounts the overlay in the page", async ({ page, serviceWorker }) => {
       expect(serviceWorker.url()).toContain("background.js");
       await page.goto(TEST_PAGE_URL);

@@ -44,7 +44,7 @@ export const FORGED_TOOLBAR_EDGE = "left";
 export { TEST_API_TOKEN };
 
 const TEST_PAGE_HTML =
-  "<!doctype html><html><head><title>Extension test page</title></head><body><h1>Extension test page</h1></body></html>";
+  "<!doctype html><html><head><title>Extension test page</title></head><body><h1>Extension test page</h1><label>Board name <input name='board' placeholder='Name'></label></body></html>";
 
 const TEST_PAGE_WITH_IFRAME_HTML = `<!doctype html><html><head><title>Extension test page with iframe</title></head><body>
 <script>window.addEventListener("message", (event) => { if (event.data === "forgery-attempted") window.forgeryAttempted = true; });</script>
