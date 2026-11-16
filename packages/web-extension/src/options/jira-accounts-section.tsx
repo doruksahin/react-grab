@@ -57,11 +57,14 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
     });
   };
 
-  const handleRemove = (account: JiraAccountSummary) =>
+  const handleRemove = (account: JiraAccountSummary) => {
+    const label = `${account.displayName} on ${siteHost(account.siteUrl)}`;
+    if (!window.confirm(`Remove the Jira account ${label}?`)) return;
     run(async () => {
       await settingsMessenger.sendMessage("removeJiraAccount", account.id);
-      return `Removed ${account.displayName} on ${siteHost(account.siteUrl)}.`;
+      return `Removed ${label}.`;
     });
+  };
 
   return (
     <section aria-labelledby="jira-accounts-heading" data-jira-accounts>

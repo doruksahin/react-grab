@@ -71,11 +71,8 @@ export interface JiraAccount {
 export interface JiraAccountRepository {
   list(): Promise<JiraAccount[]>;
   find(id: string): Promise<JiraAccount | undefined>;
-  findBySiteUser(
-    siteUrl: string,
-    atlassianAccountId: string,
-  ): Promise<JiraAccount | undefined>;
-  insert(account: JiraAccount): Promise<void>;
+  /** "duplicate" when the site already has this Jira user. */
+  insert(account: JiraAccount): Promise<"inserted" | "duplicate">;
   updateCredential(id: string, credential: SealedCredential): Promise<void>;
   /** "in-use" when a workspace or a ticket still refers to the account. */
   delete(id: string): Promise<"deleted" | "in-use">;

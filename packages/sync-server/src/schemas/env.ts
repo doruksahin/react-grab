@@ -140,7 +140,8 @@ export const CredentialEnvSchema = z
       .string()
       .transform((value, context) => {
         try {
-          return JSON.parse(value) as unknown;
+          const parsed: unknown = JSON.parse(value);
+          return parsed;
         } catch {
           context.addIssue({ code: "custom", message: "must be JSON" });
           return z.NEVER;
@@ -150,7 +151,8 @@ export const CredentialEnvSchema = z
     JIRA_CREDENTIAL_KEY_CURRENT: z.string().min(1),
   })
   .refine(
-    (env) => env.JIRA_CREDENTIAL_KEY_CURRENT in env.JIRA_CREDENTIAL_KEYS,
+    (env) =>
+      Object.hasOwn(env.JIRA_CREDENTIAL_KEYS, env.JIRA_CREDENTIAL_KEY_CURRENT),
     {
       message: "names a version that JIRA_CREDENTIAL_KEYS does not have",
       path: ["JIRA_CREDENTIAL_KEY_CURRENT"],

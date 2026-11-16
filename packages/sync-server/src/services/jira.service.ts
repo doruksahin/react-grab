@@ -3,6 +3,12 @@ import { markdownToAdf } from "marklassian";
 import { convertADFToMarkdown, type ADFDocument } from "adf-to-markdown";
 import type { SyncRepository, ScreenshotStore } from "../repositories/types.js";
 import { JiraHttpError, httpStatusOf } from "./jira-errors.js";
+import {
+  type AttachmentPath,
+  rewriteAttachmentLinks,
+} from "./jira-attachment-links.js";
+
+export type { AttachmentPath };
 
 const HTTP_NOT_FOUND = 404;
 
@@ -35,9 +41,6 @@ interface JiraCommentNode {
   richText: { adfValue: { json: ADFDocument } } | null;
   childComments?: { edges: Array<{ node: JiraCommentNode }> } | null;
 }
-
-/** The proxy path the overlay loads a ticket attachment from. */
-export type AttachmentPath = (attachmentId: string) => string;
 
 /** The Jira user an account signs in as. */
 export interface JiraMyself {
@@ -192,9 +195,12 @@ export class JiraService {
       const rawMarkdown = node.richText?.adfValue?.json
         ? convertADFToMarkdown(node.richText.adfValue.json).trim()
         : "";
-      const body = this.rewriteMediaUrls(
-        rawMarkdown,
-        filenameToAttachmentId,
+      const body = rewriteAttachmentLinks(
+        this.rewriteMediaUrls(
+          rawMarkdown,
+          filenameToAttachmentId,
+          attachmentPath,
+        ),
         attachmentPath,
       );
       flat.push({
@@ -529,13 +535,10 @@ export class JiraService {
 
   /**
    * Extract base64 data: URLs from markdown, upload to JIRA as attachments,
-   * and replace with proxy URLs. Returns rewritten markdown.
+   * and link Jira's own attachment URL, so the body stays valid in Jira; the
+   * read side maps it to the proxy (rewriteMediaUrls). Returns the markdown.
    */
-  async uploadBase64Images(
-    ticketId: string,
-    body: string,
-    attachmentPath: AttachmentPath,
-  ): Promise<string> {
+  async uploadBase64Images(ticketId: string, body: string): Promise<string> {
     const imgRegex = /!\[([^\]]*)\]\((data:image\/[^)]+)\)/g;
     let processed = body;
     for (const match of body.matchAll(imgRegex)) {
@@ -564,7 +567,7 @@ export class JiraService {
         if (attachments[0]) {
           processed = processed.replace(
             full!,
-            `![${alt}](${attachmentPath(attachments[0].id)})`,
+            `![${alt}](${this.config.baseUrl}/rest/api/3/attachment/content/${attachments[0].id})`,
           );
         }
       }

@@ -34,10 +34,16 @@ export class CredentialVault {
 
   constructor(private readonly keyRing: CredentialEnv) {}
 
+  /** The key version new writes use. */
+  get currentKeyVersion(): string {
+    return this.keyRing.JIRA_CREDENTIAL_KEY_CURRENT;
+  }
+
   private key(version: string): Promise<CryptoKey> {
     const cached = this.importedKeys.get(version);
     if (cached) return cached;
-    const raw = this.keyRing.JIRA_CREDENTIAL_KEYS[version];
+    const keys = this.keyRing.JIRA_CREDENTIAL_KEYS;
+    const raw = Object.hasOwn(keys, version) ? keys[version] : undefined;
     if (!raw) {
       return Promise.reject(
         new Error(`No Jira credential key with version "${version}"`),
@@ -58,7 +64,7 @@ export class CredentialVault {
     accountId: string,
     credential: JiraCredential,
   ): Promise<SealedCredential> {
-    const keyVersion = this.keyRing.JIRA_CREDENTIAL_KEY_CURRENT;
+    const keyVersion = this.currentKeyVersion;
     const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
     const ciphertext = await crypto.subtle.encrypt(
       {

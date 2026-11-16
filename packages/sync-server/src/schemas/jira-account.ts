@@ -39,6 +39,10 @@ export const JiraAccountSummary = z
   })
   .openapi("JiraAccountSummary");
 
+export const ReencryptResponse = z
+  .object({ reencrypted: z.number().int() })
+  .openapi("ReencryptResponse");
+
 export const AddJiraAccountRequest = z.object({
   siteUrl: JiraSiteUrl,
   email: z.string().trim().email(),

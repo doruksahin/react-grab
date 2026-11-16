@@ -83,7 +83,7 @@ The routes ask the factory for a `JiraService` only when they need one. `inject-
   - Each write uses a new random 96-bit IV.
   - The additional authenticated data is the account id, the key version and the credential kind, so a ciphertext cannot be moved to another row or read as another kind.
 - **Keys:** a Worker secret `JIRA_CREDENTIAL_KEYS`, a JSON key ring `{ "<version>": "<32 random bytes, base64>" }`, and a plain variable `JIRA_CREDENTIAL_KEY_CURRENT` naming the version used for writes. Both are validated by the env schema, as in ADR-0018. Each row stores its `key_version`.
-  - To rotate: add a version to the ring, make it current, run the re-encryption script (`pnpm --filter @react-grab/sync-server credentials:reencrypt`, which reads and rewrites each row through the vault), then remove the old version.
+  - To rotate: add a version to the ring, make it current, call `POST /jira-accounts/reencrypt` with the admin token (it seals every row of an older version again through the vault), then remove the old version.
 - **Why not Worker secrets per account:** Worker secrets are bound when the Worker is deployed. The Worker cannot add one at runtime from a form. This is why option 1 has no UI.
 
 ### Site URL
@@ -140,7 +140,9 @@ Each step is reviewed for SRP, DRY and layers, and the findings are fixed, befor
    - The migration fills `workspaces` with `SELECT DISTINCT workspace_id` from groups and comments, so existing workspaces appear in the picker.
    - A workspace without a destination falls back to the environment account and still takes the client's project key. A ticket without an origin is read through the environment account.
    - Release order: migration, then the `JIRA_CREDENTIAL_KEYS`, `JIRA_CREDENTIAL_KEY_CURRENT` and `SYNC_ADMIN_TOKEN` secrets, then the Worker.
-2. **Clients, in one release.** The extension settings get the admin token, the Jira accounts section, the workspace choice with **New workspace…** and the workspaces table. The overlay moves to the new routes, `getDestination` and the dialog's states. Storage version 3 drops `jiraProjectKey` from site settings in the same release, and `bind-site-jira-project.ts` and the project parameters in the gateway's `JIRA_METHODS` are deleted with it. A changeset deprecates `initSync({ jiraProjectKey })`.
+   - A workspace first written by the old Worker between the migration and the new Worker joins the `workspaces` table on its next write, since every write ensures its workspace.
+2. **Clients, in one release.** Before the extension ships, give every workspace an extension site uses a destination (through the new settings page, or `PUT /workspaces/{id}/jira`): storage version 3 drops the site's project key, so an unbound workspace has no project to fall back to.
+   The extension settings get the admin token, the Jira accounts section, the workspace choice with **New workspace…** and the workspaces table. The overlay moves to the new routes, `getDestination` and the dialog's states. Storage version 3 drops `jiraProjectKey` from site settings in the same release, and `bind-site-jira-project.ts` and the project parameters in the gateway's `JIRA_METHODS` are deleted with it. A changeset deprecates `initSync({ jiraProjectKey })`.
 3. **Cut over.** Add the environment account through the UI and bind the existing workspaces. A one-off script sets the origin of existing tickets to that account. Then remove the fallback, the old routes, the client project key and the `JIRA_*` variables. This supersedes ADR-0018's single-account part; its Zod-validated env pattern stays for the new secrets.
 
 ### Consequences

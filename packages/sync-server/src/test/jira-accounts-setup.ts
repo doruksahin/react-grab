@@ -5,7 +5,7 @@ import { D1SyncRepository } from "../repositories/d1.repo.js";
 import { D1JiraAccountRepository } from "../repositories/jira-accounts.repo.js";
 import { D1WorkspaceRepository } from "../repositories/workspaces.repo.js";
 import type { ScreenshotStore } from "../repositories/types.js";
-import { parseCredentialEnv } from "../schemas/env.js";
+import { type CredentialEnv, parseCredentialEnv } from "../schemas/env.js";
 import { CredentialVault } from "../services/credential-vault.js";
 import { JiraClientFactory } from "../services/jira-client-factory.js";
 import { JiraAccountService } from "../services/jira-account.service.js";
@@ -26,12 +26,13 @@ const noScreenshots: ScreenshotStore = {
  */
 export const createJiraAccountsHarness = (
   environment: JiraConfig | null = null,
+  keyRing: CredentialEnv = parseCredentialEnv(env),
 ) => {
   const db = drizzle(env.DB, { schema });
   const repo = new D1SyncRepository(db);
   const accounts = new D1JiraAccountRepository(db);
   const workspaces = new D1WorkspaceRepository(db);
-  const vault = new CredentialVault(parseCredentialEnv(env));
+  const vault = new CredentialVault(keyRing);
   const createdWith: JiraConfig[] = [];
   const configs = new WeakMap<JiraService, JiraConfig>();
   const createJiraService = (config: JiraConfig) => {

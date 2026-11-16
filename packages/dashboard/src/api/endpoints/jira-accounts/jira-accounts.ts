@@ -32,6 +32,7 @@ import type {
   JiraAccountSummary,
   JiraErrorResponse,
   ListJiraAccountProjects200Item,
+  ReencryptResponse,
   ReplaceJiraCredentialBody
 } from '../../model';
 
@@ -40,6 +41,93 @@ import type {
 
 
 /**
+ * @summary Seal every credential with the current key version (key rotation)
+ */
+export type reencryptJiraCredentialsResponse200 = {
+  data: ReencryptResponse
+  status: 200
+}
+
+export type reencryptJiraCredentialsResponseSuccess = (reencryptJiraCredentialsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type reencryptJiraCredentialsResponse = (reencryptJiraCredentialsResponseSuccess)
+
+export const getReencryptJiraCredentialsUrl = () => {
+
+
+
+
+  return `/jira-accounts/reencrypt`
+}
+
+export const reencryptJiraCredentials = async ( options?: RequestInit): Promise<reencryptJiraCredentialsResponse> => {
+
+  const res = await fetch(getReencryptJiraCredentialsUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: reencryptJiraCredentialsResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as reencryptJiraCredentialsResponse
+}
+
+
+
+
+export const getReencryptJiraCredentialsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reencryptJiraCredentials>>, TError,void, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof reencryptJiraCredentials>>, TError,void, TContext> => {
+
+const mutationKey = ['reencryptJiraCredentials'];
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reencryptJiraCredentials>>, void> = () => {
+
+
+          return  reencryptJiraCredentials(fetchOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReencryptJiraCredentialsMutationResult = NonNullable<Awaited<ReturnType<typeof reencryptJiraCredentials>>>
+
+    export type ReencryptJiraCredentialsMutationError = unknown
+
+    /**
+ * @summary Seal every credential with the current key version (key rotation)
+ */
+export const useReencryptJiraCredentials = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reencryptJiraCredentials>>, TError,void, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reencryptJiraCredentials>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getReencryptJiraCredentialsMutationOptions(options), queryClient);
+    }
+    /**
  * @summary List Jira accounts
  */
 export type listJiraAccountsResponse200 = {

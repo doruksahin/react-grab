@@ -11,10 +11,12 @@ type Database = DrizzleD1Database<typeof schema>;
 type Row = typeof schema.jiraAccounts.$inferSelect;
 
 const FOREIGN_KEY_FAILURE = "FOREIGN KEY constraint failed";
+const UNIQUE_FAILURE = "UNIQUE constraint failed";
 
-const isForeignKeyFailure = (error: unknown): boolean => {
+/** D1 names the failed constraint in the message of the error or its causes. */
+const isConstraintFailure = (error: unknown, constraint: string): boolean => {
   for (let current = error; current instanceof Error; current = current.cause) {
-    if (current.message.includes(FOREIGN_KEY_FAILURE)) return true;
+    if (current.message.includes(constraint)) return true;
   }
   return false;
 };
@@ -58,28 +60,19 @@ export class D1JiraAccountRepository implements JiraAccountRepository {
     return row ? rowToAccount(row) : undefined;
   }
 
-  async findBySiteUser(
-    siteUrl: string,
-    atlassianAccountId: string,
-  ): Promise<JiraAccount | undefined> {
-    const [row] = await this.db
-      .select()
-      .from(schema.jiraAccounts)
-      .where(
-        and(
-          eq(schema.jiraAccounts.siteUrl, siteUrl),
-          eq(schema.jiraAccounts.atlassianAccountId, atlassianAccountId),
-        ),
-      )
-      .limit(1);
-    return row ? rowToAccount(row) : undefined;
-  }
-
-  async insert(account: JiraAccount): Promise<void> {
+  async insert(account: JiraAccount): Promise<"inserted" | "duplicate"> {
+    // The unique index on site and Jira user decides, so two concurrent adds
+    // of the same account cannot both get through.
     const { credential, ...fields } = account;
-    await this.db
-      .insert(schema.jiraAccounts)
-      .values({ ...fields, ...credentialColumns(credential) });
+    try {
+      await this.db
+        .insert(schema.jiraAccounts)
+        .values({ ...fields, ...credentialColumns(credential) });
+      return "inserted";
+    } catch (error) {
+      if (isConstraintFailure(error, UNIQUE_FAILURE)) return "duplicate";
+      throw error;
+    }
   }
 
   async updateCredential(
@@ -101,7 +94,7 @@ export class D1JiraAccountRepository implements JiraAccountRepository {
         .where(eq(schema.jiraAccounts.id, id));
       return "deleted";
     } catch (error) {
-      if (isForeignKeyFailure(error)) return "in-use";
+      if (isConstraintFailure(error, FOREIGN_KEY_FAILURE)) return "in-use";
       throw error;
     }
   }

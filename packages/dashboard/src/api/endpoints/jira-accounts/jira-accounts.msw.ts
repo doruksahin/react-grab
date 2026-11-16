@@ -19,9 +19,12 @@ import type {
 
 import type {
   JiraAccountSummary,
-  ListJiraAccountProjects200Item
+  ListJiraAccountProjects200Item,
+  ReencryptResponse
 } from '../../model';
 
+
+export const getReencryptJiraCredentialsResponseMock = (overrideResponse: Partial<Extract<ReencryptResponse, object>> = {}): ReencryptResponse => ({reencrypted: faker.number.int(), ...overrideResponse})
 
 export const getListJiraAccountsResponseMock = (): JiraAccountSummary[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), siteUrl: faker.string.alpha({length: {min: 10, max: 20}}), email: faker.string.alpha({length: {min: 10, max: 20}}), displayName: faker.string.alpha({length: {min: 10, max: 20}}), workspaceCount: faker.number.int()})))
 
@@ -31,6 +34,18 @@ export const getReplaceJiraCredentialResponseMock = (overrideResponse: Partial<E
 
 export const getListJiraAccountProjectsResponseMock = (): ListJiraAccountProjects200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({key: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}})})))
 
+
+export const getReencryptJiraCredentialsMockHandler = (overrideResponse?: ReencryptResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<ReencryptResponse> | ReencryptResponse), options?: RequestHandlerOptions) => {
+  return http.post('*/jira-accounts/reencrypt', async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getReencryptJiraCredentialsResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
 
 export const getListJiraAccountsMockHandler = (overrideResponse?: JiraAccountSummary[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<JiraAccountSummary[]> | JiraAccountSummary[]), options?: RequestHandlerOptions) => {
   return http.get('*/jira-accounts', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
@@ -90,6 +105,7 @@ export const getListJiraAccountProjectsMockHandler = (overrideResponse?: ListJir
   }, options)
 }
 export const getJiraAccountsMock = () => [
+  getReencryptJiraCredentialsMockHandler(),
   getListJiraAccountsMockHandler(),
   getAddJiraAccountMockHandler(),
   getReplaceJiraCredentialMockHandler(),

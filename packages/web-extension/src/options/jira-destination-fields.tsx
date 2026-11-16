@@ -50,18 +50,16 @@ export const JiraDestinationFields = (props: JiraDestinationFieldsProps) => {
           when={projects.state !== "errored"}
           fallback={<span role="alert">{describeError(projects.error)}</span>}
         >
-          <select
-            name="projectKey"
-            required
-            disabled={projects.loading}
-            value={props.projectKey ?? ""}
-          >
+          <select name="projectKey" required disabled={projects.loading}>
             <Show when={projects.loading}>
               <option value="">Loading projects…</option>
             </Show>
             <For each={projects.latest ?? []}>
               {(project) => (
-                <option value={project.key}>
+                <option
+                  value={project.key}
+                  selected={project.key === props.projectKey}
+                >
                   {project.key} · {project.name}
                 </option>
               )}

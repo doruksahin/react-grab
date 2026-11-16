@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createJiraAccountsHarness } from "../../test/jira-accounts-setup.js";
 import { JiraError, JiraHttpError } from "../jira-errors.js";
 import { JiraService } from "../jira.service.js";
+import { CredentialVault } from "../credential-vault.js";
 
 /*
  * ADR-0027 over real D1, with Jira stubbed. Each Jira user is named by its
@@ -159,6 +160,42 @@ describe("JiraAccountService", () => {
     });
     await harness.accountService.remove(account.id);
     expect(await harness.accounts.find(account.id)).toBeUndefined();
+  });
+});
+
+describe("key rotation (ADR-0027)", () => {
+  it("re-seals credentials from an older key version, and leaves current ones", async () => {
+    const account = await harness.accountService.add({
+      siteUrl: "https://rotate.atlassian.net",
+      email: "rot@example.com",
+      apiToken: "token-ada",
+    });
+    const stored = await harness.accounts.find(account.id);
+    // Pretend an older key sealed it: v0 holds the same bytes as v1.
+    const KEY = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
+    const older = new CredentialVault({
+      JIRA_CREDENTIAL_KEYS: { v0: KEY, v1: KEY },
+      JIRA_CREDENTIAL_KEY_CURRENT: "v0",
+    });
+    await harness.accounts.updateCredential(
+      account.id,
+      await older.seal(account.id, { kind: "api-token", token: "token-ada" }),
+    );
+    expect(stored?.credential.keyVersion).toBe("v1");
+
+    const rotated = createJiraAccountsHarness(null, {
+      JIRA_CREDENTIAL_KEYS: { v0: KEY, v1: KEY },
+      JIRA_CREDENTIAL_KEY_CURRENT: "v1",
+    });
+    const { reencrypted } = await rotated.accountService.reencryptAll();
+    expect(reencrypted).toBeGreaterThanOrEqual(1);
+    const after = await rotated.accounts.find(account.id);
+    expect(after?.credential.keyVersion).toBe("v1");
+    expect(await rotated.vault.open(account.id, after!.credential)).toEqual({
+      kind: "api-token",
+      token: "token-ada",
+    });
+    expect((await rotated.accountService.reencryptAll()).reencrypted).toBe(0);
   });
 });
 

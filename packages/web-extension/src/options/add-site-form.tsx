@@ -14,7 +14,8 @@ import { formCheckbox, formField } from "./form-field.js";
 import { JiraDestinationFields } from "./jira-destination-fields.jsx";
 import { requestOriginPermission } from "./request-origin-permission.js";
 
-const NEW_WORKSPACE = "__new__";
+// A workspace id is never empty (siteSettingsSchema), so "" cannot collide.
+const NEW_WORKSPACE = "";
 
 interface AddSiteFormProps {
   workspaces: WorkspaceSummary[];
@@ -40,6 +41,11 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
       : isNew
         ? formField(form, "newWorkspace")
         : choice();
+    if (isNew && props.workspaces.some((known) => known.id === workspace)) {
+      throw new Error(
+        `${workspace} already exists. Choose it from the list, or change it under Workspaces.`,
+      );
+    }
     const site = siteSettingsSchema.parse({
       workspace,
       recordSteps: formCheckbox(form, "recordSteps"),
@@ -56,6 +62,7 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
     }
     await settingsMessenger.sendMessage("saveSite", { origin, site });
     form.reset();
+    setChoice(props.workspaces[0]?.id ?? NEW_WORKSPACE);
     setStatus(`Enabled ${origin} for ${site.workspace}.`);
     props.onSaved();
   };

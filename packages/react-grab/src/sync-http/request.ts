@@ -20,7 +20,7 @@ const SUCCESS_STATUSES: ReadonlySet<number> = new Set<SuccessStatus>([
 // The server's answer for a write that a rule forbids (ADR-0008).
 const HTTP_STATUS_CONFLICT = 409;
 
-/** A response the sync server answered with something other than 200. */
+/** A response the sync server answered with something other than 2xx. */
 export class SyncHttpError extends Error {
   readonly status: number;
   /**
@@ -143,6 +143,9 @@ export const createSyncRequest = (
         operation,
         response.status,
         isErrorBody(data) ? data.error : undefined,
+        isErrorBody(data) && typeof data.code === "string"
+          ? data.code
+          : undefined,
       );
     },
   };

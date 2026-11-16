@@ -59,16 +59,6 @@ export class JiraAccountService {
       input.email,
       input.apiToken,
     );
-    const existing = await this.deps.accounts.findBySiteUser(
-      input.siteUrl,
-      myself.accountId,
-    );
-    if (existing) {
-      throw new JiraError(
-        "jira-account-duplicate",
-        `${myself.displayName} on ${input.siteUrl} is already added. Replace its token instead.`,
-      );
-    }
     const id = crypto.randomUUID();
     const account: JiraAccount = {
       id,
@@ -81,7 +71,12 @@ export class JiraAccountService {
         .seal(id, { kind: "api-token", token: input.apiToken }),
       createdAt: Date.now(),
     };
-    await this.deps.accounts.insert(account);
+    if ((await this.deps.accounts.insert(account)) === "duplicate") {
+      throw new JiraError(
+        "jira-account-duplicate",
+        `${myself.displayName} on ${input.siteUrl} is already added. Replace its token instead.`,
+      );
+    }
     return toSummary(account, 0);
   }
 
@@ -123,6 +118,26 @@ export class JiraAccountService {
         "A workspace or a ticket still uses this Jira account",
       );
     }
+  }
+
+  /**
+   * Seals every credential that an older key version sealed with the current
+   * one. Step two of a key rotation: after it, the old version can leave the
+   * key ring (ADR-0027).
+   */
+  async reencryptAll(): Promise<{ reencrypted: number }> {
+    const vault = this.deps.vault();
+    let reencrypted = 0;
+    for (const account of await this.deps.accounts.list()) {
+      if (account.credential.keyVersion === vault.currentKeyVersion) continue;
+      const credential = await vault.open(account.id, account.credential);
+      await this.deps.accounts.updateCredential(
+        account.id,
+        await vault.seal(account.id, credential),
+      );
+      reencrypted += 1;
+    }
+    return { reencrypted };
   }
 
   async listProjects(accountId: string): Promise<JiraProjectValue[]> {

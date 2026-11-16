@@ -116,6 +116,10 @@ export interface JiraErrorResponse {
   code: JiraErrorResponseCode;
 }
 
+export interface ReencryptResponse {
+  reencrypted: number;
+}
+
 export interface JiraAccountSummary {
   id: string;
   siteUrl: string;
@@ -1844,6 +1848,42 @@ export const searchLegacyJiraUsers = async (params: SearchLegacyJiraUsersParams,
   {
     ...options,
     method: 'GET'
+
+
+  }
+);}
+
+
+
+export type reencryptJiraCredentialsResponse200 = {
+  data: ReencryptResponse
+  status: 200
+}
+
+export type reencryptJiraCredentialsResponseSuccess = (reencryptJiraCredentialsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type reencryptJiraCredentialsResponse = (reencryptJiraCredentialsResponseSuccess)
+
+export const getReencryptJiraCredentialsUrl = () => {
+
+
+
+
+  return `/jira-accounts/reencrypt`
+}
+
+/**
+ * @summary Seal every credential with the current key version (key rotation)
+ */
+export const reencryptJiraCredentials = async ( options?: Parameters<typeof customFetch>[1]): Promise<reencryptJiraCredentialsResponse> => {
+
+  return customFetch<reencryptJiraCredentialsResponse>(getReencryptJiraCredentialsUrl(),
+  {
+    ...options,
+    method: 'POST'
 
 
   }

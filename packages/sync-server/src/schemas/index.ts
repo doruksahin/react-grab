@@ -21,6 +21,7 @@ export {
   JiraAccountSummary,
   AddJiraAccountRequest,
   ReplaceJiraCredentialRequest,
+  ReencryptResponse,
   JiraErrorCode,
   JiraErrorResponse,
 } from "./jira-account.js";

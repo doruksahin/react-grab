@@ -103,7 +103,6 @@ export class JiraTicketService {
       const processedBody = await client.jira.uploadBase64Images(
         origin.jiraTicketId,
         body,
-        ticketAttachmentPath(workspaceId, groupId),
       );
       const adf = markdownToAdf(processedBody);
       const enriched = mentions?.length ? injectMentions(adf, mentions) : adf;

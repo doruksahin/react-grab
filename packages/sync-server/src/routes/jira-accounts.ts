@@ -6,6 +6,7 @@ import {
   JiraAccountIdParam,
   JiraAccountSummary,
   JiraProject,
+  ReencryptResponse,
   ReplaceJiraCredentialRequest,
 } from "../schemas/index.js";
 
@@ -102,7 +103,24 @@ const listProjects = createRoute({
   },
 });
 
+const reencrypt = createRoute({
+  method: "post",
+  path: "/jira-accounts/reencrypt",
+  tags: ["jira-accounts"],
+  summary: "Seal every credential with the current key version (key rotation)",
+  operationId: "reencryptJiraCredentials",
+  responses: {
+    200: {
+      description: "How many credentials were sealed again",
+      content: { "application/json": { schema: ReencryptResponse } },
+    },
+  },
+});
+
 export const jiraAccountRoutes = createRouter()
+  .openapi(reencrypt, async (c) =>
+    c.json(await c.var.jiraAccounts.reencryptAll(), 200),
+  )
   .openapi(listAccounts, async (c) =>
     c.json(await c.var.jiraAccounts.list(), 200),
   )

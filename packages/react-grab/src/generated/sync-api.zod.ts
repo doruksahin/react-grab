@@ -479,6 +479,14 @@ export const SearchLegacyJiraUsersResponse = zod.array(SearchLegacyJiraUsersResp
 
 
 /**
+ * @summary Seal every credential with the current key version (key rotation)
+ */
+export const ReencryptJiraCredentialsResponse = zod.object({
+  "reencrypted": zod.int()
+})
+
+
+/**
  * @summary List Jira accounts
  */
 export const ListJiraAccountsResponseItem = zod.object({
