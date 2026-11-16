@@ -29,6 +29,7 @@ import { DevInsights } from "../dev-insights/index.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
 import { ActiveGroupPicker } from "../selection-groups/active-group-picker.js";
 import { StepList } from "../reproduce-steps/step-list.jsx";
+import { LocationNote } from "../selection-location/location-note.jsx";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];
@@ -208,6 +209,9 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 hasFullPageScreenshot={Boolean(item.screenshotFullPage)}
                 recordingUrl={item.recordingUrl}
                 reproduceSteps={<StepList item={item} />}
+                locationNote={
+                  <LocationNote selectionId={item.id} class="mt-1.5" />
+                }
                 jiraTicketId={group()?.jiraTicketId}
                 jiraUrl={group()?.jiraUrl}
                 jiraStatus={group()?.jiraStatus}

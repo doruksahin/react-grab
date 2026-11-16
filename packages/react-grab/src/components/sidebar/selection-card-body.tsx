@@ -107,6 +107,10 @@ export interface SelectionCardBodyProps {
   // The steps that led to the selection and their export (ADR-0025).
   reproduceSteps?: JSX.Element;
 
+  // Where the selection is when it is not on the page, and the way back
+  // (ADR-0024, ADR-0026).
+  locationNote?: JSX.Element;
+
   // Bottom meta row
   jiraIssueType?: string | null;
   jiraPriority?: string | null;
@@ -225,6 +229,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
               );
             }}
           </Show>
+          {props.locationNote}
           <Show when={props.recordingUrl}>
             {(recordingUrl) => (
               <a

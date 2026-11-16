@@ -946,8 +946,8 @@ data_attrs:
     reproduce-steps-item: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-skip: {scope: reproduce-steps, src: 1, tests: 1}
-    step-guide-start: {scope: reproduce-steps, src: 1, tests: 1}
-    step-guide-status: {scope: reproduce-steps, src: 1, tests: 9}
+    step-guide-start: {scope: reproduce-steps, src: 1, tests: 2}
+    step-guide-status: {scope: reproduce-steps, src: 1, tests: 10}
     step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
@@ -964,14 +964,14 @@ data_attrs:
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 13}
+    selection-card: {scope: selection, src: 2, tests: 14}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 3, tests: 0}
     selection-label: {scope: selection, src: 1, tests: 19}
     selection-remove: {scope: selection, src: 1, tests: 0}
     unread-indicator: {scope: selection, src: 1, tests: 0}
-    selection-location: {scope: selection-location, src: 1, tests: 2}
+    selection-location: {scope: selection-location, src: 1, tests: 3}
     selection-location-kind: {scope: selection-location, src: 1, tests: 1}
     selection-location-open: {scope: selection-location, src: 1, tests: 5}
     active-group-picker: {scope: sidebar, src: 1, tests: 1}
@@ -1004,7 +1004,7 @@ data_attrs:
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 2, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 22}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 23}
     toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 1, tests: 4}
