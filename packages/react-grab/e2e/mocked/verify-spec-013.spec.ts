@@ -34,10 +34,6 @@ test.describe("Jira editor current UI contract", { tag: ["@SPEC-013"] }, () => {
     mockServer.override("listComments", [fixtures.comments[0]]);
     await reactGrab.triggerInitSync();
     await reactGrab.page.locator("[data-react-grab-toolbar-dashboard]").click();
-    await reactGrab.page
-      .getByRole("dialog", { name: "React Grab Dashboard" })
-      .getByRole("tab", { name: /^Selections/ })
-      .click();
     await expect(
       selectionCard(reactGrab.page).locator(
         '[data-react-grab-jira-comment-id="jira-cmt-1"]',

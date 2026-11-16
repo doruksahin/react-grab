@@ -179,7 +179,6 @@ features:
       - packages/react-grab/src/features/jira-ticket/business/site-host.ts
       - packages/react-grab/src/features/jira-ticket/issue-type-icons.ts
       - packages/react-grab/src/features/jira-ticket/priority-icons.ts
-      - packages/react-grab/src/features/sidebar/derive-status.ts
       - packages/react-grab/src/features/sidebar/extract-file-path.ts
       - packages/react-grab/src/features/sidebar/index.ts
       - packages/react-grab/src/features/sidebar/relative-time.ts
@@ -396,7 +395,6 @@ features:
     files:
       - packages/react-grab/src/components/icons/icon-flag.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
-      - packages/react-grab/src/components/sidebar/group-card.tsx
       - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
       - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
       - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
@@ -459,8 +457,7 @@ features:
     status: planned
     prds: [PRD-010]
     files:
-      - packages/react-grab/src/components/sidebar/group-card.tsx
-      - packages/react-grab/src/components/sidebar/group-children.tsx
+      - packages/react-grab/src/components/sidebar/group-ticket-summary.tsx
       - packages/react-grab/src/components/ui/avatar.tsx
       - packages/react-grab/src/components/ui/badge.tsx
       - packages/react-grab/src/components/ui/button.tsx
@@ -657,7 +654,7 @@ data_attrs:
         - toolbar-dashboard
 
     sidebar:
-      description: Sidebar shell + all top-level regions (header, tabs, filters, lists, detail view)
+      description: Sidebar shell + all top-level regions (header, filters, selection tree, detail view)
       owning_feature: sidebar
       owns:
         - sidebar
@@ -666,7 +663,6 @@ data_attrs:
         - status-filter
         - sync-offline-banner
         - sync-retry
-        - tab-bar
         - status-legend
         - filter-chips
         - bulk-action-bar
@@ -680,10 +676,11 @@ data_attrs:
         - group-picker-flyout
         - group-collapsible
         - detail-header
-        - group-card
         - group-detail
         - group-list
         - selection-list
+        - selection-tree
+        - group-ticket-summary
 
     selection:
       description: Selection labels, cards, badges, keyboard nav
@@ -946,7 +943,7 @@ data_attrs:
     step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 67, tests: 6}
+    ignore-events: {scope: reserved, src: 68, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -973,25 +970,25 @@ data_attrs:
     active-group-picker-locked: {scope: sidebar, src: 1, tests: 0}
     bulk-action-bar: {scope: sidebar, src: 1, tests: 0}
     bulk-group-picker: {scope: sidebar, src: 1, tests: 0}
-    detail-header: {scope: sidebar, src: 1, tests: 1}
+    detail-header: {scope: sidebar, src: 1, tests: 3}
     due-date-filter: {scope: sidebar, src: 1, tests: 2}
     empty-state: {scope: sidebar, src: 1, tests: 0}
     filter-chips: {scope: sidebar, src: 1, tests: 0}
-    group-card: {scope: sidebar, src: 2, tests: 5}
-    group-collapsible: {scope: sidebar, src: 1, tests: 1}
+    group-collapsible: {scope: sidebar, src: 1, tests: 10}
     group-detail: {scope: sidebar, src: 1, tests: 0}
-    group-list: {scope: sidebar, src: 2, tests: 3}
+    group-list: {scope: sidebar, src: 1, tests: 3}
     group-picker-flyout: {scope: sidebar, src: 1, tests: 2}
+    group-ticket-summary: {scope: sidebar, src: 2, tests: 2}
     jira-status-banner: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}
-    sidebar: {scope: sidebar, src: 1, tests: 3}
+    selection-tree: {scope: sidebar, src: 1, tests: 0}
+    sidebar: {scope: sidebar, src: 1, tests: 4}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
-    sidebar-search: {scope: sidebar, src: 1, tests: 2}
+    sidebar-search: {scope: sidebar, src: 1, tests: 3}
     status-filter: {scope: sidebar, src: 1, tests: 2}
     status-legend: {scope: sidebar, src: 1, tests: 0}
     sync-offline-banner: {scope: sidebar, src: 1, tests: 2}
     sync-retry: {scope: sidebar, src: 1, tests: 0}
-    tab-bar: {scope: sidebar, src: 1, tests: 0}
     ungrouped-section: {scope: sidebar, src: 1, tests: 2}
     toolbar: {scope: toolbar, src: 2, tests: 10}
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
@@ -1211,4 +1208,8 @@ decree:
     ADR-0026:
       title: Guide the user back to a selection, step by step
       file: decree/adr/0026-guide-the-user-back-to-a-selection-step-by-step.md
+      status: accepted
+    ADR-0028:
+      title: Show selections as one tree in the sidebar and the comments menu
+      file: decree/adr/0028-one-selection-tree-in-sidebar-and-comments-menu.md
       status: accepted

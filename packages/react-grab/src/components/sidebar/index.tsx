@@ -28,17 +28,12 @@ import {
   getDistinctReporters,
   getDistinctLabels,
 } from "../../features/sidebar/filter-state.js";
-import { GroupList } from "./group-list.js";
 import { GroupDetailView } from "./group-detail-view.js";
 import { StatusLegend } from "./status-legend.js";
-import { groupComments } from "../../features/selection-groups/business/group-operations.js";
-import { type GroupedEntry } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import { presentedGroups } from "../../features/selection-groups/business/membership.js";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
-import { TabBar } from "./tab-bar.js";
-import { Tabs, TabsContent } from "../ui/tabs.js";
-import { SelectionListTab } from "./selection-list-tab.js";
+import { SelectionTreePanel } from "./selection-tree-panel.js";
 import { BulkActionBar } from "./bulk-action-bar.js";
 import { BulkGroupPicker } from "./bulk-group-picker.js";
 import { isSelectionLocked } from "../../features/selection-groups/business/ticket-lock.js";
@@ -57,8 +52,8 @@ export interface SidebarProps {
   jiraSiteHost?: string;
   jiraProjectKey?: string;
   onClose: () => void;
-  /** Open on this selection, in the Selections tab where its Jira thread
-   *  is (a label's "Open thread"); a new object for every request. */
+  /** Open on this selection, where its Jira thread is (a label's "Open
+   *  thread"); a new object for every request. */
   focusRequest?: SidebarFocusRequest | null;
   onActiveDetailGroupChange: (groupId: string | null) => void;
   onJiraResolved?: (groupId: string) => void;
@@ -73,6 +68,10 @@ export interface SidebarProps {
   onMoveItem?: (itemId: string, groupId: string | null) => void;
   onMoveItems?: (itemIds: Set<string>, groupId: string) => void;
   onAddGroup?: (name: string) => void;
+  onRenameGroup?: (groupId: string, name: string) => void;
+  onDeleteGroup?: (groupId: string) => void;
+  onToggleGroupRevealed?: (groupId: string) => void;
+  onCopyGroup?: (groupId: string) => void;
   /** When set, opens the Jira create dialog for this loose item + its synthetic group. */
   looseTicketDialog?: {
     group: SelectionGroupWithJira;
@@ -84,7 +83,8 @@ export interface SidebarProps {
 
 export const Sidebar: Component<SidebarProps> = (props) => {
   // Instance-scoped (not module-scoped) — safe for multiple Sidebar instances
-  let lastFocusedCard: HTMLElement | undefined;
+  // The group whose detail view was last opened, to return focus to it.
+  let lastDetailGroupId: string | undefined;
   let detailViewRef: HTMLDivElement | undefined;
   let containerRef: HTMLDivElement | undefined;
 
@@ -97,7 +97,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   createFocusTrap({
     element: () => containerRef ?? null,
     initialFocusElement: () => containerRef ?? null,
-    // Opened on a selection: the Selections tab moves focus to its card.
+    // Opened on a selection: the tree panel moves focus to its card.
     onInitialFocus: (event: Event) => {
       if (untrack(() => props.focusRequest)) event.preventDefault();
     },
@@ -105,30 +105,22 @@ export const Sidebar: Component<SidebarProps> = (props) => {
     enabled: () => !lightbox.state().open,
   });
 
-  // Synthetic groups are invisible in user-facing surfaces (GroupList,
-  // filter chips, stats bar, empty-state guard). Loose selections appear
-  // in the Selections tab via SelectionListTab + isPresentedAsLoose.
+  // Synthetic groups are invisible in user-facing surfaces (filter chips,
+  // stats bar, empty-state guard). Their selections show as Ungrouped in
+  // the selection tree (ADR-0028).
   const userFacingGroups = createMemo(() =>
     presentedGroups(props.groups, props.commentItems),
   );
 
-  const [activeTab, setActiveTab] = createSignal<"groups" | "selections">(
-    "groups",
-  );
-  // A focus request shows the Selections tab; the tab scrolls to the card.
+  // A focus request shows the tree; the tree scrolls to the card.
   createEffect(
     on(
       () => props.focusRequest,
       (request) => {
-        if (!request) return;
-        setActiveDetailGroupId(null);
-        setActiveTab("selections");
+        if (request) setActiveDetailGroupId(null);
       },
     ),
   );
-  const handleTabChange = (value: string) => {
-    if (value === "groups" || value === "selections") setActiveTab(value);
-  };
   const [showLegend, setShowLegend] = createSignal(false);
   const [filterState, setFilterState] = createSignal<FilterState>(EMPTY_FILTER);
   const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
@@ -204,26 +196,17 @@ export const Sidebar: Component<SidebarProps> = (props) => {
 
   // Focus management: detail → list (back navigation)
   createEffect(() => {
-    if (activeDetailGroupId() === null && lastFocusedCard) {
+    if (activeDetailGroupId() === null && lastDetailGroupId) {
+      const groupId = lastDetailGroupId;
+      // The tree is mounted again, so find the group's button anew.
       queueMicrotask(() => {
-        if (lastFocusedCard?.isConnected) {
-          lastFocusedCard.focus();
-        }
+        containerRef
+          ?.querySelector<HTMLElement>(
+            `[data-react-grab-group-ticket-summary="${CSS.escape(groupId)}"] button`,
+          )
+          ?.focus();
       });
     }
-  });
-
-  const groupedItems = createMemo(() =>
-    groupComments(userFacingGroups(), props.commentItems),
-  );
-
-  const filteredGroups = createMemo(() => {
-    const filter = filterState();
-    if (!isFilterActive(filter)) return groupedItems();
-    const filtered = applyFilters(userFacingGroups(), filter);
-    return groupedItems().filter((entry: GroupedEntry) =>
-      filtered.some((g) => g.id === entry.group.id),
-    );
   });
 
   // NOTE: userFacingGroups is read via untrack() to prevent a reactive loop:
@@ -285,16 +268,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               filter={filterState()}
               onFilterChange={setFilterState}
             />
-            <Tabs
-              value={activeTab()}
-              onChange={handleTabChange}
-              class="min-h-0 flex-1"
-            >
-              <TabBar
-                groupsCount={userFacingGroups().length}
-                selectionsCount={(props.commentItems ?? []).length}
-              />
-
+            <div class="min-h-0 flex-1 flex flex-col">
               <div
                 data-react-grab-sidebar-search
                 class="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-foreground/[0.01]"
@@ -339,48 +313,18 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 onFilterChange={setFilterState}
               />
 
-              <TabsContent value="groups">
-                <Show
-                  when={
-                    userFacingGroups().length > 0 ||
-                    props.commentItems.length > 0
-                  }
-                  fallback={
-                    <EmptyState
-                      message="No selections yet."
-                      submessage="Select elements on the page to get started."
-                    />
-                  }
-                >
-                  <div class="flex-1 overflow-y-auto">
-                    <Show when={filteredGroups().length > 0}>
-                      <GroupList
-                        groupedItems={filteredGroups()}
-                        onGroupClick={(id: string, cardEl: HTMLElement) => {
-                          lastFocusedCard = cardEl;
-                          setActiveDetailGroupId(id);
-                        }}
-                      />
-                    </Show>
-
-                    {/* "No groups match" only makes sense when groups
-                          actually exist but are fully filtered out. */}
-                    <Show
-                      when={
-                        userFacingGroups().length > 0 &&
-                        filteredGroups().length === 0
-                      }
-                    >
-                      <EmptyState
-                        message={"No groups match the active filters."}
-                      />
-                    </Show>
-                  </div>
-                </Show>
-              </TabsContent>
-
-              <TabsContent value="selections">
-                <SelectionListTab
+              <Show
+                when={
+                  userFacingGroups().length > 0 || props.commentItems.length > 0
+                }
+                fallback={
+                  <EmptyState
+                    message="No selections yet."
+                    submessage="Select elements on the page to get started."
+                  />
+                }
+              >
+                <SelectionTreePanel
                   commentItems={props.commentItems ?? []}
                   groups={props.groups ?? []}
                   filter={filterState()}
@@ -397,9 +341,17 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   canRemoveItem={props.canRemoveItem}
                   onAddGroup={props.onAddGroup}
                   focusRequest={props.focusRequest}
+                  onRenameGroup={props.onRenameGroup}
+                  onDeleteGroup={props.onDeleteGroup}
+                  onToggleGroupRevealed={props.onToggleGroupRevealed}
+                  onCopyGroup={props.onCopyGroup}
+                  onOpenGroupDetail={(groupId) => {
+                    lastDetailGroupId = groupId;
+                    setActiveDetailGroupId(groupId);
+                  }}
                 />
-              </TabsContent>
-            </Tabs>
+              </Show>
+            </div>
           </>
         }
       >

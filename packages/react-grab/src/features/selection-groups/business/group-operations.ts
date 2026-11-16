@@ -9,13 +9,12 @@ export const getCommentsByGroup = (
 export const countByGroup = (
   comments: CommentItem[],
   groupId: string,
-): number =>
-  comments.reduce((n, c) => (c.groupId === groupId ? n + 1 : n), 0);
+): number => comments.reduce((n, c) => (c.groupId === groupId ? n + 1 : n), 0);
 
-export const groupComments = (
-  groups: SelectionGroup[],
+export const groupComments = <Group extends SelectionGroup>(
+  groups: Group[],
   comments: CommentItem[],
-): Array<{ group: SelectionGroup; items: CommentItem[] }> =>
+): Array<{ group: Group; items: CommentItem[] }> =>
   groups.map((group) => ({
     group,
     items: comments.filter((c) => c.groupId === group.id),

@@ -1,4 +1,4 @@
-import { createSignal, For, Show } from "solid-js";
+import { createEffect, createSignal, For, on, Show } from "solid-js";
 import type { Component, JSX } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import { cn } from "../../utils/cn.js";
@@ -9,6 +9,8 @@ interface UngroupedSectionProps {
   renderItem: (item: CommentItem) => JSX.Element;
   /** Whether this section is the first in its container (controls top border). */
   isFirst: boolean;
+  /** Opens the section when it holds this selection (a focus request). */
+  revealItemId?: string | null;
 }
 
 /**
@@ -18,6 +20,18 @@ interface UngroupedSectionProps {
  */
 export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
   const [isOpen, setIsOpen] = createSignal(true);
+  // A focus request is a user action from elsewhere: the card it targets
+  // must be visible, so its section opens.
+  createEffect(
+    on(
+      () => props.revealItemId,
+      (itemId) => {
+        if (itemId && props.items.some((item) => item.id === itemId)) {
+          setIsOpen(true);
+        }
+      },
+    ),
+  );
 
   return (
     <div data-react-grab-ungrouped-section>

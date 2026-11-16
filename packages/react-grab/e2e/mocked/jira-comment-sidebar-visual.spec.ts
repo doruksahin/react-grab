@@ -205,11 +205,7 @@ test.describe(
       const { page } = reactGrab;
 
       await openSidebar(page);
-      await page
-        .getByRole("dialog", { name: "React Grab Dashboard" })
-        .getByRole("tab", { name: /^Selections/ })
-        .click();
-      await reactGrab.screenshot("selections-tab", "page");
+      await reactGrab.screenshot("selection-tree", "page");
 
       // ADR-0022 step 3: the Jira thread lives on the selection's card in the
       // sidebar. populate() injects an in-memory Jira port, so it renders.

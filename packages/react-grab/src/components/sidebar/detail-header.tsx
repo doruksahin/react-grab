@@ -22,7 +22,7 @@ export const DetailHeader: Component<DetailHeaderProps> = (props) => {
     >
       <div class="flex items-center gap-2">
         <IconButton
-          label="Back to groups list"
+          label="Back to selections"
           class="shrink-0"
           onClick={props.onBack}
         >

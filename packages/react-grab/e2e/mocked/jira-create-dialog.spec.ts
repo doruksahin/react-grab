@@ -24,10 +24,6 @@ const openCreateDialog = async (page: Page, reactGrab: ReactGrabPageObject) => {
 
   await page.locator("[data-react-grab-toolbar-dashboard]").click();
   await page
-    .getByRole("dialog", { name: "React Grab Dashboard" })
-    .getByRole("tab", { name: /^Selections/ })
-    .click();
-  await page
     .locator("[data-react-grab-selection-card]")
     .filter({ hasText: COMMENT_TEXT })
     .locator("[data-react-grab-create-ticket]")
