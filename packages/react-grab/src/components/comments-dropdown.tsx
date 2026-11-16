@@ -50,6 +50,7 @@ import { formatRelativeTime } from "../utils/format-relative-time.js";
 import { IconButton } from "./ui/icon-button.js";
 import { Button } from "./ui/button.js";
 import { LocationNote } from "./selection-location/location-note.jsx";
+import { RemoveSelectionButton } from "./remove-selection-button.jsx";
 import type { ClearCounts } from "../features/selection-groups/business/membership-policy.js";
 
 interface CommentsDropdownProps extends Pick<
@@ -69,6 +70,9 @@ interface CommentsDropdownProps extends Pick<
   onCopyAll?: () => void;
   onCopyAllHover?: (isHovered: boolean) => void;
   onClearAll?: () => void;
+  /** Remove one selection; shown only when `canRemoveItem` allows it (ADR-0008). */
+  onRemoveItem?: (itemId: string) => void;
+  canRemoveItem?: (itemId: string) => boolean;
   /** What "Clear all" deletes and keeps; a comment with a ticket stays (ADR-0008). */
   clearCounts?: ClearCounts;
   onDismiss?: () => void;
@@ -229,6 +233,14 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         <span class="text-meta text-muted-foreground flex items-center justify-end">
           {formatRelativeTime(item.timestamp)}
         </span>
+        <Show
+          when={hoveredItemId() === item.id && props.canRemoveItem?.(item.id)}
+        >
+          <RemoveSelectionButton
+            variant="overlay"
+            onRemove={() => props.onRemoveItem?.(item.id)}
+          />
+        </Show>
         <IconButton
           data-react-grab-ignore-events
           label={

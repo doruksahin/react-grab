@@ -29,6 +29,7 @@ import { DevInsights } from "../dev-insights/index.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
 import { ActiveGroupPicker } from "../selection-groups/active-group-picker.js";
 import { StepList } from "../reproduce-steps/step-list.jsx";
+import { RemoveSelectionButton } from "../remove-selection-button.jsx";
 import { LocationNote } from "../selection-location/location-note.jsx";
 
 interface SelectionListTabProps {
@@ -42,6 +43,9 @@ interface SelectionListTabProps {
   commentEditorToolbarVisible?: boolean;
   onCreateTicket?: (item: CommentItem) => void;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
+  /** Remove a selection; shown only when `canRemoveItem` allows it (ADR-0008). */
+  onRemoveItem?: (itemId: string) => void;
+  canRemoveItem?: (itemId: string) => boolean;
   onAddGroup?: (name: string) => void;
   /** Scroll to, focus and briefly mark a selection (a label's "Open thread"). */
   focusRequest?: SidebarFocusRequest | null;
@@ -182,17 +186,24 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                   ) : undefined
                 }
                 subheader={
-                  <ActiveGroupPicker
-                    groups={props.groups}
-                    activeGroupId={item.groupId}
-                    onActiveGroupChange={(groupId) =>
-                      props.onMoveItem?.(item.id, groupId)
-                    }
-                    onAddGroup={props.onAddGroup}
-                  >
-                    <ActiveGroupPicker.Trigger />
-                    <ActiveGroupPicker.Content />
-                  </ActiveGroupPicker>
+                  <>
+                    <ActiveGroupPicker
+                      groups={props.groups}
+                      activeGroupId={item.groupId}
+                      onActiveGroupChange={(groupId) =>
+                        props.onMoveItem?.(item.id, groupId)
+                      }
+                      onAddGroup={props.onAddGroup}
+                    >
+                      <ActiveGroupPicker.Trigger />
+                      <ActiveGroupPicker.Content />
+                    </ActiveGroupPicker>
+                    <Show when={props.canRemoveItem?.(item.id)}>
+                      <RemoveSelectionButton
+                        onRemove={() => props.onRemoveItem?.(item.id)}
+                      />
+                    </Show>
+                  </>
                 }
                 noTicketAction={
                   !group()?.jiraTicketId && props.onCreateTicket ? (

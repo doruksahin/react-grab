@@ -393,6 +393,8 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   }
                   onCreateTicket={props.onCreateTicketForLooseItem}
                   onMoveItem={props.onMoveItem}
+                  onRemoveItem={props.onRemoveItem}
+                  canRemoveItem={props.canRemoveItem}
                   onAddGroup={props.onAddGroup}
                   focusRequest={props.focusRequest}
                 />
