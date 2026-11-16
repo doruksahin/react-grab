@@ -149,6 +149,8 @@ Each step is reviewed for SRP, DRY and layers, and the findings are fixed, befor
    - the cheatsheet;
    - a live check on `cognograph.doruk.uk`.
 
+All four steps are done (2026-11-16). The live check passed on `cognograph.doruk.uk`. The cheatsheet and `docs/features/getting-back-to-a-selection.md` describe the extension and the features built on it (ADR-0024 to ADR-0026).
+
 ### Sources
 
 - Chrome, *Cross-origin network requests*: https://developer.chrome.com/docs/extensions/develop/concepts/network-requests

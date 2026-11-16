@@ -348,6 +348,11 @@ test.describe('JIRA comment write-back', { tag: ['@SPEC-013'] }, () => {
 | `@SPEC-004` | Selection status colors | `selection-label-visual.spec.ts` |
 | `@SPEC-010` | JIRA comments display | `jira-comment-sidebar-visual.spec.ts`, `jira-selection-label-visual.spec.ts`, `reveal-test.spec.ts` |
 | `@SPEC-013` | JIRA comment write-back | `verify-spec-013.spec.ts`, `jira-comment-write.spec.ts` |
+| `@ADR-0024` | Where a selection is | `selection-location.spec.ts` |
+| `@ADR-0025` | Record steps, steps on the card | `reproduce-steps.spec.ts`, `reproduce-steps-sidebar.spec.ts` |
+| `@ADR-0026` | Step guide | `step-guide.spec.ts` |
+
+A feature decided by an ADR with no SPEC is tagged with that ADR.
 
 When adding new mocked tests, always add a `@SPEC-xxx` tag. See `TESTING.md` for the full cheatsheet.
 

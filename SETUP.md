@@ -172,6 +172,10 @@ Notes:
   still loads but sync is disabled (no server calls, no sidebar persistence).
 - `jiraProjectKey: 'ATT'` is AdCreative's JIRA project — change if your team
   uses a different key.
+- To save the steps that led to each comment, add `steps: { enabled: true }`
+  to `options`. To link a replay of the last minutes, add
+  `recording: { enabled: true }`. Both are off by default. See
+  [docs/features/getting-back-to-a-selection.md](docs/features/getting-back-to-a-selection.md).
 
 ### 3.3 Create `.env.local` with the sync server config
 
