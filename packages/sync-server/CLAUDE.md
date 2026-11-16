@@ -63,7 +63,7 @@ When a release adds a migration, apply it to production before deploying the Wor
 
 `src/services/jira.service.ts` is the main JIRA integration point. Capabilities:
 
-- `createTicketFromGroup` — create issue, attach screenshots, save ticket ID
+- `createTicketFromGroup` — create issue, attach screenshots, save ticket ID. The description is ADF built from the group's comments in D1 by `jira-ticket-description.ts` and checked by `adf-validation.ts` (ADR-0029, SPEC-021); the reporter's note goes through `marklassian`
 - `getIssueStatus` — fetch status, comments, flag state, assignee, reporter, avatars
 - `addComment` — markdown → ADF conversion with mention injection via `jira-adf-mentions.ts`
 - `uploadBase64Images` — upload inline images to JIRA attachments

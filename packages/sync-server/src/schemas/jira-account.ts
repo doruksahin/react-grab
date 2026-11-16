@@ -69,6 +69,7 @@ export const JiraErrorCode = z.enum([
   "jira-account-mismatch",
   "jira-project-not-found",
   "jira-request-failed",
+  "jira-description-invalid",
 ]);
 
 export const JiraErrorResponse = z

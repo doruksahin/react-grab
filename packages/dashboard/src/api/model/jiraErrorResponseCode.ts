@@ -21,4 +21,5 @@ export const JiraErrorResponseCode = {
   'jira-account-mismatch': 'jira-account-mismatch',
   'jira-project-not-found': 'jira-project-not-found',
   'jira-request-failed': 'jira-request-failed',
+  'jira-description-invalid': 'jira-description-invalid',
 } as const;

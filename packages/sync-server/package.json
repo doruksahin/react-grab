@@ -15,8 +15,11 @@
     "publish:worker": "wrangler deploy"
   },
   "dependencies": {
+    "@atlaskit/adf-schema": "^57.7.44",
+    "@atlaskit/adf-utils": "^20.9.83",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.2.4",
+    "@react-grab/selection-text": "workspace:*",
     "adf-to-markdown": "^1.0.1",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.0.0",

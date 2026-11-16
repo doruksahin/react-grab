@@ -83,6 +83,13 @@ packages:
         description: Convert @Name text patterns to ADF mention nodes
         file: packages/sync-server/src/services/jira-adf-mentions.ts
         test: packages/sync-server/src/services/__tests__/jira-adf-mentions.test.ts
+      jira-ticket-description:
+        description: The Jira ticket description as ADF, built from D1 (ADR-0029, SPEC-021)
+        file: packages/sync-server/src/services/jira-ticket-description.ts
+        test: packages/sync-server/src/services/__tests__/jira-ticket-description.test.ts
+      adf-validation:
+        description: Checks a built ADF document with Atlassian's validator before Jira sees it
+        file: packages/sync-server/src/services/adf-validation.ts
     db:
       schema: packages/sync-server/src/db/schema.ts
       migrations: packages/sync-server/drizzle/
@@ -160,6 +167,10 @@ packages:
     description: Shared Solid.js component library (tsup)
     entry: packages/design-system/src/index.tsx
 
+  selection-text:
+    description: Readable text for a selection's steps and source file, shared by the overlay and the sync server (SPEC-021). Source-only internal package, no build step
+    entry: packages/selection-text/src/index.ts
+
 # ─── Features (flat cross-package map) ────────────────────────────────────────
 # One entry per feature, all files across all packages in one place.
 # This is what Serena can't discover on its own — the cross-package picture.
@@ -174,12 +185,10 @@ features:
     files:
       - packages/react-grab/src/components/sidebar/index.tsx
       - packages/react-grab/src/core/index.tsx
-      - packages/react-grab/src/features/jira-ticket/business/default-description.ts
       - packages/react-grab/src/features/jira-ticket/business/default-summary.ts
       - packages/react-grab/src/features/jira-ticket/business/site-host.ts
       - packages/react-grab/src/features/jira-ticket/issue-type-icons.ts
       - packages/react-grab/src/features/jira-ticket/priority-icons.ts
-      - packages/react-grab/src/features/sidebar/extract-file-path.ts
       - packages/react-grab/src/features/sidebar/index.ts
       - packages/react-grab/src/features/sidebar/relative-time.ts
       - packages/react-grab/src/features/sidebar/use-lazy-visible.ts
@@ -230,11 +239,9 @@ features:
     adrs: [ADR-0025, ADR-0026, ADR-0021, ADR-0023]
     files:
       - packages/react-grab/src/features/reproduce-steps/business/build-step.ts
-      - packages/react-grab/src/features/reproduce-steps/business/describe-step.ts
       - packages/react-grab/src/features/reproduce-steps/business/find-step-target.ts
       - packages/react-grab/src/features/reproduce-steps/business/guide-progress.ts
       - packages/react-grab/src/features/reproduce-steps/business/page-key.ts
-      - packages/react-grab/src/features/reproduce-steps/business/recorder-selector.ts
       - packages/react-grab/src/features/reproduce-steps/business/selection-press.ts
       - packages/react-grab/src/features/reproduce-steps/business/step-buffer.ts
       - packages/react-grab/src/features/reproduce-steps/business/step-selectors.ts
@@ -319,21 +326,19 @@ features:
     description: Create JIRA tickets from groups — dialog, form, auto-summary, screenshot attachments
     status: implemented
     prds: [PRD-002]
-    specs: [SPEC-003, SPEC-009]
-    adrs: [ADR-0003, ADR-0004, ADR-0005, ADR-0022]
+    specs: [SPEC-003, SPEC-009, SPEC-021]
+    adrs: [ADR-0003, ADR-0004, ADR-0005, ADR-0022, ADR-0029]
     files:
       - packages/dashboard/src/api/endpoints/jira/jira.ts
       - packages/dashboard/src/components/jira/jira-create-dialog.tsx
       - packages/react-grab/src/components/sidebar/jira-create-button.tsx
       - packages/react-grab/src/components/sidebar/jira-create-dialog.tsx
       - packages/react-grab/src/components/sidebar/jira-create-form.tsx
-      - packages/react-grab/src/features/jira-ticket/business/default-description.ts
       - packages/react-grab/src/features/jira-ticket/business/default-summary.ts
       - packages/react-grab/src/features/jira-ticket/business/site-host.ts
       - packages/react-grab/src/features/jira-ticket/index.ts
       - packages/react-grab/src/features/jira-ticket/issue-type-icons.ts
       - packages/react-grab/src/features/jira-ticket/priority-icons.ts
-      - packages/react-grab/src/features/sidebar/extract-file-path.ts
       - packages/sync-server/src/routes/jira.ts
       - packages/sync-server/src/schemas/jira.ts
       - packages/sync-server/src/services/jira.service.ts
@@ -760,8 +765,9 @@ data_attrs:
         - jira-destination
         - jira-destination-problem
         - jira-signs-in-as
-        - jira-description-preview
-        - jira-description-input
+        - jira-note-input
+        - jira-note-preview
+        - jira-note-hint
 
     comments:
       description: JIRA comment authoring, display, mention picker, comment thread
@@ -914,14 +920,15 @@ data_attrs:
     generation-submit: {scope: generation, src: 1, tests: 0}
     create-ticket: {scope: jira, src: 1, tests: 5}
     jira-create: {scope: jira, src: 1, tests: 0}
-    jira-description-input: {scope: jira, src: 1, tests: 2}
-    jira-description-preview: {scope: jira, src: 1, tests: 1}
     jira-destination: {scope: jira, src: 1, tests: 1}
     jira-destination-problem: {scope: jira, src: 1, tests: 2}
     jira-dialog: {scope: jira, src: 1, tests: 2}
     jira-dots: {scope: jira, src: 1, tests: 0}
     jira-error: {scope: jira, src: 1, tests: 2}
     jira-form: {scope: jira, src: 1, tests: 6}
+    jira-note-hint: {scope: jira, src: 1, tests: 1}
+    jira-note-input: {scope: jira, src: 1, tests: 1}
+    jira-note-preview: {scope: jira, src: 1, tests: 1}
     jira-open-ticket: {scope: jira, src: 1, tests: 0}
     jira-required: {scope: jira, src: 1, tests: 3}
     jira-signs-in-as: {scope: jira, src: 1, tests: 0}

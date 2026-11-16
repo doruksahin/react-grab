@@ -2,7 +2,6 @@ export { createStepCapture } from "./hooks/create-step-capture.js";
 export { createStepGuide } from "./hooks/create-step-guide.js";
 export { StepGuideProvider, useStepGuide } from "./context.js";
 export { toReproduceSteps } from "./business/to-reproduce-steps.js";
-export { describeStep } from "./business/describe-step.js";
 export {
   toUserFlow,
   userFlowFileName,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeStep } from "./describe-step.js";
+import { describeStep, describeStepParts } from "./describe-step.js";
 
 describe("describeStep", () => {
   it("names the page a navigate opens", () => {
@@ -16,8 +16,6 @@ describe("describeStep", () => {
       describeStep({
         type: "click",
         selectors: ['aria/Billing[role="tab"]', "#billing", "text/Billing"],
-        offsetX: 1,
-        offsetY: 1,
       }),
     ).toBe("Click “Billing” (tab)");
   });
@@ -27,16 +25,12 @@ describe("describeStep", () => {
       describeStep({
         type: "click",
         selectors: ["#save", "text/Save draft"],
-        offsetX: 1,
-        offsetY: 1,
       }),
     ).toBe("Click “Save draft”");
     expect(
       describeStep({
         type: "click",
         selectors: ["ul > li:nth-child(2)"],
-        offsetX: 1,
-        offsetY: 1,
       }),
     ).toBe("Click “ul > li:nth-child(2)”");
   });
@@ -46,8 +40,6 @@ describe("describeStep", () => {
       describeStep({
         type: "click",
         selectors: ["aria/Billing"],
-        offsetX: 1,
-        offsetY: 1,
         assertedEvents: [
           {
             type: "navigation",
@@ -63,7 +55,6 @@ describe("describeStep", () => {
       describeStep({
         type: "change",
         selectors: ['aria/Coupon[role="textbox"]', "#coupon"],
-        value: "",
       }),
     ).toBe("Change “Coupon” (textbox, value not saved)");
   });
@@ -71,8 +62,6 @@ describe("describeStep", () => {
   const click = (selectors: string[]) => ({
     type: "click" as const,
     selectors,
-    offsetX: 1,
-    offsetY: 1,
   });
 
   it("names an aria selector without a role", () => {
@@ -97,9 +86,9 @@ describe("describeStep", () => {
   });
 
   it("describes a change without a role", () => {
-    expect(
-      describeStep({ type: "change", selectors: ["#coupon"], value: "" }),
-    ).toBe("Change “#coupon” (value not saved)");
+    expect(describeStep({ type: "change", selectors: ["#coupon"] })).toBe(
+      "Change “#coupon” (value not saved)",
+    );
   });
 
   it("keeps a hash route", () => {
@@ -115,5 +104,63 @@ describe("describeStep", () => {
     expect(describeStep({ type: "navigate", url: "not a url" })).toBe(
       "Open not a url",
     );
+  });
+});
+
+describe("describeStepParts", () => {
+  it("marks a navigate target as a page", () => {
+    expect(
+      describeStepParts({ type: "navigate", url: "https://app.example.com/a" }),
+    ).toEqual({ verb: "Open", target: "/a", targetKind: "page" });
+  });
+
+  it("marks an accessible name with its role", () => {
+    expect(
+      describeStepParts({
+        type: "click",
+        selectors: ['aria/Billing[role="tab"]', "#billing"],
+      }),
+    ).toEqual({
+      verb: "Click",
+      target: "Billing",
+      targetKind: "name",
+      detail: "(tab)",
+      destination: undefined,
+    });
+  });
+
+  it("marks a CSS-only target as a selector", () => {
+    expect(
+      describeStepParts({
+        type: "click",
+        selectors: ['[data-layout="regular"]'],
+      }),
+    ).toMatchObject({
+      target: '[data-layout="regular"]',
+      targetKind: "selector",
+    });
+  });
+
+  it("gives a change its value note", () => {
+    expect(
+      describeStepParts({ type: "change", selectors: ["#coupon"] }),
+    ).toEqual({
+      verb: "Change",
+      target: "#coupon",
+      targetKind: "selector",
+      detail: "(value not saved)",
+    });
+  });
+
+  it("gives a click the page it led to", () => {
+    expect(
+      describeStepParts({
+        type: "click",
+        selectors: ["text/Next"],
+        assertedEvents: [
+          { type: "navigation", url: "https://app.example.com/step-2" },
+        ],
+      }),
+    ).toMatchObject({ targetKind: "name", destination: "/step-2" });
   });
 });

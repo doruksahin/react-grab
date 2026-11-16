@@ -2,7 +2,8 @@
 import { type Component, createMemo, Show } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
-import { extractFilePath, relativeTime } from "../../features/sidebar/index.js";
+import { extractFilePath } from "@react-grab/selection-text";
+import { relativeTime } from "../../features/sidebar/index.js";
 import { screenshotRefs } from "../../features/screenshot/index.js";
 import { useSyncContext } from "../../features/sync/sync-context.js";
 import { ScreenshotPair } from "./screenshot-pair.js";

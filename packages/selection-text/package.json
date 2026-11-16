@@ -1,0 +1,21 @@
+{
+  "name": "@react-grab/selection-text",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Readable text for a selection's steps and source file, shared by the overlay and the sync server",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.4"
+  }
+}

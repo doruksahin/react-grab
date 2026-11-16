@@ -1,7 +1,7 @@
 import { type Component, For, Show, createMemo } from "solid-js";
 import type { CommentItem } from "../../types.js";
+import { describeStep } from "@react-grab/selection-text";
 import {
-  describeStep,
   downloadUserFlow,
   toUserFlow,
   userFlowFileName,

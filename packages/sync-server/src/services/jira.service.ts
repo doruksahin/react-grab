@@ -1,8 +1,12 @@
 import { Version3Client, AgileClient } from "jira.js";
-import { markdownToAdf } from "marklassian";
 import { convertADFToMarkdown, type ADFDocument } from "adf-to-markdown";
 import type { SyncRepository, ScreenshotStore } from "../repositories/types.js";
 import { JiraHttpError, httpStatusOf } from "./jira-errors.js";
+import { assertValidAdf } from "./adf-validation.js";
+import {
+  type TicketDescriptionRequest,
+  ticketDescriptionFor,
+} from "./jira-ticket-description.js";
 import {
   type AttachmentPath,
   rewriteAttachmentLinks,
@@ -19,12 +23,11 @@ export interface JiraConfig {
   apiToken: string;
 }
 
-interface CreateTicketParams {
+interface CreateTicketParams extends TicketDescriptionRequest {
   projectKey: string;
   issueType: string;
   priority: string;
   summary: string;
-  description: string;
   labels?: string[];
 }
 
@@ -227,11 +230,22 @@ export class JiraService {
     screenshots: ScreenshotStore,
     jiraAccountId: string | null,
   ): Promise<CreateTicketResult> {
-    // 1. Load comments for this group (used for screenshot attachments below)
-    const comments = await repo.listComments(workspaceId);
-    const groupComments = comments.filter((c) => c.groupId === groupId);
+    // 1. Load the group and its comments: the description and the screenshot
+    // attachments below are built from them (SPEC-021).
+    const [group, comments] = await Promise.all([
+      repo.findGroup(workspaceId, groupId),
+      repo.listComments(workspaceId),
+    ]);
+    const groupComments = comments
+      .filter((c) => c.groupId === groupId)
+      .sort((left, right) => left.timestamp - right.timestamp);
 
-    const descriptionText = markdownToAdf(params.description);
+    // 2. Build the description as ADF and check it before Jira sees it
+    const description = ticketDescriptionFor(params, {
+      groupName: group && !group.synthetic ? group.name : null,
+      comments: groupComments,
+    });
+    assertValidAdf(description);
 
     // 3. Create the issue
     const issue = await this.client.issues.createIssue({
@@ -239,7 +253,7 @@ export class JiraService {
         project: { key: params.projectKey },
         summary: params.summary,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        description: descriptionText as any,
+        description: description as any,
         issuetype: { name: params.issueType },
         priority: { name: params.priority },
         labels: params.labels ?? [],

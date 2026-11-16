@@ -8,7 +8,7 @@ import {
   collapseWhitespace,
   parseAriaSelector,
   parseTextSelector,
-} from "./recorder-selector.js";
+} from "@react-grab/selection-text";
 
 const ALL_ELEMENTS = "*";
 

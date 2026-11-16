@@ -1,7 +1,7 @@
 import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { GUIDE_SEARCH_INTERVAL_MS } from "../../../constants.js";
 import { stepTarget as controlOf } from "../business/build-step.js";
-import { describeStep } from "../business/describe-step.js";
+import { describeStep } from "@react-grab/selection-text";
 import {
   findStepTarget,
   isStillVisible,

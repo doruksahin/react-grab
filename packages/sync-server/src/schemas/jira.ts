@@ -11,9 +11,16 @@ export const CreateJiraTicketRequest = z.object({
   summary: z
     .string()
     .openapi({ example: "CardDescription text overflow on mobile" }),
-  description: z
-    .string()
-    .openapi({ example: "The tagline text overflows on mobile viewports." }),
+  note: z.string().optional().openapi({
+    description:
+      "The reporter's own text (Markdown), shown above the selections the server adds (ADR-0029)",
+    example: "Happens only on Safari.",
+  }),
+  description: z.string().optional().openapi({
+    description:
+      "Deprecated: the whole description as Markdown, sent by clients built before ADR-0029. Used only when `note` is absent",
+    example: "The tagline text overflows on mobile viewports.",
+  }),
   labels: z
     .array(z.string())
     .optional()

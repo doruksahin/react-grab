@@ -1,4 +1,3 @@
 export { relativeTime } from "./relative-time.js";
-export { extractFilePath } from "./extract-file-path.js";
 export { useLazyVisible } from "./use-lazy-visible.js";
 export type { SelectionGroupWithJira } from "../selection-groups/types.js";
