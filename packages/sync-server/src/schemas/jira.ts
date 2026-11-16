@@ -1,7 +1,11 @@
 import { z } from "@hono/zod-openapi";
 
 export const CreateJiraTicketRequest = z.object({
-  projectKey: z.string().openapi({ example: "ATT" }),
+  projectKey: z.string().optional().openapi({
+    description:
+      "Deprecated: used only for a workspace without a Jira destination (ADR-0027)",
+    example: "ATT",
+  }),
   issueType: z.string().openapi({ example: "Bug" }),
   priority: z.string().openapi({ example: "Medium" }),
   summary: z.string().openapi({ example: "CardDescription text overflow on mobile" }),

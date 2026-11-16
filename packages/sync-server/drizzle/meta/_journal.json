@@ -57,6 +57,13 @@
       "when": 1794807177735,
       "tag": "0007_unknown_captain_universe",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794820629267,
+      "tag": "0008_powerful_tana_nile",
+      "breakpoints": true
     }
   ]
 }

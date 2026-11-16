@@ -244,7 +244,7 @@ export const GetScreenshotResponse = zod.unknown()
 
 
 /**
- * @summary Create a JIRA ticket from a group
+ * @summary Create a Jira ticket from a group, in the workspace's destination
  */
 export const CreateJiraTicketParams = zod.object({
   "id": zod.string().describe('Workspace ID'),
@@ -252,7 +252,7 @@ export const CreateJiraTicketParams = zod.object({
 })
 
 export const CreateJiraTicketBody = zod.object({
-  "projectKey": zod.string(),
+  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination (ADR-0027)'),
   "issueType": zod.string(),
   "priority": zod.string(),
   "summary": zod.string(),
@@ -267,7 +267,7 @@ export const CreateJiraTicketResponse = zod.object({
 
 
 /**
- * @summary Get JIRA ticket status for a group
+ * @summary Get the Jira ticket status for a group
  */
 export const GetJiraTicketStatusParams = zod.object({
   "id": zod.string().describe('Workspace ID'),
@@ -310,7 +310,7 @@ export const GetJiraTicketStatusResponse = zod.object({
 
 
 /**
- * @summary Add a comment to a JIRA ticket linked to a group
+ * @summary Add a comment to the Jira ticket linked to a group
  */
 export const AddJiraCommentParams = zod.object({
   "id": zod.string().describe('Workspace ID'),
@@ -333,28 +333,14 @@ export const AddJiraCommentResponse = zod.object({
 
 
 /**
- * @summary The Jira site tickets are created on
+ * @summary Issue types of the workspace's Jira project
  */
-export const GetJiraSiteResponse = zod.object({
-  "siteUrl": zod.url()
+export const ListJiraIssueTypesParams = zod.object({
+  "id": zod.string().describe('Workspace ID')
 })
 
-
-/**
- * @summary List JIRA projects
- */
-export const ListJiraProjectsResponseItem = zod.object({
-  "key": zod.string(),
-  "name": zod.string()
-})
-export const ListJiraProjectsResponse = zod.array(ListJiraProjectsResponseItem)
-
-
-/**
- * @summary List JIRA issue types for a project
- */
 export const ListJiraIssueTypesQueryParams = zod.object({
-  "projectKey": zod.string().describe('Project key (e.g. ATT)')
+  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination')
 })
 
 export const ListJiraIssueTypesResponseItem = zod.object({
@@ -365,8 +351,16 @@ export const ListJiraIssueTypesResponse = zod.array(ListJiraIssueTypesResponseIt
 
 
 /**
- * @summary List JIRA priorities
+ * @summary Priorities on the workspace's Jira site
  */
+export const ListJiraPrioritiesParams = zod.object({
+  "id": zod.string().describe('Workspace ID')
+})
+
+export const ListJiraPrioritiesQueryParams = zod.object({
+  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination')
+})
+
 export const ListJiraPrioritiesResponseItem = zod.object({
   "id": zod.string(),
   "name": zod.string()
@@ -375,10 +369,14 @@ export const ListJiraPrioritiesResponse = zod.array(ListJiraPrioritiesResponseIt
 
 
 /**
- * @summary List JIRA labels used in a project
+ * @summary Labels used in the workspace's Jira project
  */
+export const ListJiraLabelsParams = zod.object({
+  "id": zod.string().describe('Workspace ID')
+})
+
 export const ListJiraLabelsQueryParams = zod.object({
-  "projectKey": zod.string().describe('Project key (e.g. ATT)')
+  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination')
 })
 
 export const ListJiraLabelsResponseItem = zod.string()
@@ -386,11 +384,15 @@ export const ListJiraLabelsResponse = zod.array(ListJiraLabelsResponseItem)
 
 
 /**
- * @summary Search JIRA users for mentions
+ * @summary Search assignable users in the workspace's Jira project
  */
+export const SearchJiraUsersParams = zod.object({
+  "id": zod.string().describe('Workspace ID')
+})
+
 export const SearchJiraUsersQueryParams = zod.object({
-  "query": zod.string().describe('Search query for user name/email'),
-  "project": zod.string().optional().describe('Project key to scope results')
+  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination'),
+  "query": zod.string().describe('Search query for user name/email')
 })
 
 export const SearchJiraUsersResponseItem = zod.object({
@@ -399,6 +401,235 @@ export const SearchJiraUsersResponseItem = zod.object({
   "avatarUrl": zod.string().nullable()
 })
 export const SearchJiraUsersResponse = zod.array(SearchJiraUsersResponseItem)
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: the environment account's Jira site
+ */
+export const GetLegacyJiraSiteResponse = zod.object({
+  "siteUrl": zod.url()
+})
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: projects of the environment account
+ */
+export const ListLegacyJiraProjectsResponseItem = zod.object({
+  "key": zod.string(),
+  "name": zod.string()
+})
+export const ListLegacyJiraProjectsResponse = zod.array(ListLegacyJiraProjectsResponseItem)
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: issue types through the environment account
+ */
+export const ListLegacyJiraIssueTypesQueryParams = zod.object({
+  "projectKey": zod.string()
+})
+
+export const ListLegacyJiraIssueTypesResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string()
+})
+export const ListLegacyJiraIssueTypesResponse = zod.array(ListLegacyJiraIssueTypesResponseItem)
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: priorities through the environment account
+ */
+export const ListLegacyJiraPrioritiesResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string()
+})
+export const ListLegacyJiraPrioritiesResponse = zod.array(ListLegacyJiraPrioritiesResponseItem)
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: labels through the environment account
+ */
+export const ListLegacyJiraLabelsQueryParams = zod.object({
+  "projectKey": zod.string()
+})
+
+export const ListLegacyJiraLabelsResponseItem = zod.string()
+export const ListLegacyJiraLabelsResponse = zod.array(ListLegacyJiraLabelsResponseItem)
+
+
+/**
+ * @deprecated
+ * @summary Deprecated: user search through the environment account
+ */
+export const SearchLegacyJiraUsersQueryParams = zod.object({
+  "query": zod.string(),
+  "project": zod.string().optional()
+})
+
+export const SearchLegacyJiraUsersResponseItem = zod.object({
+  "accountId": zod.string(),
+  "displayName": zod.string(),
+  "avatarUrl": zod.string().nullable()
+})
+export const SearchLegacyJiraUsersResponse = zod.array(SearchLegacyJiraUsersResponseItem)
+
+
+/**
+ * @summary List Jira accounts
+ */
+export const ListJiraAccountsResponseItem = zod.object({
+  "id": zod.string(),
+  "siteUrl": zod.string(),
+  "email": zod.string(),
+  "displayName": zod.string(),
+  "workspaceCount": zod.int()
+})
+export const ListJiraAccountsResponse = zod.array(ListJiraAccountsResponseItem)
+
+
+/**
+ * @summary Add a Jira account after Jira accepts its credential
+ */
+
+
+
+export const AddJiraAccountBody = zod.object({
+  "siteUrl": zod.string(),
+  "email": zod.email(),
+  "apiToken": zod.string().min(1)
+})
+
+export const AddJiraAccountResponse = zod.object({
+  "id": zod.string(),
+  "siteUrl": zod.string(),
+  "email": zod.string(),
+  "displayName": zod.string(),
+  "workspaceCount": zod.int()
+})
+
+
+/**
+ * @summary Replace a Jira account's API token
+ */
+export const ReplaceJiraCredentialParams = zod.object({
+  "accountId": zod.string().describe('Jira account ID')
+})
+
+
+
+
+export const ReplaceJiraCredentialBody = zod.object({
+  "apiToken": zod.string().min(1)
+})
+
+export const ReplaceJiraCredentialResponse = zod.object({
+  "id": zod.string(),
+  "siteUrl": zod.string(),
+  "email": zod.string(),
+  "displayName": zod.string(),
+  "workspaceCount": zod.int()
+})
+
+
+/**
+ * @summary Remove a Jira account no workspace or ticket uses
+ */
+export const RemoveJiraAccountParams = zod.object({
+  "accountId": zod.string().describe('Jira account ID')
+})
+
+export const RemoveJiraAccountResponse = zod.void()
+
+
+/**
+ * @summary Projects the account can see
+ */
+export const ListJiraAccountProjectsParams = zod.object({
+  "accountId": zod.string().describe('Jira account ID')
+})
+
+export const ListJiraAccountProjectsResponseItem = zod.object({
+  "key": zod.string(),
+  "name": zod.string()
+})
+export const ListJiraAccountProjectsResponse = zod.array(ListJiraAccountProjectsResponseItem)
+
+
+/**
+ * @summary List workspaces with their Jira destination
+ */
+export const ListWorkspacesResponseItem = zod.object({
+  "id": zod.string(),
+  "jiraAccountId": zod.string().nullable(),
+  "jiraProjectKey": zod.string().nullable(),
+  "siteUrl": zod.string().nullable()
+})
+export const ListWorkspacesResponse = zod.array(ListWorkspacesResponseItem)
+
+
+/**
+ * @summary Create the workspace if it does not exist
+ */
+export const PutWorkspaceParams = zod.object({
+  "id": zod.string().describe('Workspace ID')
+})
+
+export const PutWorkspaceResponse = zod.void()
+
+
+/**
+ * @summary Where the workspace's new Jira tickets go, and as whom
+ */
+export const GetJiraDestinationParams = zod.object({
+  "id": zod.string().describe('Workspace ID')
+})
+
+export const GetJiraDestinationQueryParams = zod.object({
+  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination')
+})
+
+export const GetJiraDestinationResponse = zod.object({
+  "siteUrl": zod.string(),
+  "projectKey": zod.string(),
+  "signsInAs": zod.string().nullable().describe('Display name of the account tickets are created as; null for the environment account')
+})
+
+
+/**
+ * @summary Send the workspace's new Jira tickets to an account's project
+ */
+export const SetJiraDestinationParams = zod.object({
+  "id": zod.string().describe('Workspace ID')
+})
+
+
+
+
+
+export const SetJiraDestinationBody = zod.object({
+  "jiraAccountId": zod.string().min(1),
+  "projectKey": zod.string().min(1)
+})
+
+export const SetJiraDestinationResponse = zod.object({
+  "siteUrl": zod.string(),
+  "projectKey": zod.string(),
+  "signsInAs": zod.string().nullable().describe('Display name of the account tickets are created as; null for the environment account')
+})
+
+
+/**
+ * @summary Clear the workspace's Jira destination; tickets keep their account
+ */
+export const ClearJiraDestinationParams = zod.object({
+  "id": zod.string().describe('Workspace ID')
+})
+
+export const ClearJiraDestinationResponse = zod.void()
 
 
 /**

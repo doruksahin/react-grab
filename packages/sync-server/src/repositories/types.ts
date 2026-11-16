@@ -27,11 +27,76 @@ export interface SyncRepository {
   upsertGroup(workspaceId: string, item: GroupWrite): Promise<void>;
   findGroup(workspaceId: string, groupId: string): Promise<Group | undefined>;
   deleteGroup(workspaceId: string, groupId: string): Promise<void>;
+  /** Links the ticket and records the account that created it (its origin). */
   updateGroupJira(
     workspaceId: string,
     groupId: string,
     jiraTicketId: string,
+    jiraAccountId: string | null,
   ): Promise<void>;
+  /** The group's ticket and the account that reads it; undefined without a ticket. */
+  findTicketOrigin(
+    workspaceId: string,
+    groupId: string,
+  ): Promise<TicketOrigin | undefined>;
+}
+
+/** A ticket and the account that created it; null for the environment account (ADR-0027). */
+export interface TicketOrigin {
+  jiraTicketId: string;
+  jiraAccountId: string | null;
+}
+
+/** A Jira credential in the clear. It exists only inside a request, never in storage. */
+export type JiraCredential = { kind: "api-token"; token: string };
+
+/** A credential as stored: AES-GCM ciphertext and the key version that sealed it. */
+export interface SealedCredential {
+  kind: JiraCredential["kind"];
+  ciphertext: string;
+  iv: string;
+  keyVersion: string;
+}
+
+export interface JiraAccount {
+  id: string;
+  siteUrl: string;
+  email: string;
+  atlassianAccountId: string;
+  displayName: string;
+  credential: SealedCredential;
+  createdAt: number;
+}
+
+export interface JiraAccountRepository {
+  list(): Promise<JiraAccount[]>;
+  find(id: string): Promise<JiraAccount | undefined>;
+  findBySiteUser(
+    siteUrl: string,
+    atlassianAccountId: string,
+  ): Promise<JiraAccount | undefined>;
+  insert(account: JiraAccount): Promise<void>;
+  updateCredential(id: string, credential: SealedCredential): Promise<void>;
+  /** "in-use" when a workspace or a ticket still refers to the account. */
+  delete(id: string): Promise<"deleted" | "in-use">;
+}
+
+export interface Workspace {
+  id: string;
+  jiraAccountId: string | null;
+  jiraProjectKey: string | null;
+}
+
+export interface WorkspaceRepository {
+  list(): Promise<Workspace[]>;
+  find(id: string): Promise<Workspace | undefined>;
+  ensure(id: string): Promise<void>;
+  setDestination(
+    id: string,
+    jiraAccountId: string,
+    jiraProjectKey: string,
+  ): Promise<void>;
+  clearDestination(id: string): Promise<void>;
 }
 
 /** Storage contract for binary assets (screenshots). */

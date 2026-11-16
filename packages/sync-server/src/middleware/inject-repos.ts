@@ -2,29 +2,71 @@ import { createMiddleware } from "hono/factory";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "../db/schema.js";
 import { D1SyncRepository } from "../repositories/d1.repo.js";
+import { D1JiraAccountRepository } from "../repositories/jira-accounts.repo.js";
+import { D1WorkspaceRepository } from "../repositories/workspaces.repo.js";
 import { R2ScreenshotStore } from "../repositories/r2.store.js";
 import { TicketLockService } from "../services/ticket-lock.service.js";
-import { JiraService } from "../services/jira.service.js";
-import { parseJiraEnv } from "../schemas/env.js";
+import { CredentialVault } from "../services/credential-vault.js";
+import {
+  JiraClientFactory,
+  type CreateJiraService,
+} from "../services/jira-client-factory.js";
+import { JiraTicketService } from "../services/jira-ticket.service.js";
+import { JiraAccountService } from "../services/jira-account.service.js";
+import { WorkspaceService } from "../services/workspace.service.js";
+import { JiraService, type JiraConfig } from "../services/jira.service.js";
+import { JiraEnvSchema, parseCredentialEnv } from "../schemas/env.js";
 import type { AppEnv } from "../types.js";
+
+const createJiraService: CreateJiraService = (config) =>
+  new JiraService(config);
+
+/** The environment account (ADR-0018), or null where it is not configured. */
+const environmentJiraConfig = (env: unknown): JiraConfig | null => {
+  const result = JiraEnvSchema.safeParse(env);
+  if (!result.success) return null;
+  return {
+    baseUrl: result.data.JIRA_BASE_URL,
+    email: result.data.JIRA_EMAIL,
+    apiToken: result.data.JIRA_API_TOKEN,
+  };
+};
 
 export const injectRepos = createMiddleware<AppEnv>(async (c, next) => {
   const db = drizzle(c.env.DB, { schema });
   const repo = new D1SyncRepository(db);
+  const screenshots = new R2ScreenshotStore(c.env.BUCKET);
   c.set("repo", repo);
   c.set("ticketLock", new TicketLockService(repo));
-  c.set("screenshots", new R2ScreenshotStore(c.env.BUCKET));
+  c.set("screenshots", screenshots);
 
-  // Composition root for Jira: the only place the Jira configuration is read,
-  // so it is also the only place it is validated.
-  const jiraEnv = parseJiraEnv(c.env);
+  // Composition root for Jira (ADR-0027). Nothing here reads a credential:
+  // the vault is built, and the key ring validated, only when a request
+  // opens an account.
+  const accounts = new D1JiraAccountRepository(db);
+  const workspaces = new D1WorkspaceRepository(db);
+  let vault: CredentialVault | undefined;
+  const getVault = () =>
+    (vault ??= new CredentialVault(parseCredentialEnv(c.env)));
+  const clients = new JiraClientFactory({
+    accounts,
+    workspaces,
+    vault: getVault,
+    environment: () => environmentJiraConfig(c.env),
+    createJiraService,
+  });
+  c.set("jiraClients", clients);
+  c.set("jiraTickets", new JiraTicketService({ repo, screenshots, clients }));
   c.set(
-    "jira",
-    new JiraService({
-      baseUrl: jiraEnv.JIRA_BASE_URL,
-      email: jiraEnv.JIRA_EMAIL,
-      apiToken: jiraEnv.JIRA_API_TOKEN,
+    "jiraAccounts",
+    new JiraAccountService({
+      accounts,
+      workspaces,
+      vault: getVault,
+      clients,
+      createJiraService,
     }),
   );
+  c.set("workspaces", new WorkspaceService({ workspaces, accounts, clients }));
   await next();
 });

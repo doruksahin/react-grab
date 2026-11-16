@@ -82,7 +82,7 @@ describe("per-item routes", () => {
   it("ignores ticket fields a client sends in a group write", async () => {
     const repo = new D1SyncRepository(drizzle(env.DB, { schema }));
     await repo.upsertGroup(WORKSPACE, { id: "g-1", name: "G", createdAt: 1 });
-    await repo.updateGroupJira(WORKSPACE, "g-1", "UI-128");
+    await repo.updateGroupJira(WORKSPACE, "g-1", "UI-128", null);
 
     const response = await SELF.fetch(
       `${BASE}/groups/g-1`,

@@ -39,6 +39,7 @@ const fakeRepo = (comments: Comment[], groups: Group[]) => {
       state.groups = state.groups.filter((g) => g.id !== id);
     },
     updateGroupJira: async () => {},
+    findTicketOrigin: async () => undefined,
   };
   return { repo, state };
 };

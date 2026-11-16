@@ -2,9 +2,12 @@ import { Version3Client, AgileClient } from "jira.js";
 import { markdownToAdf } from "marklassian";
 import { convertADFToMarkdown, type ADFDocument } from "adf-to-markdown";
 import type { SyncRepository, ScreenshotStore } from "../repositories/types.js";
+import { JiraHttpError, httpStatusOf } from "./jira-errors.js";
 
+const HTTP_NOT_FOUND = 404;
 
-interface JiraConfig {
+/** One Jira account: a site and the credential that signs in to it (ADR-0027). */
+export interface JiraConfig {
   baseUrl: string;
   email: string;
   apiToken: string;
@@ -31,6 +34,15 @@ interface JiraCommentNode {
   author: { name?: string | null; picture?: string | null } | null;
   richText: { adfValue: { json: ADFDocument } } | null;
   childComments?: { edges: Array<{ node: JiraCommentNode }> } | null;
+}
+
+/** The proxy path the overlay loads a ticket attachment from. */
+export type AttachmentPath = (attachmentId: string) => string;
+
+/** The Jira user an account signs in as. */
+export interface JiraMyself {
+  accountId: string;
+  displayName: string;
 }
 
 interface ThreadedComment {
@@ -105,6 +117,7 @@ export class JiraService {
   private rewriteMediaUrls(
     markdown: string,
     filenameToAttachmentId: Map<string, string>,
+    attachmentPath: AttachmentPath,
   ): string {
     // adf-to-markdown emits `![alt](media://{fileId})` for Jira media nodes.
     // Jira's public REST attachment API is keyed by attachmentId, not the
@@ -116,7 +129,7 @@ export class JiraService {
       (match, alt: string, _fileId: string) => {
         const attachmentId = filenameToAttachmentId.get(alt);
         if (!attachmentId) return match; // leave as-is if we can't resolve
-        return `![${alt}](/jira-attachment/${attachmentId})`;
+        return `![${alt}](${attachmentPath(attachmentId)})`;
       },
     );
   }
@@ -124,6 +137,7 @@ export class JiraService {
   private async fetchThreadedComments(
     ticketId: string,
     filenameToAttachmentId: Map<string, string>,
+    attachmentPath: AttachmentPath,
   ): Promise<ThreadedComment[]> {
     const cloudId = await this.getCloudId();
     const query = `query JiraComments($cloudId: ID!, $key: String!) {
@@ -150,7 +164,7 @@ export class JiraService {
       richText { adfValue { json } }
     }`;
     const response = await fetch(
-      "https://appier.atlassian.net/gateway/api/graphql",
+      `${this.config.baseUrl}/gateway/api/graphql`,
       {
         method: "POST",
         headers: {
@@ -182,7 +196,11 @@ export class JiraService {
       const rawMarkdown = node.richText?.adfValue?.json
         ? convertADFToMarkdown(node.richText.adfValue.json).trim()
         : "";
-      const body = this.rewriteMediaUrls(rawMarkdown, filenameToAttachmentId);
+      const body = this.rewriteMediaUrls(
+        rawMarkdown,
+        filenameToAttachmentId,
+        attachmentPath,
+      );
       flat.push({
         id: node.commentId,
         parentId: parentId ?? node.threadParentId ?? null,
@@ -205,17 +223,8 @@ export class JiraService {
     groupId: string,
     repo: SyncRepository,
     screenshots: ScreenshotStore,
+    jiraAccountId: string | null,
   ): Promise<CreateTicketResult> {
-    // Idempotency: bail early if group already has a ticket
-    const allGroups = await repo.listGroups(workspaceId);
-    const existingGroup = allGroups.find((g) => g.id === groupId);
-    if (existingGroup?.jiraTicketId) {
-      return {
-        jiraTicketId: existingGroup.jiraTicketId,
-        jiraUrl: `${this.config.baseUrl}/browse/${existingGroup.jiraTicketId}`,
-      };
-    }
-
     // 1. Load comments for this group (used for screenshot attachments below)
     const comments = await repo.listComments(workspaceId);
     const groupComments = comments.filter((c) => c.groupId === groupId);
@@ -237,7 +246,7 @@ export class JiraService {
 
     const ticketId = issue.key;
     if (!ticketId) throw new Error("Jira createIssue returned no issue key");
-    const ticketUrl = `${this.config.baseUrl}/browse/${ticketId}`;
+    const ticketUrl = this.browseUrl(ticketId);
 
     // 4. Attach screenshots
     for (const comment of groupComments) {
@@ -265,13 +274,12 @@ export class JiraService {
         const form = new FormData();
         form.append("file", blob, `${comment.id}-${type}.png`);
 
-        const authHeader = "Basic " + btoa(`${this.config.email}:${this.config.apiToken}`);
         const attachResponse = await fetch(
           `${this.config.baseUrl}/rest/api/3/issue/${ticketId}/attachments`,
           {
             method: "POST",
             headers: {
-              Authorization: authHeader,
+              Authorization: this.authHeader,
               "X-Atlassian-Token": "no-check",
             },
             body: form,
@@ -285,7 +293,7 @@ export class JiraService {
 
     // 5. Update group in D1 (wrap separately to detect partial failure)
     try {
-      await repo.updateGroupJira(workspaceId, groupId, ticketId);
+      await repo.updateGroupJira(workspaceId, groupId, ticketId, jiraAccountId);
     } catch (err) {
       throw new Error(`Jira ticket ${ticketId} created but D1 update failed: ${err}`);
     }
@@ -293,18 +301,56 @@ export class JiraService {
     return { jiraTicketId: ticketId, jiraUrl: ticketUrl };
   }
 
-  /** The site tickets are created on, as configured by JIRA_BASE_URL. */
-  getSite(): { siteUrl: string } {
-    return { siteUrl: this.config.baseUrl };
+  /** The link to a ticket on this account's site. */
+  browseUrl(ticketId: string): string {
+    return `${this.config.baseUrl}/browse/${ticketId}`;
+  }
+
+  /**
+   * The Jira user this account signs in as (`GET /rest/api/3/myself`). Throws
+   * JiraHttpError when Jira refuses the credential. Redirects are not
+   * followed, so the credential is sent only to the account's own site.
+   */
+  async getMyself(): Promise<JiraMyself> {
+    const response = await fetch(`${this.config.baseUrl}/rest/api/3/myself`, {
+      headers: { Authorization: this.authHeader, Accept: "application/json" },
+      redirect: "manual",
+    });
+    if (!response.ok) {
+      throw new JiraHttpError(
+        response.status,
+        `Jira answered ${response.status} to GET /myself`,
+      );
+    }
+    const user = (await response.json()) as Partial<JiraMyself>;
+    if (!user.accountId) {
+      throw new JiraHttpError(response.status, "Jira returned no account id");
+    }
+    return {
+      accountId: user.accountId,
+      displayName: user.displayName ?? user.accountId,
+    };
   }
 
   async getProjects() {
     const result = await this.client.projects.searchProjects({
-      query: "ATT",
+      maxResults: 100,
+      orderBy: "name",
     });
     return (result.values ?? [])
       .filter((p) => p.key && p.name)
       .map((p) => ({ key: p.key!, name: p.name! }));
+  }
+
+  /** Whether the project exists and this account can see it. */
+  async hasProject(projectKey: string): Promise<boolean> {
+    try {
+      await this.client.projects.getProject({ projectIdOrKey: projectKey });
+      return true;
+    } catch (error) {
+      if (httpStatusOf(error) === HTTP_NOT_FOUND) return false;
+      throw error;
+    }
   }
 
   async getIssueTypes(projectKey: string) {
@@ -340,7 +386,7 @@ export class JiraService {
     return [...labelSet].sort();
   }
 
-  async getIssueStatus(ticketId: string) {
+  async getIssueStatus(ticketId: string, attachmentPath: AttachmentPath) {
     const issue = await this.client.issues.getIssue({
       issueIdOrKey: ticketId,
       fields: ["status", "assignee", "reporter", "labels", "attachment", "priority", "issuetype", "duedate"],
@@ -360,6 +406,7 @@ export class JiraService {
     const comments = await this.fetchThreadedComments(
       ticketId,
       filenameToAttachmentId,
+      attachmentPath,
     );
 
     let flagged = false;
@@ -418,7 +465,7 @@ export class JiraService {
       reporter: issue.fields.reporter?.displayName ?? null,
       assigneeAvatar: issue.fields.assignee?.avatarUrls?.['48x48'] ?? null,
       reporterAvatar: issue.fields.reporter?.avatarUrls?.['48x48'] ?? null,
-      jiraUrl: `${this.config.baseUrl}/browse/${ticketId}`,
+      jiraUrl: this.browseUrl(ticketId),
       labels: (issue.fields.labels as string[] | undefined) ?? [],
       comments,
       flagged,
@@ -455,7 +502,11 @@ export class JiraService {
    * Extract base64 data: URLs from markdown, upload to JIRA as attachments,
    * and replace with proxy URLs. Returns rewritten markdown.
    */
-  async uploadBase64Images(ticketId: string, body: string): Promise<string> {
+  async uploadBase64Images(
+    ticketId: string,
+    body: string,
+    attachmentPath: AttachmentPath,
+  ): Promise<string> {
     const imgRegex = /!\[([^\]]*)\]\((data:image\/[^)]+)\)/g;
     let processed = body;
     for (const match of body.matchAll(imgRegex)) {
@@ -468,19 +519,18 @@ export class JiraService {
       const blob = new Blob([bytes], { type: mimeType });
       const form = new FormData();
       form.append("file", blob, `comment-${Date.now()}.${ext}`);
-      const authHeader = "Basic " + btoa(`${this.config.email}:${this.config.apiToken}`);
       const attachRes = await fetch(
         `${this.config.baseUrl}/rest/api/3/issue/${ticketId}/attachments`,
         {
           method: "POST",
-          headers: { Authorization: authHeader, "X-Atlassian-Token": "no-check" },
+          headers: { Authorization: this.authHeader, "X-Atlassian-Token": "no-check" },
           body: form,
         },
       );
       if (attachRes.ok) {
         const attachments = (await attachRes.json()) as Array<{ id: string }>;
         if (attachments[0]) {
-          processed = processed.replace(full!, `![${alt}](/jira-attachment/${attachments[0].id})`);
+          processed = processed.replace(full!, `![${alt}](${attachmentPath(attachments[0].id)})`);
         }
       }
     }

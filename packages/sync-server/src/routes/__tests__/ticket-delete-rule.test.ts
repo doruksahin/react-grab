@@ -50,7 +50,7 @@ const seed = async (options: { ticketed: boolean }) => {
   if (options.ticketed) {
     // The ticket is set by the server when Jira creates it.
     const repo = new D1SyncRepository(drizzle(env.DB, { schema }));
-    await repo.updateGroupJira(WORKSPACE, "g-1", "UI-1");
+    await repo.updateGroupJira(WORKSPACE, "g-1", "UI-1", null);
   }
 };
 

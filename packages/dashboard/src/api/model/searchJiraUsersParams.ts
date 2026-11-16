@@ -8,11 +8,11 @@
 
 export type SearchJiraUsersParams = {
 /**
+ * Deprecated: used only for a workspace without a Jira destination
+ */
+projectKey?: string;
+/**
  * Search query for user name/email
  */
 query: string;
-/**
- * Project key to scope results
- */
-project?: string;
 };

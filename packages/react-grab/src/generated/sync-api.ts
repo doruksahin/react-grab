@@ -94,6 +94,56 @@ export interface ChangeStep {
  */
 export type ReproduceStep = NavigateStep | ClickStep | ChangeStep;
 
+export type JiraErrorResponseCode = typeof JiraErrorResponseCode[keyof typeof JiraErrorResponseCode];
+
+
+export const JiraErrorResponseCode = {
+  'jira-account-rejected': 'jira-account-rejected',
+  'jira-credential-invalid': 'jira-credential-invalid',
+  'jira-project-forbidden': 'jira-project-forbidden',
+  'jira-ticket-missing': 'jira-ticket-missing',
+  'jira-destination-missing': 'jira-destination-missing',
+  'jira-account-duplicate': 'jira-account-duplicate',
+  'jira-account-in-use': 'jira-account-in-use',
+  'jira-account-not-found': 'jira-account-not-found',
+  'jira-account-mismatch': 'jira-account-mismatch',
+  'jira-project-not-found': 'jira-project-not-found',
+  'jira-request-failed': 'jira-request-failed',
+} as const;
+
+export interface JiraErrorResponse {
+  error: string;
+  code: JiraErrorResponseCode;
+}
+
+export interface JiraAccountSummary {
+  id: string;
+  siteUrl: string;
+  email: string;
+  displayName: string;
+  workspaceCount: number;
+}
+
+export interface WorkspaceSummary {
+  id: string;
+  /** @nullable */
+  jiraAccountId: string | null;
+  /** @nullable */
+  jiraProjectKey: string | null;
+  /** @nullable */
+  siteUrl: string | null;
+}
+
+export interface JiraDestination {
+  siteUrl: string;
+  projectKey: string;
+  /**
+     * Display name of the account tickets are created as; null for the environment account
+     * @nullable
+     */
+  signsInAs: string | null;
+}
+
 export type HealthCheck200Status = typeof HealthCheck200Status[keyof typeof HealthCheck200Status];
 
 
@@ -301,7 +351,8 @@ export type GetScreenshot404 = {
 };
 
 export type CreateJiraTicketBody = {
-  projectKey: string;
+  /** Deprecated: used only for a workspace without a Jira destination (ADR-0027) */
+  projectKey?: string;
   issueType: string;
   priority: string;
   summary: string;
@@ -312,10 +363,6 @@ export type CreateJiraTicketBody = {
 export type CreateJiraTicket200 = {
   jiraTicketId: string;
   jiraUrl: string;
-};
-
-export type CreateJiraTicket400 = {
-  error: string;
 };
 
 export type GetJiraTicketStatus200CommentsItem = {
@@ -362,10 +409,6 @@ export type GetJiraTicketStatus200 = {
   dueDate?: string | null;
 };
 
-export type GetJiraTicketStatus404 = {
-  error: string;
-};
-
 export type AddJiraCommentBodyMentionsItem = {
   text: string;
   accountId: string;
@@ -385,32 +428,11 @@ export type AddJiraComment200 = {
   created: string;
 };
 
-export type AddJiraComment400 = {
-  error: string;
-};
-
-export type AddJiraComment404 = {
-  error: string;
-};
-
-export type GetJiraSite200 = {
-  siteUrl: string;
-};
-
-export type ListJiraProjects200Item = {
-  key: string;
-  name: string;
-};
-
-export type ListJiraProjects500 = {
-  error: string;
-};
-
 export type ListJiraIssueTypesParams = {
 /**
- * Project key (e.g. ATT)
+ * Deprecated: used only for a workspace without a Jira destination
  */
-projectKey: string;
+projectKey?: string;
 };
 
 export type ListJiraIssueTypes200Item = {
@@ -418,8 +440,11 @@ export type ListJiraIssueTypes200Item = {
   name: string;
 };
 
-export type ListJiraIssueTypes500 = {
-  error: string;
+export type ListJiraPrioritiesParams = {
+/**
+ * Deprecated: used only for a workspace without a Jira destination
+ */
+projectKey?: string;
 };
 
 export type ListJiraPriorities200Item = {
@@ -427,30 +452,22 @@ export type ListJiraPriorities200Item = {
   name: string;
 };
 
-export type ListJiraPriorities500 = {
-  error: string;
-};
-
 export type ListJiraLabelsParams = {
 /**
- * Project key (e.g. ATT)
+ * Deprecated: used only for a workspace without a Jira destination
  */
-projectKey: string;
-};
-
-export type ListJiraLabels500 = {
-  error: string;
+projectKey?: string;
 };
 
 export type SearchJiraUsersParams = {
 /**
+ * Deprecated: used only for a workspace without a Jira destination
+ */
+projectKey?: string;
+/**
  * Search query for user name/email
  */
 query: string;
-/**
- * Project key to scope results
- */
-project?: string;
 };
 
 export type SearchJiraUsers200Item = {
@@ -460,8 +477,74 @@ export type SearchJiraUsers200Item = {
   avatarUrl: string | null;
 };
 
-export type SearchJiraUsers500 = {
-  error: string;
+export type GetLegacyJiraSite200 = {
+  siteUrl: string;
+};
+
+export type ListLegacyJiraProjects200Item = {
+  key: string;
+  name: string;
+};
+
+export type ListLegacyJiraIssueTypesParams = {
+projectKey: string;
+};
+
+export type ListLegacyJiraIssueTypes200Item = {
+  id: string;
+  name: string;
+};
+
+export type ListLegacyJiraPriorities200Item = {
+  id: string;
+  name: string;
+};
+
+export type ListLegacyJiraLabelsParams = {
+projectKey: string;
+};
+
+export type SearchLegacyJiraUsersParams = {
+query: string;
+project?: string;
+};
+
+export type SearchLegacyJiraUsers200Item = {
+  accountId: string;
+  displayName: string;
+  /** @nullable */
+  avatarUrl: string | null;
+};
+
+export type AddJiraAccountBody = {
+  siteUrl: string;
+  email: string;
+  /** @minLength 1 */
+  apiToken: string;
+};
+
+export type ReplaceJiraCredentialBody = {
+  /** @minLength 1 */
+  apiToken: string;
+};
+
+export type ListJiraAccountProjects200Item = {
+  key: string;
+  name: string;
+};
+
+export type GetJiraDestinationParams = {
+/**
+ * Deprecated: used only for a workspace without a Jira destination
+ */
+projectKey?: string;
+};
+
+export type SetJiraDestinationBody = {
+  /** @minLength 1 */
+  jiraAccountId: string;
+  /** @minLength 1 */
+  projectKey: string;
 };
 
 export type UploadRecording200 = {
@@ -920,15 +1003,30 @@ export type createJiraTicketResponse200 = {
   status: 200
 }
 
-export type createJiraTicketResponse400 = {
-  data: CreateJiraTicket400
-  status: 400
+export type createJiraTicketResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type createJiraTicketResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type createJiraTicketResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type createJiraTicketResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type createJiraTicketResponseSuccess = (createJiraTicketResponse200) & {
   headers: Headers;
 };
-export type createJiraTicketResponseError = (createJiraTicketResponse400) & {
+export type createJiraTicketResponseError = (createJiraTicketResponse404 | createJiraTicketResponse409 | createJiraTicketResponse422 | createJiraTicketResponse502) & {
   headers: Headers;
 };
 
@@ -944,7 +1042,7 @@ export const getCreateJiraTicketUrl = (id: string,
 }
 
 /**
- * @summary Create a JIRA ticket from a group
+ * @summary Create a Jira ticket from a group, in the workspace's destination
  */
 export const createJiraTicket = async (id: string,
     groupId: string,
@@ -981,14 +1079,29 @@ export type getJiraTicketStatusResponse200 = {
 }
 
 export type getJiraTicketStatusResponse404 = {
-  data: GetJiraTicketStatus404
+  data: JiraErrorResponse
   status: 404
+}
+
+export type getJiraTicketStatusResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type getJiraTicketStatusResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type getJiraTicketStatusResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type getJiraTicketStatusResponseSuccess = (getJiraTicketStatusResponse200) & {
   headers: Headers;
 };
-export type getJiraTicketStatusResponseError = (getJiraTicketStatusResponse404) & {
+export type getJiraTicketStatusResponseError = (getJiraTicketStatusResponse404 | getJiraTicketStatusResponse409 | getJiraTicketStatusResponse422 | getJiraTicketStatusResponse502) & {
   headers: Headers;
 };
 
@@ -1004,7 +1117,7 @@ export const getGetJiraTicketStatusUrl = (id: string,
 }
 
 /**
- * @summary Get JIRA ticket status for a group
+ * @summary Get the Jira ticket status for a group
  */
 export const getJiraTicketStatus = async (id: string,
     groupId: string, options?: Parameters<typeof customFetch>[1]): Promise<getJiraTicketStatusResponse> => {
@@ -1025,20 +1138,30 @@ export type addJiraCommentResponse200 = {
   status: 200
 }
 
-export type addJiraCommentResponse400 = {
-  data: AddJiraComment400
-  status: 400
+export type addJiraCommentResponse404 = {
+  data: JiraErrorResponse
+  status: 404
 }
 
-export type addJiraCommentResponse404 = {
-  data: AddJiraComment404
-  status: 404
+export type addJiraCommentResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type addJiraCommentResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type addJiraCommentResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type addJiraCommentResponseSuccess = (addJiraCommentResponse200) & {
   headers: Headers;
 };
-export type addJiraCommentResponseError = (addJiraCommentResponse400 | addJiraCommentResponse404) & {
+export type addJiraCommentResponseError = (addJiraCommentResponse404 | addJiraCommentResponse409 | addJiraCommentResponse422 | addJiraCommentResponse502) & {
   headers: Headers;
 };
 
@@ -1054,7 +1177,7 @@ export const getAddJiraCommentUrl = (id: string,
 }
 
 /**
- * @summary Add a comment to a JIRA ticket linked to a group
+ * @summary Add a comment to the Jira ticket linked to a group
  */
 export const addJiraComment = async (id: string,
     groupId: string,
@@ -1085,105 +1208,42 @@ return customFetch<addJiraCommentResponse>(getAddJiraCommentUrl(id,groupId),
 
 
 
-export type getJiraSiteResponse200 = {
-  data: GetJiraSite200
-  status: 200
-}
-
-export type getJiraSiteResponseSuccess = (getJiraSiteResponse200) & {
-  headers: Headers;
-};
-;
-
-export type getJiraSiteResponse = (getJiraSiteResponseSuccess)
-
-export const getGetJiraSiteUrl = () => {
-
-
-
-
-  return `/jira/site`
-}
-
-/**
- * @summary The Jira site tickets are created on
- */
-export const getJiraSite = async ( options?: Parameters<typeof customFetch>[1]): Promise<getJiraSiteResponse> => {
-
-  return customFetch<getJiraSiteResponse>(getGetJiraSiteUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-export type listJiraProjectsResponse200 = {
-  data: ListJiraProjects200Item[]
-  status: 200
-}
-
-export type listJiraProjectsResponse500 = {
-  data: ListJiraProjects500
-  status: 500
-}
-
-export type listJiraProjectsResponseSuccess = (listJiraProjectsResponse200) & {
-  headers: Headers;
-};
-export type listJiraProjectsResponseError = (listJiraProjectsResponse500) & {
-  headers: Headers;
-};
-
-export type listJiraProjectsResponse = (listJiraProjectsResponseSuccess | listJiraProjectsResponseError)
-
-export const getListJiraProjectsUrl = () => {
-
-
-
-
-  return `/jira/projects`
-}
-
-/**
- * @summary List JIRA projects
- */
-export const listJiraProjects = async ( options?: Parameters<typeof customFetch>[1]): Promise<listJiraProjectsResponse> => {
-
-  return customFetch<listJiraProjectsResponse>(getListJiraProjectsUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
 export type listJiraIssueTypesResponse200 = {
   data: ListJiraIssueTypes200Item[]
   status: 200
 }
 
-export type listJiraIssueTypesResponse500 = {
-  data: ListJiraIssueTypes500
-  status: 500
+export type listJiraIssueTypesResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listJiraIssueTypesResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listJiraIssueTypesResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listJiraIssueTypesResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type listJiraIssueTypesResponseSuccess = (listJiraIssueTypesResponse200) & {
   headers: Headers;
 };
-export type listJiraIssueTypesResponseError = (listJiraIssueTypesResponse500) & {
+export type listJiraIssueTypesResponseError = (listJiraIssueTypesResponse404 | listJiraIssueTypesResponse409 | listJiraIssueTypesResponse422 | listJiraIssueTypesResponse502) & {
   headers: Headers;
 };
 
 export type listJiraIssueTypesResponse = (listJiraIssueTypesResponseSuccess | listJiraIssueTypesResponseError)
 
-export const getListJiraIssueTypesUrl = (params: ListJiraIssueTypesParams,) => {
+export const getListJiraIssueTypesUrl = (id: string,
+    params?: ListJiraIssueTypesParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1195,15 +1255,16 @@ export const getListJiraIssueTypesUrl = (params: ListJiraIssueTypesParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/jira/issue-types?${stringifiedParams}` : `/jira/issue-types`
+  return stringifiedParams.length > 0 ? `/workspaces/${encodeURIComponent(String(id))}/jira/issue-types?${stringifiedParams}` : `/workspaces/${encodeURIComponent(String(id))}/jira/issue-types`
 }
 
 /**
- * @summary List JIRA issue types for a project
+ * @summary Issue types of the workspace's Jira project
  */
-export const listJiraIssueTypes = async (params: ListJiraIssueTypesParams, options?: Parameters<typeof customFetch>[1]): Promise<listJiraIssueTypesResponse> => {
+export const listJiraIssueTypes = async (id: string,
+    params?: ListJiraIssueTypesParams, options?: Parameters<typeof customFetch>[1]): Promise<listJiraIssueTypesResponse> => {
 
-  return customFetch<listJiraIssueTypesResponse>(getListJiraIssueTypesUrl(params),
+  return customFetch<listJiraIssueTypesResponse>(getListJiraIssueTypesUrl(id,params),
   {
     ...options,
     method: 'GET'
@@ -1219,34 +1280,58 @@ export type listJiraPrioritiesResponse200 = {
   status: 200
 }
 
-export type listJiraPrioritiesResponse500 = {
-  data: ListJiraPriorities500
-  status: 500
+export type listJiraPrioritiesResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listJiraPrioritiesResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listJiraPrioritiesResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listJiraPrioritiesResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type listJiraPrioritiesResponseSuccess = (listJiraPrioritiesResponse200) & {
   headers: Headers;
 };
-export type listJiraPrioritiesResponseError = (listJiraPrioritiesResponse500) & {
+export type listJiraPrioritiesResponseError = (listJiraPrioritiesResponse404 | listJiraPrioritiesResponse409 | listJiraPrioritiesResponse422 | listJiraPrioritiesResponse502) & {
   headers: Headers;
 };
 
 export type listJiraPrioritiesResponse = (listJiraPrioritiesResponseSuccess | listJiraPrioritiesResponseError)
 
-export const getListJiraPrioritiesUrl = () => {
+export const getListJiraPrioritiesUrl = (id: string,
+    params?: ListJiraPrioritiesParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/jira/priorities`
+  return stringifiedParams.length > 0 ? `/workspaces/${encodeURIComponent(String(id))}/jira/priorities?${stringifiedParams}` : `/workspaces/${encodeURIComponent(String(id))}/jira/priorities`
 }
 
 /**
- * @summary List JIRA priorities
+ * @summary Priorities on the workspace's Jira site
  */
-export const listJiraPriorities = async ( options?: Parameters<typeof customFetch>[1]): Promise<listJiraPrioritiesResponse> => {
+export const listJiraPriorities = async (id: string,
+    params?: ListJiraPrioritiesParams, options?: Parameters<typeof customFetch>[1]): Promise<listJiraPrioritiesResponse> => {
 
-  return customFetch<listJiraPrioritiesResponse>(getListJiraPrioritiesUrl(),
+  return customFetch<listJiraPrioritiesResponse>(getListJiraPrioritiesUrl(id,params),
   {
     ...options,
     method: 'GET'
@@ -1262,21 +1347,37 @@ export type listJiraLabelsResponse200 = {
   status: 200
 }
 
-export type listJiraLabelsResponse500 = {
-  data: ListJiraLabels500
-  status: 500
+export type listJiraLabelsResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listJiraLabelsResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listJiraLabelsResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listJiraLabelsResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type listJiraLabelsResponseSuccess = (listJiraLabelsResponse200) & {
   headers: Headers;
 };
-export type listJiraLabelsResponseError = (listJiraLabelsResponse500) & {
+export type listJiraLabelsResponseError = (listJiraLabelsResponse404 | listJiraLabelsResponse409 | listJiraLabelsResponse422 | listJiraLabelsResponse502) & {
   headers: Headers;
 };
 
 export type listJiraLabelsResponse = (listJiraLabelsResponseSuccess | listJiraLabelsResponseError)
 
-export const getListJiraLabelsUrl = (params: ListJiraLabelsParams,) => {
+export const getListJiraLabelsUrl = (id: string,
+    params?: ListJiraLabelsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1288,15 +1389,16 @@ export const getListJiraLabelsUrl = (params: ListJiraLabelsParams,) => {
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/jira/labels?${stringifiedParams}` : `/jira/labels`
+  return stringifiedParams.length > 0 ? `/workspaces/${encodeURIComponent(String(id))}/jira/labels?${stringifiedParams}` : `/workspaces/${encodeURIComponent(String(id))}/jira/labels`
 }
 
 /**
- * @summary List JIRA labels used in a project
+ * @summary Labels used in the workspace's Jira project
  */
-export const listJiraLabels = async (params: ListJiraLabelsParams, options?: Parameters<typeof customFetch>[1]): Promise<listJiraLabelsResponse> => {
+export const listJiraLabels = async (id: string,
+    params?: ListJiraLabelsParams, options?: Parameters<typeof customFetch>[1]): Promise<listJiraLabelsResponse> => {
 
-  return customFetch<listJiraLabelsResponse>(getListJiraLabelsUrl(params),
+  return customFetch<listJiraLabelsResponse>(getListJiraLabelsUrl(id,params),
   {
     ...options,
     method: 'GET'
@@ -1312,21 +1414,412 @@ export type searchJiraUsersResponse200 = {
   status: 200
 }
 
-export type searchJiraUsersResponse500 = {
-  data: SearchJiraUsers500
-  status: 500
+export type searchJiraUsersResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type searchJiraUsersResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type searchJiraUsersResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type searchJiraUsersResponse502 = {
+  data: JiraErrorResponse
+  status: 502
 }
 
 export type searchJiraUsersResponseSuccess = (searchJiraUsersResponse200) & {
   headers: Headers;
 };
-export type searchJiraUsersResponseError = (searchJiraUsersResponse500) & {
+export type searchJiraUsersResponseError = (searchJiraUsersResponse404 | searchJiraUsersResponse409 | searchJiraUsersResponse422 | searchJiraUsersResponse502) & {
   headers: Headers;
 };
 
 export type searchJiraUsersResponse = (searchJiraUsersResponseSuccess | searchJiraUsersResponseError)
 
-export const getSearchJiraUsersUrl = (params: SearchJiraUsersParams,) => {
+export const getSearchJiraUsersUrl = (id: string,
+    params: SearchJiraUsersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/workspaces/${encodeURIComponent(String(id))}/jira/users?${stringifiedParams}` : `/workspaces/${encodeURIComponent(String(id))}/jira/users`
+}
+
+/**
+ * @summary Search assignable users in the workspace's Jira project
+ */
+export const searchJiraUsers = async (id: string,
+    params: SearchJiraUsersParams, options?: Parameters<typeof customFetch>[1]): Promise<searchJiraUsersResponse> => {
+
+  return customFetch<searchJiraUsersResponse>(getSearchJiraUsersUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type getLegacyJiraSiteResponse200 = {
+  data: GetLegacyJiraSite200
+  status: 200
+}
+
+export type getLegacyJiraSiteResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type getLegacyJiraSiteResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type getLegacyJiraSiteResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type getLegacyJiraSiteResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type getLegacyJiraSiteResponseSuccess = (getLegacyJiraSiteResponse200) & {
+  headers: Headers;
+};
+export type getLegacyJiraSiteResponseError = (getLegacyJiraSiteResponse404 | getLegacyJiraSiteResponse409 | getLegacyJiraSiteResponse422 | getLegacyJiraSiteResponse502) & {
+  headers: Headers;
+};
+
+export type getLegacyJiraSiteResponse = (getLegacyJiraSiteResponseSuccess | getLegacyJiraSiteResponseError)
+
+export const getGetLegacyJiraSiteUrl = () => {
+
+
+
+
+  return `/jira/site`
+}
+
+/**
+ * @deprecated
+ * @summary Deprecated: the environment account's Jira site
+ */
+export const getLegacyJiraSite = async ( options?: Parameters<typeof customFetch>[1]): Promise<getLegacyJiraSiteResponse> => {
+
+  return customFetch<getLegacyJiraSiteResponse>(getGetLegacyJiraSiteUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type listLegacyJiraProjectsResponse200 = {
+  data: ListLegacyJiraProjects200Item[]
+  status: 200
+}
+
+export type listLegacyJiraProjectsResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listLegacyJiraProjectsResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listLegacyJiraProjectsResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listLegacyJiraProjectsResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type listLegacyJiraProjectsResponseSuccess = (listLegacyJiraProjectsResponse200) & {
+  headers: Headers;
+};
+export type listLegacyJiraProjectsResponseError = (listLegacyJiraProjectsResponse404 | listLegacyJiraProjectsResponse409 | listLegacyJiraProjectsResponse422 | listLegacyJiraProjectsResponse502) & {
+  headers: Headers;
+};
+
+export type listLegacyJiraProjectsResponse = (listLegacyJiraProjectsResponseSuccess | listLegacyJiraProjectsResponseError)
+
+export const getListLegacyJiraProjectsUrl = () => {
+
+
+
+
+  return `/jira/projects`
+}
+
+/**
+ * @deprecated
+ * @summary Deprecated: projects of the environment account
+ */
+export const listLegacyJiraProjects = async ( options?: Parameters<typeof customFetch>[1]): Promise<listLegacyJiraProjectsResponse> => {
+
+  return customFetch<listLegacyJiraProjectsResponse>(getListLegacyJiraProjectsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type listLegacyJiraIssueTypesResponse200 = {
+  data: ListLegacyJiraIssueTypes200Item[]
+  status: 200
+}
+
+export type listLegacyJiraIssueTypesResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listLegacyJiraIssueTypesResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listLegacyJiraIssueTypesResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listLegacyJiraIssueTypesResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type listLegacyJiraIssueTypesResponseSuccess = (listLegacyJiraIssueTypesResponse200) & {
+  headers: Headers;
+};
+export type listLegacyJiraIssueTypesResponseError = (listLegacyJiraIssueTypesResponse404 | listLegacyJiraIssueTypesResponse409 | listLegacyJiraIssueTypesResponse422 | listLegacyJiraIssueTypesResponse502) & {
+  headers: Headers;
+};
+
+export type listLegacyJiraIssueTypesResponse = (listLegacyJiraIssueTypesResponseSuccess | listLegacyJiraIssueTypesResponseError)
+
+export const getListLegacyJiraIssueTypesUrl = (params: ListLegacyJiraIssueTypesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/jira/issue-types?${stringifiedParams}` : `/jira/issue-types`
+}
+
+/**
+ * @deprecated
+ * @summary Deprecated: issue types through the environment account
+ */
+export const listLegacyJiraIssueTypes = async (params: ListLegacyJiraIssueTypesParams, options?: Parameters<typeof customFetch>[1]): Promise<listLegacyJiraIssueTypesResponse> => {
+
+  return customFetch<listLegacyJiraIssueTypesResponse>(getListLegacyJiraIssueTypesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type listLegacyJiraPrioritiesResponse200 = {
+  data: ListLegacyJiraPriorities200Item[]
+  status: 200
+}
+
+export type listLegacyJiraPrioritiesResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listLegacyJiraPrioritiesResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listLegacyJiraPrioritiesResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listLegacyJiraPrioritiesResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type listLegacyJiraPrioritiesResponseSuccess = (listLegacyJiraPrioritiesResponse200) & {
+  headers: Headers;
+};
+export type listLegacyJiraPrioritiesResponseError = (listLegacyJiraPrioritiesResponse404 | listLegacyJiraPrioritiesResponse409 | listLegacyJiraPrioritiesResponse422 | listLegacyJiraPrioritiesResponse502) & {
+  headers: Headers;
+};
+
+export type listLegacyJiraPrioritiesResponse = (listLegacyJiraPrioritiesResponseSuccess | listLegacyJiraPrioritiesResponseError)
+
+export const getListLegacyJiraPrioritiesUrl = () => {
+
+
+
+
+  return `/jira/priorities`
+}
+
+/**
+ * @deprecated
+ * @summary Deprecated: priorities through the environment account
+ */
+export const listLegacyJiraPriorities = async ( options?: Parameters<typeof customFetch>[1]): Promise<listLegacyJiraPrioritiesResponse> => {
+
+  return customFetch<listLegacyJiraPrioritiesResponse>(getListLegacyJiraPrioritiesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type listLegacyJiraLabelsResponse200 = {
+  data: string[]
+  status: 200
+}
+
+export type listLegacyJiraLabelsResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listLegacyJiraLabelsResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listLegacyJiraLabelsResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listLegacyJiraLabelsResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type listLegacyJiraLabelsResponseSuccess = (listLegacyJiraLabelsResponse200) & {
+  headers: Headers;
+};
+export type listLegacyJiraLabelsResponseError = (listLegacyJiraLabelsResponse404 | listLegacyJiraLabelsResponse409 | listLegacyJiraLabelsResponse422 | listLegacyJiraLabelsResponse502) & {
+  headers: Headers;
+};
+
+export type listLegacyJiraLabelsResponse = (listLegacyJiraLabelsResponseSuccess | listLegacyJiraLabelsResponseError)
+
+export const getListLegacyJiraLabelsUrl = (params: ListLegacyJiraLabelsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/jira/labels?${stringifiedParams}` : `/jira/labels`
+}
+
+/**
+ * @deprecated
+ * @summary Deprecated: labels through the environment account
+ */
+export const listLegacyJiraLabels = async (params: ListLegacyJiraLabelsParams, options?: Parameters<typeof customFetch>[1]): Promise<listLegacyJiraLabelsResponse> => {
+
+  return customFetch<listLegacyJiraLabelsResponse>(getListLegacyJiraLabelsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type searchLegacyJiraUsersResponse200 = {
+  data: SearchLegacyJiraUsers200Item[]
+  status: 200
+}
+
+export type searchLegacyJiraUsersResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type searchLegacyJiraUsersResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type searchLegacyJiraUsersResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type searchLegacyJiraUsersResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type searchLegacyJiraUsersResponseSuccess = (searchLegacyJiraUsersResponse200) & {
+  headers: Headers;
+};
+export type searchLegacyJiraUsersResponseError = (searchLegacyJiraUsersResponse404 | searchLegacyJiraUsersResponse409 | searchLegacyJiraUsersResponse422 | searchLegacyJiraUsersResponse502) & {
+  headers: Headers;
+};
+
+export type searchLegacyJiraUsersResponse = (searchLegacyJiraUsersResponseSuccess | searchLegacyJiraUsersResponseError)
+
+export const getSearchLegacyJiraUsersUrl = (params: SearchLegacyJiraUsersParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1342,14 +1835,560 @@ export const getSearchJiraUsersUrl = (params: SearchJiraUsersParams,) => {
 }
 
 /**
- * @summary Search JIRA users for mentions
+ * @deprecated
+ * @summary Deprecated: user search through the environment account
  */
-export const searchJiraUsers = async (params: SearchJiraUsersParams, options?: Parameters<typeof customFetch>[1]): Promise<searchJiraUsersResponse> => {
+export const searchLegacyJiraUsers = async (params: SearchLegacyJiraUsersParams, options?: Parameters<typeof customFetch>[1]): Promise<searchLegacyJiraUsersResponse> => {
 
-  return customFetch<searchJiraUsersResponse>(getSearchJiraUsersUrl(params),
+  return customFetch<searchLegacyJiraUsersResponse>(getSearchLegacyJiraUsersUrl(params),
   {
     ...options,
     method: 'GET'
+
+
+  }
+);}
+
+
+
+export type listJiraAccountsResponse200 = {
+  data: JiraAccountSummary[]
+  status: 200
+}
+
+export type listJiraAccountsResponseSuccess = (listJiraAccountsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listJiraAccountsResponse = (listJiraAccountsResponseSuccess)
+
+export const getListJiraAccountsUrl = () => {
+
+
+
+
+  return `/jira-accounts`
+}
+
+/**
+ * @summary List Jira accounts
+ */
+export const listJiraAccounts = async ( options?: Parameters<typeof customFetch>[1]): Promise<listJiraAccountsResponse> => {
+
+  return customFetch<listJiraAccountsResponse>(getListJiraAccountsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type addJiraAccountResponse201 = {
+  data: JiraAccountSummary
+  status: 201
+}
+
+export type addJiraAccountResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type addJiraAccountResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type addJiraAccountResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type addJiraAccountResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type addJiraAccountResponseSuccess = (addJiraAccountResponse201) & {
+  headers: Headers;
+};
+export type addJiraAccountResponseError = (addJiraAccountResponse404 | addJiraAccountResponse409 | addJiraAccountResponse422 | addJiraAccountResponse502) & {
+  headers: Headers;
+};
+
+export type addJiraAccountResponse = (addJiraAccountResponseSuccess | addJiraAccountResponseError)
+
+export const getAddJiraAccountUrl = () => {
+
+
+
+
+  return `/jira-accounts`
+}
+
+/**
+ * @summary Add a Jira account after Jira accepts its credential
+ */
+export const addJiraAccount = async (addJiraAccountBody: AddJiraAccountBody, options?: Parameters<typeof customFetch>[1]): Promise<addJiraAccountResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<addJiraAccountResponse>(getAddJiraAccountUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(addJiraAccountBody)
+  }
+);}
+
+
+
+export type replaceJiraCredentialResponse200 = {
+  data: JiraAccountSummary
+  status: 200
+}
+
+export type replaceJiraCredentialResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type replaceJiraCredentialResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type replaceJiraCredentialResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type replaceJiraCredentialResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type replaceJiraCredentialResponseSuccess = (replaceJiraCredentialResponse200) & {
+  headers: Headers;
+};
+export type replaceJiraCredentialResponseError = (replaceJiraCredentialResponse404 | replaceJiraCredentialResponse409 | replaceJiraCredentialResponse422 | replaceJiraCredentialResponse502) & {
+  headers: Headers;
+};
+
+export type replaceJiraCredentialResponse = (replaceJiraCredentialResponseSuccess | replaceJiraCredentialResponseError)
+
+export const getReplaceJiraCredentialUrl = (accountId: string,) => {
+
+
+
+
+  return `/jira-accounts/${encodeURIComponent(String(accountId))}/credential`
+}
+
+/**
+ * @summary Replace a Jira account's API token
+ */
+export const replaceJiraCredential = async (accountId: string,
+    replaceJiraCredentialBody: ReplaceJiraCredentialBody, options?: Parameters<typeof customFetch>[1]): Promise<replaceJiraCredentialResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<replaceJiraCredentialResponse>(getReplaceJiraCredentialUrl(accountId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(replaceJiraCredentialBody)
+  }
+);}
+
+
+
+export type removeJiraAccountResponse204 = {
+  data: void
+  status: 204
+}
+
+export type removeJiraAccountResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type removeJiraAccountResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type removeJiraAccountResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type removeJiraAccountResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type removeJiraAccountResponseSuccess = (removeJiraAccountResponse204) & {
+  headers: Headers;
+};
+export type removeJiraAccountResponseError = (removeJiraAccountResponse404 | removeJiraAccountResponse409 | removeJiraAccountResponse422 | removeJiraAccountResponse502) & {
+  headers: Headers;
+};
+
+export type removeJiraAccountResponse = (removeJiraAccountResponseSuccess | removeJiraAccountResponseError)
+
+export const getRemoveJiraAccountUrl = (accountId: string,) => {
+
+
+
+
+  return `/jira-accounts/${encodeURIComponent(String(accountId))}`
+}
+
+/**
+ * @summary Remove a Jira account no workspace or ticket uses
+ */
+export const removeJiraAccount = async (accountId: string, options?: Parameters<typeof customFetch>[1]): Promise<removeJiraAccountResponse> => {
+
+  return customFetch<removeJiraAccountResponse>(getRemoveJiraAccountUrl(accountId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type listJiraAccountProjectsResponse200 = {
+  data: ListJiraAccountProjects200Item[]
+  status: 200
+}
+
+export type listJiraAccountProjectsResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type listJiraAccountProjectsResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type listJiraAccountProjectsResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type listJiraAccountProjectsResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type listJiraAccountProjectsResponseSuccess = (listJiraAccountProjectsResponse200) & {
+  headers: Headers;
+};
+export type listJiraAccountProjectsResponseError = (listJiraAccountProjectsResponse404 | listJiraAccountProjectsResponse409 | listJiraAccountProjectsResponse422 | listJiraAccountProjectsResponse502) & {
+  headers: Headers;
+};
+
+export type listJiraAccountProjectsResponse = (listJiraAccountProjectsResponseSuccess | listJiraAccountProjectsResponseError)
+
+export const getListJiraAccountProjectsUrl = (accountId: string,) => {
+
+
+
+
+  return `/jira-accounts/${encodeURIComponent(String(accountId))}/projects`
+}
+
+/**
+ * @summary Projects the account can see
+ */
+export const listJiraAccountProjects = async (accountId: string, options?: Parameters<typeof customFetch>[1]): Promise<listJiraAccountProjectsResponse> => {
+
+  return customFetch<listJiraAccountProjectsResponse>(getListJiraAccountProjectsUrl(accountId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type listWorkspacesResponse200 = {
+  data: WorkspaceSummary[]
+  status: 200
+}
+
+export type listWorkspacesResponseSuccess = (listWorkspacesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listWorkspacesResponse = (listWorkspacesResponseSuccess)
+
+export const getListWorkspacesUrl = () => {
+
+
+
+
+  return `/workspaces`
+}
+
+/**
+ * @summary List workspaces with their Jira destination
+ */
+export const listWorkspaces = async ( options?: Parameters<typeof customFetch>[1]): Promise<listWorkspacesResponse> => {
+
+  return customFetch<listWorkspacesResponse>(getListWorkspacesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type putWorkspaceResponse204 = {
+  data: void
+  status: 204
+}
+
+export type putWorkspaceResponseSuccess = (putWorkspaceResponse204) & {
+  headers: Headers;
+};
+;
+
+export type putWorkspaceResponse = (putWorkspaceResponseSuccess)
+
+export const getPutWorkspaceUrl = (id: string,) => {
+
+
+
+
+  return `/workspaces/${encodeURIComponent(String(id))}`
+}
+
+/**
+ * @summary Create the workspace if it does not exist
+ */
+export const putWorkspace = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<putWorkspaceResponse> => {
+
+  return customFetch<putWorkspaceResponse>(getPutWorkspaceUrl(id),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+export type getJiraDestinationResponse200 = {
+  data: JiraDestination
+  status: 200
+}
+
+export type getJiraDestinationResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type getJiraDestinationResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type getJiraDestinationResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type getJiraDestinationResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type getJiraDestinationResponseSuccess = (getJiraDestinationResponse200) & {
+  headers: Headers;
+};
+export type getJiraDestinationResponseError = (getJiraDestinationResponse404 | getJiraDestinationResponse409 | getJiraDestinationResponse422 | getJiraDestinationResponse502) & {
+  headers: Headers;
+};
+
+export type getJiraDestinationResponse = (getJiraDestinationResponseSuccess | getJiraDestinationResponseError)
+
+export const getGetJiraDestinationUrl = (id: string,
+    params?: GetJiraDestinationParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/workspaces/${encodeURIComponent(String(id))}/jira?${stringifiedParams}` : `/workspaces/${encodeURIComponent(String(id))}/jira`
+}
+
+/**
+ * @summary Where the workspace's new Jira tickets go, and as whom
+ */
+export const getJiraDestination = async (id: string,
+    params?: GetJiraDestinationParams, options?: Parameters<typeof customFetch>[1]): Promise<getJiraDestinationResponse> => {
+
+  return customFetch<getJiraDestinationResponse>(getGetJiraDestinationUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type setJiraDestinationResponse200 = {
+  data: JiraDestination
+  status: 200
+}
+
+export type setJiraDestinationResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type setJiraDestinationResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type setJiraDestinationResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type setJiraDestinationResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type setJiraDestinationResponseSuccess = (setJiraDestinationResponse200) & {
+  headers: Headers;
+};
+export type setJiraDestinationResponseError = (setJiraDestinationResponse404 | setJiraDestinationResponse409 | setJiraDestinationResponse422 | setJiraDestinationResponse502) & {
+  headers: Headers;
+};
+
+export type setJiraDestinationResponse = (setJiraDestinationResponseSuccess | setJiraDestinationResponseError)
+
+export const getSetJiraDestinationUrl = (id: string,) => {
+
+
+
+
+  return `/workspaces/${encodeURIComponent(String(id))}/jira`
+}
+
+/**
+ * @summary Send the workspace's new Jira tickets to an account's project
+ */
+export const setJiraDestination = async (id: string,
+    setJiraDestinationBody: SetJiraDestinationBody, options?: Parameters<typeof customFetch>[1]): Promise<setJiraDestinationResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<setJiraDestinationResponse>(getSetJiraDestinationUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setJiraDestinationBody)
+  }
+);}
+
+
+
+export type clearJiraDestinationResponse204 = {
+  data: void
+  status: 204
+}
+
+export type clearJiraDestinationResponseSuccess = (clearJiraDestinationResponse204) & {
+  headers: Headers;
+};
+;
+
+export type clearJiraDestinationResponse = (clearJiraDestinationResponseSuccess)
+
+export const getClearJiraDestinationUrl = (id: string,) => {
+
+
+
+
+  return `/workspaces/${encodeURIComponent(String(id))}/jira`
+}
+
+/**
+ * @summary Clear the workspace's Jira destination; tickets keep their account
+ */
+export const clearJiraDestination = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<clearJiraDestinationResponse> => {
+
+  return customFetch<clearJiraDestinationResponse>(getClearJiraDestinationUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
 
 
   }

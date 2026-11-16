@@ -98,7 +98,7 @@ describe("groups — ticket fields are server-owned", () => {
     // Both tabs loaded group G before it had a ticket.
     await repo.upsertGroup(WORKSPACE, group("g"));
     // Tab A creates the ticket; the server records it.
-    await repo.updateGroupJira(WORKSPACE, "g", "UI-128");
+    await repo.updateGroupJira(WORKSPACE, "g", "UI-128", null);
     // Tab B renames G from its stale copy, which has no ticket.
     await repo.upsertGroup(WORKSPACE, group("g", { name: "Renamed" }));
 
@@ -111,7 +111,7 @@ describe("groups — ticket fields are server-owned", () => {
   it("a write to one group leaves every other group as it was", async () => {
     await repo.upsertGroup(WORKSPACE, group("g"));
     await repo.upsertGroup(WORKSPACE, group("h"));
-    await repo.updateGroupJira(WORKSPACE, "g", "UI-128");
+    await repo.updateGroupJira(WORKSPACE, "g", "UI-128", null);
     await repo.upsertGroup(WORKSPACE, group("h", { name: "Only H changed" }));
 
     const saved = await repo.listGroups(WORKSPACE);

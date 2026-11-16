@@ -2,7 +2,7 @@ import { bearerAuth } from "hono/bearer-auth";
 import { cors } from "hono/cors";
 import { createMiddleware } from "hono/factory";
 import { isAllowedOrigin } from "../lib/allowed-origin.js";
-import { parseAuthEnv } from "../schemas/env.js";
+import { AdminEnvSchema, parseAdminEnv, parseAuthEnv } from "../schemas/env.js";
 import type { AppEnv } from "../types.js";
 
 /**
@@ -32,5 +32,21 @@ export const corsForCallers = createMiddleware<AppEnv>(async (c, next) => {
  */
 export const requireApiToken = createMiddleware<AppEnv>(async (c, next) => {
   const { SYNC_API_TOKEN } = parseAuthEnv(c.env);
-  return bearerAuth({ token: SYNC_API_TOKEN })(c, next);
+  // The admin token may do everything the sync token does (ADR-0027).
+  const admin = AdminEnvSchema.safeParse(c.env);
+  const token = admin.success
+    ? [SYNC_API_TOKEN, admin.data.SYNC_ADMIN_TOKEN]
+    : SYNC_API_TOKEN;
+  return bearerAuth({ token })(c, next);
+});
+
+/**
+ * Managing Jira accounts and workspace destinations needs
+ * `Authorization: Bearer <SYNC_ADMIN_TOKEN>` (ADR-0027). Host apps hold only
+ * the sync token, so a script on their pages cannot redirect tickets. Fails
+ * closed: without a configured admin token, no admin request gets through.
+ */
+export const requireAdminToken = createMiddleware<AppEnv>(async (c, next) => {
+  const { SYNC_ADMIN_TOKEN } = parseAdminEnv(c.env);
+  return bearerAuth({ token: SYNC_ADMIN_TOKEN })(c, next);
 });

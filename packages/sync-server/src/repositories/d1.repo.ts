@@ -1,12 +1,28 @@
 import { and, eq } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "../db/schema.js";
-import type { Comment, Group, GroupWrite, SyncRepository } from "./types.js";
+import { D1WorkspaceRepository } from "./workspaces.repo.js";
+import type {
+  Comment,
+  Group,
+  GroupWrite,
+  SyncRepository,
+  TicketOrigin,
+} from "./types.js";
 
 type Database = DrizzleD1Database<typeof schema>;
 
 export class D1SyncRepository implements SyncRepository {
-  constructor(private readonly db: Database) {}
+  private readonly workspaces: D1WorkspaceRepository;
+
+  constructor(private readonly db: Database) {
+    this.workspaces = new D1WorkspaceRepository(db);
+  }
+
+  /** A write to a workspace makes it exist, so the settings can list it (ADR-0027). */
+  private ensureWorkspace(workspaceId: string): Promise<void> {
+    return this.workspaces.ensure(workspaceId);
+  }
 
   async listComments(workspaceId: string): Promise<Comment[]> {
     const rows = await this.db
@@ -20,6 +36,7 @@ export class D1SyncRepository implements SyncRepository {
   async upsertComment(workspaceId: string, item: Comment): Promise<void> {
     // PUT semantics: the stored comment becomes exactly what was sent, so an
     // optional field the client left out is cleared rather than kept.
+    await this.ensureWorkspace(workspaceId);
     await this.db
       .insert(schema.comments)
       .values({ ...item, workspaceId })
@@ -92,6 +109,7 @@ export class D1SyncRepository implements SyncRepository {
     // update from a client that has not seen the ticket cannot erase it —
     // which is what let a second, duplicate Jira ticket through (ADR-0019).
     const { id, name, createdAt, revealed, synthetic } = item;
+    await this.ensureWorkspace(workspaceId);
     await this.db
       .insert(schema.groups)
       .values({ id, workspaceId, name, createdAt, revealed, synthetic })
@@ -138,16 +156,39 @@ export class D1SyncRepository implements SyncRepository {
     workspaceId: string,
     groupId: string,
     jiraTicketId: string,
+    jiraAccountId: string | null,
   ): Promise<void> {
     await this.db
       .update(schema.groups)
-      .set({ jiraTicketId, status: "ticketed" })
+      .set({ jiraTicketId, jiraAccountId, status: "ticketed" })
       .where(
         and(
           eq(schema.groups.id, groupId),
           eq(schema.groups.workspaceId, workspaceId),
         ),
       );
+  }
+
+  async findTicketOrigin(
+    workspaceId: string,
+    groupId: string,
+  ): Promise<TicketOrigin | undefined> {
+    const [row] = await this.db
+      .select({
+        jiraTicketId: schema.groups.jiraTicketId,
+        jiraAccountId: schema.groups.jiraAccountId,
+      })
+      .from(schema.groups)
+      .where(
+        and(
+          eq(schema.groups.id, groupId),
+          eq(schema.groups.workspaceId, workspaceId),
+        ),
+      )
+      .limit(1);
+    return row?.jiraTicketId
+      ? { jiraTicketId: row.jiraTicketId, jiraAccountId: row.jiraAccountId }
+      : undefined;
   }
 }
 
@@ -176,7 +217,8 @@ function rowToComment(row: typeof schema.comments.$inferSelect): Comment {
 }
 
 function rowToGroup(row: typeof schema.groups.$inferSelect): Group {
-  const { workspaceId, ...rest } = row;
+  // The ticket origin stays on the server: clients name a workspace, never an account.
+  const { workspaceId, jiraAccountId, ...rest } = row;
   return {
     ...rest,
     revealed: rest.revealed ?? undefined,
