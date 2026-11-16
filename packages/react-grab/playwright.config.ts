@@ -11,6 +11,9 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 4 : undefined,
   timeout: 60_000,
+  // Screenshot baselines exist only for macOS, where the overlay is used;
+  // elsewhere (Linux CI) the screenshot assertions are skipped, the rest runs.
+  ignoreSnapshots: process.platform !== "darwin",
   reporter: "html",
   use: {
     baseURL: "http://localhost:5175",
