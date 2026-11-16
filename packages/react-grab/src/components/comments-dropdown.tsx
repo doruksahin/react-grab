@@ -50,6 +50,7 @@ import { formatRelativeTime } from "../utils/format-relative-time.js";
 import { IconButton } from "./ui/icon-button.js";
 import { Button } from "./ui/button.js";
 import { LocationNote } from "./selection-location/location-note.jsx";
+import type { ClearCounts } from "../features/selection-groups/business/membership-policy.js";
 
 interface CommentsDropdownProps extends Pick<
   SelectionGroupsViewProps,
@@ -68,8 +69,8 @@ interface CommentsDropdownProps extends Pick<
   onCopyAll?: () => void;
   onCopyAllHover?: (isHovered: boolean) => void;
   onClearAll?: () => void;
-  /** Comments that "Clear all" keeps because they have a ticket (ADR-0008). */
-  keptByClear?: number;
+  /** What "Clear all" deletes and keeps; a comment with a ticket stays (ADR-0008). */
+  clearCounts?: ClearCounts;
   onDismiss?: () => void;
   onDropdownHover?: (isHovered: boolean) => void;
   onToggleItemRevealed?: (commentItemId: string) => void;
@@ -374,12 +375,12 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             </span>
             <Show when={props.items.length > 0}>
               <div class="flex items-center gap-[5px]">
-                <Show when={props.items.length > (props.keptByClear ?? 0)}>
+                <Show when={(props.clearCounts?.removed ?? 0) > 0}>
                   <IconButton
                     data-react-grab-ignore-events
                     data-react-grab-comments-clear
                     label={
-                      (props.keptByClear ?? 0) > 0
+                      (props.clearCounts?.kept ?? 0) > 0
                         ? "Clear comments without a ticket"
                         : "Clear all"
                     }

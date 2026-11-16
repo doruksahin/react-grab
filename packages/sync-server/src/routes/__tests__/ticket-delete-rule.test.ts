@@ -81,4 +81,52 @@ describe("deleting comments and groups with a ticket", () => {
   it("treats a comment that is already gone as deleted", async () => {
     expect((await send("DELETE", "/comments/missing")).status).toBe(200);
   });
+
+  it("refuses to move a comment out of a group with a ticket", async () => {
+    await seed({ ticketed: true });
+    await send("PUT", "/groups/g-2", {
+      id: "g-2",
+      name: "Other",
+      createdAt: 2,
+    });
+    const moved = await send("PUT", "/comments/c-1", {
+      id: "c-1",
+      groupId: "g-2",
+      content: "<button>Pay</button>",
+      elementName: "button",
+      tagName: "button",
+      timestamp: 1,
+    });
+    expect(moved.status).toBe(409);
+    // So the move-then-delete path cannot remove it either.
+    expect((await send("DELETE", "/comments/c-1")).status).toBe(409);
+    expect(await listedCommentIds()).toEqual(["c-1"]);
+  });
+
+  it("refuses a new comment in a group with a ticket", async () => {
+    await seed({ ticketed: true });
+    const created = await send("PUT", "/comments/c-2", {
+      id: "c-2",
+      groupId: "g-1",
+      content: "<a>Docs</a>",
+      elementName: "a",
+      tagName: "a",
+      timestamp: 2,
+    });
+    expect(created.status).toBe(409);
+  });
+
+  it("still updates a ticketed comment that stays in its group", async () => {
+    await seed({ ticketed: true });
+    const updated = await send("PUT", "/comments/c-1", {
+      id: "c-1",
+      groupId: "g-1",
+      content: "<button>Pay</button>",
+      elementName: "button",
+      tagName: "button",
+      timestamp: 1,
+      revealed: true,
+    });
+    expect(updated.status).toBe(200);
+  });
 });

@@ -2,6 +2,7 @@ import type { CommentItem, OverlayBounds } from "./shared-types.js";
 export type { CommentItem, OverlayBounds } from "./shared-types.js";
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
 import type { SelectionGroup } from "./features/selection-groups/types.js";
+import type { ClearCounts } from "./features/selection-groups/business/membership-policy.js";
 import type { JiraPort, StorageAdapter } from "./features/sync/types.js";
 import type { JiraComment } from "./features/jira-comments/types.js";
 
@@ -664,8 +665,8 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onToggleToolbarMenu?: () => void;
   onToolbarMenuDismiss?: () => void;
   clearPromptPosition?: DropdownAnchor | null;
-  /** How many comments "Clear all" keeps because they have a ticket (ADR-0008). */
-  commentsKeptByClear?: number;
+  /** What "Clear all" would delete and keep; a comment with a ticket stays (ADR-0008). */
+  commentsClearCounts?: ClearCounts;
   onClearCommentsConfirm?: () => void;
   onClearCommentsCancel?: () => void;
   selectionsRevealed?: boolean;

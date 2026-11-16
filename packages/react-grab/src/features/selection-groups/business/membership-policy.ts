@@ -86,6 +86,12 @@ export interface ClearResult {
   removed: number;
 }
 
+/** How many selections "Clear all" deletes, and how many stay locked. */
+export interface ClearCounts {
+  removed: number;
+  kept: number;
+}
+
 /** Why a group cannot receive selections, or null when it can. */
 const refusalForGroup = (group: SelectionGroup): TargetRefusal | null => {
   if (isTicketed(group)) return "target-ticketed";

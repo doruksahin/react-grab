@@ -115,6 +115,13 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
     return "copied";
   };
 
+  // A saved label offers removal only when the membership policy allows it
+  // (ADR-0008): a selection with a ticket has no remove action.
+  const removeActionFor = (itemId: string | undefined) =>
+    itemId && props.onRemoveItem && props.canRemoveItem?.(itemId)
+      ? () => props.onRemoveItem?.(itemId)
+      : undefined;
+
   return (
     <DevModeProvider isDevMode={Boolean(props.isDevMode)}>
       <OverlayCanvas
@@ -356,16 +363,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
                 onHoverChange={(isHovered) =>
                   props.onLabelInstanceHoverChange?.(instance().id, isHovered)
                 }
-                onRemoveItem={
-                  instance().itemId &&
-                  props.onRemoveItem &&
-                  props.canRemoveItem?.(instance().itemId ?? "")
-                    ? () => {
-                        const itemId = instance().itemId;
-                        if (itemId) props.onRemoveItem?.(itemId);
-                      }
-                    : undefined
-                }
+                onRemoveItem={removeActionFor(instance().itemId)}
                 onCreateTicket={
                   instance().itemId && props.onCreateTicketForLooseItem
                     ? () => {
@@ -459,7 +457,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       <ClearCommentsPrompt
         position={props.clearPromptPosition ?? null}
-        keptCount={props.commentsKeptByClear ?? 0}
+        keptCount={props.commentsClearCounts?.kept ?? 0}
         onConfirm={props.onClearCommentsConfirm ?? (() => {})}
         onCancel={props.onClearCommentsCancel ?? (() => {})}
       />
@@ -474,7 +472,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onCopyAll={props.onCommentsCopyAll}
         onCopyAllHover={props.onCommentsCopyAllHover}
         onClearAll={props.onCommentsClear}
-        keptByClear={props.commentsKeptByClear ?? 0}
+        clearCounts={props.commentsClearCounts}
         onDismiss={props.onCommentsDismiss}
         onDropdownHover={props.onCommentsDropdownHover}
         onToggleItemRevealed={props.onToggleCommentItemRevealed}
@@ -488,9 +486,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       />
 
       {/* Single JIRA create-ticket dialog mount. Driven by the core's
-          per-item orchestrator state — shared between the sidebar's
-          LooseSelectionList flow and the SelectionLabel "+ Create ticket"
-          button, so the dialog works whether the sidebar is open or not. */}
+          per-item orchestrator state, opened by the SelectionLabel
+          "+ Create ticket" button, so the dialog works whether the sidebar
+          is open or not. */}
       <Show when={props.looseTicketDialog}>
         {(state) => (
           <JiraCreateDialog

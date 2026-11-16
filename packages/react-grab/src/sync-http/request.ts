@@ -3,8 +3,11 @@ import {
   assertNoDotSegments,
 } from "../generated/custom-fetch.js";
 import type { SyncServerConnection } from "./types.js";
+import { WriteRefusedError } from "../features/sync/business/write-refused-error.js";
 
 const HTTP_STATUS_OK = 200;
+// The server's answer for a write that a rule forbids (ADR-0008).
+const HTTP_STATUS_CONFLICT = 409;
 
 /** A response the sync server answered with something other than 200. */
 export class SyncHttpError extends Error {
@@ -50,6 +53,12 @@ export const successData = <Response extends GeneratedResponse>(
   response: Response,
 ): SuccessOf<Response>["data"] => {
   if (isSuccess(response)) return response.data;
+  const serverMessage = isErrorBody(response.data)
+    ? response.data.error
+    : undefined;
+  if (response.status === HTTP_STATUS_CONFLICT) {
+    throw new WriteRefusedError(serverMessage ?? `${operation} was refused`);
+  }
   throw new SyncHttpError(
     operation,
     response.status,

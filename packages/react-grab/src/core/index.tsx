@@ -54,7 +54,6 @@ import {
 } from "../features/reproduce-steps/index.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
 import { ticketScopeFor } from "../features/selection-groups/business/membership.js";
-import { canRemoveSelection } from "../features/selection-groups/business/ticket-lock.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
 import { isPinnedLabel } from "../features/selection-label/business/is-pinned-label.js";
@@ -851,7 +850,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           // The same comment again replaces the old one, unless the old one
           // has a ticket: then it stays and the new one is added beside it.
           if (existingItem.commentText === extraPrompt) {
-            if (canRemoveSelection(existingItem, selectionGroups.groups())) {
+            if (selectionGroups.canRemoveItem(existingItemId)) {
               selectionGroups.handleRemoveItem(existingItemId);
               commentElementMap.delete(existingItemId);
             }
@@ -2968,10 +2967,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       }));
       copyGroupedContent(combinedContent, metadataGroups);
 
-      if (isClearConfirmed()) {
-        handleCommentsClear();
-      } else {
-        showClearPrompt();
+      // Nothing to clear when every comment has a ticket (ADR-0008).
+      if (selectionGroups.clearCounts().removed > 0) {
+        if (isClearConfirmed()) {
+          handleCommentsClear();
+        } else {
+          showClearPrompt();
+        }
       }
 
       clearAllLabels();
@@ -3347,7 +3349,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       onToggleToolbarMenu={handleToggleToolbarMenu}
                       onToolbarMenuDismiss={dismissToolbarMenu}
                       clearPromptPosition={clearPromptPosition()}
-                      commentsKeptByClear={selectionGroups.keptByClear()}
+                      commentsClearCounts={selectionGroups.clearCounts()}
                       onClearCommentsConfirm={() => {
                         confirmClear();
                         dismissClearPrompt();

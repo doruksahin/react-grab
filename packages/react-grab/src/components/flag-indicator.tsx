@@ -30,7 +30,7 @@ function formatExactDate(iso: string): string {
 
 /**
  * Reusable flag indicator — icon + relative time + hover tooltip.
- * Used by selection-label, selection-card, and loose-selection-card.
+ * Used by selection-label and selection-card.
  * Single source of truth for the flag visual (SRP/DRY).
  */
 export const FlagIndicator: Component<FlagIndicatorProps> = (props) => {

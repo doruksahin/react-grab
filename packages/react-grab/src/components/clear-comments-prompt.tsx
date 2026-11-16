@@ -70,7 +70,7 @@ export const ClearCommentsPrompt: Component<ClearCommentsPromptProps> = (
           <DiscardPrompt
             label={
               props.keptCount > 0
-                ? `Clear comments? ${props.keptCount} with a ticket stay.`
+                ? `Clear comments? ${props.keptCount} with a ticket ${props.keptCount === 1 ? "stays" : "stay"}.`
                 : "Clear comments?"
             }
             cancelOnEscape

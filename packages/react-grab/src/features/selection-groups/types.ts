@@ -4,6 +4,7 @@ import type { CommentItem } from "../../shared-types.js";
 import type { JiraComment } from "../jira-comments/types.js";
 import type {
   BulkMoveResult,
+  ClearCounts,
   ClearResult,
   DeleteGroupResult,
   MoveResult,
@@ -96,8 +97,8 @@ export interface SelectionGroupsAPI {
   canRemoveItem: (itemId: string) => boolean;
   /** Delete every selection without a ticket; those with a ticket stay. */
   handleClearItems: () => ClearResult;
-  /** How many selections "Clear all" would keep, because they have a ticket. */
-  keptByClear: Accessor<number>;
+  /** What "Clear all" would do now: how many it deletes and how many stay. */
+  clearCounts: Accessor<ClearCounts>;
   /** Record the ticket created for a group; it then takes no new selections. */
   markTicketCreated: (
     groupId: string,

@@ -47,73 +47,93 @@ const panelRow = (page: Page, text: string) =>
     )
     .filter({ hasText: text });
 
-test.describe("Deleting selections", { tag: ["@SPEC-011"] }, () => {
-  test.beforeEach(async ({ reactGrab }) => {
-    await reactGrab.populate({ groups, comments: selections });
-    await expect
-      .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
-      .toBe(true);
-  });
-
-  test("Clear all deletes only the selections without a ticket", async ({
-    page,
-    reactGrab,
-  }) => {
-    await reactGrab.clickCommentsButton();
-    const clear = page.locator("[data-react-grab-comments-clear]");
-    await expect(clear).toHaveAttribute(
-      "aria-label",
-      "Clear comments without a ticket",
-    );
-
-    await clear.click();
-    await expect
-      .poll(() => reactGrab.isCommentsDropdownVisible())
-      .toBe(false);
-    await reactGrab.clickCommentsButton();
-
-    await expect(panelRow(page, "Has a ticket")).toHaveCount(1);
-    await expect(panelRow(page, "No ticket yet")).toHaveCount(0);
-  });
-
-  test("Clear all is not offered when every selection has a ticket", async ({
-    page,
-    reactGrab,
-  }) => {
-    await reactGrab.populate({
-      groups,
-      comments: [selection("locked", "ticketed", "Has a ticket")],
+test.describe(
+  "Deleting selections",
+  { tag: ["@SPEC-011", "@ADR-0008"] },
+  () => {
+    test.beforeEach(async ({ reactGrab }) => {
+      await reactGrab.populate({ groups, comments: selections });
+      await expect
+        .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
+        .toBe(true);
     });
-    await reactGrab.clickCommentsButton();
-    await expect(panelRow(page, "Has a ticket")).toHaveCount(1);
-    await expect(page.locator("[data-react-grab-comments-clear]")).toHaveCount(
-      0,
-    );
-  });
 
-  test("a selection with a ticket has no remove action on its card", async ({
-    page,
-  }) => {
-    await page.locator("[data-react-grab-toolbar-dashboard]").click();
-    await openGroupDetail(page, "Shipped");
-    const lockedCard = page
-      .locator("[data-react-grab-selection-card]")
-      .filter({ hasText: "Has a ticket" });
-    await expect(lockedCard).toBeVisible();
-    await expect(
-      lockedCard.getByRole("button", { name: /remove/i }),
-    ).toHaveCount(0);
-  });
+    test("Clear all deletes only the selections without a ticket", async ({
+      page,
+      reactGrab,
+    }) => {
+      await reactGrab.clickCommentsButton();
+      const clear = page.locator("[data-react-grab-comments-clear]");
+      await expect(clear).toHaveAttribute(
+        "aria-label",
+        "Clear comments without a ticket",
+      );
 
-  test("a selection without a ticket can be removed from its card", async ({
-    page,
-  }) => {
-    await page.locator("[data-react-grab-toolbar-dashboard]").click();
-    await openGroupDetail(page, "Open work");
-    const freeCard = page
-      .locator("[data-react-grab-selection-card]")
-      .filter({ hasText: "No ticket yet" });
-    await freeCard.getByRole("button", { name: /remove/i }).click();
-    await expect(freeCard).toHaveCount(0);
-  });
-});
+      await clear.click();
+      await expect
+        .poll(() => reactGrab.isCommentsDropdownVisible())
+        .toBe(false);
+      await reactGrab.clickCommentsButton();
+
+      await expect(panelRow(page, "Has a ticket")).toHaveCount(1);
+      await expect(panelRow(page, "No ticket yet")).toHaveCount(0);
+    });
+
+    test("Clear all is not offered when every selection has a ticket", async ({
+      page,
+      reactGrab,
+    }) => {
+      await reactGrab.populate({
+        groups,
+        comments: [selection("locked", "ticketed", "Has a ticket")],
+      });
+      await reactGrab.clickCommentsButton();
+      await expect(panelRow(page, "Has a ticket")).toHaveCount(1);
+      await expect(
+        page.locator("[data-react-grab-comments-clear]"),
+      ).toHaveCount(0);
+    });
+
+    test("a selection with a ticket has no remove action on its card", async ({
+      page,
+    }) => {
+      await page.locator("[data-react-grab-toolbar-dashboard]").click();
+      await openGroupDetail(page, "Shipped");
+      const lockedCard = page
+        .locator("[data-react-grab-selection-card]")
+        .filter({ hasText: "Has a ticket" });
+      await expect(lockedCard).toBeVisible();
+      await expect(
+        lockedCard.getByRole("button", { name: /remove/i }),
+      ).toHaveCount(0);
+    });
+
+    test("a selection without a ticket can be removed from its card", async ({
+      page,
+    }) => {
+      await page.locator("[data-react-grab-toolbar-dashboard]").click();
+      await openGroupDetail(page, "Open work");
+      const freeCard = page
+        .locator("[data-react-grab-selection-card]")
+        .filter({ hasText: "No ticket yet" });
+      await freeCard.getByRole("button", { name: /remove/i }).click();
+      await expect(freeCard).toHaveCount(0);
+    });
+
+    test("Copy all does not offer to clear when every selection has a ticket", async ({
+      page,
+      reactGrab,
+    }) => {
+      await reactGrab.populate({
+        groups,
+        comments: [selection("locked", "ticketed", "Has a ticket")],
+      });
+      await reactGrab.clickCommentsButton();
+      await page.locator("[data-react-grab-comments-copy-all]").click();
+      await expect(
+        page.locator("[data-react-grab-clear-comments-prompt]"),
+      ).toHaveCount(0);
+      await expect(panelRow(page, "Has a ticket")).toHaveCount(1);
+    });
+  },
+);

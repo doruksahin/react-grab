@@ -184,9 +184,10 @@ export function createSelectionGroups(
     return Boolean(item && canRemoveSelection(item, deps.groups()));
   };
 
-  const keptByClear = createMemo(
-    () => clearSelections(deps.commentItems(), deps.groups()).items.length,
-  );
+  const clearCounts = createMemo(() => {
+    const result = clearSelections(deps.commentItems(), deps.groups());
+    return { removed: result.removed, kept: result.items.length };
+  });
 
   const handleEnsureGroupForItem = (
     item: { componentName?: string; elementName: string },
@@ -211,7 +212,7 @@ export function createSelectionGroups(
     handleRemoveItem,
     handleClearItems,
     canRemoveItem,
-    keptByClear,
+    clearCounts,
     markTicketCreated,
     markResolved,
     ensureGroupForItem: handleEnsureGroupForItem,

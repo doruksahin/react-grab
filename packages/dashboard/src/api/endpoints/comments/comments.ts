@@ -33,6 +33,7 @@ import type {
   ListComments200Item,
   UpsertComment200,
   UpsertComment400,
+  UpsertComment409,
   UpsertCommentBody
 } from '../../model';
 
@@ -222,10 +223,15 @@ export type upsertCommentResponse400 = {
   status: 400
 }
 
+export type upsertCommentResponse409 = {
+  data: UpsertComment409
+  status: 409
+}
+
 export type upsertCommentResponseSuccess = (upsertCommentResponse200) & {
   headers: Headers;
 };
-export type upsertCommentResponseError = (upsertCommentResponse400) & {
+export type upsertCommentResponseError = (upsertCommentResponse400 | upsertCommentResponse409) & {
   headers: Headers;
 };
 
@@ -263,7 +269,7 @@ export const upsertComment = async (id: string,
 
 
 
-export const getUpsertCommentMutationOptions = <TError = UpsertComment400,
+export const getUpsertCommentMutationOptions = <TError = UpsertComment400 | UpsertComment409,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertComment>>, TError,{id: string;commentId: string;data: UpsertCommentBody}, TContext>, fetch?: RequestInit}
 ): UseMutationOptions<Awaited<ReturnType<typeof upsertComment>>, TError,{id: string;commentId: string;data: UpsertCommentBody}, TContext> => {
 
@@ -292,12 +298,12 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
     export type UpsertCommentMutationResult = NonNullable<Awaited<ReturnType<typeof upsertComment>>>
     export type UpsertCommentMutationBody = UpsertCommentBody
-    export type UpsertCommentMutationError = UpsertComment400
+    export type UpsertCommentMutationError = UpsertComment400 | UpsertComment409
 
     /**
  * @summary Create or replace one comment
  */
-export const useUpsertComment = <TError = UpsertComment400,
+export const useUpsertComment = <TError = UpsertComment400 | UpsertComment409,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertComment>>, TError,{id: string;commentId: string;data: UpsertCommentBody}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof upsertComment>>,

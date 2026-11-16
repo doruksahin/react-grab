@@ -72,6 +72,13 @@ describe("synthetic-group", () => {
       const result = gcEmptySyntheticGroups([real], []);
       expect(result).toEqual([real]);
     });
+    it("keeps an empty synthetic group that has a ticket", () => {
+      const ticketed = { ...synthA, jiraTicketId: "ABC-1" } as SelectionGroup;
+      expect(gcEmptySyntheticGroups([real, ticketed], [])).toEqual([
+        real,
+        ticketed,
+      ]);
+    });
     it("removes synthetic groups with no items", () => {
       const result = gcEmptySyntheticGroups([real, synthA], []);
       expect(result).toEqual([real]);

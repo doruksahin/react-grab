@@ -436,7 +436,7 @@ describe("deleting selections (ADR-0008, amended 2026-11-16)", () => {
   it("Clear all deletes the selections without a ticket and keeps the rest", () => {
     createRoot((dispose) => {
       const { api, items } = makeApi(mixedItems(), groupsWithTicket);
-      expect(api.keptByClear()).toBe(1);
+      expect(api.clearCounts()).toEqual({ removed: 2, kept: 1 });
 
       const result = api.handleClearItems();
 

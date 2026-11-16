@@ -286,8 +286,6 @@ features:
     specs: [SPEC-011]
     adrs: [ADR-0008]
     files:
-      - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
-      - packages/react-grab/src/components/sidebar/loose-selection-list.tsx
       - packages/react-grab/src/core/index.tsx
       - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
       - packages/react-grab/src/features/selection-groups/business/membership.ts
@@ -463,7 +461,6 @@ features:
     files:
       - packages/react-grab/src/components/sidebar/group-card.tsx
       - packages/react-grab/src/components/sidebar/group-children.tsx
-      - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
       - packages/react-grab/src/components/ui/avatar.tsx
       - packages/react-grab/src/components/ui/badge.tsx
       - packages/react-grab/src/components/ui/button.tsx
@@ -686,8 +683,6 @@ data_attrs:
         - group-card
         - group-detail
         - group-list
-        - loose-selection-card
-        - loose-selection-list
         - selection-list
 
     selection:
@@ -874,7 +869,7 @@ data_attrs:
     comment-thread: {scope: comments, src: 1, tests: 0}
     comment-time: {scope: comments, src: 1, tests: 0}
     comments-clear: {scope: comments, src: 1, tests: 3}
-    comments-copy-all: {scope: comments, src: 1, tests: 2}
+    comments-copy-all: {scope: comments, src: 1, tests: 3}
     comments-count: {scope: comments, src: 1, tests: 0}
     comments-dropdown: {scope: comments, src: 3, tests: 9}
     comments-error: {scope: comments, src: 1, tests: 1}
@@ -894,7 +889,7 @@ data_attrs:
     completion-undo: {scope: completion, src: 1, tests: 1}
     followup-input: {scope: completion, src: 1, tests: 0}
     followup-submit: {scope: completion, src: 1, tests: 0}
-    clear-comments-prompt: {scope: dialog, src: 1, tests: 3}
+    clear-comments-prompt: {scope: dialog, src: 1, tests: 4}
     discard-no: {scope: dialog, src: 1, tests: 2}
     discard-prompt: {scope: dialog, src: 1, tests: 1}
     discard-yes: {scope: dialog, src: 1, tests: 3}
@@ -988,8 +983,6 @@ data_attrs:
     group-list: {scope: sidebar, src: 2, tests: 3}
     group-picker-flyout: {scope: sidebar, src: 1, tests: 2}
     jira-status-banner: {scope: sidebar, src: 1, tests: 0}
-    loose-selection-card: {scope: sidebar, src: 1, tests: 0}
-    loose-selection-list: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}
     sidebar: {scope: sidebar, src: 1, tests: 3}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}

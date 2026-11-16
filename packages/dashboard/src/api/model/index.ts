@@ -62,6 +62,7 @@ export * from './uploadScreenshot415';
 export * from './upsertComment200';
 export * from './upsertComment200Status';
 export * from './upsertComment400';
+export * from './upsertComment409';
 export * from './upsertCommentBody';
 export * from './upsertCommentBodyStatus';
 export * from './upsertGroup200';

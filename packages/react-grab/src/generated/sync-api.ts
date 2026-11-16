@@ -208,6 +208,10 @@ export type UpsertComment400 = {
   error: string;
 };
 
+export type UpsertComment409 = {
+  error: string;
+};
+
 export type DeleteComment200Status = typeof DeleteComment200Status[keyof typeof DeleteComment200Status];
 
 
@@ -561,10 +565,15 @@ export type upsertCommentResponse400 = {
   status: 400
 }
 
+export type upsertCommentResponse409 = {
+  data: UpsertComment409
+  status: 409
+}
+
 export type upsertCommentResponseSuccess = (upsertCommentResponse200) & {
   headers: Headers;
 };
-export type upsertCommentResponseError = (upsertCommentResponse400) & {
+export type upsertCommentResponseError = (upsertCommentResponse400 | upsertCommentResponse409) & {
   headers: Headers;
 };
 
