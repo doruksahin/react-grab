@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { test, expect, type ReactGrabPageObject } from "../fixtures.js";
+import { openSelectionCard } from "../open-selection-card.js";
 import type { CommentItem } from "../../src/types.js";
 import type { SelectionGroupWithJira } from "../../src/features/selection-groups/types.js";
 import { comments as fixtureComments } from "../mocks/fixtures.js";
@@ -48,11 +49,8 @@ const bar = (page: Page) => page.locator("[data-react-grab-step-guide]");
 // the selection is.
 const openGuide = async (page: Page, _reactGrab: ReactGrabPageObject) => {
   await page.locator("[data-react-grab-toolbar-dashboard]").click();
-  await page
-    .locator("[data-react-grab-selection-card]")
-    .filter({ hasText: "Button inside the modal" })
-    .locator("[data-react-grab-step-guide-start]")
-    .click();
+  const card = await openSelectionCard(page, "Button inside the modal");
+  await card.locator("[data-react-grab-step-guide-start]").click();
 };
 
 const seed = async (reactGrab: ReactGrabPageObject, item: CommentItem) => {
@@ -202,10 +200,10 @@ test.describe("Step guide", { tag: ["@ADR-0026"] }, () => {
     await seed(reactGrab, { ...insideModal(`${ORIGIN}/`), groupId: null });
     await page.locator("[data-react-grab-toolbar-dashboard]").click();
 
-    const card = page
-      .locator("[data-react-grab-selection-card]")
-      .filter({ hasText: "Button inside the modal" });
-    const notice = card.locator("[data-react-grab-selection-location]");
+    const card = await openSelectionCard(page, "Button inside the modal");
+    const notice = card.locator(
+      "[data-react-grab-selection-card-body] [data-react-grab-selection-location]",
+    );
     await expect(notice).toContainText("Not visible on this page");
     await expect(notice).toContainText(
       '"Guide me" repeats the steps that showed it.',

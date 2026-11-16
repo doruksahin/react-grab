@@ -1,4 +1,5 @@
 import { test, expect, type ReactGrabPageObject } from "../fixtures.js";
+import { openSelectionCard } from "../open-selection-card.js";
 import type { Page } from "@playwright/test";
 import * as fixtures from "../mocks/fixtures.js";
 
@@ -33,11 +34,8 @@ const isObjectBody = (body: unknown): body is WriteBody =>
 
 const openTicketDialog = async (page: Page) => {
   await page.locator("[data-react-grab-toolbar-dashboard]").click();
-  await page
-    .locator("[data-react-grab-selection-card]")
-    .filter({ hasText: NEW_COMMENT })
-    .locator("[data-react-grab-create-ticket]")
-    .click();
+  const card = await openSelectionCard(page, NEW_COMMENT);
+  await card.locator("[data-react-grab-create-ticket]").click();
 };
 
 test.describe("Authenticated screenshots", { tag: ["@ADR-0020"] }, () => {
@@ -65,6 +63,7 @@ test.describe("Authenticated screenshots", { tag: ["@ADR-0020"] }, () => {
       .toBe(true);
 
     await page.locator("[data-react-grab-toolbar-dashboard]").click();
+    await openSelectionCard(page);
 
     const thumb = page.locator("[data-react-grab-screenshot-thumb]").first();
     await expect(thumb).toHaveAttribute("src", /^blob:/, { timeout: 5000 });

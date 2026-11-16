@@ -39,7 +39,9 @@ export type SubmitCommentFn = (
   parentId?: string,
 ) => Promise<CommentCreated>;
 
-export type SearchJiraUsersFn = (query: string) => Promise<JiraUserSuggestion[]>;
+export type SearchJiraUsersFn = (
+  query: string,
+) => Promise<JiraUserSuggestion[]>;
 
 export type RefreshGroupStatusFn = (groupId: string) => void;
 
@@ -59,12 +61,18 @@ export interface JiraCommentEditorProps {
   toolbarInitiallyVisible?: boolean;
 }
 
-export interface InlineReplyEditorProps extends Pick<JiraCommentEditorProps, "onSubmit" | "onCancel" | "onSearchUsers" | "toolbarInitiallyVisible"> {
+export interface InlineReplyEditorProps extends Pick<
+  JiraCommentEditorProps,
+  "onSubmit" | "onCancel" | "onSearchUsers" | "toolbarInitiallyVisible"
+> {
   author: string;
   authorAvatar: string | null;
 }
 
-export interface CommentThreadProps extends Pick<InlineReplyEditorProps, "onSearchUsers" | "toolbarInitiallyVisible"> {
+export interface CommentThreadProps extends Pick<
+  InlineReplyEditorProps,
+  "onSearchUsers" | "toolbarInitiallyVisible"
+> {
   root: JiraComment;
   replies: JiraComment[];
   isReplying: boolean;
@@ -79,4 +87,6 @@ export interface JiraCommentsSectionProps {
   onSearchUsers?: SearchJiraUsersFn;
   onRefreshPoll: () => void;
   commentEditorToolbarVisible?: boolean;
+  /** Whether the thread starts open. @default true */
+  defaultOpen?: boolean;
 }

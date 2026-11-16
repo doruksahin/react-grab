@@ -24,12 +24,12 @@ test.describe(
     });
 
     test(
-      "each status chip shows its count and filters the groups to it",
+      "each status chip counts the selections in that status and narrows the list to them",
       {
         annotation: {
           type: "ac",
           description:
-            "ADR-0022 step 3: the stats block becomes the status filter",
+            "ADR-0022 step 3: the stats block becomes the status filter; chips count what the list shows",
         },
       },
       async ({ page }) => {
@@ -39,16 +39,17 @@ test.describe(
           "[data-react-grab-group-collapsible]",
         );
 
+        // Two selections, both in the In Progress group (ATT-101).
         await expect(
-          chips.getByRole("button", { name: "All (3)" }),
+          chips.getByRole("button", { name: "All (2)" }),
         ).toHaveAttribute("aria-pressed", "true");
         await expect(groupCards).toHaveCount(3);
 
-        await chips.getByRole("button", { name: "In Progress (1)" }).click();
+        await chips.getByRole("button", { name: "In Progress (2)" }).click();
         await expect(groupCards).toHaveCount(1);
         await expect(groupCards).toContainText("Header alignment issue");
         await expect(
-          chips.getByRole("button", { name: "In Progress (1)" }),
+          chips.getByRole("button", { name: "In Progress (2)" }),
         ).toHaveAttribute("aria-pressed", "true");
 
         // The chips and the filter menu share one filter state.
@@ -56,15 +57,11 @@ test.describe(
           dashboard.locator("[data-react-grab-filter-badge]"),
         ).toHaveText("1");
 
-        await chips.getByRole("button", { name: "No Task (1)" }).click();
-        await expect(groupCards).toHaveCount(1);
-        await expect(groupCards).toContainText("Sidebar overflow");
-
         // Pressing the selected chip again shows every status.
-        await chips.getByRole("button", { name: "No Task (1)" }).click();
+        await chips.getByRole("button", { name: "In Progress (2)" }).click();
         await expect(groupCards).toHaveCount(3);
         await expect(
-          chips.getByRole("button", { name: "All (3)" }),
+          chips.getByRole("button", { name: "All (2)" }),
         ).toHaveAttribute("aria-pressed", "true");
       },
     );

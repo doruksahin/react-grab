@@ -1,10 +1,8 @@
-import type { SelectionGroupWithJira } from "../../selection-groups/types.js";
-import { type FilterState, applyFilters } from "../filter-state.js";
+import type { FilterState } from "../filter-state.js";
 import {
   ALL_ATT_STATUSES,
   NO_TASK_STATUS,
   type StatusColorConfig,
-  getStatusLabel,
   getStatusLabelColor,
 } from "../status-colors.js";
 
@@ -15,7 +13,7 @@ export interface StatusFilterOption {
 }
 
 export interface StatusFilterOptions {
-  /** Groups that match every filter except the status. */
+  /** Selections that match every filter except the status. */
   total: number;
   options: StatusFilterOption[];
 }
@@ -30,34 +28,47 @@ const statusRank = (status: string): number => {
   return index === -1 ? STATUS_ORDER.length : index;
 };
 
-const compareStatuses = (left: string, right: string): number =>
+/** Workflow order: No Task, then the ATT statuses, then any other status. */
+export const compareStatuses = (left: string, right: string): number =>
   statusRank(left) - statusRank(right) || left.localeCompare(right);
 
-/**
- * The status choices for the sidebar's status chips: one per status that
- * a group has, counted against the other active filters, in workflow
- * order. The selected status stays listed even when no group has it, so
- * it can be cleared.
- */
-export const getStatusFilterOptions = (
-  groups: SelectionGroupWithJira[],
-  filter: FilterState,
-): StatusFilterOptions => {
-  const matching = applyFilters(groups, { ...filter, statuses: new Set() });
+/** How many times each status occurs, in workflow order. */
+export const statusCounts = (
+  statuses: readonly string[],
+): StatusFilterOption[] => {
   const counts = new Map<string, number>();
-  for (const group of matching) {
-    const status = getStatusLabel(group);
+  for (const status of statuses) {
     counts.set(status, (counts.get(status) ?? 0) + 1);
   }
-  for (const status of filter.statuses) {
-    if (!counts.has(status)) counts.set(status, 0);
-  }
-  const options = [...counts.keys()].sort(compareStatuses).map((status) => ({
+  return [...counts.keys()].sort(compareStatuses).map((status) => ({
     status,
     count: counts.get(status) ?? 0,
     color: getStatusLabelColor(status),
   }));
-  return { total: matching.length, options };
+};
+
+/**
+ * The sidebar's status chips: one per status among the selections the list
+ * shows (each selection's status is its ticket's), counted before the
+ * status filter applies. The selected status stays listed even when no
+ * selection has it, so it can be cleared.
+ */
+export const getStatusFilterOptions = (
+  statuses: readonly string[],
+  filter: FilterState,
+): StatusFilterOptions => {
+  const missing = [...filter.statuses].filter(
+    (status) => !statuses.includes(status),
+  );
+  const options = [
+    ...statusCounts(statuses),
+    ...missing.map((status) => ({
+      status,
+      count: 0,
+      color: getStatusLabelColor(status),
+    })),
+  ].sort((left, right) => compareStatuses(left.status, right.status));
+  return { total: statuses.length, options };
 };
 
 /** The one selected status, or null when all statuses are shown. */

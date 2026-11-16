@@ -668,6 +668,9 @@ data_attrs:
         - sidebar-header
         - sidebar-search
         - status-filter
+        - status-filter-attention
+        - list-view-controls
+        - list-order
         - sync-offline-banner
         - sync-retry
         - status-legend
@@ -677,6 +680,8 @@ data_attrs:
         - jira-status-banner
         - empty-state
         - ungrouped-section
+        - status-section
+        - section-summary
         - due-date-filter
         - active-group-picker
         - active-group-picker-locked
@@ -718,6 +723,7 @@ data_attrs:
         - selection-card-ticket
         - selection-card-time
         - selection-checkbox
+        - selection-row
 
     generation:
       description: Active generation flow inside a selection label (prompt textarea, submit, abort)
@@ -887,7 +893,7 @@ data_attrs:
     comments-dropdown: {scope: comments, src: 3, tests: 9}
     comments-error: {scope: comments, src: 1, tests: 1}
     comments-list: {scope: comments, src: 1, tests: 1}
-    comments-section: {scope: comments, src: 1, tests: 0}
+    comments-section: {scope: comments, src: 1, tests: 1}
     inline-reply: {scope: comments, src: 1, tests: 2}
     jira-comment: {scope: comments, src: 1, tests: 0}
     jira-comment-id: {scope: comments, src: 1, tests: 2}
@@ -962,7 +968,7 @@ data_attrs:
     step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 70, tests: 6}
+    ignore-events: {scope: reserved, src: 71, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -971,13 +977,13 @@ data_attrs:
     collapsed-dot-preview: {scope: selection, src: 1, tests: 0}
     dev-insights: {scope: selection, src: 1, tests: 0}
     latest-comment: {scope: selection, src: 1, tests: 1}
-    move-destination: {scope: selection, src: 1, tests: 1}
+    move-destination: {scope: selection, src: 1, tests: 2}
     open-thread: {scope: selection, src: 1, tests: 1}
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 18}
-    selection-card-body: {scope: selection, src: 1, tests: 0}
+    selection-card: {scope: selection, src: 3, tests: 12}
+    selection-card-body: {scope: selection, src: 1, tests: 1}
     selection-card-header: {scope: selection, src: 1, tests: 0}
     selection-card-ticket: {scope: selection, src: 1, tests: 0}
     selection-card-time: {scope: selection, src: 1, tests: 0}
@@ -985,8 +991,9 @@ data_attrs:
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 3, tests: 0}
     selection-label: {scope: selection, src: 1, tests: 19}
-    selection-menu: {scope: selection, src: 1, tests: 0}
+    selection-menu: {scope: selection, src: 2, tests: 0}
     selection-remove: {scope: selection, src: 2, tests: 0}
+    selection-row: {scope: selection, src: 1, tests: 1}
     unread-indicator: {scope: selection, src: 1, tests: 0}
     selection-location: {scope: selection-location, src: 2, tests: 4}
     selection-location-kind: {scope: selection-location, src: 2, tests: 1}
@@ -999,19 +1006,24 @@ data_attrs:
     due-date-filter: {scope: sidebar, src: 1, tests: 2}
     empty-state: {scope: sidebar, src: 1, tests: 0}
     filter-chips: {scope: sidebar, src: 1, tests: 0}
-    group-collapsible: {scope: sidebar, src: 1, tests: 10}
+    group-collapsible: {scope: sidebar, src: 1, tests: 11}
     group-detail: {scope: sidebar, src: 1, tests: 0}
     group-list: {scope: sidebar, src: 1, tests: 3}
     group-picker-flyout: {scope: sidebar, src: 1, tests: 1}
     group-ticket-summary: {scope: sidebar, src: 2, tests: 2}
     jira-status-banner: {scope: sidebar, src: 1, tests: 0}
+    list-order: {scope: sidebar, src: 1, tests: 0}
+    list-view-controls: {scope: sidebar, src: 1, tests: 0}
+    section-summary: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}
-    selection-tree: {scope: sidebar, src: 1, tests: 0}
+    selection-tree: {scope: sidebar, src: 1, tests: 1}
     sidebar: {scope: sidebar, src: 1, tests: 4}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
     sidebar-search: {scope: sidebar, src: 1, tests: 3}
     status-filter: {scope: sidebar, src: 1, tests: 2}
+    status-filter-attention: {scope: sidebar, src: 1, tests: 0}
     status-legend: {scope: sidebar, src: 1, tests: 0}
+    status-section: {scope: sidebar, src: 1, tests: 0}
     sync-offline-banner: {scope: sidebar, src: 1, tests: 2}
     sync-retry: {scope: sidebar, src: 1, tests: 0}
     ungrouped-section: {scope: sidebar, src: 1, tests: 2}

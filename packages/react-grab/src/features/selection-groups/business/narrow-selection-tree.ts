@@ -3,10 +3,12 @@ import type { SelectionGroup } from "../types.js";
 import type { SelectionTree } from "./selection-tree.js";
 
 export interface SelectionTreeNarrowing {
-  /** Picks selections (search, Flagged). A section with none of them hides. */
+  /** Picks selections (search, Flagged, the sidebar's status and Attention
+   *  chips). A section with none of them hides. */
   itemFilter?: (item: CommentItem) => boolean;
-  /** Picks groups (status chips, filter menu). A matching group shows even
-   *  when it has no selections; a selection shows only in a matching group. */
+  /** Picks groups (the filter menu's assignee, reporter, label and due date).
+   *  A matching group shows even when it has no selections; a selection
+   *  shows only in a matching group. */
   allowedGroupIds?: ReadonlySet<string> | null;
 }
 

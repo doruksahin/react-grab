@@ -1,4 +1,5 @@
 import { test, expect, type ReactGrabPageObject } from "../fixtures.js";
+import { openSelectionCard } from "../open-selection-card.js";
 import type { Page } from "@playwright/test";
 
 /**
@@ -24,11 +25,8 @@ const openDialogShell = async (page: Page, reactGrab: ReactGrabPageObject) => {
   await reactGrab.submitInput();
 
   await page.locator("[data-react-grab-toolbar-dashboard]").click();
-  await page
-    .locator("[data-react-grab-selection-card]")
-    .filter({ hasText: COMMENT_TEXT })
-    .locator("[data-react-grab-create-ticket]")
-    .click();
+  const card = await openSelectionCard(page, COMMENT_TEXT);
+  await card.locator("[data-react-grab-create-ticket]").click();
   await expect(page.locator("[data-react-grab-jira-dialog]")).toBeVisible({
     timeout: 5000,
   });

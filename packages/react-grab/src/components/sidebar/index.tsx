@@ -16,6 +16,12 @@ import type { SidebarFocusRequest } from "../../features/sidebar/hooks/use-sideb
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
 import { StatusFilter } from "./status-filter.js";
+import {
+  ListViewControls,
+  type SelectionGrouping,
+} from "./list-view-controls.jsx";
+import { useSidebarSelections } from "../../features/sidebar/hooks/use-sidebar-selections.js";
+import type { SelectionOrder } from "../../features/sidebar/business/order-selections.js";
 import { SyncOfflineBanner } from "./sync-offline-banner.js";
 import { FilterMenu } from "./filter-menu.js";
 import { FilterChips } from "./filter-chips.js";
@@ -123,6 +129,26 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = createSignal("");
   const [flaggedOnly, setFlaggedOnly] = createSignal(false);
+  const [attentionOnly, setAttentionOnly] = createSignal(false);
+  const [grouping, setGrouping] = createSignal<SelectionGrouping>("group");
+  const [order, setOrder] = createSignal<SelectionOrder>("attention");
+
+  // The chips keep Attention and a status apart; a status chosen in the
+  // filter menu turns Attention off the same way.
+  const changeFilterFromMenu = (next: FilterState) => {
+    if (next.statuses.size > 0) setAttentionOnly(false);
+    setFilterState(next);
+  };
+
+  const sidebarSelections = useSidebarSelections({
+    commentItems: () => props.commentItems ?? [],
+    groups: () => props.groups ?? [],
+    filter: filterState,
+    searchQuery,
+    flaggedOnly,
+    attentionOnly,
+    order,
+  });
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -261,9 +287,12 @@ export const Sidebar: Component<SidebarProps> = (props) => {
         fallback={
           <>
             <StatusFilter
-              groups={userFacingGroups()}
+              options={sidebarSelections.statusOptions()}
               filter={filterState()}
               onFilterChange={setFilterState}
+              attentionCount={sidebarSelections.attentionCount()}
+              attentionOnly={attentionOnly()}
+              onAttentionOnlyChange={setAttentionOnly}
             />
             <div class="min-h-0 flex-1 flex flex-col">
               <div
@@ -283,7 +312,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   assignees={getDistinctAssignees(userFacingGroups())}
                   reporters={getDistinctReporters(userFacingGroups())}
                   labels={getDistinctLabels(userFacingGroups())}
-                  onFilterChange={setFilterState}
+                  onFilterChange={changeFilterFromMenu}
                 />
                 <IconButton
                   label="Flagged only"
@@ -307,7 +336,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
               </div>
               <FilterChips
                 filter={filterState()}
-                onFilterChange={setFilterState}
+                onFilterChange={changeFilterFromMenu}
+              />
+              <ListViewControls
+                grouping={grouping()}
+                onGroupingChange={setGrouping}
+                order={order()}
+                onOrderChange={setOrder}
               />
 
               <Show
@@ -322,13 +357,13 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 }
               >
                 <SelectionTreePanel
-                  commentItems={props.commentItems ?? []}
+                  tree={sidebarSelections.tree()}
+                  statusSections={sidebarSelections.statusSections()}
+                  grouping={grouping()}
+                  statusOf={sidebarSelections.statusOf}
                   groups={props.groups ?? []}
-                  filter={filterState()}
                   selectedIds={selectedIds()}
                   onToggleSelect={toggleSelect}
-                  searchQuery={searchQuery()}
-                  flaggedOnly={flaggedOnly()}
                   commentEditorToolbarVisible={
                     props.commentEditorToolbarVisible
                   }
