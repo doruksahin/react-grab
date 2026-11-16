@@ -311,6 +311,7 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
             onDeleteGroup={props.onDeleteGroup}
             onToggleGroupRevealed={props.onToggleGroupRevealed}
             onCopyGroup={props.onCopyGroup}
+            onArchiveGroup={props.onArchiveGroup}
             groupHeaderExtra={(group) => (
               <GroupTicketSummary
                 group={group}

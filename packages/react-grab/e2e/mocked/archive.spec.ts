@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "../fixtures.js";
+import { openGroupDetail } from "../open-group-detail.js";
 
 /**
  * ADR-0030: a group with a Jira ticket is archived instead of deleted. It
@@ -83,6 +84,37 @@ test.describe("Archive", { tag: ["@ADR-0030"] }, () => {
       groupCards.filter({ hasText: "Header alignment issue" }),
     ).toHaveCount(1);
     expect(mockServer.requests("restoreGroup")).toHaveLength(1);
+  });
+
+  test("a ticketed group's header archives the whole group", async ({
+    page,
+    mockServer,
+  }) => {
+    await page.keyboard.press("Escape");
+    await page.locator("[data-react-grab-toolbar-dashboard]").click();
+    const group = dashboard(page)
+      .locator("[data-react-grab-group-collapsible]")
+      .filter({ hasText: "Header alignment issue" });
+    await group.hover();
+    await group.getByRole("button", { name: "Archive group" }).click();
+
+    await expect(group).toHaveCount(0);
+    await expect(archivedSection(page)).toContainText("2");
+    expect(mockServer.requests("archiveGroup")).toHaveLength(1);
+  });
+
+  test("the group detail view archives the whole group", async ({
+    page,
+    mockServer,
+  }) => {
+    await page.keyboard.press("Escape");
+    await page.locator("[data-react-grab-toolbar-dashboard]").click();
+    await openGroupDetail(page, "Header alignment issue");
+    await page.locator("[data-react-grab-group-detail-archive]").click();
+
+    await expect(page.locator("[data-react-grab-group-detail]")).toHaveCount(0);
+    await expect(archivedSection(page)).toContainText("2");
+    expect(mockServer.requests("archiveGroup")).toHaveLength(1);
   });
 
   test("Undo in the toast restores it", async ({ page, mockServer }) => {

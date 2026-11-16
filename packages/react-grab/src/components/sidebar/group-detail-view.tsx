@@ -4,6 +4,10 @@ import type { CommentItem } from "../../types.js";
 import { DetailHeader } from "./detail-header.js";
 import { SelectionList } from "./selection-list.js";
 import { JiraCreateButton } from "./jira-create-button.js";
+import { Button } from "../ui/button.js";
+import { IconArchive } from "../icons/icon-archive.jsx";
+import { archiveLabel } from "../selection/archive-labels.js";
+import { canArchive } from "../../features/selection-groups/business/archive-policy.js";
 import { getStatusLabel } from "../../features/sidebar/status-colors.js";
 import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 
@@ -22,6 +26,8 @@ interface GroupDetailViewProps {
   ) => void;
   onRemoveItem?: (itemId: string) => void;
   canRemoveItem?: (itemId: string) => boolean;
+  /** Archives the whole group with its ticket (ADR-0030). */
+  onArchive?: (groupId: string) => void;
 }
 
 export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
@@ -57,6 +63,23 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
         <JiraCreateButton
           onOpen={() => props.onCreateTicket?.(props.group, groupItems())}
         />
+      </Show>
+      {/* A ticketed group is archived as a whole: its comments share one ticket. */}
+      <Show when={props.onArchive && canArchive(props.group)}>
+        <div class="shrink-0 border-t border-border p-3">
+          <Button
+            data-react-grab-ignore-events
+            data-react-grab-group-detail-archive
+            type="button"
+            variant="outline"
+            size="sm"
+            class="w-full"
+            onClick={() => props.onArchive?.(props.group.id)}
+          >
+            <IconArchive size={12} />
+            {archiveLabel(props.group, groupItems().length)}
+          </Button>
+        </div>
       </Show>
     </div>
   );
