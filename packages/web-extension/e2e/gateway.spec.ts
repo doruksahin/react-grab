@@ -140,6 +140,36 @@ test.describe(
       expect(upserts[0]?.url).not.toContain(OTHER_WORKSPACE);
     });
 
+    test("a comment's steps pass the gateway, and a typed value never does @ADR-0025", async ({
+      page,
+      syncServer,
+    }) => {
+      await page.goto(TEST_PAGE_URL);
+      await waitForOverlay(page);
+      await loadPageMessaging(page);
+
+      const steps = [
+        { type: "navigate", url: TEST_PAGE_URL },
+        { type: "change", selectors: ["#coupon"], value: "" },
+      ];
+      const messenger = pageRequestMessenger(page);
+      expect(
+        await messenger.upsertComment([
+          {
+            ...comments[0],
+            steps: [{ type: "change", selectors: ["#coupon"], value: "SECRET" }],
+          },
+        ]),
+      ).toContain("storage.upsertComment got invalid arguments");
+      expect(await messenger.upsertComment([{ ...comments[0], steps }])).toBe(
+        "accepted",
+      );
+
+      const upserts = syncServer.requests("upsertComment");
+      expect(upserts).toHaveLength(1);
+      expect(upserts[0]?.body).toMatchObject({ steps });
+    });
+
     test("a Blob screenshot is uploaded and loaded back through both message hops", async ({
       page,
       syncServer,

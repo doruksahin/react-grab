@@ -21,12 +21,16 @@ To make a ZIP for the Chrome Web Store, run `pnpm --filter @react-grab/web-exten
 
 1. Right-click the extension icon and click **Options**.
 2. Under **Sync server**, enter the server URL and the API token, then click **Save server**. Chrome asks for access to the server's origin. Accept it.
-3. Under **Enable a site**, enter the site address, the workspace and the Jira project key, then click **Enable site**. Chrome asks for access to the site. Accept it.
+3. Under **Enable a site**, enter the site address, the workspace and the Jira project key, then click **Enable site**. Chrome asks for access to the site. Accept it. Optionally select:
+   - **Record steps**: each new comment saves the clicks and field changes that led to it, as Chrome DevTools Recorder steps (ADR-0025). Typed values are never saved.
+   - **Record session**: each new comment links a replay of the last minutes (ADR-0021). Inputs are masked.
+
+   Both are off by default.
 4. Open or reload the site. The overlay starts and loads the workspace's comments.
 
 To get the token, see "Environment variables" in the root `CLAUDE.md`. Do not put the token in a file in this repository.
 
-To change a site's workspace, enable the site again with the new values. Open tabs of that site reload. To stop the overlay on a site, click **Disable** next to it. Open tabs of that site reload and the extension gives back its access to that site.
+To change a site's workspace or what it records, enable the site again with the new values. Open tabs of that site reload. To stop the overlay on a site, click **Disable** next to it. Open tabs of that site reload and the extension gives back its access to that site.
 
 On a `localhost` site the host app owns the overlay and its sync (`initSync` with its own token, ADR-0020). The extension then only relays the enabled flag and the toolbar state; it starts no overlay and no sync of its own there.
 

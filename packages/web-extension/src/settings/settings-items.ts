@@ -5,6 +5,7 @@ import {
   siteOriginSchema,
   siteSettingsSchema,
 } from "./settings-schema.js";
+import { addRecordingSettings } from "./migrate-sites.js";
 import type {
   SiteSettings,
   SiteSettingsByOrigin,
@@ -19,7 +20,11 @@ export const apiTokenItem = storage.defineItem<string>("local:sync_api_token");
 
 export const sitesItem = storage.defineItem<SiteSettingsByOrigin>(
   "local:sync_sites",
-  { fallback: {} },
+  {
+    fallback: {},
+    version: 2,
+    migrations: { 2: addRecordingSettings },
+  },
 );
 
 export const readSyncSettings = async (): Promise<SyncSettings> => {

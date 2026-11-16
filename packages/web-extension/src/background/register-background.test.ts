@@ -213,6 +213,8 @@ describe("registerBackground", () => {
     await saveSite(SITE_ORIGIN, {
       workspace: "app-workspace",
       jiraProjectKey: "ATT",
+      recordSteps: false,
+      recordSession: false,
     });
     await saveApiToken("unit-test-token");
 
@@ -221,6 +223,8 @@ describe("registerBackground", () => {
     ).toEqual({
       workspace: "app-workspace",
       jiraProjectKey: "ATT",
+      recordSteps: false,
+      recordSession: false,
     });
   });
 
@@ -239,7 +243,7 @@ describe("registerBackground", () => {
   });
 
   it("writes sites only on a request from an extension page", async () => {
-    const site = { workspace: "app-workspace", jiraProjectKey: "ATT" };
+    const site = { workspace: "app-workspace", jiraProjectKey: "ATT", recordSteps: false, recordSession: false };
 
     sendAsOwnContentScript();
     await expect(

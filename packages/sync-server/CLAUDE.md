@@ -57,6 +57,8 @@ pnpm --filter @react-grab/sync-server db:migrate:local
 pnpm --filter @react-grab/sync-server db:reset:local
 ```
 
+When a release adds a migration, apply it to production before deploying the Worker: `pnpm --filter @react-grab/sync-server db:migrate:prod`, then `wrangler deploy`. A Worker whose schema has a column the database lacks fails every query on that table.
+
 ## JIRA service
 
 `src/services/jira.service.ts` is the main JIRA integration point. Capabilities:

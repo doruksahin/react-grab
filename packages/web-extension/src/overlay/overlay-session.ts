@@ -1,6 +1,7 @@
 import type { ReactGrabAPI, ToolbarState } from "react-grab";
 import { LOCALHOST_PAGE_API_WAIT_MS } from "../constants.js";
 import type { OverlayState } from "../types.js";
+import type { CaptureOptions } from "./capture-options.js";
 import { createExtensionApi } from "./create-extension-api.js";
 import { isLocalhostHost } from "./is-localhost-host.js";
 import { isSameToolbarState } from "./is-same-toolbar-state.js";
@@ -11,7 +12,7 @@ interface OverlaySessionDeps {
 }
 
 export interface OverlaySession {
-  start: (overlayState: OverlayState) => Promise<void>;
+  start: (overlayState: OverlayState, capture: CaptureOptions) => Promise<void>;
   setEnabled: (enabled: boolean) => Promise<void>;
   applyToolbarState: (toolbarState: ToolbarState) => Promise<void>;
   adoptPageApi: (pageApi: ReactGrabAPI) => void;
@@ -26,6 +27,7 @@ export const createOverlaySession = (
   let lastSavedToolbarState: ToolbarState | null = null;
   let isApplyingExternalState = false;
   let unsubscribeToolbarState: (() => void) | null = null;
+  let capture: CaptureOptions = {};
 
   const saveToolbarStateFromApi = (toolbarState: ToolbarState): void => {
     if (isApplyingExternalState) return;
@@ -61,7 +63,7 @@ export const createOverlaySession = (
       return pageApi ? attach(pageApi) : null;
     }
 
-    extensionApi = createExtensionApi();
+    extensionApi = createExtensionApi(capture);
     return attach(extensionApi);
   };
 
@@ -78,7 +80,8 @@ export const createOverlaySession = (
   };
 
   return {
-    start: async (overlayState) => {
+    start: async (overlayState, captureForSite) => {
+      capture = captureForSite;
       const api = await resolveApi();
       if (!api) return;
       if (overlayState.toolbarState) {

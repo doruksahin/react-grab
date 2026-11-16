@@ -225,6 +225,25 @@ features:
       - packages/react-grab/src/components/renderer.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
 
+  reproduce-steps:
+    description: Captures the clicks and field changes that lead to each new comment as Chrome DevTools Recorder steps, stored on the comment; values never stored; markers in the rrweb recording (ADR-0025)
+    status: implemented
+    adrs: [ADR-0025, ADR-0021, ADR-0023]
+    files:
+      - packages/react-grab/src/features/reproduce-steps/business/build-step.ts
+      - packages/react-grab/src/features/reproduce-steps/business/selection-press.ts
+      - packages/react-grab/src/features/reproduce-steps/business/step-buffer.ts
+      - packages/react-grab/src/features/reproduce-steps/business/step-selectors.ts
+      - packages/react-grab/src/features/reproduce-steps/business/to-reproduce-steps.ts
+      - packages/react-grab/src/features/reproduce-steps/business/user-input.ts
+      - packages/react-grab/src/features/reproduce-steps/hooks/create-step-capture.ts
+      - packages/react-grab/src/features/reproduce-steps/index.ts
+      - packages/react-grab/src/features/reproduce-steps/limits.ts
+      - packages/react-grab/src/features/reproduce-steps/types.ts
+      - packages/sync-server/src/schemas/reproduce-step.ts
+      - packages/web-extension/src/overlay/capture-options.ts
+      - packages/web-extension/src/settings/migrate-sites.ts
+
   selection-location:
     description: Says where a selection not on the page was made (another page, another site, gone) and offers Open page for same-site pages (ADR-0024)
     status: implemented
@@ -898,7 +917,7 @@ data_attrs:
     overlay-canvas: {scope: overlay, src: 1, tests: 0}
     product: {scope: overlay, src: 1, tests: 61}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 67, tests: 6}
+    ignore-events: {scope: reserved, src: 65, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -1156,4 +1175,8 @@ decree:
     ADR-0024:
       title: Show where a selection was made when its element is not on the page
       file: decree/adr/0024-show-where-a-selection-was-made.md
+      status: accepted
+    ADR-0025:
+      title: Capture the steps to a selection as a Chrome Recorder flow
+      file: decree/adr/0025-capture-reproduce-steps-as-a-chrome-recorder-flow.md
       status: accepted

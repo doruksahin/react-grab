@@ -8,6 +8,7 @@ import {
   type OverlaySession,
   createOverlaySession,
 } from "./overlay-session.js";
+import { captureOptions } from "./capture-options.js";
 import { startSync } from "./start-sync.js";
 
 const startSession = async (session: OverlaySession): Promise<void> => {
@@ -15,7 +16,7 @@ const startSession = async (session: OverlaySession): Promise<void> => {
     pageRequestMessenger.sendMessage("getOverlayState"),
     pageRequestMessenger.sendMessage("getSiteSettings"),
   ]);
-  await session.start(overlayState);
+  await session.start(overlayState, captureOptions(site));
   if (site && session.ownsApi()) await startSync(site);
 };
 

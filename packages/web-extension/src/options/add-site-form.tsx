@@ -5,7 +5,7 @@ import {
 } from "../settings/settings-schema.js";
 import { settingsMessenger } from "../messaging/extension-messengers.js";
 import { describeError } from "./describe-error.js";
-import { formField } from "./form-field.js";
+import { formCheckbox, formField } from "./form-field.js";
 import { requestOriginPermission } from "./request-origin-permission.js";
 
 interface AddSiteFormProps {
@@ -20,6 +20,8 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
     const site = siteSettingsSchema.parse({
       workspace: formField(form, "workspace"),
       jiraProjectKey: formField(form, "jiraProjectKey"),
+      recordSteps: formCheckbox(form, "recordSteps"),
+      recordSession: formCheckbox(form, "recordSession"),
     });
     await requestOriginPermission(origin);
     await settingsMessenger.sendMessage("saveSite", { origin, site });
@@ -56,6 +58,16 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
         <label>
           Jira project key
           <input name="jiraProjectKey" required placeholder="ATT" />
+        </label>
+        <label>
+          <input name="recordSteps" type="checkbox" />
+          Record steps: save the clicks and field changes that led to each
+          comment. Typed values are never saved.
+        </label>
+        <label>
+          <input name="recordSession" type="checkbox" />
+          Record session: keep the last minutes as a replay and link it from
+          each comment. Inputs are masked.
         </label>
         <button type="submit">Enable site</button>
         <p role="status">{status()}</p>

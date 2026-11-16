@@ -6,6 +6,94 @@
  * OpenAPI spec version: 0.1.0
  */
 import { customFetch } from './custom-fetch.js';
+export type NavigateStepType = typeof NavigateStepType[keyof typeof NavigateStepType];
+
+
+export const NavigateStepType = {
+  navigate: 'navigate',
+} as const;
+
+export interface NavigateStep {
+  type: NavigateStepType;
+  /** @maxLength 2048 */
+  url: string;
+}
+
+export type ClickStepType = typeof ClickStepType[keyof typeof ClickStepType];
+
+
+export const ClickStepType = {
+  click: 'click',
+} as const;
+
+export type ClickStepAssertedEventsItemType = typeof ClickStepAssertedEventsItemType[keyof typeof ClickStepAssertedEventsItemType];
+
+
+export const ClickStepAssertedEventsItemType = {
+  navigation: 'navigation',
+} as const;
+
+export type ClickStepAssertedEventsItem = {
+  type: ClickStepAssertedEventsItemType;
+  /** @maxLength 2048 */
+  url: string;
+};
+
+export interface ClickStep {
+  type: ClickStepType;
+  /**
+     * Alternative selectors in Recorder order: aria/…, CSS, text/…
+     * @minItems 1
+     * @maxItems 3
+     * @items.minLength 1
+     * @items.maxLength 512
+     */
+  selectors: string[];
+  offsetX: number;
+  offsetY: number;
+  /**
+     * Set when the click led to another page in the app
+     * @maxItems 1
+     */
+  assertedEvents?: ClickStepAssertedEventsItem[];
+}
+
+export type ChangeStepType = typeof ChangeStepType[keyof typeof ChangeStepType];
+
+
+export const ChangeStepType = {
+  change: 'change',
+} as const;
+
+/**
+ * Always empty: input values are never stored
+ */
+export type ChangeStepValue = typeof ChangeStepValue[keyof typeof ChangeStepValue];
+
+
+export const ChangeStepValue = {
+  '': '',
+} as const;
+
+export interface ChangeStep {
+  type: ChangeStepType;
+  /**
+     * Alternative selectors in Recorder order: aria/…, CSS, text/…
+     * @minItems 1
+     * @maxItems 3
+     * @items.minLength 1
+     * @items.maxLength 512
+     */
+  selectors: string[];
+  /** Always empty: input values are never stored */
+  value: ChangeStepValue;
+}
+
+/**
+ * One Chrome DevTools Recorder step that led to the selection (ADR-0025)
+ */
+export type ReproduceStep = NavigateStep | ClickStep | ChangeStep;
+
 export type HealthCheck200Status = typeof HealthCheck200Status[keyof typeof HealthCheck200Status];
 
 
@@ -52,6 +140,11 @@ export type ListComments200Item = {
   screenshotElement?: string;
   /** Link to the replay of how the user got here (SPEC-020) */
   recordingUrl?: string;
+  /**
+     * Chrome DevTools Recorder steps that led to the selection (ADR-0025)
+     * @maxItems 51
+     */
+  steps?: ReproduceStep[];
   jiraTicketId?: string;
   capturedBy?: string;
 };
@@ -91,6 +184,11 @@ export type UpsertCommentBody = {
   screenshotElement?: string;
   /** Link to the replay of how the user got here (SPEC-020) */
   recordingUrl?: string;
+  /**
+     * Chrome DevTools Recorder steps that led to the selection (ADR-0025)
+     * @maxItems 51
+     */
+  steps?: ReproduceStep[];
   jiraTicketId?: string;
   capturedBy?: string;
 };

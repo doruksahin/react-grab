@@ -369,6 +369,11 @@ export interface RecordingConfig {
   windowMinutes?: number;
 }
 
+export interface StepsConfig {
+  /** Capture the clicks and field changes that lead to each new comment, as Chrome Recorder steps (ADR-0025). @default false */
+  enabled: boolean;
+}
+
 export interface Options {
   enabled?: boolean;
   activationMode?: ActivationMode;
@@ -386,6 +391,7 @@ export interface Options {
   sync?: SyncConfig;
   screenshot?: ScreenshotConfig;
   recording?: RecordingConfig;
+  steps?: StepsConfig;
   /**
    * Saved labels show as pins that open their card on click (ADR-0022
    * step 3). `false` shows them as open labels with no pin (SPEC-016 AC1-3).

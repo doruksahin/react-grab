@@ -54,10 +54,14 @@ describe("sync gateway", () => {
     await saveSite(SITE_ORIGIN, {
       workspace: "app-workspace",
       jiraProjectKey: "ATT",
+      recordSteps: false,
+      recordSession: false,
     });
     await saveSite(OTHER_SITE_ORIGIN, {
       workspace: "other-workspace",
       jiraProjectKey: "OTH",
+      recordSteps: false,
+      recordSession: false,
     });
   });
 

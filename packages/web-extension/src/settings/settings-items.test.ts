@@ -26,12 +26,14 @@ describe("settings items", () => {
     await saveSite("https://app.example.test/some/page", {
       workspace: " app ",
       jiraProjectKey: "ATT",
+      recordSteps: false,
+      recordSession: false,
     });
 
     expect(await readSyncSettings()).toMatchObject({
       serverUrl: "https://sync.example.test",
       sites: {
-        "https://app.example.test": { workspace: "app", jiraProjectKey: "ATT" },
+        "https://app.example.test": { workspace: "app", jiraProjectKey: "ATT", recordSteps: false, recordSession: false },
       },
     });
   });
@@ -71,6 +73,8 @@ describe("settings items", () => {
       saveSite("https://app.example.test", {
         workspace: "app",
         jiraProjectKey: "not a key",
+        recordSteps: false,
+        recordSession: false,
       }),
     ).rejects.toThrow();
     expect(await readSyncSettings()).toEqual({
@@ -81,8 +85,8 @@ describe("settings items", () => {
   });
 
   it("removes only the given sites", async () => {
-    await saveSite("https://a.test", { workspace: "a", jiraProjectKey: "A" });
-    await saveSite("https://b.test", { workspace: "b", jiraProjectKey: "B" });
+    await saveSite("https://a.test", { workspace: "a", jiraProjectKey: "A", recordSteps: false, recordSession: false });
+    await saveSite("https://b.test", { workspace: "b", jiraProjectKey: "B", recordSteps: false, recordSession: false });
 
     await removeSites(["https://a.test"]);
 

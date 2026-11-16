@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { ReproduceSteps } from "./reproduce-step.js";
 
 export const SelectionStatus = z
   .enum(["open", "ticketed", "resolved"])
@@ -35,6 +36,10 @@ export const CommentItem = z.object({
     .openapi({
       description: "Link to the replay of how the user got here (SPEC-020)",
     }),
+  steps: ReproduceSteps.optional().openapi({
+    description:
+      "Chrome DevTools Recorder steps that led to the selection (ADR-0025)",
+  }),
   jiraTicketId: z.string().optional(),
   capturedBy: z.string().optional(),
 });

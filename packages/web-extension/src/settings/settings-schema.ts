@@ -44,4 +44,6 @@ export const siteSettingsSchema = z.strictObject({
     .string()
     .trim()
     .regex(/^[A-Z][A-Z0-9_]*$/, "Enter a Jira project key, for example ATT"),
+  recordSteps: z.boolean(),
+  recordSession: z.boolean(),
 }) satisfies z.ZodType<SiteSettings>;

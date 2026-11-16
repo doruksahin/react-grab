@@ -24,3 +24,4 @@
 | ADR-0022 | ADR-0022 Overlay UI in three layers: tokens, primitives, feature components | accepted | 2026-11-15 |  |
 | ADR-0023 | ADR-0023 Run the overlay with sync on any site through the browser extension | accepted | 2026-11-15 |  |
 | ADR-0024 | ADR-0024 Show where a selection was made when its element is not on the page | accepted | 2026-11-16 |  |
+| ADR-0025 | ADR-0025 Capture the steps to a selection as a Chrome Recorder flow | accepted | 2026-11-16 |  |

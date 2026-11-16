@@ -39,11 +39,14 @@ import {
   FEEDBACK_DURATION_MS,
   MAX_COMMENT_ITEMS,
   NEXTJS_REVALIDATION_DELAY_MS,
+  OVERLAY_EVENT_BOUNDARY_ATTRIBUTE,
+  STEP_CUSTOM_EVENT_TAG,
   TOOLBAR_DEFAULT_POSITION_RATIO,
   ZOOM_DETECTION_THRESHOLD,
 } from "../constants.js";
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
 import { createSessionRecorder } from "../features/session-recording/index.js";
+import { createStepCapture } from "../features/reproduce-steps/index.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
 import { ticketScopeFor } from "../features/selection-groups/business/membership.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
@@ -373,6 +376,15 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       ? createSessionRecorder(recordingConfig)
       : null;
     onCleanup(() => sessionRecorder?.stop());
+
+    // ADR-0025: the clicks and field changes that lead to each new comment.
+    const stepCapture = pluginRegistry.store.options.steps?.enabled
+      ? createStepCapture({
+          isPaused: () => isActivated(),
+          onStep: (step) => sessionRecorder?.mark(STEP_CUSTOM_EVENT_TAG, step),
+        })
+      : null;
+    onCleanup(() => stepCapture?.stop());
 
     const updateToolbarState = (updates: Partial<ToolbarState>) => {
       const currentState = currentToolbarState() ?? loadToolbarState();
@@ -854,6 +866,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         timestamp: Date.now(),
         revealed: visibility.selectionsRevealed(),
         ...getPageContext(),
+        steps: stepCapture?.take(),
       };
       const groupId = selectionGroups.ensureGroupForItem(
         itemSeed,
@@ -1679,7 +1692,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       "pointerdown",
       (event: PointerEvent) => {
         if (!event.isPrimary || event.button !== 0 || !isPromptMode()) return;
-        if (isEventFromOverlay(event, "data-react-grab-ignore-events")) return;
+        if (isEventFromOverlay(event, OVERLAY_EVENT_BOUNDARY_ATTRIBUTE)) return;
         event.preventDefault();
         event.stopImmediatePropagation();
         const bounds = selectionBounds();
@@ -1700,7 +1713,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       (event: PointerEvent) => {
         if (!event.isPrimary || isPromptMode() || store.contextMenuPosition)
           return;
-        if (isEventFromOverlay(event, "data-react-grab-ignore-events")) return;
+        if (isEventFromOverlay(event, OVERLAY_EVENT_BOUNDARY_ATTRIBUTE)) return;
         actions.setPointer({ x: event.clientX, y: event.clientY });
         if (isDragging())
           scheduleDragPreviewUpdate(event.clientX, event.clientY);
@@ -2005,7 +2018,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     eventListenerManager.addWindowListener(
       "focusin",
       (event: FocusEvent) => {
-        if (isEventFromOverlay(event, "data-react-grab-ignore-events")) {
+        if (isEventFromOverlay(event, OVERLAY_EVENT_BOUNDARY_ATTRIBUTE)) {
           event.stopPropagation();
         }
       },

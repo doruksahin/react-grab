@@ -20,6 +20,7 @@ import type {
   ActionContext,
   ScreenshotConfig,
   RecordingConfig,
+  StepsConfig,
 } from "../types.js";
 import { DEFAULT_THEME, deepMergeTheme } from "./theme.js";
 import {
@@ -42,6 +43,7 @@ interface OptionsState {
   freezeReactUpdates: boolean;
   screenshot?: ScreenshotConfig;
   recording?: RecordingConfig;
+  steps?: StepsConfig;
 }
 
 const DEFAULT_OPTIONS: OptionsState = {

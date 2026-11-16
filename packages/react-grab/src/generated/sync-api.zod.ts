@@ -22,6 +22,24 @@ export const ListCommentsParams = zod.object({
   "id": zod.string().describe('Workspace ID')
 })
 
+export const listCommentsResponseStepsItemOneUrlMax = 2048;
+
+export const listCommentsResponseStepsItemTwoSelectorsItemMax = 512;
+
+export const listCommentsResponseStepsItemTwoSelectorsMax = 3;
+
+export const listCommentsResponseStepsItemTwoAssertedEventsItemUrlMax = 2048;
+
+export const listCommentsResponseStepsItemTwoAssertedEventsMax = 1;
+
+export const listCommentsResponseStepsItemThreeSelectorsItemMax = 512;
+
+export const listCommentsResponseStepsItemThreeSelectorsMax = 3;
+
+export const listCommentsResponseStepsMax = 51;
+
+
+
 export const ListCommentsResponseItem = zod.object({
   "id": zod.string(),
   "groupId": zod.string(),
@@ -40,6 +58,23 @@ export const ListCommentsResponseItem = zod.object({
   "screenshotFullPage": zod.string().optional().describe('R2 key for full-page screenshot'),
   "screenshotElement": zod.string().optional().describe('R2 key for element screenshot'),
   "recordingUrl": zod.string().optional().describe('Link to the replay of how the user got here (SPEC-020)'),
+  "steps": zod.array(zod.union([zod.object({
+  "type": zod.enum(['navigate']),
+  "url": zod.url().max(listCommentsResponseStepsItemOneUrlMax)
+}),zod.object({
+  "type": zod.enum(['click']),
+  "selectors": zod.array(zod.string().min(1).max(listCommentsResponseStepsItemTwoSelectorsItemMax)).min(1).max(listCommentsResponseStepsItemTwoSelectorsMax).describe('Alternative selectors in Recorder order: aria/…, CSS, text/…'),
+  "offsetX": zod.number(),
+  "offsetY": zod.number(),
+  "assertedEvents": zod.array(zod.object({
+  "type": zod.enum(['navigation']),
+  "url": zod.url().max(listCommentsResponseStepsItemTwoAssertedEventsItemUrlMax)
+})).max(listCommentsResponseStepsItemTwoAssertedEventsMax).optional().describe('Set when the click led to another page in the app')
+}),zod.object({
+  "type": zod.enum(['change']),
+  "selectors": zod.array(zod.string().min(1).max(listCommentsResponseStepsItemThreeSelectorsItemMax)).min(1).max(listCommentsResponseStepsItemThreeSelectorsMax).describe('Alternative selectors in Recorder order: aria/…, CSS, text/…'),
+  "value": zod.enum(['']).describe('Always empty: input values are never stored')
+})]).describe('One Chrome DevTools Recorder step that led to the selection (ADR-0025)')).max(listCommentsResponseStepsMax).optional().describe('Chrome DevTools Recorder steps that led to the selection (ADR-0025)'),
   "jiraTicketId": zod.string().optional(),
   "capturedBy": zod.string().optional()
 })
@@ -53,6 +88,24 @@ export const UpsertCommentParams = zod.object({
   "id": zod.string().describe('Workspace ID'),
   "commentId": zod.string().describe('Comment ID')
 })
+
+export const upsertCommentBodyStepsItemOneUrlMax = 2048;
+
+export const upsertCommentBodyStepsItemTwoSelectorsItemMax = 512;
+
+export const upsertCommentBodyStepsItemTwoSelectorsMax = 3;
+
+export const upsertCommentBodyStepsItemTwoAssertedEventsItemUrlMax = 2048;
+
+export const upsertCommentBodyStepsItemTwoAssertedEventsMax = 1;
+
+export const upsertCommentBodyStepsItemThreeSelectorsItemMax = 512;
+
+export const upsertCommentBodyStepsItemThreeSelectorsMax = 3;
+
+export const upsertCommentBodyStepsMax = 51;
+
+
 
 export const UpsertCommentBody = zod.object({
   "id": zod.string(),
@@ -72,6 +125,23 @@ export const UpsertCommentBody = zod.object({
   "screenshotFullPage": zod.string().optional().describe('R2 key for full-page screenshot'),
   "screenshotElement": zod.string().optional().describe('R2 key for element screenshot'),
   "recordingUrl": zod.string().optional().describe('Link to the replay of how the user got here (SPEC-020)'),
+  "steps": zod.array(zod.union([zod.object({
+  "type": zod.enum(['navigate']),
+  "url": zod.url().max(upsertCommentBodyStepsItemOneUrlMax)
+}),zod.object({
+  "type": zod.enum(['click']),
+  "selectors": zod.array(zod.string().min(1).max(upsertCommentBodyStepsItemTwoSelectorsItemMax)).min(1).max(upsertCommentBodyStepsItemTwoSelectorsMax).describe('Alternative selectors in Recorder order: aria/…, CSS, text/…'),
+  "offsetX": zod.number(),
+  "offsetY": zod.number(),
+  "assertedEvents": zod.array(zod.object({
+  "type": zod.enum(['navigation']),
+  "url": zod.url().max(upsertCommentBodyStepsItemTwoAssertedEventsItemUrlMax)
+})).max(upsertCommentBodyStepsItemTwoAssertedEventsMax).optional().describe('Set when the click led to another page in the app')
+}),zod.object({
+  "type": zod.enum(['change']),
+  "selectors": zod.array(zod.string().min(1).max(upsertCommentBodyStepsItemThreeSelectorsItemMax)).min(1).max(upsertCommentBodyStepsItemThreeSelectorsMax).describe('Alternative selectors in Recorder order: aria/…, CSS, text/…'),
+  "value": zod.enum(['']).describe('Always empty: input values are never stored')
+})]).describe('One Chrome DevTools Recorder step that led to the selection (ADR-0025)')).max(upsertCommentBodyStepsMax).optional().describe('Chrome DevTools Recorder steps that led to the selection (ADR-0025)'),
   "jiraTicketId": zod.string().optional(),
   "capturedBy": zod.string().optional()
 })

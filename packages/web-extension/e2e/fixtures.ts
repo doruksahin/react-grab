@@ -79,10 +79,14 @@ export const ENABLED_SITES: SiteSettingsByOrigin = {
   [ENABLED_SITE_ORIGIN]: {
     workspace: TEST_WORKSPACE,
     jiraProjectKey: TEST_JIRA_PROJECT_KEY,
+    recordSteps: false,
+    recordSession: false,
   },
   [LOCALHOST_SITE_ORIGIN]: {
     workspace: TEST_WORKSPACE,
     jiraProjectKey: TEST_JIRA_PROJECT_KEY,
+    recordSteps: false,
+    recordSession: false,
   },
 };
 
@@ -94,6 +98,9 @@ const configureSync = async (serviceWorker: Worker): Promise<void> => {
         sync_server_url: serverUrl,
         sync_api_token: apiToken,
         sync_sites: sites,
+        // WXT storage version of sync_sites (settings-items.ts), so the
+        // seeded value is not migrated again.
+        sync_sites$: { v: 2 },
       });
     },
     {

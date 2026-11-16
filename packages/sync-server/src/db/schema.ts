@@ -6,6 +6,7 @@ import {
   index,
   primaryKey,
 } from "drizzle-orm/sqlite-core";
+import type { ReproduceStepValue } from "../schemas/reproduce-step.js";
 
 export const comments = sqliteTable(
   "comments",
@@ -30,6 +31,7 @@ export const comments = sqliteTable(
     screenshotFullPage: text("screenshot_full_page"),
     screenshotElement: text("screenshot_element"),
     recordingUrl: text("recording_url"),
+    steps: text("steps", { mode: "json" }).$type<ReproduceStepValue[]>(),
     jiraTicketId: text("jira_ticket_id"),
     capturedBy: text("captured_by"),
   },
