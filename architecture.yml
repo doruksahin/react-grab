@@ -1024,7 +1024,8 @@ data_attrs:
 api_contract:
   description: Zod schemas → OpenAPI spec → Orval codegen → typed fetch clients
   source_of_truth: packages/sync-server/src/schemas/index.ts
-  openapi_spec: packages/sync-server/openapi.json
+  # The spec itself (openapi.json) is generated and gitignored; this is its exporter.
+  openapi_spec_exporter: packages/sync-server/src/export-spec.ts
   consumers:
     react-grab: packages/react-grab/src/generated/sync-api.ts
     dashboard: packages/dashboard/src/api/endpoints/
