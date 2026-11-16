@@ -24,7 +24,6 @@ const Wrapper = (props: { children: JSX.Element }) => (
     value={{
       storage: () => storage,
       jira: () => null,
-      jiraProjectKey: () => null,
       refreshJiraStatus: async () => {},
     }}
   >

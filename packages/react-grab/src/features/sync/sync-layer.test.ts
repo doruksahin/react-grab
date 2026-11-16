@@ -28,7 +28,7 @@ const adapter = {
 };
 
 const jira = {
-  getSite: vi.fn<JiraPort["getSite"]>(),
+  getDestination: vi.fn<JiraPort["getDestination"]>(),
   listIssueTypes: vi.fn<JiraPort["listIssueTypes"]>(),
   listPriorities: vi.fn<JiraPort["listPriorities"]>(),
   listLabels: vi.fn<JiraPort["listLabels"]>(),
@@ -51,7 +51,6 @@ const makeComment = (id: string, commentText: string): CommentItem => ({
 const makeConfig = (overrides: Partial<SyncConfig> = {}): SyncConfig => ({
   enabled: true,
   workspace: "test-workspace",
-  jiraProjectKey: "ATT",
   storage: adapter,
   jira,
   syncRevealedState: true,
@@ -69,7 +68,6 @@ const resetPorts = () => {
   adapter.deleteComment.mockResolvedValue(undefined);
   adapter.upsertGroup.mockResolvedValue(undefined);
   adapter.deleteGroup.mockResolvedValue(undefined);
-  jira.getSite.mockResolvedValue({ siteUrl: "https://acme.atlassian.net" });
 };
 
 const serverComment = makeComment("server-1", "From the server");
@@ -196,7 +194,7 @@ describe("sync layer ports", () => {
     expect(layer.adapter()).toBeNull();
   });
 
-  it("asks the Jira port for the site and for the status of ticketed groups", async () => {
+  it("asks the Jira port for the status of ticketed groups", async () => {
     adapter.loadGroups.mockResolvedValue([
       { id: "group-1", name: "Checkout", createdAt: 1, jiraTicketId: "ATT-1" },
     ]);
@@ -215,10 +213,21 @@ describe("sync layer ports", () => {
     await layer.init(makeConfig());
 
     await vi.waitFor(() => {
-      expect(layer.jiraSiteHost()).toBe("acme.atlassian.net");
       expect(layer.groups()[0]).toMatchObject({ jiraStatus: "In Progress" });
     });
     expect(jira.getTicketStatus).toHaveBeenCalledWith("group-1");
+    layer.dispose();
+  });
+
+  it("warns that jiraProjectKey is deprecated, and still connects (ADR-0027)", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig({ jiraProjectKey: "OLD" }));
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("jiraProjectKey is deprecated"),
+    );
+    expect(layer.status()).toBe("synced");
+    warn.mockRestore();
     layer.dispose();
   });
 

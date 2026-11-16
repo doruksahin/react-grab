@@ -3,7 +3,6 @@ import { changedSiteOrigins } from "./changed-site-origins.js";
 
 const SITE = {
   workspace: "app",
-  jiraProjectKey: "ATT",
   recordSteps: false,
   recordSession: false,
 };
@@ -16,14 +15,12 @@ describe("changedSiteOrigins", () => {
           "https://kept.test": SITE,
           "https://removed.test": SITE,
           "https://new-workspace.test": SITE,
-          "https://new-project.test": SITE,
           "https://steps-on.test": SITE,
           "https://session-on.test": SITE,
         },
         {
           "https://kept.test": SITE,
           "https://new-workspace.test": { ...SITE, workspace: "other" },
-          "https://new-project.test": { ...SITE, jiraProjectKey: "OTH" },
           "https://steps-on.test": { ...SITE, recordSteps: true },
           "https://session-on.test": { ...SITE, recordSession: true },
           "https://added.test": SITE,
@@ -33,7 +30,6 @@ describe("changedSiteOrigins", () => {
       removed: ["https://removed.test"],
       reconfigured: [
         "https://new-workspace.test",
-        "https://new-project.test",
         "https://steps-on.test",
         "https://session-on.test",
       ],
@@ -41,10 +37,10 @@ describe("changedSiteOrigins", () => {
   });
 
   it("reloads nothing when the storage migration only adds the defaults", () => {
-    const { workspace, jiraProjectKey } = SITE;
+    const { workspace } = SITE;
     expect(
       changedSiteOrigins(
-        { "https://kept.test": { workspace, jiraProjectKey } },
+        { "https://kept.test": { workspace, jiraProjectKey: "ATT" } },
         { "https://kept.test": SITE },
       ),
     ).toEqual({ removed: [], reconfigured: [] });

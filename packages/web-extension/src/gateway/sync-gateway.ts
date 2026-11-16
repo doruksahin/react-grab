@@ -12,8 +12,6 @@ import {
   STORAGE_METHODS,
 } from "../messaging/port-requests.js";
 import { readSyncSettings } from "../settings/settings-items.js";
-import type { SiteSettings } from "../settings/types.js";
-import { bindSiteJiraProject } from "./bind-site-jira-project.js";
 import {
   GatewayRefusalError,
   assertTopFrameSender,
@@ -63,14 +61,14 @@ export interface SyncGateway {
   ) => Promise<PortMethodResult<JiraPort, Method>>;
 }
 
-interface SenderConnection {
-  config: SyncHttpConfig;
-  site: SiteSettings;
-}
-
+/**
+ * The sender's site decides the workspace; the workspace's destination on the
+ * server decides the Jira project (ADR-0027). No argument a page sends can
+ * name either.
+ */
 const resolveConnection = async (
   sender: Browser.runtime.MessageSender,
-): Promise<SenderConnection> => {
+): Promise<SyncHttpConfig> => {
   assertTopFrameSender(sender);
   const settings = await readSyncSettings();
   const site = findSenderSite(sender, settings.sites);
@@ -83,12 +81,9 @@ const resolveConnection = async (
     throw new GatewayRefusalError("the sync server is not configured");
   }
   return {
-    config: {
-      serverUrl: settings.serverUrl,
-      apiToken: settings.apiToken,
-      workspace: site.workspace,
-    },
-    site,
+    serverUrl: settings.serverUrl,
+    apiToken: settings.apiToken,
+    workspace: site.workspace,
   };
 };
 
@@ -96,11 +91,6 @@ interface PortCall<Port, Method extends keyof Port & string> {
   portName: PortName;
   schemas: Record<keyof Port & string, ArgumentSchema>;
   createPort: (config: SyncHttpConfig) => Port;
-  bindToSite: (
-    method: Method,
-    args: ReadonlyArray<unknown>,
-    site: SiteSettings,
-  ) => ReadonlyArray<unknown>;
   method: Method;
   args: ReadonlyArray<unknown>;
   sender: Browser.runtime.MessageSender;
@@ -132,20 +122,14 @@ const callPortMethod = async <
   call: PortCall<Port, Method>,
 ): Promise<PortMethodResult<Port, Method>> => {
   const validArgs = validateArguments(call);
-  const { config, site } = await resolveConnection(call.sender);
-  const port = call.createPort(config);
+  const port = call.createPort(await resolveConnection(call.sender));
   const result: PortMethodResult<Port, Method> = await Reflect.apply(
     port[call.method],
     port,
-    call.bindToSite(call.method, validArgs, site),
+    validArgs,
   );
   return result;
 };
-
-const unchangedArguments = (
-  _method: string,
-  args: ReadonlyArray<unknown>,
-): ReadonlyArray<unknown> => args;
 
 export const createSyncGateway = (
   factories: SyncPortFactories = HTTP_PORT_FACTORIES,
@@ -155,7 +139,6 @@ export const createSyncGateway = (
       portName: "storage",
       schemas: STORAGE_METHODS,
       createPort: factories.createStorage,
-      bindToSite: unchangedArguments,
       method,
       args,
       sender,
@@ -165,7 +148,6 @@ export const createSyncGateway = (
       portName: "jira",
       schemas: JIRA_METHODS,
       createPort: factories.createJira,
-      bindToSite: bindSiteJiraProject,
       method,
       args,
       sender,

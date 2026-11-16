@@ -54,7 +54,11 @@ export class JiraAccountService {
   }
 
   async add(input: AddJiraAccountInput): Promise<JiraAccountSummaryValue> {
-    const myself = await this.verify(input.siteUrl, input.email, input.apiToken);
+    const myself = await this.verify(
+      input.siteUrl,
+      input.email,
+      input.apiToken,
+    );
     const existing = await this.deps.accounts.findBySiteUser(
       input.siteUrl,
       myself.accountId,

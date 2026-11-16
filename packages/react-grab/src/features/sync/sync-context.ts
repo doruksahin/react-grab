@@ -7,7 +7,6 @@ export interface SyncContextValue {
   storage: Accessor<StorageAdapter | null>;
   /** Null when sync is off. */
   jira: Accessor<JiraPort | null>;
-  jiraProjectKey: Accessor<string | null>;
   /** Fetches one group's Jira status into the sync store. */
   refreshJiraStatus: (groupId: string) => Promise<void>;
 }
@@ -15,7 +14,6 @@ export interface SyncContextValue {
 const SyncContext = createContext<SyncContextValue>({
   storage: () => null,
   jira: () => null,
-  jiraProjectKey: () => null,
   refreshJiraStatus: async () => {},
 });
 

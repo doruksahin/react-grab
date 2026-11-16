@@ -497,8 +497,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             groupId={state().group.id}
             group={state().group}
             commentItems={state().items}
-            jiraProjectKey={props.jiraProjectKey ?? ""}
-            jiraSiteHost={props.jiraSiteHost}
             onTicketCreated={(groupId, ticketId, ticketUrl) => {
               // The dialog stays open to confirm the ticket; it closes via
               // its own Done button, which calls onClose.
@@ -516,8 +514,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           commentItems={props.commentItems ?? []}
           syncStatus={props.syncStatus ?? "local"}
           onRetrySync={props.onRetrySync}
-          jiraSiteHost={props.jiraSiteHost}
-          jiraProjectKey={props.jiraProjectKey}
           onActiveDetailGroupChange={setActiveDetailGroupId}
           onJiraResolved={props.onJiraResolved}
           onTicketCreated={props.onTicketCreated}

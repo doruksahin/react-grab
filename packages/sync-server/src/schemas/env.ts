@@ -161,4 +161,9 @@ export type CredentialEnv = z.infer<typeof CredentialEnvSchema>;
 
 /** Validates the credential key ring. */
 export const parseCredentialEnv = (env: unknown): CredentialEnv =>
-  parseEnvPart(CredentialEnvSchema, env, "Jira credential encryption", "ADR-0027");
+  parseEnvPart(
+    CredentialEnvSchema,
+    env,
+    "Jira credential encryption",
+    "ADR-0027",
+  );

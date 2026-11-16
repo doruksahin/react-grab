@@ -34,7 +34,7 @@ export interface MockOverrides {
   createJiraTicket: RouteHandler;
   getJiraTicketStatus: RouteHandler;
   addJiraComment: RouteHandler;
-  getJiraSite: RouteHandler;
+  getJiraDestination: RouteHandler;
   listJiraProjects: RouteHandler;
   listJiraIssueTypes: RouteHandler;
   listJiraPriorities: RouteHandler;
@@ -94,12 +94,20 @@ const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
     pattern: "**/workspaces/*/groups/*/jira-comment",
     method: "POST",
   },
-  getJiraSite: { pattern: "**/jira/site", method: "GET" },
-  listJiraProjects: { pattern: "**/jira/projects", method: "GET" },
-  listJiraIssueTypes: { pattern: "**/jira/issue-types*", method: "GET" },
-  listJiraPriorities: { pattern: "**/jira/priorities", method: "GET" },
-  listJiraLabels: { pattern: "**/jira/labels*", method: "GET" },
-  searchJiraUsers: { pattern: "**/jira/users*", method: "GET" },
+  // Workspace-scoped Jira routes (ADR-0027). `*` does not cross a slash, so
+  // the destination pattern does not match the picker routes below it.
+  getJiraDestination: { pattern: "**/workspaces/*/jira*", method: "GET" },
+  listJiraProjects: { pattern: "**/jira-accounts/*/projects", method: "GET" },
+  listJiraIssueTypes: {
+    pattern: "**/workspaces/*/jira/issue-types*",
+    method: "GET",
+  },
+  listJiraPriorities: {
+    pattern: "**/workspaces/*/jira/priorities*",
+    method: "GET",
+  },
+  listJiraLabels: { pattern: "**/workspaces/*/jira/labels*", method: "GET" },
+  searchJiraUsers: { pattern: "**/workspaces/*/jira/users*", method: "GET" },
 };
 
 // ---------------------------------------------------------------------------
@@ -120,7 +128,7 @@ const DEFAULT_FIXTURES: Record<keyof MockOverrides, unknown> = {
   createJiraTicket: fixtures.createJiraTicketResponse,
   getJiraTicketStatus: null, // handled by group-specific logic below
   addJiraComment: fixtures.addJiraCommentResponse,
-  getJiraSite: fixtures.jiraSite,
+  getJiraDestination: fixtures.jiraDestination,
   listJiraProjects: fixtures.jiraProjects,
   listJiraIssueTypes: fixtures.jiraIssueTypes,
   listJiraPriorities: fixtures.jiraPriorities,

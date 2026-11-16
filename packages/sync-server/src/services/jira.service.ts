@@ -163,21 +163,18 @@ export class JiraService {
       author { name picture }
       richText { adfValue { json } }
     }`;
-    const response = await fetch(
-      `${this.config.baseUrl}/gateway/api/graphql`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: this.authHeader,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          operationName: "JiraComments",
-          query,
-          variables: { cloudId, key: ticketId },
-        }),
+    const response = await fetch(`${this.config.baseUrl}/gateway/api/graphql`, {
+      method: "POST",
+      headers: {
+        Authorization: this.authHeader,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        operationName: "JiraComments",
+        query,
+        variables: { cloudId, key: ticketId },
+      }),
+    });
     if (!response.ok) return [];
     const payload = (await response.json()) as {
       data?: {
@@ -188,8 +185,7 @@ export class JiraService {
         };
       };
     };
-    const rootEdges =
-      payload.data?.jira?.issueByKey?.comments?.edges ?? [];
+    const rootEdges = payload.data?.jira?.issueByKey?.comments?.edges ?? [];
 
     const flat: ThreadedComment[] = [];
     const pushNode = (node: JiraCommentNode, parentId: string | null) => {
@@ -251,7 +247,10 @@ export class JiraService {
     // 4. Attach screenshots
     for (const comment of groupComments) {
       for (const type of ["element", "full"] as const) {
-        const key = type === "element" ? comment.screenshotElement : comment.screenshotFullPage;
+        const key =
+          type === "element"
+            ? comment.screenshotElement
+            : comment.screenshotFullPage;
         if (!key) continue;
 
         const screenshot = await screenshots.get(key);
@@ -266,7 +265,9 @@ export class JiraService {
           if (result.value) chunks.push(result.value);
           done = result.done;
         }
-        const blob = new Blob(chunks as BlobPart[], { type: screenshot.contentType });
+        const blob = new Blob(chunks as BlobPart[], {
+          type: screenshot.contentType,
+        });
 
         // Use raw fetch instead of jira.js for attachments —
         // jira.js sets a custom Content-Type on FormData which
@@ -286,7 +287,9 @@ export class JiraService {
           },
         );
         if (!attachResponse.ok) {
-          console.error(`Failed to attach ${type} screenshot for ${comment.id}: ${attachResponse.status}`);
+          console.error(
+            `Failed to attach ${type} screenshot for ${comment.id}: ${attachResponse.status}`,
+          );
         }
       }
     }
@@ -295,7 +298,9 @@ export class JiraService {
     try {
       await repo.updateGroupJira(workspaceId, groupId, ticketId, jiraAccountId);
     } catch (err) {
-      throw new Error(`Jira ticket ${ticketId} created but D1 update failed: ${err}`);
+      throw new Error(
+        `Jira ticket ${ticketId} created but D1 update failed: ${err}`,
+      );
     }
 
     return { jiraTicketId: ticketId, jiraUrl: ticketUrl };
@@ -372,11 +377,12 @@ export class JiraService {
   }
 
   async getLabels(projectKey: string) {
-    const result = await this.client.issueSearch.searchForIssuesUsingJqlEnhancedSearch({
-      jql: `project = ${projectKey} AND labels is not EMPTY`,
-      fields: ["labels"],
-      maxResults: 100,
-    });
+    const result =
+      await this.client.issueSearch.searchForIssuesUsingJqlEnhancedSearch({
+        jql: `project = ${projectKey} AND labels is not EMPTY`,
+        fields: ["labels"],
+        maxResults: 100,
+      });
     const labelSet = new Set<string>();
     for (const issue of result.issues ?? []) {
       for (const lbl of (issue.fields?.labels as string[] | undefined) ?? []) {
@@ -389,7 +395,16 @@ export class JiraService {
   async getIssueStatus(ticketId: string, attachmentPath: AttachmentPath) {
     const issue = await this.client.issues.getIssue({
       issueIdOrKey: ticketId,
-      fields: ["status", "assignee", "reporter", "labels", "attachment", "priority", "issuetype", "duedate"],
+      fields: [
+        "status",
+        "assignee",
+        "reporter",
+        "labels",
+        "attachment",
+        "priority",
+        "issuetype",
+        "duedate",
+      ],
     });
 
     // Map filename → attachment id so fetchThreadedComments can rewrite
@@ -424,7 +439,9 @@ export class JiraService {
         },
       );
       if (response.ok) {
-        const data = (await response.json()) as { fields?: { flagged?: boolean } };
+        const data = (await response.json()) as {
+          fields?: { flagged?: boolean };
+        };
         flagged = data.fields?.flagged === true;
       }
     } catch {
@@ -442,17 +459,27 @@ export class JiraService {
         const histories = (changelogIssue as any).changelog?.histories as
           | Array<{
               created: string;
-              author?: { displayName?: string; avatarUrls?: Record<string, string> };
+              author?: {
+                displayName?: string;
+                avatarUrls?: Record<string, string>;
+              };
               items: Array<{ field: string; toString: string | null }>;
             }>
           | undefined;
         // Find the most recent "Flagged" → "Impediment" changelog entry
         const flagEntry = histories
-          ?.filter((h) => h.items.some((i) => i.field === "Flagged" && i.toString === "Impediment"))
+          ?.filter((h) =>
+            h.items.some(
+              (i) => i.field === "Flagged" && i.toString === "Impediment",
+            ),
+          )
           .at(-1);
-        flaggedAt = flagEntry?.created ?? (changelogIssue.fields.created as string | undefined) ?? null;
+        flaggedAt =
+          flagEntry?.created ??
+          (changelogIssue.fields.created as string | undefined) ??
+          null;
         flaggedBy = flagEntry?.author?.displayName ?? null;
-        flaggedByAvatar = flagEntry?.author?.avatarUrls?.['48x48'] ?? null;
+        flaggedByAvatar = flagEntry?.author?.avatarUrls?.["48x48"] ?? null;
       } catch {
         // Changelog unavailable — flag date unknown
       }
@@ -463,8 +490,8 @@ export class JiraService {
       statusCategory: issue.fields.status?.statusCategory?.name ?? "Unknown",
       assignee: issue.fields.assignee?.displayName ?? null,
       reporter: issue.fields.reporter?.displayName ?? null,
-      assigneeAvatar: issue.fields.assignee?.avatarUrls?.['48x48'] ?? null,
-      reporterAvatar: issue.fields.reporter?.avatarUrls?.['48x48'] ?? null,
+      assigneeAvatar: issue.fields.assignee?.avatarUrls?.["48x48"] ?? null,
+      reporterAvatar: issue.fields.reporter?.avatarUrls?.["48x48"] ?? null,
       jiraUrl: this.browseUrl(ticketId),
       labels: (issue.fields.labels as string[] | undefined) ?? [],
       comments,
@@ -472,8 +499,10 @@ export class JiraService {
       flaggedAt,
       flaggedBy,
       flaggedByAvatar,
-      priority: (issue.fields.priority as { name?: string } | null)?.name ?? null,
-      issueType: (issue.fields.issuetype as { name?: string } | null)?.name ?? null,
+      priority:
+        (issue.fields.priority as { name?: string } | null)?.name ?? null,
+      issueType:
+        (issue.fields.issuetype as { name?: string } | null)?.name ?? null,
       dueDate: (issue.fields.duedate as string | null) ?? null,
     };
   }
@@ -523,14 +552,20 @@ export class JiraService {
         `${this.config.baseUrl}/rest/api/3/issue/${ticketId}/attachments`,
         {
           method: "POST",
-          headers: { Authorization: this.authHeader, "X-Atlassian-Token": "no-check" },
+          headers: {
+            Authorization: this.authHeader,
+            "X-Atlassian-Token": "no-check",
+          },
           body: form,
         },
       );
       if (attachRes.ok) {
         const attachments = (await attachRes.json()) as Array<{ id: string }>;
         if (attachments[0]) {
-          processed = processed.replace(full!, `![${alt}](${attachmentPath(attachments[0].id)})`);
+          processed = processed.replace(
+            full!,
+            `![${alt}](${attachmentPath(attachments[0].id)})`,
+          );
         }
       }
     }
@@ -541,7 +576,12 @@ export class JiraService {
    * Search for JIRA users that can be mentioned in comments.
    * Uses the user picker endpoint which returns users with accountId needed for ADF mentions.
    */
-  async searchUsers(query: string, projectKey?: string): Promise<Array<{ accountId: string; displayName: string; avatarUrl: string | null }>> {
+  async searchUsers(
+    query: string,
+    projectKey?: string,
+  ): Promise<
+    Array<{ accountId: string; displayName: string; avatarUrl: string | null }>
+  > {
     const results = await this.client.userSearch.findAssignableUsers({
       query,
       project: projectKey,
@@ -553,5 +593,4 @@ export class JiraService {
       avatarUrl: u.avatarUrls?.["48x48"] ?? null,
     }));
   }
-
 }

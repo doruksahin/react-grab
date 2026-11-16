@@ -75,9 +75,10 @@ describe("JiraAccountService", () => {
 
     const stored = await harness.accounts.find(summary.id);
     expect(stored?.credential.ciphertext).not.toContain("token-ada");
-    expect(
-      await harness.vault.open(summary.id, stored!.credential),
-    ).toEqual({ kind: "api-token", token: "token-ada" });
+    expect(await harness.vault.open(summary.id, stored!.credential)).toEqual({
+      kind: "api-token",
+      token: "token-ada",
+    });
   });
 
   it("refuses a credential Jira does not accept, and saves nothing", async () => {
@@ -122,7 +123,11 @@ describe("JiraAccountService", () => {
       email: "carol@example.com",
       apiToken: "token-ada",
     });
-    await harness.workspaceService.setDestination(workspaceId, account.id, "SCRUM");
+    await harness.workspaceService.setDestination(
+      workspaceId,
+      account.id,
+      "SCRUM",
+    );
     await expectJiraError(
       harness.accountService.remove(account.id),
       "jira-account-in-use",
@@ -134,7 +139,12 @@ describe("JiraAccountService", () => {
       name: "G",
       createdAt: 1,
     });
-    await harness.repo.updateGroupJira(workspaceId, "g-1", "SCRUM-1", account.id);
+    await harness.repo.updateGroupJira(
+      workspaceId,
+      "g-1",
+      "SCRUM-1",
+      account.id,
+    );
     await expectJiraError(
       harness.accountService.remove(account.id),
       "jira-account-in-use",
@@ -164,7 +174,11 @@ describe("WorkspaceService", () => {
       "jira-project-not-found",
     );
     expect(
-      await harness.workspaceService.setDestination(workspaceId, account.id, "SCRUM"),
+      await harness.workspaceService.setDestination(
+        workspaceId,
+        account.id,
+        "SCRUM",
+      ),
     ).toEqual({
       siteUrl: "https://erin.atlassian.net",
       projectKey: "SCRUM",
@@ -197,7 +211,11 @@ describe("WorkspaceService", () => {
       email: "frank@example.com",
       apiToken: "token-bob",
     });
-    await harness.workspaceService.setDestination(workspaceId, account.id, "OPS");
+    await harness.workspaceService.setDestination(
+      workspaceId,
+      account.id,
+      "OPS",
+    );
     expect(
       (await harness.workspaceService.getDestination(workspaceId, "LEGACY"))
         .projectKey,
@@ -220,33 +238,52 @@ describe("JiraTicketService", () => {
       email: "gina@example.com",
       apiToken: "token-ada",
     });
-    await harness.workspaceService.setDestination(workspaceId, account.id, "SCRUM");
-    await harness.repo.upsertGroup(workspaceId, { id: "g-1", name: "G", createdAt: 1 });
+    await harness.workspaceService.setDestination(
+      workspaceId,
+      account.id,
+      "SCRUM",
+    );
+    await harness.repo.upsertGroup(workspaceId, {
+      id: "g-1",
+      name: "G",
+      createdAt: 1,
+    });
     const create = vi
       .spyOn(JiraService.prototype, "createTicketFromGroup")
-      .mockImplementation(async function (
-        this: JiraService,
-        params,
-        workspace,
-        groupId,
-        repo,
-        _screenshots,
-        jiraAccountId,
-      ) {
-        await repo.updateGroupJira(workspace, groupId, `${params.projectKey}-1`, jiraAccountId);
-        return {
-          jiraTicketId: `${params.projectKey}-1`,
-          jiraUrl: `${harness.configOf(this).baseUrl}/browse/${params.projectKey}-1`,
-        };
-      });
+      .mockImplementation(
+        async function (
+          this: JiraService,
+          params,
+          workspace,
+          groupId,
+          repo,
+          _screenshots,
+          jiraAccountId,
+        ) {
+          await repo.updateGroupJira(
+            workspace,
+            groupId,
+            `${params.projectKey}-1`,
+            jiraAccountId,
+          );
+          return {
+            jiraTicketId: `${params.projectKey}-1`,
+            jiraUrl: `${harness.configOf(this).baseUrl}/browse/${params.projectKey}-1`,
+          };
+        },
+      );
 
-    const result = await harness.ticketService.createTicket(workspaceId, "g-1", {
-      projectKey: "IGNORED",
-      issueType: "Bug",
-      priority: "Medium",
-      summary: "S",
-      description: "D",
-    });
+    const result = await harness.ticketService.createTicket(
+      workspaceId,
+      "g-1",
+      {
+        projectKey: "IGNORED",
+        issueType: "Bug",
+        priority: "Medium",
+        summary: "S",
+        description: "D",
+      },
+    );
     expect(result).toEqual({
       jiraTicketId: "SCRUM-1",
       jiraUrl: "https://gina.atlassian.net/browse/SCRUM-1",
@@ -277,9 +314,17 @@ describe("JiraTicketService", () => {
       email: "ivy@example.com",
       apiToken: "token-bob",
     });
-    await harness.repo.upsertGroup(workspaceId, { id: "g-1", name: "G", createdAt: 1 });
+    await harness.repo.upsertGroup(workspaceId, {
+      id: "g-1",
+      name: "G",
+      createdAt: 1,
+    });
     await harness.repo.updateGroupJira(workspaceId, "g-1", "SCRUM-1", first.id);
-    await harness.workspaceService.setDestination(workspaceId, second.id, "OPS");
+    await harness.workspaceService.setDestination(
+      workspaceId,
+      second.id,
+      "OPS",
+    );
 
     const sites: string[] = [];
     const paths: string[] = [];
@@ -315,7 +360,11 @@ describe("JiraTicketService", () => {
   });
 
   it("reads a ticket from before ADR-0027 through the environment account", async () => {
-    await harness.repo.upsertGroup(workspaceId, { id: "g-1", name: "G", createdAt: 1 });
+    await harness.repo.upsertGroup(workspaceId, {
+      id: "g-1",
+      name: "G",
+      createdAt: 1,
+    });
     await harness.repo.updateGroupJira(workspaceId, "g-1", "OLD-1", null);
     const client = await harness.clients.forTicket({
       jiraTicketId: "OLD-1",
@@ -332,7 +381,11 @@ describe("JiraTicketService", () => {
   });
 
   it("maps Jira refusing the account to jira-account-rejected", async () => {
-    await harness.repo.upsertGroup(workspaceId, { id: "g-1", name: "G", createdAt: 1 });
+    await harness.repo.upsertGroup(workspaceId, {
+      id: "g-1",
+      name: "G",
+      createdAt: 1,
+    });
     await harness.repo.updateGroupJira(workspaceId, "g-1", "OLD-1", null);
     vi.spyOn(JiraService.prototype, "getIssueStatus").mockRejectedValue(
       new JiraHttpError(401, "Unauthorized"),

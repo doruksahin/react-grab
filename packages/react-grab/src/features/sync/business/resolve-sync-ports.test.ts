@@ -19,7 +19,6 @@ const makeFactories = () => ({
 const config = (overrides: Partial<SyncConfig> = {}): SyncConfig => ({
   enabled: true,
   workspace: "team",
-  jiraProjectKey: "ATT",
   syncRevealedState: true,
   onSyncError: () => {},
   ...overrides,
@@ -50,6 +49,24 @@ describe("resolveSyncPorts", () => {
     expect(resolved).toEqual({ storage: builtStorage, jira: builtJira });
     expect(factories.createStorage).toHaveBeenCalledWith(expected);
     expect(factories.createJira).toHaveBeenCalledWith(expected);
+  });
+
+  it("passes the deprecated project key to the built ports only when given (ADR-0027)", () => {
+    const factories = makeFactories();
+    resolveSyncPorts(
+      config({
+        serverUrl: "https://sync.example.com",
+        apiToken: "token",
+        jiraProjectKey: "OLD",
+      }),
+      factories,
+    );
+    expect(factories.createJira).toHaveBeenCalledWith({
+      serverUrl: "https://sync.example.com",
+      apiToken: "token",
+      workspace: "team",
+      jiraProjectKey: "OLD",
+    });
   });
 
   it("builds only the port that is missing", () => {

@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Browser } from "wxt/browser";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 import {
   extensionEventMessenger,
@@ -15,6 +14,11 @@ import {
   sitesItem,
 } from "../settings/settings-items.js";
 import { registerBackground } from "./register-background.js";
+import {
+  SITE_ORIGIN,
+  sendAsOptionsPage,
+  sendAsOwnContentScript,
+} from "../test-support/senders.js";
 
 interface TestTabs {
   firstTabId: number;
@@ -33,36 +37,6 @@ const createTabs = async (): Promise<TestTabs> => {
   }
   return { firstTabId: firstTab.id, secondTabId: secondTab.id };
 };
-
-const SITE_ORIGIN = "https://app.example.test";
-
-const sendAs = (sender: Browser.runtime.MessageSender): void => {
-  vi.spyOn(fakeBrowser.runtime, "sendMessage").mockImplementation(
-    (message: unknown, sendResponse: unknown) => {
-      void fakeBrowser.runtime.onMessage.trigger(
-        message,
-        sender,
-        (response: unknown) => {
-          if (typeof sendResponse === "function") sendResponse(response);
-        },
-      );
-    },
-  );
-};
-
-const sendAsOwnContentScript = (): void =>
-  sendAs({
-    id: fakeBrowser.runtime.id,
-    frameId: 0,
-    origin: SITE_ORIGIN,
-    url: `${SITE_ORIGIN}/page`,
-  });
-
-const sendAsOptionsPage = (): void =>
-  sendAs({
-    id: fakeBrowser.runtime.id,
-    url: fakeBrowser.runtime.getURL("/options.html"),
-  });
 
 const spyOnEvents = () =>
   vi.spyOn(extensionEventMessenger, "sendMessage").mockResolvedValue(undefined);
@@ -212,7 +186,6 @@ describe("registerBackground", () => {
     sendAsOwnContentScript();
     await saveSite(SITE_ORIGIN, {
       workspace: "app-workspace",
-      jiraProjectKey: "ATT",
       recordSteps: false,
       recordSession: false,
     });
@@ -222,7 +195,6 @@ describe("registerBackground", () => {
       await extensionRequestMessenger.sendMessage("getSiteSettings"),
     ).toEqual({
       workspace: "app-workspace",
-      jiraProjectKey: "ATT",
       recordSteps: false,
       recordSession: false,
     });
@@ -243,7 +215,11 @@ describe("registerBackground", () => {
   });
 
   it("writes sites only on a request from an extension page", async () => {
-    const site = { workspace: "app-workspace", jiraProjectKey: "ATT", recordSteps: false, recordSession: false };
+    const site = {
+      workspace: "app-workspace",
+      recordSteps: false,
+      recordSession: false,
+    };
 
     sendAsOwnContentScript();
     await expect(

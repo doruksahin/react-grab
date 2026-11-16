@@ -7,9 +7,6 @@ export interface SyncStoreShape {
   groups: SelectionGroupWithJira[];
   comments: CommentItem[];
   workspace: string | null;
-  jiraProjectKey: string | null;
-  /** The Jira site tickets go to (GET /jira/site); null until it answers. */
-  jiraSiteUrl: string | null;
   status: "idle" | "loading" | "synced" | "local" | "error";
   error: string | null;
 }
@@ -18,8 +15,6 @@ const INITIAL_STATE: SyncStoreShape = {
   groups: [],
   comments: [],
   workspace: null,
-  jiraProjectKey: null,
-  jiraSiteUrl: null,
   status: "idle",
   error: null,
 };
@@ -29,11 +24,8 @@ export const createSyncStore = () => {
 
   return {
     store,
-    setConfig: (workspace: string, jiraProjectKey: string) => {
-      setStore({ workspace, jiraProjectKey });
-    },
-    setJiraSiteUrl: (jiraSiteUrl: string | null) => {
-      setStore({ jiraSiteUrl });
+    setWorkspace: (workspace: string) => {
+      setStore({ workspace });
     },
     setStatus: (status: SyncStoreShape["status"], error?: string) => {
       setStore({ status, error: error ?? null });

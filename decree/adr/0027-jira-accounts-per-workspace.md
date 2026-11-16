@@ -88,7 +88,7 @@ The routes ask the factory for a `JiraService` only when they need one. `inject-
 
 ### Site URL
 
-The account's site must be `https://<name>.atlassian.net`. The Zod schema enforces it and normalizes the value to that origin. The Worker sends the account's credential only to that origin and fetches with `redirect: "manual"`. So a typed URL cannot make the Worker send a credential to another host. This ADR covers Jira Cloud (REST v3) only. Self-hosted Jira would need a new ADR.
+The account's site must be `https://<name>.atlassian.net`. The Zod schema enforces it and normalizes the value to that origin, so the Worker sends an account's credential only to that origin. The verification call (`/rest/api/3/myself`) is made with `redirect: "manual"`, so a typed URL cannot redirect the credential to another host before the account is saved. This ADR covers Jira Cloud (REST v3) only. Self-hosted Jira would need a new ADR.
 
 ### API (added to the existing OpenAPI chain)
 

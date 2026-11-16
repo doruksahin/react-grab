@@ -69,17 +69,20 @@ When a release adds a migration, apply it to production before deploying the Wor
 - `uploadBase64Images` — upload inline images to JIRA attachments
 - `searchUsers` — user search for @mention resolution
 - `fetchThreadedComments` — threaded comments via Atlassian GraphQL gateway
-- `getSite` — the configured `JIRA_BASE_URL`, served as `GET /jira/site` so the overlay can name the site in its Jira dialog
+- `getMyself` — the Jira user an account signs in as (`GET /rest/api/3/myself`, no redirects), used to verify an account before it is saved
+- `hasProject` — whether the account can see a project, checked before a workspace is bound to it
+
+`JiraService` talks to one account. It never chooses one: `services/jira-client-factory.ts` builds it for a workspace's destination (new tickets, pickers) or for a ticket's origin (status, comments, attachments) — ADR-0027. `services/jira-ticket.service.ts` runs the ticket flow through the right account, `jira-account.service.ts` adds and verifies accounts, `workspace.service.ts` binds workspaces, `credential-vault.ts` encrypts tokens (AES-256-GCM, Web Crypto), and `jira-errors.ts` maps every Jira failure to one typed `JiraError` with a `code` the client can show.
 
 ## Configuration
 
-`JIRA_BASE_URL` is a non-secret `[vars]` entry in `wrangler.toml` and decides which Jira site every ticket lands on. `JIRA_EMAIL` and `JIRA_API_TOKEN` are per-developer: copy `.dev.vars.example` to `.dev.vars` (gitignored) and fill them in. In production set them on the deployed Worker with `wrangler secret put`, never in a committed file.
+Jira accounts live in D1 (`jira_accounts`), entered in the extension's settings; each workspace has an optional destination (`workspaces.jira_account_id`, `jira_project_key`), and each group with a ticket records the account that created it (`groups.jira_account_id`) — ADR-0027. Account tokens are stored only encrypted, with the key ring `JIRA_CREDENTIAL_KEYS` (secret JSON `{version: base64 key}`) and `JIRA_CREDENTIAL_KEY_CURRENT`, validated by `parseCredentialEnv()`. The vault is built only when a request opens an account.
 
-All three are described by `src/schemas/env.ts` — the sixth schema in that folder — and validated by `parseJiraEnv()` in `middleware/inject-repos.ts`, the one place the configuration is read. A missing or malformed value fails the first request with every problem named, instead of an opaque Jira 401 later. See ADR-0018 for why this is a Zod schema rather than an env library.
+`JIRA_BASE_URL`, `JIRA_EMAIL` and `JIRA_API_TOKEN` are the environment account (ADR-0018). Until the ADR-0027 cut-over it serves workspaces without a destination (with the client's deprecated project key) and tickets without an origin; when it is not configured those requests answer `409 jira-destination-missing`. Copy `.dev.vars.example` to `.dev.vars` (gitignored) for local work; in production use `wrangler secret put`, never a committed file. Every part of the environment is a Zod schema in `src/schemas/env.ts` (ADR-0018).
 
 ## Access control
 
-Every route under `/workspaces/*` and `/jira/*` requires `Authorization: Bearer <SYNC_API_TOKEN>` (Hono's `bearerAuth`), and CORS allows only local dev servers plus `ALLOWED_ORIGINS` — see `middleware/access-control.ts` and ADR-0020. `/health`, `/doc` and `/ui` stay public. The token is validated by `parseAuthEnv()` in `schemas/env.ts`; if it is missing or shorter than 32 characters, every API request fails closed. Do not add a route outside these prefixes that reads or writes data. The one exception is `GET /r/{shareId}` in `routes/recordings.ts`: a recording's random share id is itself the permission, so a Jira reader can watch it without a token (a capability URL, ADR-0021). It only reads, and only the object named by that id.
+Every route under `/workspaces/*` and `/jira/*` requires `Authorization: Bearer <SYNC_API_TOKEN>` (Hono's `bearerAuth`). The admin routes — `/jira-accounts/*` and `PUT`/`DELETE /workspaces/{id}/jira` — require `SYNC_ADMIN_TOKEN` instead (ADR-0027); the admin token also passes everywhere the sync token does. Host apps hold only the sync token, so a script on their pages cannot add accounts or redirect tickets. Without a configured admin token the admin routes fail closed. CORS allows only local dev servers plus `ALLOWED_ORIGINS` — see `middleware/access-control.ts` and ADR-0020. `/health`, `/doc` and `/ui` stay public. The token is validated by `parseAuthEnv()` in `schemas/env.ts`; if it is missing or shorter than 32 characters, every API request fails closed. Do not add a route outside these prefixes that reads or writes data. The one exception is `GET /r/{shareId}` in `routes/recordings.ts`: a recording's random share id is itself the permission, so a Jira reader can watch it without a token (a capability URL, ADR-0021). It only reads, and only the object named by that id.
 
 ## Writes are per item
 
@@ -87,7 +90,7 @@ Comments and groups are written one item at a time — `PUT`/`DELETE` on `/works
 
 ## Tests
 
-`pnpm --filter @react-grab/sync-server exec vitest run`. Tests run inside workerd through Cloudflare's `@cloudflare/vitest-plugin`, against real D1: `vitest.config.ts` reads the drizzle migrations and `src/test/apply-migrations.ts` applies them. Storage is isolated per test file, not per test, so give each test its own workspace id. Route tests call the Worker through `SELF.fetch` and send the token with `authorized()` from `src/test/api-token.ts`. The config supplies fake credentials and points `JIRA_BASE_URL` at `https://jira.invalid`, which never resolves, so no test can reach a real Jira even if it slips past the token check.
+`pnpm --filter @react-grab/sync-server exec vitest run`. Tests run inside workerd through Cloudflare's `@cloudflare/vitest-plugin`, against real D1: `vitest.config.ts` reads the drizzle migrations and `src/test/apply-migrations.ts` applies them. Storage is isolated per test file, not per test, so give each test its own workspace id. Route tests call the Worker through `SELF.fetch` and send the token with `authorized()` from `src/test/api-token.ts`. The config supplies fake credentials and points `JIRA_BASE_URL` at `https://jira.invalid`, which never resolves, so no test can reach a real Jira even if it slips past the token check. Service tests for ADR-0027 use `src/test/jira-accounts-setup.ts` (real D1, `JiraService` methods stubbed with `vi.spyOn`); send the admin token with `asAdmin()`.
 
 ## Dev server
 
@@ -100,4 +103,4 @@ Health check at `http://localhost:8787/health`.
 
 ## Middleware
 
-`inject-repos.ts` creates repository and service instances from Cloudflare bindings and injects them into Hono context. Routes access them via `c.var.syncRepo`, `c.var.screenshotStore`, `c.var.jiraService`.
+`inject-repos.ts` creates repository and service instances from Cloudflare bindings and injects them into Hono context. Routes access them via `c.var.repo`, `c.var.screenshots`, `c.var.ticketLock`, `c.var.jiraTickets`, `c.var.jiraAccounts`, `c.var.workspaces` and `c.var.jiraClients`. A `JiraError` thrown anywhere answers with its status and `{ error, code }` (`app.onError`).

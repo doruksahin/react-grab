@@ -20,15 +20,18 @@ To make a ZIP for the Chrome Web Store, run `pnpm --filter @react-grab/web-exten
 ## Configure
 
 1. Right-click the extension icon and click **Options**.
-2. Under **Sync server**, enter the server URL and the API token, then click **Save server**. Chrome asks for access to the server's origin. Accept it.
-3. Under **Enable a site**, enter the site address, the workspace and the Jira project key, then click **Enable site**. Chrome asks for access to the site. Accept it. Optionally select:
+2. Under **Sync server**, enter the server URL and the API token, then click **Save server**. Chrome asks for access to the server's origin. Accept it. If you set up Jira for your team, also enter the **admin token** (`SYNC_ADMIN_TOKEN`, ADR-0027). Only the service worker reads it.
+3. With the admin token, **Jira accounts** shows: enter a Jira Cloud site, an email and an API token, then click **Connect**. The server signs in to Jira before it saves the account, and never shows the token again. Create the token at id.atlassian.com → Security → API tokens. Tickets are created as that account.
+4. Under **Enable a site**, enter the site address and choose its workspace. With the admin token, choose **New workspace…** to name one and pick its Jira account and project; an existing workspace shows where its tickets go. Without the admin token, type the workspace name. Click **Enable site**. Chrome asks for access to the site. Accept it. Optionally select:
    - **Record steps**: each new comment saves the clicks and field changes that led to it, as Chrome DevTools Recorder steps (ADR-0025). Typed values are never saved.
    - **Record session**: each new comment links a replay of the last minutes (ADR-0021). Inputs are masked.
 
    Both are off by default.
-4. Open or reload the site. The overlay starts and loads the workspace's comments.
+5. Open or reload the site. The overlay starts and loads the workspace's comments.
 
 To get the token, see "Environment variables" in the root `CLAUDE.md`. Do not put the token in a file in this repository.
+
+To send a workspace's tickets elsewhere, click **Edit** next to it under **Workspaces**. Only new tickets move: a ticket is always read through the account that created it.
 
 To change a site's workspace or what it records, enable the site again with the new values. Open tabs of that site reload. To stop the overlay on a site, click **Disable** next to it. Open tabs of that site reload and the extension gives back its access to that site.
 

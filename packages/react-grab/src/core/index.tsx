@@ -200,7 +200,6 @@ const syncLayer = createSyncLayer({
 const syncContext: SyncContextValue = {
   storage: syncLayer.adapter,
   jira: syncLayer.jira,
-  jiraProjectKey: syncLayer.jiraProjectKey,
   refreshJiraStatus: syncLayer.refreshJiraStatus,
 };
 let pendingSyncOptions: Options | undefined;
@@ -519,7 +518,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     const stepGuide = createStepGuide({
       commentItems,
       currentPageUrl,
-      commentsLoaded: () => COMMENTS_LOADED_SYNC_STATUSES.has(syncLayer.status()),
+      commentsLoaded: () =>
+        COMMENTS_LOADED_SYNC_STATUSES.has(syncLayer.status()),
       isPaused: () => isActivated(),
       selectionElements: getConnectedCommentElements,
     });
@@ -2293,7 +2293,14 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       void store.viewportVersion;
       const guideElement = stepGuide.highlightedElement();
       const guideBoxes = guideElement
-        ? [{ id: STEP_GUIDE_BOX_ID, bounds: createElementBounds(guideElement), createdAt: 0, element: guideElement }]
+        ? [
+            {
+              id: STEP_GUIDE_BOX_ID,
+              bounds: createElementBounds(guideElement),
+              createdAt: 0,
+              element: guideElement,
+            },
+          ]
         : [];
       return [
         ...store.grabbedBoxes.map((box) => {
@@ -3224,11 +3231,15 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                         store.frozenElements.length > 0 ||
                         dragPreviewBounds().length > 0
                       }
-                      inspectVisible={isInspectMode() && inspectBounds().length > 0}
+                      inspectVisible={
+                        isInspectMode() && inspectBounds().length > 0
+                      }
                       inspectBounds={inspectBounds()}
                       selectionElementsCount={store.frozenElements.length}
                       selectionFilePath={store.selectionFilePath ?? undefined}
-                      selectionLineNumber={store.selectionLineNumber ?? undefined}
+                      selectionLineNumber={
+                        store.selectionLineNumber ?? undefined
+                      }
                       selectionTagName={selectionTagName()}
                       selectionComponentName={resolvedComponentName()}
                       selectionLabelVisible={selectionLabelVisible()}
@@ -3239,7 +3250,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       inspectNavigationState={inspectNavigationState()}
                       onInspectSelect={handleInspectSelect}
                       labelInstances={computedLabelInstancesWithStatus()}
-                      labelPinsEnabled={Boolean(initialOptions.collapsibleLabels)}
+                      labelPinsEnabled={Boolean(
+                        initialOptions.collapsibleLabels,
+                      )}
                       labelPinsStartClosed={Boolean(
                         initialOptions.labelsStartCollapsed,
                       )}
@@ -3253,7 +3266,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                           : cursorPosition().x
                       }
                       isFrozen={
-                        isFrozenPhase() || isActivated() || isToolbarSelectHovered()
+                        isFrozenPhase() ||
+                        isActivated() ||
+                        isToolbarSelectHovered()
                       }
                       inputValue={store.inputText}
                       isPromptMode={isPromptMode()}
@@ -3268,7 +3283,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       onAcknowledgeSessionError={handleAcknowledgeError}
                       onRetrySession={agentManager.session.retry}
                       onShowContextMenuInstance={handleShowContextMenuInstance}
-                      onLabelInstanceHoverChange={handleLabelInstanceHoverChange}
+                      onLabelInstanceHoverChange={
+                        handleLabelInstanceHoverChange
+                      }
                       onInputChange={actions.setInputText}
                       onInputSubmit={() => void handleInputSubmit()}
                       onToggleExpand={handleToggleExpand}
@@ -3281,7 +3298,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                         actions.setPendingAbortSessionId(sessionId)
                       }
                       onAbortSession={handleAgentAbort}
-                      toolbarVisible={pluginRegistry.store.theme.toolbar.enabled}
+                      toolbarVisible={
+                        pluginRegistry.store.theme.toolbar.enabled
+                      }
                       isActive={isActivated()}
                       onToggleActive={handleToggleActive}
                       enabled={isEnabled()}
@@ -3343,7 +3362,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                         (action) => action.showInToolbarMenu === true,
                       )}
                       defaultActionId={
-                        currentToolbarState()?.defaultAction ?? DEFAULT_ACTION_ID
+                        currentToolbarState()?.defaultAction ??
+                        DEFAULT_ACTION_ID
                       }
                       onSetDefaultAction={handleSetDefaultAction}
                       onToggleToolbarMenu={handleToggleToolbarMenu}
@@ -3362,8 +3382,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       syncStatus={derivedSyncStatus()}
                       onRetrySync={syncLayer.retry}
                       syncWorkspace={syncLayer.workspace() ?? undefined}
-                      jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
-                      jiraSiteHost={syncLayer.jiraSiteHost() ?? undefined}
                       groups={selectionGroups.groups()}
                       activeGroupId={selectionGroups.activeGroupId()}
                       onAddGroup={selectionGroups.handleAddGroup}
@@ -3375,7 +3393,8 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                         // persist the group change via handleMoveItem (server),
                         // not just the "next new selection" default.
                         const itemId = findFocusedCommentItemId();
-                        if (itemId) selectionGroups.handleMoveItem(itemId, groupId);
+                        if (itemId)
+                          selectionGroups.handleMoveItem(itemId, groupId);
                       }}
                       onMoveItem={selectionGroups.handleMoveItem}
                       onMoveItems={selectionGroups.handleMoveItems}
@@ -3387,9 +3406,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       onFilterVisibilityChange={visibility.setGroupsRevealed}
                       onJiraResolved={selectionGroups.markResolved}
                       onTicketCreated={selectionGroups.markTicketCreated}
-                      onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
+                      onCreateTicketForLooseItem={
+                        handleCreateTicketForLooseItem
+                      }
                       looseTicketDialog={looseTicketDialog()}
-                      onLooseTicketDialogClose={() => setLooseTicketDialog(null)}
+                      onLooseTicketDialogClose={() =>
+                        setLooseTicketDialog(null)
+                      }
                       commentEditorToolbarVisible={
                         initialOptions.commentEditorToolbarVisible
                       }

@@ -137,7 +137,7 @@ packages:
     request_handlers: packages/web-extension/src/background/handle-overlay-requests.ts
     gateway: packages/web-extension/src/gateway/sync-gateway.ts
     sender_policy: packages/web-extension/src/gateway/sender-policy.ts
-    jira_project_binding: packages/web-extension/src/gateway/bind-site-jira-project.ts
+    jira_admin_requests: packages/web-extension/src/background/handle-jira-admin-requests.ts
     settings_requests: packages/web-extension/src/background/handle-settings-requests.ts
     site_scripts: packages/web-extension/src/site-trust/replace-site-scripts.ts
     settings: packages/web-extension/src/settings/settings-items.ts
@@ -513,7 +513,6 @@ features:
       - packages/web-extension/src/background/handle-settings-requests.ts
       - packages/web-extension/src/background/queues.ts
       - packages/web-extension/src/background/register-background.ts
-      - packages/web-extension/src/gateway/bind-site-jira-project.ts
       - packages/web-extension/src/gateway/sender-policy.ts
       - packages/web-extension/src/gateway/sync-gateway.ts
       - packages/web-extension/src/messaging/extension-messengers.ts
@@ -762,6 +761,8 @@ data_attrs:
         - create-ticket
         - jira-ticket-link
         - jira-destination
+        - jira-destination-problem
+        - jira-signs-in-as
         - jira-description-preview
         - jira-description-input
 
@@ -918,13 +919,15 @@ data_attrs:
     jira-create: {scope: jira, src: 1, tests: 0}
     jira-description-input: {scope: jira, src: 1, tests: 2}
     jira-description-preview: {scope: jira, src: 1, tests: 1}
-    jira-destination: {scope: jira, src: 1, tests: 2}
-    jira-dialog: {scope: jira, src: 1, tests: 0}
+    jira-destination: {scope: jira, src: 1, tests: 1}
+    jira-destination-problem: {scope: jira, src: 1, tests: 2}
+    jira-dialog: {scope: jira, src: 1, tests: 2}
     jira-dots: {scope: jira, src: 1, tests: 0}
     jira-error: {scope: jira, src: 1, tests: 2}
     jira-form: {scope: jira, src: 1, tests: 6}
     jira-open-ticket: {scope: jira, src: 1, tests: 0}
     jira-required: {scope: jira, src: 1, tests: 3}
+    jira-signs-in-as: {scope: jira, src: 1, tests: 0}
     jira-success: {scope: jira, src: 1, tests: 6}
     jira-ticket-link: {scope: jira, src: 1, tests: 0}
     image-lightbox: {scope: lightbox, src: 1, tests: 3}

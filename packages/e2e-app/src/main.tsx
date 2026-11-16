@@ -28,7 +28,6 @@ const populate = async ({ jira, ...seed }: PopulateSeed) => {
   await initSync({
     enabled: false,
     workspace: seed.workspace,
-    jiraProjectKey: seed.jiraProjectKey,
     jira: createFakeJiraPort(jira),
     syncRevealedState: true,
     onSyncError: (error) => console.warn("[e2e] sync error:", error.message),

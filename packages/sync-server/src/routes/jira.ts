@@ -325,14 +325,19 @@ export const jiraRoutes = createRouter()
   })
   .openapi(legacySite, (c) =>
     c.json(
-      { siteUrl: environmentAccount(c.var.jiraClients.forEnvironment()).siteUrl },
+      {
+        siteUrl: environmentAccount(c.var.jiraClients.forEnvironment()).siteUrl,
+      },
       200,
     ),
   )
   .openapi(legacyProjects, async (c) => {
     const { jira } = environmentAccount(c.var.jiraClients.forEnvironment());
     return c.json(
-      await withJiraErrors(() => jira.getProjects(), "Failed to list Jira projects"),
+      await withJiraErrors(
+        () => jira.getProjects(),
+        "Failed to list Jira projects",
+      ),
       200,
     );
   })

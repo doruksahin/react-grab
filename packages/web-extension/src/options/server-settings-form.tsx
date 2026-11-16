@@ -1,6 +1,10 @@
 import { createSignal } from "solid-js";
 import { serverUrlSchema } from "../settings/settings-schema.js";
-import { saveApiToken, saveServerUrl } from "../settings/settings-items.js";
+import {
+  saveAdminToken,
+  saveApiToken,
+  saveServerUrl,
+} from "../settings/settings-items.js";
 import { describeError } from "./describe-error.js";
 import { formField } from "./form-field.js";
 import { requestOriginPermission } from "./request-origin-permission.js";
@@ -8,6 +12,7 @@ import { requestOriginPermission } from "./request-origin-permission.js";
 interface ServerSettingsFormProps {
   serverUrl: string;
   hasApiToken: boolean;
+  hasAdminToken: boolean;
   onSaved: () => void;
 }
 
@@ -20,6 +25,8 @@ export const ServerSettingsForm = (props: ServerSettingsFormProps) => {
     await requestOriginPermission(new URL(serverUrl).origin);
     await saveServerUrl(serverUrl);
     if (apiToken) await saveApiToken(apiToken);
+    const adminToken = formField(form, "adminToken");
+    if (adminToken) await saveAdminToken(adminToken);
     form.reset();
     setStatus("Saved.");
     props.onSaved();
@@ -56,6 +63,19 @@ export const ServerSettingsForm = (props: ServerSettingsFormProps) => {
             required={!props.hasApiToken}
             placeholder={
               props.hasApiToken ? "Saved. Enter a new token to replace it." : ""
+            }
+          />
+        </label>
+        <label>
+          Admin token (optional)
+          <input
+            name="adminToken"
+            type="password"
+            autocomplete="off"
+            placeholder={
+              props.hasAdminToken
+                ? "Saved. Enter a new token to replace it."
+                : "Needed to add Jira accounts and choose where tickets go"
             }
           />
         </label>

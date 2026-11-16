@@ -157,7 +157,9 @@ test.describe(
         await messenger.upsertComment([
           {
             ...comments[0],
-            steps: [{ type: "change", selectors: ["#coupon"], value: "SECRET" }],
+            steps: [
+              { type: "change", selectors: ["#coupon"], value: "SECRET" },
+            ],
           },
         ]),
       ).toContain("storage.upsertComment got invalid arguments");
@@ -293,11 +295,13 @@ test.describe(
       await optionsPage.goto(`chrome-extension://${extensionId}/options.html`);
 
       await optionsPage.getByLabel("Site address").fill(DISABLED_SITE_ORIGIN);
+      // Without the admin token the workspace is typed, as before ADR-0027.
       await optionsPage.getByLabel("Workspace").fill(TEST_WORKSPACE);
-      await optionsPage.getByLabel("Jira project key").fill("ATT");
       await optionsPage.getByRole("button", { name: "Enable site" }).click();
       await expect(
-        optionsPage.getByText(`Enabled ${DISABLED_SITE_ORIGIN}.`),
+        optionsPage.getByText(
+          `Enabled ${DISABLED_SITE_ORIGIN} for ${TEST_WORKSPACE}.`,
+        ),
       ).toBeVisible();
 
       const disabledSitePage = await context.newPage();

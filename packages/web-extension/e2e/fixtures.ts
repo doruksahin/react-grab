@@ -39,7 +39,6 @@ export const HOST_INIT_DELAY_MS = 1500;
 const THIRD_PARTY_IFRAME_URL = "https://third-party-ads.test/frame";
 
 export const TEST_WORKSPACE = "extension-e2e-workspace";
-export const TEST_JIRA_PROJECT_KEY = "ATT";
 export const FORGED_TOOLBAR_EDGE = "left";
 export { TEST_API_TOKEN };
 
@@ -78,13 +77,11 @@ const HTML_PAGES = new Map([
 export const ENABLED_SITES: SiteSettingsByOrigin = {
   [ENABLED_SITE_ORIGIN]: {
     workspace: TEST_WORKSPACE,
-    jiraProjectKey: TEST_JIRA_PROJECT_KEY,
     recordSteps: false,
     recordSession: false,
   },
   [LOCALHOST_SITE_ORIGIN]: {
     workspace: TEST_WORKSPACE,
-    jiraProjectKey: TEST_JIRA_PROJECT_KEY,
     recordSteps: false,
     recordSession: false,
   },
