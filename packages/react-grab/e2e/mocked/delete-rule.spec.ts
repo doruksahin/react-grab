@@ -135,5 +135,52 @@ test.describe(
       ).toHaveCount(0);
       await expect(panelRow(page, "Has a ticket")).toHaveCount(1);
     });
+
+    test("a comment panel row removes a selection without a ticket", async ({
+      page,
+      reactGrab,
+    }) => {
+      await reactGrab.clickCommentsButton();
+      const free = panelRow(page, "No ticket yet");
+      await free.hover();
+      await free.getByRole("button", { name: "Remove selection" }).click();
+      await expect(free).toHaveCount(0);
+      await expect(panelRow(page, "Has a ticket")).toHaveCount(1);
+    });
+
+    test("a comment panel row offers no removal for a selection with a ticket", async ({
+      page,
+      reactGrab,
+    }) => {
+      await reactGrab.clickCommentsButton();
+      const locked = panelRow(page, "Has a ticket");
+      await locked.hover();
+      await expect(
+        locked.getByRole("button", { name: "Remove selection" }),
+      ).toHaveCount(0);
+    });
+
+    test("the Selections tab card removes a selection without a ticket", async ({
+      page,
+      reactGrab,
+    }) => {
+      await reactGrab.populate({
+        groups,
+        comments: [
+          { ...selection("loose", "open", "Loose one"), groupId: null },
+          selection("locked", "ticketed", "Has a ticket"),
+        ],
+      });
+      await page.locator("[data-react-grab-toolbar-dashboard]").click();
+      await page
+        .getByRole("dialog", { name: "React Grab Dashboard" })
+        .getByRole("tab", { name: /^Selections/ })
+        .click();
+      const card = page
+        .locator("[data-react-grab-selection-card]")
+        .filter({ hasText: "Loose one" });
+      await card.getByRole("button", { name: "Remove selection" }).click();
+      await expect(card).toHaveCount(0);
+    });
   },
 );

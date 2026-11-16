@@ -472,6 +472,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onCopyAll={props.onCommentsCopyAll}
         onCopyAllHover={props.onCommentsCopyAllHover}
         onClearAll={props.onCommentsClear}
+        onRemoveItem={props.onRemoveItem}
+        canRemoveItem={props.canRemoveItem}
         clearCounts={props.commentsClearCounts}
         onDismiss={props.onCommentsDismiss}
         onDropdownHover={props.onCommentsDropdownHover}
