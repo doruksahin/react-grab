@@ -144,7 +144,8 @@ test.describe(
       await reactGrab.clickCommentsButton();
       const free = panelRow(page, "No ticket yet");
       await free.hover();
-      await free.getByRole("button", { name: "Remove selection" }).click();
+      await free.getByRole("button", { name: "Selection actions" }).click();
+      await page.getByRole("menuitem", { name: "Remove selection" }).click();
       await expect(free).toHaveCount(0);
       await expect(panelRow(page, "Has a ticket")).toHaveCount(1);
     });
@@ -157,7 +158,7 @@ test.describe(
       const locked = panelRow(page, "Has a ticket");
       await locked.hover();
       await expect(
-        locked.getByRole("button", { name: "Remove selection" }),
+        locked.getByRole("button", { name: "Selection actions" }),
       ).toHaveCount(0);
     });
 
