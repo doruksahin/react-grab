@@ -4,21 +4,25 @@ import type { CommentItem } from "../../types.js";
 import { cn } from "../../utils/cn.js";
 import { Badge } from "../ui/badge.js";
 
-interface UngroupedSectionProps {
+interface SelectionSectionProps {
+  title: string;
   items: CommentItem[];
   renderItem: (item: CommentItem) => JSX.Element;
   /** Whether this section is the first in its container (controls top border). */
   isFirst: boolean;
   /** Opens the section when it holds this selection (a focus request). */
   revealItemId?: string | null;
+  /** A short summary of the section's selections (the sidebar's statuses). */
+  summary?: JSX.Element;
+  emptyText?: string;
 }
 
 /**
- * Sibling of GroupCollapsible that renders selections without a group.
- * Header is non-interactive (no rename / delete / copy / reveal toggles —
- * "Ungrouped" is not a real group, so those actions don't apply).
+ * A titled, collapsible run of selections whose header has no actions:
+ * Ungrouped, or a status when the sidebar groups by status. The header
+ * stays at the top while its selections scroll.
  */
-export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
+export const SelectionSection: Component<SelectionSectionProps> = (props) => {
   const [isOpen, setIsOpen] = createSignal(true);
   // A focus request is a user action from elsewhere: the card it targets
   // must be visible, so its section opens.
@@ -34,11 +38,10 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
   );
 
   return (
-    <div data-react-grab-ungrouped-section>
-      {/* Header */}
+    <>
       <div
         class={cn(
-          "group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-foreground/[0.03] cursor-pointer",
+          "group/header sticky top-0 z-[1] w-full flex items-center justify-between gap-2 px-2 py-1.5 bg-card hover:bg-muted cursor-pointer",
           !props.isFirst && "border-t border-border",
         )}
         onClick={() => setIsOpen((prev) => !prev)}
@@ -59,12 +62,12 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
             />
           </svg>
           <span class="text-caption font-semibold text-foreground/70 truncate">
-            Ungrouped
+            {props.title}
           </span>
         </div>
+        {props.summary}
         <Badge variant="count">{props.items.length}</Badge>
       </div>
-      {/* Collapsible items */}
       <div
         class="grid transition-[grid-template-rows] duration-150 ease-out"
         style={{ "grid-template-rows": isOpen() ? "1fr" : "0fr" }}
@@ -74,7 +77,7 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
             when={props.items.length > 0}
             fallback={
               <div class="px-2 py-2 text-meta text-muted-foreground text-center italic">
-                No selections yet
+                {props.emptyText ?? "No selections yet"}
               </div>
             }
           >
@@ -82,6 +85,16 @@ export const UngroupedSection: Component<UngroupedSectionProps> = (props) => {
           </Show>
         </div>
       </div>
-    </div>
+    </>
   );
 };
+
+type UngroupedSectionProps = Omit<SelectionSectionProps, "title">;
+
+/** Selections without a group (ADR-0028). "Ungrouped" is not a real group,
+ *  so its header has no rename / delete / copy / reveal actions. */
+export const UngroupedSection: Component<UngroupedSectionProps> = (props) => (
+  <div data-react-grab-ungrouped-section>
+    <SelectionSection title="Ungrouped" {...props} />
+  </div>
+);

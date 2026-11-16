@@ -53,7 +53,7 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
       {/* Group header */}
       <div
         class={cn(
-          "group/header w-full flex items-center justify-between px-2 py-1.5 hover:bg-foreground/[0.03] cursor-pointer",
+          "group/header sticky top-0 z-[1] w-full flex items-center justify-between px-2 py-1.5 bg-card hover:bg-muted cursor-pointer",
           !props.isFirst && "border-t border-border",
         )}
         onClick={() => !isRenaming() && setIsOpen((prev) => !prev)}

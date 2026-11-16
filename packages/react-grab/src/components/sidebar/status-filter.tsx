@@ -1,10 +1,9 @@
-import { type Component, For, Show, createMemo } from "solid-js";
+import { type Component, For, Show } from "solid-js";
 import type { FilterState } from "../../features/sidebar/filter-state.js";
-import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
 import {
   ALL_STATUSES_VALUE,
+  type StatusFilterOptions,
   getSelectedStatus,
-  getStatusFilterOptions,
   selectStatus,
 } from "../../features/sidebar/business/status-filter.js";
 import {
@@ -13,46 +12,64 @@ import {
   ToggleGroupItem,
 } from "../ui/toggle-group.js";
 import { StatusDot } from "../ui/status-dot.js";
+import { IconEyeOff } from "../icons/icon-eye-off.jsx";
+
+const ATTENTION_VALUE = "attention";
 
 interface StatusFilterProps {
-  groups: SelectionGroupWithJira[];
+  options: StatusFilterOptions;
   filter: FilterState;
   onFilterChange: (filter: FilterState) => void;
+  /** Selections that are flagged or not on this page. */
+  attentionCount: number;
+  attentionOnly: boolean;
+  onAttentionOnlyChange: (attentionOnly: boolean) => void;
 }
 
-/** The status chips: each shows how many groups have that status and filters to it. */
+/**
+ * The status chips: each counts the selections the list shows in that status
+ * and narrows the list to them. "Attention" narrows to the flagged ones and
+ * the ones not on this page.
+ */
 export const StatusFilter: Component<StatusFilterProps> = (props) => {
-  const statusOptions = createMemo(() =>
-    getStatusFilterOptions(props.groups, props.filter),
-  );
+  const value = () =>
+    props.attentionOnly
+      ? ATTENTION_VALUE
+      : (getSelectedStatus(props.filter) ?? ALL_STATUSES_VALUE);
 
-  const handleChange = (value: string | null) => {
+  const handleChange = (next: string | null) => {
+    const attentionOnly = next === ATTENTION_VALUE;
     const status =
-      value === null || value === ALL_STATUSES_VALUE ? null : value;
+      next === null || next === ALL_STATUSES_VALUE || attentionOnly
+        ? null
+        : next;
+    props.onAttentionOnlyChange(attentionOnly);
     props.onFilterChange(selectStatus(props.filter, status));
   };
 
-  // With no groups and no status chosen there is nothing to filter.
+  // With no selections and nothing chosen there is nothing to filter.
   const hasChoices = () =>
-    props.groups.length > 0 || getSelectedStatus(props.filter) !== null;
+    props.options.total > 0 ||
+    getSelectedStatus(props.filter) !== null ||
+    props.attentionOnly;
 
   return (
     <Show when={hasChoices()}>
       <ToggleGroup
         data-react-grab-status-filter
         aria-label="Filter by status"
-        value={getSelectedStatus(props.filter) ?? ALL_STATUSES_VALUE}
+        value={value()}
         onChange={handleChange}
         class="px-4 pt-3 pb-1"
       >
         <ToggleGroupItem
           value={ALL_STATUSES_VALUE}
-          aria-label={`All (${statusOptions().total})`}
+          aria-label={`All (${props.options.total})`}
         >
           All
-          <ToggleGroupCount>{statusOptions().total}</ToggleGroupCount>
+          <ToggleGroupCount>{props.options.total}</ToggleGroupCount>
         </ToggleGroupItem>
-        <For each={statusOptions().options}>
+        <For each={props.options.options}>
           {(option) => (
             <ToggleGroupItem
               value={option.status}
@@ -64,6 +81,17 @@ export const StatusFilter: Component<StatusFilterProps> = (props) => {
             </ToggleGroupItem>
           )}
         </For>
+        <Show when={props.attentionCount > 0 || props.attentionOnly}>
+          <ToggleGroupItem
+            data-react-grab-status-filter-attention
+            value={ATTENTION_VALUE}
+            aria-label={`Needs attention (${props.attentionCount})`}
+          >
+            <IconEyeOff size={11} class="text-warning-text" />
+            Attention
+            <ToggleGroupCount>{props.attentionCount}</ToggleGroupCount>
+          </ToggleGroupItem>
+        </Show>
       </ToggleGroup>
     </Show>
   );

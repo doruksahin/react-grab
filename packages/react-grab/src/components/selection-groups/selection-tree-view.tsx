@@ -16,6 +16,9 @@ export interface SelectionTreeViewProps<Group extends SelectionGroup> {
   onCopyGroup?: (groupId: string) => void;
   /** Extra header content per group (the sidebar's ticket status). */
   groupHeaderExtra?: (group: Group) => JSX.Element;
+  /** A short summary of Ungrouped's selections (the sidebar's statuses).
+   *  A group's selections share its ticket, so its header says it once. */
+  ungroupedSummary?: (items: CommentItem[]) => JSX.Element;
   /** A section holding this selection opens (a focus request). */
   revealItemId?: string | null;
 }
@@ -36,6 +39,7 @@ export const SelectionTreeView = <Group extends SelectionGroup>(
         isFirst={true}
         renderItem={props.renderItem}
         revealItemId={props.revealItemId}
+        summary={props.ungroupedSummary?.(props.tree.ungrouped)}
       />
     </Show>
     <Key each={props.tree.groups} by={(section) => section.group.id}>

@@ -23,69 +23,68 @@ export const CommentsSection: Component<JiraCommentsSectionProps> = (props) => {
 
   return (
     <div data-react-grab-comments-section data-react-grab-ignore-events>
-      <div class="bg-comments/[0.08] border border-comments/20 rounded-md mt-2 px-2.5 py-1.5 transition-colors hover:bg-comments/[0.12]">
-        <CollapsibleCard
-          variant="inline"
-          defaultOpen={true}
-          trigger={
-            <span class="text-comments-text font-semibold text-meta uppercase tracking-wide">
-              Comments{" "}
-              <span data-react-grab-comments-count>
-                ({mergedComments().length})
-              </span>
+      <CollapsibleCard
+        variant="panel"
+        defaultOpen={props.defaultOpen ?? true}
+        trigger={
+          <>
+            <span>Comments</span>
+            <span
+              data-react-grab-comments-count
+              class="font-normal text-muted-foreground"
+            >
+              {mergedComments().length}
             </span>
-          }
-        >
-          <div class="flex flex-col gap-1">
-            <div class="mb-2">
-              <JiraCommentEditor
-                onSearchUsers={props.onSearchUsers}
-                onSubmit={(markdown, mentions) =>
-                  submitComment(markdown, mentions)
-                }
-                toolbarInitiallyVisible={props.commentEditorToolbarVisible}
-              />
-            </div>
-
-            <Show when={error()}>
-              <div
-                data-react-grab-comments-error
-                class="text-meta text-destructive px-1 py-0.5"
-              >
-                {error()}
-              </div>
-            </Show>
-
-            <Show when={mergedComments().length > 0}>
-              <div
-                data-react-grab-comments-list
-                class="flex flex-col gap-4 max-h-[300px] overflow-y-auto"
-              >
-                <For each={rootComments()}>
-                  {(root) => (
-                    <CommentThread
-                      root={root}
-                      replies={replies(root.id)}
-                      isReplying={replyTo()?.id === root.id}
-                      onReply={() =>
-                        setReplyTo({ id: root.id, author: root.author })
-                      }
-                      onCancelReply={() => setReplyTo(null)}
-                      onSubmitReply={(md, mentions) =>
-                        submitComment(md, mentions, root.id)
-                      }
-                      onSearchUsers={props.onSearchUsers}
-                      toolbarInitiallyVisible={
-                        props.commentEditorToolbarVisible
-                      }
-                    />
-                  )}
-                </For>
-              </div>
-            </Show>
+          </>
+        }
+      >
+        <div class="flex flex-col gap-1">
+          <div class="mb-2">
+            <JiraCommentEditor
+              onSearchUsers={props.onSearchUsers}
+              onSubmit={(markdown, mentions) =>
+                submitComment(markdown, mentions)
+              }
+              toolbarInitiallyVisible={props.commentEditorToolbarVisible}
+            />
           </div>
-        </CollapsibleCard>
-      </div>
+
+          <Show when={error()}>
+            <div
+              data-react-grab-comments-error
+              class="text-meta text-destructive px-1 py-0.5"
+            >
+              {error()}
+            </div>
+          </Show>
+
+          <Show when={mergedComments().length > 0}>
+            <div
+              data-react-grab-comments-list
+              class="flex flex-col gap-4 max-h-[300px] overflow-y-auto"
+            >
+              <For each={rootComments()}>
+                {(root) => (
+                  <CommentThread
+                    root={root}
+                    replies={replies(root.id)}
+                    isReplying={replyTo()?.id === root.id}
+                    onReply={() =>
+                      setReplyTo({ id: root.id, author: root.author })
+                    }
+                    onCancelReply={() => setReplyTo(null)}
+                    onSubmitReply={(md, mentions) =>
+                      submitComment(md, mentions, root.id)
+                    }
+                    onSearchUsers={props.onSearchUsers}
+                    toolbarInitiallyVisible={props.commentEditorToolbarVisible}
+                  />
+                )}
+              </For>
+            </div>
+          </Show>
+        </div>
+      </CollapsibleCard>
     </div>
   );
 };

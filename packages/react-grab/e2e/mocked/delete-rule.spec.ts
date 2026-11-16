@@ -177,6 +177,8 @@ test.describe(
       const card = page
         .locator("[data-react-grab-selection-card]")
         .filter({ hasText: "Loose one" });
+      // A row shows its menu on hover.
+      await card.hover();
       await card.getByRole("button", { name: "Selection actions" }).click();
       await page.getByRole("menuitem", { name: "Remove selection" }).click();
       await expect(card).toHaveCount(0);

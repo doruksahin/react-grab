@@ -55,8 +55,9 @@ const SelectionCardBodyLayout: Component<SelectionCardBodySlots> = (props) => {
       <Show
         when={hasHeader()}
         fallback={
-          <Show when={props.time}>
-            <div class="pb-2.5 text-meta text-muted-foreground">
+          <Show when={props.subheader || props.time}>
+            <div class="flex min-w-0 items-center gap-2 pb-2.5 text-meta text-muted-foreground">
+              {props.subheader}
               {props.time}
             </div>
           </Show>
@@ -137,6 +138,8 @@ export interface SelectionCardBodyProps {
   onSearchUsers?: SearchJiraUsersFn;
   onRefreshStatus?: () => void;
   commentEditorToolbarVisible?: boolean;
+  /** Whether the comments start open. @default true */
+  commentsDefaultOpen?: boolean;
 
   // Screenshot click — when provided, thumbnails open in a lightbox. The
   // sidebar wires this via useImageLightbox; the floating selection label
@@ -281,6 +284,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
               onSearchUsers={props.onSearchUsers}
               onRefreshPoll={props.onRefreshStatus ?? (() => {})}
               commentEditorToolbarVisible={props.commentEditorToolbarVisible}
+              defaultOpen={props.commentsDefaultOpen}
             />
           )}
         </Show>

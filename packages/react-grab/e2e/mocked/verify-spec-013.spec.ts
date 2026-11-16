@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "../fixtures.js";
+import { openSelectionCard } from "../open-selection-card.js";
 import * as fixtures from "../mocks/fixtures.js";
 
 /**
@@ -34,6 +35,11 @@ test.describe("Jira editor current UI contract", { tag: ["@SPEC-013"] }, () => {
     mockServer.override("listComments", [fixtures.comments[0]]);
     await reactGrab.triggerInitSync();
     await reactGrab.page.locator("[data-react-grab-toolbar-dashboard]").click();
+    await openSelectionCard(
+      reactGrab.page,
+      "Navigation bar is misaligned on mobile viewports",
+      { comments: true },
+    );
     await expect(
       selectionCard(reactGrab.page).locator(
         '[data-react-grab-jira-comment-id="jira-cmt-1"]',

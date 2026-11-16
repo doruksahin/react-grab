@@ -1,5 +1,6 @@
 import { openGroupDetail } from "../open-group-detail.js";
 import { test, expect } from "../fixtures.js";
+import { openSelectionCard } from "../open-selection-card.js";
 
 /**
  * Visual verification E2E tests for JIRA comments in the sidebar.
@@ -209,9 +210,12 @@ test.describe(
 
       // ADR-0022 step 3: the Jira thread lives on the selection's card in the
       // sidebar. populate() injects an in-memory Jira port, so it renders.
-      const composer = page
-        .locator("[data-react-grab-selection-card]")
-        .filter({ hasText: "Navigation bar is misaligned on mobile viewports" })
+      const card = await openSelectionCard(
+        page,
+        "Navigation bar is misaligned on mobile viewports",
+        { comments: true },
+      );
+      const composer = card
         .locator("[data-react-grab-comment-composer]")
         .first();
       await expect(composer).toBeVisible({ timeout: 5000 });

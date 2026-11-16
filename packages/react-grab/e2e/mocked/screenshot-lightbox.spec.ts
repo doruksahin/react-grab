@@ -1,5 +1,6 @@
 import type { ReactGrabPageObject } from "../fixtures.js";
 import { test, expect } from "../fixtures.js";
+import { openSelectionCard } from "../open-selection-card.js";
 import type { MockServerHandle } from "../mocks/routes.js";
 import { comments as defaultComments } from "../mocks/fixtures.js";
 
@@ -157,6 +158,12 @@ const seedAndOpen = async (
     .toBe(true);
   await openSidebar(reactGrab.page);
   await switchToSelectionsTab(reactGrab.page);
+  // The first comment has the screenshots; its card opens under its row.
+  const [withScreenshots] = commentsWithScreenshots;
+  await openSelectionCard(
+    reactGrab.page,
+    withScreenshots.commentText ?? withScreenshots.elementName,
+  );
   // Wait for at least one thumbnail to render
   await expect
     .poll(

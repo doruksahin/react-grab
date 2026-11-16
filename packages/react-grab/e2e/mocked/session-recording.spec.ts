@@ -1,4 +1,5 @@
 import { test, expect, type ReactGrabPageObject } from "../fixtures.js";
+import { openSelectionCard } from "../open-selection-card.js";
 import type { Page } from "@playwright/test";
 import * as fixtures from "../mocks/fixtures.js";
 
@@ -35,11 +36,9 @@ const savedRecordingUrls = (
     .filter((body) => body.commentText === NEW_COMMENT)
     .map((body) => body.recordingUrl);
 
-const openSelectionCard = async (page: Page) => {
+const openNewCommentCard = async (page: Page) => {
   await page.locator("[data-react-grab-toolbar-dashboard]").click();
-  return page
-    .locator("[data-react-grab-selection-card]")
-    .filter({ hasText: NEW_COMMENT });
+  return openSelectionCard(page, NEW_COMMENT);
 };
 
 const startWithRecording = async (
@@ -77,7 +76,7 @@ test.describe("Session recording", { tag: ["@SPEC-020"] }, () => {
         })
         .toContain(fixtures.RECORDING_URL);
 
-      const card = await openSelectionCard(page);
+      const card = await openNewCommentCard(page);
       await expect(
         card.locator("[data-react-grab-recording-link]"),
       ).toHaveAttribute("href", fixtures.RECORDING_URL);

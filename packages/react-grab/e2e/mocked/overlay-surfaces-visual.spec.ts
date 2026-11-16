@@ -1,4 +1,5 @@
 import { test, expect, type ReactGrabPageObject } from "../fixtures.js";
+import { openSelectionCard } from "../open-selection-card.js";
 import type { Locator, Page } from "@playwright/test";
 
 /**
@@ -116,11 +117,8 @@ test.describe("Overlay surfaces", { tag: ["@ADR-0022"] }, () => {
     await reactGrab.typeInInput("Checkout button does nothing on Safari");
     await reactGrab.submitInput();
     await openDashboard(page);
-    await page
-      .locator("[data-react-grab-selection-card]")
-      .filter({ hasText: "Checkout button" })
-      .locator("[data-react-grab-create-ticket]")
-      .click();
+    const card = await openSelectionCard(page, "Checkout button");
+    await card.locator("[data-react-grab-create-ticket]").click();
     await expect(page.locator("[data-react-grab-jira-form]")).toBeVisible();
     // The list behind the dialog is still settling around the new card;
     // the sidebar has its own shots, so only the dialog is compared here.

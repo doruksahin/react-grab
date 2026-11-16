@@ -6,12 +6,13 @@ import { cn } from "../../utils/cn.js";
 import { Badge } from "./badge.js";
 
 // A single-choice group of toggles (Kobalte ToggleGroup): pill chips, such
-// as a filter, or colour swatches.
+// as a filter, colour swatches, or a compact segmented control.
 const toggleGroupVariants = cva({
   variants: {
     variant: {
       chip: "flex flex-wrap gap-1.5",
       swatch: "grid grid-cols-5 gap-1",
+      segment: "inline-flex gap-0.5 rounded-md border border-input p-0.5",
     },
   },
   defaultVariants: {
@@ -26,6 +27,8 @@ const toggleGroupItemVariants = cva({
       chip: "group/toggle inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-full border border-input bg-transparent px-2.5 text-caption font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[pressed]:border-transparent data-[pressed]:bg-foreground data-[pressed]:text-background",
       swatch:
         "size-6 rounded-md border-2 border-transparent transition-all hover:scale-110 data-[pressed]:border-foreground",
+      segment:
+        "inline-flex h-5 items-center rounded-sm px-2 text-meta font-medium text-muted-foreground transition-colors hover:text-foreground data-[pressed]:bg-accent data-[pressed]:text-foreground",
     },
   },
   defaultVariants: {
@@ -33,7 +36,7 @@ const toggleGroupItemVariants = cva({
   },
 });
 
-type ToggleGroupVariant = "chip" | "swatch";
+type ToggleGroupVariant = "chip" | "swatch" | "segment";
 
 const ToggleGroupVariantContext = createContext<() => ToggleGroupVariant>(
   (): ToggleGroupVariant => "chip",
