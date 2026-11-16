@@ -18,7 +18,7 @@ export interface OverlayBounds {
  *
  * `groupId` is overridden to `string | null` (server type is `string`).
  * `null` = intentionally ungrouped. The wire-format translation
- * (`null` ↔ `""`) lives in features/sync/transforms.ts.
+ * (`null` ↔ `""`) lives in sync-http/wire.ts.
  */
 export interface CommentItem extends Omit<ServerCommentItem, "groupId"> {
   groupId: string | null;

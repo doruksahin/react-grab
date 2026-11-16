@@ -13,11 +13,6 @@ import { cn } from "../../utils/cn.js";
 import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import type { SyncStatus } from "../../features/sync/types.js";
 import type { SidebarFocusRequest } from "../../features/sidebar/hooks/use-sidebar-session.js";
-import type {
-  RefreshGroupStatusFn,
-  SearchJiraUsersFn,
-  SubmitGroupCommentFn,
-} from "../../features/jira-comments/types.js";
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
 import { StatusFilter } from "./status-filter.js";
@@ -39,17 +34,15 @@ import { StatusLegend } from "./status-legend.js";
 import { groupComments } from "../../features/selection-groups/business/group-operations.js";
 import { type GroupedEntry } from "../../features/sidebar/index.js";
 import type { SelectionGroupWithJira } from "../../features/selection-groups/types.js";
-import { filterUserFacingGroups } from "../../features/selection-groups/business/synthetic-group.js";
+import { presentedGroups } from "../../features/selection-groups/business/membership.js";
 import { JiraCreateDialog } from "./jira-create-dialog.jsx";
 import { TabBar } from "./tab-bar.js";
 import { Tabs, TabsContent } from "../ui/tabs.js";
 import { SelectionListTab } from "./selection-list-tab.js";
 import { BulkActionBar } from "./bulk-action-bar.js";
 import { BulkGroupPicker } from "./bulk-group-picker.js";
-import {
-  assignableGroupsFor,
-  isSelectionLocked,
-} from "../../features/selection-groups/business/ticket-lock.js";
+import { isSelectionLocked } from "../../features/selection-groups/business/ticket-lock.js";
+import { assignableGroupsFor } from "../../features/selection-groups/business/membership-policy.js";
 import { ImageLightbox } from "../ui/image-lightbox.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { IconFlag } from "../icons/icon-flag.js";
@@ -62,8 +55,6 @@ export interface SidebarProps {
   onRetrySync?: () => Promise<void>;
   /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
   jiraSiteHost?: string;
-  syncServerUrl?: string;
-  syncWorkspace?: string;
   jiraProjectKey?: string;
   onClose: () => void;
   /** Open on this selection, in the Selections tab where its Jira thread
@@ -87,12 +78,6 @@ export interface SidebarProps {
     items: CommentItem[];
   } | null;
   onLooseTicketDialogClose?: () => void;
-  /** Submit a JIRA comment for a specific group */
-  onSubmitJiraComment?: SubmitGroupCommentFn;
-  /** Search JIRA users for @mention autocomplete */
-  onSearchJiraUsers?: SearchJiraUsersFn;
-  /** Trigger JIRA status refresh for a specific group */
-  onRefreshJiraStatus?: RefreshGroupStatusFn;
   commentEditorToolbarVisible?: boolean;
 }
 
@@ -123,7 +108,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // filter chips, stats bar, empty-state guard). Loose selections appear
   // in the Selections tab via SelectionListTab + isPresentedAsLoose.
   const userFacingGroups = createMemo(() =>
-    filterUserFacingGroups(props.groups),
+    presentedGroups(props.groups, props.commentItems),
   );
 
   const [activeTab, setActiveTab] = createSignal<"groups" | "selections">(
@@ -402,11 +387,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   onToggleSelect={toggleSelect}
                   searchQuery={searchQuery()}
                   flaggedOnly={flaggedOnly()}
-                  syncServerUrl={props.syncServerUrl}
-                  syncWorkspace={props.syncWorkspace}
-                  onSubmitJiraComment={props.onSubmitJiraComment}
-                  onSearchJiraUsers={props.onSearchJiraUsers}
-                  onRefreshJiraStatus={props.onRefreshJiraStatus}
                   commentEditorToolbarVisible={
                     props.commentEditorToolbarVisible
                   }
@@ -426,8 +406,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           }}
           group={activeGroup()!}
           commentItems={props.commentItems}
-          syncServerUrl={props.syncServerUrl}
-          syncWorkspace={props.syncWorkspace}
           onBack={() => setActiveDetailGroupId(null)}
           onCreateTicket={(group, items) =>
             setGroupTicketDialog({ group, items })
@@ -439,8 +417,6 @@ export const Sidebar: Component<SidebarProps> = (props) => {
       <Show when={groupTicketDialog()}>
         {(state) => (
           <JiraCreateDialog
-            workspaceId={props.syncWorkspace ?? ""}
-            syncServerUrl={props.syncServerUrl}
             groupId={state().group.id}
             group={state().group}
             commentItems={state().items}

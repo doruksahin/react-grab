@@ -6,10 +6,10 @@
  *   > Its group cannot change, and ticketed groups cannot receive new
  *   > members.
  *
- * This file is the single source of truth for that invariant. Every
- * surface that lets a user reassign a selection (picker, move menu,
- * keyboard shortcut, drag-drop) must consult these predicates — never
- * re-derive the rule inline.
+ * This file defines the lock. What may move where, built on it, is
+ * business/membership-policy.ts: every surface and command that
+ * reassigns a selection goes through that policy — never re-derive the
+ * rule inline.
  *
  * Synthetic groups count: a loose selection that earned a ticket lives
  * in a synthetic backing group, and it is just as locked as a real
@@ -17,7 +17,6 @@
  * whether the group is real or synthetic, resolved or open.
  */
 import type { SelectionGroup } from "../types.js";
-import { isSynthetic } from "./synthetic-group.js";
 
 interface HasMembership {
   groupId: string | null;
@@ -38,23 +37,6 @@ export const isSelectionLocked = (
   if (item.groupId === null) return false;
   const group = groups.find((g) => g.id === item.groupId);
   return Boolean(group && isTicketed(group));
-};
-
-/**
- * Groups that this selection may be reassigned into.
- *
- *   - Locked selections have no assignable targets (empty list).
- *   - Ticketed groups are never valid targets (can't dump new items
- *     into an existing ticket).
- *   - Synthetic groups are never valid targets (they're UI-invisible
- *     backing stores for loose-with-ticket).
- */
-export const assignableGroupsFor = (
-  item: HasMembership,
-  groups: SelectionGroup[],
-): SelectionGroup[] => {
-  if (isSelectionLocked(item, groups)) return [];
-  return groups.filter((g) => !isTicketed(g) && !isSynthetic(g));
 };
 
 /**

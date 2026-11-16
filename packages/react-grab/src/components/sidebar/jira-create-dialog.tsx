@@ -6,8 +6,6 @@ import type { CommentItem, TicketCreatedCallback } from "../../types.js";
 import { useShadowMount } from "../../utils/shadow-context.js";
 
 interface JiraCreateDialogProps {
-  workspaceId: string;
-  syncServerUrl?: string;
   groupId: string;
   group: SelectionGroup;
   commentItems: CommentItem[];
@@ -37,8 +35,6 @@ export const JiraCreateDialog: Component<JiraCreateDialogProps> = (props) => {
           onClick={(e) => e.stopPropagation()}
         >
           <JiraCreateForm
-            workspaceId={props.workspaceId}
-            syncServerUrl={props.syncServerUrl}
             groupId={props.groupId}
             group={props.group}
             commentItems={props.commentItems}

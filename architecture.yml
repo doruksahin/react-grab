@@ -125,12 +125,36 @@ packages:
       playground: packages/gym/app/playground/page.tsx
 
   web-extension:
-    description: Chrome/Firefox extension
-    manifest: packages/web-extension/src/manifest.json
-    background: packages/web-extension/src/background/service-worker.ts
-    content_scripts:
-      react_grab: packages/web-extension/src/content/react-grab.ts
-      bridge: packages/web-extension/src/content/bridge.ts
+    description: Chrome MV3 extension on WXT (ADR-0023) — runs the overlay with sync on enabled sites; the service worker is the only holder of the token and the gateway to the sync server
+    config: packages/web-extension/wxt.config.ts
+    readme: packages/web-extension/README.md
+    entrypoints:
+      background: packages/web-extension/src/entrypoints/background.ts
+      overlay: packages/web-extension/src/entrypoints/overlay.content.ts
+      relay: packages/web-extension/src/entrypoints/relay.content.ts
+      options: packages/web-extension/src/entrypoints/options/main.tsx
+    background: packages/web-extension/src/background/register-background.ts
+    request_handlers: packages/web-extension/src/background/handle-overlay-requests.ts
+    gateway: packages/web-extension/src/gateway/sync-gateway.ts
+    sender_policy: packages/web-extension/src/gateway/sender-policy.ts
+    jira_project_binding: packages/web-extension/src/gateway/bind-site-jira-project.ts
+    settings_requests: packages/web-extension/src/background/handle-settings-requests.ts
+    site_scripts: packages/web-extension/src/site-trust/replace-site-scripts.ts
+    settings: packages/web-extension/src/settings/settings-items.ts
+    settings_schema: packages/web-extension/src/settings/settings-schema.ts
+    overlay: packages/web-extension/src/overlay/start-overlay.ts
+    overlay_ports: packages/web-extension/src/overlay/messaging-ports.ts
+    relay: packages/web-extension/src/relay/start-relay.ts
+    messaging:
+      port_requests: packages/web-extension/src/messaging/port-requests.ts
+      request_protocol: packages/web-extension/src/messaging/overlay-request-protocol.ts
+      event_protocol: packages/web-extension/src/messaging/overlay-event-protocol.ts
+      page: packages/web-extension/src/messaging/page-messengers.ts
+      extension: packages/web-extension/src/messaging/extension-messengers.ts
+    storage: packages/web-extension/src/storage/overlay-items.ts
+    e2e:
+      overlay: packages/web-extension/e2e/overlay.spec.ts
+      gateway: packages/web-extension/e2e/gateway.spec.ts
 
   design-system:
     description: Shared Solid.js component library (tsup)
@@ -159,7 +183,6 @@ features:
       - packages/react-grab/src/features/sidebar/extract-file-path.ts
       - packages/react-grab/src/features/sidebar/index.ts
       - packages/react-grab/src/features/sidebar/relative-time.ts
-      - packages/react-grab/src/features/sidebar/screenshot-url.ts
       - packages/react-grab/src/features/sidebar/use-lazy-visible.ts
 
   selection-groups:
@@ -168,6 +191,8 @@ features:
     prds: [PRD-002]
     specs: [SPEC-001]
     files:
+      - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
+      - packages/react-grab/src/features/selection-groups/business/membership.ts
       - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
       - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
       - packages/react-grab/src/features/selection-groups/business/ticket-lock.ts
@@ -182,10 +207,12 @@ features:
     prds: [PRD-003]
     specs: [SPEC-005]
     files:
+      - packages/react-grab/src/features/screenshot/business/screenshot-refs.ts
       - packages/react-grab/src/features/screenshot/capture.ts
+      - packages/react-grab/src/features/screenshot/hooks/use-screenshot-url.ts
       - packages/react-grab/src/features/screenshot/index.ts
       - packages/react-grab/src/features/screenshot/orchestrate.ts
-      - packages/react-grab/src/features/screenshot/use-authenticated-image-url.ts
+      - packages/react-grab/src/features/screenshot/types.ts
       - packages/sync-server/src/repositories/r2.store.ts
       - packages/sync-server/src/routes/screenshots.ts
 
@@ -198,11 +225,57 @@ features:
       - packages/react-grab/src/components/renderer.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
 
+  reproduce-steps:
+    description: Captures the clicks and field changes that lead to each new comment as Chrome DevTools Recorder steps, stored on the comment; values never stored; markers in the rrweb recording (ADR-0025)
+    status: implemented
+    adrs: [ADR-0025, ADR-0026, ADR-0021, ADR-0023]
+    files:
+      - packages/react-grab/src/features/reproduce-steps/business/build-step.ts
+      - packages/react-grab/src/features/reproduce-steps/business/describe-step.ts
+      - packages/react-grab/src/features/reproduce-steps/business/find-step-target.ts
+      - packages/react-grab/src/features/reproduce-steps/business/guide-progress.ts
+      - packages/react-grab/src/features/reproduce-steps/business/page-key.ts
+      - packages/react-grab/src/features/reproduce-steps/business/recorder-selector.ts
+      - packages/react-grab/src/features/reproduce-steps/business/selection-press.ts
+      - packages/react-grab/src/features/reproduce-steps/business/step-buffer.ts
+      - packages/react-grab/src/features/reproduce-steps/business/step-selectors.ts
+      - packages/react-grab/src/features/reproduce-steps/business/to-reproduce-steps.ts
+      - packages/react-grab/src/features/reproduce-steps/business/to-user-flow.ts
+      - packages/react-grab/src/features/reproduce-steps/business/user-input.ts
+      - packages/react-grab/src/features/reproduce-steps/context.ts
+      - packages/react-grab/src/features/reproduce-steps/download-user-flow.ts
+      - packages/react-grab/src/features/reproduce-steps/hooks/create-page-events.ts
+      - packages/react-grab/src/features/reproduce-steps/hooks/create-step-capture.ts
+      - packages/react-grab/src/features/reproduce-steps/hooks/create-step-guide.ts
+      - packages/react-grab/src/features/reproduce-steps/index.ts
+      - packages/react-grab/src/features/reproduce-steps/limits.ts
+      - packages/react-grab/src/features/reproduce-steps/store/guide-session.ts
+      - packages/react-grab/src/features/reproduce-steps/types.ts
+      - packages/sync-server/src/schemas/reproduce-step.ts
+      - packages/web-extension/src/overlay/capture-options.ts
+      - packages/web-extension/src/settings/migrate-sites.ts
+
+  selection-location:
+    description: Says where a selection not on the page was made (another page, another site, gone) and offers Open page for same-site pages (ADR-0024)
+    status: implemented
+    adrs: [ADR-0024, ADR-0023]
+    files:
+      - packages/react-grab/src/components/selection-location/location-note.tsx
+      - packages/react-grab/src/features/selection-location/business/describe-location.ts
+      - packages/react-grab/src/features/selection-location/business/locate-selection.ts
+      - packages/react-grab/src/features/selection-location/context.ts
+      - packages/react-grab/src/features/selection-location/hooks/create-current-page-url.ts
+      - packages/react-grab/src/features/selection-location/index.ts
+      - packages/react-grab/src/features/selection-location/open-page.ts
+      - packages/react-grab/src/features/selection-location/types.ts
+
   selection-visibility:
     description: Reveal/hide selections on canvas — batch visibility from filters
     status: implemented
     specs: [SPEC-006]
     files:
+      - packages/react-grab/src/features/selection-visibility/business/preview-label-fields.ts
+      - packages/react-grab/src/features/selection-visibility/business/same-preview.ts
       - packages/react-grab/src/features/selection-visibility/index.ts
       - packages/react-grab/src/features/selection-visibility/types.ts
 
@@ -216,8 +289,11 @@ features:
       - packages/react-grab/src/components/sidebar/loose-selection-card.tsx
       - packages/react-grab/src/components/sidebar/loose-selection-list.tsx
       - packages/react-grab/src/core/index.tsx
+      - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
       - packages/react-grab/src/features/selection-groups/business/membership.ts
+      - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
       - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
+      - packages/react-grab/src/features/selection-groups/business/ticket-lock.ts
       - packages/react-grab/src/features/selection-groups/types.ts
 
   group-dropdown-consistency:
@@ -272,12 +348,11 @@ features:
     adrs: [ADR-0006]
     files:
       - packages/react-grab/src/core/index.tsx
-      - packages/react-grab/src/features/sync/adapter.ts
-      - packages/react-grab/src/features/sync/schemas.ts
       - packages/react-grab/src/features/sync/store/sync-store.ts
       - packages/react-grab/src/features/sync/sync-layer.ts
-      - packages/react-grab/src/features/sync/transforms.ts
       - packages/react-grab/src/features/sync/types.ts
+      - packages/react-grab/src/sync-http/http-jira-port.ts
+      - packages/react-grab/src/sync-http/request.ts
       - packages/sync-server/src/routes/jira.ts
       - packages/sync-server/src/services/jira.service.ts
 
@@ -306,6 +381,10 @@ features:
     prds: [PRD-005]
     specs: [SPEC-008]
     files:
+      - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
+      - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
+      - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
+      - packages/react-grab/src/features/selection-groups/business/ticket-lock.ts
       - packages/react-grab/src/features/selection-groups/types.ts
       - packages/sync-server/src/schemas/jira.ts
       - packages/sync-server/src/services/jira.service.ts
@@ -320,6 +399,10 @@ features:
       - packages/react-grab/src/components/icons/icon-flag.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
       - packages/react-grab/src/components/sidebar/group-card.tsx
+      - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
+      - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
+      - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
+      - packages/react-grab/src/features/selection-groups/business/ticket-lock.ts
       - packages/react-grab/src/features/selection-groups/types.ts
       - packages/react-grab/src/features/sidebar/resolve-display-color.ts
       - packages/react-grab/src/features/sidebar/status-colors.ts
@@ -421,6 +504,35 @@ features:
       - packages/react-grab/src/features/session-recording/business/gzip-json.ts
       - packages/react-grab/src/features/session-recording/business/recent-window.ts
       - packages/react-grab/src/features/session-recording/index.ts
+  overlay-on-any-site:
+    description: The browser extension runs the overlay with sync on sites the user enables; page calls reach the sync server only through the service worker gateway, which holds the token (ADR-0023)
+    status: implemented
+    adrs: [ADR-0020, ADR-0023]
+    files:
+      - packages/react-grab/src/features/sync/types.ts
+      - packages/react-grab/src/sync-http/index.ts
+      - packages/react-grab/src/sync-http/port-arguments.ts
+      - packages/web-extension/src/background/handle-overlay-requests.ts
+      - packages/web-extension/src/background/handle-settings-requests.ts
+      - packages/web-extension/src/background/queues.ts
+      - packages/web-extension/src/background/register-background.ts
+      - packages/web-extension/src/gateway/bind-site-jira-project.ts
+      - packages/web-extension/src/gateway/sender-policy.ts
+      - packages/web-extension/src/gateway/sync-gateway.ts
+      - packages/web-extension/src/messaging/extension-messengers.ts
+      - packages/web-extension/src/messaging/overlay-request-protocol.ts
+      - packages/web-extension/src/messaging/page-messengers.ts
+      - packages/web-extension/src/messaging/port-requests.ts
+      - packages/web-extension/src/options/options-app.tsx
+      - packages/web-extension/src/overlay/messaging-ports.ts
+      - packages/web-extension/src/overlay/start-sync.ts
+      - packages/web-extension/src/relay/start-relay.ts
+      - packages/web-extension/src/settings/settings-items.ts
+      - packages/web-extension/src/settings/settings-schema.ts
+      - packages/web-extension/src/site-trust/apply-site-changes.ts
+      - packages/web-extension/src/site-trust/release-server-permission.ts
+      - packages/web-extension/src/site-trust/remove-revoked-sites.ts
+      - packages/web-extension/src/site-trust/replace-site-scripts.ts
   selection-label:
     description: TODO
     status: discovered
@@ -500,6 +612,28 @@ data_attrs:
   # `data-react-grab-`). An attr is valid if its suffix matches one entry in
   # some scope's `owns` list, or appears in `reserved`.
   scopes:
+    reproduce-steps:
+      description: Step list on a selection card, its Chrome Recorder flow download (ADR-0025), and the step guide (ADR-0026)
+      owning_feature: reproduce-steps
+      owns:
+        - reproduce-steps
+        - reproduce-steps-item
+        - reproduce-steps-download
+        - step-guide
+        - step-guide-status
+        - step-guide-text
+        - step-guide-skip
+        - step-guide-stop
+        - step-guide-start
+
+    selection-location:
+      description: Reason a selection is not on the page, and its Open page action (comments panel row, sidebar card)
+      owning_feature: selection-location
+      owns:
+        - selection-location
+        - selection-location-kind
+        - selection-location-open
+
     overlay:
       description: Overlay canvas, context menu, cursor/arrow chrome
       owning_feature: selection-status-colors
@@ -547,6 +681,7 @@ data_attrs:
         - active-group-picker
         - active-group-picker-locked
         - group-picker-flyout
+        - group-collapsible
         - detail-header
         - group-card
         - group-detail
@@ -730,10 +865,10 @@ data_attrs:
     comment-body: {scope: comments, src: 1, tests: 0}
     comment-cancel: {scope: comments, src: 1, tests: 0}
     comment-composer: {scope: comments, src: 1, tests: 5}
-    comment-editor: {scope: comments, src: 1, tests: 2}
+    comment-editor: {scope: comments, src: 1, tests: 1}
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
-    comment-item: {scope: comments, src: 1, tests: 3}
+    comment-item: {scope: comments, src: 1, tests: 7}
     comment-reply: {scope: comments, src: 1, tests: 0}
     comment-submit: {scope: comments, src: 1, tests: 1}
     comment-thread: {scope: comments, src: 1, tests: 0}
@@ -741,7 +876,7 @@ data_attrs:
     comments-clear: {scope: comments, src: 1, tests: 1}
     comments-copy-all: {scope: comments, src: 1, tests: 2}
     comments-count: {scope: comments, src: 1, tests: 0}
-    comments-dropdown: {scope: comments, src: 3, tests: 4}
+    comments-dropdown: {scope: comments, src: 3, tests: 8}
     comments-error: {scope: comments, src: 1, tests: 1}
     comments-list: {scope: comments, src: 1, tests: 1}
     comments-section: {scope: comments, src: 1, tests: 0}
@@ -806,13 +941,22 @@ data_attrs:
     menu-item: {scope: overlay, src: 2, tests: 8}
     overlay-canvas: {scope: overlay, src: 1, tests: 0}
     product: {scope: overlay, src: 1, tests: 61}
+    reproduce-steps: {scope: reproduce-steps, src: 1, tests: 1}
+    reproduce-steps-download: {scope: reproduce-steps, src: 1, tests: 1}
+    reproduce-steps-item: {scope: reproduce-steps, src: 1, tests: 1}
+    step-guide: {scope: reproduce-steps, src: 1, tests: 1}
+    step-guide-skip: {scope: reproduce-steps, src: 1, tests: 1}
+    step-guide-start: {scope: reproduce-steps, src: 1, tests: 2}
+    step-guide-status: {scope: reproduce-steps, src: 1, tests: 10}
+    step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
+    step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 66, tests: 6}
+    ignore-events: {scope: reserved, src: 67, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
     collapse-label: {scope: selection, src: 1, tests: 2}
-    collapsed-dot: {scope: selection, src: 1, tests: 8}
+    collapsed-dot: {scope: selection, src: 1, tests: 9}
     collapsed-dot-preview: {scope: selection, src: 1, tests: 0}
     dev-insights: {scope: selection, src: 1, tests: 0}
     latest-comment: {scope: selection, src: 1, tests: 1}
@@ -820,13 +964,16 @@ data_attrs:
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 8}
+    selection-card: {scope: selection, src: 2, tests: 14}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 3, tests: 0}
     selection-label: {scope: selection, src: 1, tests: 19}
     selection-remove: {scope: selection, src: 1, tests: 0}
     unread-indicator: {scope: selection, src: 1, tests: 0}
+    selection-location: {scope: selection-location, src: 1, tests: 3}
+    selection-location-kind: {scope: selection-location, src: 1, tests: 1}
+    selection-location-open: {scope: selection-location, src: 1, tests: 5}
     active-group-picker: {scope: sidebar, src: 1, tests: 1}
     active-group-picker-locked: {scope: sidebar, src: 1, tests: 0}
     bulk-action-bar: {scope: sidebar, src: 1, tests: 0}
@@ -836,14 +983,15 @@ data_attrs:
     empty-state: {scope: sidebar, src: 1, tests: 0}
     filter-chips: {scope: sidebar, src: 1, tests: 0}
     group-card: {scope: sidebar, src: 2, tests: 5}
+    group-collapsible: {scope: sidebar, src: 1, tests: 1}
     group-detail: {scope: sidebar, src: 1, tests: 0}
     group-list: {scope: sidebar, src: 2, tests: 3}
-    group-picker-flyout: {scope: sidebar, src: 1, tests: 1}
+    group-picker-flyout: {scope: sidebar, src: 1, tests: 2}
     jira-status-banner: {scope: sidebar, src: 1, tests: 0}
     loose-selection-card: {scope: sidebar, src: 1, tests: 0}
     loose-selection-list: {scope: sidebar, src: 1, tests: 0}
     selection-list: {scope: sidebar, src: 1, tests: 0}
-    sidebar: {scope: sidebar, src: 1, tests: 2}
+    sidebar: {scope: sidebar, src: 1, tests: 3}
     sidebar-header: {scope: sidebar, src: 1, tests: 0}
     sidebar-search: {scope: sidebar, src: 1, tests: 2}
     status-filter: {scope: sidebar, src: 1, tests: 2}
@@ -856,7 +1004,7 @@ data_attrs:
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 2, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 20}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 23}
     toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 1, tests: 4}
@@ -876,7 +1024,8 @@ data_attrs:
 api_contract:
   description: Zod schemas → OpenAPI spec → Orval codegen → typed fetch clients
   source_of_truth: packages/sync-server/src/schemas/index.ts
-  openapi_spec: packages/sync-server/openapi.json
+  # The spec itself (openapi.json) is generated and gitignored; this is its exporter.
+  openapi_spec_exporter: packages/sync-server/src/export-spec.ts
   consumers:
     react-grab: packages/react-grab/src/generated/sync-api.ts
     dashboard: packages/dashboard/src/api/endpoints/
@@ -1053,4 +1202,20 @@ decree:
     ADR-0022:
       title: "Overlay UI in three layers: tokens, primitives, feature components"
       file: decree/adr/0022-overlay-ui-layers-tokens-primitives-features.md
-      status: proposed
+      status: accepted
+    ADR-0023:
+      title: Run the overlay with sync on any site through the browser extension
+      file: decree/adr/0023-overlay-on-any-site-through-the-browser-extension.md
+      status: accepted
+    ADR-0024:
+      title: Show where a selection was made when its element is not on the page
+      file: decree/adr/0024-show-where-a-selection-was-made.md
+      status: accepted
+    ADR-0025:
+      title: Capture the steps to a selection as a Chrome Recorder flow
+      file: decree/adr/0025-capture-reproduce-steps-as-a-chrome-recorder-flow.md
+      status: accepted
+    ADR-0026:
+      title: Guide the user back to a selection, step by step
+      file: decree/adr/0026-guide-the-user-back-to-a-selection-step-by-step.md
+      status: accepted

@@ -1,21 +1,24 @@
-import { batch, untrack } from "solid-js";
+import { batch, createSignal, untrack } from "solid-js";
 import { unwrap } from "solid-js/store";
 import { createSyncStore } from "./store/sync-store.js";
-import { createHttpAdapter } from "./adapter.js";
+import { withLocalRevealedState } from "./store/with-local-revealed-state.js";
+import { withErrorReporting } from "./store/with-error-reporting.js";
 import { itemChanges } from "./business/item-changes.js";
 import { applyItemChanges } from "./business/apply-item-changes.js";
+import { resolveSyncPorts } from "./business/resolve-sync-ports.js";
 import {
-  toCommentWire,
-  toGroupWire,
-  saveLocalRevealedStates,
-} from "./transforms.js";
-import { setApiBaseUrl, setApiToken } from "../../generated/custom-fetch.js";
-import { getJiraSite, getJiraTicketStatus } from "../../generated/sync-api.js";
+  persistedCommentFields,
+  persistedGroupFields,
+} from "./business/persisted-fields.js";
 import { getSiteHost } from "../jira-ticket/business/site-host.js";
 import { migrateLegacyDefaultGroup } from "../../utils/migrate-legacy-groups.js";
 import { logRecoverableError } from "../../utils/log-recoverable-error.js";
-import type { SyncConfig } from "./types.js";
-import type { StorageAdapter } from "./types.js";
+import type {
+  JiraPort,
+  StorageAdapter,
+  SyncConfig,
+  SyncPortFactories,
+} from "./types.js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../selection-groups/types.js";
 
@@ -71,12 +74,19 @@ const trimToSizeLimit = (items: CommentItem[]): CommentItem[] => {
   return trimmed;
 };
 
-export const createSyncLayer = () => {
+/**
+ * @param factories build the ports a SyncConfig does not inject; the
+ * composition root (core) passes the HTTP ones from `react-grab/sync-http`.
+ */
+export const createSyncLayer = (factories: SyncPortFactories) => {
   const storeHandle = createSyncStore();
-  let adapterRef: StorageAdapter | null = null;
-  let syncRevealedState = true;
+  // Signals, so surfaces that load through a port (screenshots) react once
+  // the connection is up.
+  const [adapter, setAdapter] = createSignal<StorageAdapter | null>(null);
+  const [jira, setJira] = createSignal<JiraPort | null>(null);
   let pollIntervalId: ReturnType<typeof setInterval> | null = null;
-  let activeConfig: SyncConfig | null = null;
+  // The storage port of the last init, for retries after a failed connect.
+  let activeStorage: StorageAdapter | null = null;
   // Bumped by init and dispose, so a connection started before either one
   // cannot apply its result afterwards.
   let generation = 0;
@@ -87,16 +97,6 @@ export const createSyncLayer = () => {
     comments: CommentItem[];
     groups: SelectionGroupWithJira[];
   } | null = null;
-
-  // When revealed state is not synced, it lives in localStorage instead. Both
-  // lists are saved together so writing one never wipes the other's flags.
-  const rememberRevealedLocally = () => {
-    if (syncRevealedState) return;
-    saveLocalRevealedStates(
-      storeHandle.store.comments,
-      storeHandle.store.groups,
-    );
-  };
 
   // --- Persistence ---
   // Callers still hand over the whole next list — it is the local state. What
@@ -115,8 +115,8 @@ export const createSyncLayer = () => {
   ): SelectionGroupWithJira[] => untrack(() => persistGroupsNow(groups));
 
   const persistCommentsNow = (items: CommentItem[]): CommentItem[] => {
-    const adapter = adapterRef;
-    if (!adapter) {
+    const storage = adapter();
+    if (!storage) {
       const toStore = trimToSizeLimit(items);
       storeHandle.setComments(toStore);
       try {
@@ -127,23 +127,24 @@ export const createSyncLayer = () => {
       return toStore;
     }
 
-    const changes = itemChanges(storeHandle.store.comments, items, (item) =>
-      toCommentWire(item, syncRevealedState),
+    const changes = itemChanges(
+      storeHandle.store.comments,
+      items,
+      persistedCommentFields,
     );
     storeHandle.setComments(items);
     for (const item of changes.upserts)
-      adapter.upsertComment(item).catch(() => {});
+      storage.upsertComment(item).catch(() => {});
     for (const id of changes.deletedIds)
-      adapter.deleteComment(id).catch(() => {});
-    rememberRevealedLocally();
+      storage.deleteComment(id).catch(() => {});
     return items;
   };
 
   const persistGroupsNow = (
     groups: SelectionGroupWithJira[],
   ): SelectionGroupWithJira[] => {
-    const adapter = adapterRef;
-    if (!adapter) {
+    const storage = adapter();
+    if (!storage) {
       storeHandle.setGroups(groups);
       try {
         localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
@@ -156,57 +157,54 @@ export const createSyncLayer = () => {
     const changes = itemChanges<SelectionGroupWithJira>(
       storeHandle.store.groups,
       groups,
-      (group) => toGroupWire(group, syncRevealedState),
+      persistedGroupFields,
     );
     storeHandle.setGroups(groups);
     for (const group of changes.upserts)
-      adapter.upsertGroup(group).catch(() => {});
+      storage.upsertGroup(group).catch(() => {});
     for (const id of changes.deletedIds)
-      adapter.deleteGroup(id).catch(() => {});
-    rememberRevealedLocally();
+      storage.deleteGroup(id).catch(() => {});
     return groups;
   };
 
   // --- Refetching ---
   const refetchGroups = async () => {
-    if (!adapterRef) return;
-    const groups = await adapterRef.loadGroups();
-    storeHandle.setGroups(groups);
+    const storage = adapter();
+    if (!storage) return;
+    storeHandle.setGroups(await storage.loadGroups());
   };
 
   const refetchComments = async () => {
-    if (!adapterRef) return;
-    const comments = await adapterRef.loadComments();
-    storeHandle.setComments(comments);
+    const storage = adapter();
+    if (!storage) return;
+    storeHandle.setComments(await storage.loadComments());
   };
 
   // --- JIRA polling ---
+  const refreshJiraStatus = async (groupId: string) => {
+    const jiraPort = jira();
+    if (!jiraPort) return;
+    try {
+      storeHandle.updateJiraStatus(
+        groupId,
+        await jiraPort.getTicketStatus(groupId),
+      );
+    } catch {
+      // Silent per SPEC-003
+    }
+  };
+
   const pollJira = async () => {
-    const workspace = storeHandle.store.workspace;
-    const ticketed = [...storeHandle.store.groups].filter(
-      (g) => g.jiraTicketId,
-    );
-    if (!workspace || ticketed.length === 0) return;
-    await Promise.allSettled(
-      ticketed.map(async (g) => {
-        try {
-          const result = await getJiraTicketStatus(workspace, g.id);
-          if (result.status === 200) {
-            storeHandle.updateJiraStatus(g.id, result.data);
-          }
-        } catch {
-          // Silent per SPEC-003
-        }
-      }),
-    );
+    const ticketed = storeHandle.store.groups.filter((g) => g.jiraTicketId);
+    await Promise.all(ticketed.map((g) => refreshJiraStatus(g.id)));
   };
 
   // An older Worker has no /jira/site; the dialog then names the project only.
   const loadJiraSite = async () => {
+    const jiraPort = jira();
+    if (!jiraPort) return;
     try {
-      const result = await getJiraSite();
-      if (result.status === 200)
-        storeHandle.setJiraSiteUrl(result.data.siteUrl);
+      storeHandle.setJiraSiteUrl((await jiraPort.getSite()).siteUrl);
     } catch {
       storeHandle.setJiraSiteUrl(null);
     }
@@ -232,32 +230,20 @@ export const createSyncLayer = () => {
       );
     }
 
-    if (config.enabled && !config.apiToken) {
-      throw new Error(
-        "react-grab: SyncConfig.apiToken is required when sync is enabled — the sync server refuses requests without it (ADR-0020)",
-      );
-    }
+    // Throws on a config that cannot reach a server, before any state changes.
+    const ports = resolveSyncPorts(config, factories);
 
     generation += 1;
-    activeConfig = null;
+    activeStorage = null;
     offlineBaseline = null;
-
-    if (config.serverUrl) {
-      setApiBaseUrl(config.serverUrl);
-    }
-    setApiToken(config.apiToken ?? "");
-    syncRevealedState = config.syncRevealedState;
+    setJira(ports.jira);
 
     batch(() => {
-      storeHandle.setConfig(
-        config.workspace,
-        config.serverUrl,
-        config.jiraProjectKey,
-      );
+      storeHandle.setConfig(config.workspace, config.jiraProjectKey);
       storeHandle.setStatus("loading");
     });
 
-    if (!config.enabled) {
+    if (!ports.storage) {
       batch(() => {
         storeHandle.setGroups(loadGroupsFromLocalStorage());
         storeHandle.setComments(loadCommentsFromLocalStorage());
@@ -266,14 +252,17 @@ export const createSyncLayer = () => {
       return;
     }
 
-    activeConfig = config;
-    await connect(config, generation, { loadLocalOnFailure: true });
+    const revealedPolicy = config.syncRevealedState
+      ? ports.storage
+      : withLocalRevealedState(ports.storage);
+    activeStorage = withErrorReporting(revealedPolicy, config.onSyncError);
+    await connect(activeStorage, generation, { loadLocalOnFailure: true });
   };
 
   // Sends what changed while offline and returns the server's lists with
   // those changes applied. Groups go first: comments refer to them.
   const replayOfflineChanges = (
-    adapter: StorageAdapter,
+    storage: StorageAdapter,
     server: { groups: SelectionGroupWithJira[]; comments: CommentItem[] },
   ) => {
     const baseline = offlineBaseline;
@@ -281,21 +270,21 @@ export const createSyncLayer = () => {
     const groupChanges = itemChanges(
       baseline.groups,
       storeHandle.store.groups,
-      (group) => toGroupWire(group, syncRevealedState),
+      persistedGroupFields,
     );
     const commentChanges = itemChanges(
       baseline.comments,
       storeHandle.store.comments,
-      (item) => toCommentWire(item, syncRevealedState),
+      persistedCommentFields,
     );
     for (const group of groupChanges.upserts)
-      adapter.upsertGroup(group).catch(() => {});
+      storage.upsertGroup(group).catch(() => {});
     for (const id of groupChanges.deletedIds)
-      adapter.deleteGroup(id).catch(() => {});
+      storage.deleteGroup(id).catch(() => {});
     for (const item of commentChanges.upserts)
-      adapter.upsertComment(item).catch(() => {});
+      storage.upsertComment(item).catch(() => {});
     for (const id of commentChanges.deletedIds)
-      adapter.deleteComment(id).catch(() => {});
+      storage.deleteComment(id).catch(() => {});
     return {
       groups: applyItemChanges(server.groups, groupChanges),
       comments: applyItemChanges(server.comments, commentChanges),
@@ -303,21 +292,21 @@ export const createSyncLayer = () => {
   };
 
   // Loads the server's state. Writes go to the server only once it has
-  // answered; until then they are kept in localStorage.
+  // answered; until then they are kept in localStorage. A failed load has
+  // already been reported to onSyncError by the storage port's wrapper.
   const connect = async (
-    config: SyncConfig,
+    storage: StorageAdapter,
     connectGeneration: number,
     options: { loadLocalOnFailure: boolean },
   ) => {
-    const httpAdapter = createHttpAdapter(config);
     try {
       const [groups, comments] = await Promise.all([
-        httpAdapter.loadGroups(),
-        httpAdapter.loadComments(),
+        storage.loadGroups(),
+        storage.loadComments(),
       ]);
       if (connectGeneration !== generation) return;
-      const next = replayOfflineChanges(httpAdapter, { groups, comments });
-      adapterRef = httpAdapter;
+      const next = replayOfflineChanges(storage, { groups, comments });
+      setAdapter(storage);
       offlineBaseline = null;
       batch(() => {
         storeHandle.setGroups(next.groups);
@@ -329,7 +318,7 @@ export const createSyncLayer = () => {
       loadJiraSite();
     } catch (error) {
       if (connectGeneration !== generation) return;
-      adapterRef = null;
+      setAdapter(null);
       batch(() => {
         if (options.loadLocalOnFailure) {
           storeHandle.setGroups(loadGroupsFromLocalStorage());
@@ -341,20 +330,17 @@ export const createSyncLayer = () => {
         groups: structuredClone(unwrap(storeHandle.store.groups)),
         comments: structuredClone(unwrap(storeHandle.store.comments)),
       };
-      config.onSyncError(
-        error instanceof Error ? error : new Error(String(error)),
-      );
     }
   };
 
   // Connects again with the config of the last init, after a failed one.
   // Calls while a retry runs share it.
   const retry = (): Promise<void> => {
-    const config = activeConfig;
-    if (!config || storeHandle.store.status !== "error") {
+    const storage = activeStorage;
+    if (!storage || storeHandle.store.status !== "error") {
       return pendingRetry ?? Promise.resolve();
     }
-    pendingRetry ??= connect(config, generation, {
+    pendingRetry ??= connect(storage, generation, {
       loadLocalOnFailure: false,
     }).finally(() => {
       pendingRetry = null;
@@ -364,23 +350,18 @@ export const createSyncLayer = () => {
 
   const dispose = () => {
     generation += 1;
-    activeConfig = null;
+    activeStorage = null;
     stopPolling();
   };
 
   const populate = (data: {
     workspace: string;
-    serverUrl: string;
     jiraProjectKey: string;
     groups?: SelectionGroupWithJira[];
     comments?: CommentItem[];
   }) => {
     batch(() => {
-      storeHandle.setConfig(
-        data.workspace,
-        data.serverUrl,
-        data.jiraProjectKey,
-      );
+      storeHandle.setConfig(data.workspace, data.jiraProjectKey);
       if (data.groups) storeHandle.setGroups(data.groups);
       if (data.comments) storeHandle.setComments(data.comments);
       storeHandle.setStatus("local");
@@ -392,7 +373,6 @@ export const createSyncLayer = () => {
     groups: () => storeHandle.store.groups,
     comments: () => storeHandle.store.comments,
     workspace: () => storeHandle.store.workspace,
-    serverUrl: () => storeHandle.store.serverUrl,
     jiraProjectKey: () => storeHandle.store.jiraProjectKey,
     jiraSiteHost: () => getSiteHost(storeHandle.store.jiraSiteUrl),
     status: () => storeHandle.store.status,
@@ -408,8 +388,13 @@ export const createSyncLayer = () => {
     refetchGroups,
     refetchComments,
     refetchJira: pollJira,
+    /** Fetches one group's Jira status now, e.g. after posting a comment. */
+    refreshJiraStatus,
 
-    adapter: () => adapterRef,
+    /** The storage port, once the server has answered; null while local or offline. */
+    adapter,
+    /** The Jira port of the last init; null when sync is off. */
+    jira,
 
     init,
     retry,

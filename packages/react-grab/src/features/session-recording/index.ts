@@ -15,6 +15,8 @@ export interface SessionRecorder {
     commentId: string,
     adapter: StorageAdapter | null,
   ) => Promise<string | undefined>;
+  /** Puts a marker in the recording, e.g. a reproduce step (ADR-0025). */
+  mark: (tag: string, payload: unknown) => void;
   stop: () => void;
 }
 
@@ -51,6 +53,10 @@ export const createSessionRecorder = (
         // Best effort, like screenshots: a failed upload never blocks the comment.
         return undefined;
       }
+    },
+    mark: (tag, payload) => {
+      // rrweb throws when it is not recording (unsupported page, or stopped).
+      if (stopRecording) record.addCustomEvent(tag, payload);
     },
     stop: () => stopRecording?.(),
   };

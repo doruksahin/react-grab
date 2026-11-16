@@ -135,7 +135,7 @@ pnpm workspaces + Turborepo. Key packages:
 | `mcp` | MCP server for Claude Code / Cursor |
 | `gym` | Next.js 15 playground for testing agent integration |
 | `e2e-app` | Vite React app — Playwright test target |
-| `web-extension` | Chrome/Firefox extension |
+| `web-extension` | Chrome MV3 extension (WXT) — overlay with sync on enabled sites; the service worker holds the token (ADR-0023) |
 | `design-system` | Shared Solid.js components (tsup) |
 | `website` | Next.js marketing site |
 
@@ -219,6 +219,7 @@ security find-generic-password -s react-grab-sync-prod -a SYNC_API_TOKEN -w
 |---|---|
 | Overlay in the host app | `initSync({ serverUrl, apiToken })` — usually from the host's gitignored `.env.local` |
 | Dashboard | `SYNC_API_TOKEN` in `packages/dashboard/.env.local` (the dev proxy adds it; it already targets the Worker) |
+| Browser extension (any site, ADR-0023) | the extension's options page; only its service worker reads it — see `packages/web-extension/README.md` |
 | Deployed Worker | `wrangler secret put SYNC_API_TOKEN` (set) |
 | `pnpm sync:dev`, when changing the server | `packages/sync-server/.dev.vars` — copy `.dev.vars.example`; also needs `JIRA_EMAIL` and `JIRA_API_TOKEN` (ADR-0018) |
 
@@ -347,6 +348,11 @@ test.describe('JIRA comment write-back', { tag: ['@SPEC-013'] }, () => {
 | `@SPEC-004` | Selection status colors | `selection-label-visual.spec.ts` |
 | `@SPEC-010` | JIRA comments display | `jira-comment-sidebar-visual.spec.ts`, `jira-selection-label-visual.spec.ts`, `reveal-test.spec.ts` |
 | `@SPEC-013` | JIRA comment write-back | `verify-spec-013.spec.ts`, `jira-comment-write.spec.ts` |
+| `@ADR-0024` | Where a selection is | `selection-location.spec.ts` |
+| `@ADR-0025` | Record steps, steps on the card | `reproduce-steps.spec.ts`, `reproduce-steps-sidebar.spec.ts` |
+| `@ADR-0026` | Step guide | `step-guide.spec.ts` |
+
+A feature decided by an ADR with no SPEC is tagged with that ADR.
 
 When adding new mocked tests, always add a `@SPEC-xxx` tag. See `TESTING.md` for the full cheatsheet.
 
@@ -366,4 +372,4 @@ When adding new mocked tests, always add a `@SPEC-xxx` tag. See `TESTING.md` for
 - Add changesets for published package changes: `pnpm changeset`
 - Lint/format tools: **oxlint** + **oxfmt** (not ESLint/Prettier, except dashboard)
 - Package manager: **pnpm** (pinned to 10.24.0 via `packageManager` field)
-- Node: >= 18 (>= 22.18 for AdCreative integration)
+- Node: >= 22 (WXT needs it; >= 22.18 for AdCreative integration)

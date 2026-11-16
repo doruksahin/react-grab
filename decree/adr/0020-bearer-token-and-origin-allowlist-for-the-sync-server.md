@@ -115,3 +115,5 @@ sequenceDiagram
 **Test isolation from Jira.** While the gate was removed for the red run above, the Jira-lookup test reached `doruksahin.atlassian.net` with the fake test credentials — a read that failed authentication, nothing created. Test bindings now point `JIRA_BASE_URL` at `https://jira.invalid`, which never resolves, so no test can reach a real Jira site again.
 
 **Revisit when** more than one team uses the server, or anyone outside the company does: per-user identity (Option C, or Access for the dashboard) becomes worth its cost.
+
+**Amended by ADR-0023 (2026-11-15).** The token may also be stored in the browser extension's storage on the user's machine. Only the extension's service worker reads it and sends it, so it is still never in page JavaScript or in a shipped bundle. The extension's requests are exempt from CORS through its host permission, so the origin allowlist is unchanged.

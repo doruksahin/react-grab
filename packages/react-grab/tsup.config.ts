@@ -66,6 +66,10 @@ const DEFAULT_OPTIONS: Options = {
     "react-grab-upstream",
     /^@kobalte\//,
     "solid-focus-trap",
+    "@solid-primitives/keyed",
+    // CommonJS only: Node's ESM loader cannot import its named export, so it
+    // is bundled for SSR imports to work (ADR-0025, phase 3).
+    "file-saver",
   ],
   onSuccess: process.env.COPY ? "pbcopy < ./dist/index.global.js" : undefined,
   outDir: "./dist",
@@ -128,4 +132,21 @@ const libraryBuildConfig: Options = {
   ],
 };
 
-export default defineConfig([browserBuildConfig, libraryBuildConfig]);
+// The HTTP implementation of the overlay's ports (ADR-0023). Built on its own
+// so it carries no Solid and no DOM code: the extension's service worker runs it.
+const syncHttpBuildConfig: Options = {
+  ...DEFAULT_OPTIONS,
+  clean: false,
+  entry: { "sync-http": "./src/sync-http/index.ts" },
+  format: ["cjs", "esm"],
+  noExternal: [],
+  outDir: "./dist",
+  platform: "neutral",
+  splitting: false,
+};
+
+export default defineConfig([
+  browserBuildConfig,
+  libraryBuildConfig,
+  syncHttpBuildConfig,
+]);

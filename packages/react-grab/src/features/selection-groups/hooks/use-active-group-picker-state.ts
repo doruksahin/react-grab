@@ -16,10 +16,8 @@
 import { createMemo } from "solid-js";
 import type { Accessor } from "solid-js";
 import type { SelectionGroup } from "../types.js";
-import {
-  assignableGroupsFor,
-  isSelectionLocked,
-} from "../business/ticket-lock.js";
+import { isSelectionLocked } from "../business/ticket-lock.js";
+import { assignableGroupsFor } from "../business/membership-policy.js";
 
 interface UseActiveGroupPickerStateDeps {
   groups: Accessor<SelectionGroup[]>;

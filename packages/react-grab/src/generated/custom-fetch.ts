@@ -1,38 +1,62 @@
-// Custom fetch mutator for Orval-generated API functions.
-// Prepends the sync-server base URL (set at runtime) to relative paths.
+/**
+ * Request options for the Orval-generated functions. The fetch client types
+ * its options argument as `RequestInit`, so the server URL rides along as an
+ * extra field that the generated functions spread through to this mutator.
+ * Callers build it with `createSyncRequest` (src/sync-http/request.ts), which
+ * also adds the Authorization header (ADR-0020). Nothing is kept in module
+ * state: every call names its own server and token (ADR-0023).
+ */
+export interface SyncRequestInit extends RequestInit {
+  serverUrl?: string;
+}
 
-let _baseUrl = "";
-let _apiToken = "";
-
-/** Call once during init to set the sync-server URL for all generated API calls. */
-export const setApiBaseUrl = (url: string) => {
-  _baseUrl = url.replace(/\/$/, ""); // strip trailing slash
-};
-
-export const getApiBaseUrl = () => _baseUrl;
-
-/** Call once during init. Every request to the sync server carries it (ADR-0020). */
-export const setApiToken = (token: string) => {
-  _apiToken = token;
-};
-
-/** The Authorization header for sync-server requests, or none before init. */
-export const apiAuthHeaders = (): Record<string, string> =>
-  _apiToken ? { Authorization: `Bearer ${_apiToken}` } : {};
-
-/** Orval custom mutator — wraps fetch with the runtime base URL and token. */
-export const customFetch = async <T>(
-  url: string,
-  options: RequestInit,
-): Promise<T> => {
-  const fullUrl = url.startsWith("/") ? `${_baseUrl}${url}` : url;
-  const headers = new Headers(options.headers);
-  for (const [name, value] of Object.entries(apiAuthHeaders())) {
-    headers.set(name, value);
+/**
+ * The response body as JSON. A body that is not JSON (an HTML error page from
+ * a proxy, say) becomes undefined, so the caller still sees the status and
+ * reports it as a failed request instead of a SyntaxError.
+ */
+const parseBody = (body: string): unknown => {
+  if (!body) return {};
+  try {
+    const data: unknown = JSON.parse(body);
+    return data;
+  } catch {
+    return undefined;
   }
-  const response = await fetch(fullUrl, { ...options, headers });
-  const body = await response.text();
-  const data = body ? JSON.parse(body) : {};
+};
+
+const DOT_SEGMENTS = new Set([".", ".."]);
+
+/**
+ * Refuses a path with a "." or ".." segment. Orval encodes each path
+ * parameter (urlEncodeParameters), but encodeURIComponent leaves dots alone,
+ * and fetch would resolve "/comments/.." to the parent route (ADR-0023).
+ */
+export const assertNoDotSegments = (path: string): void => {
+  const [pathname = ""] = path.split("?");
+  if (pathname.split("/").some((segment) => DOT_SEGMENTS.has(segment))) {
+    throw new Error(
+      `react-grab: refused a sync path with a dot segment: ${path}`,
+    );
+  }
+};
+
+/** Orval custom mutator: resolves the relative path against the caller's server URL. */
+export const customFetch = async <T>(
+  path: string,
+  options: SyncRequestInit,
+): Promise<T> => {
+  const { serverUrl, ...init } = options;
+  if (!serverUrl) {
+    throw new Error(
+      `react-grab: no sync server URL for ${path}; call the generated functions through createSyncRequest()`,
+    );
+  }
+  assertNoDotSegments(path);
+  const response = await fetch(`${serverUrl}${path}`, init);
+  const data = parseBody(await response.text());
+  // HACK: Orval's mutator contract returns the generated response union `T`,
+  // which it cannot express in the mutator's own signature.
   return { data, status: response.status, headers: response.headers } as T;
 };
 

@@ -1,8 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { createRoot, createSignal } from "solid-js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroup } from "./types.js";
-import { createSelectionGroups } from "./index.js";
+const { logRecoverableError } = vi.hoisted(() => ({
+  logRecoverableError: vi.fn(),
+}));
+vi.mock("../../utils/log-recoverable-error.js", () => ({
+  logRecoverableError,
+}));
+
+const { createSelectionGroups } = await import("./index.js");
 
 const seedItems = (): CommentItem[] =>
   [
@@ -24,11 +31,12 @@ const makeDeps = (
     persistGroups: (next: SelectionGroup[]) => { setGroups(next); return next; },
     rawItems: items,
     rawGroups: groups,
+    setItems,
   };
 };
 
 describe("createSelectionGroups.handleDeleteGroup", () => {
-  it("demotes selections in the deleted group to groupId: null (does NOT delete them)", () => {
+  it("gives each selection of the deleted group its own synthetic group (does NOT delete them)", () => {
     createRoot((dispose) => {
       const deps = makeDeps(seedItems(), [
         { id: "g1", name: "Alpha", createdAt: 0, revealed: false },
@@ -40,9 +48,13 @@ describe("createSelectionGroups.handleDeleteGroup", () => {
 
       const next = deps.rawItems();
       expect(next.map((i) => i.id)).toEqual(["a", "b", "c"]); // nothing deleted
-      expect(next.find((i) => i.id === "a")!.groupId).toBeNull();
-      expect(next.find((i) => i.id === "b")!.groupId).toBeNull();
+      const groupOf = (id: string) =>
+        api.groups().find((g) => g.id === next.find((i) => i.id === id)?.groupId);
+      expect(groupOf("a")?.synthetic).toBe(true);
+      expect(groupOf("b")?.synthetic).toBe(true);
+      expect(groupOf("a")?.id).not.toBe(groupOf("b")?.id);
       expect(next.find((i) => i.id === "c")!.groupId).toBe("g2");
+      expect(api.groups().some((g) => g.id === "g1")).toBe(false);
 
       dispose();
     });
@@ -115,7 +127,7 @@ describe("createSelectionGroups.handleRemoveItem", () => {
         [{ id: "a", groupId: null }] as unknown as CommentItem[],
         [],
       );
-      expect(api.handleRemoveItem("a")).toBe(true);
+      expect(api.handleRemoveItem("a").status).toBe("removed");
       expect(items()).toEqual([]);
       dispose();
     });
@@ -128,7 +140,7 @@ describe("createSelectionGroups.handleRemoveItem", () => {
         [{ id: "a", groupId: "r1" }] as unknown as CommentItem[],
         [real],
       );
-      expect(api.handleRemoveItem("a")).toBe(true);
+      expect(api.handleRemoveItem("a").status).toBe("removed");
       expect(items()).toEqual([]);
       expect(api.groups().find((g) => g.id === "r1")).toBeDefined();
       dispose();
@@ -148,7 +160,7 @@ describe("createSelectionGroups.handleRemoveItem", () => {
         [{ id: "a", groupId: "s1" }] as unknown as CommentItem[],
         [synth],
       );
-      expect(api.handleRemoveItem("a")).toBe(true);
+      expect(api.handleRemoveItem("a").status).toBe("removed");
       expect(api.groups().find((g) => g.id === "s1")).toBeUndefined();
       dispose();
     });
@@ -170,7 +182,7 @@ describe("createSelectionGroups.handleRemoveItem", () => {
         ] as unknown as CommentItem[],
         [synth],
       );
-      expect(api.handleRemoveItem("a")).toBe(true);
+      expect(api.handleRemoveItem("a").status).toBe("removed");
       expect(api.groups().find((g) => g.id === "s1")).toBeDefined();
       dispose();
     });
@@ -189,7 +201,7 @@ describe("createSelectionGroups.handleRemoveItem", () => {
         [{ id: "a", groupId: "r1" }] as unknown as CommentItem[],
         [ticketed],
       );
-      expect(api.handleRemoveItem("a")).toBe(false);
+      expect(api.handleRemoveItem("a").status).toBe("refused");
       expect(items().length).toBe(1);
       expect(api.groups().length).toBe(1);
       dispose();
@@ -210,7 +222,7 @@ describe("createSelectionGroups.handleRemoveItem", () => {
         [{ id: "a", groupId: "s1" }] as unknown as CommentItem[],
         [ticketedSynth],
       );
-      expect(api.handleRemoveItem("a")).toBe(false);
+      expect(api.handleRemoveItem("a").status).toBe("refused");
       expect(items().length).toBe(1);
       expect(api.groups().find((g) => g.id === "s1")).toBeDefined();
       dispose();
@@ -240,8 +252,151 @@ describe("createSelectionGroups.handleRemoveItem", () => {
   it("returns false for an unknown item id", () => {
     createRoot((dispose) => {
       const { api } = makeApi([], []);
-      expect(api.handleRemoveItem("ghost")).toBe(false);
+      expect(api.handleRemoveItem("ghost")).toEqual({
+        status: "refused",
+        reason: "selection-not-found",
+      });
       dispose();
     });
+  });
+});
+
+describe("createSelectionGroups membership commands", () => {
+  const liveGroups = (): SelectionGroup[] => [
+    { id: "open", name: "Open", createdAt: 0, revealed: false },
+    {
+      id: "synthetic-8",
+      name: "Header",
+      createdAt: 0,
+      revealed: false,
+      synthetic: true,
+      jiraTicketId: "SCRUM-8",
+    },
+    {
+      id: "synthetic-9",
+      name: "Button",
+      createdAt: 0,
+      revealed: false,
+      synthetic: true,
+      jiraTicketId: "SCRUM-9",
+    },
+  ];
+  const liveItems = () =>
+    [
+      { id: "header", groupId: "synthetic-8" },
+      { id: "button", groupId: "synthetic-9" },
+    ] as unknown as CommentItem[];
+
+  it("refuses to move a locked selection and keeps its ticketed synthetic group", () => {
+    createRoot((dispose) => {
+      const deps = makeDeps(liveItems(), liveGroups());
+      const api = createSelectionGroups(deps);
+
+      const result = api.handleMoveItem("header", "synthetic-9");
+
+      expect(result).toEqual({ status: "refused", reason: "selection-locked" });
+      expect(deps.rawItems().find((i) => i.id === "header")?.groupId).toBe(
+        "synthetic-8",
+      );
+      expect(deps.rawGroups().map((g) => g.id)).toContain("synthetic-8");
+      dispose();
+    });
+  });
+
+  it("refuses a bulk move into a synthetic group and changes nothing", () => {
+    createRoot((dispose) => {
+      const deps = makeDeps(
+        [{ id: "loose", groupId: "open" }] as unknown as CommentItem[],
+        liveGroups(),
+      );
+      const api = createSelectionGroups(deps);
+
+      expect(api.handleMoveItems(new Set(["loose"]), "synthetic-9")).toEqual({
+        status: "refused",
+        reason: "target-ticketed",
+      });
+      expect(deps.rawItems()[0]?.groupId).toBe("open");
+      dispose();
+    });
+  });
+
+  it("refuses to delete a ticketed group", () => {
+    createRoot((dispose) => {
+      const deps = makeDeps(liveItems(), liveGroups());
+      const api = createSelectionGroups(deps);
+
+      expect(api.handleDeleteGroup("synthetic-8")).toEqual({
+        status: "refused",
+        reason: "group-ticketed",
+      });
+      expect(deps.rawItems()[0]?.groupId).toBe("synthetic-8");
+      dispose();
+    });
+  });
+});
+
+describe("createSelectionGroups ticket metadata", () => {
+  const open = (): SelectionGroup[] => [
+    { id: "g1", name: "Alpha", createdAt: 0, revealed: false },
+  ];
+
+  it("records a new ticket and stops offering the group to new selections", () => {
+    createRoot((dispose) => {
+      const deps = makeDeps(seedItems(), open());
+      const api = createSelectionGroups(deps);
+      api.setActiveGroupId("g1");
+
+      api.markTicketCreated("g1", "SCRUM-1", "https://jira/browse/SCRUM-1");
+
+      expect(api.groups()[0]).toMatchObject({
+        jiraTicketId: "SCRUM-1",
+        jiraUrl: "https://jira/browse/SCRUM-1",
+      });
+      expect(api.activeGroupId()).toBeNull();
+      dispose();
+    });
+  });
+
+  it("records a resolved ticket", () => {
+    createRoot((dispose) => {
+      const deps = makeDeps(seedItems(), open());
+      const api = createSelectionGroups(deps);
+      api.markResolved("g1");
+      expect(api.groups()[0]?.jiraResolved).toBe(true);
+      dispose();
+    });
+  });
+});
+
+describe("createSelectionGroups membership anomalies", () => {
+  it("reports each anomaly once and writes nothing", () => {
+    logRecoverableError.mockClear();
+    const { deps, persistItems, dispose } = createRoot((dispose) => {
+      const deps = makeDeps(
+        [
+          { id: "b", groupId: "crowded" },
+          { id: "c", groupId: "crowded" },
+          { id: "o", groupId: "gone" },
+        ] as unknown as CommentItem[],
+        [
+          {
+            id: "crowded",
+            name: "Button",
+            createdAt: 0,
+            revealed: false,
+            synthetic: true,
+          },
+        ],
+      );
+      const persistItems = vi.spyOn(deps, "persistCommentItems");
+      createSelectionGroups(deps);
+      return { deps, persistItems, dispose };
+    });
+
+    expect(logRecoverableError).toHaveBeenCalledTimes(2);
+    deps.setItems([...deps.rawItems()]);
+    expect(logRecoverableError).toHaveBeenCalledTimes(2);
+    expect(persistItems).not.toHaveBeenCalled();
+    dispose();
   });
 });

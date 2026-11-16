@@ -16,11 +16,7 @@ import {
   isFilterActive,
 } from "../../features/sidebar/filter-state.js";
 import { bindGroupCommentCallbacks } from "../../features/jira-comments/bind-group-callbacks.js";
-import type {
-  RefreshGroupStatusFn,
-  SearchJiraUsersFn,
-  SubmitGroupCommentFn,
-} from "../../features/jira-comments/types.js";
+import { useGroupCommentCallbacks } from "../../features/jira-comments/hooks/use-group-comment-callbacks.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { isSelectionLocked } from "../../features/selection-groups/business/ticket-lock.js";
 import { SelectionCardBody } from "./selection-card-body.js";
@@ -32,6 +28,8 @@ import { CreateTicketButton } from "../jira/create-ticket-button.js";
 import { DevInsights } from "../dev-insights/index.js";
 import { useDevMode } from "../../features/dev-mode/index.js";
 import { ActiveGroupPicker } from "../selection-groups/active-group-picker.js";
+import { StepList } from "../reproduce-steps/step-list.jsx";
+import { LocationNote } from "../selection-location/location-note.jsx";
 
 interface SelectionListTabProps {
   commentItems: CommentItem[];
@@ -41,11 +39,6 @@ interface SelectionListTabProps {
   onToggleSelect?: (id: string) => void;
   searchQuery?: string;
   flaggedOnly?: boolean;
-  syncServerUrl?: string;
-  syncWorkspace?: string;
-  onSubmitJiraComment?: SubmitGroupCommentFn;
-  onSearchJiraUsers?: SearchJiraUsersFn;
-  onRefreshJiraStatus?: RefreshGroupStatusFn;
   commentEditorToolbarVisible?: boolean;
   onCreateTicket?: (item: CommentItem) => void;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
@@ -92,6 +85,8 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
       },
     ),
   );
+
+  const commentCallbacks = useGroupCommentCallbacks();
 
   const groupMap = createMemo(
     () => new Map(props.groups.map((g) => [g.id, g])),
@@ -151,22 +146,11 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
           const summary = () =>
             item.commentText || item.componentName || item.tagName;
 
-          const boundCommentSubmit = () => {
+          const boundComments = () => {
             const g = group();
-            const submit = props.onSubmitJiraComment;
-            if (!g || !submit) return undefined;
-            return bindGroupCommentCallbacks(g.id, {
-              onSubmitComment: submit,
-              onSearchUsers: props.onSearchJiraUsers,
-              onRefreshStatus: props.onRefreshJiraStatus,
-            }).onSubmitComment;
-          };
-
-          const refreshStatus = () => {
-            const g = group();
-            const refresh = props.onRefreshJiraStatus;
-            if (!g || !refresh) return undefined;
-            return () => refresh(g.id);
+            const callbacks = commentCallbacks();
+            if (!g || !callbacks) return undefined;
+            return bindGroupCommentCallbacks(g.id, callbacks);
           };
 
           return (
@@ -224,8 +208,10 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 hasElementScreenshot={Boolean(item.screenshotElement)}
                 hasFullPageScreenshot={Boolean(item.screenshotFullPage)}
                 recordingUrl={item.recordingUrl}
-                syncServerUrl={props.syncServerUrl}
-                syncWorkspace={props.syncWorkspace}
+                reproduceSteps={<StepList item={item} />}
+                locationNote={
+                  <LocationNote selectionId={item.id} class="mt-1.5" />
+                }
                 jiraTicketId={group()?.jiraTicketId}
                 jiraUrl={group()?.jiraUrl}
                 jiraStatus={group()?.jiraStatus}
@@ -237,9 +223,9 @@ export const SelectionListTab: Component<SelectionListTabProps> = (props) => {
                 jiraAssignee={group()?.jiraAssignee}
                 jiraAssigneeAvatar={group()?.jiraAssigneeAvatar}
                 jiraComments={group()?.jiraComments}
-                onSubmitComment={boundCommentSubmit()}
-                onSearchUsers={props.onSearchJiraUsers}
-                onRefreshStatus={refreshStatus()}
+                onSubmitComment={boundComments()?.onSubmitComment}
+                onSearchUsers={boundComments()?.onSearchUsers}
+                onRefreshStatus={boundComments()?.onRefreshPoll}
                 commentEditorToolbarVisible={props.commentEditorToolbarVisible}
                 onScreenshotClick={(src, label) => lightbox.open(src, label)}
               />

@@ -1,12 +1,16 @@
 import type { CommentItem, Options } from "../src/types.js";
 import type { SelectionGroupWithJira } from "../src/features/selection-groups/types.js";
 import type { init, initSync, populateSync } from "../src/core/index.js";
+import type { FakeJiraData } from "../src/test-support/fake-ports.js";
 
 declare global {
   interface Window {
     initReactGrab: typeof init;
     __reactGrabSync: {
-      populate: typeof populateSync;
+      /** e2e-app: injects an in-memory Jira port via initSync, then seeds the store. No HTTP. */
+      populate: (
+        seed: Parameters<typeof populateSync>[0] & { jira?: FakeJiraData },
+      ) => Promise<void>;
       initSync: typeof initSync;
     };
   }
@@ -277,15 +281,26 @@ interface SyncConnectionConfig {
   apiToken?: string;
 }
 
-interface SeedPayload extends SyncConnectionConfig {
+interface SeedPayload {
+  workspace: string;
+  jiraProjectKey: string;
   groups: SelectionGroupWithJira[];
   comments: CommentItem[];
+  /** Data for the in-memory Jira port populate() injects (src/test-support/fake-ports.ts). */
+  jira: FakeJiraData;
 }
 
 const DEFAULT_SEED: SeedPayload = {
   workspace: "test-workspace",
-  serverUrl: "http://localhost:9999",
   jiraProjectKey: "ATT",
+  jira: {
+    site: mockFixtures.jiraSite,
+    issueTypes: mockFixtures.jiraIssueTypes,
+    priorities: mockFixtures.jiraPriorities,
+    labels: mockFixtures.jiraLabels,
+    ticketStatuses: mockFixtures.jiraStatusByGroup,
+    users: mockFixtures.searchJiraUsers,
+  },
   groups: mockFixtures.groups,
   comments: mockFixtures.comments,
 };
@@ -2520,9 +2535,7 @@ const createReactGrabPageObject = (
     /** Seed the sync store with mock data. Call before interacting with sidebar/JIRA features. */
     populate: async (overrides?: Partial<SeedPayload>) => {
       const data = { ...DEFAULT_SEED, ...overrides };
-      await page.evaluate((d) => {
-        window.__reactGrabSync.populate(d);
-      }, data);
+      await page.evaluate((d) => window.__reactGrabSync.populate(d), data);
     },
 
     /** Trigger initSync manually. For HTTP behavior tests — call AFTER mockServer routes are registered. */

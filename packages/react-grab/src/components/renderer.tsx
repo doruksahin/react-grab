@@ -30,13 +30,23 @@ import { ClearCommentsPrompt } from "./clear-comments-prompt.js";
 import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
 import { DevModeProvider } from "../features/dev-mode/index.js";
+import { GuideBar } from "./reproduce-steps/guide-bar.js";
 import { LabelPin } from "./selection-label/label-pin.js";
 import { useLabelPins } from "../features/selection-label/hooks/use-label-pins.js";
 import { useSidebarSession } from "../features/sidebar/hooks/use-sidebar-session.js";
 import { LABEL_EXIT_ANIMATION_MS } from "../constants.js";
+import { useSyncContext } from "../features/sync/sync-context.js";
+import { Key } from "@solid-primitives/keyed";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const sidebar = useSidebarSession();
+  const sync = useSyncContext();
+  const refreshStatusFor = (groupId: string | undefined) =>
+    groupId && sync.jira()
+      ? () => {
+          void sync.refreshJiraStatus(groupId);
+        }
+      : undefined;
   const sidebarOpen = sidebar.isOpen;
 
   const labelPins = useLabelPins({
@@ -234,7 +244,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       {/* Pins first and cards after: on the same layer the later element
           is on top, so an open card covers the pins of nearby elements. */}
-      <Index each={labelPins.pinned()}>
+      {/* Keyed by label id, not position: a label keeps its DOM node (and does
+          not replay its entry animation) when another label comes or goes. */}
+      <Key each={labelPins.pinned()} by="id">
         {(instance) => {
           const [element, setElement] = createSignal<HTMLButtonElement>();
           createEffect(() => {
@@ -257,9 +269,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             />
           );
         }}
-      </Index>
+      </Key>
 
-      <Index each={props.labelInstances ?? []}>
+      <Key each={props.labelInstances ?? []} by="id">
         {(instance) => {
           // A pin's card plays its closing animation before it goes.
           const [isLabelExiting, setIsLabelExiting] = createSignal(false);
@@ -326,8 +338,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
                 timestamp={instance().timestamp}
                 hasElementScreenshot={instance().hasElementScreenshot}
                 hasFullPageScreenshot={instance().hasFullPageScreenshot}
-                syncServerUrl={props.syncServerUrl}
-                syncWorkspace={props.syncWorkspace}
                 groups={props.groups ?? []}
                 activeGroupId={instance().groupId}
                 onActiveGroupChange={(groupId) => {
@@ -378,17 +388,13 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
                       }
                     : undefined
                 }
-                onRefreshJiraStatus={
-                  instance().groupId && props.onRefreshJiraStatus
-                    ? () => props.onRefreshJiraStatus!(instance().groupId!)
-                    : undefined
-                }
+                onRefreshJiraStatus={refreshStatusFor(instance().groupId)}
                 isCollapsing={isLabelExiting()}
               />
             </Show>
           );
         }}
-      </Index>
+      </Key>
 
       <Show when={props.toolbarVisible !== false}>
         <Toolbar
@@ -447,6 +453,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onDismiss={props.onToolbarMenuDismiss ?? (() => {})}
       />
 
+      <GuideBar />
+
       <ClearCommentsPrompt
         position={props.clearPromptPosition ?? null}
         onConfirm={props.onClearCommentsConfirm ?? (() => {})}
@@ -482,8 +490,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       <Show when={props.looseTicketDialog}>
         {(state) => (
           <JiraCreateDialog
-            workspaceId={props.syncWorkspace ?? ""}
-            syncServerUrl={props.syncServerUrl}
             groupId={state().group.id}
             group={state().group}
             commentItems={state().items}
@@ -507,8 +513,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           syncStatus={props.syncStatus ?? "local"}
           onRetrySync={props.onRetrySync}
           jiraSiteHost={props.jiraSiteHost}
-          syncServerUrl={props.syncServerUrl}
-          syncWorkspace={props.syncWorkspace}
           jiraProjectKey={props.jiraProjectKey}
           onActiveDetailGroupChange={setActiveDetailGroupId}
           onJiraResolved={props.onJiraResolved}
@@ -521,9 +525,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onAddGroup={props.onAddGroup}
           looseTicketDialog={props.looseTicketDialog}
           onLooseTicketDialogClose={props.onLooseTicketDialogClose}
-          onSubmitJiraComment={props.onSubmitJiraComment}
-          onSearchJiraUsers={props.onSearchJiraUsers}
-          onRefreshJiraStatus={props.onRefreshJiraStatus}
           commentEditorToolbarVisible={props.commentEditorToolbarVisible}
           onClose={() => {
             sidebar.close();

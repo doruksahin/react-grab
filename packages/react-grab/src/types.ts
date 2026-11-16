@@ -2,13 +2,8 @@ import type { CommentItem, OverlayBounds } from "./shared-types.js";
 export type { CommentItem, OverlayBounds } from "./shared-types.js";
 import type { SelectionGroupsViewProps } from "./features/selection-groups/types.js";
 import type { SelectionGroup } from "./features/selection-groups/types.js";
-import type {
-  JiraComment,
-  RefreshGroupStatusFn,
-  SearchJiraUsersFn,
-  SubmitCommentFn,
-  SubmitGroupCommentFn,
-} from "./features/jira-comments/types.js";
+import type { JiraPort, StorageAdapter } from "./features/sync/types.js";
+import type { JiraComment } from "./features/jira-comments/types.js";
 
 export interface Position {
   x: number;
@@ -374,6 +369,11 @@ export interface RecordingConfig {
   windowMinutes?: number;
 }
 
+export interface StepsConfig {
+  /** Capture the clicks and field changes that lead to each new comment, as Chrome Recorder steps (ADR-0025). @default false */
+  enabled: boolean;
+}
+
 export interface Options {
   enabled?: boolean;
   activationMode?: ActivationMode;
@@ -391,6 +391,7 @@ export interface Options {
   sync?: SyncConfig;
   screenshot?: ScreenshotConfig;
   recording?: RecordingConfig;
+  steps?: StepsConfig;
   /**
    * Saved labels show as pins that open their card on click (ADR-0022
    * step 3). `false` shows them as open labels with no pin (SPEC-016 AC1-3).
@@ -672,7 +673,6 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   /** Connects to the sync server again after a failed connection. */
   onRetrySync?: () => Promise<void>;
   syncWorkspace?: string;
-  syncServerUrl?: string; // serverUrl from SyncConfig — needed to build screenshot URLs
   jiraProjectKey?: string;
   /** Host of the Jira site (GET /jira/site), when the sync server reports it. */
   jiraSiteHost?: string;
@@ -684,12 +684,6 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   looseTicketDialog?: { group: SelectionGroup; items: CommentItem[] } | null;
   onLooseTicketDialogClose?: () => void;
-  /** Submit a JIRA comment for a specific group */
-  onSubmitJiraComment?: SubmitGroupCommentFn;
-  /** Search JIRA users for @mention autocomplete */
-  onSearchJiraUsers?: SearchJiraUsersFn;
-  /** Trigger JIRA status refresh for a specific group */
-  onRefreshJiraStatus?: RefreshGroupStatusFn;
   commentEditorToolbarVisible?: boolean;
 }
 
@@ -784,8 +778,6 @@ export interface SelectionLabelProps
   timestamp?: number;
   hasElementScreenshot?: boolean;
   hasFullPageScreenshot?: boolean;
-  syncServerUrl?: string;
-  syncWorkspace?: string;
   mouseX?: number;
   visible?: boolean;
   isPromptMode?: boolean;
@@ -835,12 +827,6 @@ export interface SelectionLabelProps
   hideArrow?: boolean;
   /** True during the exit animation before the label is actually collapsed */
   isCollapsing?: boolean;
-  /** Submit a JIRA comment for the current group's ticket */
-  onSubmitJiraComment?: SubmitCommentFn;
-  /** Search JIRA users for @mention autocomplete */
-  onSearchJiraUsers?: SearchJiraUsersFn;
-  /** Trigger a JIRA status refresh (after posting a comment) */
-  onRefreshJiraStatus?: () => void;
   commentEditorToolbarVisible?: boolean;
 }
 
@@ -850,7 +836,8 @@ export interface SelectionLabelProps
  */
 export interface SyncConfig {
   enabled: boolean;
-  serverUrl: string;
+  /** Required when an HTTP port has to be built (no injected `storage` or `jira`). */
+  serverUrl?: string;
   workspace: string;
   jiraProjectKey: string;
   /**
@@ -860,6 +847,13 @@ export interface SyncConfig {
    * development builds, so it never ships in a production bundle.
    */
   apiToken?: string;
+  /**
+   * The storage port to use instead of the HTTP one (ADR-0023). When both
+   * ports are given, `serverUrl` and `apiToken` are not used.
+   */
+  storage?: StorageAdapter;
+  /** The Jira port to use instead of the HTTP one (ADR-0023). */
+  jira?: JiraPort;
   syncRevealedState: boolean;
   onSyncError: (error: Error) => void;
   /** Options forwarded to init() — use this to set screenshot config etc. */

@@ -23,8 +23,6 @@ interface LooseSelectionCardProps {
   /** Remove handler. Passed by the parent only when the selection is
    *  not ticket-locked (i.e. no backing synthetic ticket). */
   onRemoveItem?: (itemId: string) => void;
-  syncServerUrl?: string;
-  syncWorkspace?: string;
   scrollRoot: () => Element | null;
   jiraFlagged?: boolean;
   jiraFlaggedAt?: string | null;
@@ -112,8 +110,6 @@ export const LooseSelectionCard: Component<LooseSelectionCardProps> = (
         <div class="mt-2">
           <SelectionCard
             item={props.item}
-            syncServerUrl={props.syncServerUrl}
-            syncWorkspace={props.syncWorkspace}
             scrollRoot={props.scrollRoot}
             jiraFlagged={props.jiraFlagged}
             jiraFlaggedAt={props.jiraFlaggedAt}

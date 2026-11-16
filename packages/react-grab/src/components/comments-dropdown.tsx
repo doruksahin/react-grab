@@ -21,8 +21,14 @@ import {
   groupComments,
   fuzzyMatchGroup,
 } from "../features/selection-groups/business/group-operations.js";
-import { isPresentedAsLoose } from "../features/selection-groups/business/membership.js";
-import { filterUserFacingGroups } from "../features/selection-groups/business/synthetic-group.js";
+import {
+  isPresentedAsLoose,
+  presentedGroups,
+} from "../features/selection-groups/business/membership.js";
+import {
+  assignableGroupsFor,
+  canDeleteGroup,
+} from "../features/selection-groups/business/membership-policy.js";
 import {
   DROPDOWN_EDGE_TRANSFORM_ORIGIN,
   DROPDOWN_ICON_SIZE_PX,
@@ -43,6 +49,7 @@ import { createAnchoredDropdown } from "../utils/create-anchored-dropdown.js";
 import { formatRelativeTime } from "../utils/format-relative-time.js";
 import { IconButton } from "./ui/icon-button.js";
 import { Button } from "./ui/button.js";
+import { LocationNote } from "./selection-location/location-note.jsx";
 
 interface CommentsDropdownProps extends Pick<
   SelectionGroupsViewProps,
@@ -117,9 +124,13 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
 
   let copyAllFeedbackTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  const visibleGroups = () => filterUserFacingGroups(props.groups ?? []);
+  const visibleGroups = () => presentedGroups(props.groups ?? [], props.items);
 
   const groupedItems = () => groupComments(visibleGroups(), props.items);
+
+  // A locked selection has no targets, so it gets no move action at all.
+  const moveTargetsFor = (item: CommentItem) =>
+    assignableGroupsFor(item, props.groups ?? []);
 
   const ungroupedItems = () =>
     props.items.filter((item) =>
@@ -174,39 +185,44 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             {item.commentText}
           </span>
         </Show>
+        <LocationNote selectionId={item.id} class="mt-0.5" />
       </span>
       <div class="flex items-center gap-1 shrink-0">
-        <GroupPickerPopover
-          open={openMoveId() === item.id}
-          onOpenChange={(open) => setOpenMoveId(open ? item.id : null)}
-        >
-          <Show when={hoveredItemId() === item.id || openMoveId() === item.id}>
-            <GroupPickerTrigger
-              as={IconButton}
-              data-react-grab-ignore-events
-              label="Move to group"
-              size="icon-xs"
-              onClick={(event: MouseEvent) => event.stopPropagation()}
+        <Show when={moveTargetsFor(item).length > 0}>
+          <GroupPickerPopover
+            open={openMoveId() === item.id}
+            onOpenChange={(open) => setOpenMoveId(open ? item.id : null)}
+          >
+            <Show
+              when={hoveredItemId() === item.id || openMoveId() === item.id}
             >
-              <svg width="10" height="10" viewBox="0 0 16 16">
-                <path
-                  fill="currentColor"
-                  fill-rule="evenodd"
-                  d="M3 2.5a.5.5 0 0 0-.5.5v3h11V4.75a.5.5 0 0 0-.5-.5H7.69L5.94 2.5zm10.5 5h-11V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5zM1 3a2 2 0 0 1 2-2h3.56l1.75 1.75H13a2 2 0 0 1 2 2V13a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </GroupPickerTrigger>
-          </Show>
-          <GroupPickerFlyout
-            groups={props.groups ?? []}
-            excludeGroupId={item.groupId ?? undefined}
-            onSelect={(groupId) => {
-              props.onMoveItem?.(item.id, groupId);
-              setOpenMoveId(null);
-            }}
-          />
-        </GroupPickerPopover>
+              <GroupPickerTrigger
+                as={IconButton}
+                data-react-grab-ignore-events
+                label="Move to group"
+                size="icon-xs"
+                onClick={(event: MouseEvent) => event.stopPropagation()}
+              >
+                <svg width="10" height="10" viewBox="0 0 16 16">
+                  <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M3 2.5a.5.5 0 0 0-.5.5v3h11V4.75a.5.5 0 0 0-.5-.5H7.69L5.94 2.5zm10.5 5h-11V13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5zM1 3a2 2 0 0 1 2-2h3.56l1.75 1.75H13a2 2 0 0 1 2 2V13a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </GroupPickerTrigger>
+            </Show>
+            <GroupPickerFlyout
+              groups={moveTargetsFor(item)}
+              excludeGroupId={item.groupId ?? undefined}
+              onSelect={(groupId) => {
+                props.onMoveItem?.(item.id, groupId);
+                setOpenMoveId(null);
+              }}
+            />
+          </GroupPickerPopover>
+        </Show>
         <span class="text-meta text-muted-foreground flex items-center justify-end">
           {formatRelativeTime(item.timestamp)}
         </span>
@@ -468,7 +484,11 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
                     onRename={(groupId, name) =>
                       props.onRenameGroup?.(groupId, name)
                     }
-                    onDelete={(groupId) => props.onDeleteGroup?.(groupId)}
+                    onDelete={
+                      canDeleteGroup(entry.group)
+                        ? (groupId) => props.onDeleteGroup?.(groupId)
+                        : undefined
+                    }
                     onToggleRevealed={(groupId) =>
                       props.onToggleGroupRevealed?.(groupId)
                     }

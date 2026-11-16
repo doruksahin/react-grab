@@ -11,8 +11,6 @@ interface LooseSelectionListProps {
   allGroups: SelectionGroupWithJira[];
   /** Full unfiltered comment items list. */
   commentItems: CommentItem[];
-  syncServerUrl?: string;
-  syncWorkspace?: string;
   scrollRoot: () => Element | null;
   onCreateTicket: (item: CommentItem) => void;
   onRemoveItem?: (itemId: string) => void;
@@ -63,8 +61,6 @@ export const LooseSelectionList: Component<LooseSelectionListProps> = (
                 jiraFlaggedByAvatar={group()?.jiraFlaggedByAvatar}
                 onCreateTicket={props.onCreateTicket}
                 onRemoveItem={props.onRemoveItem}
-                syncServerUrl={props.syncServerUrl}
-                syncWorkspace={props.syncWorkspace}
                 scrollRoot={props.scrollRoot}
               />
             );

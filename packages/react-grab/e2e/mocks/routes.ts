@@ -77,7 +77,6 @@ const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
   uploadScreenshot: {
     pattern: "**/workspaces/*/screenshots/*/*",
     method: "PUT",
-    binary: true,
   },
   uploadRecording: {
     pattern: "**/workspaces/*/recordings/*",
@@ -135,7 +134,7 @@ const DEFAULT_FIXTURES: Record<keyof MockOverrides, unknown> = {
 
 function extractGroupIdFromUrl(url: string): string | null {
   const match = url.match(/\/groups\/([^/]+)\/jira-/);
-  return match ? match[1] : null;
+  return match?.[1] ?? null;
 }
 
 function defaultJiraStatusHandler(request: Request): unknown {
@@ -205,7 +204,7 @@ function fulfillRoute(
 // ---------------------------------------------------------------------------
 
 export async function mockSyncServer(
-  page: Page,
+  page: Pick<Page, "route">,
   overrides?: Partial<MockOverrides>,
 ): Promise<MockServerHandle> {
   const activeOverrides = new Map<keyof MockOverrides, RouteHandler>();

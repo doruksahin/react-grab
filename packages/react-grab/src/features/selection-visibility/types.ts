@@ -1,9 +1,5 @@
 import type { Accessor, Setter } from "solid-js";
-import type {
-  CommentItem,
-  OverlayBounds,
-  ToolbarState,
-} from "../../types.js";
+import type { CommentItem, OverlayBounds, ToolbarState } from "../../types.js";
 import type { SelectionGroup } from "../selection-groups/types.js";
 
 /**
@@ -50,8 +46,6 @@ export interface SelectionVisibilityDeps {
   updateToolbarState: (updates: Partial<ToolbarState>) => ToolbarState;
   /** Reactive signal of all selection groups */
   groups: Accessor<SelectionGroup[]>;
-  /** Setter for the groups signal */
-  setGroups: Setter<SelectionGroup[]>;
   /** Persist groups to sessionStorage */
   persistGroups: (groups: SelectionGroup[]) => SelectionGroup[];
 }

@@ -9,6 +9,9 @@ export default defineConfig({
       mode: "single",
       target: "src/generated/sync-api.ts",
       client: "fetch",
+      // Every path parameter goes through encodeURIComponent, so an id such
+      // as "../other" stays one segment (ADR-0023).
+      urlEncodeParameters: true,
       override: {
         mutator: {
           path: "./src/generated/custom-fetch.ts",
@@ -20,6 +23,30 @@ export default defineConfig({
     // imports; orval emits extensionless imports, so patch the one offender.
     hooks: {
       afterAllFilesWrite: "node scripts/patch-orval-imports.mjs",
+    },
+  },
+  // Runtime checks for what the server sends, from the same spec, so they
+  // cannot drift from the types above. Used by react-grab/sync-http.
+  syncSchemas: {
+    input: {
+      target: "../sync-server/openapi.json",
+    },
+    output: {
+      mode: "single",
+      target: "src/generated/sync-api.zod.ts",
+      client: "zod",
+      override: {
+        zod: {
+          version: 4,
+          generate: {
+            param: true,
+            query: true,
+            header: false,
+            body: true,
+            response: true,
+          },
+        },
+      },
     },
   },
 });

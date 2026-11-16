@@ -70,6 +70,16 @@
         "default": "./dist/primitives.cjs"
       }
     },
+    "./sync-http": {
+      "import": {
+        "types": "./dist/sync-http.d.ts",
+        "default": "./dist/sync-http.js"
+      },
+      "require": {
+        "types": "./dist/sync-http.d.cts",
+        "default": "./dist/sync-http.cjs"
+      }
+    },
     "./src/*": "./src/*",
     "./styles.css": "./dist/styles.css",
     "./dist/styles.css": "./dist/styles.css",
@@ -112,6 +122,7 @@
     "@medv/finder": "^4.0.2",
     "@react-grab/cli": "workspace:*",
     "@rrweb/record": "2.2.2",
+    "@solid-primitives/keyed": "^1.5.3",
     "@tiptap/core": "^3.22.3",
     "@tiptap/extension-color": "^3.22.3",
     "@tiptap/extension-image": "^3.22.3",
@@ -125,7 +136,9 @@
     "@tiptap/suggestion": "^3.22.3",
     "bippy": "^0.5.32",
     "cva": "1.0.0-beta.4",
+    "dom-accessibility-api": "0.7.1",
     "element-source": "^0.0.3",
+    "file-saver": "2.0.5",
     "modern-screenshot": "^4.6.8",
     "react-grab-upstream": "npm:react-grab@0.2.0",
     "solid-focus-trap": "^0.1.9",
@@ -139,9 +152,12 @@
   "devDependencies": {
     "@babel/core": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
-    "@playwright/test": "^1.40.0",
+    "@playwright/test": "^1.65.1",
+    "@puppeteer/replay": "4.0.2",
     "@solidjs/testing-library": "^0.8.10",
     "@tailwindcss/cli": "^4.1.17",
+    "@types/dom-navigation": "1.0.7",
+    "@types/file-saver": "2.0.7",
     "@types/node": "^20.19.23",
     "@types/react": "^19.2.11",
     "babel-preset-solid": "^1.9.10",
@@ -150,7 +166,7 @@
     "esbuild": "0.24.2",
     "esbuild-plugin-babel": "^0.2.3",
     "jsdom": "^29.0.2",
-    "orval": "^8.6.2",
+    "orval": "8.44.0",
     "oxlint": "^1.42.0",
     "publint": "^0.2.12",
     "tailwindcss": "^4.1.0",

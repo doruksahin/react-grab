@@ -40,7 +40,12 @@ export type {
   PluginConfig,
   PluginHooks,
 } from "./types.js";
-export type { SyncConfig } from "./features/sync/types.js";
+export type {
+  JiraPort,
+  ScreenshotKind,
+  StorageAdapter,
+  SyncConfig,
+} from "./features/sync/types.js";
 export type { ScreenshotConfig } from "./types.js";
 
 import { init } from "./core/index.js";

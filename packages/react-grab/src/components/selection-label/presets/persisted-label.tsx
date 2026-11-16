@@ -41,9 +41,6 @@ export interface PersistedLabelProps extends JiraDisplayFields {
   hasElementScreenshot?: boolean;
   hasFullPageScreenshot?: boolean;
 
-  syncServerUrl?: string;
-  syncWorkspace?: string;
-
   groups: SelectionGroupWithJira[];
   activeGroupId?: string | null;
   onActiveGroupChange?: (groupId: string | null) => void;
@@ -125,8 +122,6 @@ export const PersistedLabel: Component<PersistedLabelProps> = (props) => {
             <SelectionCardBody
               timestamp={props.timestamp}
               itemId={props.itemId}
-              syncServerUrl={props.syncServerUrl}
-              syncWorkspace={props.syncWorkspace}
               jiraTicketId={props.jiraTicketId}
               jiraUrl={props.jiraUrl}
               jiraStatus={props.groupStatus}

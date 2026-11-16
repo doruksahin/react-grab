@@ -12,8 +12,6 @@ interface GroupDetailViewProps {
   ref?: (el: HTMLDivElement) => void;
   group: SelectionGroupWithJira;
   commentItems: CommentItem[];
-  syncServerUrl?: string;
-  syncWorkspace?: string;
   onBack: () => void;
   /** Bubble the "Create JIRA Ticket" intent up to the Sidebar so the dialog
    *  can be mounted there via the same on-demand pattern the loose flow
@@ -46,8 +44,6 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
 
       <SelectionList
         items={groupItems()}
-        syncServerUrl={props.syncServerUrl}
-        syncWorkspace={props.syncWorkspace}
         onRemoveItem={
           // Ticket-lock: ticketed groups freeze their members.
           isTicketed(props.group) ? undefined : props.onRemoveItem

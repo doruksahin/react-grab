@@ -1,69 +1,89 @@
-import { createEffect, createMemo, on, untrack } from "solid-js";
+import {
+  type Accessor,
+  createEffect,
+  createMemo,
+  onCleanup,
+  untrack,
+} from "solid-js";
+import { keyArray } from "@solid-primitives/keyed";
+import type { CommentItem } from "../../types.js";
 import type {
   PreviewEntry,
   SelectionVisibilityAPI,
   SelectionVisibilityDeps,
 } from "./types.js";
-import { saveLocalRevealedStates } from "../sync/transforms.js";
+import { saveLocalRevealedStates } from "../sync/store/local-revealed-state.js";
+import { isSamePreview, type PreviewSource } from "./business/same-preview.js";
 
 const REVEAL_PREFIX = "reveal-pinned";
 
 export function createSelectionVisibility(
   deps: SelectionVisibilityDeps,
 ): SelectionVisibilityAPI {
-  // Private state — hover code CANNOT touch this
-  let revealedPreviews: PreviewEntry[] = [];
-
   const selectionsRevealed = createMemo(
     () => deps.currentToolbarState()?.selectionsRevealed ?? false,
   );
 
-  const clearRevealedPreviews = () => {
-    for (const { boxId, labelId } of revealedPreviews) {
-      deps.actions.removeGrabbedBox(boxId);
-      if (labelId) {
-        deps.actions.removeLabelInstance(labelId);
-      }
-    }
-    revealedPreviews = [];
-  };
-
-  const showRevealedPreviews = () => {
+  // The selections to draw: revealed and with their elements on the page.
+  // disconnectedItemIds follows DOM mutations (domMutationVersion in core).
+  const revealedItems = createMemo(() => {
     const disconnected = deps.disconnectedItemIds();
-    for (const item of deps.commentItems()) {
-      if (!item.revealed) continue;
-      if (disconnected.has(item.id)) continue;
-      const connectedElements = deps.getConnectedCommentElements(item);
-      const previewBounds = connectedElements.map((element) =>
-        deps.createElementBounds(element),
-      );
-      deps.addCommentItemPreview(
-        item,
-        previewBounds,
-        connectedElements,
-        REVEAL_PREFIX,
-        revealedPreviews,
-      );
-    }
-  };
+    return deps
+      .commentItems()
+      .filter((item) => item.revealed && !disconnected.has(item.id));
+  });
 
-  // Re-render reveal previews when:
-  // - comment items change (toggles, additions, removals)
-  // - disconnected set changes (DOM elements appear/disappear)
-  // Both are reactive signals — no separate MutationObserver needed.
-  // Uses the same disconnectedItemIds memo as the comments dropdown,
-  // which is driven by a domMutationVersion signal in core.
-  createEffect(
-    on(
-      () => [deps.commentItems(), deps.disconnectedItemIds()] as const,
+  // One reactive scope per revealed selection, keyed by id (keyArray from
+  // @solid-primitives/keyed): items are rebuilt as new objects on every edit
+  // or sync, and the scope receives the current one as an accessor. A
+  // selection keeps its box and label while other selections change; its
+  // scope ends — and its preview goes — when it is hidden, disconnected or
+  // removed. External bridge: the overlay store.
+  const drawPreview = (item: Accessor<CommentItem>) => {
+    const source = createMemo<PreviewSource | undefined>(
       () => {
-        clearRevealedPreviews();
-        showRevealedPreviews();
-        // Persist revealed states locally for sync round-trip survival
-        saveLocalRevealedStates(deps.commentItems(), deps.groups());
+        void deps.disconnectedItemIds();
+        return {
+          item: item(),
+          elements: deps.getConnectedCommentElements(item()),
+        };
       },
-    ),
-  );
+      undefined,
+      {
+        equals: (previous, next) =>
+          previous !== undefined &&
+          next !== undefined &&
+          isSamePreview(previous, next),
+      },
+    );
+
+    createEffect(() => {
+      const current = source();
+      if (!current) return;
+      const entries: PreviewEntry[] = [];
+      untrack(() =>
+        deps.addCommentItemPreview(
+          current.item,
+          current.elements.map((element) => deps.createElementBounds(element)),
+          current.elements,
+          REVEAL_PREFIX,
+          entries,
+        ),
+      );
+      onCleanup(() => {
+        for (const { boxId, labelId } of entries) {
+          deps.actions.removeGrabbedBox(boxId);
+          if (labelId) deps.actions.removeLabelInstance(labelId);
+        }
+      });
+    });
+  };
+  createMemo(keyArray(revealedItems, (item) => item.id, drawPreview));
+
+  // Persistence, separate from drawing: revealed flags survive sync round-trips.
+  createEffect(() => {
+    saveLocalRevealedStates(deps.commentItems(), deps.groups());
+  });
 
   const isItemRevealed = (commentItemId: string): boolean => {
     const item = deps.commentItems().find((i) => i.id === commentItemId);
@@ -73,9 +93,7 @@ export function createSelectionVisibility(
   const handleToggleItem = (commentItemId: string) => {
     const items = deps.commentItems();
     const updatedItems = items.map((item) =>
-      item.id === commentItemId
-        ? { ...item, revealed: !item.revealed }
-        : item,
+      item.id === commentItemId ? { ...item, revealed: !item.revealed } : item,
     );
     deps.setCommentItems(updatedItems);
     deps.persistCommentItems(updatedItems);
@@ -87,17 +105,15 @@ export function createSelectionVisibility(
     const newRevealed = !group.revealed;
 
     // Update the group's revealed state
-    const updatedGroups = deps.groups().map((g) =>
-      g.id === groupId ? { ...g, revealed: newRevealed } : g,
-    );
+    const updatedGroups = deps
+      .groups()
+      .map((g) => (g.id === groupId ? { ...g, revealed: newRevealed } : g));
     deps.persistGroups(updatedGroups);
 
     // Override all items in this group
     const items = deps.commentItems();
     const updatedItems = items.map((item) =>
-      item.groupId === groupId
-        ? { ...item, revealed: newRevealed }
-        : item,
+      item.groupId === groupId ? { ...item, revealed: newRevealed } : item,
     );
     deps.setCommentItems(updatedItems);
     deps.persistCommentItems(updatedItems);
@@ -131,7 +147,10 @@ export function createSelectionVisibility(
   // deps.commentItems() would register as dependencies of that outer effect,
   // and the subsequent persistGroups (which updates deps.groups()) would
   // re-trigger the caller — creating an infinite loop.
-  const setGroupsRevealed = (visibleIds: Set<string>, allGroupIds: string[]) => {
+  const setGroupsRevealed = (
+    visibleIds: Set<string>,
+    allGroupIds: string[],
+  ) => {
     const allIdSet = new Set(allGroupIds);
     const currentGroups = untrack(() => deps.groups());
     const updatedGroups = currentGroups.map((g) =>
@@ -159,4 +178,8 @@ export function createSelectionVisibility(
   };
 }
 
-export type { SelectionVisibilityAPI, SelectionVisibilityDeps, PreviewEntry } from "./types.js";
+export type {
+  SelectionVisibilityAPI,
+  SelectionVisibilityDeps,
+  PreviewEntry,
+} from "./types.js";

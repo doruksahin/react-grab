@@ -1,13 +1,12 @@
 import { createStore } from "solid-js/store";
 import type { CommentItem } from "../../../types.js";
 import type { SelectionGroupWithJira } from "../../selection-groups/types.js";
-import type { GetJiraTicketStatus200 } from "../../../generated/sync-api.js";
+import type { JiraTicketStatus } from "../types.js";
 
 export interface SyncStoreShape {
   groups: SelectionGroupWithJira[];
   comments: CommentItem[];
   workspace: string | null;
-  serverUrl: string | null;
   jiraProjectKey: string | null;
   /** The Jira site tickets go to (GET /jira/site); null until it answers. */
   jiraSiteUrl: string | null;
@@ -19,7 +18,6 @@ const INITIAL_STATE: SyncStoreShape = {
   groups: [],
   comments: [],
   workspace: null,
-  serverUrl: null,
   jiraProjectKey: null,
   jiraSiteUrl: null,
   status: "idle",
@@ -31,12 +29,8 @@ export const createSyncStore = () => {
 
   return {
     store,
-    setConfig: (
-      workspace: string,
-      serverUrl: string,
-      jiraProjectKey: string,
-    ) => {
-      setStore({ workspace, serverUrl, jiraProjectKey });
+    setConfig: (workspace: string, jiraProjectKey: string) => {
+      setStore({ workspace, jiraProjectKey });
     },
     setJiraSiteUrl: (jiraSiteUrl: string | null) => {
       setStore({ jiraSiteUrl });
@@ -55,7 +49,7 @@ export const createSyncStore = () => {
     },
     // Fine-grained per-group JIRA status update — uses path-based setStore
     // so only the affected group's properties change in the store.
-    updateJiraStatus: (groupId: string, status: GetJiraTicketStatus200) => {
+    updateJiraStatus: (groupId: string, status: JiraTicketStatus) => {
       const resolved = status.statusCategory.toLowerCase() === "done";
       setStore("groups", (g) => g.id === groupId, {
         jiraStatus: status.status,

@@ -39,24 +39,34 @@ import {
   FEEDBACK_DURATION_MS,
   MAX_COMMENT_ITEMS,
   NEXTJS_REVALIDATION_DELAY_MS,
+  OVERLAY_EVENT_BOUNDARY_ATTRIBUTE,
+  STEP_CUSTOM_EVENT_TAG,
+  STEP_GUIDE_BOX_ID,
+  COMMENTS_LOADED_SYNC_STATUSES,
   TOOLBAR_DEFAULT_POSITION_RATIO,
   ZOOM_DETECTION_THRESHOLD,
 } from "../constants.js";
 import { captureAndUploadScreenshots } from "../features/screenshot/index.js";
 import { createSessionRecorder } from "../features/session-recording/index.js";
+import {
+  createStepCapture,
+  createStepGuide,
+  StepGuideProvider,
+} from "../features/reproduce-steps/index.js";
 import { groupComments } from "../features/selection-groups/business/group-operations.js";
-import { isSynthetic } from "../features/selection-groups/business/synthetic-group.js";
+import { ticketScopeFor } from "../features/selection-groups/business/membership.js";
 import { createSelectionGroups } from "../features/selection-groups/index.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
 import { isPinnedLabel } from "../features/selection-label/business/is-pinned-label.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
+import { toPreviewLabelFields } from "../features/selection-visibility/business/preview-label-fields.js";
 import { createSyncLayer } from "../features/sync/sync-layer.js";
 import type { SyncConfig, SyncStatus } from "../features/sync/types.js";
 import {
-  addJiraComment,
-  getJiraTicketStatus,
-  searchJiraUsers,
-} from "../generated/sync-api.js";
+  SyncProvider,
+  type SyncContextValue,
+} from "../features/sync/sync-context.js";
+import { createHttpAdapter, createHttpJiraPort } from "../sync-http/index.js";
 import type {
   ActionCycleItem,
   ActionCycleState,
@@ -98,6 +108,13 @@ import {
 } from "../utils/create-element-bounds.js";
 import { createElementSelector } from "../utils/create-element-selector.js";
 import { getPageContext } from "../utils/get-page-context.js";
+import {
+  createCurrentPageUrl,
+  locateSelection,
+  ON_PAGE,
+  SelectionLocationProvider,
+  type LocateSelectionById,
+} from "../features/selection-location/index.js";
 import { generateId } from "../utils/generate-id.js";
 import { generateSnippet } from "../utils/generate-snippet.js";
 import { getAncestorElements } from "../utils/get-ancestor-elements.js";
@@ -175,7 +192,18 @@ interface BuildActionContextOptions {
   customEnterPromptMode?: (agent?: AgentOptions) => void;
 }
 
-const syncLayer = createSyncLayer();
+// Composition root: the HTTP ports are the default for configs that do not
+// inject their own (ADR-0023).
+const syncLayer = createSyncLayer({
+  createStorage: createHttpAdapter,
+  createJira: createHttpJiraPort,
+});
+const syncContext: SyncContextValue = {
+  storage: syncLayer.adapter,
+  jira: syncLayer.jira,
+  jiraProjectKey: syncLayer.jiraProjectKey,
+  refreshJiraStatus: syncLayer.refreshJiraStatus,
+};
 let pendingSyncOptions: Options | undefined;
 
 export const initSync = async (config: SyncConfig): Promise<void> => {
@@ -355,6 +383,15 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       : null;
     onCleanup(() => sessionRecorder?.stop());
 
+    // ADR-0025: the clicks and field changes that lead to each new comment.
+    const stepCapture = pluginRegistry.store.options.steps?.enabled
+      ? createStepCapture({
+          isPaused: () => isActivated(),
+          onStep: (step) => sessionRecorder?.mark(STEP_CUSTOM_EVENT_TAG, step),
+        })
+      : null;
+    onCleanup(() => stepCapture?.stop());
+
     const updateToolbarState = (updates: Partial<ToolbarState>) => {
       const currentState = currentToolbarState() ?? loadToolbarState();
       const newState: ToolbarState = {
@@ -464,6 +501,36 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         },
       },
     );
+
+    // Where each selection is relative to this page (ADR-0024). Rebuilt only
+    // when the URL, the disconnected set or the items change.
+    const currentPageUrl = createCurrentPageUrl(domMutationVersion);
+    const selectionLocations = createMemo(() => {
+      const disconnected = commentsDisconnectedItemIds();
+      const currentUrl = currentPageUrl();
+      return new Map(
+        commentItems().map((item) => [
+          item.id,
+          locateSelection({
+            pageUrl: item.pageUrl,
+            currentUrl,
+            isOnPage: !disconnected.has(item.id),
+          }),
+        ]),
+      );
+    });
+
+    const locateSelectionById: LocateSelectionById = (selectionId) =>
+      selectionLocations().get(selectionId) ?? ON_PAGE;
+
+    // ADR-0026: guide the user back to a selection along its recorded steps.
+    const stepGuide = createStepGuide({
+      commentItems,
+      currentPageUrl,
+      commentsLoaded: () => COMMENTS_LOADED_SYNC_STATUSES.has(syncLayer.status()),
+      isPaused: () => isActivated(),
+      selectionElements: getConnectedCommentElements,
+    });
 
     const copyableItemCount = createMemo(() => {
       const disconnected = commentsDisconnectedItemIds();
@@ -814,6 +881,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         timestamp: Date.now(),
         revealed: visibility.selectionsRevealed(),
         ...getPageContext(),
+        steps: stepCapture?.take(),
       };
       const groupId = selectionGroups.ensureGroupForItem(
         itemSeed,
@@ -1639,7 +1707,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       "pointerdown",
       (event: PointerEvent) => {
         if (!event.isPrimary || event.button !== 0 || !isPromptMode()) return;
-        if (isEventFromOverlay(event, "data-react-grab-ignore-events")) return;
+        if (isEventFromOverlay(event, OVERLAY_EVENT_BOUNDARY_ATTRIBUTE)) return;
         event.preventDefault();
         event.stopImmediatePropagation();
         const bounds = selectionBounds();
@@ -1660,7 +1728,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       (event: PointerEvent) => {
         if (!event.isPrimary || isPromptMode() || store.contextMenuPosition)
           return;
-        if (isEventFromOverlay(event, "data-react-grab-ignore-events")) return;
+        if (isEventFromOverlay(event, OVERLAY_EVENT_BOUNDARY_ATTRIBUTE)) return;
         actions.setPointer({ x: event.clientX, y: event.clientY });
         if (isDragging())
           scheduleDragPreviewUpdate(event.clientX, event.clientY);
@@ -1965,7 +2033,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     eventListenerManager.addWindowListener(
       "focusin",
       (event: FocusEvent) => {
-        if (isEventFromOverlay(event, "data-react-grab-ignore-events")) {
+        if (isEventFromOverlay(event, OVERLAY_EVENT_BOUNDARY_ATTRIBUTE)) {
           event.stopPropagation();
         }
       },
@@ -2227,15 +2295,22 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       if (!isThemeEnabled()) return [];
       if (!pluginRegistry.store.theme.grabbedBoxes.enabled) return [];
       void store.viewportVersion;
-      return store.grabbedBoxes.map((box) => {
-        if (!box.element || !document.body.contains(box.element)) {
-          return box;
-        }
-        return {
-          ...box,
-          bounds: createElementBounds(box.element),
-        };
-      });
+      const guideElement = stepGuide.highlightedElement();
+      const guideBoxes = guideElement
+        ? [{ id: STEP_GUIDE_BOX_ID, bounds: createElementBounds(guideElement), createdAt: 0, element: guideElement }]
+        : [];
+      return [
+        ...store.grabbedBoxes.map((box) => {
+          if (!box.element || !document.body.contains(box.element)) {
+            return box;
+          }
+          return {
+            ...box,
+            bounds: createElementBounds(box.element),
+          };
+        }),
+        ...guideBoxes,
+      ];
     });
 
     const dragVisible = createMemo(
@@ -2572,20 +2647,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
             // carries no item id and never becomes a pin.
             itemId: labelKind === "saved" ? item.id : undefined,
             selectionBounds: bounds,
-            tagName: item.tagName,
-            componentName: item.componentName,
-            elementsCount: item.elementsCount,
+            ...toPreviewLabelFields(item),
             status: "idle",
-            isPromptMode: Boolean(item.commentText),
-            inputValue: item.commentText ?? undefined,
             createdAt: 0,
             element: previewElement,
             mouseX: bounds.x + bounds.width / 2,
-            groupId: item.groupId ?? undefined,
-            commentText: item.commentText,
-            timestamp: item.timestamp,
-            hasElementScreenshot: Boolean(item.screenshotElement),
-            hasFullPageScreenshot: Boolean(item.screenshotFullPage),
           });
         }
 
@@ -2611,19 +2677,15 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     } | null>(null);
 
     const handleCreateTicketForLooseItem = (item: CommentItem) => {
-      // Every item has a group (real or synthetic) from selection time.
-      // Find it and open the dialog.
-      const group = selectionGroups.groups().find((g) => g.id === item.groupId);
-      if (!group) return;
-
-      const groupItems = isSynthetic(group)
-        ? [item]
-        : commentItems().filter((ci) => ci.groupId === group.id);
-
-      setLooseTicketDialog({
-        group,
-        items: groupItems,
-      });
+      // Every item has a group (real or synthetic): the membership policy
+      // never leaves one ungrouped. A missing group is reported as a data
+      // anomaly by the selection-groups orchestrator.
+      const scope = ticketScopeFor(
+        item,
+        selectionGroups.groups(),
+        commentItems(),
+      );
+      if (scope) setLooseTicketDialog(scope);
     };
     // --- end per-item ticketing orchestrator ---
 
@@ -2689,8 +2751,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       updateToolbarState,
       // NEW: group deps
       groups: selectionGroups.groups,
-      setGroups: selectionGroups.setGroups,
-      persistGroups: selectionGroups.persistGroups,
+      // Revealed flags are visibility state, not membership: written through
+      // the sync layer directly, outside the selection-groups commands.
+      persistGroups: syncLayer.persistGroups,
     });
 
     const showCommentItemPreview = (
@@ -3148,240 +3211,188 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           if (disposed) return;
           disposeRenderer = render(() => {
             return (
-              <ReactGrabRenderer
-                selectionVisible={selectionVisible()}
-                selectionBounds={selectionBounds()}
-                selectionBoundsMultiple={selectionBoundsMultiple()}
-                selectionShouldSnap={
-                  store.frozenElements.length > 0 ||
-                  dragPreviewBounds().length > 0
-                }
-                inspectVisible={isInspectMode() && inspectBounds().length > 0}
-                inspectBounds={inspectBounds()}
-                selectionElementsCount={store.frozenElements.length}
-                selectionFilePath={store.selectionFilePath ?? undefined}
-                selectionLineNumber={store.selectionLineNumber ?? undefined}
-                selectionTagName={selectionTagName()}
-                selectionComponentName={resolvedComponentName()}
-                selectionLabelVisible={selectionLabelVisible()}
-                selectionLabelStatus="idle"
-                selectionActionCycleState={actionCycleState()}
-                selectionArrowNavigationState={arrowNavigationState()}
-                onArrowNavigationSelect={handleArrowNavigationSelect}
-                inspectNavigationState={inspectNavigationState()}
-                onInspectSelect={handleInspectSelect}
-                labelInstances={computedLabelInstancesWithStatus()}
-                labelPinsEnabled={Boolean(initialOptions.collapsibleLabels)}
-                labelPinsStartClosed={Boolean(
-                  initialOptions.labelsStartCollapsed,
-                )}
-                previewedItemId={previewedItemId()}
-                dragVisible={dragVisible()}
-                dragBounds={dragBounds()}
-                grabbedBoxes={computedGrabbedBoxes()}
-                mouseX={
-                  store.frozenElements.length > 1
-                    ? undefined
-                    : cursorPosition().x
-                }
-                isFrozen={
-                  isFrozenPhase() || isActivated() || isToolbarSelectHovered()
-                }
-                inputValue={store.inputText}
-                isPromptMode={isPromptMode()}
-                hasAgent={store.hasAgentProvider}
-                agentSessions={agentManager.sessions()}
-                supportsUndo={store.supportsUndo}
-                supportsFollowUp={store.supportsFollowUp}
-                dismissButtonText={store.dismissButtonText}
-                onDismissSession={agentManager.session.dismiss}
-                onUndoSession={agentManager.session.undo}
-                onFollowUpSubmitSession={handleFollowUpSubmit}
-                onAcknowledgeSessionError={handleAcknowledgeError}
-                onRetrySession={agentManager.session.retry}
-                onShowContextMenuInstance={handleShowContextMenuInstance}
-                onLabelInstanceHoverChange={handleLabelInstanceHoverChange}
-                onInputChange={actions.setInputText}
-                onInputSubmit={() => void handleInputSubmit()}
-                onToggleExpand={handleToggleExpand}
-                isPendingDismiss={isPendingDismiss()}
-                selectionLabelShakeCount={selectionLabelShakeCount()}
-                onConfirmDismiss={handleConfirmDismiss}
-                onCancelDismiss={handleCancelDismiss}
-                pendingAbortSessionId={store.pendingAbortSessionId}
-                onRequestAbortSession={(sessionId) =>
-                  actions.setPendingAbortSessionId(sessionId)
-                }
-                onAbortSession={handleAgentAbort}
-                toolbarVisible={pluginRegistry.store.theme.toolbar.enabled}
-                isActive={isActivated()}
-                onToggleActive={handleToggleActive}
-                enabled={isEnabled()}
-                onToggleEnabled={handleToggleEnabled}
-                isDevMode={isDevMode()}
-                onToggleDevMode={handleToggleDevMode}
-                shakeCount={toolbarShakeCount()}
-                onToolbarStateChange={(state) => {
-                  setCurrentToolbarState(state);
-                  toolbarStateChangeCallbacks.forEach((callback) =>
-                    callback(state),
-                  );
-                }}
-                onSubscribeToToolbarStateChanges={(callback) => {
-                  toolbarStateChangeCallbacks.add(callback);
-                  return () => {
-                    toolbarStateChangeCallbacks.delete(callback);
-                  };
-                }}
-                onToolbarSelectHoverChange={setIsToolbarSelectHovered}
-                onToolbarRef={(element) => {
-                  toolbarElement = element;
-                }}
-                contextMenuPosition={contextMenuPosition()}
-                contextMenuBounds={contextMenuBounds()}
-                contextMenuTagName={contextMenuTagName()}
-                contextMenuComponentName={contextMenuComponentName()}
-                contextMenuHasFilePath={Boolean(
-                  contextMenuFilePath()?.filePath,
-                )}
-                actions={pluginRegistry.store.actions}
-                actionContext={contextMenuActionContext()}
-                onContextMenuDismiss={handleContextMenuDismiss}
-                onContextMenuHide={deferHideContextMenu}
-                commentItems={commentItems()}
-                commentsDisconnectedItemIds={commentsDisconnectedItemIds()}
-                commentItemCount={commentItems().length}
-                clockFlashTrigger={clockFlashTrigger()}
-                commentsDropdownPosition={commentsDropdownPosition()}
-                isCommentsPinned={
-                  commentsDropdownPosition() !== null && !isCommentsHoverOpen()
-                }
-                onToggleComments={handleToggleComments}
-                onCopyAll={handleCommentsCopyAll}
-                onCopyAllHover={handleCommentsCopyAllHover}
-                onCommentsButtonHover={handleCommentsButtonHover}
-                onCommentItemSelect={handleCommentItemSelect}
-                onCommentItemHover={handleCommentItemHover}
-                onCommentsCopyAll={handleCommentsCopyAll}
-                onCommentsCopyAllHover={handleCommentsCopyAllHover}
-                onCommentsClear={handleCommentsClear}
-                copyableCount={copyableItemCount()}
-                onCopyGroup={handleCopyGroup}
-                onCommentsDismiss={dismissCommentsDropdown}
-                onCommentsDropdownHover={handleCommentsDropdownHover}
-                toolbarMenuPosition={toolbarMenuPosition()}
-                toolbarMenuActions={pluginRegistry.store.actions.filter(
-                  (action) => action.showInToolbarMenu === true,
-                )}
-                defaultActionId={
-                  currentToolbarState()?.defaultAction ?? DEFAULT_ACTION_ID
-                }
-                onSetDefaultAction={handleSetDefaultAction}
-                onToggleToolbarMenu={handleToggleToolbarMenu}
-                onToolbarMenuDismiss={dismissToolbarMenu}
-                clearPromptPosition={clearPromptPosition()}
-                onClearCommentsConfirm={() => {
-                  confirmClear();
-                  dismissClearPrompt();
-                  handleCommentsClear();
-                }}
-                onClearCommentsCancel={dismissClearPrompt}
-                selectionsRevealed={visibility.selectionsRevealed()}
-                onToggleSelectionsRevealed={visibility.handleToggleParent}
-                onToggleCommentItemRevealed={visibility.handleToggleItem}
-                syncStatus={derivedSyncStatus()}
-                onRetrySync={syncLayer.retry}
-                syncWorkspace={syncLayer.workspace() ?? undefined}
-                syncServerUrl={syncLayer.serverUrl() ?? undefined}
-                jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
-                jiraSiteHost={syncLayer.jiraSiteHost() ?? undefined}
-                groups={selectionGroups.groups()}
-                activeGroupId={selectionGroups.activeGroupId()}
-                onAddGroup={selectionGroups.handleAddGroup}
-                onRenameGroup={selectionGroups.handleRenameGroup}
-                onDeleteGroup={selectionGroups.handleDeleteGroup}
-                onActiveGroupChange={(groupId) => {
-                  selectionGroups.setActiveGroupId(groupId);
-                  // If the active selection backs a saved CommentItem,
-                  // persist the group change via handleMoveItem (server),
-                  // not just the "next new selection" default.
-                  const itemId = findFocusedCommentItemId();
-                  if (itemId) selectionGroups.handleMoveItem(itemId, groupId);
-                }}
-                onMoveItem={selectionGroups.handleMoveItem}
-                onMoveItems={selectionGroups.handleMoveItems}
-                onRemoveItem={(itemId) => {
-                  selectionGroups.handleRemoveItem(itemId);
-                }}
-                onToggleGroupRevealed={visibility.handleToggleGroup}
-                onFilterVisibilityChange={visibility.setGroupsRevealed}
-                onJiraResolved={(groupId) => {
-                  const updated = selectionGroups
-                    .groups()
-                    .map((g) =>
-                      g.id === groupId ? { ...g, jiraResolved: true } : g,
-                    );
-                  selectionGroups.persistGroups(updated);
-                }}
-                onTicketCreated={(groupId, ticketId, ticketUrl) => {
-                  const updated = selectionGroups
-                    .groups()
-                    .map((g) =>
-                      g.id === groupId
-                        ? { ...g, jiraTicketId: ticketId, jiraUrl: ticketUrl }
-                        : g,
-                    );
-                  selectionGroups.persistGroups(updated);
-                }}
-                onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
-                looseTicketDialog={looseTicketDialog()}
-                onLooseTicketDialogClose={() => setLooseTicketDialog(null)}
-                onSubmitJiraComment={
-                  syncLayer.workspace()
-                    ? async (groupId, markdown, mentions, parentId) => {
-                        const res = await addJiraComment(
-                          syncLayer.workspace()!,
-                          groupId,
-                          { body: markdown, mentions, parentId },
+              <SyncProvider value={syncContext}>
+                <SelectionLocationProvider value={locateSelectionById}>
+                  <StepGuideProvider value={stepGuide}>
+                    <ReactGrabRenderer
+                      selectionVisible={selectionVisible()}
+                      selectionBounds={selectionBounds()}
+                      selectionBoundsMultiple={selectionBoundsMultiple()}
+                      selectionShouldSnap={
+                        store.frozenElements.length > 0 ||
+                        dragPreviewBounds().length > 0
+                      }
+                      inspectVisible={isInspectMode() && inspectBounds().length > 0}
+                      inspectBounds={inspectBounds()}
+                      selectionElementsCount={store.frozenElements.length}
+                      selectionFilePath={store.selectionFilePath ?? undefined}
+                      selectionLineNumber={store.selectionLineNumber ?? undefined}
+                      selectionTagName={selectionTagName()}
+                      selectionComponentName={resolvedComponentName()}
+                      selectionLabelVisible={selectionLabelVisible()}
+                      selectionLabelStatus="idle"
+                      selectionActionCycleState={actionCycleState()}
+                      selectionArrowNavigationState={arrowNavigationState()}
+                      onArrowNavigationSelect={handleArrowNavigationSelect}
+                      inspectNavigationState={inspectNavigationState()}
+                      onInspectSelect={handleInspectSelect}
+                      labelInstances={computedLabelInstancesWithStatus()}
+                      labelPinsEnabled={Boolean(initialOptions.collapsibleLabels)}
+                      labelPinsStartClosed={Boolean(
+                        initialOptions.labelsStartCollapsed,
+                      )}
+                      previewedItemId={previewedItemId()}
+                      dragVisible={dragVisible()}
+                      dragBounds={dragBounds()}
+                      grabbedBoxes={computedGrabbedBoxes()}
+                      mouseX={
+                        store.frozenElements.length > 1
+                          ? undefined
+                          : cursorPosition().x
+                      }
+                      isFrozen={
+                        isFrozenPhase() || isActivated() || isToolbarSelectHovered()
+                      }
+                      inputValue={store.inputText}
+                      isPromptMode={isPromptMode()}
+                      hasAgent={store.hasAgentProvider}
+                      agentSessions={agentManager.sessions()}
+                      supportsUndo={store.supportsUndo}
+                      supportsFollowUp={store.supportsFollowUp}
+                      dismissButtonText={store.dismissButtonText}
+                      onDismissSession={agentManager.session.dismiss}
+                      onUndoSession={agentManager.session.undo}
+                      onFollowUpSubmitSession={handleFollowUpSubmit}
+                      onAcknowledgeSessionError={handleAcknowledgeError}
+                      onRetrySession={agentManager.session.retry}
+                      onShowContextMenuInstance={handleShowContextMenuInstance}
+                      onLabelInstanceHoverChange={handleLabelInstanceHoverChange}
+                      onInputChange={actions.setInputText}
+                      onInputSubmit={() => void handleInputSubmit()}
+                      onToggleExpand={handleToggleExpand}
+                      isPendingDismiss={isPendingDismiss()}
+                      selectionLabelShakeCount={selectionLabelShakeCount()}
+                      onConfirmDismiss={handleConfirmDismiss}
+                      onCancelDismiss={handleCancelDismiss}
+                      pendingAbortSessionId={store.pendingAbortSessionId}
+                      onRequestAbortSession={(sessionId) =>
+                        actions.setPendingAbortSessionId(sessionId)
+                      }
+                      onAbortSession={handleAgentAbort}
+                      toolbarVisible={pluginRegistry.store.theme.toolbar.enabled}
+                      isActive={isActivated()}
+                      onToggleActive={handleToggleActive}
+                      enabled={isEnabled()}
+                      onToggleEnabled={handleToggleEnabled}
+                      isDevMode={isDevMode()}
+                      onToggleDevMode={handleToggleDevMode}
+                      shakeCount={toolbarShakeCount()}
+                      onToolbarStateChange={(state) => {
+                        setCurrentToolbarState(state);
+                        toolbarStateChangeCallbacks.forEach((callback) =>
+                          callback(state),
                         );
-                        if (res.status !== 200)
-                          throw new Error("Failed to post comment");
-                        return res.data as { id: string; created: string };
+                      }}
+                      onSubscribeToToolbarStateChanges={(callback) => {
+                        toolbarStateChangeCallbacks.add(callback);
+                        return () => {
+                          toolbarStateChangeCallbacks.delete(callback);
+                        };
+                      }}
+                      onToolbarSelectHoverChange={setIsToolbarSelectHovered}
+                      onToolbarRef={(element) => {
+                        toolbarElement = element;
+                      }}
+                      contextMenuPosition={contextMenuPosition()}
+                      contextMenuBounds={contextMenuBounds()}
+                      contextMenuTagName={contextMenuTagName()}
+                      contextMenuComponentName={contextMenuComponentName()}
+                      contextMenuHasFilePath={Boolean(
+                        contextMenuFilePath()?.filePath,
+                      )}
+                      actions={pluginRegistry.store.actions}
+                      actionContext={contextMenuActionContext()}
+                      onContextMenuDismiss={handleContextMenuDismiss}
+                      onContextMenuHide={deferHideContextMenu}
+                      commentItems={commentItems()}
+                      commentsDisconnectedItemIds={commentsDisconnectedItemIds()}
+                      commentItemCount={commentItems().length}
+                      clockFlashTrigger={clockFlashTrigger()}
+                      commentsDropdownPosition={commentsDropdownPosition()}
+                      isCommentsPinned={
+                        commentsDropdownPosition() !== null &&
+                        !isCommentsHoverOpen()
                       }
-                    : undefined
-                }
-                onSearchJiraUsers={
-                  syncLayer.workspace()
-                    ? async (query) => {
-                        const res = await searchJiraUsers({
-                          query,
-                          project: syncLayer.jiraProjectKey()!,
-                        });
-                        if (res.status !== 200) return [];
-                        return res.data as Array<{
-                          accountId: string;
-                          displayName: string;
-                          avatarUrl: string | null;
-                        }>;
+                      onToggleComments={handleToggleComments}
+                      onCopyAll={handleCommentsCopyAll}
+                      onCopyAllHover={handleCommentsCopyAllHover}
+                      onCommentsButtonHover={handleCommentsButtonHover}
+                      onCommentItemSelect={handleCommentItemSelect}
+                      onCommentItemHover={handleCommentItemHover}
+                      onCommentsCopyAll={handleCommentsCopyAll}
+                      onCommentsCopyAllHover={handleCommentsCopyAllHover}
+                      onCommentsClear={handleCommentsClear}
+                      copyableCount={copyableItemCount()}
+                      onCopyGroup={handleCopyGroup}
+                      onCommentsDismiss={dismissCommentsDropdown}
+                      onCommentsDropdownHover={handleCommentsDropdownHover}
+                      toolbarMenuPosition={toolbarMenuPosition()}
+                      toolbarMenuActions={pluginRegistry.store.actions.filter(
+                        (action) => action.showInToolbarMenu === true,
+                      )}
+                      defaultActionId={
+                        currentToolbarState()?.defaultAction ?? DEFAULT_ACTION_ID
                       }
-                    : undefined
-                }
-                onRefreshJiraStatus={
-                  syncLayer.workspace()
-                    ? (groupId) => {
-                        getJiraTicketStatus(syncLayer.workspace()!, groupId)
-                          .then((res) => {
-                            if (res.status !== 200) return;
-                            syncLayer.updateJiraStatus(groupId, res.data);
-                          })
-                          .catch(() => {});
+                      onSetDefaultAction={handleSetDefaultAction}
+                      onToggleToolbarMenu={handleToggleToolbarMenu}
+                      onToolbarMenuDismiss={dismissToolbarMenu}
+                      clearPromptPosition={clearPromptPosition()}
+                      onClearCommentsConfirm={() => {
+                        confirmClear();
+                        dismissClearPrompt();
+                        handleCommentsClear();
+                      }}
+                      onClearCommentsCancel={dismissClearPrompt}
+                      selectionsRevealed={visibility.selectionsRevealed()}
+                      onToggleSelectionsRevealed={visibility.handleToggleParent}
+                      onToggleCommentItemRevealed={visibility.handleToggleItem}
+                      syncStatus={derivedSyncStatus()}
+                      onRetrySync={syncLayer.retry}
+                      syncWorkspace={syncLayer.workspace() ?? undefined}
+                      jiraProjectKey={syncLayer.jiraProjectKey() ?? undefined}
+                      jiraSiteHost={syncLayer.jiraSiteHost() ?? undefined}
+                      groups={selectionGroups.groups()}
+                      activeGroupId={selectionGroups.activeGroupId()}
+                      onAddGroup={selectionGroups.handleAddGroup}
+                      onRenameGroup={selectionGroups.handleRenameGroup}
+                      onDeleteGroup={selectionGroups.handleDeleteGroup}
+                      onActiveGroupChange={(groupId) => {
+                        selectionGroups.setActiveGroupId(groupId);
+                        // If the active selection backs a saved CommentItem,
+                        // persist the group change via handleMoveItem (server),
+                        // not just the "next new selection" default.
+                        const itemId = findFocusedCommentItemId();
+                        if (itemId) selectionGroups.handleMoveItem(itemId, groupId);
+                      }}
+                      onMoveItem={selectionGroups.handleMoveItem}
+                      onMoveItems={selectionGroups.handleMoveItems}
+                      onRemoveItem={(itemId) => {
+                        selectionGroups.handleRemoveItem(itemId);
+                      }}
+                      onToggleGroupRevealed={visibility.handleToggleGroup}
+                      onFilterVisibilityChange={visibility.setGroupsRevealed}
+                      onJiraResolved={selectionGroups.markResolved}
+                      onTicketCreated={selectionGroups.markTicketCreated}
+                      onCreateTicketForLooseItem={handleCreateTicketForLooseItem}
+                      looseTicketDialog={looseTicketDialog()}
+                      onLooseTicketDialogClose={() => setLooseTicketDialog(null)}
+                      commentEditorToolbarVisible={
+                        initialOptions.commentEditorToolbarVisible
                       }
-                    : undefined
-                }
-                commentEditorToolbarVisible={
-                  initialOptions.commentEditorToolbarVisible
-                }
-              />
+                    />
+                  </StepGuideProvider>
+                </SelectionLocationProvider>
+              </SyncProvider>
             );
           }, rendererRoot);
         })

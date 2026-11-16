@@ -1,24 +1,31 @@
 {
   "name": "@react-grab/web-extension",
-  "version": "0.0.0",
+  "version": "0.0.8",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "package": "./scripts/package.sh"
+    "dev": "wxt",
+    "build": "wxt build",
+    "package": "wxt zip",
+    "typecheck": "wxt prepare && tsc --noEmit",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "test": "vitest run",
+    "test:e2e": "wxt build --mode e2e && playwright test",
+    "build:e2e": "wxt build --mode e2e"
   },
   "dependencies": {
+    "@webext-core/messaging": "^4.0.1",
     "react-grab": "workspace:*",
-    "turndown": "^7.2.0"
+    "solid-js": "^1.9.10",
+    "zod": "^4.6.6"
   },
   "devDependencies": {
-    "@types/chrome": "^0.0.278",
-    "@types/turndown": "^5.0.5",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@playwright/test": "^1.65.1",
+    "oxlint": "^1.42.0",
     "typescript": "^5.7.3",
-    "vite": "^6.0.2",
-    "vite-plugin-web-extension": "^4.1.6"
+    "vite-plugin-solid": "^2.11.12",
+    "vitest": "^4.1.4",
+    "wxt": "^0.21.5"
   }
 }

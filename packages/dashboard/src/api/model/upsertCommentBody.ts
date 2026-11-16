@@ -5,6 +5,7 @@
  * API for the react-grab dashboard — comments, groups, workspaces.
  * OpenAPI spec version: 0.1.0
  */
+import type { ReproduceStep } from './reproduceStep';
 import type { UpsertCommentBodyStatus } from './upsertCommentBodyStatus';
 
 export type UpsertCommentBody = {
@@ -30,6 +31,11 @@ export type UpsertCommentBody = {
   screenshotElement?: string;
   /** Link to the replay of how the user got here (SPEC-020) */
   recordingUrl?: string;
+  /**
+     * Chrome DevTools Recorder steps that led to the selection (ADR-0025)
+     * @maxItems 51
+     */
+  steps?: ReproduceStep[];
   jiraTicketId?: string;
   capturedBy?: string;
 };

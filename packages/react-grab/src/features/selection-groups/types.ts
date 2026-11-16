@@ -2,6 +2,12 @@ import type { Accessor, Setter } from "solid-js";
 import type { ServerSelectionGroup } from "../../generated/types.js";
 import type { CommentItem } from "../../shared-types.js";
 import type { JiraComment } from "../jira-comments/types.js";
+import type {
+  BulkMoveResult,
+  DeleteGroupResult,
+  MoveResult,
+  RemoveResult,
+} from "./business/membership-policy.js";
 
 /**
  * Application-level group type. Extends the server type with UI-only fields.
@@ -13,11 +19,11 @@ export interface SelectionGroup extends ServerSelectionGroup {
    *  survives page refresh without waiting for the next poll cycle. */
   jiraResolved?: boolean;
   /** True if this group was auto-created when a loose selection earned a
-   *  ticket. Synthetic groups are filtered out of every user-facing surface
-   *  (GroupList, picker, stats, filters); their single item renders as a
-   *  loose card via `isPresentedAsLoose`. The flag is permanent — synthetic
-   *  groups never become "real" by accumulating items, because we filter
-   *  them out of the picker. */
+   *  ticket. Synthetic groups are hidden on user-facing surfaces (GroupList,
+   *  picker, stats, filters); their single item renders as a loose card via
+   *  `isPresentedAsLoose`. The flag is permanent, and the membership policy
+   *  never moves a selection into one (see `presentedGroups` for older
+   *  data that has several members). */
   synthetic?: boolean;
 }
 
@@ -76,18 +82,23 @@ export interface SelectionGroupsDeps {
  */
 export interface SelectionGroupsAPI {
   groups: Accessor<SelectionGroupWithJira[]>;
-  setGroups: Setter<SelectionGroupWithJira[]>;
-  persistGroups: (groups: SelectionGroupWithJira[]) => SelectionGroupWithJira[];
   activeGroupId: Accessor<string | null>;
   setActiveGroupId: Setter<string | null>;
   handleAddGroup: (name: string) => void;
   handleRenameGroup: (groupId: string, name: string) => void;
-  handleDeleteGroup: (groupId: string) => void;
-  handleMoveItem: (itemId: string, groupId: string | null) => void;
-  handleMoveItems: (itemIds: Set<string>, groupId: string) => void;
-  /** Remove a selection. Gated by ticket-lock — returns false if the
-   *  selection is in a ticketed group. GCs empty synthetic groups. */
-  handleRemoveItem: (itemId: string) => boolean;
+  handleDeleteGroup: (groupId: string) => DeleteGroupResult;
+  handleMoveItem: (itemId: string, groupId: string | null) => MoveResult;
+  handleMoveItems: (itemIds: Set<string>, groupId: string) => BulkMoveResult;
+  /** Remove a selection; refused for a locked one. GCs empty synthetic groups. */
+  handleRemoveItem: (itemId: string) => RemoveResult;
+  /** Record the ticket created for a group; it then takes no new selections. */
+  markTicketCreated: (
+    groupId: string,
+    jiraTicketId: string,
+    jiraUrl: string,
+  ) => void;
+  /** Record that a group's ticket is resolved in Jira. */
+  markResolved: (groupId: string) => void;
   /** Guarantee the item has a group. Returns the groupId to assign.
    *  Uses activeGroupId when set, otherwise creates a synthetic group. */
   ensureGroupForItem: (

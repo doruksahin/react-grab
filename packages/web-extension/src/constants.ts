@@ -1,2 +1,12 @@
-export const LOCALHOST_INIT_DELAY_MS = 500;
-export const STATE_QUERY_TIMEOUT_MS = 500;
+export const PAGE_REQUEST_NAMESPACE = "react-grab-extension:request";
+export const PAGE_EVENT_NAMESPACE = "react-grab-extension:event";
+export const DEFAULT_ENABLED = true;
+export const LOCALHOST_PAGE_API_WAIT_MS = 500;
+export const ACTION_TITLE_ENABLED = "React Grab (Active)";
+export const ACTION_TITLE_DISABLED = "React Grab (Inactive)";
+export const ACTION_BADGE_TEXT_DISABLED = "OFF";
+export const ACTION_BADGE_COLOR = "#FF40E0";
+export const OVERLAY_SCRIPT_ID = "react-grab-overlay";
+export const RELAY_SCRIPT_ID = "react-grab-relay";
+export const OVERLAY_SCRIPT_FILE = "content-scripts/overlay.js";
+export const RELAY_SCRIPT_FILE = "content-scripts/relay.js";

@@ -50,6 +50,13 @@
       "when": 1794599994510,
       "tag": "0006_safe_fixer",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794807177735,
+      "tag": "0007_unknown_captain_universe",
+      "breakpoints": true
     }
   ]
 }

@@ -273,3 +273,24 @@ export const RELEVANT_CSS_PROPERTIES = new Set([
   "object-fit",
   "object-position",
 ]);
+
+// ADR-0025: reproduce steps. Count and selector limits come from the server
+// schema through the generated client (features/reproduce-steps/limits.ts).
+export const STEP_TEXT_MAX_LENGTH_CHARS = 64;
+export const STEP_ACCESSIBLE_NAME_MAX_LENGTH_CHARS = 100;
+export const STEP_CUSTOM_EVENT_TAG = "react-grab-step";
+// The attribute on the overlay's shadow host and its interactive containers;
+// events whose path passes through it belong to React Grab, not the page.
+export const OVERLAY_EVENT_BOUNDARY_ATTRIBUTE = "data-react-grab-ignore-events";
+// ADR-0026: the overlay highlight box the step guide draws.
+export const STEP_GUIDE_BOX_ID = "step-guide";
+// ADR-0026: how often a running guide looks for its step's element again,
+// as Testing Library's waitFor polls (50 ms there).
+export const GUIDE_SEARCH_INTERVAL_MS = 100;
+// Sync statuses after which the comment list has loaded (synced, local-only,
+// or failed back to local); a missing comment then means it was removed.
+export const COMMENTS_LOADED_SYNC_STATUSES: ReadonlySet<string> = new Set([
+  "synced",
+  "local",
+  "error",
+]);

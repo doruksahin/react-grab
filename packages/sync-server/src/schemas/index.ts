@@ -14,6 +14,11 @@ export {
 } from "./env.js";
 export { CommentItem, CommentItemArray, SelectionStatus } from "./comment.js";
 export {
+  ReproduceStep,
+  ReproduceSteps,
+  type ReproduceStepValue,
+} from "./reproduce-step.js";
+export {
   SelectionGroup,
   SelectionGroupArray,
   SelectionGroupWrite,
