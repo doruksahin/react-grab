@@ -252,7 +252,6 @@ export const CreateJiraTicketParams = zod.object({
 })
 
 export const CreateJiraTicketBody = zod.object({
-  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination (ADR-0027)'),
   "issueType": zod.string(),
   "priority": zod.string(),
   "summary": zod.string(),
@@ -339,10 +338,6 @@ export const ListJiraIssueTypesParams = zod.object({
   "id": zod.string().describe('Workspace ID')
 })
 
-export const ListJiraIssueTypesQueryParams = zod.object({
-  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination')
-})
-
 export const ListJiraIssueTypesResponseItem = zod.object({
   "id": zod.string(),
   "name": zod.string()
@@ -355,10 +350,6 @@ export const ListJiraIssueTypesResponse = zod.array(ListJiraIssueTypesResponseIt
  */
 export const ListJiraPrioritiesParams = zod.object({
   "id": zod.string().describe('Workspace ID')
-})
-
-export const ListJiraPrioritiesQueryParams = zod.object({
-  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination')
 })
 
 export const ListJiraPrioritiesResponseItem = zod.object({
@@ -375,10 +366,6 @@ export const ListJiraLabelsParams = zod.object({
   "id": zod.string().describe('Workspace ID')
 })
 
-export const ListJiraLabelsQueryParams = zod.object({
-  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination')
-})
-
 export const ListJiraLabelsResponseItem = zod.string()
 export const ListJiraLabelsResponse = zod.array(ListJiraLabelsResponseItem)
 
@@ -391,7 +378,6 @@ export const SearchJiraUsersParams = zod.object({
 })
 
 export const SearchJiraUsersQueryParams = zod.object({
-  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination'),
   "query": zod.string().describe('Search query for user name/email')
 })
 
@@ -401,81 +387,6 @@ export const SearchJiraUsersResponseItem = zod.object({
   "avatarUrl": zod.string().nullable()
 })
 export const SearchJiraUsersResponse = zod.array(SearchJiraUsersResponseItem)
-
-
-/**
- * @deprecated
- * @summary Deprecated: the environment account's Jira site
- */
-export const GetLegacyJiraSiteResponse = zod.object({
-  "siteUrl": zod.url()
-})
-
-
-/**
- * @deprecated
- * @summary Deprecated: projects of the environment account
- */
-export const ListLegacyJiraProjectsResponseItem = zod.object({
-  "key": zod.string(),
-  "name": zod.string()
-})
-export const ListLegacyJiraProjectsResponse = zod.array(ListLegacyJiraProjectsResponseItem)
-
-
-/**
- * @deprecated
- * @summary Deprecated: issue types through the environment account
- */
-export const ListLegacyJiraIssueTypesQueryParams = zod.object({
-  "projectKey": zod.string()
-})
-
-export const ListLegacyJiraIssueTypesResponseItem = zod.object({
-  "id": zod.string(),
-  "name": zod.string()
-})
-export const ListLegacyJiraIssueTypesResponse = zod.array(ListLegacyJiraIssueTypesResponseItem)
-
-
-/**
- * @deprecated
- * @summary Deprecated: priorities through the environment account
- */
-export const ListLegacyJiraPrioritiesResponseItem = zod.object({
-  "id": zod.string(),
-  "name": zod.string()
-})
-export const ListLegacyJiraPrioritiesResponse = zod.array(ListLegacyJiraPrioritiesResponseItem)
-
-
-/**
- * @deprecated
- * @summary Deprecated: labels through the environment account
- */
-export const ListLegacyJiraLabelsQueryParams = zod.object({
-  "projectKey": zod.string()
-})
-
-export const ListLegacyJiraLabelsResponseItem = zod.string()
-export const ListLegacyJiraLabelsResponse = zod.array(ListLegacyJiraLabelsResponseItem)
-
-
-/**
- * @deprecated
- * @summary Deprecated: user search through the environment account
- */
-export const SearchLegacyJiraUsersQueryParams = zod.object({
-  "query": zod.string(),
-  "project": zod.string().optional()
-})
-
-export const SearchLegacyJiraUsersResponseItem = zod.object({
-  "accountId": zod.string(),
-  "displayName": zod.string(),
-  "avatarUrl": zod.string().nullable()
-})
-export const SearchLegacyJiraUsersResponse = zod.array(SearchLegacyJiraUsersResponseItem)
 
 
 /**
@@ -596,14 +507,10 @@ export const GetJiraDestinationParams = zod.object({
   "id": zod.string().describe('Workspace ID')
 })
 
-export const GetJiraDestinationQueryParams = zod.object({
-  "projectKey": zod.string().optional().describe('Deprecated: used only for a workspace without a Jira destination')
-})
-
 export const GetJiraDestinationResponse = zod.object({
   "siteUrl": zod.string(),
   "projectKey": zod.string(),
-  "signsInAs": zod.string().nullable().describe('Display name of the account tickets are created as; null for the environment account')
+  "signsInAs": zod.string().describe('Display name of the account tickets are created as')
 })
 
 
@@ -626,7 +533,7 @@ export const SetJiraDestinationBody = zod.object({
 export const SetJiraDestinationResponse = zod.object({
   "siteUrl": zod.string(),
   "projectKey": zod.string(),
-  "signsInAs": zod.string().nullable().describe('Display name of the account tickets are created as; null for the environment account')
+  "signsInAs": zod.string().describe('Display name of the account tickets are created as')
 })
 
 

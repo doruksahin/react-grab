@@ -3,7 +3,6 @@ import { captureOptions } from "./capture-options.js";
 
 const SITE = {
   workspace: "app",
-  jiraProjectKey: "ATT",
   recordSteps: true,
   recordSession: false,
 };

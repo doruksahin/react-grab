@@ -4,21 +4,12 @@
 # wrangler.toml. They are validated on the first request by
 # `src/schemas/env.ts`, which names every missing or malformed value at once.
 #
-# In production these are NOT set here. Set them on the deployed Worker:
-#   wrangler secret put JIRA_API_TOKEN
-# and set JIRA_EMAIL as a per-environment var or secret.
-
-# The environment Jira account (ADR-0018). Since ADR-0027 it serves only
-# workspaces without a Jira destination and tickets created before ADR-0027,
-# until the cut-over removes it.
-JIRA_EMAIL=you@yourcompany.com
-
-# Atlassian API token for that account.
-# Create one at https://id.atlassian.com/manage-profile/security/api-tokens
-JIRA_API_TOKEN=
-
-# Optional: override the Jira site from wrangler.toml for local work.
-# JIRA_BASE_URL=https://yourcompany.atlassian.net
+# In production these are NOT set here. Set each on the deployed Worker with
+# `wrangler secret put <NAME>`, or in the Cloudflare dashboard (Workers &
+# Pages → the Worker → Settings → Variables and Secrets).
+#
+# Jira accounts are not configured here: they are stored in D1 and entered in
+# the extension's settings page (ADR-0027).
 
 # Bearer token every API request must carry (ADR-0020). At least 32 random
 # characters, for example: openssl rand -base64 32

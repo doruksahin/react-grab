@@ -3,7 +3,6 @@ import { createRouter } from "../lib/create-router.js";
 import { jiraErrorResponses } from "../lib/jira-error-responses.js";
 import {
   JiraDestination,
-  LegacyProjectKeyQuery,
   SetJiraDestinationRequest,
   WorkspaceIdParam,
   WorkspaceSummary,
@@ -45,7 +44,7 @@ const getDestination = createRoute({
   tags: ["workspaces"],
   summary: "Where the workspace's new Jira tickets go, and as whom",
   operationId: "getJiraDestination",
-  request: { params: WorkspaceIdParam, query: LegacyProjectKeyQuery },
+  request: { params: WorkspaceIdParam },
   responses: {
     200: {
       description: "The destination",
@@ -97,8 +96,7 @@ export const workspaceRoutes = createRouter()
   })
   .openapi(getDestination, async (c) => {
     const { id } = c.req.valid("param");
-    const { projectKey } = c.req.valid("query");
-    return c.json(await c.var.workspaces.getDestination(id, projectKey), 200);
+    return c.json(await c.var.workspaces.getDestination(id), 200);
   })
   .openapi(setDestination, async (c) => {
     const { id } = c.req.valid("param");

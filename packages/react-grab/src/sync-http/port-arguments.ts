@@ -64,7 +64,7 @@ export const JIRA_ARGUMENTS = {
   getTicketStatus: z.tuple([pathIdSchema]),
   createTicket: z.tuple([
     pathIdSchema,
-    CreateJiraTicketBody.omit({ projectKey: true }).strict(),
+    CreateJiraTicketBody.strict(),
   ]),
   addComment: z.tuple([pathIdSchema, AddJiraCommentBody]),
   searchUsers: z.tuple([SearchJiraUsersQueryParams.shape.query]),

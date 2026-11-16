@@ -28,11 +28,7 @@ const expectJiraError = async (promise: Promise<unknown>, code: string) => {
 };
 
 beforeEach(() => {
-  harness = createJiraAccountsHarness({
-    baseUrl: "https://env.atlassian.net",
-    email: "env@example.com",
-    apiToken: "token-env",
-  });
+  harness = createJiraAccountsHarness();
   workspaceId = `ws-${crypto.randomUUID()}`;
   vi.spyOn(JiraService.prototype, "getMyself").mockImplementation(
     async function (this: JiraService) {
@@ -183,7 +179,7 @@ describe("key rotation (ADR-0027)", () => {
     );
     expect(stored?.credential.keyVersion).toBe("v1");
 
-    const rotated = createJiraAccountsHarness(null, {
+    const rotated = createJiraAccountsHarness({
       JIRA_CREDENTIAL_KEYS: { v0: KEY, v1: KEY },
       JIRA_CREDENTIAL_KEY_CURRENT: "v1",
     });
@@ -228,41 +224,9 @@ describe("WorkspaceService", () => {
     });
   });
 
-  it("falls back to the environment account and the client's key until the cut-over", async () => {
-    expect(
-      await harness.workspaceService.getDestination(workspaceId, "LEGACY"),
-    ).toEqual({
-      siteUrl: "https://env.atlassian.net",
-      projectKey: "LEGACY",
-      signsInAs: null,
-    });
+  it("has no destination until one is set", async () => {
     await expectJiraError(
       harness.workspaceService.getDestination(workspaceId),
-      "jira-destination-missing",
-    );
-  });
-
-  it("ignores the client's project key once the workspace has a destination", async () => {
-    const account = await harness.accountService.add({
-      siteUrl: "https://frank.atlassian.net",
-      email: "frank@example.com",
-      apiToken: "token-bob",
-    });
-    await harness.workspaceService.setDestination(
-      workspaceId,
-      account.id,
-      "OPS",
-    );
-    expect(
-      (await harness.workspaceService.getDestination(workspaceId, "LEGACY"))
-        .projectKey,
-    ).toBe("OPS");
-  });
-
-  it("has no destination once the environment account is removed", async () => {
-    const cutOver = createJiraAccountsHarness(null);
-    await expectJiraError(
-      cutOver.workspaceService.getDestination(workspaceId, "LEGACY"),
       "jira-destination-missing",
     );
   });
@@ -314,7 +278,6 @@ describe("JiraTicketService", () => {
       workspaceId,
       "g-1",
       {
-        projectKey: "IGNORED",
         issueType: "Bug",
         priority: "Medium",
         summary: "S",
@@ -396,18 +359,11 @@ describe("JiraTicketService", () => {
     ]);
   });
 
-  it("reads a ticket from before ADR-0027 through the environment account", async () => {
-    await harness.repo.upsertGroup(workspaceId, {
-      id: "g-1",
-      name: "G",
-      createdAt: 1,
-    });
-    await harness.repo.updateGroupJira(workspaceId, "g-1", "OLD-1", null);
-    const client = await harness.clients.forTicket({
-      jiraTicketId: "OLD-1",
-      jiraAccountId: null,
-    });
-    expect(client.siteUrl).toBe("https://env.atlassian.net");
+  it("refuses a ticket that has no origin", async () => {
+    await expectJiraError(
+      harness.clients.forTicket({ jiraTicketId: "OLD-1", jiraAccountId: null }),
+      "jira-account-not-found",
+    );
   });
 
   it("names a group without a ticket", async () => {
@@ -423,7 +379,12 @@ describe("JiraTicketService", () => {
       name: "G",
       createdAt: 1,
     });
-    await harness.repo.updateGroupJira(workspaceId, "g-1", "OLD-1", null);
+    const account = await harness.accountService.add({
+      siteUrl: "https://ivy.atlassian.net",
+      email: "ivy@example.com",
+      apiToken: "token-ada",
+    });
+    await harness.repo.updateGroupJira(workspaceId, "g-1", "OLD-1", account.id);
     vi.spyOn(JiraService.prototype, "getIssueStatus").mockRejectedValue(
       new JiraHttpError(401, "Unauthorized"),
     );

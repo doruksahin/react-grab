@@ -43,9 +43,6 @@ export const resolveSyncPorts = (
     serverUrl: config.serverUrl,
     apiToken: config.apiToken,
     workspace: config.workspace,
-    ...(config.jiraProjectKey === undefined
-      ? {}
-      : { jiraProjectKey: config.jiraProjectKey }),
   };
   return {
     storage: storage ?? factories.createStorage(serverConfig),

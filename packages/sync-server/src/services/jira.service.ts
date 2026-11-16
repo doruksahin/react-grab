@@ -225,7 +225,7 @@ export class JiraService {
     groupId: string,
     repo: SyncRepository,
     screenshots: ScreenshotStore,
-    jiraAccountId: string | null,
+    jiraAccountId: string,
   ): Promise<CreateTicketResult> {
     // 1. Load comments for this group (used for screenshot attachments below)
     const comments = await repo.listComments(workspaceId);

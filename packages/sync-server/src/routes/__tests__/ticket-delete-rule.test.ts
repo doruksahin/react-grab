@@ -2,6 +2,7 @@ import { SELF, env } from "cloudflare:test";
 import { drizzle } from "drizzle-orm/d1";
 import { beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
+import { seedJiraAccount } from "../../test/seed-jira-account.js";
 import { D1SyncRepository } from "../../repositories/d1.repo.js";
 import { authorized } from "../../test/api-token.js";
 
@@ -50,7 +51,7 @@ const seed = async (options: { ticketed: boolean }) => {
   if (options.ticketed) {
     // The ticket is set by the server when Jira creates it.
     const repo = new D1SyncRepository(drizzle(env.DB, { schema }));
-    await repo.updateGroupJira(WORKSPACE, "g-1", "UI-1", null);
+    await repo.updateGroupJira(WORKSPACE, "g-1", "UI-1", await seedJiraAccount("account-1"));
   }
 };
 

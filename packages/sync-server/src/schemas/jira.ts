@@ -1,11 +1,6 @@
 import { z } from "@hono/zod-openapi";
 
 export const CreateJiraTicketRequest = z.object({
-  projectKey: z.string().optional().openapi({
-    description:
-      "Deprecated: used only for a workspace without a Jira destination (ADR-0027)",
-    example: "ATT",
-  }),
   issueType: z.string().openapi({ example: "Bug" }),
   priority: z.string().openapi({ example: "Medium" }),
   summary: z
@@ -25,11 +20,6 @@ export const CreateJiraTicketResponse = z.object({
   jiraUrl: z
     .string()
     .openapi({ example: "https://appier.atlassian.net/browse/ATT-123" }),
-});
-
-/** The Jira site every ticket is created on (JIRA_BASE_URL, ADR-0018). */
-export const JiraSite = z.object({
-  siteUrl: z.string().url().openapi({ example: "https://acme.atlassian.net" }),
 });
 
 export const JiraProject = z.object({

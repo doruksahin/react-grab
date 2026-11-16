@@ -76,17 +76,11 @@ First-run only — apply migrations to the local D1:
 pnpm --filter @react-grab/sync-server db:migrate:local
 ```
 
-> The Worker reads JIRA credentials from `packages/sync-server/.dev.vars`
-> (gitignored). If you need JIRA create-issue to work locally, create the file
-> with:
->
-> ```dotenv
-> JIRA_EMAIL=you@adcreative.ai
-> JIRA_API_TOKEN=<token>
-> ```
->
-> Generate a token at <https://id.atlassian.com/manage-profile/security/api-tokens>.
-> Without it the rest of the server still runs — you just can't create issues.
+> The Worker reads its secrets from `packages/sync-server/.dev.vars`
+> (gitignored); copy `.dev.vars.example` and fill it in. Jira accounts are not
+> in that file: connect one in the extension's settings page and choose the
+> workspace's Jira project there (ADR-0027). Without one the rest of the server
+> still runs — you just can't create issues.
 
 If port `8787` is already in use, pass `--port` to wrangler:
 `pnpm --filter @react-grab/sync-server exec wrangler dev --port 8788` (and
@@ -155,7 +149,6 @@ if (import.meta.env.DEV) {
       serverUrl: syncServerUrl,
       workspace: syncWorkspace,
       syncRevealedState: false,
-      jiraProjectKey: 'ATT',
       onSyncError: (error) => console.error('[react-grab sync]', error),
       options: {
         screenshot: { enabled: true },
@@ -170,8 +163,8 @@ Notes:
   production bundles.
 - `enabled: Boolean(...)` means if either env var is missing, the overlay
   still loads but sync is disabled (no server calls, no sidebar persistence).
-- `jiraProjectKey: 'ATT'` is AdCreative's JIRA project — change if your team
-  uses a different key.
+- The workspace's Jira site, account and project are chosen in the
+  extension's settings page, not here (ADR-0027).
 - To save the steps that led to each comment, add `steps: { enabled: true }`
   to `options`. To link a replay of the last minutes, add
   `recording: { enabled: true }`. Both are off by default. See

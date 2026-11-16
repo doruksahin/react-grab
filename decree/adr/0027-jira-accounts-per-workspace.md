@@ -144,6 +144,8 @@ Each step is reviewed for SRP, DRY and layers, and the findings are fixed, befor
 2. **Clients, in one release.** Before the extension ships, give every workspace an extension site uses a destination (through the new settings page, or `PUT /workspaces/{id}/jira`): storage version 3 drops the site's project key, so an unbound workspace has no project to fall back to.
    The extension settings get the admin token, the Jira accounts section, the workspace choice with **New workspace…** and the workspaces table. The overlay moves to the new routes, `getDestination` and the dialog's states. Storage version 3 drops `jiraProjectKey` from site settings in the same release, and `bind-site-jira-project.ts` and the project parameters in the gateway's `JIRA_METHODS` are deleted with it. A changeset deprecates `initSync({ jiraProjectKey })`.
 3. **Cut over.** Add the environment account through the UI and bind the existing workspaces. A one-off script sets the origin of existing tickets to that account. Then remove the fallback, the old routes, the client project key and the `JIRA_*` variables. This supersedes ADR-0018's single-account part; its Zod-validated env pattern stays for the new secrets.
+   - Release order: set the origins (one `UPDATE groups … WHERE jira_ticket_id IS NOT NULL AND jira_account_id IS NULL`, after checking that the stored account is the environment account's Jira user), then deploy the Worker, then delete the `JIRA_EMAIL` and `JIRA_API_TOKEN` secrets. A ticket left without an origin answers `jira-account-not-found`.
+   - The destination's `signsInAs` becomes required, since every destination is a stored account.
 
 ### Consequences
 

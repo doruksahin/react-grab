@@ -338,24 +338,5 @@ test.describe(
         ).toHaveAttribute("data-code", "jira-destination-missing");
       },
     );
-
-    test(
-      "the deprecated project key is sent only as a fallback hint",
-      {
-        annotation: {
-          type: "ac",
-          description: "ADR-0027 rollout: client project key until cut-over",
-        },
-      },
-      async ({ page, reactGrab, mockServer }) => {
-        await reactGrab.triggerInitSync({ jiraProjectKey: "OLD" });
-        await expect
-          .poll(() => reactGrab.isToolbarVisible(), { timeout: 5000 })
-          .toBe(true);
-        await openCreateDialog(page, reactGrab);
-        const [request] = mockServer.requests("getJiraDestination");
-        expect(new URL(request.url).searchParams.get("projectKey")).toBe("OLD");
-      },
-    );
   },
 );

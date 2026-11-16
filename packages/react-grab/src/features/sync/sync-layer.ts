@@ -239,12 +239,6 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
 
   // --- Init ---
   const init = async (config: SyncConfig) => {
-    if (config.jiraProjectKey !== undefined) {
-      console.warn(
-        "react-grab: SyncConfig.jiraProjectKey is deprecated and used only for a workspace without a Jira destination. Choose the workspace's Jira account and project in the extension's settings (ADR-0027).",
-      );
-    }
-
     // Throws on a config that cannot reach a server, before any state changes.
     const ports = resolveSyncPorts(config, factories);
 

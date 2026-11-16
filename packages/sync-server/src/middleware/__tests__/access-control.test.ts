@@ -42,7 +42,9 @@ describe("API token", () => {
   });
 
   it("stops the Jira lookup routes without a token", async () => {
-    const response = await SELF.fetch(`${BASE}/jira/priorities`);
+    const response = await SELF.fetch(
+      `${BASE}/workspaces/ws-a/jira/priorities`,
+    );
     expect(response.status).toBe(401);
   });
 

@@ -60,7 +60,7 @@ export class WorkspaceService {
     if (!exists) {
       throw new JiraError(
         "jira-project-not-found",
-        `${client.signsInAs ?? "This account"} has no project ${projectKey} on ${client.siteUrl}`,
+        `${client.signsInAs} has no project ${projectKey} on ${client.siteUrl}`,
       );
     }
     await this.deps.workspaces.setDestination(
@@ -79,14 +79,8 @@ export class WorkspaceService {
     return this.deps.workspaces.clearDestination(workspaceId);
   }
 
-  async getDestination(
-    workspaceId: string,
-    legacyProjectKey?: string,
-  ): Promise<JiraDestinationValue> {
-    const destination = await this.deps.clients.forWorkspace(
-      workspaceId,
-      legacyProjectKey,
-    );
+  async getDestination(workspaceId: string): Promise<JiraDestinationValue> {
+    const destination = await this.deps.clients.forWorkspace(workspaceId);
     return {
       siteUrl: destination.siteUrl,
       projectKey: destination.projectKey,

@@ -89,7 +89,7 @@ interface SearchJiraUsers200Item {
 interface JiraDestination {
   siteUrl: string;
   projectKey: string;
-  signsInAs: string | null;
+  signsInAs: string;
 }
 
 interface ListJiraProjects200Item {

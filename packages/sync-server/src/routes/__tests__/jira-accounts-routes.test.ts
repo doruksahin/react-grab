@@ -4,7 +4,7 @@ import { asAdmin, authorized } from "../../test/api-token.js";
 
 /*
  * ADR-0027 over HTTP: who may call what, and what the routes refuse before
- * any Jira call. Jira itself is never reached (JIRA_BASE_URL is .invalid).
+ * any Jira call. No test here reaches Jira.
  */
 
 const json = (headers: Record<string, string>) => ({
@@ -127,16 +127,14 @@ describe("workspace routes", () => {
     });
   });
 
-  it("give the environment destination for the client's key until the cut-over", async () => {
+  it("answer jira-destination-missing for a workspace without a destination", async () => {
     const response = await SELF.fetch(
       "https://sync.test/workspaces/ws-unbound/jira?projectKey=SCRUM",
       { headers: authorized() },
     );
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({
-      siteUrl: "https://jira.invalid",
-      projectKey: "SCRUM",
-      signsInAs: null,
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      code: "jira-destination-missing",
     });
   });
 

@@ -353,23 +353,6 @@ describe("Jira port", () => {
     ]);
   });
 
-  it("sends the deprecated project key only when configured", async () => {
-    fetchMock.mockImplementation(async () =>
-      jsonResponse(200, {
-        siteUrl: "https://acme.atlassian.net",
-        projectKey: "OLD",
-        signsInAs: null,
-      }),
-    );
-    await createHttpJiraPort({
-      ...config,
-      jiraProjectKey: "OLD",
-    }).getDestination();
-    expect(recorded()[0].url).toBe(
-      "https://sync.example.com/workspaces/team%20space/jira?projectKey=OLD",
-    );
-  });
-
   it("carries the server's Jira error code as an own property (ADR-0027)", async () => {
     fetchMock.mockResolvedValue(
       jsonResponse(409, {
@@ -420,7 +403,7 @@ describe("non-JSON responses", () => {
 
 describe("customFetch", () => {
   it("refuses a call that names no server", async () => {
-    await expect(customFetch("/jira/site", {})).rejects.toThrow(
+    await expect(customFetch("/workspaces/a/jira", {})).rejects.toThrow(
       /no sync server URL/,
     );
     expect(fetchMock).not.toHaveBeenCalled();
@@ -513,10 +496,14 @@ describe("structured clone contract", () => {
     if (path.includes("/screenshots/"))
       return new Response("png", { headers: { "Content-Type": "image/png" } });
     if (path.endsWith("/jira-status")) return jsonResponse(200, ticketStatus);
-    if (path === "/jira/site")
-      return jsonResponse(200, { siteUrl: "https://j" });
-    if (path === "/jira/labels") return jsonResponse(200, ["ui"]);
-    if (path === "/jira/users")
+    if (path.endsWith("/jira"))
+      return jsonResponse(200, {
+        siteUrl: "https://j",
+        projectKey: "ATT",
+        signsInAs: "Ada",
+      });
+    if (path.endsWith("/jira/labels")) return jsonResponse(200, ["ui"]);
+    if (path.endsWith("/jira/users"))
       return jsonResponse(200, [
         { accountId: "a", displayName: "A", avatarUrl: null },
       ]);
@@ -541,7 +528,7 @@ describe("structured clone contract", () => {
       groups: [{ id: "g", name: "G", createdAt: 1 }],
     });
     const jira = createFakeJiraPort({
-      destination: { siteUrl: "https://j", projectKey: "ATT", signsInAs: null },
+      destination: { siteUrl: "https://j", projectKey: "ATT", signsInAs: "Ada" },
       issueTypes: [{ id: "1", name: "Task" }],
       priorities: [{ id: "1", name: "Medium" }],
       labels: ["ui"],

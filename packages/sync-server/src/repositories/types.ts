@@ -32,7 +32,7 @@ export interface SyncRepository {
     workspaceId: string,
     groupId: string,
     jiraTicketId: string,
-    jiraAccountId: string | null,
+    jiraAccountId: string,
   ): Promise<void>;
   /** The group's ticket and the account that reads it; undefined without a ticket. */
   findTicketOrigin(
@@ -41,7 +41,11 @@ export interface SyncRepository {
   ): Promise<TicketOrigin | undefined>;
 }
 
-/** A ticket and the account that created it; null for the environment account (ADR-0027). */
+/**
+ * A ticket and the account that created it (ADR-0027). The account is null
+ * only for a ticket from before ADR-0027 that was never given one; such a
+ * ticket cannot be read.
+ */
 export interface TicketOrigin {
   jiraTicketId: string;
   jiraAccountId: string | null;

@@ -2,6 +2,7 @@ import { env } from "cloudflare:test";
 import { drizzle } from "drizzle-orm/d1";
 import { beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../db/schema.js";
+import { seedJiraAccount } from "../../test/seed-jira-account.js";
 import { D1SyncRepository } from "../d1.repo.js";
 import type { Comment, GroupWrite } from "../types.js";
 
@@ -98,7 +99,7 @@ describe("groups — ticket fields are server-owned", () => {
     // Both tabs loaded group G before it had a ticket.
     await repo.upsertGroup(WORKSPACE, group("g"));
     // Tab A creates the ticket; the server records it.
-    await repo.updateGroupJira(WORKSPACE, "g", "UI-128", null);
+    await repo.updateGroupJira(WORKSPACE, "g", "UI-128", await seedJiraAccount("account-1"));
     // Tab B renames G from its stale copy, which has no ticket.
     await repo.upsertGroup(WORKSPACE, group("g", { name: "Renamed" }));
 
@@ -111,7 +112,7 @@ describe("groups — ticket fields are server-owned", () => {
   it("a write to one group leaves every other group as it was", async () => {
     await repo.upsertGroup(WORKSPACE, group("g"));
     await repo.upsertGroup(WORKSPACE, group("h"));
-    await repo.updateGroupJira(WORKSPACE, "g", "UI-128", null);
+    await repo.updateGroupJira(WORKSPACE, "g", "UI-128", await seedJiraAccount("account-1"));
     await repo.upsertGroup(WORKSPACE, group("h", { name: "Only H changed" }));
 
     const saved = await repo.listGroups(WORKSPACE);

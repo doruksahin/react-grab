@@ -13,11 +13,9 @@ export type CreateJiraService = (config: JiraConfig) => JiraService;
 /** A Jira client and the account it signs in as. */
 export interface JiraAccountClient {
   jira: JiraService;
-  /** null for the environment account (ADR-0018), until the cut-over. */
-  accountId: string | null;
+  accountId: string;
   siteUrl: string;
-  /** null when not known without asking Jira: the environment account. */
-  signsInAs: string | null;
+  signsInAs: string;
 }
 
 /** Where a workspace's new tickets go: an account and one of its projects. */
@@ -30,8 +28,6 @@ export interface JiraClientFactoryDeps {
   workspaces: WorkspaceRepository;
   /** Built on first use, so a request that needs no account decrypts nothing. */
   vault: () => CredentialVault;
-  /** The environment account, or null when it is not configured. */
-  environment: () => JiraConfig | null;
   createJiraService: CreateJiraService;
 }
 
@@ -71,49 +67,27 @@ export class JiraClientFactory {
     return this.forAccount(account);
   }
 
-  /**
-   * The workspace's destination. Until the cut-over, a workspace without one
-   * uses the environment account and the client's project key.
-   */
-  async forWorkspace(
-    workspaceId: string,
-    legacyProjectKey?: string,
-  ): Promise<ResolvedDestination> {
+  /** The workspace's destination: the account and project its new tickets go to. */
+  async forWorkspace(workspaceId: string): Promise<ResolvedDestination> {
     const workspace = await this.deps.workspaces.find(workspaceId);
-    if (workspace?.jiraAccountId && workspace.jiraProjectKey) {
-      const client = await this.forAccountId(workspace.jiraAccountId);
-      return { ...client, projectKey: workspace.jiraProjectKey };
+    if (!workspace?.jiraAccountId || !workspace.jiraProjectKey) {
+      throw new JiraError(
+        "jira-destination-missing",
+        `Workspace "${workspaceId}" has no Jira destination. Choose one in the extension's settings.`,
+      );
     }
-    const environment = this.forEnvironment();
-    if (environment && legacyProjectKey) {
-      return { ...environment, projectKey: legacyProjectKey };
-    }
-    throw new JiraError(
-      "jira-destination-missing",
-      `Workspace "${workspaceId}" has no Jira destination. Choose one in the extension's settings.`,
-    );
+    const client = await this.forAccountId(workspace.jiraAccountId);
+    return { ...client, projectKey: workspace.jiraProjectKey };
   }
 
-  /** The account that created the ticket; a ticket without an origin predates ADR-0027. */
+  /** The account that created the ticket. */
   async forTicket(origin: TicketOrigin): Promise<JiraAccountClient> {
-    if (origin.jiraAccountId) return this.forAccountId(origin.jiraAccountId);
-    const environment = this.forEnvironment();
-    if (environment) return environment;
-    throw new JiraError(
-      "jira-account-not-found",
-      `Ticket ${origin.jiraTicketId} has no Jira account to read it with`,
-    );
-  }
-
-  /** The environment account (ADR-0018), or null once it is removed. */
-  forEnvironment(): JiraAccountClient | null {
-    const config = this.deps.environment();
-    if (!config) return null;
-    return {
-      jira: this.deps.createJiraService(config),
-      accountId: null,
-      siteUrl: config.baseUrl,
-      signsInAs: null,
-    };
+    if (!origin.jiraAccountId) {
+      throw new JiraError(
+        "jira-account-not-found",
+        `Ticket ${origin.jiraTicketId} has no Jira account to read it with`,
+      );
+    }
+    return this.forAccountId(origin.jiraAccountId);
   }
 }

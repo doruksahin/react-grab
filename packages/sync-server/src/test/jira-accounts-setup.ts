@@ -25,7 +25,6 @@ const noScreenshots: ScreenshotStore = {
  * Jira.
  */
 export const createJiraAccountsHarness = (
-  environment: JiraConfig | null = null,
   keyRing: CredentialEnv = parseCredentialEnv(env),
 ) => {
   const db = drizzle(env.DB, { schema });
@@ -51,7 +50,6 @@ export const createJiraAccountsHarness = (
     accounts,
     workspaces,
     vault: () => vault,
-    environment: () => environment,
     createJiraService,
   });
   return {
