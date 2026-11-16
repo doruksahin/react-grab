@@ -198,7 +198,8 @@
                   "../core/**",
                   "../utils/**",
                   "../features/**",
-                  "!../features/sync/business/persisted-fields.js"
+                  "!../features/sync/business/persisted-fields.js",
+                  "!../features/sync/business/write-refused-error.js"
                 ],
                 "allowTypeImports": true,
                 "message": "sync-http may import overlay types and pure business rules only, never UI or DOM code (ADR-0023)."

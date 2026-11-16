@@ -1,5 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 import { createRouter } from "../lib/create-router.js";
+import { REFUSAL_MESSAGES } from "../services/ticket-lock.service.js";
 import {
   WorkspaceIdParam,
   CommentIdParam,
@@ -69,6 +70,15 @@ const upsertCommentRoute = createRoute({
         },
       },
     },
+    409: {
+      description:
+        "Refused: the comment's group has a Jira ticket and the write moves it, or the new group has one (ADR-0008)",
+      content: {
+        "application/json": {
+          schema: ErrorResponse,
+        },
+      },
+    },
   },
 });
 
@@ -90,6 +100,14 @@ const deleteCommentRoute = createRoute({
         },
       },
     },
+    409: {
+      description: "Refused: the comment's group has a Jira ticket (ADR-0008)",
+      content: {
+        "application/json": {
+          schema: ErrorResponse,
+        },
+      },
+    },
   },
 });
 
@@ -108,11 +126,17 @@ export const commentsRoutes = createRouter()
         400,
       );
     }
-    await c.var.repo.upsertComment(id, body);
+    const result = await c.var.ticketLock.upsertComment(id, body);
+    if (result.status === "refused") {
+      return c.json({ error: REFUSAL_MESSAGES[result.reason] }, 409);
+    }
     return c.json({ status: "ok" as const }, 200);
   })
   .openapi(deleteCommentRoute, async (c) => {
     const { id, commentId } = c.req.valid("param");
-    await c.var.repo.deleteComment(id, commentId);
+    const result = await c.var.ticketLock.deleteComment(id, commentId);
+    if (result.status === "refused") {
+      return c.json({ error: REFUSAL_MESSAGES[result.reason] }, 409);
+    }
     return c.json({ status: "ok" as const }, 200);
   });

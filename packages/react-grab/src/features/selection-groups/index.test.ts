@@ -400,3 +400,64 @@ describe("createSelectionGroups membership anomalies", () => {
     dispose();
   });
 });
+
+describe("deleting selections (ADR-0008, amended 2026-11-16)", () => {
+  const groupsWithTicket: SelectionGroup[] = [
+    { id: "open", name: "Open", createdAt: 0, revealed: false },
+    {
+      id: "ticketed",
+      name: "Ticketed",
+      createdAt: 0,
+      revealed: false,
+      jiraTicketId: "ABC-1",
+    },
+    {
+      id: "synthetic-open",
+      name: "Loose",
+      createdAt: 0,
+      revealed: false,
+      synthetic: true,
+    },
+  ];
+  const makeApi = (
+    initialItems: CommentItem[],
+    initialGroups: SelectionGroup[],
+  ) => {
+    const deps = makeDeps(initialItems, initialGroups);
+    return { api: createSelectionGroups(deps), items: deps.rawItems };
+  };
+  const mixedItems = (): CommentItem[] =>
+    [
+      { id: "free", groupId: "open" },
+      { id: "locked", groupId: "ticketed" },
+      { id: "loose", groupId: "synthetic-open" },
+    ] as unknown as CommentItem[];
+
+  it("Clear all deletes the selections without a ticket and keeps the rest", () => {
+    createRoot((dispose) => {
+      const { api, items } = makeApi(mixedItems(), groupsWithTicket);
+      expect(api.clearCounts()).toEqual({ removed: 2, kept: 1 });
+
+      const result = api.handleClearItems();
+
+      expect(result.removed).toBe(2);
+      expect(items().map((item) => item.id)).toEqual(["locked"]);
+      expect(api.groups().some((group) => group.id === "synthetic-open")).toBe(
+        false,
+      );
+      expect(api.groups().some((group) => group.id === "ticketed")).toBe(true);
+      dispose();
+    });
+  });
+
+  it("answers whether each selection may be removed", () => {
+    createRoot((dispose) => {
+      const { api } = makeApi(mixedItems(), groupsWithTicket);
+      expect(api.canRemoveItem("free")).toBe(true);
+      expect(api.canRemoveItem("loose")).toBe(true);
+      expect(api.canRemoveItem("locked")).toBe(false);
+      expect(api.canRemoveItem("missing")).toBe(false);
+      dispose();
+    });
+  });
+});

@@ -37,7 +37,6 @@ import {
   DROPDOWN_HOVER_OPEN_DELAY_MS,
   FADE_COMPLETE_BUFFER_MS,
   FEEDBACK_DURATION_MS,
-  MAX_COMMENT_ITEMS,
   NEXTJS_REVALIDATION_DELAY_MS,
   OVERLAY_EVENT_BOUNDARY_ATTRIBUTE,
   STEP_CUSTOM_EVENT_TAG,
@@ -326,18 +325,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     const persistCommentItems = syncLayer.persistComments;
     const getActiveAdapter = syncLayer.adapter;
 
+    // No cap: a comment is deleted only through the membership policy
+    // (ADR-0008, amended 2026-11-16).
     const addCommentItem = (item: Omit<CommentItem, "id">): CommentItem[] =>
-      syncLayer.persistComments(
-        [{ ...item, id: generateId("comment") }, ...syncLayer.comments()].slice(
-          0,
-          MAX_COMMENT_ITEMS,
-        ),
-      );
-
-    const removeCommentItem = (itemId: string): CommentItem[] =>
-      syncLayer.persistComments(
-        syncLayer.comments().filter((i) => i.id !== itemId),
-      );
+      syncLayer.persistComments([
+        { ...item, id: generateId("comment") },
+        ...syncLayer.comments(),
+      ]);
 
     const patchCommentItem = (
       id: string,
@@ -346,8 +340,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       syncLayer.persistComments(
         syncLayer.comments().map((i) => (i.id === id ? { ...i, ...patch } : i)),
       );
-
-    const clearComments = (): CommentItem[] => syncLayer.persistComments([]);
 
     const derivedSyncStatus = (): SyncStatus => {
       const s = syncLayer.status();
@@ -855,9 +847,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           );
           if (!existingItem) continue;
 
+          // The same comment again replaces the old one, unless the old one
+          // has a ticket: then it stays and the new one is added beside it.
           if (existingItem.commentText === extraPrompt) {
-            removeCommentItem(existingItemId);
-            commentElementMap.delete(existingItemId);
+            if (selectionGroups.canRemoveItem(existingItemId)) {
+              selectionGroups.handleRemoveItem(existingItemId);
+              commentElementMap.delete(existingItemId);
+            }
             break;
           }
         }
@@ -2971,10 +2967,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       }));
       copyGroupedContent(combinedContent, metadataGroups);
 
-      if (isClearConfirmed()) {
-        handleCommentsClear();
-      } else {
-        showClearPrompt();
+      // Nothing to clear when every comment has a ticket (ADR-0008).
+      if (selectionGroups.clearCounts().removed > 0) {
+        if (isClearConfirmed()) {
+          handleCommentsClear();
+        } else {
+          showClearPrompt();
+        }
       }
 
       clearAllLabels();
@@ -3134,10 +3133,13 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       }
     };
 
+    // Clears what may be deleted; selections with a ticket stay (ADR-0008).
     const handleCommentsClear = () => {
-      commentElementMap.clear();
-      const updatedCommentItems = clearComments();
-      setCommentItems(updatedCommentItems);
+      const { items: kept } = selectionGroups.handleClearItems();
+      const keptIds = new Set(kept.map((item) => item.id));
+      for (const itemId of commentElementMap.keys()) {
+        if (!keptIds.has(itemId)) commentElementMap.delete(itemId);
+      }
       dismissCommentsDropdown();
     };
 
@@ -3347,6 +3349,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       onToggleToolbarMenu={handleToggleToolbarMenu}
                       onToolbarMenuDismiss={dismissToolbarMenu}
                       clearPromptPosition={clearPromptPosition()}
+                      commentsClearCounts={selectionGroups.clearCounts()}
                       onClearCommentsConfirm={() => {
                         confirmClear();
                         dismissClearPrompt();
@@ -3379,6 +3382,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       onRemoveItem={(itemId) => {
                         selectionGroups.handleRemoveItem(itemId);
                       }}
+                      canRemoveItem={selectionGroups.canRemoveItem}
                       onToggleGroupRevealed={visibility.handleToggleGroup}
                       onFilterVisibilityChange={visibility.setGroupsRevealed}
                       onJiraResolved={selectionGroups.markResolved}

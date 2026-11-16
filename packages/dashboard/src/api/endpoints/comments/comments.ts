@@ -29,9 +29,11 @@ import type {
 
 import type {
   DeleteComment200,
+  DeleteComment409,
   ListComments200Item,
   UpsertComment200,
   UpsertComment400,
+  UpsertComment409,
   UpsertCommentBody
 } from '../../model';
 
@@ -221,10 +223,15 @@ export type upsertCommentResponse400 = {
   status: 400
 }
 
+export type upsertCommentResponse409 = {
+  data: UpsertComment409
+  status: 409
+}
+
 export type upsertCommentResponseSuccess = (upsertCommentResponse200) & {
   headers: Headers;
 };
-export type upsertCommentResponseError = (upsertCommentResponse400) & {
+export type upsertCommentResponseError = (upsertCommentResponse400 | upsertCommentResponse409) & {
   headers: Headers;
 };
 
@@ -262,7 +269,7 @@ export const upsertComment = async (id: string,
 
 
 
-export const getUpsertCommentMutationOptions = <TError = UpsertComment400,
+export const getUpsertCommentMutationOptions = <TError = UpsertComment400 | UpsertComment409,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertComment>>, TError,{id: string;commentId: string;data: UpsertCommentBody}, TContext>, fetch?: RequestInit}
 ): UseMutationOptions<Awaited<ReturnType<typeof upsertComment>>, TError,{id: string;commentId: string;data: UpsertCommentBody}, TContext> => {
 
@@ -291,12 +298,12 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
     export type UpsertCommentMutationResult = NonNullable<Awaited<ReturnType<typeof upsertComment>>>
     export type UpsertCommentMutationBody = UpsertCommentBody
-    export type UpsertCommentMutationError = UpsertComment400
+    export type UpsertCommentMutationError = UpsertComment400 | UpsertComment409
 
     /**
  * @summary Create or replace one comment
  */
-export const useUpsertComment = <TError = UpsertComment400,
+export const useUpsertComment = <TError = UpsertComment400 | UpsertComment409,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertComment>>, TError,{id: string;commentId: string;data: UpsertCommentBody}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof upsertComment>>,
@@ -314,12 +321,19 @@ export type deleteCommentResponse200 = {
   status: 200
 }
 
+export type deleteCommentResponse409 = {
+  data: DeleteComment409
+  status: 409
+}
+
 export type deleteCommentResponseSuccess = (deleteCommentResponse200) & {
   headers: Headers;
 };
-;
+export type deleteCommentResponseError = (deleteCommentResponse409) & {
+  headers: Headers;
+};
 
-export type deleteCommentResponse = (deleteCommentResponseSuccess)
+export type deleteCommentResponse = (deleteCommentResponseSuccess | deleteCommentResponseError)
 
 export const getDeleteCommentUrl = (id: string,
     commentId: string,) => {
@@ -351,7 +365,7 @@ export const deleteComment = async (id: string,
 
 
 
-export const getDeleteCommentMutationOptions = <TError = unknown,
+export const getDeleteCommentMutationOptions = <TError = DeleteComment409,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{id: string;commentId: string}, TContext>, fetch?: RequestInit}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{id: string;commentId: string}, TContext> => {
 
@@ -380,12 +394,12 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
     export type DeleteCommentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteComment>>>
 
-    export type DeleteCommentMutationError = unknown
+    export type DeleteCommentMutationError = DeleteComment409
 
     /**
  * @summary Delete one comment
  */
-export const useDeleteComment = <TError = unknown,
+export const useDeleteComment = <TError = DeleteComment409,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{id: string;commentId: string}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteComment>>,

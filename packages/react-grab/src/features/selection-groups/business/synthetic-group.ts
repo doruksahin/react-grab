@@ -1,5 +1,6 @@
 import type { SelectionGroup } from "../types.js";
 import { generateId } from "../../../utils/generate-id.js";
+import { isTicketed } from "./ticket-lock.js";
 
 /** Minimal shape needed to name a synthetic group. */
 interface SyntheticGroupSeed {
@@ -54,7 +55,8 @@ export const isSynthetic = (group: SelectionGroup): boolean =>
 /**
  * GC pass: drop any synthetic groups that no longer have items pointing
  * at them. Real groups survive emptiness by design — only synthetic
- * backing stores are garbage-collected.
+ * backing stores are garbage-collected. A synthetic group with a ticket is
+ * never collected: a ticketed group cannot be deleted (ADR-0008).
  *
  * Pure function. The caller is responsible for persisting the result.
  * Every selection mutation that can empty a group (move, remove) should
@@ -68,5 +70,7 @@ export const gcEmptySyntheticGroups = (
   for (const item of items) {
     if (item.groupId !== null) occupied.add(item.groupId);
   }
-  return groups.filter((g) => !isSynthetic(g) || occupied.has(g.id));
+  return groups.filter(
+    (g) => !isSynthetic(g) || isTicketed(g) || occupied.has(g.id),
+  );
 };

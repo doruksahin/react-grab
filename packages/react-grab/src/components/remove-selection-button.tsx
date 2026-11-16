@@ -4,10 +4,10 @@ import { IconX } from "./icons/icon-x.jsx";
 import { IconButton } from "./ui/icon-button.js";
 
 /**
- * Shared red × button for removing a selection. Rendered by the
- * selection-label (both idle and prompt-mode branches) and by the
- * sidebar selection cards. Presentational only — visibility and
- * ticket-lock gating are decided by the caller.
+ * Shared red × button for removing a selection. Rendered by the saved
+ * selection-label and by the sidebar selection cards. Presentational only:
+ * a caller renders it only when the membership policy allows the removal
+ * (`canRemoveItem`, ADR-0008).
  *
  * Two variants:
  *

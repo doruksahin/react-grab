@@ -208,6 +208,10 @@ export type UpsertComment400 = {
   error: string;
 };
 
+export type UpsertComment409 = {
+  error: string;
+};
+
 export type DeleteComment200Status = typeof DeleteComment200Status[keyof typeof DeleteComment200Status];
 
 
@@ -217,6 +221,10 @@ export const DeleteComment200Status = {
 
 export type DeleteComment200 = {
   status: DeleteComment200Status;
+};
+
+export type DeleteComment409 = {
+  error: string;
 };
 
 /**
@@ -274,6 +282,10 @@ export const DeleteGroup200Status = {
 
 export type DeleteGroup200 = {
   status: DeleteGroup200Status;
+};
+
+export type DeleteGroup409 = {
+  error: string;
 };
 
 export type UploadScreenshot200 = {
@@ -553,10 +565,15 @@ export type upsertCommentResponse400 = {
   status: 400
 }
 
+export type upsertCommentResponse409 = {
+  data: UpsertComment409
+  status: 409
+}
+
 export type upsertCommentResponseSuccess = (upsertCommentResponse200) & {
   headers: Headers;
 };
-export type upsertCommentResponseError = (upsertCommentResponse400) & {
+export type upsertCommentResponseError = (upsertCommentResponse400 | upsertCommentResponse409) & {
   headers: Headers;
 };
 
@@ -608,12 +625,19 @@ export type deleteCommentResponse200 = {
   status: 200
 }
 
+export type deleteCommentResponse409 = {
+  data: DeleteComment409
+  status: 409
+}
+
 export type deleteCommentResponseSuccess = (deleteCommentResponse200) & {
   headers: Headers;
 };
-;
+export type deleteCommentResponseError = (deleteCommentResponse409) & {
+  headers: Headers;
+};
 
-export type deleteCommentResponse = (deleteCommentResponseSuccess)
+export type deleteCommentResponse = (deleteCommentResponseSuccess | deleteCommentResponseError)
 
 export const getDeleteCommentUrl = (id: string,
     commentId: string,) => {
@@ -742,12 +766,19 @@ export type deleteGroupResponse200 = {
   status: 200
 }
 
+export type deleteGroupResponse409 = {
+  data: DeleteGroup409
+  status: 409
+}
+
 export type deleteGroupResponseSuccess = (deleteGroupResponse200) & {
   headers: Headers;
 };
-;
+export type deleteGroupResponseError = (deleteGroupResponse409) & {
+  headers: Headers;
+};
 
-export type deleteGroupResponse = (deleteGroupResponseSuccess)
+export type deleteGroupResponse = (deleteGroupResponseSuccess | deleteGroupResponseError)
 
 export const getDeleteGroupUrl = (id: string,
     groupId: string,) => {

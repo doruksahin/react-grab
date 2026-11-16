@@ -1,5 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 import { createRouter } from "../lib/create-router.js";
+import { REFUSAL_MESSAGES } from "../services/ticket-lock.service.js";
 import {
   WorkspaceIdParam,
   GroupIdParam,
@@ -91,6 +92,14 @@ const deleteGroupRoute = createRoute({
         },
       },
     },
+    409: {
+      description: "Refused: the group has a Jira ticket (ADR-0008)",
+      content: {
+        "application/json": {
+          schema: ErrorResponse,
+        },
+      },
+    },
   },
 });
 
@@ -114,6 +123,9 @@ export const groupsRoutes = createRouter()
   })
   .openapi(deleteGroupRoute, async (c) => {
     const { id, groupId } = c.req.valid("param");
-    await c.var.repo.deleteGroup(id, groupId);
+    const result = await c.var.ticketLock.deleteGroup(id, groupId);
+    if (result.status === "refused") {
+      return c.json({ error: REFUSAL_MESSAGES[result.reason] }, 409);
+    }
     return c.json({ status: "ok" as const }, 200);
   });

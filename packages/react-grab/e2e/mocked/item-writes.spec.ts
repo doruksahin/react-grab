@@ -139,7 +139,7 @@ test.describe("Per-item writes", { tag: ["@ADR-0019", "@SPEC-014"] }, () => {
     );
   });
 
-  test("clearing deletes each comment this tab knows, one request per comment", async ({
+  test("clearing deletes each comment without a ticket, one request per comment, and keeps the ticketed ones (ADR-0008)", async ({
     reactGrab,
     mockServer,
   }) => {
@@ -147,20 +147,37 @@ test.describe("Per-item writes", { tag: ["@ADR-0019", "@SPEC-014"] }, () => {
     await reactGrab.clickCommentsButton();
     await reactGrab.clickCommentsClear();
 
-    const expectedIds = [...fixtures.comments.map((item) => item.id)];
+    const ticketedGroupIds = new Set(
+      fixtures.groups
+        .filter((group) => group.jiraTicketId)
+        .map((group) => group.id),
+    );
+    const [deletable, ticketed] = [
+      fixtures.comments.filter((item) => !ticketedGroupIds.has(item.groupId)),
+      fixtures.comments.filter((item) => ticketedGroupIds.has(item.groupId)),
+    ];
+    expect(ticketed.length).toBeGreaterThan(0);
+
     await expect
       .poll(() => mockServer.requests("deleteComment").length, {
         timeout: 5000,
       })
-      .toBeGreaterThanOrEqual(expectedIds.length);
+      .toBeGreaterThanOrEqual(deletable.length);
 
     const deletedUrls = mockServer
       .requests("deleteComment")
       .map((request) => request.url);
-    for (const id of expectedIds) {
-      expect(deletedUrls.some((url) => url.endsWith(`/comments/${id}`))).toBe(
-        true,
-      );
+    for (const item of deletable) {
+      expect(
+        deletedUrls.some((url) => url.endsWith(`/comments/${item.id}`)),
+        item.id,
+      ).toBe(true);
+    }
+    for (const item of ticketed) {
+      expect(
+        deletedUrls.some((url) => url.endsWith(`/comments/${item.id}`)),
+        item.id,
+      ).toBe(false);
     }
   });
 

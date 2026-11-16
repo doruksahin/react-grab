@@ -21,6 +21,7 @@ import type {
 } from "./types.js";
 import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../selection-groups/types.js";
+import { isWriteRefused } from "./business/write-refused-error.js";
 
 const GROUPS_KEY = "react-grab-selection-groups";
 const COMMENT_ITEMS_KEY = "react-grab-comment-items";
@@ -134,9 +135,9 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     );
     storeHandle.setComments(items);
     for (const item of changes.upserts)
-      storage.upsertComment(item).catch(() => {});
+      storage.upsertComment(item).catch(reloadIfRefused);
     for (const id of changes.deletedIds)
-      storage.deleteComment(id).catch(() => {});
+      storage.deleteComment(id).catch(reloadIfRefused);
     return items;
   };
 
@@ -161,9 +162,9 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     );
     storeHandle.setGroups(groups);
     for (const group of changes.upserts)
-      storage.upsertGroup(group).catch(() => {});
+      storage.upsertGroup(group).catch(reloadIfRefused);
     for (const id of changes.deletedIds)
-      storage.deleteGroup(id).catch(() => {});
+      storage.deleteGroup(id).catch(reloadIfRefused);
     return groups;
   };
 
@@ -178,6 +179,32 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     const storage = adapter();
     if (!storage) return;
     storeHandle.setComments(await storage.loadComments());
+  };
+
+  // A write the server refused by rule (a ticket lock this tab did not know
+  // of, ADR-0008) leaves the local lists out of step: the store was updated
+  // first, and the write will never succeed. Reloading both lists puts the
+  // server's state back. A write that merely failed (network, 5xx) keeps its
+  // local change, as before. Either way the error is already reported
+  // (withErrorReporting). Refusals that come together, as after "Clear all",
+  // share one reload.
+  let pendingReload: Promise<void> | null = null;
+  const reloadFromServer = (): Promise<void> => {
+    pendingReload ??= (async () => {
+      try {
+        await refetchGroups();
+        await refetchComments();
+      } catch {
+        // Unreachable server: the next successful load corrects the lists.
+      } finally {
+        pendingReload = null;
+      }
+    })();
+    return pendingReload;
+  };
+
+  const reloadIfRefused = (error: unknown): void => {
+    if (isWriteRefused(error)) void reloadFromServer();
   };
 
   // --- JIRA polling ---

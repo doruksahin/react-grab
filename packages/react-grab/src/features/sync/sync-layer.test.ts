@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CommentItem } from "../../types.js";
 import { createSyncLayer } from "./sync-layer.js";
+import { WriteRefusedError } from "./business/write-refused-error.js";
 import type {
   JiraPort,
   StorageAdapter,
@@ -301,6 +302,51 @@ describe("sync layer ports", () => {
 
     expect(jira.getTicketStatus).toHaveBeenCalledWith("group-1");
     expect(layer.groups()[0]).toMatchObject({ jiraStatus: "Done" });
+    layer.dispose();
+  });
+});
+
+describe("a write the server rejects (ADR-0008)", () => {
+  const ticketed = makeComment("ticketed", "Has a ticket");
+  const free = makeComment("free", "No ticket");
+
+  beforeEach(() => {
+    resetPorts();
+    adapter.loadComments.mockResolvedValue([ticketed, free]);
+    adapter.loadGroups.mockResolvedValue([]);
+  });
+
+  it("puts a comment back when the server refuses to delete it", async () => {
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+    adapter.deleteComment.mockImplementation(async (commentId) => {
+      if (commentId === "ticketed") throw new WriteRefusedError("locked");
+    });
+    adapter.loadComments.mockResolvedValue([ticketed]);
+
+    layer.persistComments([]);
+
+    await vi.waitFor(() =>
+      expect(layer.comments().map((item) => item.id)).toEqual(["ticketed"]),
+    );
+    layer.dispose();
+  });
+
+  it("reloads once for many rejected writes", async () => {
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+    adapter.deleteComment.mockRejectedValue(new WriteRefusedError("locked"));
+    adapter.loadComments.mockClear();
+
+    layer.persistComments([]);
+
+    await vi.waitFor(() =>
+      expect(layer.comments().map((item) => item.id)).toEqual([
+        "ticketed",
+        "free",
+      ]),
+    );
+    expect(adapter.loadComments).toHaveBeenCalledTimes(1);
     layer.dispose();
   });
 });

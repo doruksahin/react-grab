@@ -25,7 +25,11 @@ import {
   bulkAssignSelections,
 } from "./selection-assignment.js";
 import { createSyntheticGroupForItem, isSynthetic } from "./synthetic-group.js";
-import { isSelectionLocked, isTicketed } from "./ticket-lock.js";
+import {
+  canRemoveSelection,
+  isSelectionLocked,
+  isTicketed,
+} from "./ticket-lock.js";
 
 interface HasMembership {
   groupId: string | null;
@@ -75,6 +79,18 @@ export type DeleteGroupResult =
 export type RemoveResult =
   | { status: "removed"; items: CommentItem[] }
   | { status: "refused"; reason: SelectionRefusal };
+
+/** What clearing left: the locked selections, and how many were deleted. */
+export interface ClearResult {
+  items: CommentItem[];
+  removed: number;
+}
+
+/** How many selections "Clear all" deletes, and how many stay locked. */
+export interface ClearCounts {
+  removed: number;
+  kept: number;
+}
 
 /** Why a group cannot receive selections, or null when it can. */
 const refusalForGroup = (group: SelectionGroup): TargetRefusal | null => {
@@ -247,6 +263,19 @@ export const removeSelection = (
     status: "removed",
     items: items.filter((entry) => entry.id !== itemId),
   };
+};
+
+/**
+ * Deletes every selection that may be deleted and keeps the locked ones:
+ * a selection with a ticket is never deleted (ADR-0008, amended
+ * 2026-11-16). "Clear all" and the clear after "Copy all" use this.
+ */
+export const clearSelections = (
+  items: CommentItem[],
+  groups: SelectionGroup[],
+): ClearResult => {
+  const kept = items.filter((entry) => !canRemoveSelection(entry, groups));
+  return { items: kept, removed: items.length - kept.length };
 };
 
 interface NewSelectionSeed {

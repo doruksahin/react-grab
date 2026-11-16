@@ -1,6 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import type { SyncRepository, ScreenshotStore } from "./repositories/types.js";
+import type { TicketLockService } from "./services/ticket-lock.service.js";
 import type { JiraService } from "./services/jira.service.js";
 
 export type Bindings = {
@@ -18,6 +19,7 @@ export type Variables = {
   repo: SyncRepository;
   screenshots: ScreenshotStore;
   jira: JiraService; // NEW
+  ticketLock: TicketLockService;
 };
 
 export type AppEnv = {

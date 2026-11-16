@@ -128,3 +128,21 @@ The original design created synthetic groups lazily — only when the user click
 - **Invariants are enforced by commands, not by filtering pickers.** `features/selection-groups/business/membership-policy.ts` holds them. Every membership change goes through its commands (`moveSelection`, `moveSelections`, `deleteGroup`, `removeSelection`, `groupForNewSelection`). The pickers use the query `assignableGroupsFor`, which shares the commands' predicates. This replaces "exactly one item — enforced by filtering them from all pickers".
 - **Never ungrouped, through synthetic groups.** Moving a selection to "Ungrouped", or deleting its real group, gives it a new synthetic group of its own, so it can still be ticketed.
 - **Older data is shown, not rewritten.** `business/membership.ts` shows a synthetic group that has several selections as a visible group, named after its ticket key (`presentedGroups`). It shows a selection whose group is missing as loose. The orchestrator reports each such anomaly once through `logRecoverableError`, so the owner can repair the data deliberately. Nothing is written at load time.
+
+**Amended 2026-11-16 — deleting a selection.**
+
+- **Rule.** A selection without a ticket can be deleted. A selection with a ticket cannot. "Has a ticket" is the ticket lock above: its group, real or synthetic, has a `jiraTicketId`. `ticket-lock.ts` is the only definition. `comment.jiraTicketId` is not used for this; nothing sets it.
+- **One command per kind of deletion,** in `membership-policy.ts`:
+  - `removeSelection` deletes one selection, or refuses a locked one.
+  - `clearSelections` deletes every selection that is not locked and keeps the locked ones. "Clear all" and the automatic clear after "Copy all" use it. The confirmation says how many stay. When nothing can be deleted, the trash is hidden and "Copy all" does not offer to clear.
+  - Replacing a selection with a new comment on the same element goes through `removeSelection`. A locked selection is kept, and the new comment is added next to it.
+- **No silent deletions.** The 20-item cap from upstream deleted the oldest comment from the server when the 21st was added. It is removed. The existing 5 MB size trim of `localStorage` still applies while there is no server connection; a server refuses any delete it sends for a ticketed comment.
+- **Synthetic groups.** The garbage collection of empty synthetic groups keeps a synthetic group that has a ticket: it is a ticketed group, so it cannot be deleted.
+- **The UI asks the policy.** A remove (×) button shows only when the orchestrator's `canRemoveItem` allows it. No surface checks the ticket inline.
+- **The server enforces the same rule** in `services/ticket-lock.service.ts`. It returns 409 when a request would:
+  - delete a comment whose group has a ticket (`DELETE /comments/{commentId}`);
+  - delete a ticketed group (`DELETE /groups/{groupId}`);
+  - move a comment out of a ticketed group, or into one (`PUT /comments/{commentId}` with another `groupId`). Without this, a move followed by a delete would get round the rule.
+
+  The ticket is set on the server (`updateGroupJira`), so the server has the last word; a direct API call, the dashboard or an older overlay cannot delete a ticketed selection. The client checks first so the user is not offered an action the server refuses.
+- **When the server refuses anyway** (a ticket created in another tab that this tab has not seen), the HTTP adapter turns the 409 into a `WriteRefusedError`, and the sync layer reloads groups and comments from the server, once for a burst of refusals. A write that merely fails (network, 5xx) keeps its local change, as before.

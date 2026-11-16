@@ -5,9 +5,10 @@ import { EmptyState } from "./empty-state.js";
 
 interface SelectionListProps {
   items: CommentItem[];
-  /** Remove handler. Undefined disables the × button for every card —
-   *  GroupDetailView passes undefined when the group is ticketed. */
+  /** Remove handler; a card shows × only when `canRemoveItem` allows it. */
   onRemoveItem?: (itemId: string) => void;
+  /** The membership policy's answer; a selection with a ticket has no remove action. */
+  canRemoveItem?: (itemId: string) => boolean;
   jiraFlagged?: boolean;
   jiraFlaggedAt?: string | null;
   jiraFlaggedBy?: string | null;
@@ -39,7 +40,7 @@ export const SelectionList: Component<SelectionListProps> = (props) => {
               item={item}
               scrollRoot={() => scrollContainerRef ?? null}
               onRemoveItem={
-                props.onRemoveItem
+                props.onRemoveItem && props.canRemoveItem?.(item.id)
                   ? () => props.onRemoveItem?.(item.id)
                   : undefined
               }

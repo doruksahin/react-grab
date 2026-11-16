@@ -71,7 +71,7 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
     }
     if (props.arrowNavigationState?.isVisible) return true;
     if (props.inspectNavigationState?.isVisible) return true;
-    if (props.onRemoveItem && !props.jiraTicketId) return true;
+    if (props.onRemoveItem) return true;
     return false;
   };
 
@@ -329,7 +329,7 @@ export const SelectionLabelRoot: Component<SelectionLabelRootProps> = (
           onAnimationEnd={() => setIsShaking(false)}
         >
           <Show
-            when={canInteract() && props.onRemoveItem && !props.jiraTicketId}
+            when={canInteract() && props.onRemoveItem}
           >
             <div class="absolute -top-2 -right-2 z-10">
               <RemoveSelectionButton

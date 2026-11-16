@@ -1,4 +1,4 @@
-import { createEffect, createSignal, on } from "solid-js";
+import { createEffect, createMemo, createSignal, on } from "solid-js";
 import type {
   SelectionGroupsAPI,
   SelectionGroupsDeps,
@@ -11,10 +11,12 @@ import {
   groupForNewSelection,
   moveSelection,
   moveSelections,
+  clearSelections,
   removeSelection,
 } from "./business/membership-policy.js";
 import { membershipAnomalies } from "./business/membership.js";
 import { gcEmptySyntheticGroups } from "./business/synthetic-group.js";
+import { canRemoveSelection } from "./business/ticket-lock.js";
 import { generateId } from "../../utils/generate-id.js";
 import { logRecoverableError } from "../../utils/log-recoverable-error.js";
 
@@ -170,6 +172,23 @@ export function createSelectionGroups(
     return result;
   };
 
+  const handleClearItems: SelectionGroupsAPI["handleClearItems"] = () => {
+    const result = clearSelections(deps.commentItems(), deps.groups());
+    deps.persistCommentItems(result.items);
+    reconcileSyntheticGroups(result.items);
+    return result;
+  };
+
+  const canRemoveItem: SelectionGroupsAPI["canRemoveItem"] = (itemId) => {
+    const item = deps.commentItems().find((entry) => entry.id === itemId);
+    return Boolean(item && canRemoveSelection(item, deps.groups()));
+  };
+
+  const clearCounts = createMemo(() => {
+    const result = clearSelections(deps.commentItems(), deps.groups());
+    return { removed: result.removed, kept: result.items.length };
+  });
+
   const handleEnsureGroupForItem = (
     item: { componentName?: string; elementName: string },
     selectedGroupId = activeGroupId(),
@@ -191,6 +210,9 @@ export function createSelectionGroups(
     handleMoveItem,
     handleMoveItems,
     handleRemoveItem,
+    handleClearItems,
+    canRemoveItem,
+    clearCounts,
     markTicketCreated,
     markResolved,
     ensureGroupForItem: handleEnsureGroupForItem,
