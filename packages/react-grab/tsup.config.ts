@@ -67,6 +67,9 @@ const DEFAULT_OPTIONS: Options = {
     /^@kobalte\//,
     "solid-focus-trap",
     "@solid-primitives/keyed",
+    // CommonJS only: Node's ESM loader cannot import its named export, so it
+    // is bundled for SSR imports to work (ADR-0025, phase 3).
+    "file-saver",
   ],
   onSuccess: process.env.COPY ? "pbcopy < ./dist/index.global.js" : undefined,
   outDir: "./dist",
