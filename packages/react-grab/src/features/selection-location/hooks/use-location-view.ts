@@ -54,7 +54,7 @@ export const useLocationView = (selectionId: () => string): LocationView => {
     location,
     label: () => describeLocation(location()),
     shortLabel: () => describeLocationShort(location()),
-    notice: () => describeLocationNotice(location()),
+    notice: () => describeLocationNotice(location(), { canGuide: canGuide() }),
     otherPage,
     canGuide,
     openPage: () => {
