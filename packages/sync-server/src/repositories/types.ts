@@ -17,10 +17,15 @@ export type GroupWrite = z.infer<typeof SelectionGroupWrite>;
 export interface SyncRepository {
   listComments(workspaceId: string): Promise<Comment[]>;
   upsertComment(workspaceId: string, item: Comment): Promise<void>;
+  findComment(
+    workspaceId: string,
+    commentId: string,
+  ): Promise<Comment | undefined>;
   deleteComment(workspaceId: string, commentId: string): Promise<void>;
   listGroups(workspaceId: string): Promise<Group[]>;
   /** Writes the client-owned fields only; never touches status or jiraTicketId. */
   upsertGroup(workspaceId: string, item: GroupWrite): Promise<void>;
+  findGroup(workspaceId: string, groupId: string): Promise<Group | undefined>;
   deleteGroup(workspaceId: string, groupId: string): Promise<void>;
   updateGroupJira(
     workspaceId: string,

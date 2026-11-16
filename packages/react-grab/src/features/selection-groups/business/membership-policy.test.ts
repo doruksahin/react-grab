@@ -8,6 +8,7 @@ import {
   groupForNewSelection,
   moveSelection,
   moveSelections,
+  clearSelections,
   removeSelection,
 } from "./membership-policy.js";
 import { ticketScopeFor } from "./membership.js";
@@ -313,5 +314,39 @@ describe("removeSelection", () => {
       status: "refused",
       reason: "selection-not-found",
     });
+  });
+});
+
+describe("clearSelections", () => {
+  it("deletes every selection without a ticket and keeps the ticketed ones", () => {
+    const result = clearSelections(items, groups);
+    expect(result.items.map((i) => i.id)).toEqual([
+      "in-ticketed",
+      "in-synthetic-8",
+      "in-synthetic-9",
+    ]);
+    expect(result.removed).toBe(3);
+  });
+
+  it("deletes everything when nothing has a ticket", () => {
+    const open = [item("a", "open-a"), item("b", null)];
+    expect(clearSelections(open, groups)).toEqual({ items: [], removed: 2 });
+  });
+
+  it("deletes nothing when every selection has a ticket", () => {
+    const locked = [item("t", "ticketed")];
+    expect(clearSelections(locked, groups)).toEqual({
+      items: locked,
+      removed: 0,
+    });
+  });
+
+  it("agrees with removeSelection on each selection", () => {
+    const kept = new Set(clearSelections(items, groups).items.map((i) => i.id));
+    for (const entry of items) {
+      const removable =
+        removeSelection(items, groups, entry.id).status === "removed";
+      expect(kept.has(entry.id), entry.id).toBe(!removable);
+    }
   });
 });

@@ -90,6 +90,14 @@ const deleteCommentRoute = createRoute({
         },
       },
     },
+    409: {
+      description: "Refused: the comment's group has a Jira ticket (ADR-0008)",
+      content: {
+        "application/json": {
+          schema: ErrorResponse,
+        },
+      },
+    },
   },
 });
 
@@ -113,6 +121,12 @@ export const commentsRoutes = createRouter()
   })
   .openapi(deleteCommentRoute, async (c) => {
     const { id, commentId } = c.req.valid("param");
-    await c.var.repo.deleteComment(id, commentId);
+    const result = await c.var.deletions.deleteComment(id, commentId);
+    if (result.status === "refused") {
+      return c.json(
+        { error: "A comment whose group has a Jira ticket cannot be deleted" },
+        409,
+      );
+    }
     return c.json({ status: "ok" as const }, 200);
   });

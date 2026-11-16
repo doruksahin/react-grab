@@ -10,6 +10,8 @@ import { registerOverlayDismiss } from "../utils/register-overlay-dismiss.js";
 
 interface ClearCommentsPromptProps {
   position: DropdownAnchor | null;
+  /** Comments that stay because they have a ticket (ADR-0008). */
+  keptCount: number;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -66,7 +68,11 @@ export const ClearCommentsPrompt: Component<ClearCommentsPromptProps> = (
           )}
         >
           <DiscardPrompt
-            label="Clear comments?"
+            label={
+              props.keptCount > 0
+                ? `Clear comments? ${props.keptCount} with a ticket stay.`
+                : "Clear comments?"
+            }
             cancelOnEscape
             onConfirm={props.onConfirm}
             onCancel={props.onCancel}

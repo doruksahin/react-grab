@@ -4,6 +4,7 @@ import type { CommentItem } from "../../shared-types.js";
 import type { JiraComment } from "../jira-comments/types.js";
 import type {
   BulkMoveResult,
+  ClearResult,
   DeleteGroupResult,
   MoveResult,
   RemoveResult,
@@ -91,6 +92,12 @@ export interface SelectionGroupsAPI {
   handleMoveItems: (itemIds: Set<string>, groupId: string) => BulkMoveResult;
   /** Remove a selection; refused for a locked one. GCs empty synthetic groups. */
   handleRemoveItem: (itemId: string) => RemoveResult;
+  /** Whether a selection may be removed: it has no ticket (ADR-0008). */
+  canRemoveItem: (itemId: string) => boolean;
+  /** Delete every selection without a ticket; those with a ticket stay. */
+  handleClearItems: () => ClearResult;
+  /** How many selections "Clear all" would keep, because they have a ticket. */
+  keptByClear: Accessor<number>;
   /** Record the ticket created for a group; it then takes no new selections. */
   markTicketCreated: (
     groupId: string,
@@ -121,8 +128,9 @@ export interface SelectionGroupsViewProps {
   onToggleGroupRevealed?: (groupId: string) => void;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
   onMoveItems?: (itemIds: Set<string>, groupId: string) => void;
-  /** Remove a selection permanently. No-op when the selection is
-   *  locked by the ticket-lock rule. */
+  /** Remove a selection permanently. Refused for a selection with a ticket. */
   onRemoveItem?: (itemId: string) => void;
+  /** Whether a selection may be removed; surfaces show a remove action only then. */
+  canRemoveItem?: (itemId: string) => boolean;
   onJiraResolved?: (groupId: string) => void;
 }

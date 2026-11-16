@@ -91,6 +91,14 @@ const deleteGroupRoute = createRoute({
         },
       },
     },
+    409: {
+      description: "Refused: the group has a Jira ticket (ADR-0008)",
+      content: {
+        "application/json": {
+          schema: ErrorResponse,
+        },
+      },
+    },
   },
 });
 
@@ -114,6 +122,12 @@ export const groupsRoutes = createRouter()
   })
   .openapi(deleteGroupRoute, async (c) => {
     const { id, groupId } = c.req.valid("param");
-    await c.var.repo.deleteGroup(id, groupId);
+    const result = await c.var.deletions.deleteGroup(id, groupId);
+    if (result.status === "refused") {
+      return c.json(
+        { error: "A group with a Jira ticket cannot be deleted" },
+        409,
+      );
+    }
     return c.json({ status: "ok" as const }, 200);
   });

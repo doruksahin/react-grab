@@ -8,6 +8,8 @@ interface SelectionListProps {
   /** Remove handler. Undefined disables the × button for every card —
    *  GroupDetailView passes undefined when the group is ticketed. */
   onRemoveItem?: (itemId: string) => void;
+  /** The membership policy's answer; a selection with a ticket has no remove action. */
+  canRemoveItem?: (itemId: string) => boolean;
   jiraFlagged?: boolean;
   jiraFlaggedAt?: string | null;
   jiraFlaggedBy?: string | null;
@@ -39,7 +41,7 @@ export const SelectionList: Component<SelectionListProps> = (props) => {
               item={item}
               scrollRoot={() => scrollContainerRef ?? null}
               onRemoveItem={
-                props.onRemoveItem
+                props.onRemoveItem && props.canRemoveItem?.(item.id)
                   ? () => props.onRemoveItem?.(item.id)
                   : undefined
               }

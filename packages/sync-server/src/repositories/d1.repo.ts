@@ -49,6 +49,23 @@ export class D1SyncRepository implements SyncRepository {
       });
   }
 
+  async findComment(
+    workspaceId: string,
+    commentId: string,
+  ): Promise<Comment | undefined> {
+    const [row] = await this.db
+      .select()
+      .from(schema.comments)
+      .where(
+        and(
+          eq(schema.comments.id, commentId),
+          eq(schema.comments.workspaceId, workspaceId),
+        ),
+      )
+      .limit(1);
+    return row ? rowToComment(row) : undefined;
+  }
+
   async deleteComment(workspaceId: string, commentId: string): Promise<void> {
     await this.db
       .delete(schema.comments)
@@ -87,6 +104,23 @@ export class D1SyncRepository implements SyncRepository {
           synthetic: synthetic ?? null,
         },
       });
+  }
+
+  async findGroup(
+    workspaceId: string,
+    groupId: string,
+  ): Promise<Group | undefined> {
+    const [row] = await this.db
+      .select()
+      .from(schema.groups)
+      .where(
+        and(
+          eq(schema.groups.id, groupId),
+          eq(schema.groups.workspaceId, workspaceId),
+        ),
+      )
+      .limit(1);
+    return row ? rowToGroup(row) : undefined;
   }
 
   async deleteGroup(workspaceId: string, groupId: string): Promise<void> {

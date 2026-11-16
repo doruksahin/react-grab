@@ -68,6 +68,8 @@ interface CommentsDropdownProps extends Pick<
   onCopyAll?: () => void;
   onCopyAllHover?: (isHovered: boolean) => void;
   onClearAll?: () => void;
+  /** Comments that "Clear all" keeps because they have a ticket (ADR-0008). */
+  keptByClear?: number;
   onDismiss?: () => void;
   onDropdownHover?: (isHovered: boolean) => void;
   onToggleItemRevealed?: (commentItemId: string) => void;
@@ -372,19 +374,25 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             </span>
             <Show when={props.items.length > 0}>
               <div class="flex items-center gap-[5px]">
-                <IconButton
-                  data-react-grab-ignore-events
-                  data-react-grab-comments-clear
-                  label="Clear all"
-                  variant="chip-destructive"
-                  class="shrink-0"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    props.onClearAll?.();
-                  }}
-                >
-                  <IconTrash size={DROPDOWN_ICON_SIZE_PX} />
-                </IconButton>
+                <Show when={props.items.length > (props.keptByClear ?? 0)}>
+                  <IconButton
+                    data-react-grab-ignore-events
+                    data-react-grab-comments-clear
+                    label={
+                      (props.keptByClear ?? 0) > 0
+                        ? "Clear comments without a ticket"
+                        : "Clear all"
+                    }
+                    variant="chip-destructive"
+                    class="shrink-0"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      props.onClearAll?.();
+                    }}
+                  >
+                    <IconTrash size={DROPDOWN_ICON_SIZE_PX} />
+                  </IconButton>
+                </Show>
                 <Tooltip openDelay={ICON_BUTTON_TOOLTIP_OPEN_DELAY_MS}>
                   <TooltipTrigger
                     as={Button}

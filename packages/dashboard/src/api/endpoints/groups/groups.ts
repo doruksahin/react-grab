@@ -29,6 +29,7 @@ import type {
 
 import type {
   DeleteGroup200,
+  DeleteGroup409,
   ListGroups200Item,
   UpsertGroup200,
   UpsertGroup400,
@@ -314,12 +315,19 @@ export type deleteGroupResponse200 = {
   status: 200
 }
 
+export type deleteGroupResponse409 = {
+  data: DeleteGroup409
+  status: 409
+}
+
 export type deleteGroupResponseSuccess = (deleteGroupResponse200) & {
   headers: Headers;
 };
-;
+export type deleteGroupResponseError = (deleteGroupResponse409) & {
+  headers: Headers;
+};
 
-export type deleteGroupResponse = (deleteGroupResponseSuccess)
+export type deleteGroupResponse = (deleteGroupResponseSuccess | deleteGroupResponseError)
 
 export const getDeleteGroupUrl = (id: string,
     groupId: string,) => {
@@ -351,7 +359,7 @@ export const deleteGroup = async (id: string,
 
 
 
-export const getDeleteGroupMutationOptions = <TError = unknown,
+export const getDeleteGroupMutationOptions = <TError = DeleteGroup409,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGroup>>, TError,{id: string;groupId: string}, TContext>, fetch?: RequestInit}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteGroup>>, TError,{id: string;groupId: string}, TContext> => {
 
@@ -380,12 +388,12 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
     export type DeleteGroupMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGroup>>>
 
-    export type DeleteGroupMutationError = unknown
+    export type DeleteGroupMutationError = DeleteGroup409
 
     /**
  * @summary Delete one group
  */
-export const useDeleteGroup = <TError = unknown,
+export const useDeleteGroup = <TError = DeleteGroup409,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGroup>>, TError,{id: string;groupId: string}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteGroup>>,

@@ -868,15 +868,15 @@ data_attrs:
     comment-editor: {scope: comments, src: 1, tests: 1}
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
-    comment-item: {scope: comments, src: 1, tests: 7}
+    comment-item: {scope: comments, src: 1, tests: 8}
     comment-reply: {scope: comments, src: 1, tests: 0}
     comment-submit: {scope: comments, src: 1, tests: 1}
     comment-thread: {scope: comments, src: 1, tests: 0}
     comment-time: {scope: comments, src: 1, tests: 0}
-    comments-clear: {scope: comments, src: 1, tests: 1}
+    comments-clear: {scope: comments, src: 1, tests: 3}
     comments-copy-all: {scope: comments, src: 1, tests: 2}
     comments-count: {scope: comments, src: 1, tests: 0}
-    comments-dropdown: {scope: comments, src: 3, tests: 8}
+    comments-dropdown: {scope: comments, src: 3, tests: 9}
     comments-error: {scope: comments, src: 1, tests: 1}
     comments-list: {scope: comments, src: 1, tests: 1}
     comments-section: {scope: comments, src: 1, tests: 0}
@@ -964,7 +964,7 @@ data_attrs:
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 14}
+    selection-card: {scope: selection, src: 2, tests: 16}
     selection-card-body: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 3, tests: 0}
@@ -1004,7 +1004,7 @@ data_attrs:
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 2, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 23}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 25}
     toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 1, tests: 4}

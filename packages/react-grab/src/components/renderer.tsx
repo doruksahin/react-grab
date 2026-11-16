@@ -357,7 +357,9 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
                   props.onLabelInstanceHoverChange?.(instance().id, isHovered)
                 }
                 onRemoveItem={
-                  instance().itemId && props.onRemoveItem
+                  instance().itemId &&
+                  props.onRemoveItem &&
+                  props.canRemoveItem?.(instance().itemId ?? "")
                     ? () => {
                         const itemId = instance().itemId;
                         if (itemId) props.onRemoveItem?.(itemId);
@@ -457,6 +459,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       <ClearCommentsPrompt
         position={props.clearPromptPosition ?? null}
+        keptCount={props.commentsKeptByClear ?? 0}
         onConfirm={props.onClearCommentsConfirm ?? (() => {})}
         onCancel={props.onClearCommentsCancel ?? (() => {})}
       />
@@ -471,6 +474,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onCopyAll={props.onCommentsCopyAll}
         onCopyAllHover={props.onCommentsCopyAllHover}
         onClearAll={props.onCommentsClear}
+        keptByClear={props.commentsKeptByClear ?? 0}
         onDismiss={props.onCommentsDismiss}
         onDropdownHover={props.onCommentsDropdownHover}
         onToggleItemRevealed={props.onToggleCommentItemRevealed}
@@ -520,6 +524,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           onFilterVisibilityChange={props.onFilterVisibilityChange}
           onCreateTicketForLooseItem={props.onCreateTicketForLooseItem}
           onRemoveItem={props.onRemoveItem}
+          canRemoveItem={props.canRemoveItem}
           onMoveItem={props.onMoveItem}
           onMoveItems={props.onMoveItems}
           onAddGroup={props.onAddGroup}

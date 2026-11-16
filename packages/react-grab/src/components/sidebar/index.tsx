@@ -69,6 +69,7 @@ export interface SidebarProps {
   ) => void;
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   onRemoveItem?: (itemId: string) => void;
+  canRemoveItem?: (itemId: string) => boolean;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
   onMoveItems?: (itemIds: Set<string>, groupId: string) => void;
   onAddGroup?: (name: string) => void;
@@ -411,6 +412,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
             setGroupTicketDialog({ group, items })
           }
           onRemoveItem={props.onRemoveItem}
+          canRemoveItem={props.canRemoveItem}
         />
       </Show>
 

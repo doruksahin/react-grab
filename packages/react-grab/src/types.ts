@@ -664,6 +664,8 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onToggleToolbarMenu?: () => void;
   onToolbarMenuDismiss?: () => void;
   clearPromptPosition?: DropdownAnchor | null;
+  /** How many comments "Clear all" keeps because they have a ticket (ADR-0008). */
+  commentsKeptByClear?: number;
   onClearCommentsConfirm?: () => void;
   onClearCommentsCancel?: () => void;
   selectionsRevealed?: boolean;

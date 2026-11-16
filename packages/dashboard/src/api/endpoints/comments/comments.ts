@@ -29,6 +29,7 @@ import type {
 
 import type {
   DeleteComment200,
+  DeleteComment409,
   ListComments200Item,
   UpsertComment200,
   UpsertComment400,
@@ -314,12 +315,19 @@ export type deleteCommentResponse200 = {
   status: 200
 }
 
+export type deleteCommentResponse409 = {
+  data: DeleteComment409
+  status: 409
+}
+
 export type deleteCommentResponseSuccess = (deleteCommentResponse200) & {
   headers: Headers;
 };
-;
+export type deleteCommentResponseError = (deleteCommentResponse409) & {
+  headers: Headers;
+};
 
-export type deleteCommentResponse = (deleteCommentResponseSuccess)
+export type deleteCommentResponse = (deleteCommentResponseSuccess | deleteCommentResponseError)
 
 export const getDeleteCommentUrl = (id: string,
     commentId: string,) => {
@@ -351,7 +359,7 @@ export const deleteComment = async (id: string,
 
 
 
-export const getDeleteCommentMutationOptions = <TError = unknown,
+export const getDeleteCommentMutationOptions = <TError = DeleteComment409,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{id: string;commentId: string}, TContext>, fetch?: RequestInit}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{id: string;commentId: string}, TContext> => {
 
@@ -380,12 +388,12 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
     export type DeleteCommentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteComment>>>
 
-    export type DeleteCommentMutationError = unknown
+    export type DeleteCommentMutationError = DeleteComment409
 
     /**
  * @summary Delete one comment
  */
-export const useDeleteComment = <TError = unknown,
+export const useDeleteComment = <TError = DeleteComment409,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteComment>>, TError,{id: string;commentId: string}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteComment>>,
