@@ -28,9 +28,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ArchiveGroup200,
+  ArchiveGroup404,
+  ArchiveGroup409,
   DeleteGroup200,
   DeleteGroup409,
   ListGroups200Item,
+  RestoreGroup200,
+  RestoreGroup404,
   UpsertGroup200,
   UpsertGroup400,
   UpsertGroupBody
@@ -402,4 +407,201 @@ export const useDeleteGroup = <TError = DeleteGroup409,
         TContext
       > => {
       return useMutation(getDeleteGroupMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Archive one group that has a Jira ticket
+ */
+export type archiveGroupResponse200 = {
+  data: ArchiveGroup200
+  status: 200
+}
+
+export type archiveGroupResponse404 = {
+  data: ArchiveGroup404
+  status: 404
+}
+
+export type archiveGroupResponse409 = {
+  data: ArchiveGroup409
+  status: 409
+}
+
+export type archiveGroupResponseSuccess = (archiveGroupResponse200) & {
+  headers: Headers;
+};
+export type archiveGroupResponseError = (archiveGroupResponse404 | archiveGroupResponse409) & {
+  headers: Headers;
+};
+
+export type archiveGroupResponse = (archiveGroupResponseSuccess | archiveGroupResponseError)
+
+export const getArchiveGroupUrl = (id: string,
+    groupId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/groups/${groupId}/archive`
+}
+
+export const archiveGroup = async (id: string,
+    groupId: string, options?: RequestInit): Promise<archiveGroupResponse> => {
+
+  const res = await fetch(getArchiveGroupUrl(id,groupId),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: archiveGroupResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as archiveGroupResponse
+}
+
+
+
+
+export const getArchiveGroupMutationOptions = <TError = ArchiveGroup404 | ArchiveGroup409,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveGroup>>, TError,{id: string;groupId: string}, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveGroup>>, TError,{id: string;groupId: string}, TContext> => {
+
+const mutationKey = ['archiveGroup'];
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveGroup>>, {id: string;groupId: string}> = (props) => {
+          const {id,groupId} = props ?? {};
+
+          return  archiveGroup(id,groupId,fetchOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveGroupMutationResult = NonNullable<Awaited<ReturnType<typeof archiveGroup>>>
+
+    export type ArchiveGroupMutationError = ArchiveGroup404 | ArchiveGroup409
+
+    /**
+ * @summary Archive one group that has a Jira ticket
+ */
+export const useArchiveGroup = <TError = ArchiveGroup404 | ArchiveGroup409,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveGroup>>, TError,{id: string;groupId: string}, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof archiveGroup>>,
+        TError,
+        {id: string;groupId: string},
+        TContext
+      > => {
+      return useMutation(getArchiveGroupMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Restore one archived group
+ */
+export type restoreGroupResponse200 = {
+  data: RestoreGroup200
+  status: 200
+}
+
+export type restoreGroupResponse404 = {
+  data: RestoreGroup404
+  status: 404
+}
+
+export type restoreGroupResponseSuccess = (restoreGroupResponse200) & {
+  headers: Headers;
+};
+export type restoreGroupResponseError = (restoreGroupResponse404) & {
+  headers: Headers;
+};
+
+export type restoreGroupResponse = (restoreGroupResponseSuccess | restoreGroupResponseError)
+
+export const getRestoreGroupUrl = (id: string,
+    groupId: string,) => {
+
+
+
+
+  return `/workspaces/${id}/groups/${groupId}/archive`
+}
+
+export const restoreGroup = async (id: string,
+    groupId: string, options?: RequestInit): Promise<restoreGroupResponse> => {
+
+  const res = await fetch(getRestoreGroupUrl(id,groupId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: restoreGroupResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as restoreGroupResponse
+}
+
+
+
+
+export const getRestoreGroupMutationOptions = <TError = RestoreGroup404,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreGroup>>, TError,{id: string;groupId: string}, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreGroup>>, TError,{id: string;groupId: string}, TContext> => {
+
+const mutationKey = ['restoreGroup'];
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreGroup>>, {id: string;groupId: string}> = (props) => {
+          const {id,groupId} = props ?? {};
+
+          return  restoreGroup(id,groupId,fetchOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreGroupMutationResult = NonNullable<Awaited<ReturnType<typeof restoreGroup>>>
+
+    export type RestoreGroupMutationError = RestoreGroup404
+
+    /**
+ * @summary Restore one archived group
+ */
+export const useRestoreGroup = <TError = RestoreGroup404,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreGroup>>, TError,{id: string;groupId: string}, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof restoreGroup>>,
+        TError,
+        {id: string;groupId: string},
+        TContext
+      > => {
+      return useMutation(getRestoreGroupMutationOptions(options), queryClient);
     }

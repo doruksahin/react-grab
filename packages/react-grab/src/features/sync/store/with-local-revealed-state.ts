@@ -83,5 +83,18 @@ export const withLocalRevealedState = (
       await storage.deleteGroup(groupId);
       serverFields.delete(groupKey(groupId));
     },
+    // The server owns the archive time; the local revealed state still applies.
+    archiveGroup: async (groupId) => {
+      const [group] = mergeRevealedIntoGroups([
+        await storage.archiveGroup(groupId),
+      ]);
+      return group;
+    },
+    restoreGroup: async (groupId) => {
+      const [group] = mergeRevealedIntoGroups([
+        await storage.restoreGroup(groupId),
+      ]);
+      return group;
+    },
   };
 };

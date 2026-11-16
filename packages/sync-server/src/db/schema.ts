@@ -57,6 +57,8 @@ export const groups = sqliteTable(
       onDelete: "restrict",
     }),
     synthetic: integer("synthetic", { mode: "boolean" }),
+    /** When the group was archived (epoch ms); null while active (ADR-0030). */
+    archivedAt: real("archived_at"),
   },
   (table) => [
     primaryKey({ columns: [table.id, table.workspaceId] }),

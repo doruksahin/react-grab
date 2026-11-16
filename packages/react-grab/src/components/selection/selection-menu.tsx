@@ -15,6 +15,13 @@ import { IconEllipsis } from "../icons/icon-ellipsis.jsx";
 import { IconFolder } from "../icons/icon-folder.jsx";
 import { IconTrash } from "../icons/icon-trash.jsx";
 import { IconDashboard } from "../icons/icon-dashboard.jsx";
+import { IconArchive } from "../icons/icon-archive.jsx";
+import { IconRestore } from "../icons/icon-restore.jsx";
+
+interface MenuAction {
+  label: string;
+  onSelect: () => void;
+}
 
 interface SelectionMenuProps {
   /** Where the selection can move; omitted or empty hides "Move to group". */
@@ -24,18 +31,24 @@ interface SelectionMenuProps {
   onRemove?: () => void;
   /** Opens the selection's full card in the sidebar. */
   onOpenInSidebar?: () => void;
+  /** Archives the group that holds the ticket (ADR-0030); its label says what. */
+  archive?: MenuAction;
+  /** Restores an archived group to the board. */
+  restore?: MenuAction;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   class?: string;
 }
 
 /**
- * A selection's less frequent actions behind ⋯: move it to another group and
- * remove it. Removing sits here, away from the header and the row, so it is
+ * A selection's less frequent actions behind ⋯: open it in the sidebar, move
+ * it, archive or restore its ticketed group (ADR-0030), and remove it. Removing sits here, away from the header and the row, so it is
  * never mistaken for closing.
  */
 export const SelectionMenu: Component<SelectionMenuProps> = (props) => {
   const canMove = () => (props.destinations?.length ?? 0) > 0;
+  const hasOrganize = () =>
+    canMove() || Boolean(props.archive) || Boolean(props.restore);
   // The menu is portaled, but Solid's delegated events still bubble to where
   // it sits in the tree (the row); stop them so picking an item does not
   // also select the row.
@@ -76,7 +89,7 @@ export const SelectionMenu: Component<SelectionMenuProps> = (props) => {
                 <IconDashboard size={12} />
                 Open in sidebar
               </MenuItem>
-              <Show when={canMove() || props.onRemove}>
+              <Show when={hasOrganize() || props.onRemove}>
                 <MenuSeparator class="-mx-1 my-1 border-border" />
               </Show>
             </>
@@ -109,7 +122,29 @@ export const SelectionMenu: Component<SelectionMenuProps> = (props) => {
             </MenuSubContent>
           </MenuSub>
         </Show>
-        <Show when={canMove() && props.onRemove}>
+        <Show when={props.archive}>
+          {(archive) => (
+            <MenuItem
+              data-react-grab-selection-archive
+              onSelect={() => archive().onSelect()}
+            >
+              <IconArchive size={12} />
+              {archive().label}
+            </MenuItem>
+          )}
+        </Show>
+        <Show when={props.restore}>
+          {(restore) => (
+            <MenuItem
+              data-react-grab-selection-restore
+              onSelect={() => restore().onSelect()}
+            >
+              <IconRestore size={12} />
+              {restore().label}
+            </MenuItem>
+          )}
+        </Show>
+        <Show when={hasOrganize() && props.onRemove}>
           <MenuSeparator class="-mx-1 my-1 border-border" />
         </Show>
         <Show when={props.onRemove}>

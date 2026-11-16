@@ -47,6 +47,8 @@ export const STORAGE_ARGUMENTS = {
   loadGroups: z.tuple([]),
   upsertGroup: z.tuple([UpsertGroupBody.extend({ id: pathIdSchema })]),
   deleteGroup: z.tuple([pathIdSchema]),
+  archiveGroup: z.tuple([pathIdSchema]),
+  restoreGroup: z.tuple([pathIdSchema]),
   uploadScreenshot: z.tuple([pathIdSchema, screenshotKindSchema, blobSchema]),
   loadScreenshot: z.tuple([pathIdSchema, screenshotKindSchema]),
   uploadRecording: z.tuple([pathIdSchema, blobSchema]),
@@ -62,10 +64,7 @@ export const JIRA_ARGUMENTS = {
   listPriorities: z.tuple([]),
   listLabels: z.tuple([]),
   getTicketStatus: z.tuple([pathIdSchema]),
-  createTicket: z.tuple([
-    pathIdSchema,
-    CreateJiraTicketBody.strict(),
-  ]),
+  createTicket: z.tuple([pathIdSchema, CreateJiraTicketBody.strict()]),
   addComment: z.tuple([pathIdSchema, AddJiraCommentBody]),
   searchUsers: z.tuple([SearchJiraUsersQueryParams.shape.query]),
 } satisfies PortArguments<JiraPort>;

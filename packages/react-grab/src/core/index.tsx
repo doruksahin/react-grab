@@ -57,6 +57,7 @@ import { ticketScopeFor } from "../features/selection-groups/business/membership
 import { createSelectionGroups } from "../features/selection-groups/index.js";
 import type { SelectionGroup } from "../features/selection-groups/types.js";
 import { isPinnedLabel } from "../features/selection-label/business/is-pinned-label.js";
+import { activeSelections } from "../features/selection-groups/business/archive-policy.js";
 import { createSelectionVisibility } from "../features/selection-visibility/index.js";
 import { toPreviewLabelFields } from "../features/selection-visibility/business/preview-label-fields.js";
 import { createSyncLayer } from "../features/sync/sync-layer.js";
@@ -311,6 +312,12 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
     const [isToolbarSelectHovered, setIsToolbarSelectHovered] =
       createSignal(false);
     const commentItems = syncLayer.comments;
+    // What the page, the comments menu and Copy all show: archived groups'
+    // selections stay in the sidebar's Archived section only (ADR-0030).
+    // Writes still go through the full list.
+    const boardCommentItems = createMemo(() =>
+      activeSelections(commentItems(), syncLayer.groups()),
+    );
     const setCommentItems: import("solid-js").Setter<CommentItem[]> = ((
       itemsOrFn: unknown,
     ) => {
@@ -526,7 +533,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
 
     const copyableItemCount = createMemo(() => {
       const disconnected = commentsDisconnectedItemIds();
-      return commentItems().filter(
+      return boardCommentItems().filter(
         (item) => item.revealed && !disconnected.has(item.id),
       ).length;
     });
@@ -2939,7 +2946,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       clearCommentsHoverPreviews();
 
       const disconnected = commentsDisconnectedItemIds();
-      const currentItems = commentItems();
+      const currentItems = boardCommentItems();
       const currentGroups = selectionGroups.groups();
 
       // Filter: only revealed + connected items
@@ -3102,7 +3109,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
           commentsDropdownPosition() === null &&
           clearPromptPosition() === null
         ) {
-          for (const item of commentItems()) {
+          for (const item of boardCommentItems()) {
             if (!visibility.isItemRevealed(item.id)) {
               showCommentItemPreview(item, "comment-all-hover");
             }
@@ -3130,7 +3137,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       clearCommentsHoverPreviews();
       if (isHovered) {
         cancelCommentsHoverCloseTimeout();
-        for (const item of commentItems()) {
+        for (const item of boardCommentItems()) {
           if (!visibility.isItemRevealed(item.id)) {
             showCommentItemPreview(item, "comment-all-hover");
           }
@@ -3335,9 +3342,12 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       actionContext={contextMenuActionContext()}
                       onContextMenuDismiss={handleContextMenuDismiss}
                       onContextMenuHide={deferHideContextMenu}
-                      commentItems={commentItems()}
+                      commentItems={boardCommentItems()}
+                      sidebarCommentItems={commentItems()}
+                      onArchiveGroup={syncLayer.archiveGroup}
+                      onRestoreGroup={syncLayer.restoreGroup}
                       commentsDisconnectedItemIds={commentsDisconnectedItemIds()}
-                      commentItemCount={commentItems().length}
+                      commentItemCount={boardCommentItems().length}
                       clockFlashTrigger={clockFlashTrigger()}
                       commentsDropdownPosition={commentsDropdownPosition()}
                       isCommentsPinned={

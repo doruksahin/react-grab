@@ -1,3 +1,4 @@
+import { activeSelections } from "./business/archive-policy.js";
 import { createEffect, createMemo, createSignal, on } from "solid-js";
 import type {
   SelectionGroupsAPI,
@@ -186,7 +187,11 @@ export function createSelectionGroups(
 
   const clearCounts = createMemo(() => {
     const result = clearSelections(deps.commentItems(), deps.groups());
-    return { removed: result.removed, kept: result.items.length };
+    // Archived selections are not on the board, so they are not "kept" there.
+    return {
+      removed: result.removed,
+      kept: activeSelections(result.items, deps.groups()).length,
+    };
   });
 
   const handleEnsureGroupForItem = (

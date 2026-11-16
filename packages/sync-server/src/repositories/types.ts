@@ -27,6 +27,12 @@ export interface SyncRepository {
   upsertGroup(workspaceId: string, item: GroupWrite): Promise<void>;
   findGroup(workspaceId: string, groupId: string): Promise<Group | undefined>;
   deleteGroup(workspaceId: string, groupId: string): Promise<void>;
+  /** Archives (a time) or restores (null) a group; the caller checks the rule. */
+  setGroupArchived(
+    workspaceId: string,
+    groupId: string,
+    archivedAt: number | null,
+  ): Promise<void>;
   /** Links the ticket and records the account that created it (its origin). */
   updateGroupJira(
     workspaceId: string,

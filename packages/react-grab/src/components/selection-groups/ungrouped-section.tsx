@@ -15,6 +15,8 @@ interface SelectionSectionProps {
   /** A short summary of the section's selections (the sidebar's statuses). */
   summary?: JSX.Element;
   emptyText?: string;
+  /** Whether the section starts open. @default true */
+  defaultOpen?: boolean;
 }
 
 /**
@@ -23,7 +25,7 @@ interface SelectionSectionProps {
  * stays at the top while its selections scroll.
  */
 export const SelectionSection: Component<SelectionSectionProps> = (props) => {
-  const [isOpen, setIsOpen] = createSignal(true);
+  const [isOpen, setIsOpen] = createSignal(props.defaultOpen ?? true);
   // A focus request is a user action from elsewhere: the card it targets
   // must be visible, so its section opens.
   createEffect(

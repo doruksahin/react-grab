@@ -1,3 +1,4 @@
+import { isSelectionArchived } from "../selection-groups/business/archive-policy.js";
 import {
   type Accessor,
   createEffect,
@@ -26,11 +27,18 @@ export function createSelectionVisibility(
 
   // The selections to draw: revealed and with their elements on the page.
   // disconnectedItemIds follows DOM mutations (domMutationVersion in core).
+  // An archived group's selections stay off the page (ADR-0030).
   const revealedItems = createMemo(() => {
     const disconnected = deps.disconnectedItemIds();
+    const groups = deps.groups();
     return deps
       .commentItems()
-      .filter((item) => item.revealed && !disconnected.has(item.id));
+      .filter(
+        (item) =>
+          item.revealed &&
+          !disconnected.has(item.id) &&
+          !isSelectionArchived(item, groups),
+      );
   });
 
   // One reactive scope per revealed selection, keyed by id (keyArray from

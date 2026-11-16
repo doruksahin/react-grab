@@ -133,6 +133,8 @@ describe("path parameters (ADR-0023)", () => {
       () => storage.upsertGroup({ id: value, name: "G", createdAt: 1 }),
     ],
     ["deleteGroup", () => storage.deleteGroup(value)],
+    ["archiveGroup", () => storage.archiveGroup(value)],
+    ["restoreGroup", () => storage.restoreGroup(value)],
     ["uploadScreenshot", () => storage.uploadScreenshot(value, "full", blob)],
     ["loadScreenshot", () => storage.loadScreenshot(value, "element")],
     [
@@ -420,11 +422,15 @@ const callEveryMethod = async (
     upsertComment: await storage.upsertComment({ ...comment, groupId: null }),
     deleteComment: await storage.deleteComment("c"),
     loadGroups: await storage.loadGroups(),
+    // A ticketed group: only one with a ticket is archived (ADR-0030).
     upsertGroup: await storage.upsertGroup({
       id: "g",
       name: "G",
       createdAt: 1,
+      jiraTicketId: "ATT-1",
     }),
+    archiveGroup: await storage.archiveGroup("g"),
+    restoreGroup: await storage.restoreGroup("g"),
     deleteGroup: await storage.deleteGroup("g"),
     uploadScreenshot: await storage.uploadScreenshot("c", "full", blob),
     loadScreenshot: await storage.loadScreenshot("c", "full"),
@@ -488,6 +494,13 @@ describe("structured clone contract", () => {
         });
       if (path.endsWith("/jira-comment"))
         return jsonResponse(200, { id: "10", created: "now" });
+      if (path.endsWith("/archive"))
+        return jsonResponse(200, {
+          id: "g",
+          name: "G",
+          createdAt: 1,
+          ...(method === "PUT" ? { archivedAt: 5 } : {}),
+        });
       return jsonResponse(200, { status: "ok" });
     }
     if (path.endsWith("/comments")) return jsonResponse(200, [comment]);
@@ -528,7 +541,11 @@ describe("structured clone contract", () => {
       groups: [{ id: "g", name: "G", createdAt: 1 }],
     });
     const jira = createFakeJiraPort({
-      destination: { siteUrl: "https://j", projectKey: "ATT", signsInAs: "Ada" },
+      destination: {
+        siteUrl: "https://j",
+        projectKey: "ATT",
+        signsInAs: "Ada",
+      },
       issueTypes: [{ id: "1", name: "Task" }],
       priorities: [{ id: "1", name: "Medium" }],
       labels: ["ui"],

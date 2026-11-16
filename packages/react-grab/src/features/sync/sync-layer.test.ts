@@ -22,6 +22,8 @@ const adapter = {
   loadGroups: vi.fn<StorageAdapter["loadGroups"]>(),
   upsertGroup: vi.fn<StorageAdapter["upsertGroup"]>(),
   deleteGroup: vi.fn<StorageAdapter["deleteGroup"]>(),
+  archiveGroup: vi.fn<StorageAdapter["archiveGroup"]>(),
+  restoreGroup: vi.fn<StorageAdapter["restoreGroup"]>(),
   uploadScreenshot: vi.fn<StorageAdapter["uploadScreenshot"]>(),
   loadScreenshot: vi.fn<StorageAdapter["loadScreenshot"]>(),
   uploadRecording: vi.fn<StorageAdapter["uploadRecording"]>(),
@@ -344,6 +346,113 @@ describe("a write the server rejects (ADR-0008)", () => {
       ]),
     );
     expect(adapter.loadComments).toHaveBeenCalledTimes(1);
+    layer.dispose();
+  });
+});
+
+describe("sync layer archive (ADR-0030)", () => {
+  // A fresh object each time: the store updates the objects it holds.
+  const ticketed = (extra: object = {}) => ({
+    id: "g-1",
+    name: "Checkout",
+    createdAt: 1,
+    jiraTicketId: "ATT-1",
+    ...extra,
+  });
+
+  beforeEach(() => {
+    resetPorts();
+    adapter.loadComments.mockResolvedValue([]);
+    adapter.loadGroups.mockImplementation(async () => [ticketed()]);
+  });
+
+  it("archives with the server's time", async () => {
+    adapter.archiveGroup.mockResolvedValue(ticketed({ archivedAt: 42 }));
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+
+    await layer.archiveGroup("g-1");
+
+    expect(adapter.archiveGroup).toHaveBeenCalledWith("g-1");
+    expect(layer.groups()[0].archivedAt).toBe(42);
+    layer.dispose();
+  });
+
+  it("puts the group back when the server refuses", async () => {
+    adapter.archiveGroup.mockRejectedValue(new Error("409"));
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+
+    await expect(layer.archiveGroup("g-1")).rejects.toThrow("409");
+
+    expect(layer.groups()[0].archivedAt).toBeUndefined();
+    layer.dispose();
+  });
+
+  it("restores an archived group", async () => {
+    adapter.loadGroups.mockImplementation(async () => [
+      ticketed({ archivedAt: 42 }),
+    ]);
+    adapter.restoreGroup.mockResolvedValue(ticketed());
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+
+    await layer.restoreGroup("g-1");
+
+    expect(layer.groups()[0].archivedAt).toBeUndefined();
+    layer.dispose();
+  });
+
+  it("refuses to archive while not connected, so nothing is lost on reconnect", async () => {
+    adapter.loadGroups.mockRejectedValueOnce(new Error("offline"));
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+    expect(layer.status()).toBe("error");
+
+    await expect(layer.archiveGroup("g-1")).rejects.toThrow(/Not connected/);
+    expect(adapter.archiveGroup).not.toHaveBeenCalled();
+    layer.dispose();
+  });
+
+  it("keeps a pending archive when a group list loads meanwhile", async () => {
+    let confirm: (group: ReturnType<typeof ticketed>) => void = () => {};
+    adapter.archiveGroup.mockImplementation(
+      () => new Promise((resolve) => (confirm = resolve)),
+    );
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+
+    const archiving = layer.archiveGroup("g-1");
+    await layer.refetchGroups();
+    expect(layer.groups()[0].archivedAt).toBeDefined();
+
+    confirm(ticketed({ archivedAt: 42 }));
+    await archiving;
+    expect(layer.groups()[0].archivedAt).toBe(42);
+    layer.dispose();
+  });
+
+  it("does not poll Jira for an archived ticket", async () => {
+    adapter.loadGroups.mockImplementation(async () => [
+      ticketed({ archivedAt: 42 }),
+      ticketed({ id: "g-2", jiraTicketId: "ATT-2" }),
+    ]);
+    jira.getTicketStatus.mockResolvedValue({
+      status: "To Do",
+      statusCategory: "new",
+      jiraUrl: "https://j/ATT-2",
+      labels: [],
+      comments: [],
+    } as unknown as Awaited<ReturnType<JiraPort["getTicketStatus"]>>);
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+    jira.getTicketStatus.mockClear();
+
+    await layer.refetchJira();
+
+    expect(jira.getTicketStatus.mock.calls.map(([groupId]) => groupId)).toEqual(
+      ["g-2"],
+    );
     layer.dispose();
   });
 });

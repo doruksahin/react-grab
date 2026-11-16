@@ -6,9 +6,11 @@ import {
   GroupIdParam,
   StatusResponse,
   ErrorResponse,
+  SelectionGroup,
   SelectionGroupArray,
   SelectionGroupWrite,
 } from "../schemas/index.js";
+import { ARCHIVE_REFUSAL_MESSAGES } from "../services/group-archive.service.js";
 
 const listGroupsRoute = createRoute({
   method: "get",
@@ -103,6 +105,51 @@ const deleteGroupRoute = createRoute({
   },
 });
 
+/** Takes a ticketed group off the board (ADR-0030); the server sets the time. */
+const archiveGroupRoute = createRoute({
+  method: "put",
+  path: "/workspaces/{id}/groups/{groupId}/archive",
+  tags: ["groups"],
+  summary: "Archive one group that has a Jira ticket",
+  operationId: "archiveGroup",
+  request: { params: GroupIdParam },
+  responses: {
+    200: {
+      description: "The group as it is now",
+      content: { "application/json": { schema: SelectionGroup } },
+    },
+    404: {
+      description: "The group does not exist",
+      content: { "application/json": { schema: ErrorResponse } },
+    },
+    409: {
+      description:
+        "Refused: the group has no Jira ticket; delete it instead (ADR-0030)",
+      content: { "application/json": { schema: ErrorResponse } },
+    },
+  },
+});
+
+/** Brings an archived group back to the board (ADR-0030). */
+const restoreGroupRoute = createRoute({
+  method: "delete",
+  path: "/workspaces/{id}/groups/{groupId}/archive",
+  tags: ["groups"],
+  summary: "Restore one archived group",
+  operationId: "restoreGroup",
+  request: { params: GroupIdParam },
+  responses: {
+    200: {
+      description: "The group as it is now",
+      content: { "application/json": { schema: SelectionGroup } },
+    },
+    404: {
+      description: "The group does not exist",
+      content: { "application/json": { schema: ErrorResponse } },
+    },
+  },
+});
+
 export const groupsRoutes = createRouter()
   .openapi(listGroupsRoute, async (c) => {
     const { id } = c.req.valid("param");
@@ -128,4 +175,23 @@ export const groupsRoutes = createRouter()
       return c.json({ error: REFUSAL_MESSAGES[result.reason] }, 409);
     }
     return c.json({ status: "ok" as const }, 200);
+  })
+  .openapi(archiveGroupRoute, async (c) => {
+    const { id, groupId } = c.req.valid("param");
+    const result = await c.var.groupArchive.archive(id, groupId);
+    if (result.status === "refused") {
+      const message = ARCHIVE_REFUSAL_MESSAGES[result.reason];
+      return result.reason === "group-not-found"
+        ? c.json({ error: message }, 404)
+        : c.json({ error: message }, 409);
+    }
+    return c.json(result.group, 200);
+  })
+  .openapi(restoreGroupRoute, async (c) => {
+    const { id, groupId } = c.req.valid("param");
+    const result = await c.var.groupArchive.restore(id, groupId);
+    if (result.status === "refused") {
+      return c.json({ error: ARCHIVE_REFUSAL_MESSAGES[result.reason] }, 404);
+    }
+    return c.json(result.group, 200);
   });

@@ -178,7 +178,8 @@ export const ListGroupsResponseItem = zod.object({
   "revealed": zod.boolean().optional(),
   "status": zod.enum(['open', 'ticketed', 'resolved']).optional().describe('Lifecycle status of a group'),
   "jiraTicketId": zod.string().optional(),
-  "synthetic": zod.boolean().optional()
+  "synthetic": zod.boolean().optional(),
+  "archivedAt": zod.number().optional().describe('When the group was archived (epoch ms); absent while it is active (ADR-0030)')
 })
 export const ListGroupsResponse = zod.array(ListGroupsResponseItem)
 
@@ -214,6 +215,46 @@ export const DeleteGroupParams = zod.object({
 
 export const DeleteGroupResponse = zod.object({
   "status": zod.enum(['ok'])
+})
+
+
+/**
+ * @summary Archive one group that has a Jira ticket
+ */
+export const ArchiveGroupParams = zod.object({
+  "id": zod.string().describe('Workspace ID'),
+  "groupId": zod.string().describe('Group ID')
+})
+
+export const ArchiveGroupResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "createdAt": zod.number(),
+  "revealed": zod.boolean().optional(),
+  "status": zod.enum(['open', 'ticketed', 'resolved']).optional().describe('Lifecycle status of a group'),
+  "jiraTicketId": zod.string().optional(),
+  "synthetic": zod.boolean().optional(),
+  "archivedAt": zod.number().optional().describe('When the group was archived (epoch ms); absent while it is active (ADR-0030)')
+})
+
+
+/**
+ * @summary Restore one archived group
+ */
+export const RestoreGroupParams = zod.object({
+  "id": zod.string().describe('Workspace ID'),
+  "groupId": zod.string().describe('Group ID')
+})
+
+export const RestoreGroupResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "createdAt": zod.number(),
+  "revealed": zod.boolean().optional(),
+  "status": zod.enum(['open', 'ticketed', 'resolved']).optional().describe('Lifecycle status of a group'),
+  "jiraTicketId": zod.string().optional(),
+  "synthetic": zod.boolean().optional(),
+  "archivedAt": zod.number().optional().describe('When the group was archived (epoch ms); absent while it is active (ADR-0030)')
 })
 
 

@@ -300,6 +300,8 @@ export type ListGroups200Item = {
   status?: ListGroups200ItemStatus;
   jiraTicketId?: string;
   synthetic?: boolean;
+  /** When the group was archived (epoch ms); absent while it is active (ADR-0030) */
+  archivedAt?: number;
 };
 
 export type UpsertGroupBody = {
@@ -337,6 +339,68 @@ export type DeleteGroup200 = {
 };
 
 export type DeleteGroup409 = {
+  error: string;
+};
+
+/**
+ * Lifecycle status of a group
+ */
+export type ArchiveGroup200Status = typeof ArchiveGroup200Status[keyof typeof ArchiveGroup200Status];
+
+
+export const ArchiveGroup200Status = {
+  open: 'open',
+  ticketed: 'ticketed',
+  resolved: 'resolved',
+} as const;
+
+export type ArchiveGroup200 = {
+  id: string;
+  name: string;
+  createdAt: number;
+  revealed?: boolean;
+  /** Lifecycle status of a group */
+  status?: ArchiveGroup200Status;
+  jiraTicketId?: string;
+  synthetic?: boolean;
+  /** When the group was archived (epoch ms); absent while it is active (ADR-0030) */
+  archivedAt?: number;
+};
+
+export type ArchiveGroup404 = {
+  error: string;
+};
+
+export type ArchiveGroup409 = {
+  error: string;
+};
+
+/**
+ * Lifecycle status of a group
+ */
+export type RestoreGroup200Status = typeof RestoreGroup200Status[keyof typeof RestoreGroup200Status];
+
+
+export const RestoreGroup200Status = {
+  open: 'open',
+  ticketed: 'ticketed',
+  resolved: 'resolved',
+} as const;
+
+export type RestoreGroup200 = {
+  id: string;
+  name: string;
+  createdAt: number;
+  revealed?: boolean;
+  /** Lifecycle status of a group */
+  status?: RestoreGroup200Status;
+  jiraTicketId?: string;
+  synthetic?: boolean;
+  /** When the group was archived (epoch ms); absent while it is active (ADR-0030) */
+  archivedAt?: number;
+};
+
+export type RestoreGroup404 = {
   error: string;
 };
 
@@ -811,6 +875,101 @@ export const deleteGroup = async (id: string,
     groupId: string, options?: Parameters<typeof customFetch>[1]): Promise<deleteGroupResponse> => {
 
   return customFetch<deleteGroupResponse>(getDeleteGroupUrl(id,groupId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type archiveGroupResponse200 = {
+  data: ArchiveGroup200
+  status: 200
+}
+
+export type archiveGroupResponse404 = {
+  data: ArchiveGroup404
+  status: 404
+}
+
+export type archiveGroupResponse409 = {
+  data: ArchiveGroup409
+  status: 409
+}
+
+export type archiveGroupResponseSuccess = (archiveGroupResponse200) & {
+  headers: Headers;
+};
+export type archiveGroupResponseError = (archiveGroupResponse404 | archiveGroupResponse409) & {
+  headers: Headers;
+};
+
+export type archiveGroupResponse = (archiveGroupResponseSuccess | archiveGroupResponseError)
+
+export const getArchiveGroupUrl = (id: string,
+    groupId: string,) => {
+
+
+
+
+  return `/workspaces/${encodeURIComponent(String(id))}/groups/${encodeURIComponent(String(groupId))}/archive`
+}
+
+/**
+ * @summary Archive one group that has a Jira ticket
+ */
+export const archiveGroup = async (id: string,
+    groupId: string, options?: Parameters<typeof customFetch>[1]): Promise<archiveGroupResponse> => {
+
+  return customFetch<archiveGroupResponse>(getArchiveGroupUrl(id,groupId),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+export type restoreGroupResponse200 = {
+  data: RestoreGroup200
+  status: 200
+}
+
+export type restoreGroupResponse404 = {
+  data: RestoreGroup404
+  status: 404
+}
+
+export type restoreGroupResponseSuccess = (restoreGroupResponse200) & {
+  headers: Headers;
+};
+export type restoreGroupResponseError = (restoreGroupResponse404) & {
+  headers: Headers;
+};
+
+export type restoreGroupResponse = (restoreGroupResponseSuccess | restoreGroupResponseError)
+
+export const getRestoreGroupUrl = (id: string,
+    groupId: string,) => {
+
+
+
+
+  return `/workspaces/${encodeURIComponent(String(id))}/groups/${encodeURIComponent(String(groupId))}/archive`
+}
+
+/**
+ * @summary Restore one archived group
+ */
+export const restoreGroup = async (id: string,
+    groupId: string, options?: Parameters<typeof customFetch>[1]): Promise<restoreGroupResponse> => {
+
+  return customFetch<restoreGroupResponse>(getRestoreGroupUrl(id,groupId),
   {
     ...options,
     method: 'DELETE'

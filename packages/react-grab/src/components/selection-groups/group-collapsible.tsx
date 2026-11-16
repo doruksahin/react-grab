@@ -4,6 +4,7 @@ import type { CommentItem } from "../../types.js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import { cn } from "../../utils/cn.js";
 import { Badge } from "../ui/badge.js";
+import { IconArchive } from "../icons/icon-archive.jsx";
 import { IconButton } from "../ui/icon-button.js";
 
 interface GroupCollapsibleProps {
@@ -16,6 +17,8 @@ interface GroupCollapsibleProps {
   onDelete?: (groupId: string) => void;
   onToggleRevealed: (groupId: string) => void;
   onCopy?: (groupId: string) => void;
+  /** Archives the group (ADR-0030); given only for a ticketed group. */
+  onArchive?: (groupId: string) => void;
   /** Extra header content, such as the sidebar's ticket status (ADR-0028). */
   headerExtra?: JSX.Element;
   /** Opens the section when it holds this selection (a focus request). */
@@ -123,6 +126,22 @@ export const GroupCollapsible: Component<GroupCollapsibleProps> = (props) => {
                 />
               </svg>
             </IconButton>
+            <Show when={props.onArchive}>
+              {(onArchive) => (
+                <IconButton
+                  data-react-grab-ignore-events
+                  data-react-grab-group-archive
+                  label="Archive group"
+                  size="icon-2xs"
+                  on:click={(e) => {
+                    e.stopPropagation();
+                    onArchive()(props.group.id);
+                  }}
+                >
+                  <IconArchive size={10} />
+                </IconButton>
+              )}
+            </Show>
             <Show when={props.onDelete}>
               {(onDelete) => (
                 <IconButton

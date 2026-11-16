@@ -1,5 +1,6 @@
 import type { StorageAdapter } from "../features/sync/types.js";
 import {
+  archiveGroup,
   deleteComment,
   deleteGroup,
   getGetScreenshotUrl,
@@ -7,13 +8,16 @@ import {
   getUploadScreenshotUrl,
   listComments,
   listGroups,
+  restoreGroup,
   upsertComment,
   upsertGroup,
 } from "../generated/sync-api.js";
 import { createSyncRequest, successData } from "./request.js";
 import {
+  ArchiveGroupResponse,
   ListCommentsResponse,
   ListGroupsResponse,
+  RestoreGroupResponse,
   UploadRecordingResponse,
   UploadScreenshotResponse,
 } from "../generated/sync-api.zod.js";
@@ -83,6 +87,22 @@ export const createHttpAdapter = (config: SyncHttpConfig): StorageAdapter => {
         "DELETE /groups/:groupId",
         await deleteGroup(workspace, groupId, request.options()),
       );
+    },
+
+    archiveGroup: async (groupId) => {
+      const data = successData(
+        "PUT /groups/:groupId/archive",
+        await archiveGroup(workspace, groupId, request.options()),
+      );
+      return ArchiveGroupResponse.parse(data);
+    },
+
+    restoreGroup: async (groupId) => {
+      const data = successData(
+        "DELETE /groups/:groupId/archive",
+        await restoreGroup(workspace, groupId, request.options()),
+      );
+      return RestoreGroupResponse.parse(data);
     },
 
     uploadScreenshot: async (selectionId, kind, blob) => {

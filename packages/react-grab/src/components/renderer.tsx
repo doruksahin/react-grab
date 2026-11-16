@@ -31,6 +31,8 @@ import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
 import { DevModeProvider } from "../features/dev-mode/index.js";
 import { GuideBar } from "./reproduce-steps/guide-bar.js";
+import { ToastRegion, showToast } from "./ui/toast.js";
+import { groupTitle } from "./selection/archive-labels.js";
 import {
   StepGuideProvider,
   useStepGuide,
@@ -45,6 +47,31 @@ import { Key } from "@solid-primitives/keyed";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const sidebar = useSidebarSession();
+  const groupById = (groupId: string) =>
+    (props.groups ?? []).find((group) => group.id === groupId);
+
+  // Archive with Undo, restore with a note (ADR-0030). A refusal or a failed
+  // request is reported by the sync layer; the toast says it in place.
+  const restoreGroup = (groupId: string) => {
+    const group = groupById(groupId);
+    const title = group ? groupTitle(group) : "Group";
+    props.onRestoreGroup?.(groupId).then(
+      () => showToast({ title: `${title} restored` }),
+      () => showToast({ title: `Could not restore ${title}` }),
+    );
+  };
+  const archiveGroup = (groupId: string) => {
+    const group = groupById(groupId);
+    const title = group ? groupTitle(group) : "Group";
+    props.onArchiveGroup?.(groupId).then(
+      () =>
+        showToast({
+          title: `${title} archived`,
+          action: { label: "Undo", onSelect: () => restoreGroup(groupId) },
+        }),
+      () => showToast({ title: `Could not archive ${title}` }),
+    );
+  };
   const stepGuide = useStepGuide();
   // A guide started from the sidebar closes it, so the page it points at
   // is not covered (ADR-0026).
@@ -501,6 +528,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onCopyGroup={props.onCopyGroup}
         copyableCount={props.copyableCount}
         onMoveItem={props.onMoveItem}
+        onArchiveGroup={archiveGroup}
         onOpenInSidebar={(itemId) => {
           // The menu gives way to the sidebar, where the full card is.
           props.onCommentsDismiss?.();
@@ -534,7 +562,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           <Sidebar
             focusRequest={sidebar.focusRequest()}
             groups={props.groups ?? []}
-            commentItems={props.commentItems ?? []}
+            commentItems={props.sidebarCommentItems ?? props.commentItems ?? []}
             syncStatus={props.syncStatus ?? "local"}
             onRetrySync={props.onRetrySync}
             onActiveDetailGroupChange={setActiveDetailGroupId}
@@ -546,6 +574,8 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             canRemoveItem={props.canRemoveItem}
             onMoveItem={props.onMoveItem}
             onMoveItems={props.onMoveItems}
+            onArchiveGroup={archiveGroup}
+            onRestoreGroup={restoreGroup}
             onAddGroup={props.onAddGroup}
             onRenameGroup={props.onRenameGroup}
             onDeleteGroup={props.onDeleteGroup}
@@ -561,6 +591,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
           />
         </StepGuideProvider>
       </Show>
+      <ToastRegion />
     </DevModeProvider>
   );
 };

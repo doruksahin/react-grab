@@ -40,6 +40,8 @@ import { LocationChip } from "./selection-location/location-chip.jsx";
 import { IconEyeOff } from "./icons/icon-eye-off.jsx";
 import { IconEyeFilled } from "./icons/icon-eye-filled.jsx";
 import { SelectionMenu } from "./selection/selection-menu.jsx";
+import { archiveLabel } from "./selection/archive-labels.js";
+import { archiveScopeFor } from "../features/selection-groups/business/archive-policy.js";
 import type { ClearCounts } from "../features/selection-groups/business/membership-policy.js";
 
 interface CommentsDropdownProps extends Pick<
@@ -71,6 +73,8 @@ interface CommentsDropdownProps extends Pick<
   copyableCount?: number;
   /** Opens the sidebar, on this selection's card when one is given. */
   onOpenInSidebar?: (itemId: string | null) => void;
+  /** Archives a ticketed group (ADR-0030). */
+  onArchiveGroup?: (groupId: string) => void;
 }
 
 export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
@@ -113,6 +117,18 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
   const [openMenuId, setOpenMenuId] = createSignal<string | null>(null);
 
   let copyAllFeedbackTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  // Archiving a selection archives the group that holds its ticket.
+  const archiveActionFor = (item: CommentItem) => {
+    const scope = props.onArchiveGroup
+      ? archiveScopeFor(item, props.groups ?? [], props.items)
+      : undefined;
+    if (!scope) return undefined;
+    return {
+      label: archiveLabel(scope.group, scope.selectionCount),
+      onSelect: () => props.onArchiveGroup?.(scope.group.id),
+    };
+  };
 
   // A locked selection has no destinations, so its menu has no move.
   const moveDestinationsFor = (item: CommentItem) =>
@@ -194,6 +210,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             }
           >
             <SelectionMenu
+              archive={archiveActionFor(item)}
               onOpenInSidebar={
                 props.onOpenInSidebar
                   ? () => props.onOpenInSidebar?.(item.id)
@@ -458,6 +475,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
               <SelectionTreeView
                 tree={visibleTree()}
                 renderItem={renderRow}
+                onArchiveGroup={props.onArchiveGroup}
                 onRenameGroup={props.onRenameGroup}
                 onDeleteGroup={props.onDeleteGroup}
                 onToggleGroupRevealed={props.onToggleGroupRevealed}

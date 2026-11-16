@@ -3,6 +3,7 @@ import type { CommentItem } from "../../../types.js";
 import type { SelectionGroupWithJira } from "../../selection-groups/types.js";
 import {
   type SelectionTree,
+  archivedSelectionTree,
   selectionTree,
 } from "../../selection-groups/business/selection-tree.js";
 import { narrowSelectionTree } from "../../selection-groups/business/narrow-selection-tree.js";
@@ -47,6 +48,8 @@ export interface SidebarSelections {
   /** The status chips, counted over the selections before the status filter. */
   statusOptions: Accessor<StatusFilterOptions>;
   attentionCount: Accessor<number>;
+  /** Selections in archived groups (ADR-0030) that search leaves, newest archive first. */
+  archived: Accessor<CommentItem[]>;
   statusOf: (item: CommentItem) => string;
   attentionOf: (item: CommentItem) => boolean;
 }
@@ -162,8 +165,19 @@ export const useSidebarSelections = (
     sectionsByStatus(ordered(flatten(visibleTree())), statusOf),
   );
 
+  const archived = createMemo(() => {
+    const base = baseFilter();
+    const groups = groupsById();
+    const archivedAt = (item: CommentItem) =>
+      (item.groupId ? groups.get(item.groupId)?.archivedAt : undefined) ?? 0;
+    return flatten(archivedSelectionTree(input.commentItems(), input.groups()))
+      .filter((item) => !base || base(item))
+      .sort((left, right) => archivedAt(right) - archivedAt(left));
+  });
+
   return {
     tree: visibleTree,
+    archived,
     statusSections,
     statusOptions,
     attentionCount,

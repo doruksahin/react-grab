@@ -28,6 +28,8 @@ export interface MockOverrides {
   listGroups: RouteHandler;
   upsertGroup: RouteHandler;
   deleteGroup: RouteHandler;
+  archiveGroup: RouteHandler;
+  restoreGroup: RouteHandler;
   getScreenshot: RouteHandler;
   uploadScreenshot: RouteHandler;
   uploadRecording: RouteHandler;
@@ -69,6 +71,14 @@ const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
   listGroups: { pattern: "**/workspaces/*/groups", method: "GET" },
   upsertGroup: { pattern: "**/workspaces/*/groups/*", method: "PUT" },
   deleteGroup: { pattern: "**/workspaces/*/groups/*", method: "DELETE" },
+  archiveGroup: {
+    pattern: "**/workspaces/*/groups/*/archive",
+    method: "PUT",
+  },
+  restoreGroup: {
+    pattern: "**/workspaces/*/groups/*/archive",
+    method: "DELETE",
+  },
   getScreenshot: {
     pattern: "**/workspaces/*/screenshots/*/*",
     method: "GET",
@@ -122,6 +132,8 @@ const DEFAULT_FIXTURES: Record<keyof MockOverrides, unknown> = {
   listGroups: fixtures.groups,
   upsertGroup: fixtures.itemWriteResponse,
   deleteGroup: fixtures.itemWriteResponse,
+  archiveGroup: (request: Request) => archivedGroupFor(request, true),
+  restoreGroup: (request: Request) => archivedGroupFor(request, false),
   getScreenshot: fixtures.screenshotFull,
   uploadScreenshot: fixtures.uploadScreenshotResponse,
   uploadRecording: fixtures.uploadRecordingResponse,
@@ -143,6 +155,15 @@ const DEFAULT_FIXTURES: Record<keyof MockOverrides, unknown> = {
 function extractGroupIdFromUrl(url: string): string | null {
   const match = url.match(/\/groups\/([^/]+)\/jira-/);
   return match?.[1] ?? null;
+}
+
+/** The fixture group named in an archive URL, archived or restored (ADR-0030). */
+function archivedGroupFor(request: Request, archived: boolean): unknown {
+  const groupId = request.url().match(/\/groups\/([^/]+)\/archive/)?.[1];
+  const group = fixtures.groups.find((candidate) => candidate.id === groupId);
+  if (!group) return null;
+  const { archivedAt: _archivedAt, ...active } = { archivedAt: 0, ...group };
+  return archived ? { ...active, archivedAt: Date.now() } : active;
 }
 
 function defaultJiraStatusHandler(request: Request): unknown {
@@ -273,7 +294,11 @@ export async function mockSyncServer(
           return;
         }
 
-        const data = DEFAULT_FIXTURES[key];
+        // A default may be data or, like an override, a function of the request.
+        const data = await resolveHandler(
+          DEFAULT_FIXTURES[key] as RouteHandler,
+          request,
+        );
         await fulfillRoute(route, data, Boolean(def.binary));
         return;
       }
