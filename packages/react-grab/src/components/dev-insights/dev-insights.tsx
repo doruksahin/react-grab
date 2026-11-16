@@ -1,11 +1,6 @@
 import type { Component, JSX } from "solid-js";
-import { cn } from "../../utils/cn.js";
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "../ui/collapsible.jsx";
-import { ChevronIcon } from "../ui/chevron-icon.jsx";
+import { CollapsibleCard } from "../ui/collapsible.jsx";
+import { Badge } from "../ui/badge.js";
 
 export interface DevInsightsShellProps {
   children: JSX.Element;
@@ -15,40 +10,22 @@ export interface DevInsightsShellProps {
   class?: string;
 }
 
-export const DevInsightsShell: Component<DevInsightsShellProps> = (props) => {
-  return (
-    <Collapsible
+/** The selection's technical details, a section like the card's others. */
+export const DevInsightsShell: Component<DevInsightsShellProps> = (props) => (
+  <div data-react-grab-dev-insights class={props.class}>
+    <CollapsibleCard
+      variant="panel"
       defaultOpen={props.defaultOpen ?? false}
-      class={cn("mt-1.5 w-full", props.class)}
+      trigger={
+        <>
+          <span>Dev insights</span>
+          <Badge tone="dev" size="sm">
+            DEV
+          </Badge>
+        </>
+      }
     >
-      <div
-        data-react-grab-dev-insights
-        class="bg-background border border-border rounded-lg overflow-hidden"
-      >
-        {/* Header bar — clickable trigger inside the card */}
-        <CollapsibleTrigger
-          class={cn(
-            "flex w-full items-center gap-1.5 px-2.5 py-1.5 cursor-pointer select-none transition-colors",
-            "bg-card border-b border-border",
-            "[&>svg.collapsible-chevron]:transition-transform [&>svg.collapsible-chevron]:duration-150",
-            "[&[data-expanded]>svg.collapsible-chevron]:rotate-0",
-            "[&[data-closed]>svg.collapsible-chevron]:-rotate-90",
-          )}
-        >
-          <ChevronIcon class="collapsible-chevron text-muted-foreground size-2.5" />
-          <span class="w-[5px] h-[5px] rounded-full bg-dev shadow-glow-dev-soft" />
-          <span class="text-meta font-extrabold text-dev uppercase tracking-wide">
-            Dev Insights
-          </span>
-        </CollapsibleTrigger>
-
-        {/* Body — collapses */}
-        <CollapsibleContent class="overflow-hidden">
-          <div class="px-2.5 py-2 font-mono flex flex-col gap-px">
-            {props.children}
-          </div>
-        </CollapsibleContent>
-      </div>
-    </Collapsible>
-  );
-};
+      <div class="flex flex-col gap-px font-mono">{props.children}</div>
+    </CollapsibleCard>
+  </div>
+);

@@ -31,6 +31,11 @@ import { Sidebar } from "./sidebar/index.js";
 import { JiraCreateDialog } from "./sidebar/jira-create-dialog.js";
 import { DevModeProvider } from "../features/dev-mode/index.js";
 import { GuideBar } from "./reproduce-steps/guide-bar.js";
+import {
+  StepGuideProvider,
+  useStepGuide,
+} from "../features/reproduce-steps/index.js";
+import type { StepGuideAPI } from "../features/reproduce-steps/index.js";
 import { LabelPin } from "./selection-label/label-pin.js";
 import { useLabelPins } from "../features/selection-label/hooks/use-label-pins.js";
 import { useSidebarSession } from "../features/sidebar/hooks/use-sidebar-session.js";
@@ -40,6 +45,17 @@ import { Key } from "@solid-primitives/keyed";
 
 export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
   const sidebar = useSidebarSession();
+  const stepGuide = useStepGuide();
+  // A guide started from the sidebar closes it, so the page it points at
+  // is not covered (ADR-0026).
+  const sidebarStepGuide: StepGuideAPI = {
+    ...stepGuide,
+    start: (selectionId) => {
+      sidebar.close();
+      setActiveDetailGroupId(null);
+      stepGuide.start(selectionId);
+    },
+  };
   const sync = useSyncContext();
   const refreshStatusFor = (groupId: string | undefined) =>
     groupId && sync.jira()
@@ -508,34 +524,36 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       </Show>
 
       <Show when={sidebarOpen()}>
-        <Sidebar
-          focusRequest={sidebar.focusRequest()}
-          groups={props.groups ?? []}
-          commentItems={props.commentItems ?? []}
-          syncStatus={props.syncStatus ?? "local"}
-          onRetrySync={props.onRetrySync}
-          onActiveDetailGroupChange={setActiveDetailGroupId}
-          onJiraResolved={props.onJiraResolved}
-          onTicketCreated={props.onTicketCreated}
-          onFilterVisibilityChange={props.onFilterVisibilityChange}
-          onCreateTicketForLooseItem={props.onCreateTicketForLooseItem}
-          onRemoveItem={props.onRemoveItem}
-          canRemoveItem={props.canRemoveItem}
-          onMoveItem={props.onMoveItem}
-          onMoveItems={props.onMoveItems}
-          onAddGroup={props.onAddGroup}
-          onRenameGroup={props.onRenameGroup}
-          onDeleteGroup={props.onDeleteGroup}
-          onToggleGroupRevealed={props.onToggleGroupRevealed}
-          onCopyGroup={props.onCopyGroup}
-          looseTicketDialog={props.looseTicketDialog}
-          onLooseTicketDialogClose={props.onLooseTicketDialogClose}
-          commentEditorToolbarVisible={props.commentEditorToolbarVisible}
-          onClose={() => {
-            sidebar.close();
-            setActiveDetailGroupId(null);
-          }}
-        />
+        <StepGuideProvider value={sidebarStepGuide}>
+          <Sidebar
+            focusRequest={sidebar.focusRequest()}
+            groups={props.groups ?? []}
+            commentItems={props.commentItems ?? []}
+            syncStatus={props.syncStatus ?? "local"}
+            onRetrySync={props.onRetrySync}
+            onActiveDetailGroupChange={setActiveDetailGroupId}
+            onJiraResolved={props.onJiraResolved}
+            onTicketCreated={props.onTicketCreated}
+            onFilterVisibilityChange={props.onFilterVisibilityChange}
+            onCreateTicketForLooseItem={props.onCreateTicketForLooseItem}
+            onRemoveItem={props.onRemoveItem}
+            canRemoveItem={props.canRemoveItem}
+            onMoveItem={props.onMoveItem}
+            onMoveItems={props.onMoveItems}
+            onAddGroup={props.onAddGroup}
+            onRenameGroup={props.onRenameGroup}
+            onDeleteGroup={props.onDeleteGroup}
+            onToggleGroupRevealed={props.onToggleGroupRevealed}
+            onCopyGroup={props.onCopyGroup}
+            looseTicketDialog={props.looseTicketDialog}
+            onLooseTicketDialogClose={props.onLooseTicketDialogClose}
+            commentEditorToolbarVisible={props.commentEditorToolbarVisible}
+            onClose={() => {
+              sidebar.close();
+              setActiveDetailGroupId(null);
+            }}
+          />
+        </StepGuideProvider>
       </Show>
     </DevModeProvider>
   );

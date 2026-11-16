@@ -67,6 +67,16 @@ const note = (page: Page, text: string) =>
 
 const KIND = "data-react-grab-selection-location-kind";
 
+// The way back (Open page, Guide me) lives in the sidebar card's notice; a
+// comments row only says where the selection is.
+const openCard = async (page: Page, text: string) => {
+  await page.locator("[data-react-grab-toolbar-dashboard]").click();
+  await openGroupDetail(page, "Checkout");
+  return page
+    .locator("[data-react-grab-selection-card]")
+    .filter({ hasText: text });
+};
+
 test.describe("Selection location", { tag: ["@ADR-0024"] }, () => {
   test.beforeEach(async ({ reactGrab }) => {
     await reactGrab.populate({ groups, comments: selections });
@@ -76,13 +86,13 @@ test.describe("Selection location", { tag: ["@ADR-0024"] }, () => {
     await reactGrab.clickCommentsButton();
   });
 
-  test("each row not on the page says why", async ({ page, reactGrab }) => {
-    await expect(note(page, "Made on billing")).toHaveText(
-      /Made on \/settings\/billing\s*Open page/,
+  test("each row not on the page says where", async ({ page, reactGrab }) => {
+    await expect(note(page, "Made on billing")).toHaveText("/settings/billing");
+    await expect(note(page, "Made on billing")).toHaveAttribute(
+      "title",
+      "Made on /settings/billing",
     );
-    await expect(note(page, "Made locally")).toHaveText(
-      "Made on localhost:3000, another site",
-    );
+    await expect(note(page, "Made locally")).toHaveText("localhost:3000");
     await expect(note(page, "Element removed")).toHaveText(
       "No longer on this page",
     );
@@ -91,12 +101,15 @@ test.describe("Selection location", { tag: ["@ADR-0024"] }, () => {
   });
 
   test("only a same-site page offers Open page", async ({ page }) => {
-    const openPage = page.locator("[data-react-grab-selection-location-open]");
-    await expect(openPage).toHaveCount(1);
     await expect(
-      row(page, "Made locally").locator(
-        "[data-react-grab-selection-location-open]",
-      ),
+      page.locator("[data-react-grab-selection-location-open]"),
+    ).toHaveCount(0);
+    const localCard = await openCard(page, "Made locally");
+    await expect(
+      page.locator("[data-react-grab-selection-location-open]"),
+    ).toHaveCount(1);
+    await expect(
+      localCard.locator("[data-react-grab-selection-location-open]"),
     ).toHaveCount(0);
   });
 
@@ -124,7 +137,7 @@ test.describe("Selection location", { tag: ["@ADR-0024"] }, () => {
     );
   });
 
-  test("Open page navigates without selecting the row", async ({ page }) => {
+  test("Open page navigates without selecting the card", async ({ page }) => {
     // Selecting a row whose element is missing copies it. A 204 response
     // cancels the navigation, so the page stays to be checked.
     const billingUrl = `${ORIGIN}/settings/billing?plan=pro`;
@@ -140,38 +153,34 @@ test.describe("Selection location", { tag: ["@ADR-0024"] }, () => {
         true,
       );
     });
-    const requested = page.waitForRequest(billingUrl);
-
-    await row(page, "Made on billing")
-      .locator("[data-react-grab-selection-location-open]")
-      .click();
-    await requested;
+    // Control: selecting a row does copy, so the count below means something.
     const copyCount = page.locator("html");
-    await expect(copyCount).toHaveAttribute("data-copy-count", "0");
-
-    // Control: selecting a row does copy, so the count above means something.
     await row(page, "Made locally").click();
+    await expect(copyCount).toHaveAttribute("data-copy-count", "1");
+
+    const requested = page.waitForRequest(billingUrl);
+    const card = await openCard(page, "Made on billing");
+    await card.locator("[data-react-grab-selection-location-open]").click();
+    await requested;
     await expect(copyCount).toHaveAttribute("data-copy-count", "1");
   });
 
   test("Open page goes to the page the selection was made on", async ({
     page,
   }) => {
-    await row(page, "Made on billing")
-      .locator("[data-react-grab-selection-location-open]")
-      .click();
+    const card = await openCard(page, "Made on billing");
+    await card.locator("[data-react-grab-selection-location-open]").click();
     await page.waitForURL(`${ORIGIN}/settings/billing?plan=pro`);
   });
 
   test("the sidebar card says where it was made", async ({ page }) => {
-    await page.locator("[data-react-grab-toolbar-dashboard]").click();
-    await openGroupDetail(page, "Checkout");
-    const card = page
-      .locator("[data-react-grab-selection-card]")
-      .filter({ hasText: "Made on billing" });
+    const card = await openCard(page, "Made on billing");
     await expect(
       card.locator("[data-react-grab-selection-location]"),
     ).toHaveAttribute(KIND, "other-page");
+    await expect(
+      card.locator("[data-react-grab-selection-location]"),
+    ).toContainText("On another page/settings/billing");
     await expect(
       card.getByRole("button", { name: "Open /settings/billing" }),
     ).toBeVisible();

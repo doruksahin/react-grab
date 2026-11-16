@@ -22,7 +22,7 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
     <div
       data-react-grab-selection-card
       class={cn(
-        "bg-black/25 border border-foreground/[0.08] rounded-lg px-4 py-3 cursor-pointer transition-colors",
+        "group/card bg-black/25 border border-foreground/[0.08] rounded-lg px-4 py-3 cursor-pointer transition-colors",
         "hover:border-foreground/[0.15] hover:bg-black/35",
         local.class,
       )}

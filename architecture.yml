@@ -179,6 +179,7 @@ features:
       - packages/react-grab/src/features/jira-ticket/business/site-host.ts
       - packages/react-grab/src/features/jira-ticket/issue-type-icons.ts
       - packages/react-grab/src/features/jira-ticket/priority-icons.ts
+      - packages/react-grab/src/features/sidebar/business/source-location.ts
       - packages/react-grab/src/features/sidebar/extract-file-path.ts
       - packages/react-grab/src/features/sidebar/index.ts
       - packages/react-grab/src/features/sidebar/relative-time.ts
@@ -232,6 +233,7 @@ features:
       - packages/react-grab/src/features/reproduce-steps/business/build-step.ts
       - packages/react-grab/src/features/reproduce-steps/business/describe-step.ts
       - packages/react-grab/src/features/reproduce-steps/business/find-step-target.ts
+      - packages/react-grab/src/features/reproduce-steps/business/group-repeated-steps.ts
       - packages/react-grab/src/features/reproduce-steps/business/guide-progress.ts
       - packages/react-grab/src/features/reproduce-steps/business/page-key.ts
       - packages/react-grab/src/features/reproduce-steps/business/recorder-selector.ts
@@ -259,11 +261,13 @@ features:
     status: implemented
     adrs: [ADR-0024, ADR-0023]
     files:
-      - packages/react-grab/src/components/selection-location/location-note.tsx
+      - packages/react-grab/src/components/selection-location/location-chip.tsx
+      - packages/react-grab/src/components/selection-location/location-notice.tsx
       - packages/react-grab/src/features/selection-location/business/describe-location.ts
       - packages/react-grab/src/features/selection-location/business/locate-selection.ts
       - packages/react-grab/src/features/selection-location/context.ts
       - packages/react-grab/src/features/selection-location/hooks/create-current-page-url.ts
+      - packages/react-grab/src/features/selection-location/hooks/use-location-view.ts
       - packages/react-grab/src/features/selection-location/index.ts
       - packages/react-grab/src/features/selection-location/open-page.ts
       - packages/react-grab/src/features/selection-location/types.ts
@@ -704,6 +708,11 @@ data_attrs:
         - selection-content
         - latest-comment
         - open-thread
+        - selection-card-header
+        - selection-card-menu
+        - selection-card-ticket
+        - selection-card-time
+        - selection-checkbox
 
     generation:
       description: Active generation flow inside a selection label (prompt textarea, submit, abort)
@@ -861,7 +870,7 @@ data_attrs:
     comment-editor: {scope: comments, src: 1, tests: 1}
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
-    comment-item: {scope: comments, src: 1, tests: 8}
+    comment-item: {scope: comments, src: 1, tests: 7}
     comment-reply: {scope: comments, src: 1, tests: 0}
     comment-submit: {scope: comments, src: 1, tests: 1}
     comment-thread: {scope: comments, src: 1, tests: 0}
@@ -946,7 +955,7 @@ data_attrs:
     step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 68, tests: 6}
+    ignore-events: {scope: reserved, src: 69, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
@@ -959,16 +968,21 @@ data_attrs:
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 2, tests: 17}
+    selection-card: {scope: selection, src: 2, tests: 18}
     selection-card-body: {scope: selection, src: 1, tests: 0}
+    selection-card-header: {scope: selection, src: 1, tests: 0}
+    selection-card-menu: {scope: selection, src: 1, tests: 0}
+    selection-card-ticket: {scope: selection, src: 1, tests: 0}
+    selection-card-time: {scope: selection, src: 1, tests: 0}
+    selection-checkbox: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 3, tests: 0}
     selection-label: {scope: selection, src: 1, tests: 19}
-    selection-remove: {scope: selection, src: 1, tests: 0}
+    selection-remove: {scope: selection, src: 2, tests: 0}
     unread-indicator: {scope: selection, src: 1, tests: 0}
-    selection-location: {scope: selection-location, src: 1, tests: 3}
-    selection-location-kind: {scope: selection-location, src: 1, tests: 1}
-    selection-location-open: {scope: selection-location, src: 1, tests: 5}
+    selection-location: {scope: selection-location, src: 2, tests: 4}
+    selection-location-kind: {scope: selection-location, src: 2, tests: 1}
+    selection-location-open: {scope: selection-location, src: 1, tests: 6}
     active-group-picker: {scope: sidebar, src: 1, tests: 1}
     active-group-picker-locked: {scope: sidebar, src: 1, tests: 0}
     bulk-action-bar: {scope: sidebar, src: 1, tests: 0}
@@ -997,7 +1011,7 @@ data_attrs:
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 2, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 26}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 27}
     toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 1, tests: 4}

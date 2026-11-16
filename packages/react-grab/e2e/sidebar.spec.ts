@@ -472,9 +472,9 @@ test.describe("Sidebar — Group Detail View", () => {
           "[role='region'][aria-label^='Detail:']",
         );
         if (!detail) return false;
-        return Array.from(detail.querySelectorAll("p")).some((p) =>
-          p.textContent?.includes(commentText),
-        );
+        return Array.from(
+          detail.querySelectorAll("[data-react-grab-selection-card]"),
+        ).some((card) => card.textContent?.includes(commentText));
       },
       { attrName: ATTR, commentText: TEST_COMMENT.commentText! },
     );

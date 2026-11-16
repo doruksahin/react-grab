@@ -30,6 +30,10 @@ const menuTriggerVariants = cva({
         buttonVariants({ variant: "subtle", size: "xs" }),
         "data-[expanded]:bg-accent data-[expanded]:text-foreground",
       ),
+      icon: cn(
+        buttonVariants({ variant: "subtle", size: "icon-sm" }),
+        "data-[expanded]:bg-accent data-[expanded]:text-foreground",
+      ),
     },
   },
   defaultVariants: { variant: "field" },
@@ -72,16 +76,26 @@ export const MenuContent: Component<
   );
 };
 
-export const MenuItem: Component<ComponentProps<typeof DropdownMenu.Item>> = (
-  props,
-) => {
-  const [local, rest] = splitProps(props, ["class"]);
+const menuItemVariants = cva({
+  base: "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-caption outline-none",
+  variants: {
+    tone: {
+      default:
+        "data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+      destructive: "text-destructive data-[highlighted]:bg-destructive/10",
+    },
+  },
+  defaultVariants: { tone: "default" },
+});
+
+export const MenuItem: Component<
+  ComponentProps<typeof DropdownMenu.Item> &
+    VariantProps<typeof menuItemVariants>
+> = (props) => {
+  const [local, rest] = splitProps(props, ["class", "tone"]);
   return (
     <DropdownMenu.Item
-      class={cn(
-        "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-caption outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
-        local.class,
-      )}
+      class={cn(menuItemVariants({ tone: local.tone }), local.class)}
       {...rest}
     />
   );
