@@ -4,6 +4,7 @@ import type { CommentItem } from "../../types.js";
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
 import type { SelectionTree } from "../../features/selection-groups/business/selection-tree.js";
 import { canDeleteGroup } from "../../features/selection-groups/business/membership-policy.js";
+import { canArchive } from "../../features/selection-groups/business/archive-policy.js";
 import { UngroupedSection } from "./ungrouped-section.jsx";
 import { GroupCollapsible } from "./group-collapsible.jsx";
 
@@ -14,6 +15,8 @@ export interface SelectionTreeViewProps<Group extends SelectionGroup> {
   onDeleteGroup?: (groupId: string) => void;
   onToggleGroupRevealed?: (groupId: string) => void;
   onCopyGroup?: (groupId: string) => void;
+  /** Archives a ticketed group (ADR-0030); offered only on one that can be. */
+  onArchiveGroup?: (groupId: string) => void;
   /** Extra header content per group (the sidebar's ticket status). */
   groupHeaderExtra?: (group: Group) => JSX.Element;
   /** A short summary of Ungrouped's selections (the sidebar's statuses).
@@ -56,6 +59,11 @@ export const SelectionTreeView = <Group extends SelectionGroup>(
           }
           onToggleRevealed={(groupId) => props.onToggleGroupRevealed?.(groupId)}
           onCopy={(groupId) => props.onCopyGroup?.(groupId)}
+          onArchive={
+            props.onArchiveGroup && canArchive(section().group)
+              ? (groupId) => props.onArchiveGroup?.(groupId)
+              : undefined
+          }
           headerExtra={props.groupHeaderExtra?.(section().group)}
           renderItem={props.renderItem}
           revealItemId={props.revealItemId}

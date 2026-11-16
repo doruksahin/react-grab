@@ -299,3 +299,6 @@ export const COMMENTS_LOADED_SYNC_STATUSES: ReadonlySet<string> = new Set([
 export const SELECTION_ROW_TEXT_INSET_PX = 54;
 // The same without the checkbox column: trigger pad (12) + dot (6) + gap (10).
 export const SELECTION_ROW_TEXT_INSET_NO_LEADING_PX = 28;
+
+// How long a toast stays before it closes by itself (e.g. "Archived · Undo").
+export const TOAST_DURATION_MS = 6000;

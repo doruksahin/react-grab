@@ -6,6 +6,7 @@ import { D1JiraAccountRepository } from "../repositories/jira-accounts.repo.js";
 import { D1WorkspaceRepository } from "../repositories/workspaces.repo.js";
 import { R2ScreenshotStore } from "../repositories/r2.store.js";
 import { TicketLockService } from "../services/ticket-lock.service.js";
+import { GroupArchiveService } from "../services/group-archive.service.js";
 import { CredentialVault } from "../services/credential-vault.js";
 import {
   JiraClientFactory,
@@ -27,6 +28,7 @@ export const injectRepos = createMiddleware<AppEnv>(async (c, next) => {
   const screenshots = new R2ScreenshotStore(c.env.BUCKET);
   c.set("repo", repo);
   c.set("ticketLock", new TicketLockService(repo));
+  c.set("groupArchive", new GroupArchiveService({ repo }));
   c.set("screenshots", screenshots);
 
   // Composition root for Jira (ADR-0027). Nothing here reads a credential:

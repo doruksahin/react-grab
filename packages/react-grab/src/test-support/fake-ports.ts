@@ -58,6 +58,23 @@ export const createFakeStorage = (
     deleteGroup: async (groupId) => {
       groups.delete(groupId);
     },
+    archiveGroup: async (groupId) => {
+      const group = groups.get(groupId);
+      if (!group) return notFound(`group ${groupId}`);
+      if (!group.jiraTicketId) {
+        throw new Error("Only a group with a Jira ticket is archived");
+      }
+      const archived = { ...group, archivedAt: group.archivedAt ?? Date.now() };
+      groups.set(groupId, archived);
+      return copy(archived);
+    },
+    restoreGroup: async (groupId) => {
+      const group = groups.get(groupId);
+      if (!group) return notFound(`group ${groupId}`);
+      const { archivedAt: _archivedAt, ...active } = group;
+      groups.set(groupId, active);
+      return copy(active);
+    },
     uploadScreenshot: async (selectionId, kind, blob) => {
       const key = screenshotKey(selectionId, kind);
       screenshots.set(key, blob);

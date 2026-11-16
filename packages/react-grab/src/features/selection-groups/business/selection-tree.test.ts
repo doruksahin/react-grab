@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CommentItem } from "../../../types.js";
 import type { SelectionGroup } from "../types.js";
-import { selectionTree } from "./selection-tree.js";
+import { archivedSelectionTree, selectionTree } from "./selection-tree.js";
 
 const group = (
   id: string,
@@ -52,5 +52,43 @@ describe("selectionTree", () => {
       ["checkout", ["in-checkout"]],
       ["empty", []],
     ]);
+  });
+});
+
+describe("archived selections (ADR-0030)", () => {
+  const groups = [
+    group("released", { jiraTicketId: "UI-2", archivedAt: 5 }),
+    group("synthetic-1", {
+      synthetic: true,
+      jiraTicketId: "UI-1",
+      archivedAt: 6,
+    }),
+    group("checkout"),
+  ];
+  const items = [
+    item("in-released", "released"),
+    item("ticketed-loose", "synthetic-1"),
+    item("in-checkout", "checkout"),
+  ];
+
+  it("leaves archived groups and their selections out of the tree", () => {
+    const tree = selectionTree(items, groups);
+    expect(tree.ungrouped).toEqual([]);
+    expect(tree.groups.map((section) => section.group.id)).toEqual([
+      "checkout",
+    ]);
+  });
+
+  it("draws them in the archived tree the same way", () => {
+    const tree = archivedSelectionTree(items, groups);
+    expect(tree.ungrouped.map((selection) => selection.id)).toEqual([
+      "ticketed-loose",
+    ]);
+    expect(
+      tree.groups.map((section) => [
+        section.group.id,
+        section.items.map((selection) => selection.id),
+      ]),
+    ).toEqual([["released", ["in-released"]]]);
   });
 });

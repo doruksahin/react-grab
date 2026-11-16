@@ -43,6 +43,10 @@ export interface StorageAdapter {
   /** Write one group's client-owned fields; the server owns its ticket fields. */
   upsertGroup: (group: SelectionGroup) => Promise<void>;
   deleteGroup: (groupId: string) => Promise<void>;
+  /** Archive a group with a ticket; returns it with the server's archive time (ADR-0030). */
+  archiveGroup: (groupId: string) => Promise<SelectionGroup>;
+  /** Restore an archived group; returns it without an archive time. */
+  restoreGroup: (groupId: string) => Promise<SelectionGroup>;
   /** Upload a screenshot. Returns its storage key. */
   uploadScreenshot: (
     selectionId: string,

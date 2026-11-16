@@ -31,6 +31,8 @@ export const withErrorReporting = (
     loadGroups: () => reported(() => storage.loadGroups()),
     upsertGroup: (group) => reported(() => storage.upsertGroup(group)),
     deleteGroup: (groupId) => reported(() => storage.deleteGroup(groupId)),
+    archiveGroup: (groupId) => reported(() => storage.archiveGroup(groupId)),
+    restoreGroup: (groupId) => reported(() => storage.restoreGroup(groupId)),
     uploadScreenshot: (selectionId, kind, blob) =>
       reported(() => storage.uploadScreenshot(selectionId, kind, blob)),
     // A screenshot that fails to show leaves an empty slot; it is not a sync failure.

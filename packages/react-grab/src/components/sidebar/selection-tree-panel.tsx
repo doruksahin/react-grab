@@ -32,6 +32,8 @@ import { ActiveGroupPicker } from "../selection-groups/active-group-picker.js";
 import { ReproducePanel } from "../reproduce-steps/reproduce-panel.jsx";
 import { LocationNotice } from "../selection-location/location-notice.jsx";
 import { SelectionMenu } from "../selection/selection-menu.jsx";
+import { archiveLabel, restoreLabel } from "../selection/archive-labels.js";
+import { archiveScopeFor } from "../../features/selection-groups/business/archive-policy.js";
 import { SelectionTreeView } from "../selection-groups/selection-tree-view.jsx";
 import { SelectionSection } from "../selection-groups/ungrouped-section.jsx";
 import { GroupTicketSummary } from "./group-ticket-summary.jsx";
@@ -44,6 +46,12 @@ interface SelectionTreePanelProps {
   statusSections: StatusSection<CommentItem>[];
   grouping: SelectionGrouping;
   statusOf: (item: CommentItem) => string;
+  /** Selections in archived groups, shown in a closed section at the end (ADR-0030). */
+  archived: CommentItem[];
+  /** Every selection, to say how many go with a group when it is archived. */
+  commentItems: CommentItem[];
+  onArchiveGroup?: (groupId: string) => void;
+  onRestoreGroup?: (groupId: string) => void;
   groups: SelectionGroupWithJira[];
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
@@ -131,7 +139,7 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
     </span>
   );
 
-  const renderRow = (item: CommentItem) => {
+  const renderRow = (item: CommentItem, archived = false) => {
     const group = () =>
       item.groupId ? groupMap().get(item.groupId) : undefined;
     const checkable = () =>
@@ -140,6 +148,26 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
     const isBulkSelecting = () => (props.selectedIds?.size ?? 0) > 0;
     const destinations = () => moveDestinations(item, props.groups);
     const canRemove = () => Boolean(props.canRemoveItem?.(item.id));
+    const groupSize = (groupId: string) =>
+      props.commentItems.filter((other) => other.groupId === groupId).length;
+    const archiveAction = () => {
+      const scope = props.onArchiveGroup
+        ? archiveScopeFor(item, props.groups, props.commentItems)
+        : undefined;
+      if (!scope) return undefined;
+      return {
+        label: archiveLabel(scope.group, scope.selectionCount),
+        onSelect: () => props.onArchiveGroup?.(scope.group.id),
+      };
+    };
+    const restoreAction = () => {
+      const currentGroup = group();
+      if (!currentGroup || !props.onRestoreGroup) return undefined;
+      return {
+        label: restoreLabel(currentGroup, groupSize(currentGroup.id)),
+        onSelect: () => props.onRestoreGroup?.(currentGroup.id),
+      };
+    };
 
     const boundComments = () => {
       const currentGroup = group();
@@ -182,9 +210,18 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
           )
         }
         actions={
-          <Show when={destinations().length > 0 || canRemove()}>
+          <Show
+            when={
+              archived ||
+              destinations().length > 0 ||
+              canRemove() ||
+              Boolean(archiveAction())
+            }
+          >
             <SelectionMenu
-              destinations={destinations()}
+              archive={archived ? undefined : archiveAction()}
+              restore={archived ? restoreAction() : undefined}
+              destinations={archived ? [] : destinations()}
               onMove={(groupId) => props.onMoveItem?.(item.id, groupId)}
               onRemove={
                 canRemove() ? () => props.onRemoveItem?.(item.id) : undefined
@@ -245,9 +282,10 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
   };
 
   const isEmpty = () =>
-    props.grouping === "status"
+    props.archived.length === 0 &&
+    (props.grouping === "status"
       ? props.statusSections.length === 0
-      : props.tree.ungrouped.length === 0 && props.tree.groups.length === 0;
+      : props.tree.ungrouped.length === 0 && props.tree.groups.length === 0);
 
   return (
     <div
@@ -295,6 +333,18 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
             </div>
           )}
         </Key>
+      </Show>
+      <Show when={props.archived.length > 0}>
+        <div data-react-grab-archived-section>
+          <SelectionSection
+            title="Archived"
+            items={props.archived}
+            isFirst={false}
+            defaultOpen={false}
+            revealItemId={props.focusRequest?.itemId}
+            renderItem={(item) => renderRow(item, true)}
+          />
+        </div>
       </Show>
     </div>
   );

@@ -719,6 +719,10 @@ data_attrs:
         - open-thread
         - selection-card-header
         - selection-menu
+        - selection-archive
+        - selection-restore
+        - archived-section
+        - group-archive
         - open-in-sidebar
         - move-destination
         - selection-card-facts
@@ -814,6 +818,9 @@ data_attrs:
         - comments-clear
         - comments-copy-all
         - comments-open-sidebar
+        - toast
+        - toast-list
+        - toast-action
         - inline-reply
         # Mentions
         - mention
@@ -885,7 +892,7 @@ data_attrs:
     comment-editor: {scope: comments, src: 1, tests: 1}
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
-    comment-item: {scope: comments, src: 1, tests: 8}
+    comment-item: {scope: comments, src: 1, tests: 9}
     comment-reply: {scope: comments, src: 1, tests: 0}
     comment-submit: {scope: comments, src: 1, tests: 1}
     comment-thread: {scope: comments, src: 1, tests: 0}
@@ -893,7 +900,7 @@ data_attrs:
     comments-clear: {scope: comments, src: 1, tests: 3}
     comments-copy-all: {scope: comments, src: 1, tests: 3}
     comments-count: {scope: comments, src: 1, tests: 0}
-    comments-dropdown: {scope: comments, src: 3, tests: 10}
+    comments-dropdown: {scope: comments, src: 3, tests: 11}
     comments-error: {scope: comments, src: 1, tests: 1}
     comments-list: {scope: comments, src: 1, tests: 1}
     comments-open-sidebar: {scope: comments, src: 1, tests: 1}
@@ -906,6 +913,9 @@ data_attrs:
     mention-id: {scope: comments, src: 1, tests: 0}
     mention-option: {scope: comments, src: 1, tests: 1}
     mention-picker: {scope: comments, src: 1, tests: 0}
+    toast: {scope: comments, src: 1, tests: 1}
+    toast-action: {scope: comments, src: 1, tests: 1}
+    toast-list: {scope: comments, src: 1, tests: 0}
     completion: {scope: completion, src: 1, tests: 0}
     completion-dismiss: {scope: completion, src: 1, tests: 1}
     completion-more-options: {scope: completion, src: 1, tests: 0}
@@ -972,14 +982,16 @@ data_attrs:
     step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 73, tests: 6}
+    ignore-events: {scope: reserved, src: 75, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
+    archived-section: {scope: selection, src: 1, tests: 1}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
     arrow-nav-item: {scope: selection, src: 1, tests: 6}
     collapse-label: {scope: selection, src: 1, tests: 2}
     collapsed-dot: {scope: selection, src: 1, tests: 9}
     collapsed-dot-preview: {scope: selection, src: 1, tests: 0}
     dev-insights: {scope: selection, src: 1, tests: 0}
+    group-archive: {scope: selection, src: 1, tests: 0}
     jira-open: {scope: selection, src: 1, tests: 0}
     latest-comment: {scope: selection, src: 1, tests: 1}
     move-destination: {scope: selection, src: 1, tests: 2}
@@ -988,7 +1000,8 @@ data_attrs:
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
-    selection-card: {scope: selection, src: 3, tests: 13}
+    selection-archive: {scope: selection, src: 1, tests: 0}
+    selection-card: {scope: selection, src: 3, tests: 14}
     selection-card-body: {scope: selection, src: 1, tests: 2}
     selection-card-facts: {scope: selection, src: 1, tests: 0}
     selection-card-header: {scope: selection, src: 1, tests: 0}
@@ -999,6 +1012,7 @@ data_attrs:
     selection-label: {scope: selection, src: 1, tests: 19}
     selection-menu: {scope: selection, src: 2, tests: 0}
     selection-remove: {scope: selection, src: 2, tests: 0}
+    selection-restore: {scope: selection, src: 1, tests: 0}
     selection-row: {scope: selection, src: 1, tests: 2}
     unread-indicator: {scope: selection, src: 1, tests: 0}
     selection-location: {scope: selection-location, src: 2, tests: 4}
@@ -1012,7 +1026,7 @@ data_attrs:
     due-date-filter: {scope: sidebar, src: 1, tests: 2}
     empty-state: {scope: sidebar, src: 1, tests: 0}
     filter-chips: {scope: sidebar, src: 1, tests: 0}
-    group-collapsible: {scope: sidebar, src: 1, tests: 11}
+    group-collapsible: {scope: sidebar, src: 1, tests: 12}
     group-detail: {scope: sidebar, src: 1, tests: 0}
     group-list: {scope: sidebar, src: 1, tests: 3}
     group-picker-flyout: {scope: sidebar, src: 1, tests: 1}
@@ -1037,7 +1051,7 @@ data_attrs:
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 2, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 26}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 27}
     toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 1, tests: 4}

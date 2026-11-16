@@ -18,17 +18,23 @@ import type {
 } from 'msw';
 
 import type {
+  ArchiveGroup200,
   DeleteGroup200,
   ListGroups200Item,
+  RestoreGroup200,
   UpsertGroup200
 } from '../../model';
 
 
-export const getListGroupsResponseMock = (): ListGroups200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.number.float({fractionDigits: 2}), revealed: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), status: faker.helpers.arrayElement([faker.helpers.arrayElement(['open','ticketed','resolved'] as const), undefined]), jiraTicketId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), synthetic: faker.helpers.arrayElement([faker.datatype.boolean(), undefined])})))
+export const getListGroupsResponseMock = (): ListGroups200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.number.float({fractionDigits: 2}), revealed: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), status: faker.helpers.arrayElement([faker.helpers.arrayElement(['open','ticketed','resolved'] as const), undefined]), jiraTicketId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), synthetic: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), archivedAt: faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), undefined])})))
 
 export const getUpsertGroupResponseMock = (overrideResponse: Partial<Extract<UpsertGroup200, object>> = {}): UpsertGroup200 => ({status: faker.helpers.arrayElement(['ok'] as const), ...overrideResponse})
 
 export const getDeleteGroupResponseMock = (overrideResponse: Partial<Extract<DeleteGroup200, object>> = {}): DeleteGroup200 => ({status: faker.helpers.arrayElement(['ok'] as const), ...overrideResponse})
+
+export const getArchiveGroupResponseMock = (overrideResponse: Partial<Extract<ArchiveGroup200, object>> = {}): ArchiveGroup200 => ({id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.number.float({fractionDigits: 2}), revealed: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), status: faker.helpers.arrayElement([faker.helpers.arrayElement(['open','ticketed','resolved'] as const), undefined]), jiraTicketId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), synthetic: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), archivedAt: faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), undefined]), ...overrideResponse})
+
+export const getRestoreGroupResponseMock = (overrideResponse: Partial<Extract<RestoreGroup200, object>> = {}): RestoreGroup200 => ({id: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 10, max: 20}}), createdAt: faker.number.float({fractionDigits: 2}), revealed: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), status: faker.helpers.arrayElement([faker.helpers.arrayElement(['open','ticketed','resolved'] as const), undefined]), jiraTicketId: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), synthetic: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), archivedAt: faker.helpers.arrayElement([faker.number.float({fractionDigits: 2}), undefined]), ...overrideResponse})
 
 
 export const getListGroupsMockHandler = (overrideResponse?: ListGroups200Item[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<ListGroups200Item[]> | ListGroups200Item[]), options?: RequestHandlerOptions) => {
@@ -66,8 +72,34 @@ export const getDeleteGroupMockHandler = (overrideResponse?: DeleteGroup200 | ((
       })
   }, options)
 }
+
+export const getArchiveGroupMockHandler = (overrideResponse?: ArchiveGroup200 | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<ArchiveGroup200> | ArchiveGroup200), options?: RequestHandlerOptions) => {
+  return http.put('*/workspaces/:id/groups/:groupId/archive', async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getArchiveGroupResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
+
+export const getRestoreGroupMockHandler = (overrideResponse?: RestoreGroup200 | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<RestoreGroup200> | RestoreGroup200), options?: RequestHandlerOptions) => {
+  return http.delete('*/workspaces/:id/groups/:groupId/archive', async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getRestoreGroupResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
 export const getGroupsMock = () => [
   getListGroupsMockHandler(),
   getUpsertGroupMockHandler(),
-  getDeleteGroupMockHandler()
+  getDeleteGroupMockHandler(),
+  getArchiveGroupMockHandler(),
+  getRestoreGroupMockHandler()
 ]

@@ -16,6 +16,7 @@ import type { SidebarFocusRequest } from "../../features/sidebar/hooks/use-sideb
 import { SidebarHeader } from "./sidebar-header.js";
 import { EmptyState } from "./empty-state.js";
 import { StatusFilter } from "./status-filter.js";
+import { isArchived } from "../../features/selection-groups/business/archive-policy.js";
 import {
   ListViewControls,
   type SelectionGrouping,
@@ -68,6 +69,8 @@ export interface SidebarProps {
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   onRemoveItem?: (itemId: string) => void;
   canRemoveItem?: (itemId: string) => boolean;
+  onArchiveGroup?: (groupId: string) => void;
+  onRestoreGroup?: (groupId: string) => void;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
   onMoveItems?: (itemIds: Set<string>, groupId: string) => void;
   onAddGroup?: (name: string) => void;
@@ -111,8 +114,12 @@ export const Sidebar: Component<SidebarProps> = (props) => {
   // Synthetic groups are invisible in user-facing surfaces (filter chips,
   // stats bar, empty-state guard). Their selections show as Ungrouped in
   // the selection tree (ADR-0028).
+  // Archived groups stay out of the filters (ADR-0030).
   const userFacingGroups = createMemo(() =>
-    presentedGroups(props.groups, props.commentItems),
+    presentedGroups(
+      props.groups.filter((group) => !isArchived(group)),
+      props.commentItems,
+    ),
   );
 
   // A focus request shows the tree; the tree scrolls to the card.
@@ -361,6 +368,10 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   statusSections={sidebarSelections.statusSections()}
                   grouping={grouping()}
                   statusOf={sidebarSelections.statusOf}
+                  archived={sidebarSelections.archived()}
+                  commentItems={props.commentItems ?? []}
+                  onArchiveGroup={props.onArchiveGroup}
+                  onRestoreGroup={props.onRestoreGroup}
                   groups={props.groups ?? []}
                   selectedIds={selectedIds()}
                   onToggleSelect={toggleSelect}

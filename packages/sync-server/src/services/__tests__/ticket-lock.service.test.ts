@@ -35,6 +35,7 @@ const fakeRepo = (comments: Comment[], groups: Group[]) => {
     listGroups: async () => state.groups,
     findGroup: async (_, id) => state.groups.find((g) => g.id === id),
     upsertGroup: async () => {},
+    setGroupArchived: async () => {},
     deleteGroup: async (_, id) => {
       state.groups = state.groups.filter((g) => g.id !== id);
     },

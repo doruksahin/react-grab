@@ -1,5 +1,6 @@
 import { batch, createSignal, untrack } from "solid-js";
 import { unwrap } from "solid-js/store";
+import { isArchived } from "../selection-groups/business/archive-policy.js";
 import { createSyncStore } from "./store/sync-store.js";
 import { withLocalRevealedState } from "./store/with-local-revealed-state.js";
 import { withErrorReporting } from "./store/with-error-reporting.js";
@@ -171,7 +172,7 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
   const refetchGroups = async () => {
     const storage = adapter();
     if (!storage) return;
-    storeHandle.setGroups(await storage.loadGroups());
+    storeHandle.setGroups(withPendingArchives(await storage.loadGroups()));
   };
 
   const refetchComments = async () => {
@@ -206,6 +207,68 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     if (isWriteRefused(error)) void reloadFromServer();
   };
 
+  // --- Archive (ADR-0030) ---
+  // Shown at once, confirmed by the server, which owns the time; undone if
+  // the server refuses or cannot be reached. A group list loaded while a
+  // request is in flight keeps the pending value, and only the latest
+  // request for a group may confirm or undo it. Without a connection it is
+  // refused, since a later sync would not send it; local mode keeps the
+  // time in the local list.
+  const pendingArchives = new Map<
+    string,
+    { version: number; archivedAt: number | undefined }
+  >();
+  let archiveVersion = 0;
+
+  const withPendingArchives = <Group extends { id: string }>(
+    groups: Group[],
+  ): Group[] =>
+    pendingArchives.size === 0
+      ? groups
+      : groups.map((group) => {
+          const pending = pendingArchives.get(group.id);
+          return pending ? { ...group, archivedAt: pending.archivedAt } : group;
+        });
+
+  const setArchived = async (groupId: string, archive: boolean) => {
+    const previous = storeHandle.store.groups.find(
+      (group) => group.id === groupId,
+    )?.archivedAt;
+    const archivedAt = archive ? Date.now() : undefined;
+    if (storeHandle.store.status === "local") {
+      persistGroupsNow(
+        storeHandle.store.groups.map((group) =>
+          group.id === groupId ? { ...group, archivedAt } : group,
+        ),
+      );
+      return;
+    }
+    const storage = adapter();
+    if (!storage) {
+      throw new Error("Not connected to the sync server; try again later");
+    }
+    const version = ++archiveVersion;
+    const isLatest = () => pendingArchives.get(groupId)?.version === version;
+    pendingArchives.set(groupId, { version, archivedAt });
+    storeHandle.updateGroup(groupId, { archivedAt });
+    try {
+      const saved = archive
+        ? await storage.archiveGroup(groupId)
+        : await storage.restoreGroup(groupId);
+      if (!isLatest()) return;
+      pendingArchives.delete(groupId);
+      storeHandle.updateGroup(groupId, { archivedAt: saved.archivedAt });
+      // A restored ticket was not polled while archived.
+      if (!archive) void refreshJiraStatus(groupId);
+    } catch (error) {
+      if (isLatest()) {
+        pendingArchives.delete(groupId);
+        storeHandle.updateGroup(groupId, { archivedAt: previous });
+      }
+      throw error;
+    }
+  };
+
   // --- JIRA polling ---
   const refreshJiraStatus = async (groupId: string) => {
     const jiraPort = jira();
@@ -220,8 +283,11 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     }
   };
 
+  // An archived ticket is not polled (ADR-0030).
   const pollJira = async () => {
-    const ticketed = storeHandle.store.groups.filter((g) => g.jiraTicketId);
+    const ticketed = storeHandle.store.groups.filter(
+      (g) => g.jiraTicketId && !isArchived(g),
+    );
     await Promise.all(ticketed.map((g) => refreshJiraStatus(g.id)));
   };
 
@@ -318,7 +384,7 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
       setAdapter(storage);
       offlineBaseline = null;
       batch(() => {
-        storeHandle.setGroups(next.groups);
+        storeHandle.setGroups(withPendingArchives(next.groups));
         storeHandle.setComments(next.comments);
         storeHandle.setStatus("synced");
       });
@@ -393,6 +459,10 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     refetchGroups,
     refetchComments,
     refetchJira: pollJira,
+    /** Takes a ticketed group off the board; rejects if the server refuses. */
+    archiveGroup: (groupId: string) => setArchived(groupId, true),
+    /** Puts an archived group back on the board. */
+    restoreGroup: (groupId: string) => setArchived(groupId, false),
     /** Fetches one group's Jira status now, e.g. after posting a comment. */
     refreshJiraStatus,
 

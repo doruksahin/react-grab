@@ -2,6 +2,7 @@
 
 import type { SyncRepository, ScreenshotStore } from "./repositories/types.js";
 import type { TicketLockService } from "./services/ticket-lock.service.js";
+import type { GroupArchiveService } from "./services/group-archive.service.js";
 import type { JiraClientFactory } from "./services/jira-client-factory.js";
 import type { JiraTicketService } from "./services/jira-ticket.service.js";
 import type { JiraAccountService } from "./services/jira-account.service.js";
@@ -22,6 +23,7 @@ export type Variables = {
   repo: SyncRepository;
   screenshots: ScreenshotStore;
   ticketLock: TicketLockService;
+  groupArchive: GroupArchiveService;
   jiraClients: JiraClientFactory;
   jiraTickets: JiraTicketService;
   jiraAccounts: JiraAccountService;

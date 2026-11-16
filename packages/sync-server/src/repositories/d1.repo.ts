@@ -152,6 +152,22 @@ export class D1SyncRepository implements SyncRepository {
       );
   }
 
+  async setGroupArchived(
+    workspaceId: string,
+    groupId: string,
+    archivedAt: number | null,
+  ): Promise<void> {
+    await this.db
+      .update(schema.groups)
+      .set({ archivedAt })
+      .where(
+        and(
+          eq(schema.groups.id, groupId),
+          eq(schema.groups.workspaceId, workspaceId),
+        ),
+      );
+  }
+
   async updateGroupJira(
     workspaceId: string,
     groupId: string,
@@ -225,5 +241,6 @@ function rowToGroup(row: typeof schema.groups.$inferSelect): Group {
     status: rest.status ?? undefined,
     jiraTicketId: rest.jiraTicketId ?? undefined,
     synthetic: rest.synthetic ?? undefined,
+    archivedAt: rest.archivedAt ?? undefined,
   };
 }

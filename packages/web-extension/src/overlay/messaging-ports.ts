@@ -13,6 +13,10 @@ export const createMessagingStorageAdapter = (): StorageAdapter => ({
     pageRequestMessenger.sendMessage("storage.upsertGroup", args),
   deleteGroup: (...args) =>
     pageRequestMessenger.sendMessage("storage.deleteGroup", args),
+  archiveGroup: (...args) =>
+    pageRequestMessenger.sendMessage("storage.archiveGroup", args),
+  restoreGroup: (...args) =>
+    pageRequestMessenger.sendMessage("storage.restoreGroup", args),
   uploadScreenshot: (...args) =>
     pageRequestMessenger.sendMessage("storage.uploadScreenshot", args),
   loadScreenshot: (...args) =>

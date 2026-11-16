@@ -16,4 +16,6 @@ export type ListGroups200Item = {
   status?: ListGroups200ItemStatus;
   jiraTicketId?: string;
   synthetic?: boolean;
+  /** When the group was archived (epoch ms); absent while it is active (ADR-0030) */
+  archivedAt?: number;
 };

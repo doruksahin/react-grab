@@ -86,7 +86,7 @@ Every route under `/workspaces/*` requires `Authorization: Bearer <SYNC_API_TOKE
 
 ## Writes are per item
 
-Comments and groups are written one item at a time — `PUT`/`DELETE` on `/workspaces/{id}/comments/{commentId}` and `/workspaces/{id}/groups/{groupId}`. There is no route that replaces a whole workspace's list, and none should be added: that is what let a stale client erase other people's comments and the server's ticket links (ADR-0019). A group's `status` and `jiraTicketId` are server-owned — set only by `updateGroupJira` — and are absent from the group write schema.
+Comments and groups are written one item at a time — `PUT`/`DELETE` on `/workspaces/{id}/comments/{commentId}` and `/workspaces/{id}/groups/{groupId}`. There is no route that replaces a whole workspace's list, and none should be added: that is what let a stale client erase other people's comments and the server's ticket links (ADR-0019). A group's `status` and `jiraTicketId` are server-owned — set only by `updateGroupJira` — and are absent from the group write schema. So is `archivedAt`: only `PUT`/`DELETE /workspaces/{id}/groups/{groupId}/archive` set and clear it, through `services/group-archive.service.ts`, which archives only a group with a ticket (ADR-0030).
 
 ## Tests
 

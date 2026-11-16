@@ -640,6 +640,12 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onContextMenuDismiss?: () => void;
   onContextMenuHide?: () => void;
   commentItems?: CommentItem[];
+  /** Every selection, archived ones included, for the sidebar (ADR-0030). */
+  sidebarCommentItems?: CommentItem[];
+  /** Archives a ticketed group; rejects when the server refuses. */
+  onArchiveGroup?: (groupId: string) => Promise<void>;
+  /** Restores an archived group. */
+  onRestoreGroup?: (groupId: string) => Promise<void>;
   commentsDisconnectedItemIds?: Set<string>;
   commentItemCount?: number;
   clockFlashTrigger?: number;
