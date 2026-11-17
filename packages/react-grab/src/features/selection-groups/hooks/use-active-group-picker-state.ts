@@ -6,7 +6,7 @@
  * groupId, it exposes two memos:
  *
  *   - `isLocked`: the picker should render a static, non-interactive
- *     trigger (the selection lives in a ticketed group).
+ *     trigger (the selection's group has a ticket or is archived).
  *   - `assignableGroups`: the filtered list the flyout should render.
  *     Already excludes ticketed and synthetic groups.
  *
@@ -16,8 +16,10 @@
 import { createMemo } from "solid-js";
 import type { Accessor } from "solid-js";
 import type { SelectionGroup } from "../types.js";
-import { isSelectionLocked } from "../business/ticket-lock.js";
-import { assignableGroupsFor } from "../business/membership-policy.js";
+import {
+  assignableGroupsFor,
+  canMoveSelection,
+} from "../business/membership-policy.js";
 
 interface UseActiveGroupPickerStateDeps {
   groups: Accessor<SelectionGroup[]>;
@@ -36,8 +38,8 @@ export const useActiveGroupPickerState = (
     groupId: deps.activeGroupId() ?? null,
   }));
 
-  const isLocked = createMemo(() =>
-    isSelectionLocked(currentItem(), deps.groups()),
+  const isLocked = createMemo(
+    () => !canMoveSelection(currentItem(), deps.groups()),
   );
 
   const assignableGroups = createMemo(() =>

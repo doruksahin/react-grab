@@ -1,10 +1,12 @@
 /**
- * Archiving (ADR-0030): a group with a Jira ticket, real or synthetic, can
- * be taken off the board and restored. It keeps its selections and its
- * ticket; views leave it out, and the sidebar lists it under "Archived".
- * A group without a ticket is deleted instead.
+ * Archiving (ADR-0030): the step before delete. A selection always has a
+ * group (ADR-0008), so archiving is always a group's: a real group as a
+ * whole, a loose selection through its own synthetic group. Archived groups
+ * keep everything; views leave them out, and the sidebar lists them under
+ * "Archived". Delete keeps its own rule: nothing with a ticket.
  */
 import type { SelectionGroup } from "../types.js";
+import { isSynthetic } from "./synthetic-group.js";
 import { isTicketed } from "./ticket-lock.js";
 
 interface HasMembership {
@@ -16,52 +18,76 @@ type ArchiveFields = Pick<SelectionGroup, "archivedAt">;
 export const isArchived = (group: ArchiveFields | undefined): boolean =>
   group?.archivedAt !== undefined && group.archivedAt !== null;
 
-/** Only a ticketed group that is still on the board can be archived. */
+/** Any group still on the board can be archived. */
 export const canArchive = (group: SelectionGroup): boolean =>
-  isTicketed(group) && !isArchived(group);
+  !isArchived(group);
 
-/**
- * The group that archiving a selection archives: its own group, when that
- * group has the ticket. A selection without a ticket has none.
- */
-export const archiveTargetFor = <Group extends SelectionGroup>(
+const groupOf = <Group extends SelectionGroup>(
   item: HasMembership,
   groups: Group[],
-): Group | undefined => {
-  if (item.groupId === null) return undefined;
-  const group = groups.find((candidate) => candidate.id === item.groupId);
-  return group && isTicketed(group) ? group : undefined;
-};
+): Group | undefined =>
+  item.groupId === null
+    ? undefined
+    : groups.find((candidate) => candidate.id === item.groupId);
+
+const memberCount = (items: HasMembership[], groupId: string): number =>
+  items.filter((item) => item.groupId === groupId).length;
 
 /** Whether a selection sits in an archived group. */
 export const isSelectionArchived = (
   item: HasMembership,
   groups: SelectionGroup[],
-): boolean =>
-  item.groupId !== null &&
-  isArchived(groups.find((group) => group.id === item.groupId));
+): boolean => isArchived(groupOf(item, groups));
 
-/** The selections and groups still on the board. */
+/** The selections still on the board. */
 export const activeSelections = <Item extends HasMembership>(
   items: Item[],
   groups: SelectionGroup[],
 ): Item[] => items.filter((item) => !isSelectionArchived(item, groups));
 
-/** What archiving a selection would archive: its ticketed group and how many selections go with it. */
-export interface ArchiveScope<Group extends SelectionGroup> {
+/** A group and how many selections go with it. */
+export interface GroupScope<Group extends SelectionGroup> {
   group: Group;
   selectionCount: number;
 }
 
+/** What archiving a selection archives: its group, as a whole. */
 export const archiveScopeFor = <Group extends SelectionGroup>(
   item: HasMembership,
   groups: Group[],
   items: HasMembership[],
-): ArchiveScope<Group> | undefined => {
-  const group = archiveTargetFor(item, groups);
+): GroupScope<Group> | undefined => {
+  const group = groupOf(item, groups);
   if (!group || !canArchive(group)) return undefined;
-  return {
-    group,
-    selectionCount: items.filter((other) => other.groupId === group.id).length,
-  };
+  return { group, selectionCount: memberCount(items, group.id) };
+};
+
+/** What restoring an archived selection restores: its group. */
+export const restoreScopeFor = <Group extends SelectionGroup>(
+  item: HasMembership,
+  groups: Group[],
+  items: HasMembership[],
+): GroupScope<Group> | undefined => {
+  const group = groupOf(item, groups);
+  if (!group || !isArchived(group)) return undefined;
+  return { group, selectionCount: memberCount(items, group.id) };
+};
+
+/**
+ * What deleting an archived selection deletes, only without a ticket: a
+ * loose one is removed on its own; one in a real group goes with the group.
+ */
+export type ArchivedDeletion<Group extends SelectionGroup> =
+  | { kind: "selection" }
+  | ({ kind: "group" } & GroupScope<Group>);
+
+export const archivedDeletionFor = <Group extends SelectionGroup>(
+  item: HasMembership,
+  groups: Group[],
+  items: HasMembership[],
+): ArchivedDeletion<Group> | undefined => {
+  const group = groupOf(item, groups);
+  if (!group || !isArchived(group) || isTicketed(group)) return undefined;
+  if (isSynthetic(group)) return { kind: "selection" };
+  return { kind: "group", group, selectionCount: memberCount(items, group.id) };
 };

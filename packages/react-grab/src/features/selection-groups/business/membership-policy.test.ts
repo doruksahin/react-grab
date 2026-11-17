@@ -4,6 +4,7 @@ import type { SelectionGroup } from "../types.js";
 import {
   assignableGroupsFor,
   canDeleteGroup,
+  deleteArchivedGroup,
   deleteGroup,
   groupForNewSelection,
   moveSelection,
@@ -237,6 +238,116 @@ describe("deleteGroup", () => {
       status: "refused",
       reason: "group-not-found",
     });
+  });
+});
+
+describe("archived groups (ADR-0030)", () => {
+  const archivedGroups = [
+    ...groups,
+    group("archived-open", { archivedAt: 10 }),
+    group("archived-ticketed", { jiraTicketId: "SCRUM-2", archivedAt: 10 }),
+  ];
+  const archivedItems = [
+    ...items,
+    item("in-archived-open-1", "archived-open"),
+    item("in-archived-open-2", "archived-open"),
+    item("in-archived-ticketed", "archived-ticketed"),
+  ];
+
+  it("never moves a selection into an archived group", () => {
+    expect(
+      moveSelection(
+        archivedItems,
+        archivedGroups,
+        "in-open-a",
+        "archived-open",
+      ),
+    ).toEqual({ status: "refused", reason: "target-archived" });
+  });
+
+  it("never puts a new selection in an archived group", () => {
+    const result = groupForNewSelection(
+      { elementName: "button" },
+      "archived-open",
+      archivedGroups,
+    );
+    expect(result.groupId).not.toBe("archived-open");
+  });
+
+  it("deletes an archived group without a ticket together with its selections", () => {
+    const result = deleteArchivedGroup(
+      archivedItems,
+      archivedGroups,
+      "archived-open",
+    );
+    expect(result.status).toBe("deleted");
+    if (result.status !== "deleted") return;
+    expect(result.groups.some((g) => g.id === "archived-open")).toBe(false);
+    expect(
+      result.items.filter((i) => i.id.startsWith("in-archived-open")),
+    ).toEqual([]);
+    expect(result.items).toHaveLength(archivedItems.length - 2);
+  });
+
+  it("never deletes an archived group with a ticket", () => {
+    expect(
+      deleteArchivedGroup(archivedItems, archivedGroups, "archived-ticketed"),
+    ).toEqual({ status: "refused", reason: "group-ticketed" });
+  });
+
+  it("never moves one selection out of an archived group", () => {
+    expect(
+      moveSelection(archivedItems, archivedGroups, "in-archived-open-1", null),
+    ).toEqual({ status: "refused", reason: "selection-archived" });
+    expect(
+      assignableGroupsFor(
+        archivedItems[archivedItems.length - 3],
+        archivedGroups,
+      ),
+    ).toEqual([]);
+    expect(
+      moveSelections(
+        archivedItems,
+        archivedGroups,
+        new Set(["in-archived-open-1"]),
+        "open-b",
+      ),
+    ).toEqual({ status: "refused", reason: "selection-archived" });
+  });
+
+  it("removes an archived loose selection, never one from an archived real group", () => {
+    const looseGroups = [
+      ...archivedGroups,
+      group("archived-loose", { synthetic: true, archivedAt: 10 }),
+    ];
+    const looseItems = [
+      ...archivedItems,
+      item("in-archived-loose", "archived-loose"),
+    ];
+    expect(
+      removeSelection(looseItems, looseGroups, "in-archived-loose").status,
+    ).toBe("removed");
+    expect(
+      removeSelection(looseItems, looseGroups, "in-archived-open-1"),
+    ).toEqual({ status: "refused", reason: "selection-archived" });
+  });
+
+  it("deletes only an archived group", () => {
+    expect(
+      deleteArchivedGroup(archivedItems, archivedGroups, "open-a"),
+    ).toEqual({ status: "refused", reason: "group-not-archived" });
+  });
+
+  it("never clears archived selections: they are not on the board", () => {
+    const result = clearSelections(archivedItems, archivedGroups);
+    expect(result.items.map((entry) => entry.id)).toEqual(
+      expect.arrayContaining([
+        "in-archived-open-1",
+        "in-archived-open-2",
+        "in-archived-ticketed",
+      ]),
+    );
+    expect(result.items.some((entry) => entry.id === "in-open-a")).toBe(false);
   });
 });
 

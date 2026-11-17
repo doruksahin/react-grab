@@ -49,6 +49,7 @@ import { ImageLightbox } from "../ui/image-lightbox.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
 import { IconFlag } from "../icons/icon-flag.js";
 import { IconButton } from "../ui/icon-button.js";
+import type { ArchiveHandlers } from "../selection/archive-actions.js";
 
 export interface SidebarProps {
   groups: SelectionGroupWithJira[];
@@ -69,8 +70,8 @@ export interface SidebarProps {
   onCreateTicketForLooseItem?: (item: CommentItem) => void;
   onRemoveItem?: (itemId: string) => void;
   canRemoveItem?: (itemId: string) => boolean;
-  onArchiveGroup?: (groupId: string) => void;
-  onRestoreGroup?: (groupId: string) => void;
+  /** Archive, restore and delete from the archive (ADR-0030). */
+  archive?: ArchiveHandlers;
   onMoveItem?: (itemId: string, groupId: string | null) => void;
   onMoveItems?: (itemIds: Set<string>, groupId: string) => void;
   onAddGroup?: (name: string) => void;
@@ -370,8 +371,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                   statusOf={sidebarSelections.statusOf}
                   archived={sidebarSelections.archived()}
                   commentItems={props.commentItems ?? []}
-                  onArchiveGroup={props.onArchiveGroup}
-                  onRestoreGroup={props.onRestoreGroup}
+                  archive={props.archive}
                   groups={props.groups ?? []}
                   selectedIds={selectedIds()}
                   onToggleSelect={toggleSelect}
@@ -411,11 +411,11 @@ export const Sidebar: Component<SidebarProps> = (props) => {
           onRemoveItem={props.onRemoveItem}
           canRemoveItem={props.canRemoveItem}
           onArchive={
-            props.onArchiveGroup
+            props.archive
               ? (groupId) => {
                   // The group leaves the board, so its detail view closes.
                   setActiveDetailGroupId(null);
-                  props.onArchiveGroup?.(groupId);
+                  props.archive?.archiveGroup(groupId);
                 }
               : undefined
           }

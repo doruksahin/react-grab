@@ -18,6 +18,7 @@
  * so a surface that offers only assignable groups never offers a move the
  * command refuses. Pure functions: no signals, no persistence.
  */
+import { isArchived, isSelectionArchived } from "./archive-policy.js";
 import type { CommentItem } from "../../../types.js";
 import type { SelectionGroup } from "../types.js";
 import {
@@ -38,11 +39,19 @@ interface HasMembership {
 export type TargetRefusal =
   | "target-not-found"
   | "target-ticketed"
-  | "target-synthetic";
+  | "target-synthetic"
+  | "target-archived";
 
-export type SelectionRefusal = "selection-not-found" | "selection-locked";
+export type SelectionRefusal =
+  | "selection-not-found"
+  | "selection-locked"
+  | "selection-archived";
 
 export type GroupDeletionRefusal = "group-not-found" | "group-ticketed";
+
+export type ArchivedGroupDeletionRefusal =
+  | GroupDeletionRefusal
+  | "group-not-archived";
 
 /** An accepted change carries the next items and groups; persist both. */
 interface MembershipChange {
@@ -76,11 +85,15 @@ export type DeleteGroupResult =
   | ({ status: "deleted" } & MembershipChange)
   | { status: "refused"; reason: GroupDeletionRefusal };
 
+export type DeleteArchivedGroupResult =
+  | ({ status: "deleted" } & MembershipChange)
+  | { status: "refused"; reason: ArchivedGroupDeletionRefusal };
+
 export type RemoveResult =
   | { status: "removed"; items: CommentItem[] }
   | { status: "refused"; reason: SelectionRefusal };
 
-/** What clearing left: the locked selections, and how many were deleted. */
+/** What clearing left: the locked and archived selections, and how many were deleted. */
 export interface ClearResult {
   items: CommentItem[];
   removed: number;
@@ -94,6 +107,8 @@ export interface ClearCounts {
 
 /** Why a group cannot receive selections, or null when it can. */
 const refusalForGroup = (group: SelectionGroup): TargetRefusal | null => {
+  // An archived group is off the board (ADR-0030): nothing moves or lands in it.
+  if (isArchived(group)) return "target-archived";
   if (isTicketed(group)) return "target-ticketed";
   if (isSynthetic(group)) return "target-synthetic";
   return null;
@@ -114,10 +129,41 @@ const refusalForSelection = (
   groups: SelectionGroup[],
 ): SelectionRefusal | null => {
   if (!item) return "selection-not-found";
-  return isSelectionLocked(item, groups) ? "selection-locked" : null;
+  if (isSelectionLocked(item, groups)) return "selection-locked";
+  // An archived group goes as a whole; one selection never leaves it (ADR-0030).
+  return isSelectionArchived(item, groups) ? "selection-archived" : null;
 };
 
-/** The groups a selection may move into: none when it is locked. */
+/**
+ * Why a selection cannot be removed: a ticket keeps it (ADR-0008), and one
+ * in an archived real group goes only with its group (ADR-0030). An archived
+ * loose selection may be removed: its synthetic group is just itself.
+ */
+const refusalForRemoval = (
+  item: HasMembership | undefined,
+  groups: SelectionGroup[],
+): SelectionRefusal | null => {
+  if (!item) return "selection-not-found";
+  if (isSelectionLocked(item, groups)) return "selection-locked";
+  const group = groups.find((candidate) => candidate.id === item.groupId);
+  return group && isArchived(group) && !isSynthetic(group)
+    ? "selection-archived"
+    : null;
+};
+
+/** Whether a selection may be removed on its own. */
+export const isRemovable = (
+  item: HasMembership,
+  groups: SelectionGroup[],
+): boolean => refusalForRemoval(item, groups) === null;
+
+/** Whether a selection may change group: not when it is locked or archived. */
+export const canMoveSelection = (
+  item: HasMembership,
+  groups: SelectionGroup[],
+): boolean => refusalForSelection(item, groups) === null;
+
+/** The groups a selection may move into: none when it is locked or archived. */
 export const assignableGroupsFor = (
   item: HasMembership,
   groups: SelectionGroup[],
@@ -248,13 +294,35 @@ export const deleteGroup = (
   };
 };
 
+/**
+ * Deletes an archived group together with its selections (ADR-0030). Unlike
+ * `deleteGroup`, its selections do not fall back to Ungrouped: they were off
+ * the board and are deleted with it. A group with a ticket is never deleted.
+ */
+export const deleteArchivedGroup = (
+  items: CommentItem[],
+  groups: SelectionGroup[],
+  groupId: string,
+): DeleteArchivedGroupResult => {
+  const group = groups.find((g) => g.id === groupId);
+  const reason = refusalForDeletion(group);
+  if (reason) return { status: "refused", reason };
+  if (!isArchived(group))
+    return { status: "refused", reason: "group-not-archived" };
+  return {
+    status: "deleted",
+    items: items.filter((item) => item.groupId !== groupId),
+    groups: groups.filter((group) => group.id !== groupId),
+  };
+};
+
 /** Removes a selection; a locked one stays, removing it would orphan its ticket. */
 export const removeSelection = (
   items: CommentItem[],
   groups: SelectionGroup[],
   itemId: string,
 ): RemoveResult => {
-  const reason = refusalForSelection(
+  const reason = refusalForRemoval(
     items.find((entry) => entry.id === itemId),
     groups,
   );
@@ -266,15 +334,20 @@ export const removeSelection = (
 };
 
 /**
- * Deletes every selection that may be deleted and keeps the locked ones:
- * a selection with a ticket is never deleted (ADR-0008, amended
- * 2026-11-16). "Clear all" and the clear after "Copy all" use this.
+ * Deletes every selection on the board that may be deleted and keeps the
+ * locked ones: a selection with a ticket is never deleted (ADR-0008, amended
+ * 2026-11-16). Archived selections are not on the board, so clearing it
+ * never deletes them (ADR-0030). "Clear all" and the clear after "Copy all"
+ * use this.
  */
 export const clearSelections = (
   items: CommentItem[],
   groups: SelectionGroup[],
 ): ClearResult => {
-  const kept = items.filter((entry) => !canRemoveSelection(entry, groups));
+  const kept = items.filter(
+    (entry) =>
+      isSelectionArchived(entry, groups) || !canRemoveSelection(entry, groups),
+  );
   return { items: kept, removed: items.length - kept.length };
 };
 

@@ -27,6 +27,8 @@ export interface SyncRepository {
   upsertGroup(workspaceId: string, item: GroupWrite): Promise<void>;
   findGroup(workspaceId: string, groupId: string): Promise<Group | undefined>;
   deleteGroup(workspaceId: string, groupId: string): Promise<void>;
+  /** Deletes a group and its comments in one batch (ADR-0030). */
+  deleteGroupWithComments(workspaceId: string, groupId: string): Promise<void>;
   /** Archives (a time) or restores (null) a group; the caller checks the rule. */
   setGroupArchived(
     workspaceId: string,

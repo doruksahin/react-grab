@@ -15,7 +15,7 @@ export interface SelectionTreeViewProps<Group extends SelectionGroup> {
   onDeleteGroup?: (groupId: string) => void;
   onToggleGroupRevealed?: (groupId: string) => void;
   onCopyGroup?: (groupId: string) => void;
-  /** Archives a ticketed group (ADR-0030); offered only on one that can be. */
+  /** Archives a group (ADR-0030); offered only on one that can be. */
   onArchiveGroup?: (groupId: string) => void;
   /** Extra header content per group (the sidebar's ticket status). */
   groupHeaderExtra?: (group: Group) => JSX.Element;

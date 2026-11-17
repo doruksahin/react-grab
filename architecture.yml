@@ -297,6 +297,7 @@ features:
     adrs: [ADR-0008]
     files:
       - packages/react-grab/src/core/index.tsx
+      - packages/react-grab/src/features/selection-groups/business/archive-policy.ts
       - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
       - packages/react-grab/src/features/selection-groups/business/membership.ts
       - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
@@ -387,6 +388,7 @@ features:
     prds: [PRD-005]
     specs: [SPEC-008]
     files:
+      - packages/react-grab/src/features/selection-groups/business/archive-policy.ts
       - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
       - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
       - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
@@ -404,6 +406,7 @@ features:
     files:
       - packages/react-grab/src/components/icons/icon-flag.tsx
       - packages/react-grab/src/components/selection-label/index.tsx
+      - packages/react-grab/src/features/selection-groups/business/archive-policy.ts
       - packages/react-grab/src/features/selection-groups/business/membership-policy.ts
       - packages/react-grab/src/features/selection-groups/business/selection-assignment.ts
       - packages/react-grab/src/features/selection-groups/business/synthetic-group.ts
@@ -722,6 +725,7 @@ data_attrs:
         - selection-menu
         - selection-archive
         - selection-restore
+        - selection-delete-group
         - archived-section
         - group-archive
         - group-detail-archive
@@ -894,12 +898,12 @@ data_attrs:
     comment-editor: {scope: comments, src: 1, tests: 1}
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
-    comment-item: {scope: comments, src: 1, tests: 9}
+    comment-item: {scope: comments, src: 1, tests: 10}
     comment-reply: {scope: comments, src: 1, tests: 0}
     comment-submit: {scope: comments, src: 1, tests: 1}
     comment-thread: {scope: comments, src: 1, tests: 0}
     comment-time: {scope: comments, src: 1, tests: 0}
-    comments-clear: {scope: comments, src: 1, tests: 3}
+    comments-clear: {scope: comments, src: 1, tests: 4}
     comments-copy-all: {scope: comments, src: 1, tests: 3}
     comments-count: {scope: comments, src: 1, tests: 0}
     comments-dropdown: {scope: comments, src: 3, tests: 11}
@@ -1004,13 +1008,14 @@ data_attrs:
     screenshot-pair: {scope: selection, src: 1, tests: 0}
     screenshot-thumb: {scope: selection, src: 2, tests: 2}
     selection-archive: {scope: selection, src: 1, tests: 0}
-    selection-card: {scope: selection, src: 3, tests: 14}
+    selection-card: {scope: selection, src: 3, tests: 15}
     selection-card-body: {scope: selection, src: 1, tests: 2}
     selection-card-facts: {scope: selection, src: 1, tests: 0}
     selection-card-header: {scope: selection, src: 1, tests: 0}
     selection-card-time: {scope: selection, src: 1, tests: 0}
     selection-checkbox: {scope: selection, src: 1, tests: 0}
     selection-content: {scope: selection, src: 1, tests: 0}
+    selection-delete-group: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 3, tests: 0}
     selection-label: {scope: selection, src: 1, tests: 19}
     selection-menu: {scope: selection, src: 2, tests: 0}
@@ -1054,7 +1059,7 @@ data_attrs:
     toolbar-collapse: {scope: toolbar, src: 1, tests: 1}
     toolbar-comments: {scope: toolbar, src: 2, tests: 6}
     toolbar-copy-all: {scope: toolbar, src: 2, tests: 2}
-    toolbar-dashboard: {scope: toolbar, src: 1, tests: 29}
+    toolbar-dashboard: {scope: toolbar, src: 1, tests: 31}
     toolbar-devmode: {scope: toolbar, src: 1, tests: 2}
     toolbar-menu: {scope: toolbar, src: 1, tests: 3}
     toolbar-toggle: {scope: toolbar, src: 1, tests: 4}

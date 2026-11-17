@@ -18,7 +18,7 @@ import { IconDashboard } from "../icons/icon-dashboard.jsx";
 import { IconArchive } from "../icons/icon-archive.jsx";
 import { IconRestore } from "../icons/icon-restore.jsx";
 
-interface MenuAction {
+export interface MenuAction {
   label: string;
   onSelect: () => void;
 }
@@ -31,10 +31,12 @@ interface SelectionMenuProps {
   onRemove?: () => void;
   /** Opens the selection's full card in the sidebar. */
   onOpenInSidebar?: () => void;
-  /** Archives the group that holds the ticket (ADR-0030); its label says what. */
+  /** Archives the selection's group (ADR-0030); its label says what. */
   archive?: MenuAction;
-  /** Restores an archived group to the board. */
+  /** Restores an archived group or selection to the board. */
   restore?: MenuAction;
+  /** Deletes an archived group without a ticket, with its selections. */
+  deleteGroup?: MenuAction;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   class?: string;
@@ -42,13 +44,16 @@ interface SelectionMenuProps {
 
 /**
  * A selection's less frequent actions behind ⋯: open it in the sidebar, move
- * it, archive or restore its ticketed group (ADR-0030), and remove it. Removing sits here, away from the header and the row, so it is
- * never mistaken for closing.
+ * it, archive or restore it or its group (ADR-0030), and remove it or delete
+ * its archived group. The destructive actions sit here, away from the header
+ * and the row, so they are never mistaken for closing.
  */
 export const SelectionMenu: Component<SelectionMenuProps> = (props) => {
   const canMove = () => (props.destinations?.length ?? 0) > 0;
   const hasOrganize = () =>
     canMove() || Boolean(props.archive) || Boolean(props.restore);
+  const hasDestructive = () =>
+    Boolean(props.onRemove) || Boolean(props.deleteGroup);
   // The menu is portaled, but Solid's delegated events still bubble to where
   // it sits in the tree (the row); stop them so picking an item does not
   // also select the row.
@@ -89,7 +94,7 @@ export const SelectionMenu: Component<SelectionMenuProps> = (props) => {
                 <IconDashboard size={12} />
                 Open in sidebar
               </MenuItem>
-              <Show when={hasOrganize() || props.onRemove}>
+              <Show when={hasOrganize() || hasDestructive()}>
                 <MenuSeparator class="-mx-1 my-1 border-border" />
               </Show>
             </>
@@ -144,7 +149,7 @@ export const SelectionMenu: Component<SelectionMenuProps> = (props) => {
             </MenuItem>
           )}
         </Show>
-        <Show when={hasOrganize() && props.onRemove}>
+        <Show when={hasOrganize() && hasDestructive()}>
           <MenuSeparator class="-mx-1 my-1 border-border" />
         </Show>
         <Show when={props.onRemove}>
@@ -156,6 +161,18 @@ export const SelectionMenu: Component<SelectionMenuProps> = (props) => {
             >
               <IconTrash size={12} />
               Remove selection
+            </MenuItem>
+          )}
+        </Show>
+        <Show when={props.deleteGroup}>
+          {(deleteGroup) => (
+            <MenuItem
+              data-react-grab-selection-delete-group
+              tone="destructive"
+              onSelect={() => deleteGroup().onSelect()}
+            >
+              <IconTrash size={12} />
+              {deleteGroup().label}
             </MenuItem>
           )}
         </Show>

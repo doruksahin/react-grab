@@ -152,6 +152,30 @@ export class D1SyncRepository implements SyncRepository {
       );
   }
 
+  async deleteGroupWithComments(
+    workspaceId: string,
+    groupId: string,
+  ): Promise<void> {
+    await this.db.batch([
+      this.db
+        .delete(schema.comments)
+        .where(
+          and(
+            eq(schema.comments.groupId, groupId),
+            eq(schema.comments.workspaceId, workspaceId),
+          ),
+        ),
+      this.db
+        .delete(schema.groups)
+        .where(
+          and(
+            eq(schema.groups.id, groupId),
+            eq(schema.groups.workspaceId, workspaceId),
+          ),
+        ),
+    ]);
+  }
+
   async setGroupArchived(
     workspaceId: string,
     groupId: string,

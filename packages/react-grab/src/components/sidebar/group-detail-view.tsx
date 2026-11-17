@@ -64,7 +64,7 @@ export const GroupDetailView: Component<GroupDetailViewProps> = (props) => {
           onOpen={() => props.onCreateTicket?.(props.group, groupItems())}
         />
       </Show>
-      {/* A ticketed group is archived as a whole: its comments share one ticket. */}
+      {/* A group is archived as a whole (ADR-0030). */}
       <Show when={props.onArchive && canArchive(props.group)}>
         <div class="shrink-0 border-t border-border p-3">
           <Button

@@ -213,10 +213,15 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
   // request is in flight keeps the pending value, and only the latest
   // request for a group may confirm or undo it. Without a connection it is
   // refused, since a later sync would not send it; local mode keeps the
-  // time in the local list.
+  // time in the local list. An undo goes back to the value the server last
+  // had, not to another request's optimistic one.
   const pendingArchives = new Map<
     string,
-    { version: number; archivedAt: number | undefined }
+    {
+      version: number;
+      archivedAt: number | undefined;
+      settled: number | undefined;
+    }
   >();
   let archiveVersion = 0;
 
@@ -231,9 +236,10 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
         });
 
   const setArchived = async (groupId: string, archive: boolean) => {
-    const previous = storeHandle.store.groups.find(
-      (group) => group.id === groupId,
-    )?.archivedAt;
+    const settled = pendingArchives.has(groupId)
+      ? pendingArchives.get(groupId)?.settled
+      : storeHandle.store.groups.find((group) => group.id === groupId)
+          ?.archivedAt;
     const archivedAt = archive ? Date.now() : undefined;
     if (storeHandle.store.status === "local") {
       persistGroupsNow(
@@ -249,21 +255,27 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     }
     const version = ++archiveVersion;
     const isLatest = () => pendingArchives.get(groupId)?.version === version;
-    pendingArchives.set(groupId, { version, archivedAt });
+    pendingArchives.set(groupId, { version, archivedAt, settled });
     storeHandle.updateGroup(groupId, { archivedAt });
     try {
       const saved = archive
         ? await storage.archiveGroup(groupId)
         : await storage.restoreGroup(groupId);
-      if (!isLatest()) return;
+      if (!isLatest()) {
+        // A newer request owns the display; an undo of it goes to this answer.
+        const pending = pendingArchives.get(groupId);
+        if (pending) pending.settled = saved.archivedAt;
+        return;
+      }
       pendingArchives.delete(groupId);
       storeHandle.updateGroup(groupId, { archivedAt: saved.archivedAt });
       // A restored ticket was not polled while archived.
       if (!archive) void refreshJiraStatus(groupId);
     } catch (error) {
       if (isLatest()) {
+        const lastAnswer = pendingArchives.get(groupId)?.settled;
         pendingArchives.delete(groupId);
-        storeHandle.updateGroup(groupId, { archivedAt: previous });
+        storeHandle.updateGroup(groupId, { archivedAt: lastAnswer });
       }
       throw error;
     }

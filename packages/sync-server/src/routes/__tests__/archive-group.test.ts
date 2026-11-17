@@ -7,8 +7,9 @@ import { D1SyncRepository } from "../../repositories/d1.repo.js";
 import { authorized } from "../../test/api-token.js";
 
 /**
- * ADR-0030: a group with a Jira ticket can be archived and restored; the
- * server owns the archive time, and a group without a ticket is refused.
+ * ADR-0030: any group can be archived and restored, and the server owns the
+ * archive time. Deleting an archived group without a ticket deletes its
+ * comments with it.
  */
 
 let WORKSPACE: string;
@@ -83,11 +84,11 @@ describe("archiving a group", () => {
     expect(second.archivedAt).toBe(first.archivedAt);
   });
 
-  it("refuses a group without a ticket", async () => {
+  it("archives a group without a ticket too", async () => {
     await seedGroup({ ticketed: false });
     const response = await send("PUT", "/groups/g-1/archive");
-    expect(response.status).toBe(409);
-    expect((await listedGroup())?.archivedAt).toBeUndefined();
+    expect(response.status).toBe(200);
+    expect((await listedGroup())?.archivedAt).toBeDefined();
   });
 
   it("answers 404 for a group that does not exist", async () => {
@@ -125,5 +126,63 @@ describe("archiving a group", () => {
       archivedAt: 5,
     });
     expect((await listedGroup())?.archivedAt).toBe(archivedAt);
+  });
+});
+
+describe("deleting an archived group", () => {
+  const seedComment = (id: string) =>
+    send("PUT", `/comments/${id}`, {
+      id,
+      groupId: "g-1",
+      content: "<button>Buy</button>",
+      elementName: "button",
+      tagName: "button",
+      timestamp: 1,
+    });
+
+  const listedCommentIds = async (): Promise<string[]> => {
+    const response = await SELF.fetch(`${BASE}/comments`, {
+      headers: authorized(),
+    });
+    const comments: { id: string }[] = await response.json();
+    return comments.map((comment) => comment.id);
+  };
+
+  it("deletes its comments with it", async () => {
+    await seedGroup({ ticketed: false });
+    await seedComment("c-1");
+    await seedComment("c-2");
+    await send("PUT", "/groups/g-1/archive");
+
+    expect((await send("DELETE", "/groups/g-1")).status).toBe(200);
+
+    expect(await listedGroup()).toBeUndefined();
+    expect(await listedCommentIds()).toEqual([]);
+  });
+
+  it("keeps the comments of a group that is not archived", async () => {
+    await seedGroup({ ticketed: false });
+    await seedComment("c-1");
+
+    expect((await send("DELETE", "/groups/g-1")).status).toBe(200);
+
+    expect(await listedCommentIds()).toEqual(["c-1"]);
+  });
+
+  it("refuses an archived group with a ticket", async () => {
+    // A comment cannot join a ticketed group, so it is there first.
+    await seedGroup({ ticketed: false });
+    await seedComment("c-1");
+    const repo = new D1SyncRepository(drizzle(env.DB, { schema }));
+    await repo.updateGroupJira(
+      WORKSPACE,
+      "g-1",
+      "UI-1",
+      await seedJiraAccount("account-1"),
+    );
+    await send("PUT", "/groups/g-1/archive");
+
+    expect((await send("DELETE", "/groups/g-1")).status).toBe(409);
+    expect(await listedCommentIds()).toEqual(["c-1"]);
   });
 });
