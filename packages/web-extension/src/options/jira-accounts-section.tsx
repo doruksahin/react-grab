@@ -79,10 +79,7 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
   return (
     <section aria-labelledby="jira-accounts-heading" data-jira-accounts>
       <h2 id="jira-accounts-heading">Jira accounts</h2>
-      <Show
-        when={props.accounts.length > 0}
-        fallback={<p>No Jira account is connected yet.</p>}
-      >
+      <Show when={props.accounts.length > 0} fallback={<p>No account yet.</p>}>
         <table>
           <thead>
             <tr>
@@ -139,9 +136,9 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
                           <button
                             type="button"
                             disabled={account.workspaceCount > 0}
-                            aria-describedby={
+                            title={
                               account.workspaceCount > 0
-                                ? "jira-account-remove-rule"
+                                ? "In use by a workspace"
                                 : undefined
                             }
                             onClick={() => handleRemove(account)}
@@ -172,16 +169,6 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
             </For>
           </tbody>
         </table>
-        <Show
-          when={props.accounts.some((account) => account.workspaceCount > 0)}
-        >
-          <p id="jira-account-remove-rule">
-            <small>
-              An account can't be removed while a workspace sends tickets to it.
-              Choose another account for that workspace first.
-            </small>
-          </p>
-        </Show>
       </Show>
 
       <details id="add-jira-account" open={startsOpen}>
@@ -210,10 +197,7 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
                 autocomplete="off"
               />
             </label>
-            <p>
-              Create the token at id.atlassian.com → Security → API tokens.
-              Tickets are created as this account.
-            </p>
+            <small>From id.atlassian.com → Security → API tokens.</small>
             <button type="submit">Connect</button>
           </fieldset>
         </form>

@@ -62,7 +62,7 @@ export const WorkspacesSection = (props: WorkspacesSectionProps) => {
       <h2 id="workspaces-heading">Workspaces</h2>
       <Show
         when={props.workspaces.length > 0}
-        fallback={<p>No workspace yet. Enabling a site creates one.</p>}
+        fallback={<p>No workspace yet.</p>}
       >
         <table>
           <thead>

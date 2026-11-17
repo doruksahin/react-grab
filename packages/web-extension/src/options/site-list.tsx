@@ -6,7 +6,6 @@ import type {
 import { settingsMessenger } from "../messaging/extension-messengers.js";
 import type { SiteSettingsByOrigin } from "../settings/types.js";
 import { anchorHref } from "./anchor-id.js";
-import { describeDestination } from "./describe-destination.js";
 import { describeError } from "./describe-error.js";
 
 interface SiteListProps {
@@ -23,6 +22,10 @@ export const SiteList = (props: SiteListProps) => {
   const siteEntries = () => Object.entries(props.sites);
   const workspaceOf = (id: string) =>
     props.workspaces.find((workspace) => workspace.id === id);
+  const describeRecording = (recordSteps: boolean, recordSession: boolean) =>
+    [recordSteps && "Steps", recordSession && "Session"]
+      .filter(Boolean)
+      .join(", ") || "Off";
 
   const handleRemove = (origin: string) => {
     settingsMessenger
@@ -36,19 +39,14 @@ export const SiteList = (props: SiteListProps) => {
 
   return (
     <section id="sites" aria-labelledby="sites-heading">
-      <h2 id="sites-heading">Enabled sites</h2>
-      <Show
-        when={siteEntries().length > 0}
-        fallback={<p>No site is enabled yet.</p>}
-      >
+      <h2 id="sites-heading">Sites</h2>
+      <Show when={siteEntries().length > 0} fallback={<p>No site yet.</p>}>
         <table>
           <thead>
             <tr>
               <th scope="col">Site</th>
               <th scope="col">Workspace</th>
-              <th scope="col">Tickets go to</th>
-              <th scope="col">Steps</th>
-              <th scope="col">Session</th>
+              <th scope="col">Records</th>
               <th scope="col">
                 <span class="visually-hidden">Actions</span>
               </th>
@@ -64,20 +62,21 @@ export const SiteList = (props: SiteListProps) => {
                       when={workspaceOf(site.workspace)}
                       fallback={site.workspace}
                     >
-                      <a href={anchorHref("workspace", site.workspace)}>
-                        {site.workspace}
-                      </a>
+                      {(workspace) => (
+                        <>
+                          <a href={anchorHref("workspace", site.workspace)}>
+                            {site.workspace}
+                          </a>
+                          <Show when={workspace().jiraProjectKey}>
+                            {(projectKey) => <small> → {projectKey()}</small>}
+                          </Show>
+                        </>
+                      )}
                     </Show>
                   </td>
                   <td>
-                    <Show when={workspaceOf(site.workspace)} fallback="Unknown">
-                      {(workspace) =>
-                        describeDestination(workspace(), props.accounts)
-                      }
-                    </Show>
+                    {describeRecording(site.recordSteps, site.recordSession)}
                   </td>
-                  <td>{site.recordSteps ? "Recorded" : "Off"}</td>
-                  <td>{site.recordSession ? "Recorded" : "Off"}</td>
                   <td>
                     <button
                       type="button"
