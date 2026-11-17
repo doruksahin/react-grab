@@ -107,6 +107,13 @@ interface ListJiraPriorities200Item {
   name: string;
 }
 
+interface WorkspaceSummary {
+  id: string;
+  jiraAccountId: string | null;
+  jiraProjectKey: string | null;
+  siteUrl: string | null;
+}
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -340,6 +347,19 @@ export const addJiraCommentResponse: AddJiraComment200 = {
 // ---------------------------------------------------------------------------
 
 export const searchJiraUsers: SearchJiraUsers200Item[] = users;
+
+// ---------------------------------------------------------------------------
+// Workspaces with their Jira destination — GET /workspaces (ADR-0027)
+// ---------------------------------------------------------------------------
+
+export const workspaces: WorkspaceSummary[] = [
+  {
+    id: WORKSPACE_ID,
+    jiraAccountId: "test-jira-account",
+    jiraProjectKey: JIRA_PROJECT,
+    siteUrl: JIRA_BASE_URL,
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Where the workspace's tickets go — GET /workspaces/:id/jira (ADR-0027)

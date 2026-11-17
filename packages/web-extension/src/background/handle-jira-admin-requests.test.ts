@@ -90,6 +90,24 @@ describe("Jira admin requests", () => {
     ).rejects.toThrow("the admin token is not set");
   });
 
+  it("lists workspaces with the sync token, without the admin token", async () => {
+    sendAsOptionsPage();
+    await expect(
+      settingsMessenger.sendMessage("listWorkspaces", undefined),
+    ).resolves.toEqual([]);
+    expect(connections).toEqual([
+      { serverUrl: SERVER_URL, apiToken: "sync-token" },
+    ]);
+  });
+
+  it("refuses to list workspaces from a content script", async () => {
+    sendAsOwnContentScript();
+    await expect(
+      settingsMessenger.sendMessage("listWorkspaces", undefined),
+    ).rejects.toThrow("the sender is not an extension page");
+    expect(connections).toEqual([]);
+  });
+
   it("calls the server with the admin token, never the sync token", async () => {
     await saveAdminToken("admin-token");
     sendAsOptionsPage();

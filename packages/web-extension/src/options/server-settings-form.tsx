@@ -7,17 +7,37 @@ import {
 } from "../settings/settings-items.js";
 import { describeError } from "./describe-error.js";
 import { formField } from "./form-field.js";
+import type { ServerConnection } from "./load-options-state.js";
 import { requestOriginPermission } from "./request-origin-permission.js";
+import { siteHost } from "./site-host.js";
 
 interface ServerSettingsFormProps {
   serverUrl: string;
   hasApiToken: boolean;
   hasAdminToken: boolean;
+  connection: ServerConnection;
   onSaved: () => void;
 }
 
+const describeConnection = (props: ServerSettingsFormProps): string => {
+  const { connection } = props;
+  if (connection.kind === "not-configured") {
+    return "Not connected. Enter the server URL and the API token.";
+  }
+  if (connection.kind === "failed") {
+    return `Could not connect: ${connection.message}`;
+  }
+  const admin = props.hasAdminToken ? "admin token saved" : "no admin token";
+  return `Connected to ${siteHost(props.serverUrl)}, ${admin}.`;
+};
+
+/**
+ * Closed once the server answers, open while it does not: the server is set
+ * up once and then only summarized.
+ */
 export const ServerSettingsForm = (props: ServerSettingsFormProps) => {
   const [status, setStatus] = createSignal("");
+  const startsOpen = props.connection.kind !== "connected";
 
   const save = async (form: HTMLFormElement): Promise<void> => {
     const serverUrl = serverUrlSchema.parse(formField(form, "serverUrl"));
@@ -41,47 +61,56 @@ export const ServerSettingsForm = (props: ServerSettingsFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} aria-labelledby="server-heading">
-      <fieldset>
-        <legend id="server-heading">Sync server</legend>
-        <label>
-          Server URL
-          <input
-            name="serverUrl"
-            type="url"
-            required
-            value={props.serverUrl}
-            placeholder="https://sync.example.com"
-          />
-        </label>
-        <label>
-          API token
-          <input
-            name="apiToken"
-            type="password"
-            autocomplete="off"
-            required={!props.hasApiToken}
-            placeholder={
-              props.hasApiToken ? "Saved. Enter a new token to replace it." : ""
-            }
-          />
-        </label>
-        <label>
-          Admin token (optional)
-          <input
-            name="adminToken"
-            type="password"
-            autocomplete="off"
-            placeholder={
-              props.hasAdminToken
-                ? "Saved. Enter a new token to replace it."
-                : "Needed to add Jira accounts and choose where tickets go"
-            }
-          />
-        </label>
-        <button type="submit">Save server</button>
-        <p role="status">{status()}</p>
-      </fieldset>
-    </form>
+    <details id="sync-server" open={startsOpen} data-sync-server>
+      <summary>
+        <strong id="server-heading">Sync server</strong>{" "}
+        <span data-connection={props.connection.kind}>
+          {describeConnection(props)}
+        </span>
+      </summary>
+      <form onSubmit={handleSubmit} aria-labelledby="server-heading">
+        <fieldset>
+          <label>
+            Server URL
+            <input
+              name="serverUrl"
+              type="url"
+              required
+              value={props.serverUrl}
+              placeholder="https://sync.example.com"
+            />
+          </label>
+          <label>
+            API token
+            <input
+              name="apiToken"
+              type="password"
+              autocomplete="off"
+              required={!props.hasApiToken}
+              placeholder={
+                props.hasApiToken
+                  ? "Saved. Enter a new token to replace it."
+                  : ""
+              }
+            />
+          </label>
+          <label>
+            Admin token (optional)
+            <input
+              name="adminToken"
+              type="password"
+              autocomplete="off"
+              placeholder={
+                props.hasAdminToken
+                  ? "Saved. Enter a new token to replace it."
+                  : "Needed to add Jira accounts and choose where tickets go"
+              }
+            />
+          </label>
+          <button type="submit">Save server</button>
+          <p role="status">{status()}</p>
+        </fieldset>
+      </form>
+    </details>
   );
 };

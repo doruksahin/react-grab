@@ -26,6 +26,7 @@ export interface SetJiraDestinationRequest extends JiraDestinationChoice {
  * Messages from the extension's own pages. The background accepts none of
  * them from a content script (assertExtensionPageSender, ADR-0023). The Jira
  * ones use the admin token, which only the background reads (ADR-0027).
+ * `listWorkspaces` uses the sync token: reading workspaces is not an admin task.
  */
 export interface SettingsProtocol {
   saveSite(request: SaveSiteRequest): void;
