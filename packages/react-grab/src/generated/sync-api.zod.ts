@@ -219,7 +219,7 @@ export const DeleteGroupResponse = zod.object({
 
 
 /**
- * @summary Archive one group that has a Jira ticket
+ * @summary Archive one group
  */
 export const ArchiveGroupParams = zod.object({
   "id": zod.string().describe('Workspace ID'),

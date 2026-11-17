@@ -371,10 +371,6 @@ export type ArchiveGroup404 = {
   error: string;
 };
 
-export type ArchiveGroup409 = {
-  error: string;
-};
-
 /**
  * Lifecycle status of a group
  */
@@ -895,15 +891,10 @@ export type archiveGroupResponse404 = {
   status: 404
 }
 
-export type archiveGroupResponse409 = {
-  data: ArchiveGroup409
-  status: 409
-}
-
 export type archiveGroupResponseSuccess = (archiveGroupResponse200) & {
   headers: Headers;
 };
-export type archiveGroupResponseError = (archiveGroupResponse404 | archiveGroupResponse409) & {
+export type archiveGroupResponseError = (archiveGroupResponse404) & {
   headers: Headers;
 };
 
@@ -919,7 +910,7 @@ export const getArchiveGroupUrl = (id: string,
 }
 
 /**
- * @summary Archive one group that has a Jira ticket
+ * @summary Archive one group
  */
 export const archiveGroup = async (id: string,
     groupId: string, options?: Parameters<typeof customFetch>[1]): Promise<archiveGroupResponse> => {

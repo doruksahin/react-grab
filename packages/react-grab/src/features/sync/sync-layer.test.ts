@@ -432,6 +432,36 @@ describe("sync layer archive (ADR-0030)", () => {
     layer.dispose();
   });
 
+  it("goes back to the server's value when an archive and its undo both fail", async () => {
+    adapter.archiveGroup.mockRejectedValue(new Error("offline"));
+    adapter.restoreGroup.mockRejectedValue(new Error("offline"));
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+
+    const archiving = layer.archiveGroup("g-1");
+    const restoring = layer.restoreGroup("g-1");
+    await expect(archiving).rejects.toThrow("offline");
+    await expect(restoring).rejects.toThrow("offline");
+
+    expect(layer.groups()[0].archivedAt).toBeUndefined();
+    layer.dispose();
+  });
+
+  it("goes back to the server's answer when an archive succeeds and its undo fails", async () => {
+    adapter.archiveGroup.mockResolvedValue(ticketed({ archivedAt: 42 }));
+    adapter.restoreGroup.mockRejectedValue(new Error("offline"));
+    const layer = createSyncLayer(factories);
+    await layer.init(makeConfig());
+
+    const archiving = layer.archiveGroup("g-1");
+    const restoring = layer.restoreGroup("g-1");
+    await archiving;
+    await expect(restoring).rejects.toThrow("offline");
+
+    expect(layer.groups()[0].archivedAt).toBe(42);
+    layer.dispose();
+  });
+
   it("does not poll Jira for an archived ticket", async () => {
     adapter.loadGroups.mockImplementation(async () => [
       ticketed({ archivedAt: 42 }),

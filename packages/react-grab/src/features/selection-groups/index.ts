@@ -9,6 +9,8 @@ import type {
 import type { CommentItem } from "../../types.js";
 import {
   deleteGroup,
+  deleteArchivedGroup,
+  isRemovable,
   groupForNewSelection,
   moveSelection,
   moveSelections,
@@ -17,7 +19,6 @@ import {
 } from "./business/membership-policy.js";
 import { membershipAnomalies } from "./business/membership.js";
 import { gcEmptySyntheticGroups } from "./business/synthetic-group.js";
-import { canRemoveSelection } from "./business/ticket-lock.js";
 import { generateId } from "../../utils/generate-id.js";
 import { logRecoverableError } from "../../utils/log-recoverable-error.js";
 
@@ -121,6 +122,22 @@ export function createSelectionGroups(
     return result;
   };
 
+  const handleDeleteArchivedGroup: SelectionGroupsAPI["handleDeleteArchivedGroup"] =
+    (groupId) => {
+      const result = deleteArchivedGroup(
+        deps.commentItems(),
+        deps.groups(),
+        groupId,
+      );
+      if (result.status === "refused") {
+        reportRefusal("Archived group delete", result.reason);
+        return result;
+      }
+      persistChange(result);
+      if (activeGroupId() === groupId) setActiveGroupId(null);
+      return result;
+    };
+
   const handleMoveItem: SelectionGroupsAPI["handleMoveItem"] = (
     itemId,
     groupId,
@@ -182,7 +199,7 @@ export function createSelectionGroups(
 
   const canRemoveItem: SelectionGroupsAPI["canRemoveItem"] = (itemId) => {
     const item = deps.commentItems().find((entry) => entry.id === itemId);
-    return Boolean(item && canRemoveSelection(item, deps.groups()));
+    return Boolean(item && isRemovable(item, deps.groups()));
   };
 
   const clearCounts = createMemo(() => {
@@ -212,6 +229,7 @@ export function createSelectionGroups(
     handleAddGroup,
     handleRenameGroup,
     handleDeleteGroup,
+    handleDeleteArchivedGroup,
     handleMoveItem,
     handleMoveItems,
     handleRemoveItem,

@@ -3,10 +3,11 @@ import type { SelectionGroup } from "../types.js";
 import {
   activeSelections,
   archiveScopeFor,
-  archiveTargetFor,
+  archivedDeletionFor,
   canArchive,
   isArchived,
   isSelectionArchived,
+  restoreScopeFor,
 } from "./archive-policy.js";
 
 const group = (
@@ -23,72 +24,102 @@ const group = (
 const groups = [
   group("open"),
   group("ticketed", { jiraTicketId: "SCRUM-1" }),
-  group("synthetic", { synthetic: true, jiraTicketId: "SCRUM-8" }),
-  group("archived", { jiraTicketId: "SCRUM-2", archivedAt: 10 }),
+  group("loose", { synthetic: true }),
+  group("archived-ticketed", { jiraTicketId: "SCRUM-2", archivedAt: 10 }),
+  group("archived-open", { archivedAt: 10 }),
+  group("archived-loose", { synthetic: true, archivedAt: 10 }),
+  group("archived-loose-ticketed", {
+    synthetic: true,
+    jiraTicketId: "SCRUM-3",
+    archivedAt: 10,
+  }),
+];
+const byId = (id: string) => groups.find((candidate) => candidate.id === id)!;
+
+const items = [
+  { groupId: "open" },
+  { groupId: "open" },
+  { groupId: "ticketed" },
+  { groupId: "loose" },
+  { groupId: "archived-ticketed" },
+  { groupId: "archived-open" },
+  { groupId: "archived-open" },
+  { groupId: "archived-loose" },
+  { groupId: "archived-loose-ticketed" },
 ];
 
 describe("archive policy", () => {
   it("knows an archived group by its archive time", () => {
-    expect(isArchived(groups[3])).toBe(true);
-    expect(isArchived(groups[1])).toBe(false);
+    expect(isArchived(byId("archived-open"))).toBe(true);
+    expect(isArchived(byId("open"))).toBe(false);
     expect(isArchived(undefined)).toBe(false);
   });
 
-  it("archives only a ticketed group that is on the board", () => {
-    expect(canArchive(groups[0])).toBe(false);
-    expect(canArchive(groups[1])).toBe(true);
-    expect(canArchive(groups[2])).toBe(true);
-    expect(canArchive(groups[3])).toBe(false);
-  });
-
-  it("archives a selection through the group that holds its ticket", () => {
-    expect(archiveTargetFor({ groupId: "synthetic" }, groups)?.id).toBe(
-      "synthetic",
-    );
-    expect(archiveTargetFor({ groupId: "ticketed" }, groups)?.id).toBe(
-      "ticketed",
-    );
-    expect(archiveTargetFor({ groupId: "open" }, groups)).toBeUndefined();
-    expect(archiveTargetFor({ groupId: null }, groups)).toBeUndefined();
+  it("archives any group on the board, ticket or not", () => {
+    expect(canArchive(byId("open"))).toBe(true);
+    expect(canArchive(byId("ticketed"))).toBe(true);
+    expect(canArchive(byId("loose"))).toBe(true);
+    expect(canArchive(byId("archived-open"))).toBe(false);
   });
 
   it("leaves selections in archived groups off the board", () => {
-    const items = [
-      { id: "a", groupId: "archived" },
-      { id: "b", groupId: "ticketed" },
-      { id: "c", groupId: null },
-    ];
-    expect(isSelectionArchived(items[0], groups)).toBe(true);
-    expect(activeSelections(items, groups).map((item) => item.id)).toEqual([
-      "b",
-      "c",
-    ]);
+    expect(isSelectionArchived({ groupId: "archived-loose" }, groups)).toBe(
+      true,
+    );
+    expect(isSelectionArchived({ groupId: null }, groups)).toBe(false);
+    expect(activeSelections(items, groups)).toEqual(items.slice(0, 4));
   });
 });
 
 describe("archiveScopeFor", () => {
-  const items = [
-    { groupId: "ticketed" },
-    { groupId: "ticketed" },
-    { groupId: "synthetic" },
-    { groupId: "open" },
-  ];
-
-  it("archives the whole ticketed group, with how many selections go", () => {
+  it("archives a selection's whole group, with how many selections go", () => {
     expect(archiveScopeFor(items[0], groups, items)).toEqual({
-      group: groups[1],
+      group: byId("open"),
       selectionCount: 2,
     });
   });
 
-  it("archives a loose selection's own ticket alone", () => {
-    expect(archiveScopeFor(items[2], groups, items)?.selectionCount).toBe(1);
+  it("archives a loose selection through its own synthetic group", () => {
+    expect(archiveScopeFor(items[3], groups, items)).toEqual({
+      group: byId("loose"),
+      selectionCount: 1,
+    });
   });
 
-  it("has nothing to archive without a ticket or when already archived", () => {
-    expect(archiveScopeFor(items[3], groups, items)).toBeUndefined();
-    expect(
-      archiveScopeFor({ groupId: "archived" }, groups, items),
-    ).toBeUndefined();
+  it("has nothing to archive when already archived or without a group", () => {
+    expect(archiveScopeFor(items[5], groups, items)).toBeUndefined();
+    expect(archiveScopeFor({ groupId: null }, groups, items)).toBeUndefined();
+  });
+});
+
+describe("restoreScopeFor", () => {
+  it("restores an archived selection's group", () => {
+    expect(restoreScopeFor(items[5], groups, items)).toEqual({
+      group: byId("archived-open"),
+      selectionCount: 2,
+    });
+    expect(restoreScopeFor(items[0], groups, items)).toBeUndefined();
+  });
+});
+
+describe("archivedDeletionFor", () => {
+  it("deletes an archived real group without a ticket as a whole", () => {
+    expect(archivedDeletionFor(items[5], groups, items)).toEqual({
+      kind: "group",
+      group: byId("archived-open"),
+      selectionCount: 2,
+    });
+  });
+
+  it("removes an archived loose selection without a ticket on its own", () => {
+    expect(archivedDeletionFor(items[7], groups, items)).toEqual({
+      kind: "selection",
+    });
+  });
+
+  it("never deletes what has a ticket, nor what is on the board", () => {
+    expect(archivedDeletionFor(items[4], groups, items)).toBeUndefined();
+    expect(archivedDeletionFor(items[8], groups, items)).toBeUndefined();
+    expect(archivedDeletionFor(items[0], groups, items)).toBeUndefined();
   });
 });

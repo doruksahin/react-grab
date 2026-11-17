@@ -17,7 +17,7 @@ interface GroupCollapsibleProps {
   onDelete?: (groupId: string) => void;
   onToggleRevealed: (groupId: string) => void;
   onCopy?: (groupId: string) => void;
-  /** Archives the group (ADR-0030); given only for a ticketed group. */
+  /** Archives the group (ADR-0030); given only for one on the board. */
   onArchive?: (groupId: string) => void;
   /** Extra header content, such as the sidebar's ticket status (ADR-0028). */
   headerExtra?: JSX.Element;

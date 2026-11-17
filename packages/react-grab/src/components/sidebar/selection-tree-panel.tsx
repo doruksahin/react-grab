@@ -17,7 +17,7 @@ import { statusCounts } from "../../features/sidebar/business/status-filter.js";
 import { bindGroupCommentCallbacks } from "../../features/jira-comments/bind-group-callbacks.js";
 import { useGroupCommentCallbacks } from "../../features/jira-comments/hooks/use-group-comment-callbacks.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
-import { isSelectionLocked } from "../../features/selection-groups/business/ticket-lock.js";
+import { canMoveSelection } from "../../features/selection-groups/business/membership-policy.js";
 import { moveDestinations } from "../../features/selection-groups/business/move-destinations.js";
 import type { SidebarFocusRequest } from "../../features/sidebar/hooks/use-sidebar-session.js";
 import { SIDEBAR_FOCUS_HIGHLIGHT_MS } from "../../constants.js";
@@ -32,8 +32,13 @@ import { ActiveGroupPicker } from "../selection-groups/active-group-picker.js";
 import { ReproducePanel } from "../reproduce-steps/reproduce-panel.jsx";
 import { LocationNotice } from "../selection-location/location-notice.jsx";
 import { SelectionMenu } from "../selection/selection-menu.jsx";
-import { archiveLabel, restoreLabel } from "../selection/archive-labels.js";
-import { archiveScopeFor } from "../../features/selection-groups/business/archive-policy.js";
+import {
+  type ArchiveHandlers,
+  archiveMenuAction,
+  deleteArchivedGroupMenuAction,
+  restoreMenuAction,
+} from "../selection/archive-actions.js";
+import { archivedDeletionFor } from "../../features/selection-groups/business/archive-policy.js";
 import { SelectionTreeView } from "../selection-groups/selection-tree-view.jsx";
 import { SelectionSection } from "../selection-groups/ungrouped-section.jsx";
 import { GroupTicketSummary } from "./group-ticket-summary.jsx";
@@ -46,12 +51,11 @@ interface SelectionTreePanelProps {
   statusSections: StatusSection<CommentItem>[];
   grouping: SelectionGrouping;
   statusOf: (item: CommentItem) => string;
-  /** Selections in archived groups, shown in a closed section at the end (ADR-0030). */
+  /** Archived selections, shown in a closed section at the end (ADR-0030). */
   archived: CommentItem[];
   /** Every selection, to say how many go with a group when it is archived. */
   commentItems: CommentItem[];
-  onArchiveGroup?: (groupId: string) => void;
-  onRestoreGroup?: (groupId: string) => void;
+  archive?: ArchiveHandlers;
   groups: SelectionGroupWithJira[];
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
@@ -142,32 +146,39 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
   const renderRow = (item: CommentItem, archived = false) => {
     const group = () =>
       item.groupId ? groupMap().get(item.groupId) : undefined;
+    // Bulk actions move selections, so only one that may move is checkable.
     const checkable = () =>
-      !isSelectionLocked({ groupId: item.groupId }, props.groups);
+      canMoveSelection({ groupId: item.groupId }, props.groups);
     const isSelected = () => props.selectedIds?.has(item.id) === true;
     const isBulkSelecting = () => (props.selectedIds?.size ?? 0) > 0;
     const destinations = () => moveDestinations(item, props.groups);
-    const canRemove = () => Boolean(props.canRemoveItem?.(item.id));
-    const groupSize = (groupId: string) =>
-      props.commentItems.filter((other) => other.groupId === groupId).length;
-    const archiveAction = () => {
-      const scope = props.onArchiveGroup
-        ? archiveScopeFor(item, props.groups, props.commentItems)
+    // In the Archived section a selection in a real group goes with its
+    // group: the group is restored or deleted as a whole (ADR-0030).
+    const archivedDeletion = () =>
+      archived
+        ? archivedDeletionFor(item, props.groups, props.commentItems)
         : undefined;
-      if (!scope) return undefined;
-      return {
-        label: archiveLabel(scope.group, scope.selectionCount),
-        onSelect: () => props.onArchiveGroup?.(scope.group.id),
-      };
-    };
-    const restoreAction = () => {
-      const currentGroup = group();
-      if (!currentGroup || !props.onRestoreGroup) return undefined;
-      return {
-        label: restoreLabel(currentGroup, groupSize(currentGroup.id)),
-        onSelect: () => props.onRestoreGroup?.(currentGroup.id),
-      };
-    };
+    const canRemove = () => Boolean(props.canRemoveItem?.(item.id));
+    const archiveAction = () =>
+      archived
+        ? undefined
+        : archiveMenuAction(
+            item,
+            props.groups,
+            props.commentItems,
+            props.archive,
+          );
+    const restoreAction = () =>
+      archived
+        ? restoreMenuAction(
+            item,
+            props.groups,
+            props.commentItems,
+            props.archive,
+          )
+        : undefined;
+    const deleteGroupAction = () =>
+      deleteArchivedGroupMenuAction(archivedDeletion(), props.archive);
 
     const boundComments = () => {
       const currentGroup = group();
@@ -212,15 +223,15 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
         actions={
           <Show
             when={
-              archived ||
               destinations().length > 0 ||
               canRemove() ||
-              Boolean(archiveAction())
+              Boolean(archiveAction() ?? restoreAction() ?? deleteGroupAction())
             }
           >
             <SelectionMenu
-              archive={archived ? undefined : archiveAction()}
-              restore={archived ? restoreAction() : undefined}
+              archive={archiveAction()}
+              restore={restoreAction()}
+              deleteGroup={deleteGroupAction()}
               destinations={archived ? [] : destinations()}
               onMove={(groupId) => props.onMoveItem?.(item.id, groupId)}
               onRemove={
@@ -311,7 +322,7 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
             onDeleteGroup={props.onDeleteGroup}
             onToggleGroupRevealed={props.onToggleGroupRevealed}
             onCopyGroup={props.onCopyGroup}
-            onArchiveGroup={props.onArchiveGroup}
+            onArchiveGroup={props.archive?.archiveGroup}
             groupHeaderExtra={(group) => (
               <GroupTicketSummary
                 group={group}

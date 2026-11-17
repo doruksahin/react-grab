@@ -6,6 +6,7 @@ import type {
   BulkMoveResult,
   ClearCounts,
   ClearResult,
+  DeleteArchivedGroupResult,
   DeleteGroupResult,
   MoveResult,
   RemoveResult,
@@ -89,6 +90,8 @@ export interface SelectionGroupsAPI {
   handleAddGroup: (name: string) => void;
   handleRenameGroup: (groupId: string, name: string) => void;
   handleDeleteGroup: (groupId: string) => DeleteGroupResult;
+  /** Deletes an archived group without a ticket, with its selections (ADR-0030). */
+  handleDeleteArchivedGroup: (groupId: string) => DeleteArchivedGroupResult;
   handleMoveItem: (itemId: string, groupId: string | null) => MoveResult;
   handleMoveItems: (itemIds: Set<string>, groupId: string) => BulkMoveResult;
   /** Remove a selection; refused for a locked one. GCs empty synthetic groups. */

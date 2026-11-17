@@ -30,7 +30,6 @@ import type {
 import type {
   ArchiveGroup200,
   ArchiveGroup404,
-  ArchiveGroup409,
   DeleteGroup200,
   DeleteGroup409,
   ListGroups200Item,
@@ -409,7 +408,7 @@ export const useDeleteGroup = <TError = DeleteGroup409,
       return useMutation(getDeleteGroupMutationOptions(options), queryClient);
     }
     /**
- * @summary Archive one group that has a Jira ticket
+ * @summary Archive one group
  */
 export type archiveGroupResponse200 = {
   data: ArchiveGroup200
@@ -421,15 +420,10 @@ export type archiveGroupResponse404 = {
   status: 404
 }
 
-export type archiveGroupResponse409 = {
-  data: ArchiveGroup409
-  status: 409
-}
-
 export type archiveGroupResponseSuccess = (archiveGroupResponse200) & {
   headers: Headers;
 };
-export type archiveGroupResponseError = (archiveGroupResponse404 | archiveGroupResponse409) & {
+export type archiveGroupResponseError = (archiveGroupResponse404) & {
   headers: Headers;
 };
 
@@ -465,7 +459,7 @@ export const archiveGroup = async (id: string,
 
 
 
-export const getArchiveGroupMutationOptions = <TError = ArchiveGroup404 | ArchiveGroup409,
+export const getArchiveGroupMutationOptions = <TError = ArchiveGroup404,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveGroup>>, TError,{id: string;groupId: string}, TContext>, fetch?: RequestInit}
 ): UseMutationOptions<Awaited<ReturnType<typeof archiveGroup>>, TError,{id: string;groupId: string}, TContext> => {
 
@@ -494,12 +488,12 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
 
     export type ArchiveGroupMutationResult = NonNullable<Awaited<ReturnType<typeof archiveGroup>>>
 
-    export type ArchiveGroupMutationError = ArchiveGroup404 | ArchiveGroup409
+    export type ArchiveGroupMutationError = ArchiveGroup404
 
     /**
- * @summary Archive one group that has a Jira ticket
+ * @summary Archive one group
  */
-export const useArchiveGroup = <TError = ArchiveGroup404 | ArchiveGroup409,
+export const useArchiveGroup = <TError = ArchiveGroup404,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveGroup>>, TError,{id: string;groupId: string}, TContext>, fetch?: RequestInit}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof archiveGroup>>,

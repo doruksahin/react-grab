@@ -3346,6 +3346,10 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       sidebarCommentItems={commentItems()}
                       onArchiveGroup={syncLayer.archiveGroup}
                       onRestoreGroup={syncLayer.restoreGroup}
+                      onDeleteArchivedGroup={(groupId) =>
+                        selectionGroups.handleDeleteArchivedGroup(groupId)
+                          .status === "deleted"
+                      }
                       commentsDisconnectedItemIds={commentsDisconnectedItemIds()}
                       commentItemCount={boardCommentItems().length}
                       clockFlashTrigger={clockFlashTrigger()}

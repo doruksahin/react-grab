@@ -56,14 +56,17 @@ export const createFakeStorage = (
       groups.set(group.id, copy(group));
     },
     deleteGroup: async (groupId) => {
+      // As the server: an archived group goes with its comments (ADR-0030).
+      if (groups.get(groupId)?.archivedAt !== undefined) {
+        for (const [id, item] of comments) {
+          if (item.groupId === groupId) comments.delete(id);
+        }
+      }
       groups.delete(groupId);
     },
     archiveGroup: async (groupId) => {
       const group = groups.get(groupId);
       if (!group) return notFound(`group ${groupId}`);
-      if (!group.jiraTicketId) {
-        throw new Error("Only a group with a Jira ticket is archived");
-      }
       const archived = { ...group, archivedAt: group.archivedAt ?? Date.now() };
       groups.set(groupId, archived);
       return copy(archived);

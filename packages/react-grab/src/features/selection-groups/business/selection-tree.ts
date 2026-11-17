@@ -45,8 +45,8 @@ export const selectionTree = <Group extends SelectionGroup>(
 
 /**
  * The archived part of the tree (ADR-0030), drawn the same way: a loose
- * selection whose own ticket was archived goes to its Ungrouped, an
- * archived group follows with its selections.
+ * selection whose own synthetic group was archived goes to its Ungrouped,
+ * an archived real group follows with its selections.
  */
 export const archivedSelectionTree = <Group extends SelectionGroup>(
   items: CommentItem[],

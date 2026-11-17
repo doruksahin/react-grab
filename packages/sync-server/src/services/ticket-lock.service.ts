@@ -81,15 +81,22 @@ export class TicketLockService {
     return DONE;
   }
 
-  /** Deletes a group unless it has a ticket. Absent counts as deleted. */
+  /**
+   * Deletes a group unless it has a ticket. Absent counts as deleted. An
+   * archived group goes with its comments, in one batch: they were off the
+   * board and must not come back as loose selections (ADR-0030).
+   */
   async deleteGroup(
     workspaceId: string,
     groupId: string,
   ): Promise<TicketLockResult> {
-    if (await this.isGroupTicketed(workspaceId, groupId)) {
-      return refused("group-has-ticket");
+    const group = await this.repo.findGroup(workspaceId, groupId);
+    if (group && isTicketed(group)) return refused("group-has-ticket");
+    if (group?.archivedAt !== undefined) {
+      await this.repo.deleteGroupWithComments(workspaceId, groupId);
+    } else {
+      await this.repo.deleteGroup(workspaceId, groupId);
     }
-    await this.repo.deleteGroup(workspaceId, groupId);
     return DONE;
   }
 }

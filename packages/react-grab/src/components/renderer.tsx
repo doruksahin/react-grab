@@ -33,6 +33,7 @@ import { DevModeProvider } from "../features/dev-mode/index.js";
 import { GuideBar } from "./reproduce-steps/guide-bar.js";
 import { ToastRegion, showToast } from "./ui/toast.js";
 import { groupTitle } from "./selection/archive-labels.js";
+import type { ArchiveHandlers } from "./selection/archive-actions.js";
 import {
   StepGuideProvider,
   useStepGuide,
@@ -71,6 +72,17 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         }),
       () => showToast({ title: `Could not archive ${title}` }),
     );
+  };
+  // Delete is permanent, so there is no Undo; the toast says what went.
+  const deleteArchivedGroup = (groupId: string) => {
+    const group = groupById(groupId);
+    const deleted = props.onDeleteArchivedGroup?.(groupId);
+    if (deleted && group) showToast({ title: `${group.name} deleted` });
+  };
+  const archive: ArchiveHandlers = {
+    archiveGroup,
+    restoreGroup,
+    deleteArchivedGroup,
   };
   const stepGuide = useStepGuide();
   // A guide started from the sidebar closes it, so the page it points at
@@ -528,7 +540,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         onCopyGroup={props.onCopyGroup}
         copyableCount={props.copyableCount}
         onMoveItem={props.onMoveItem}
-        onArchiveGroup={archiveGroup}
+        archive={archive}
         onOpenInSidebar={(itemId) => {
           // The menu gives way to the sidebar, where the full card is.
           props.onCommentsDismiss?.();
@@ -574,8 +586,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
             canRemoveItem={props.canRemoveItem}
             onMoveItem={props.onMoveItem}
             onMoveItems={props.onMoveItems}
-            onArchiveGroup={archiveGroup}
-            onRestoreGroup={restoreGroup}
+            archive={archive}
             onAddGroup={props.onAddGroup}
             onRenameGroup={props.onRenameGroup}
             onDeleteGroup={props.onDeleteGroup}

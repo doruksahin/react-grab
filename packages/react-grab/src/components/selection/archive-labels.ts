@@ -1,14 +1,14 @@
 import type { SelectionGroup } from "../../features/selection-groups/types.js";
 
-// A real group's comments share one ticket, so they are archived and
-// restored together and the label says so; a loose comment's own ticket is
-// just that comment (ADR-0030).
-const scopeText = (group: SelectionGroup, selectionCount: number): string =>
-  group.synthetic
-    ? ""
-    : ` group (${selectionCount} ${selectionCount === 1 ? "comment" : "comments"})`;
+// A real group is archived and restored as a whole and the label says so; a
+// loose selection's own synthetic group is just that selection (ADR-0030).
+const commentCount = (count: number): string =>
+  `${count} ${count === 1 ? "comment" : "comments"}`;
 
-/** "Archive", or "Archive group (3 comments)" when the ticket is a group's. */
+const scopeText = (group: SelectionGroup, selectionCount: number): string =>
+  group.synthetic ? "" : ` group (${commentCount(selectionCount)})`;
+
+/** "Archive", or "Archive group (3 comments)" for a real group. */
 export const archiveLabel = (
   group: SelectionGroup,
   selectionCount: number,
@@ -23,3 +23,7 @@ export const restoreLabel = (
 /** How a toast names a group: its ticket key, else its name. */
 export const groupTitle = (group: SelectionGroup): string =>
   group.jiraTicketId ?? group.name;
+
+/** "Delete group (3 comments)": an archived group goes with its comments. */
+export const deleteGroupLabel = (selectionCount: number): string =>
+  `Delete group (${commentCount(selectionCount)})`;

@@ -46,3 +46,17 @@ Apply the migration to production before deploying the Worker, then release the 
 ## More Information
 
 Linear and GitHub Projects archive the same way: an archived item keeps its context, leaves the normal views, is browsed in a separate place and can be restored ([Linear](https://linear.app/docs/archive-issues), [GitHub Projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/managing-items-in-your-project/archiving-items-from-your-project)).
+
+### Update: archive before delete (2026-11-17)
+
+Decided by the user on 2026-11-17: archive is the step before delete, for everything.
+
+| | Archive | Delete |
+|---|---|---|
+| Has a ticket | yes | no (ADR-0008) |
+| No ticket | yes | yes, permanently |
+
+- **Archive is always a group's.** A selection always has a group (ADR-0008), so a group, with or without a ticket, is archived as a whole, and a loose selection through its own synthetic group (its menu just says "Archive"). The server no longer refuses a group without a ticket. No comment carries its own archive field: one source of truth, and production had no selection without a group when this was decided.
+- **An archived group is never a move target or the group a new selection lands in.**
+- **"Clear all" and the clear after "Copy all" leave archived selections alone:** they clear the board, and archived selections are not on it.
+- **Delete from the Archived section, only without a ticket:** a loose selection is removed ("Remove selection"); a real group is deleted together with its selections ("Delete group (N comments)", `deleteArchivedGroup`), since archived selections must not fall back onto the board as Ungrouped. The server deletes an archived group and its comments in one D1 batch, so a failed request cannot bring them back as loose cards. Delete stays permanent; a short notification says what went.

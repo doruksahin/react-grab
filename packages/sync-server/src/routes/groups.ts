@@ -105,12 +105,12 @@ const deleteGroupRoute = createRoute({
   },
 });
 
-/** Takes a ticketed group off the board (ADR-0030); the server sets the time. */
+/** Takes a group off the board (ADR-0030); the server sets the time. */
 const archiveGroupRoute = createRoute({
   method: "put",
   path: "/workspaces/{id}/groups/{groupId}/archive",
   tags: ["groups"],
-  summary: "Archive one group that has a Jira ticket",
+  summary: "Archive one group",
   operationId: "archiveGroup",
   request: { params: GroupIdParam },
   responses: {
@@ -120,11 +120,6 @@ const archiveGroupRoute = createRoute({
     },
     404: {
       description: "The group does not exist",
-      content: { "application/json": { schema: ErrorResponse } },
-    },
-    409: {
-      description:
-        "Refused: the group has no Jira ticket; delete it instead (ADR-0030)",
       content: { "application/json": { schema: ErrorResponse } },
     },
   },
@@ -180,10 +175,7 @@ export const groupsRoutes = createRouter()
     const { id, groupId } = c.req.valid("param");
     const result = await c.var.groupArchive.archive(id, groupId);
     if (result.status === "refused") {
-      const message = ARCHIVE_REFUSAL_MESSAGES[result.reason];
-      return result.reason === "group-not-found"
-        ? c.json({ error: message }, 404)
-        : c.json({ error: message }, 409);
+      return c.json({ error: ARCHIVE_REFUSAL_MESSAGES[result.reason] }, 404);
     }
     return c.json(result.group, 200);
   })
