@@ -1,12 +1,17 @@
 import { For, Show, createSignal } from "solid-js";
-import type { JiraAccountSummary } from "react-grab/sync-http";
+import type {
+  JiraAccountSummary,
+  WorkspaceSummary,
+} from "react-grab/sync-http";
 import { settingsMessenger } from "../messaging/extension-messengers.js";
+import { anchorHref, anchorId } from "./anchor-id.js";
 import { describeError } from "./describe-error.js";
 import { formField } from "./form-field.js";
 import { siteHost } from "./site-host.js";
 
 interface JiraAccountsSectionProps {
   accounts: JiraAccountSummary[];
+  workspaces: WorkspaceSummary[];
   onChanged: () => void;
 }
 
@@ -17,6 +22,11 @@ interface JiraAccountsSectionProps {
 export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
   const [status, setStatus] = createSignal("");
   const [replacing, setReplacing] = createSignal<string | null>(null);
+  const startsOpen = props.accounts.length === 0;
+  const workspacesOf = (accountId: string) =>
+    props.workspaces.filter(
+      (workspace) => workspace.jiraAccountId === accountId,
+    );
 
   const run = (action: () => Promise<string>) => {
     setStatus("Working…");
@@ -87,7 +97,7 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
           <tbody>
             <For each={props.accounts}>
               {(account) => (
-                <tr>
+                <tr id={anchorId("jira-account", account.id)}>
                   <td>{siteHost(account.siteUrl)}</td>
                   <td>
                     {account.displayName}
@@ -95,9 +105,25 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
                     <small>{account.email}</small>
                   </td>
                   <td>
-                    {account.workspaceCount === 1
-                      ? "1 workspace"
-                      : `${account.workspaceCount} workspaces`}
+                    <Show
+                      when={workspacesOf(account.id).length > 0}
+                      fallback={
+                        account.workspaceCount > 0
+                          ? `${account.workspaceCount} workspaces`
+                          : "No workspace"
+                      }
+                    >
+                      <For each={workspacesOf(account.id)}>
+                        {(workspace, index) => (
+                          <>
+                            {index() > 0 ? ", " : ""}
+                            <a href={anchorHref("workspace", workspace.id)}>
+                              {workspace.id}
+                            </a>
+                          </>
+                        )}
+                      </For>
+                    </Show>
                   </td>
                   <td>
                     <Show
@@ -115,7 +141,7 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
                             disabled={account.workspaceCount > 0}
                             title={
                               account.workspaceCount > 0
-                                ? "A workspace uses this account"
+                                ? "A workspace uses this account. Send its tickets to another account first."
                                 : undefined
                             }
                             onClick={() => handleRemove(account)}
@@ -148,38 +174,40 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
         </table>
       </Show>
 
-      <form onSubmit={handleAdd} aria-labelledby="add-jira-account-heading">
-        <fieldset>
-          <legend id="add-jira-account-heading">Add a Jira account</legend>
-          <label>
-            Jira site
-            <input
-              name="siteUrl"
-              type="url"
-              required
-              placeholder="https://acme.atlassian.net"
-            />
-          </label>
-          <label>
-            Email
-            <input name="email" type="email" required autocomplete="off" />
-          </label>
-          <label>
-            API token
-            <input
-              name="apiToken"
-              type="password"
-              required
-              autocomplete="off"
-            />
-          </label>
-          <p>
-            Create the token at id.atlassian.com → Security → API tokens.
-            Tickets are created as this account.
-          </p>
-          <button type="submit">Connect</button>
-        </fieldset>
-      </form>
+      <details id="add-jira-account" open={startsOpen}>
+        <summary id="add-jira-account-heading">Add a Jira account</summary>
+        <form onSubmit={handleAdd} aria-labelledby="add-jira-account-heading">
+          <fieldset>
+            <label>
+              Jira site
+              <input
+                name="siteUrl"
+                type="url"
+                required
+                placeholder="https://acme.atlassian.net"
+              />
+            </label>
+            <label>
+              Email
+              <input name="email" type="email" required autocomplete="off" />
+            </label>
+            <label>
+              API token
+              <input
+                name="apiToken"
+                type="password"
+                required
+                autocomplete="off"
+              />
+            </label>
+            <p>
+              Create the token at id.atlassian.com → Security → API tokens.
+              Tickets are created as this account.
+            </p>
+            <button type="submit">Connect</button>
+          </fieldset>
+        </form>
+      </details>
       <p role="status">{status()}</p>
     </section>
   );

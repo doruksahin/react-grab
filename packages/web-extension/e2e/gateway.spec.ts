@@ -294,9 +294,15 @@ test.describe(
       const optionsPage = await context.newPage();
       await optionsPage.goto(`chrome-extension://${extensionId}/options.html`);
 
+      // A site is already enabled, so the form starts closed.
+      await optionsPage
+        .locator("summary", { hasText: "Enable a site" })
+        .click();
       await optionsPage.getByLabel("Site address").fill(DISABLED_SITE_ORIGIN);
-      // Without the admin token the workspace is typed, as before ADR-0027.
-      await optionsPage.getByLabel("Workspace").fill(TEST_WORKSPACE);
+      // Without the admin token the workspace is typed, with the known ones suggested.
+      await optionsPage
+        .getByLabel("Workspace", { exact: true })
+        .fill(TEST_WORKSPACE);
       await optionsPage.getByRole("button", { name: "Enable site" }).click();
       await expect(
         optionsPage.getByText(
@@ -307,6 +313,43 @@ test.describe(
       const disabledSitePage = await context.newPage();
       await disabledSitePage.goto(DISABLED_PAGE_URL);
       await waitForOverlay(disabledSitePage);
+    });
+
+    test("without the admin token the options page shows each site's workspace and where its tickets go @ADR-0027", async ({
+      context,
+      serviceWorker,
+      syncServer,
+    }) => {
+      syncServer.override("listWorkspaces", [
+        {
+          id: TEST_WORKSPACE,
+          jiraAccountId: "e2e-jira-account",
+          jiraProjectKey: "SHOP",
+          siteUrl: "https://acme.atlassian.net",
+        },
+      ]);
+      const extensionId = new URL(serviceWorker.url()).host;
+      const optionsPage = await context.newPage();
+      await optionsPage.goto(`chrome-extension://${extensionId}/options.html`);
+
+      await expect(
+        optionsPage
+          .getByRole("row", { name: new URL(TEST_PAGE_URL).origin })
+          .getByRole("link", { name: TEST_WORKSPACE }),
+      ).toBeVisible();
+      await expect(
+        optionsPage
+          .getByRole("row", { name: new URL(TEST_PAGE_URL).origin })
+          .getByText("SHOP on acme.atlassian.net"),
+      ).toBeVisible();
+      await expect(
+        optionsPage.locator("[data-connection='connected']"),
+      ).toBeVisible();
+      expect(
+        syncServer
+          .requests("listWorkspaces")
+          .map((request) => request.authorization),
+      ).toContain(EXPECTED_AUTHORIZATION);
     });
 
     test("on localhost the host app's own react-grab is the only overlay and the extension starts no sync", async ({

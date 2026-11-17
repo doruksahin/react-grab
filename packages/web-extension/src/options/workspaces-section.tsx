@@ -4,6 +4,8 @@ import type {
   WorkspaceSummary,
 } from "react-grab/sync-http";
 import { settingsMessenger } from "../messaging/extension-messengers.js";
+import type { SiteSettingsByOrigin } from "../settings/types.js";
+import { anchorHref, anchorId } from "./anchor-id.js";
 import { describeError } from "./describe-error.js";
 import { describeDestination } from "./describe-destination.js";
 import { formField } from "./form-field.js";
@@ -12,6 +14,9 @@ import { JiraDestinationFields } from "./jira-destination-fields.jsx";
 interface WorkspacesSectionProps {
   workspaces: WorkspaceSummary[];
   accounts: JiraAccountSummary[];
+  sites: SiteSettingsByOrigin;
+  /** False without the admin token: the destinations are then read only. */
+  canManageJira: boolean;
   onChanged: () => void;
 }
 
@@ -22,6 +27,10 @@ interface WorkspacesSectionProps {
 export const WorkspacesSection = (props: WorkspacesSectionProps) => {
   const [status, setStatus] = createSignal("");
   const [editing, setEditing] = createSignal<string | null>(null);
+  // Only this browser's sites: other people's sites are not stored here.
+  const siteCount = (workspaceId: string) =>
+    Object.values(props.sites).filter((site) => site.workspace === workspaceId)
+      .length;
 
   const handleSave = (event: SubmitEvent, workspaceId: string) => {
     event.preventDefault();
@@ -45,7 +54,11 @@ export const WorkspacesSection = (props: WorkspacesSectionProps) => {
   };
 
   return (
-    <section aria-labelledby="workspaces-heading" data-workspaces>
+    <section
+      id="workspaces"
+      aria-labelledby="workspaces-heading"
+      data-workspaces
+    >
       <h2 id="workspaces-heading">Workspaces</h2>
       <Show
         when={props.workspaces.length > 0}
@@ -56,6 +69,7 @@ export const WorkspacesSection = (props: WorkspacesSectionProps) => {
             <tr>
               <th scope="col">Workspace</th>
               <th scope="col">Tickets go to</th>
+              <th scope="col">Your sites</th>
               <th scope="col">
                 <span class="visually-hidden">Actions</span>
               </th>
@@ -64,12 +78,26 @@ export const WorkspacesSection = (props: WorkspacesSectionProps) => {
           <tbody>
             <For each={props.workspaces}>
               {(workspace) => (
-                <tr>
+                <tr id={anchorId("workspace", workspace.id)}>
                   <td>{workspace.id}</td>
                   <td>
                     <Show
                       when={editing() === workspace.id}
-                      fallback={describeDestination(workspace, props.accounts)}
+                      fallback={
+                        <Show
+                          when={props.canManageJira && workspace.jiraAccountId}
+                          fallback={describeDestination(
+                            workspace,
+                            props.accounts,
+                          )}
+                        >
+                          {(accountId) => (
+                            <a href={anchorHref("jira-account", accountId())}>
+                              {describeDestination(workspace, props.accounts)}
+                            </a>
+                          )}
+                        </Show>
+                      }
                     >
                       <form
                         onSubmit={(event) => handleSave(event, workspace.id)}
@@ -87,7 +115,14 @@ export const WorkspacesSection = (props: WorkspacesSectionProps) => {
                     </Show>
                   </td>
                   <td>
-                    <Show when={editing() !== workspace.id}>
+                    <Show when={siteCount(workspace.id) > 0} fallback="None">
+                      <a href="#sites">{siteCount(workspace.id)}</a>
+                    </Show>
+                  </td>
+                  <td>
+                    <Show
+                      when={props.canManageJira && editing() !== workspace.id}
+                    >
                       <button
                         type="button"
                         disabled={props.accounts.length === 0}

@@ -22,6 +22,7 @@ export type RouteHandler =
 
 export interface MockOverrides {
   health: RouteHandler;
+  listWorkspaces: RouteHandler;
   listComments: RouteHandler;
   upsertComment: RouteHandler;
   deleteComment: RouteHandler;
@@ -65,6 +66,7 @@ interface EndpointDef {
 
 const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
   health: { pattern: "**/health", method: "GET" },
+  listWorkspaces: { pattern: "**/workspaces", method: "GET" },
   listComments: { pattern: "**/workspaces/*/comments", method: "GET" },
   upsertComment: { pattern: "**/workspaces/*/comments/*", method: "PUT" },
   deleteComment: { pattern: "**/workspaces/*/comments/*", method: "DELETE" },
@@ -126,6 +128,7 @@ const ENDPOINTS: Record<keyof MockOverrides, EndpointDef> = {
 
 const DEFAULT_FIXTURES: Record<keyof MockOverrides, unknown> = {
   health: fixtures.healthCheck,
+  listWorkspaces: fixtures.workspaces,
   listComments: fixtures.comments,
   upsertComment: fixtures.itemWriteResponse,
   deleteComment: fixtures.itemWriteResponse,

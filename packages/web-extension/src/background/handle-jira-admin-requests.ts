@@ -30,6 +30,22 @@ const adminPort = async (
   return createPort({ serverUrl, apiToken: adminToken });
 };
 
+/** Reading workspaces needs only the sync token, so teammates without the admin token see them too. */
+const syncTokenPort = async (
+  createPort: CreateJiraAdminPort,
+): Promise<JiraAdminPort> => {
+  const { serverUrl, apiToken } = await readSyncSettings();
+  if (!serverUrl) {
+    throw new GatewayRefusalError("the sync server is not configured");
+  }
+  if (!apiToken) {
+    throw new GatewayRefusalError(
+      "the API token is not set; enter it under Sync server",
+    );
+  }
+  return createPort({ serverUrl, apiToken });
+};
+
 /**
  * Jira accounts and workspace destinations, for the settings page only. A
  * content script that sends one of these is refused before anything is read.
@@ -40,10 +56,11 @@ export const handleJiraAdminRequests = (
 ): void => {
   const port = async (
     sender: Parameters<typeof assertExtensionPageSender>[0],
+    build = adminPort,
   ): Promise<JiraAdminPort> => {
     await ready;
     assertExtensionPageSender(sender);
-    return adminPort(createPort);
+    return build(createPort);
   };
 
   settingsMessenger.onMessage("listJiraAccounts", async ({ sender }) =>
@@ -64,7 +81,7 @@ export const handleJiraAdminRequests = (
     (await port(sender)).listProjects(data),
   );
   settingsMessenger.onMessage("listWorkspaces", async ({ sender }) =>
-    (await port(sender)).listWorkspaces(),
+    (await port(sender, syncTokenPort)).listWorkspaces(),
   );
   settingsMessenger.onMessage(
     "setJiraDestination",

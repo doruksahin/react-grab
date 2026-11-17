@@ -159,6 +159,7 @@ Each step is reviewed for SRP, DRY and layers, and the findings are fixed, befor
 
 ### More information
 
+- 2026-11-17: the extension lists workspaces with the sync token, not the admin token. `GET /workspaces` has always needed only the sync token. A teammate without the admin token now sees each workspace and where its tickets go, read only. The settings page also uses this call to check that the server answers and accepts the token.
 - For option 3 later: Arctic's `Atlassian` provider (MIT, fetch-based, checked at 3.7.0) covers the OAuth code exchange and refresh, so no OAuth code would be hand-written. Calls then go to `api.atlassian.com/ex/jira/{cloudId}`, and the refresh token rotates, so each new one must be stored.
 
 ### Sources

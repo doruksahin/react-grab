@@ -20,16 +20,21 @@ const NEW_WORKSPACE = "";
 interface AddSiteFormProps {
   workspaces: WorkspaceSummary[];
   accounts: JiraAccountSummary[];
-  /** False when the admin token is missing: only existing workspaces can be chosen. */
+  /** False when the admin token is missing: the workspace is typed, with the known ones suggested. */
   canManageJira: boolean;
+  /** Open on first run, closed once a site exists. */
+  startsOpen: boolean;
   onSaved: () => void;
 }
 
 export const AddSiteForm = (props: AddSiteFormProps) => {
   const [status, setStatus] = createSignal("");
-  const [choice, setChoice] = createSignal(
-    props.workspaces[0]?.id ?? NEW_WORKSPACE,
-  );
+  // A typed workspace starts empty; a chosen one starts on the first in the list.
+  const initialChoice = () =>
+    props.canManageJira ? (props.workspaces[0]?.id ?? NEW_WORKSPACE) : "";
+  const [choice, setChoice] = createSignal(initialChoice());
+  // Read once: closing the form right after the first site would hide its status.
+  const startsOpen = props.startsOpen;
   const chosenWorkspace = () =>
     props.workspaces.find((workspace) => workspace.id === choice());
 
@@ -62,7 +67,7 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
     }
     await settingsMessenger.sendMessage("saveSite", { origin, site });
     form.reset();
-    setChoice(props.workspaces[0]?.id ?? NEW_WORKSPACE);
+    setChoice(initialChoice());
     setStatus(`Enabled ${origin} for ${site.workspace}.`);
     props.onSaved();
   };
@@ -76,89 +81,104 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      aria-labelledby="add-site-heading"
-      data-add-site
-    >
-      <fieldset>
-        <legend id="add-site-heading">Enable a site</legend>
-        <label>
-          Site address
-          <input
-            name="origin"
-            type="url"
-            required
-            placeholder="https://app.example.com"
-          />
-        </label>
-        <Show
-          when={props.canManageJira}
-          fallback={
-            <label>
-              Workspace
-              <input name="workspace" required />
-            </label>
-          }
-        >
+    <details id="add-site" open={startsOpen}>
+      <summary id="add-site-heading">Enable a site</summary>
+      <form
+        onSubmit={handleSubmit}
+        aria-labelledby="add-site-heading"
+        data-add-site
+      >
+        <fieldset>
           <label>
-            Workspace
-            <select
-              name="workspace"
-              value={choice()}
-              onChange={(event) => setChoice(event.currentTarget.value)}
-            >
-              <For each={props.workspaces}>
-                {(workspace) => (
-                  <option value={workspace.id}>{workspace.id}</option>
-                )}
-              </For>
-              <option value={NEW_WORKSPACE}>New workspace…</option>
-            </select>
-          </label>
-        </Show>
-        <Show
-          when={props.canManageJira && choice() === NEW_WORKSPACE}
-          fallback={
-            <Show when={chosenWorkspace()}>
-              {(workspace) => (
-                <p data-workspace-destination>
-                  Tickets go to{" "}
-                  {describeDestination(workspace(), props.accounts)}. Change it
-                  under Workspaces.
-                </p>
-              )}
-            </Show>
-          }
-        >
-          <label>
-            Workspace name
+            Site address
             <input
-              name="newWorkspace"
+              name="origin"
+              type="url"
               required
-              placeholder="my-app-workspace"
+              placeholder="https://app.example.com"
             />
           </label>
           <Show
-            when={props.accounts.length > 0}
-            fallback={<p role="alert">Add a Jira account first.</p>}
+            when={props.canManageJira}
+            fallback={
+              <label>
+                Workspace
+                <input
+                  name="workspace"
+                  required
+                  list="known-workspaces"
+                  autocomplete="off"
+                  onInput={(event) => setChoice(event.currentTarget.value)}
+                />
+                <datalist id="known-workspaces">
+                  <For each={props.workspaces}>
+                    {(workspace) => <option value={workspace.id} />}
+                  </For>
+                </datalist>
+              </label>
+            }
           >
-            <JiraDestinationFields accounts={props.accounts} />
+            <label>
+              Workspace
+              <select
+                name="workspace"
+                value={choice()}
+                onChange={(event) => setChoice(event.currentTarget.value)}
+              >
+                <For each={props.workspaces}>
+                  {(workspace) => (
+                    <option value={workspace.id}>{workspace.id}</option>
+                  )}
+                </For>
+                <option value={NEW_WORKSPACE}>New workspace…</option>
+              </select>
+            </label>
           </Show>
-        </Show>
-        <label>
-          <input name="recordSteps" type="checkbox" />
-          Record steps: save the clicks and field changes that led to each
-          comment. Typed values are never saved.
-        </label>
-        <label>
-          <input name="recordSession" type="checkbox" />
-          Record session: keep the last minutes as a replay and link it from
-          each comment. Inputs are masked.
-        </label>
-        <button type="submit">Enable site</button>
-        <p role="status">{status()}</p>
-      </fieldset>
-    </form>
+          <Show
+            when={props.canManageJira && choice() === NEW_WORKSPACE}
+            fallback={
+              <Show when={chosenWorkspace()}>
+                {(workspace) => (
+                  <p data-workspace-destination>
+                    Tickets go to{" "}
+                    {describeDestination(workspace(), props.accounts)}.{" "}
+                    {props.canManageJira
+                      ? "Change it under Workspaces."
+                      : "Someone with the admin token can change it."}
+                  </p>
+                )}
+              </Show>
+            }
+          >
+            <label>
+              Workspace name
+              <input
+                name="newWorkspace"
+                required
+                placeholder="my-app-workspace"
+              />
+            </label>
+            <Show
+              when={props.accounts.length > 0}
+              fallback={<p role="alert">Add a Jira account first.</p>}
+            >
+              <JiraDestinationFields accounts={props.accounts} />
+            </Show>
+          </Show>
+          <label>
+            <input name="recordSteps" type="checkbox" />
+            Record steps: save the clicks and field changes that led to each
+            comment. Typed values are never saved.
+          </label>
+          <label>
+            <input name="recordSession" type="checkbox" />
+            Record session: keep the last minutes as a replay and link it from
+            each comment. Inputs are masked.
+          </label>
+          <button type="submit">Enable site</button>
+          <p role="status">{status()}</p>
+        </fieldset>
+      </form>
+    </details>
   );
 };
