@@ -139,9 +139,9 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
                           <button
                             type="button"
                             disabled={account.workspaceCount > 0}
-                            title={
+                            aria-describedby={
                               account.workspaceCount > 0
-                                ? "A workspace uses this account. Send its tickets to another account first."
+                                ? "jira-account-remove-rule"
                                 : undefined
                             }
                             onClick={() => handleRemove(account)}
@@ -172,6 +172,16 @@ export const JiraAccountsSection = (props: JiraAccountsSectionProps) => {
             </For>
           </tbody>
         </table>
+        <Show
+          when={props.accounts.some((account) => account.workspaceCount > 0)}
+        >
+          <p id="jira-account-remove-rule">
+            <small>
+              An account can't be removed while a workspace sends tickets to it.
+              Choose another account for that workspace first.
+            </small>
+          </p>
+        </Show>
       </Show>
 
       <details id="add-jira-account" open={startsOpen}>
