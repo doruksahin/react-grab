@@ -114,6 +114,13 @@ pnpm typecheck # runs type checking
 pnpm format
 ```
 
+## Commits, PRs and releases
+
+- Write commit messages and PR titles as Conventional Commits: `type(scope): summary`, for example `feat(web-extension): show the installed version` or `fix: encode path parameters`. Types: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `ci`, `chore`. Mark a breaking change with `!` after the type (`feat!: …`).
+- PRs are squash-merged, and the PR title becomes the commit message on `main`. The `PR Title` check (`.github/workflows/pr-title.yml`) fails a PR whose title does not follow the format.
+- The web extension (`packages/web-extension`) is versioned by release-please (`release-please-config.json`). Never edit its version or `CHANGELOG.md` by hand. A `fix` makes a patch release and a `feat` a minor one; below 1.0.0 a breaking change also makes a minor one. `docs`, `test`, `ci` and `chore` make no release. To release, merge the open "release web-extension" PR. See `packages/web-extension/README.md`.
+- The npm packages (`react-grab`, `grab`, `@react-grab/cli`, `@react-grab/mcp`) still use Changesets: run `pnpm changeset` in a PR that changes them.
+
 ## Development instructions
 
 This is a pnpm + Turborepo monorepo (19 packages under `packages/`). No external services (databases, Docker, etc.) are required.
