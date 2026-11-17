@@ -21,23 +21,17 @@ interface ServerSettingsFormProps {
 
 const describeConnection = (props: ServerSettingsFormProps): string => {
   const { connection } = props;
-  if (connection.kind === "not-configured") {
-    return "Not connected. Enter the server URL and the API token.";
-  }
+  if (connection.kind === "not-configured") return "Not connected";
   if (connection.kind === "failed") {
-    return `Could not connect: ${connection.message}`;
+    return `Can't connect: ${connection.message}`;
   }
   const admin = props.hasAdminToken ? "admin token saved" : "no admin token";
-  return `Connected to ${siteHost(props.serverUrl)}, ${admin}.`;
+  return `Connected to ${siteHost(props.serverUrl)} · ${admin}`;
 };
 
-/**
- * Closed once the server answers, open while it does not: the server is set
- * up once and then only summarized.
- */
+/** The extension keeps the tokens; pages on enabled sites never see them (ADR-0023). */
 export const ServerSettingsForm = (props: ServerSettingsFormProps) => {
   const [status, setStatus] = createSignal("");
-  const startsOpen = props.connection.kind !== "connected";
 
   const save = async (form: HTMLFormElement): Promise<void> => {
     const serverUrl = serverUrlSchema.parse(formField(form, "serverUrl"));
@@ -61,13 +55,9 @@ export const ServerSettingsForm = (props: ServerSettingsFormProps) => {
   };
 
   return (
-    <details id="sync-server" open={startsOpen} data-sync-server>
-      <summary>
-        <strong id="server-heading">Sync server</strong>{" "}
-        <span data-connection={props.connection.kind}>
-          {describeConnection(props)}
-        </span>
-      </summary>
+    <section id="sync-server" aria-labelledby="server-heading" data-sync-server>
+      <h2 id="server-heading">Sync server</h2>
+      <p data-connection={props.connection.kind}>{describeConnection(props)}</p>
       <form onSubmit={handleSubmit} aria-labelledby="server-heading">
         <fieldset>
           <label>
@@ -87,11 +77,7 @@ export const ServerSettingsForm = (props: ServerSettingsFormProps) => {
               type="password"
               autocomplete="off"
               required={!props.hasApiToken}
-              placeholder={
-                props.hasApiToken
-                  ? "Saved. Enter a new token to replace it."
-                  : ""
-              }
+              placeholder={props.hasApiToken ? "Saved" : ""}
             />
           </label>
           <label>
@@ -100,17 +86,13 @@ export const ServerSettingsForm = (props: ServerSettingsFormProps) => {
               name="adminToken"
               type="password"
               autocomplete="off"
-              placeholder={
-                props.hasAdminToken
-                  ? "Saved. Enter a new token to replace it."
-                  : "Needed to add Jira accounts and choose where tickets go"
-              }
+              placeholder={props.hasAdminToken ? "Saved" : "For Jira setup"}
             />
           </label>
           <button type="submit">Save server</button>
           <p role="status">{status()}</p>
         </fieldset>
       </form>
-    </details>
+    </section>
   );
 };

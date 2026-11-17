@@ -140,11 +140,7 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
               <Show when={chosenWorkspace()}>
                 {(workspace) => (
                   <p data-workspace-destination>
-                    Tickets go to{" "}
-                    {describeDestination(workspace(), props.accounts)}.{" "}
-                    {props.canManageJira
-                      ? "Change it under Workspaces."
-                      : "Someone with the admin token can change it."}
+                    → {describeDestination(workspace(), props.accounts)}
                   </p>
                 )}
               </Show>
@@ -167,13 +163,11 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
           </Show>
           <label>
             <input name="recordSteps" type="checkbox" />
-            Record steps: save the clicks and field changes that led to each
-            comment. Typed values are never saved.
+            Record steps <small>(typed values are never saved)</small>
           </label>
           <label>
             <input name="recordSession" type="checkbox" />
-            Record session: keep the last minutes as a replay and link it from
-            each comment. Inputs are masked.
+            Record session <small>(inputs are masked)</small>
           </label>
           <button type="submit">Enable site</button>
           <p role="status">{status()}</p>

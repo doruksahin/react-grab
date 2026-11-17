@@ -332,19 +332,21 @@ test.describe(
       const optionsPage = await context.newPage();
       await optionsPage.goto(`chrome-extension://${extensionId}/options.html`);
 
+      const siteRow = optionsPage.getByRole("row", {
+        name: new URL(TEST_PAGE_URL).origin,
+      });
+      await expect(siteRow.getByText("→ SHOP")).toBeVisible();
       await expect(
-        optionsPage
-          .getByRole("row", { name: new URL(TEST_PAGE_URL).origin })
-          .getByRole("link", { name: TEST_WORKSPACE }),
+        optionsPage.locator("[data-badge='sync-server']"),
+      ).toHaveText("OK");
+
+      await siteRow.getByRole("link", { name: TEST_WORKSPACE }).click();
+      await expect(
+        optionsPage.locator(`#workspace-${TEST_WORKSPACE}`),
       ).toBeVisible();
       await expect(
-        optionsPage
-          .getByRole("row", { name: new URL(TEST_PAGE_URL).origin })
-          .getByText("SHOP on acme.atlassian.net"),
-      ).toBeVisible();
-      await expect(
-        optionsPage.locator("[data-connection='connected']"),
-      ).toBeVisible();
+        optionsPage.getByRole("link", { name: "Workspaces" }),
+      ).toHaveAttribute("aria-current", "page");
       expect(
         syncServer
           .requests("listWorkspaces")
