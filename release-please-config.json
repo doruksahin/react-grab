@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "2d44bcf2ad9453af569c85e12217ca118848a011",
+  "bump-minor-pre-major": true,
+  "packages": {
+    "packages/web-extension": {
+      "release-type": "node",
+      "component": "web-extension",
+      "package-name": "@react-grab/web-extension",
+      "include-component-in-tag": true
+    }
+  }
+}

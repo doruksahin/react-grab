@@ -370,8 +370,9 @@ When adding new mocked tests, always add a `@SPEC-xxx` tag. See `TESTING.md` for
 
 ## Conventions
 
-- Conventional commits: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`
-- Add changesets for published package changes: `pnpm changeset`
+- Conventional commits: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`. PRs are squash-merged, so the PR title is the commit message and must follow the same format (checked by `.github/workflows/pr-title.yml`)
+- The web extension is versioned by release-please from those commits (`release-please-config.json`); merge its Release PR to release. See `packages/web-extension/README.md`
+- Add changesets for published npm package changes: `pnpm changeset`
 - Lint/format tools: **oxlint** + **oxfmt** (not ESLint/Prettier, except dashboard)
 - Package manager: **pnpm** (pinned to 10.24.0 via `packageManager` field)
 - Node: >= 22 (WXT needs it; >= 22.18 for AdCreative integration)
