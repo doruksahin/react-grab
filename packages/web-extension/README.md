@@ -54,6 +54,14 @@ Clicking the extension icon turns the overlay's enabled flag on or off. The badg
 
 The page never gets the token. A script on an enabled site can send the same messages as the overlay. It can then read and change that site's workspace and create Jira tickets. It cannot read the token, choose a URL or reach another site's workspace. Enable only sites you trust.
 
+## Releases
+
+The extension is versioned by [release-please](https://github.com/googleapis/release-please) from Conventional Commits. You do not edit the version or the changelog by hand.
+
+1. Give the PR a Conventional Commit title. The `PR Title` check enforces it. PRs are squash-merged, so the title becomes the commit that release-please reads. A `fix` makes a patch release, a `feat` a minor one. A `!` after the type (`feat!:`) is a breaking change: while the version is below 1.0.0 it makes a minor release. `chore`, `docs`, `test` and `ci` make no release.
+2. release-please keeps a Release PR open with the next version and its `CHANGELOG.md` entries. Only commits that change files under `packages/web-extension` count.
+3. Merge the Release PR to release. It tags `web-extension-v<version>`, creates a GitHub release and attaches the Chrome ZIP. The settings page shows the installed version next to its title.
+
 ## Develop and test
 
 ```bash

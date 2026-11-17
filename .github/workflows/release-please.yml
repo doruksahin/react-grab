@@ -1,0 +1,58 @@
+name: Release Please
+
+# Versions the packages listed in release-please-config.json from Conventional
+# Commits. Keeps a Release PR open; merging it tags the release. A web
+# extension release also gets its Chrome ZIP attached.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      extension-released: ${{ steps.release.outputs['packages/web-extension--release_created'] }}
+      extension-tag: ${{ steps.release.outputs['packages/web-extension--tag_name'] }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  web-extension-zip:
+    needs: release-please
+    if: needs.release-please.outputs.extension-released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build extension
+        run: pnpm extension:build
+
+      - name: Package extension
+        run: pnpm --filter @react-grab/web-extension package
+
+      - name: Attach ZIP to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.release-please.outputs.extension-tag }}" packages/web-extension/dist/*.zip

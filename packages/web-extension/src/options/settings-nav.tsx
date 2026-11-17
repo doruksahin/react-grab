@@ -1,4 +1,5 @@
 import { For } from "solid-js";
+import { browser } from "wxt/browser";
 import {
   SECTION_ORDER,
   SECTION_TITLES,
@@ -14,7 +15,10 @@ interface SettingsNavProps {
 /** Settings sections as plain links; the URL hash picks the section (settings-sections.ts). */
 export const SettingsNav = (props: SettingsNavProps) => (
   <nav aria-label="Settings" data-settings-nav>
-    <h1>React Grab</h1>
+    <h1>
+      React Grab{" "}
+      <small data-version>v{browser.runtime.getManifest().version}</small>
+    </h1>
     <ul>
       <For each={SECTION_ORDER}>
         {(id) => (
