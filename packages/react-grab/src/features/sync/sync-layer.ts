@@ -19,7 +19,7 @@ import type {
   SyncConfig,
   SyncPortFactories,
 } from "./types.js";
-import type { CommentItem } from "../../types.js";
+import type { CommentItem, SyncUser } from "../../types.js";
 import type { SelectionGroupWithJira } from "../selection-groups/types.js";
 import { isWriteRefused } from "./business/write-refused-error.js";
 
@@ -85,6 +85,7 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
   // the connection is up.
   const [adapter, setAdapter] = createSignal<StorageAdapter | null>(null);
   const [jira, setJira] = createSignal<JiraPort | null>(null);
+  const [currentUser, setCurrentUser] = createSignal<SyncUser | null>(null);
   let pollIntervalId: ReturnType<typeof setInterval> | null = null;
   // The storage port of the last init, for retries after a failed connect.
   let activeStorage: StorageAdapter | null = null;
@@ -324,6 +325,7 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
     activeStorage = null;
     offlineBaseline = null;
     setJira(ports.jira);
+    setCurrentUser(config.user ?? null);
 
     batch(() => {
       storeHandle.setWorkspace(config.workspace);
@@ -455,6 +457,8 @@ export const createSyncLayer = (factories: SyncPortFactories) => {
 
   return {
     store: storeHandle.store,
+    /** Who makes new selections, from the last init (ADR-0031). */
+    currentUser,
     groups: () => storeHandle.store.groups,
     comments: () => storeHandle.store.comments,
     workspace: () => storeHandle.store.workspace,

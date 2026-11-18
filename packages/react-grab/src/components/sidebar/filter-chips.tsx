@@ -13,6 +13,13 @@ export const FilterChips: Component<FilterChipsProps> = (props) => {
   const chips = () => {
     const result: { label: string; onDismiss: () => void }[] = [];
     // The selected status shows as the pressed status chip (status-filter.tsx).
+    if (props.filter.capturedBy) {
+      result.push({
+        label: `Captured by: ${props.filter.capturedBy}`,
+        onDismiss: () =>
+          props.onFilterChange({ ...props.filter, capturedBy: null }),
+      });
+    }
     if (props.filter.assignee) {
       result.push({
         label: `Assignee: ${props.filter.assignee}`,

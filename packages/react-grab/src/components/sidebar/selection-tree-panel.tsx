@@ -280,6 +280,7 @@ export const SelectionTreePanel: Component<SelectionTreePanelProps> = (
           jiraPriority={group()?.jiraPriority}
           jiraAssignee={group()?.jiraAssignee}
           jiraAssigneeAvatar={group()?.jiraAssigneeAvatar}
+          capturedBy={item.capturedBy}
           jiraComments={group()?.jiraComments}
           commentsDefaultOpen={props.focusRequest?.itemId === item.id}
           onSubmitComment={boundComments()?.onSubmitComment}

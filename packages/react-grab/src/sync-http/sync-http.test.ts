@@ -2,6 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createHttpAdapter,
   createHttpJiraPort,
+  encodeJiraCredential,
+  fetchJiraMe,
+  JIRA_CREDENTIAL_HEADER,
   SyncHttpError,
 } from "./index.js";
 import type { SyncHttpConfig } from "./types.js";
@@ -65,6 +68,27 @@ afterEach(() => {
 });
 
 describe("request helper", () => {
+  it("sends the caller's Jira credential only when the config has one (ADR-0031)", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse(200, { accountId: "a-1", displayName: "Ayşe Yılmaz" }),
+      )
+      .mockResolvedValueOnce(jsonResponse(200, []));
+    const jiraCredential = encodeJiraCredential("ayse@acme.com", "personal");
+
+    expect(await fetchJiraMe({ ...config, jiraCredential })).toEqual({
+      accountId: "a-1",
+      displayName: "Ayşe Yılmaz",
+    });
+    await createHttpAdapter(config).loadComments();
+
+    const [withCredential, withoutCredential] = fetchMock.mock.calls.map(
+      ([, init]) => new Headers(init?.headers).get(JIRA_CREDENTIAL_HEADER),
+    );
+    expect(withCredential).toBe(btoa("ayse@acme.com:personal"));
+    expect(withoutCredential).toBeNull();
+  });
+
   it("sends every generated call to the configured server with the token", async () => {
     fetchMock.mockResolvedValue(jsonResponse(200, [comment]));
     await createHttpAdapter(config).loadComments();

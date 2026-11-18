@@ -33,6 +33,7 @@ import { Badge } from "../ui/badge.js";
 
 interface FilterMenuProps {
   filter: FilterState;
+  capturers: string[];
   assignees: string[];
   reporters: string[];
   labels: string[];
@@ -42,6 +43,7 @@ interface FilterMenuProps {
 const countActive = (filter: FilterState): number => {
   let n = 0;
   if (filter.statuses.size > 0) n += 1;
+  if (filter.capturedBy !== null) n += 1;
   if (filter.assignee !== null) n += 1;
   if (filter.reporter !== null) n += 1;
   if (filter.label !== null) n += 1;
@@ -71,6 +73,16 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
   const currentStatus = () =>
     getSelectedStatus(props.filter) ?? ALL_STATUSES_VALUE;
   const currentStatusLabel = () => getSelectedStatus(props.filter) ?? "All";
+
+  // Captured by (ADR-0031)
+  const handleCapturedByChange = (value: string) => {
+    props.onFilterChange({
+      ...props.filter,
+      capturedBy: value === "" ? null : value,
+    });
+  };
+  const currentCapturedByValue = () => props.filter.capturedBy ?? "";
+  const currentCapturedByLabel = () => props.filter.capturedBy ?? "All";
 
   // Assignee
   const handleAssigneeChange = (value: string) => {
@@ -192,6 +204,40 @@ export const FilterMenu: Component<FilterMenuProps> = (props) => {
                   {(status) => (
                     <MenuRadioItem value={status}>{status}</MenuRadioItem>
                   )}
+                </For>
+              </MenuRadioGroup>
+            </MenuSubContent>
+          </MenuSub>
+
+          {/* Captured by (ADR-0031) */}
+          <MenuSub>
+            <MenuSubTrigger data-react-grab-filter-row="captured-by">
+              <span class="flex items-center gap-2">
+                <svg width="12" height="12" viewBox="0 0 16 16">
+                  <path
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    d="M8 1.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4 4a4 4 0 1 1 8 0 4 4 0 0 1-8 0m-2 9a3.75 3.75 0 0 1 3.75-3.75h2.5v1.5h-2.5A2.25 2.25 0 0 0 3.5 13v2H2zm10.97-3.28 1.06 1.06-3.5 3.5a.75.75 0 0 1-1.06 0l-1.5-1.5 1.06-1.06.97.97z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="font-medium">Captured by</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <span class={valueClass(props.filter.capturedBy !== null)}>
+                  {currentCapturedByLabel()}
+                </span>
+                <ChevronRight />
+              </span>
+            </MenuSubTrigger>
+            <MenuSubContent>
+              <MenuRadioGroup
+                value={currentCapturedByValue()}
+                onChange={handleCapturedByChange}
+              >
+                <MenuRadioItem value="">Everyone</MenuRadioItem>
+                <For each={props.capturers}>
+                  {(name) => <MenuRadioItem value={name}>{name}</MenuRadioItem>}
                 </For>
               </MenuRadioGroup>
             </MenuSubContent>

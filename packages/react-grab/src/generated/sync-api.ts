@@ -117,6 +117,14 @@ export interface JiraErrorResponse {
   code: JiraErrorResponseCode;
 }
 
+/**
+ * The Jira user the request's credential signs in as on the workspace's site (ADR-0031)
+ */
+export interface JiraMe {
+  accountId: string;
+  displayName: string;
+}
+
 export interface ReencryptResponse {
   reencrypted: number;
 }
@@ -1521,6 +1529,65 @@ export const searchJiraUsers = async (id: string,
     params: SearchJiraUsersParams, options?: Parameters<typeof customFetch>[1]): Promise<searchJiraUsersResponse> => {
 
   return customFetch<searchJiraUsersResponse>(getSearchJiraUsersUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type getJiraMeResponse200 = {
+  data: JiraMe
+  status: 200
+}
+
+export type getJiraMeResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type getJiraMeResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type getJiraMeResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type getJiraMeResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type getJiraMeResponseSuccess = (getJiraMeResponse200) & {
+  headers: Headers;
+};
+export type getJiraMeResponseError = (getJiraMeResponse404 | getJiraMeResponse409 | getJiraMeResponse422 | getJiraMeResponse502) & {
+  headers: Headers;
+};
+
+export type getJiraMeResponse = (getJiraMeResponseSuccess | getJiraMeResponseError)
+
+export const getGetJiraMeUrl = (id: string,) => {
+
+
+
+
+  return `/workspaces/${encodeURIComponent(String(id))}/jira/me`
+}
+
+/**
+ * The caller's personal credential (X-Jira-Credential) when it sends one, else the workspace's account (ADR-0031)
+ * @summary Who the request's Jira credential signs in as
+ */
+export const getJiraMe = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<getJiraMeResponse> => {
+
+  return customFetch<getJiraMeResponse>(getGetJiraMeUrl(id),
   {
     ...options,
     method: 'GET'

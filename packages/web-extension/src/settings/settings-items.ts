@@ -8,6 +8,7 @@ import {
 } from "./settings-schema.js";
 import { addRecordingSettings, dropJiraProjectKey } from "./migrate-sites.js";
 import type {
+  PersonalJiraAccount,
   SiteSettings,
   SiteSettingsByOrigin,
   SyncSettings,
@@ -22,6 +23,11 @@ export const apiTokenItem = storage.defineItem<string>("local:sync_api_token");
 /** The admin token (ADR-0027). storage.local is closed to content scripts. */
 export const adminTokenItem = storage.defineItem<string>(
   "local:sync_admin_token",
+);
+
+/** The user's own Jira token and who it signs in as (ADR-0031). storage.local is closed to content scripts. */
+export const personalJiraAccountItem = storage.defineItem<PersonalJiraAccount>(
+  "local:jira_personal_account",
 );
 
 export const sitesItem = storage.defineItem<SiteSettingsByOrigin>(

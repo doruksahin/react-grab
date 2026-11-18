@@ -21,7 +21,7 @@ import type {
   JiraClientFactory,
 } from "./jira-client-factory.js";
 import { JiraError, withJiraErrors } from "./jira-errors.js";
-import type { AttachmentPath } from "./jira.service.js";
+import type { AttachmentPath, JiraMyself } from "./jira.service.js";
 
 type CreateTicketInput = z.infer<typeof CreateJiraTicketRequest>;
 type CreateTicketResult = z.infer<typeof CreateJiraTicketResponse>;
@@ -154,6 +154,15 @@ export class JiraTicketService {
     return withJiraErrors(
       () => jira.searchUsers(query, projectKey),
       "Failed to search Jira users",
+    );
+  }
+
+  /** Who the request's credential signs in as on the workspace's Jira site (ADR-0031). */
+  async whoAmI(workspaceId: string): Promise<JiraMyself> {
+    const { jira } = await this.deps.clients.forWorkspace(workspaceId);
+    return withJiraErrors(
+      () => jira.getMyself(),
+      "Failed to read the Jira user",
     );
   }
 

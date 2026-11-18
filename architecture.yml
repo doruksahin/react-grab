@@ -1283,3 +1283,7 @@ decree:
       title: Show selections as one tree in the sidebar and the comments menu
       file: decree/adr/0028-one-selection-tree-in-sidebar-and-comments-menu.md
       status: accepted
+    ADR-0031:
+      title: Each extension user signs in to Jira with their own API token
+      file: decree/adr/0031-personal-jira-token-per-extension-user.md
+      status: accepted

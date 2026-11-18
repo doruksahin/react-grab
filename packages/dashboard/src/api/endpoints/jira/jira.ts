@@ -34,6 +34,7 @@ import type {
   CreateJiraTicketBody,
   GetJiraTicketStatus200,
   JiraErrorResponse,
+  JiraMe,
   ListJiraIssueTypes200Item,
   ListJiraPriorities200Item,
   SearchJiraUsers200Item,
@@ -1249,6 +1250,198 @@ export function useSearchJiraUsersSuspense<TData = Awaited<ReturnType<typeof sea
  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSearchJiraUsersSuspenseQueryOptions(id,params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * The caller's personal credential (X-Jira-Credential) when it sends one, else the workspace's account (ADR-0031)
+ * @summary Who the request's Jira credential signs in as
+ */
+export type getJiraMeResponse200 = {
+  data: JiraMe
+  status: 200
+}
+
+export type getJiraMeResponse404 = {
+  data: JiraErrorResponse
+  status: 404
+}
+
+export type getJiraMeResponse409 = {
+  data: JiraErrorResponse
+  status: 409
+}
+
+export type getJiraMeResponse422 = {
+  data: JiraErrorResponse
+  status: 422
+}
+
+export type getJiraMeResponse502 = {
+  data: JiraErrorResponse
+  status: 502
+}
+
+export type getJiraMeResponseSuccess = (getJiraMeResponse200) & {
+  headers: Headers;
+};
+export type getJiraMeResponseError = (getJiraMeResponse404 | getJiraMeResponse409 | getJiraMeResponse422 | getJiraMeResponse502) & {
+  headers: Headers;
+};
+
+export type getJiraMeResponse = (getJiraMeResponseSuccess | getJiraMeResponseError)
+
+export const getGetJiraMeUrl = (id: string,) => {
+
+
+
+
+  return `/workspaces/${id}/jira/me`
+}
+
+export const getJiraMe = async (id: string, options?: RequestInit): Promise<getJiraMeResponse> => {
+
+  const res = await fetch(getGetJiraMeUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+)
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: getJiraMeResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as getJiraMeResponse
+}
+
+
+
+
+
+export const getGetJiraMeQueryKey = (id: string,) => {
+    return [
+    `/workspaces/${id}/jira/me`
+    ] as const;
+    }
+
+
+export const getGetJiraMeQueryOptions = <TData = Awaited<ReturnType<typeof getJiraMe>>, TError = JiraErrorResponse>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJiraMeQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJiraMe>>> = ({ signal }) => getJiraMe(id, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetJiraMeQueryResult = NonNullable<Awaited<ReturnType<typeof getJiraMe>>>
+export type GetJiraMeQueryError = JiraErrorResponse
+
+
+export function useGetJiraMe<TData = Awaited<ReturnType<typeof getJiraMe>>, TError = JiraErrorResponse>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJiraMe>>,
+          TError,
+          Awaited<ReturnType<typeof getJiraMe>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJiraMe<TData = Awaited<ReturnType<typeof getJiraMe>>, TError = JiraErrorResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJiraMe>>,
+          TError,
+          Awaited<ReturnType<typeof getJiraMe>>
+        > , 'initialData'
+      >, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJiraMe<TData = Awaited<ReturnType<typeof getJiraMe>>, TError = JiraErrorResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Who the request's Jira credential signs in as
+ */
+
+export function useGetJiraMe<TData = Awaited<ReturnType<typeof getJiraMe>>, TError = JiraErrorResponse>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetJiraMeQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+export const getGetJiraMeSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof getJiraMe>>, TError = JiraErrorResponse>(id: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData>>, fetch?: RequestInit}
+) => {
+
+const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJiraMeQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJiraMe>>> = ({ signal }) => getJiraMe(id, { signal, ...fetchOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetJiraMeSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getJiraMe>>>
+export type GetJiraMeSuspenseQueryError = JiraErrorResponse
+
+
+export function useGetJiraMeSuspense<TData = Awaited<ReturnType<typeof getJiraMe>>, TError = JiraErrorResponse>(
+ id: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJiraMeSuspense<TData = Awaited<ReturnType<typeof getJiraMe>>, TError = JiraErrorResponse>(
+ id: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJiraMeSuspense<TData = Awaited<ReturnType<typeof getJiraMe>>, TError = JiraErrorResponse>(
+ id: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Who the request's Jira credential signs in as
+ */
+
+export function useGetJiraMeSuspense<TData = Awaited<ReturnType<typeof getJiraMe>>, TError = JiraErrorResponse>(
+ id: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getJiraMe>>, TError, TData>>, fetch?: RequestInit}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetJiraMeSuspenseQueryOptions(id,options)
 
   const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

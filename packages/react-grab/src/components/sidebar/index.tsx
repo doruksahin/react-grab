@@ -32,6 +32,7 @@ import {
   isFilterActive,
   applyFilters,
   getDistinctAssignees,
+  getDistinctCapturers,
   getDistinctReporters,
   getDistinctLabels,
 } from "../../features/sidebar/filter-state.js";
@@ -317,6 +318,7 @@ export const Sidebar: Component<SidebarProps> = (props) => {
                 />
                 <FilterMenu
                   filter={filterState()}
+                  capturers={getDistinctCapturers(props.commentItems)}
                   assignees={getDistinctAssignees(userFacingGroups())}
                   reporters={getDistinctReporters(userFacingGroups())}
                   labels={getDistinctLabels(userFacingGroups())}

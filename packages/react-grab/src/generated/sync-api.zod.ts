@@ -432,6 +432,20 @@ export const SearchJiraUsersResponse = zod.array(SearchJiraUsersResponseItem)
 
 
 /**
+ * The caller's personal credential (X-Jira-Credential) when it sends one, else the workspace's account (ADR-0031)
+ * @summary Who the request's Jira credential signs in as
+ */
+export const GetJiraMeParams = zod.object({
+  "id": zod.string().describe('Workspace ID')
+})
+
+export const GetJiraMeResponse = zod.object({
+  "accountId": zod.string(),
+  "displayName": zod.string()
+}).describe('The Jira user the request\'s credential signs in as on the workspace\'s site (ADR-0031)')
+
+
+/**
  * @summary Seal every credential with the current key version (key rotation)
  */
 export const ReencryptJiraCredentialsResponse = zod.object({

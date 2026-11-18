@@ -21,6 +21,7 @@ import type {
   AddJiraComment200,
   CreateJiraTicket200,
   GetJiraTicketStatus200,
+  JiraMe,
   ListJiraIssueTypes200Item,
   ListJiraPriorities200Item,
   SearchJiraUsers200Item
@@ -40,6 +41,8 @@ export const getListJiraPrioritiesResponseMock = (): ListJiraPriorities200Item[]
 export const getListJiraLabelsResponseMock = (): string[] => (Array.from({length: faker.number.int({min: 1, max: 10})}, () => faker.word.sample()))
 
 export const getSearchJiraUsersResponseMock = (): SearchJiraUsers200Item[] => (Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({accountId: faker.string.alpha({length: {min: 10, max: 20}}), displayName: faker.string.alpha({length: {min: 10, max: 20}}), avatarUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), null])})))
+
+export const getGetJiraMeResponseMock = (overrideResponse: Partial<Extract<JiraMe, object>> = {}): JiraMe => ({accountId: faker.string.alpha({length: {min: 10, max: 20}}), displayName: faker.string.alpha({length: {min: 10, max: 20}}), ...overrideResponse})
 
 
 export const getCreateJiraTicketMockHandler = (overrideResponse?: CreateJiraTicket200 | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<CreateJiraTicket200> | CreateJiraTicket200), options?: RequestHandlerOptions) => {
@@ -125,6 +128,18 @@ export const getSearchJiraUsersMockHandler = (overrideResponse?: SearchJiraUsers
       })
   }, options)
 }
+
+export const getGetJiraMeMockHandler = (overrideResponse?: JiraMe | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<JiraMe> | JiraMe), options?: RequestHandlerOptions) => {
+  return http.get('*/workspaces/:id/jira/me', async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getGetJiraMeResponseMock(),
+      { status: 200
+      })
+  }, options)
+}
 export const getJiraMock = () => [
   getCreateJiraTicketMockHandler(),
   getGetJiraTicketStatusMockHandler(),
@@ -132,5 +147,6 @@ export const getJiraMock = () => [
   getListJiraIssueTypesMockHandler(),
   getListJiraPrioritiesMockHandler(),
   getListJiraLabelsMockHandler(),
-  getSearchJiraUsersMockHandler()
+  getSearchJiraUsersMockHandler(),
+  getGetJiraMeMockHandler()
 ]

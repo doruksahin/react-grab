@@ -45,6 +45,7 @@ export {
   AddJiraCommentRequest,
   AddJiraCommentResponse,
   JiraUser,
+  JiraMe,
   JiraProject,
   JiraIssueType,
   JiraPriority,

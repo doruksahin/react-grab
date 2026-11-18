@@ -118,19 +118,31 @@ export interface SyncRequest {
   ) => Promise<Response>;
 }
 
+export const JIRA_CREDENTIAL_HEADER = "X-Jira-Credential";
+
+/** The sync token, plus the caller's own Jira credential when there is one (ADR-0031). */
+const syncAuthHeaders = (
+  connection: SyncServerConnection,
+): Record<string, string> => ({
+  Authorization: `Bearer ${connection.apiToken}`,
+  ...(connection.jiraCredential
+    ? { [JIRA_CREDENTIAL_HEADER]: connection.jiraCredential }
+    : {}),
+});
+
 /** The one place that knows how to reach the sync server (ADR-0020, ADR-0023). */
 export const createSyncRequest = (
   connection: SyncServerConnection,
 ): SyncRequest => {
   const serverUrl = connection.serverUrl.replace(/\/+$/, "");
-  const authorization = `Bearer ${connection.apiToken}`;
+  const authHeaders = syncAuthHeaders(connection);
 
   return {
-    options: () => ({ serverUrl, headers: { Authorization: authorization } }),
+    options: () => ({ serverUrl, headers: authHeaders }),
 
     raw: async (operation, path, request) => {
       assertNoDotSegments(path);
-      const headers = new Headers({ Authorization: authorization });
+      const headers = new Headers(authHeaders);
       if (request.contentType) headers.set("Content-Type", request.contentType);
       const response = await fetch(`${serverUrl}${path}`, {
         method: request.method,

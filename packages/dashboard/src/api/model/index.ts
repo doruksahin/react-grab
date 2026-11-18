@@ -39,6 +39,7 @@ export * from './jiraAccountSummary';
 export * from './jiraDestination';
 export * from './jiraErrorResponse';
 export * from './jiraErrorResponseCode';
+export * from './jiraMe';
 export * from './listComments200Item';
 export * from './listComments200ItemStatus';
 export * from './listGroups200Item';

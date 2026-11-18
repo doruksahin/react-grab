@@ -1,3 +1,4 @@
+import type { CommentItem } from "../../types.js";
 import type { SelectionGroupWithJira } from "../selection-groups/types.js";
 import { getStatusLabel } from "./status-colors.js";
 import { type DueDatePreset, matchesDueDatePreset } from "./due-date/index.js";
@@ -16,6 +17,7 @@ export {
 
 export interface FilterState {
   statuses: Set<string>;               // empty = all
+  capturedBy: string | null;           // null = all; per selection (ADR-0031)
   assignee: string | null;             // null = all
   reporter: string | null;             // null = all
   label: string | null;                // null = all
@@ -24,6 +26,7 @@ export interface FilterState {
 
 export const EMPTY_FILTER: FilterState = {
   statuses: new Set(),
+  capturedBy: null,
   assignee: null,
   reporter: null,
   label: null,
@@ -33,6 +36,7 @@ export const EMPTY_FILTER: FilterState = {
 export function isFilterActive(filter: FilterState): boolean {
   return (
     filter.statuses.size > 0 ||
+    filter.capturedBy !== null ||
     filter.assignee !== null ||
     filter.reporter !== null ||
     filter.label !== null ||
@@ -58,6 +62,11 @@ export function applyFilters(
 
 export function getDistinctAssignees(groups: SelectionGroupWithJira[]): string[] {
   return [...new Set(groups.map(g => g.jiraAssignee).filter(Boolean) as string[])].sort();
+}
+
+/** Who captured the selections, for the Captured by filter (ADR-0031). */
+export function getDistinctCapturers(items: CommentItem[]): string[] {
+  return [...new Set(items.map(item => item.capturedBy).filter(Boolean) as string[])].sort();
 }
 
 export function getDistinctReporters(groups: SelectionGroupWithJira[]): string[] {

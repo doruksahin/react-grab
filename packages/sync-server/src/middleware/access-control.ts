@@ -2,6 +2,7 @@ import { bearerAuth } from "hono/bearer-auth";
 import { cors } from "hono/cors";
 import { createMiddleware } from "hono/factory";
 import { isAllowedOrigin } from "../lib/allowed-origin.js";
+import { JIRA_CREDENTIAL_HEADER } from "../lib/personal-jira-credential.js";
 import { AdminEnvSchema, parseAdminEnv, parseAuthEnv } from "../schemas/env.js";
 import type { AppEnv } from "../types.js";
 
@@ -17,7 +18,7 @@ export const corsForCallers = createMiddleware<AppEnv>(async (c, next) => {
     // c.env is absent when the app runs outside Workers, as export-spec does.
     origin: (origin) =>
       isAllowedOrigin(origin, c.env?.ALLOWED_ORIGINS) ? origin : null,
-    allowHeaders: ["Authorization", "Content-Type"],
+    allowHeaders: ["Authorization", "Content-Type", JIRA_CREDENTIAL_HEADER],
     allowMethods: ["GET", "PUT", "POST", "DELETE", "OPTIONS"],
     maxAge: 600,
   });

@@ -3,8 +3,14 @@ import type {
   WorkspaceSummary,
 } from "react-grab/sync-http";
 import { settingsMessenger } from "../messaging/extension-messengers.js";
-import { readSyncSettings } from "../settings/settings-items.js";
-import type { SiteSettingsByOrigin } from "../settings/types.js";
+import {
+  personalJiraAccountItem,
+  readSyncSettings,
+} from "../settings/settings-items.js";
+import type {
+  JiraUserIdentity,
+  SiteSettingsByOrigin,
+} from "../settings/types.js";
 import { describeError } from "./describe-error.js";
 
 /**
@@ -30,6 +36,8 @@ export interface OptionsState {
   sites: SiteSettingsByOrigin;
   connection: ServerConnection;
   jira: JiraAdminState;
+  /** Who the user's own Jira token signs in as; never the token (ADR-0031). */
+  personalJira: JiraUserIdentity | null;
 }
 
 const loadConnection = async (
@@ -66,9 +74,10 @@ export const loadOptionsState = async (): Promise<OptionsState> => {
   const settings = await readSyncSettings();
   const isConfigured = Boolean(settings.serverUrl && settings.apiToken);
   const hasAdminToken = Boolean(settings.serverUrl && settings.adminToken);
-  const [connection, jira] = await Promise.all([
+  const [connection, jira, personalJiraAccount] = await Promise.all([
     loadConnection(isConfigured),
     loadJiraAdminState(hasAdminToken),
+    personalJiraAccountItem.getValue(),
   ]);
   return {
     serverUrl: settings.serverUrl ?? "",
@@ -77,5 +86,11 @@ export const loadOptionsState = async (): Promise<OptionsState> => {
     sites: settings.sites,
     connection,
     jira,
+    personalJira: personalJiraAccount
+      ? {
+          accountId: personalJiraAccount.accountId,
+          displayName: personalJiraAccount.displayName,
+        }
+      : null,
   };
 };

@@ -118,6 +118,16 @@ export const JiraUser = z.object({
   avatarUrl: z.string().nullable().openapi({ example: "https://x/avatar.png" }),
 });
 
+export const JiraMe = z
+  .object({
+    accountId: z.string().openapi({ example: "5b10ac8d82e05b22cc7d4ef5" }),
+    displayName: z.string().openapi({ example: "Ayşe Yılmaz" }),
+  })
+  .openapi("JiraMe", {
+    description:
+      "The Jira user the request's credential signs in as on the workspace's site (ADR-0031)",
+  });
+
 export const GroupIdParam = z.object({
   id: z.string().openapi({ description: "Workspace ID" }),
   groupId: z.string().openapi({ description: "Group ID" }),

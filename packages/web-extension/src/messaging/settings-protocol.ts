@@ -6,7 +6,7 @@ import type {
   NewJiraAccount,
   WorkspaceSummary,
 } from "react-grab/sync-http";
-import type { SiteSettings } from "../settings/types.js";
+import type { JiraUserIdentity, SiteSettings } from "../settings/types.js";
 
 export interface SaveSiteRequest {
   origin: string;
@@ -15,6 +15,11 @@ export interface SaveSiteRequest {
 
 export interface ReplaceJiraCredentialRequest {
   accountId: string;
+  apiToken: string;
+}
+
+export interface ConnectPersonalJiraRequest {
+  email: string;
   apiToken: string;
 }
 
@@ -40,4 +45,6 @@ export interface SettingsProtocol {
   listJiraProjects(accountId: string): JiraProjectSummary[];
   listWorkspaces(): WorkspaceSummary[];
   setJiraDestination(request: SetJiraDestinationRequest): JiraDestination;
+  connectPersonalJira(request: ConnectPersonalJiraRequest): JiraUserIdentity;
+  disconnectPersonalJira(): void;
 }

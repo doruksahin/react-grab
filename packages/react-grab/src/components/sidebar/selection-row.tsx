@@ -9,6 +9,7 @@ import {
   CollapsibleTrigger,
 } from "../ui/collapsible.jsx";
 import { StatusDot } from "../ui/status-dot.js";
+import { Avatar } from "../ui/avatar.js";
 import { LocationChip } from "../selection-location/location-chip.jsx";
 import { IconFlag } from "../icons/icon-flag.jsx";
 import { IconPlay } from "../icons/icon-play.jsx";
@@ -101,6 +102,17 @@ export const SelectionRow: Component<SelectionRowProps> = (props) => {
               <span class="flex shrink-0" title="Has a replay">
                 <IconPlay size={10} />
               </span>
+            </Show>
+            <Show when={props.item.capturedBy}>
+              {(name) => (
+                <span
+                  class="ml-auto flex shrink-0 items-center gap-1"
+                  title={`Captured by ${name()}`}
+                >
+                  <Avatar name={name()} size="sm" />
+                  {name().split(" ")[0]}
+                </span>
+              )}
             </Show>
           </span>
         </CollapsibleTrigger>

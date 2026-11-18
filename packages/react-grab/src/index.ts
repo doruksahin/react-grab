@@ -45,6 +45,7 @@ export type {
   ScreenshotKind,
   StorageAdapter,
   SyncConfig,
+  SyncUser,
 } from "./features/sync/types.js";
 export type { ScreenshotConfig } from "./types.js";
 
