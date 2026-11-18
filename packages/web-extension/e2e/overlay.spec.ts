@@ -1,9 +1,13 @@
 import type { WxtBrowser } from "wxt/browser";
 import {
   FORGED_TOOLBAR_EDGE,
+  HOST_INIT_DELAY_MS,
+  LOCALHOST_PAGE_URL,
+  OVERLAY_SETTLE_MS,
   TEST_PAGE_URL,
   TEST_PAGE_WITH_IFRAME_URL,
   expect,
+  setExtensionEnabled,
   test,
   waitForOverlay,
 } from "./fixtures.js";
@@ -47,34 +51,36 @@ test.describe(
         .toBe(true);
     });
 
-    test("disabling the extension reaches the overlay API and badges the action", async ({
+    test("turning the extension off disposes the overlay and its sync, and badges the action", async ({
       page,
       serviceWorker,
+      syncServer,
     }) => {
       await page.goto(TEST_PAGE_URL);
       await waitForOverlay(page);
+      await expect
+        .poll(() => syncServer.requests("listGroups").length)
+        .toBeGreaterThan(0);
       await page.evaluate(() => {
         const api = window.__REACT_GRAB__;
         if (!api) return;
-        const setEnabledCalls: boolean[] = [];
-        const originalSetEnabled = api.setEnabled;
-        api.setEnabled = (enabled) => {
-          setEnabledCalls.push(enabled);
-          originalSetEnabled(enabled);
+        const originalDispose = api.dispose;
+        api.dispose = () => {
+          Reflect.set(window, "overlayDisposed", true);
+          originalDispose();
         };
-        Reflect.set(window, "setEnabledCalls", setEnabledCalls);
       });
 
-      await serviceWorker.evaluate(async () => {
-        const extensionApi: WxtBrowser = Reflect.get(globalThis, "chrome");
-        await extensionApi.storage.local.set({ react_grab_enabled: false });
-      });
+      await setExtensionEnabled(serviceWorker, false);
 
       await expect
         .poll(() =>
-          page.evaluate((): unknown => Reflect.get(window, "setEnabledCalls")),
+          page.evaluate(() => ({
+            hasApi: Boolean(window.__REACT_GRAB__),
+            disposed: Reflect.get(window, "overlayDisposed"),
+          })),
         )
-        .toEqual([false]);
+        .toEqual({ hasApi: false, disposed: true });
       await expect
         .poll(() =>
           serviceWorker.evaluate(() => {
@@ -83,6 +89,71 @@ test.describe(
           }),
         )
         .toBe("OFF");
+    });
+
+    test("turning the extension back on starts the overlay and its sync again", async ({
+      page,
+      serviceWorker,
+      syncServer,
+    }) => {
+      await page.goto(TEST_PAGE_URL);
+      await waitForOverlay(page);
+      await setExtensionEnabled(serviceWorker, false);
+      await expect
+        .poll(() => page.evaluate(() => Boolean(window.__REACT_GRAB__)))
+        .toBe(false);
+      syncServer.reset();
+
+      await setExtensionEnabled(serviceWorker, true);
+
+      await waitForOverlay(page);
+      await expect
+        .poll(() => syncServer.requests("listGroups").length)
+        .toBeGreaterThan(0);
+    });
+
+    test("a page opened while the extension is off gets no overlay and no sync", async ({
+      page,
+      serviceWorker,
+      syncServer,
+    }) => {
+      await setExtensionEnabled(serviceWorker, false);
+
+      await page.goto(TEST_PAGE_URL);
+      await page.waitForTimeout(OVERLAY_SETTLE_MS);
+
+      expect(await page.evaluate(() => Boolean(window.__REACT_GRAB__))).toBe(
+        false,
+      );
+      expect(syncServer.requests("listGroups")).toEqual([]);
+      expect(syncServer.requests("listComments")).toEqual([]);
+    });
+
+    test("on localhost turning the extension off leaves the host app's own overlay running", async ({
+      page,
+      serviceWorker,
+    }) => {
+      await page.goto(LOCALHOST_PAGE_URL);
+      await expect
+        .poll(() => page.evaluate(() => Boolean(window.__REACT_GRAB__)), {
+          timeout: HOST_INIT_DELAY_MS * 4,
+        })
+        .toBe(true);
+
+      await setExtensionEnabled(serviceWorker, false);
+      await expect
+        .poll(() =>
+          serviceWorker.evaluate(() => {
+            const extensionApi: WxtBrowser = Reflect.get(globalThis, "chrome");
+            return extensionApi.action.getBadgeText({});
+          }),
+        )
+        .toBe("OFF");
+      await page.waitForTimeout(OVERLAY_SETTLE_MS);
+
+      expect(await page.evaluate(() => Boolean(window.__REACT_GRAB__))).toBe(
+        true,
+      );
     });
 
     test("saves toolbar changes made in the page to extension storage", async ({

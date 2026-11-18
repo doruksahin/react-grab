@@ -36,6 +36,7 @@ const HOST_REACT_GRAB_PATH = path.resolve(
   "../../react-grab/dist/index.global.js",
 );
 export const HOST_INIT_DELAY_MS = 1500;
+export const OVERLAY_SETTLE_MS = 1000;
 const THIRD_PARTY_IFRAME_URL = "https://third-party-ads.test/frame";
 
 export const TEST_WORKSPACE = "extension-e2e-workspace";
@@ -123,6 +124,15 @@ const configureSync = async (serviceWorker: Worker): Promise<void> => {
         .sort(),
     );
 };
+
+export const setExtensionEnabled = (
+  serviceWorker: Worker,
+  enabled: boolean,
+): Promise<void> =>
+  serviceWorker.evaluate(async (nextEnabled) => {
+    const extensionApi: WxtBrowser = Reflect.get(globalThis, "chrome");
+    await extensionApi.storage.local.set({ react_grab_enabled: nextEnabled });
+  }, enabled);
 
 export const waitForOverlay = (page: Page) =>
   expect

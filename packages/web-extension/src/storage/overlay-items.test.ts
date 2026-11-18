@@ -29,15 +29,15 @@ describe("overlay storage items", () => {
     });
   });
 
-  it("reads values written by the previous extension build, with the enabled flag overriding toolbarState.enabled", async () => {
+  it("reads values written by the previous extension build", async () => {
     await fakeBrowser.storage.local.set({
       react_grab_enabled: false,
-      react_grab_toolbar_state: { ...TOOLBAR_STATE_FIXTURE, enabled: true },
+      react_grab_toolbar_state: TOOLBAR_STATE_FIXTURE,
     });
 
     expect(await readOverlayState()).toEqual({
       enabled: false,
-      toolbarState: { ...TOOLBAR_STATE_FIXTURE, enabled: false },
+      toolbarState: TOOLBAR_STATE_FIXTURE,
     });
   });
 });

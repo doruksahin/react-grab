@@ -1,4 +1,4 @@
-import { createSerialQueue } from "./serial-queue.js";
+import { createSerialQueue } from "../utils/serial-queue.js";
 
 export const siteTrustQueue = createSerialQueue();
 

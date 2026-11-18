@@ -1,6 +1,5 @@
 import type { ReactGrabAPI, ToolbarState } from "react-grab";
 import { LOCALHOST_PAGE_API_WAIT_MS } from "../constants.js";
-import type { OverlayState } from "../types.js";
 import type { CaptureOptions } from "./capture-options.js";
 import { createExtensionApi } from "./create-extension-api.js";
 import { isLocalhostHost } from "./is-localhost-host.js";
@@ -12,10 +11,14 @@ interface OverlaySessionDeps {
 }
 
 export interface OverlaySession {
-  start: (overlayState: OverlayState, capture: CaptureOptions) => Promise<void>;
-  setEnabled: (enabled: boolean) => Promise<void>;
-  applyToolbarState: (toolbarState: ToolbarState) => Promise<void>;
+  start: (
+    toolbarState: ToolbarState | null,
+    capture: CaptureOptions,
+  ) => Promise<void>;
+  stop: () => void;
+  applyToolbarState: (toolbarState: ToolbarState) => void;
   adoptPageApi: (pageApi: ReactGrabAPI) => void;
+  isStarted: () => boolean;
   ownsApi: () => boolean;
 }
 
@@ -27,7 +30,6 @@ export const createOverlaySession = (
   let lastSavedToolbarState: ToolbarState | null = null;
   let isApplyingExternalState = false;
   let unsubscribeToolbarState: (() => void) | null = null;
-  let capture: CaptureOptions = {};
 
   const saveToolbarStateFromApi = (toolbarState: ToolbarState): void => {
     if (isApplyingExternalState) return;
@@ -49,10 +51,22 @@ export const createOverlaySession = (
     return api;
   };
 
+  const detach = (): void => {
+    unsubscribeToolbarState?.();
+    unsubscribeToolbarState = null;
+    activeApi = null;
+    lastSavedToolbarState = null;
+  };
+
+  const ownsApi = (): boolean =>
+    activeApi !== null && activeApi === extensionApi;
+
   const findExistingApi = (): ReactGrabAPI | null =>
     activeApi ?? window.__REACT_GRAB__ ?? null;
 
-  const resolveApi = async (): Promise<ReactGrabAPI | null> => {
+  const resolveApi = async (
+    capture: CaptureOptions,
+  ): Promise<ReactGrabAPI | null> => {
     const existingApi = findExistingApi();
     if (existingApi) return attach(existingApi);
 
@@ -69,7 +83,7 @@ export const createOverlaySession = (
 
   const applyWithoutEcho = (
     api: ReactGrabAPI,
-    toolbarState: Partial<ToolbarState>,
+    toolbarState: ToolbarState,
   ): void => {
     isApplyingExternalState = true;
     try {
@@ -80,30 +94,27 @@ export const createOverlaySession = (
   };
 
   return {
-    start: async (overlayState, captureForSite) => {
-      capture = captureForSite;
-      const api = await resolveApi();
-      if (!api) return;
-      if (overlayState.toolbarState) {
-        applyWithoutEcho(api, overlayState.toolbarState);
-      }
-      api.setEnabled(overlayState.enabled);
+    start: async (toolbarState, capture) => {
+      const api = await resolveApi(capture);
+      if (api && toolbarState) applyWithoutEcho(api, toolbarState);
     },
-    setEnabled: async (enabled) => {
-      const api = await resolveApi();
-      if (!api) return;
-      applyWithoutEcho(api, { enabled });
-      api.setEnabled(enabled);
+    stop: () => {
+      const ownedApi = extensionApi;
+      if (!ownedApi || !ownsApi()) return;
+      detach();
+      extensionApi = null;
+      if (window.__REACT_GRAB__ === ownedApi) delete window.__REACT_GRAB__;
+      ownedApi.dispose();
     },
-    applyToolbarState: async (toolbarState) => {
-      const api = await resolveApi();
-      if (api) applyWithoutEcho(api, toolbarState);
+    applyToolbarState: (toolbarState) => {
+      if (activeApi) applyWithoutEcho(activeApi, toolbarState);
     },
     adoptPageApi: (pageApi) => {
       if (activeApi && activeApi !== pageApi) activeApi.dispose();
       window.__REACT_GRAB__ = pageApi;
       attach(pageApi);
     },
-    ownsApi: () => activeApi !== null && activeApi === extensionApi,
+    isStarted: () => activeApi !== null,
+    ownsApi,
   };
 };

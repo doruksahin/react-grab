@@ -124,19 +124,16 @@ describe("registerBackground", () => {
     });
   });
 
-  it("answers getOverlayState with the enabled flag as the only source of enabled", async () => {
+  it("answers getOverlayState with the enabled flag and the saved toolbar state", async () => {
     sendAsOwnContentScript();
     await enabledItem.setValue(false);
-    await toolbarStateItem.setValue({
-      ...TOOLBAR_STATE_FIXTURE,
-      enabled: true,
-    });
+    await toolbarStateItem.setValue(TOOLBAR_STATE_FIXTURE);
 
     expect(
       await extensionRequestMessenger.sendMessage("getOverlayState"),
     ).toEqual({
       enabled: false,
-      toolbarState: { ...TOOLBAR_STATE_FIXTURE, enabled: false },
+      toolbarState: TOOLBAR_STATE_FIXTURE,
     });
   });
 
