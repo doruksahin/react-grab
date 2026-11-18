@@ -648,7 +648,6 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onRestoreGroup?: (groupId: string) => Promise<void>;
   /** Deletes an archived group without a ticket, with its selections; true when it went. */
   onDeleteArchivedGroup?: (groupId: string) => boolean;
-  commentsDisconnectedItemIds?: Set<string>;
   commentItemCount?: number;
   clockFlashTrigger?: number;
   commentsDropdownPosition?: DropdownAnchor | null;
@@ -679,7 +678,6 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onClearCommentsCancel?: () => void;
   selectionsRevealed?: boolean;
   onToggleSelectionsRevealed?: () => void;
-  onToggleCommentItemRevealed?: (commentItemId: string) => void;
   syncStatus?: SyncStatus;
   /** Connects to the sync server again after a failed connection. */
   onRetrySync?: () => Promise<void>;

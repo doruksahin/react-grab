@@ -39,6 +39,7 @@ import {
   useStepGuide,
 } from "../features/reproduce-steps/index.js";
 import type { StepGuideAPI } from "../features/reproduce-steps/index.js";
+import { SelectionHoverProvider } from "../features/selection-hover/index.js";
 import { LabelPin } from "./selection-label/label-pin.js";
 import { useLabelPins } from "../features/selection-label/hooks/use-label-pins.js";
 import { useSidebarSession } from "../features/sidebar/hooks/use-sidebar-session.js";
@@ -520,7 +521,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
       <CommentsDropdown
         position={props.commentsDropdownPosition ?? null}
         items={props.commentItems ?? []}
-        disconnectedItemIds={props.commentsDisconnectedItemIds}
         groups={props.groups ?? []}
         onSelectItem={props.onCommentItemSelect}
         onItemHover={props.onCommentItemHover}
@@ -532,7 +532,6 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         clearCounts={props.commentsClearCounts}
         onDismiss={props.onCommentsDismiss}
         onDropdownHover={props.onCommentsDropdownHover}
-        onToggleItemRevealed={props.onToggleCommentItemRevealed}
         onAddGroup={props.onAddGroup}
         onRenameGroup={props.onRenameGroup}
         onDeleteGroup={props.onDeleteGroup}
@@ -571,35 +570,41 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
 
       <Show when={sidebarOpen()}>
         <StepGuideProvider value={sidebarStepGuide}>
-          <Sidebar
-            focusRequest={sidebar.focusRequest()}
-            groups={props.groups ?? []}
-            commentItems={props.sidebarCommentItems ?? props.commentItems ?? []}
-            syncStatus={props.syncStatus ?? "local"}
-            onRetrySync={props.onRetrySync}
-            onActiveDetailGroupChange={setActiveDetailGroupId}
-            onJiraResolved={props.onJiraResolved}
-            onTicketCreated={props.onTicketCreated}
-            onFilterVisibilityChange={props.onFilterVisibilityChange}
-            onCreateTicketForLooseItem={props.onCreateTicketForLooseItem}
-            onRemoveItem={props.onRemoveItem}
-            canRemoveItem={props.canRemoveItem}
-            onMoveItem={props.onMoveItem}
-            onMoveItems={props.onMoveItems}
-            archive={archive}
-            onAddGroup={props.onAddGroup}
-            onRenameGroup={props.onRenameGroup}
-            onDeleteGroup={props.onDeleteGroup}
-            onToggleGroupRevealed={props.onToggleGroupRevealed}
-            onCopyGroup={props.onCopyGroup}
-            looseTicketDialog={props.looseTicketDialog}
-            onLooseTicketDialogClose={props.onLooseTicketDialogClose}
-            commentEditorToolbarVisible={props.commentEditorToolbarVisible}
-            onClose={() => {
-              sidebar.close();
-              setActiveDetailGroupId(null);
-            }}
-          />
+          <SelectionHoverProvider
+            value={{ hover: (itemId) => props.onCommentItemHover?.(itemId) }}
+          >
+            <Sidebar
+              focusRequest={sidebar.focusRequest()}
+              groups={props.groups ?? []}
+              commentItems={
+                props.sidebarCommentItems ?? props.commentItems ?? []
+              }
+              syncStatus={props.syncStatus ?? "local"}
+              onRetrySync={props.onRetrySync}
+              onActiveDetailGroupChange={setActiveDetailGroupId}
+              onJiraResolved={props.onJiraResolved}
+              onTicketCreated={props.onTicketCreated}
+              onFilterVisibilityChange={props.onFilterVisibilityChange}
+              onCreateTicketForLooseItem={props.onCreateTicketForLooseItem}
+              onRemoveItem={props.onRemoveItem}
+              canRemoveItem={props.canRemoveItem}
+              onMoveItem={props.onMoveItem}
+              onMoveItems={props.onMoveItems}
+              archive={archive}
+              onAddGroup={props.onAddGroup}
+              onRenameGroup={props.onRenameGroup}
+              onDeleteGroup={props.onDeleteGroup}
+              onToggleGroupRevealed={props.onToggleGroupRevealed}
+              onCopyGroup={props.onCopyGroup}
+              looseTicketDialog={props.looseTicketDialog}
+              onLooseTicketDialogClose={props.onLooseTicketDialogClose}
+              commentEditorToolbarVisible={props.commentEditorToolbarVisible}
+              onClose={() => {
+                sidebar.close();
+                setActiveDetailGroupId(null);
+              }}
+            />
+          </SelectionHoverProvider>
         </StepGuideProvider>
       </Show>
       <ToastRegion />

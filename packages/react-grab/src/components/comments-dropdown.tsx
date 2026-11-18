@@ -57,7 +57,7 @@ interface CommentsDropdownProps extends Pick<
 > {
   position: DropdownAnchor | null;
   items: CommentItem[];
-  disconnectedItemIds?: Set<string>;
+  /** A click on a row shows or hides that selection on the page. */
   onSelectItem?: (item: CommentItem) => void;
   onItemHover?: (commentItemId: string | null) => void;
   onCopyAll?: () => void;
@@ -70,7 +70,6 @@ interface CommentsDropdownProps extends Pick<
   clearCounts?: ClearCounts;
   onDismiss?: () => void;
   onDropdownHover?: (isHovered: boolean) => void;
-  onToggleItemRevealed?: (commentItemId: string) => void;
   onCopyGroup?: (groupId: string) => void;
   copyableCount?: number;
   /** Opens the sidebar, on this selection's card when one is given. */
@@ -134,6 +133,8 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
       data-react-grab-ignore-events
       data-react-grab-comment-item
       class="group/row relative z-1 contain-layout flex items-start justify-between w-full px-2 py-1 cursor-pointer text-left gap-2"
+      role="button"
+      aria-pressed={item.revealed}
       tabindex="0"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => {
@@ -148,9 +149,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         }
       }}
       onMouseEnter={(event) => {
-        if (!props.disconnectedItemIds?.has(item.id)) {
-          props.onItemHover?.(item.id);
-        }
+        props.onItemHover?.(item.id);
         updateHighlight(event.currentTarget);
       }}
       onMouseLeave={() => {
@@ -176,6 +175,14 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
           class="mt-1 max-w-full min-w-0 shrink self-start"
         />
       </span>
+      <span
+        class="flex h-4 shrink-0 items-center"
+        title={item.revealed ? "Shown on the page" : "Hidden on the page"}
+      >
+        <Show when={item.revealed} fallback={<IconEyeOff size={12} />}>
+          <IconEyeFilled size={12} class="text-selection-strong" />
+        </Show>
+      </span>
       <div class="grid shrink-0 [&>*]:col-start-1 [&>*]:row-start-1">
         <span
           class={cn(
@@ -183,11 +190,6 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             openMenuId() === item.id && "invisible",
           )}
         >
-          <Show when={!item.revealed}>
-            <span title="Hidden on the page" class="flex">
-              <IconEyeOff size={12} />
-            </span>
-          </Show>
           {formatRelativeTime(item.timestamp)}
         </span>
         <div
@@ -221,22 +223,6 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
               }
             />
           </Show>
-          <IconButton
-            data-react-grab-ignore-events
-            label={
-              item.revealed ? "Hide this selection" : "Reveal this selection"
-            }
-            size="icon-xs"
-            on:click={(event) => {
-              event.stopPropagation();
-              props.onToggleItemRevealed?.(item.id);
-            }}
-            on:pointerdown={(event) => event.stopPropagation()}
-          >
-            <Show when={item.revealed} fallback={<IconEyeOff size={12} />}>
-              <IconEyeFilled size={12} class="text-selection-strong" />
-            </Show>
-          </IconButton>
         </div>
       </div>
     </div>

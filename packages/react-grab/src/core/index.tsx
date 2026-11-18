@@ -457,10 +457,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       return connectedMappedElements;
     };
 
-    const getFirstConnectedCommentElement = (
-      commentItem: CommentItem,
-    ): Element | undefined => getConnectedCommentElements(commentItem)[0];
-
     /**
      * Returns the id of the CommentItem backing the currently focused
      * (frozen) selection element, if any. Used to route "active group"
@@ -2900,49 +2896,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       }
     };
 
-    const copyCommentItemContent = (item: CommentItem) => {
-      copyContent(item.content, {
-        tagName: item.tagName,
-        componentName: item.componentName ?? item.elementName,
-        commentText: item.commentText,
-      });
-      const element = getFirstConnectedCommentElement(item);
-      if (!element) return;
-
-      clearAllLabels();
-
-      // HACK: defer to next frame so idle preview label clears visually before "copied" appears
-      nativeRequestAnimationFrame(() => {
-        if (!isElementConnected(element)) return;
-        const bounds = createElementBounds(element);
-        const labelId = createLabelInstance(
-          bounds,
-          item.tagName,
-          item.componentName,
-          "copied",
-          { element, mouseX: bounds.x + bounds.width / 2 },
-        );
-        if (labelId) scheduleLabelFade(labelId);
-      });
-    };
-
-    const handleCommentItemSelect = (item: CommentItem) => {
-      clearCommentsHoverPreviews();
-      if (isPromptMode()) {
-        actions.exitPromptMode();
-        actions.clearInputText();
-      }
-      const element = getFirstConnectedCommentElement(item);
-
-      if (item.commentText && element) {
-        const { center } = getElementBoundsCenter(element);
-        actions.enterPromptMode(center, element);
-        actions.setInputText(item.commentText);
-      } else {
-        copyCommentItemContent(item);
-      }
-    };
-
     const handleCommentsCopyAll = () => {
       clearCommentsHoverPreviews();
 
@@ -3092,13 +3045,20 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       const item = commentItems().find(
         (innerItem) => innerItem.id === commentItemId,
       );
-      if (!item) return;
+      if (!item || commentsDisconnectedItemIds().has(item.id)) return;
       // A revealed item is already on the page: open its pin's card.
       if (visibility.isItemRevealed(item.id)) {
         setPreviewedItemId(item.id);
         return;
       }
       showCommentItemPreview(item, "comment-hover");
+    };
+
+    // A row's click shows or hides that selection on the page; the hover
+    // that was already on the row is redone so it matches the new state.
+    const handleCommentItemSelect = (item: CommentItem) => {
+      visibility.handleToggleItem(item.id);
+      handleCommentItemHover(item.id);
     };
 
     const handleCommentsButtonHover = (isHovered: boolean) => {
@@ -3351,7 +3311,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                         selectionGroups.handleDeleteArchivedGroup(groupId)
                           .status === "deleted"
                       }
-                      commentsDisconnectedItemIds={commentsDisconnectedItemIds()}
                       commentItemCount={boardCommentItems().length}
                       clockFlashTrigger={clockFlashTrigger()}
                       commentsDropdownPosition={commentsDropdownPosition()}
@@ -3393,7 +3352,6 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       onClearCommentsCancel={dismissClearPrompt}
                       selectionsRevealed={visibility.selectionsRevealed()}
                       onToggleSelectionsRevealed={visibility.handleToggleParent}
-                      onToggleCommentItemRevealed={visibility.handleToggleItem}
                       syncStatus={derivedSyncStatus()}
                       onRetrySync={syncLayer.retry}
                       syncWorkspace={syncLayer.workspace() ?? undefined}

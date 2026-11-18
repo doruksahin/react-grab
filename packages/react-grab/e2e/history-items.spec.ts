@@ -134,20 +134,23 @@ test.describe("Comment Items", () => {
   });
 
   test.describe("Item Selection", () => {
-    test("should enter prompt mode with comment text when clicking a comment item", async ({
+    test("should show and hide the selection on the page when clicking a comment item", async ({
       reactGrab,
     }) => {
+      const pinnedBoxCount = async () =>
+        (await reactGrab.getGrabbedBoxInfo()).boxes.filter((box) =>
+          box.id.startsWith("reveal-pinned"),
+        ).length;
+
       await copyElement(reactGrab, "li:first-child");
-
       await reactGrab.clickCommentsButton();
+      expect(await pinnedBoxCount()).toBe(0);
+
       await reactGrab.clickCommentItem(0);
+      await expect.poll(pinnedBoxCount, { timeout: 3000 }).toBeGreaterThan(0);
 
-      await expect
-        .poll(() => reactGrab.isPromptModeActive(), { timeout: 3000 })
-        .toBe(true);
-
-      const inputValue = await reactGrab.getInputValue();
-      expect(inputValue).toBe("comment");
+      await reactGrab.clickCommentItem(0);
+      await expect.poll(pinnedBoxCount, { timeout: 3000 }).toBe(0);
     });
 
     test("should keep the dropdown open after selecting an item", async ({
@@ -689,7 +692,7 @@ test.describe("Comment Items", () => {
   });
 
   test.describe("Preview Suppression After Copy", () => {
-    test("should clear hover preview boxes after copying via row click", async ({
+    test("should clear hover preview boxes after a row click", async ({
       reactGrab,
     }) => {
       await copyElement(reactGrab, "li:first-child");
@@ -825,7 +828,7 @@ test.describe("Comment Items", () => {
         .toBeGreaterThanOrEqual(1);
     });
 
-    test("should clear idle labels and show copied label after individual copy", async ({
+    test("should replace the hover preview with the pinned selection after a row click", async ({
       reactGrab,
     }) => {
       await copyElement(reactGrab, "li:first-child");
@@ -835,12 +838,10 @@ test.describe("Comment Items", () => {
       await reactGrab.hoverCommentItem(0);
       await expect
         .poll(
-          async () => {
-            const labels = await reactGrab.getLabelInstancesInfo();
-            return labels.filter(
-              (label) => label.status === "idle" && label.createdAt === 0,
-            ).length;
-          },
+          async () =>
+            (await reactGrab.getGrabbedBoxInfo()).boxes.filter((box) =>
+              box.id.startsWith("comment-hover-"),
+            ).length,
           { timeout: 5000 },
         )
         .toBeGreaterThan(0);
@@ -850,71 +851,21 @@ test.describe("Comment Items", () => {
       await expect
         .poll(
           async () => {
-            const labels = await reactGrab.getLabelInstancesInfo();
-            const idlePreviewLabels = labels.filter(
-              (label) => label.status === "idle" && label.createdAt === 0,
-            );
-            return idlePreviewLabels.length;
+            const { boxes } = await reactGrab.getGrabbedBoxInfo();
+            return {
+              hover: boxes.filter((box) => box.id.startsWith("comment-hover-"))
+                .length,
+              pinned: boxes.filter((box) => box.id.startsWith("reveal-pinned"))
+                .length,
+            };
           },
           { timeout: 5000 },
         )
-        .toBe(0);
-
-      await expect
-        .poll(
-          async () => {
-            const labels = await reactGrab.getLabelInstancesInfo();
-            return labels.filter((label) => label.status === "copied").length;
-          },
-          { timeout: 5000 },
-        )
-        .toBeGreaterThanOrEqual(1);
-    });
-
-    test("should clear idle labels and show copied label after row click", async ({
-      reactGrab,
-    }) => {
-      await copyElement(reactGrab, "li:first-child");
-      await reactGrab.clickCommentsButton();
-      await reactGrab.page.waitForTimeout(200);
-
-      await reactGrab.hoverCommentItem(0);
-      await expect
-        .poll(
-          async () => {
-            const labels = await reactGrab.getLabelInstancesInfo();
-            return labels.filter(
-              (label) => label.status === "idle" && label.createdAt === 0,
-            ).length;
-          },
-          { timeout: 5000 },
-        )
-        .toBeGreaterThan(0);
-
-      await reactGrab.clickCommentItem(0);
-
-      await expect
-        .poll(
-          async () => {
-            const labels = await reactGrab.getLabelInstancesInfo();
-            const idlePreviewLabels = labels.filter(
-              (label) => label.status === "idle" && label.createdAt === 0,
-            );
-            return idlePreviewLabels.length;
-          },
-          { timeout: 5000 },
-        )
-        .toBe(0);
-
-      await expect
-        .poll(
-          async () => {
-            const labels = await reactGrab.getLabelInstancesInfo();
-            return labels.filter((label) => label.status === "copied").length;
-          },
-          { timeout: 5000 },
-        )
-        .toBeGreaterThanOrEqual(1);
+        .toEqual({ hover: 0, pinned: expect.any(Number) });
+      const { boxes } = await reactGrab.getGrabbedBoxInfo();
+      expect(
+        boxes.filter((box) => box.id.startsWith("reveal-pinned")).length,
+      ).toBeGreaterThan(0);
     });
   });
 });
