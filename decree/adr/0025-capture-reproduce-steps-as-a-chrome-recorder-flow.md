@@ -39,7 +39,7 @@ A comment gets an optional `steps` field: an array of Recorder steps. Only three
   1. **ARIA:** `aria/<name>[role="<role>"]`, from the WAI-ARIA accessible name and role. It is computed with `dom-accessibility-api`, the library Testing Library uses.
   2. **CSS:** from the existing `createElementSelector`, which uses `@medv/finder` and prefers test ids.
   3. **Text:** `text/<text>` for short visible text.
-- **Page changes inside the app.** A click after which the page (origin and path) is different gets `assertedEvents: [{ type: "navigation", url }]`. The Recorder reference describes `assertedEvents` as the events a step is expected to cause. A change only to the query or fragment (a search box writing `?q=`, an anchor) is not asserted. If the URL is too long for the server, the click keeps no assertion.
+- **Page changes inside the app.** *(Amended by ADR-0032: new flows hold the steps of one page, so they have no navigation assertions.)* A click after which the page (origin and path) is different gets `assertedEvents: [{ type: "navigation", url }]`. The Recorder reference describes `assertedEvents` as the events a step is expected to cause. A change only to the query or fragment (a search box writing `?q=`, an anchor) is not asserted. If the URL is too long for the server, the click keeps no assertion.
 - **No values.** A `change` step stores `value: ""`. This matches the masked inputs of ADR-0021. In a DevTools replay the developer types the value.
 - **No values through names or text either.** The accessible name of a button, row, cell or option includes the live value of a field inside it (WAI-ARIA AccName, step 2E), and an editor's text is what was typed. So the ARIA and text selectors are left out for any element that is editable, sits in an editor, or holds a field. A field's own ARIA selector is kept, because its name comes from its label.
 - **Not captured:** hover, scroll, keys, double clicks, iframes, and clicks inside a component's shadow root (the event is retargeted to the host, which would make a wrong step). The goal is a readable path to the element, not a full replay.
@@ -53,10 +53,12 @@ A comment gets an optional `steps` field: an array of Recorder steps. Only three
   - Only events with `isTrusted` are used, so the page's own synthetic events are not steps.
   - Events from the overlay are ignored, using the existing `isEventFromOverlay` check. React Grab's own UI is never a step.
   - The click that selects an element is not a step. A selection ends on `pointerup`, which turns selection mode off before `click` fires, so a click is judged by the `pointerdown` that started it. Keyboard clicks (`detail` 0) have no press and are always kept; a cancelled press is forgotten.
-- **Ring buffer.** It keeps the last 50 steps of this document, each with the URL at the time of the event. Taking a flow does not clear the buffer, so two comments on one page both get the full path.
+- **Ring buffer.** *(Amended by ADR-0032: a flow takes only the buffer's steps since the selection's page was last entered.)* It keeps the last 50 steps of this document, each with the URL at the time of the event. Taking a flow does not clear the buffer, so two comments on one page both get the full path.
 - **Saving.** When a comment is created, the overlay saves the flow on it. The flow is a `navigate` to the first kept step's URL, followed by the kept steps.
 - **Full page loads.** A full page load starts a new buffer, because the buffer lives in the page's memory. For a multi-page site the flow starts at the last full load. The `navigate` step still opens that page.
 - **rrweb markers.** When session recording is also on, each step is written into the recording with rrweb's `record.addCustomEvent("react-grab-step", step)`. This is the way Sentry adds its breadcrumbs, and it puts markers in the replay at the same moments.
+
+**Amended by ADR-0032 (2026-11-18).** A flow keeps only the steps since the selection's page was last entered, and the `navigate` step opens that page. The buffer is unchanged. New flows no longer assert navigations; stored ones keep their assertions.
 
 ### Configuration
 

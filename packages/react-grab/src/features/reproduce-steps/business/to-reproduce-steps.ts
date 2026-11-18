@@ -1,42 +1,25 @@
 import { isAcceptedStep } from "../limits.js";
 import type { CapturedStep, ReproduceStep } from "../types.js";
-import { pageKey } from "./page-key.js";
-
-const withNavigation = (
-  captured: CapturedStep,
-  nextPageUrl: string,
-): ReproduceStep => {
-  const { step, pageUrl } = captured;
-  if (step.type !== "click" || pageKey(nextPageUrl) === pageKey(pageUrl)) {
-    return step;
-  }
-  const asserted: ReproduceStep = {
-    ...step,
-    assertedEvents: [{ type: "navigation", url: nextPageUrl }],
-  };
-  // An overlong URL loses only its assertion, not the click.
-  return isAcceptedStep(asserted) ? asserted : step;
-};
+import { stepsOnCurrentPage } from "./steps-on-current-page.js";
 
 /**
- * The flow that led to the current page, as Chrome DevTools Recorder steps
- * (ADR-0025): a navigate to where capture started, then each step. A click
- * after which the page (origin and path) changed asserts that navigation,
- * as the Recorder does for single-page apps. Steps the server would refuse (an overlong URL)
- * are left out, so a flow never blocks saving its comment.
+ * The flow that led to a selection on the current page, as Chrome DevTools
+ * Recorder steps (ADR-0025): a navigate to this page as it was when it was
+ * last entered, then each step taken on it (ADR-0032). Steps the server
+ * would refuse (an overlong URL, no usable selector) are left out, so a flow
+ * never blocks saving its comment.
  */
 export const toReproduceSteps = (
   captured: ReadonlyArray<CapturedStep>,
   currentPageUrl: string,
 ): ReproduceStep[] | undefined => {
-  const [first] = captured;
+  const onPage = stepsOnCurrentPage(captured, currentPageUrl);
+  const [first] = onPage;
   if (!first) return undefined;
 
   const steps: ReproduceStep[] = [
     { type: "navigate", url: first.pageUrl },
-    ...captured.map((entry, index) =>
-      withNavigation(entry, captured[index + 1]?.pageUrl ?? currentPageUrl),
-    ),
+    ...onPage.map((entry) => entry.step),
   ];
   const valid = steps.filter(isAcceptedStep);
   return valid[0]?.type === "navigate" ? valid : undefined;

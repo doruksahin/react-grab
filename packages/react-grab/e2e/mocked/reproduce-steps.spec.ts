@@ -139,3 +139,51 @@ test.describe("Reproduce steps", { tag: ["@ADR-0025"] }, () => {
     expect(saved.steps).toBeUndefined();
   });
 });
+
+test.describe(
+  "Steps start on the selection's page",
+  { tag: ["@ADR-0032"] },
+  () => {
+    test("steps on an earlier page of a single-page app are left out", async ({
+      page,
+      reactGrab,
+      mockServer,
+    }) => {
+      await start(reactGrab, true);
+      await useThePage(page);
+      await page.evaluate(() => window.history.pushState({}, "", "/billing"));
+      await page.getByTestId("submit-button").click();
+      await addComment(reactGrab);
+
+      const { steps } = await firstSavedComment(mockServer);
+      expect(steps).toEqual([
+        { type: "navigate", url: page.url() },
+        expect.objectContaining({
+          type: "click",
+          selectors: expect.arrayContaining(['[data-testid="submit-button"]']),
+        }),
+      ]);
+    });
+
+    test("returning to a page starts the steps at the return", async ({
+      page,
+      reactGrab,
+      mockServer,
+    }) => {
+      await start(reactGrab, true);
+      await page.getByTestId("submit-button").click();
+      await page.evaluate(() => window.history.pushState({}, "", "/billing"));
+      await page.getByTestId("submit-button").click();
+      await page.evaluate(() => window.history.pushState({}, "", "/"));
+      await useThePage(page);
+      await addComment(reactGrab);
+
+      const { steps } = await firstSavedComment(mockServer);
+      expect(steps).toEqual([
+        { type: "navigate", url: page.url() },
+        expect.objectContaining({ type: "change" }),
+        expect.objectContaining({ type: "click" }),
+      ]);
+    });
+  },
+);
