@@ -86,7 +86,11 @@ export const useSidebarSelections = (
 
   // The filter menu picks groups; the status chips pick selections.
   const allowedGroupIds = createMemo(() => {
-    const groupFilter = { ...input.filter(), statuses: new Set<string>() };
+    const groupFilter = {
+      ...input.filter(),
+      statuses: new Set<string>(),
+      capturedBy: null,
+    };
     if (!isFilterActive(groupFilter)) return null;
     return new Set(
       applyFilters(input.groups(), groupFilter).map((group) => group.id),
@@ -97,8 +101,10 @@ export const useSidebarSelections = (
   const baseFilter = createMemo(() => {
     const query = input.searchQuery().toLowerCase();
     const flaggedOnly = input.flaggedOnly();
-    if (!query && !flaggedOnly) return undefined;
+    const capturedBy = input.filter().capturedBy;
+    if (!query && !flaggedOnly && !capturedBy) return undefined;
     return (item: CommentItem) => {
+      if (capturedBy && item.capturedBy !== capturedBy) return false;
       if (query) {
         const { title, detail } = selectionRowFields(item);
         if (!`${title} ${detail ?? ""}`.toLowerCase().includes(query)) {

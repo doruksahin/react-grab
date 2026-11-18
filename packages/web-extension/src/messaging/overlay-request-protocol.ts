@@ -1,6 +1,6 @@
 import type { ToolbarState } from "react-grab";
 import type { JiraPort, StorageAdapter } from "react-grab/sync-http";
-import type { SiteSettings } from "../settings/types.js";
+import type { JiraUserIdentity, SiteSettings } from "../settings/types.js";
 import type { OverlayState } from "../types.js";
 import {
   JIRA_METHODS,
@@ -14,6 +14,8 @@ export interface OverlayStateRequests {
   getOverlayState(): OverlayState;
   saveToolbarState(toolbarState: ToolbarState): void;
   getSiteSettings(): SiteSettings | null;
+  /** Who the user's own Jira token signs in as, without the token (ADR-0031). */
+  getJiraUser(): JiraUserIdentity | null;
 }
 
 export interface OverlayRequestProtocol
@@ -26,6 +28,7 @@ const OVERLAY_STATE_REQUESTS: Record<keyof OverlayStateRequests, true> = {
   getOverlayState: true,
   saveToolbarState: true,
   getSiteSettings: true,
+  getJiraUser: true,
 };
 
 export const OVERLAY_REQUEST_NAMES: ReadonlyArray<

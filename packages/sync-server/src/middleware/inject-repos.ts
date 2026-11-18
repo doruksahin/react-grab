@@ -17,6 +17,10 @@ import { JiraAccountService } from "../services/jira-account.service.js";
 import { WorkspaceService } from "../services/workspace.service.js";
 import { JiraService } from "../services/jira.service.js";
 import { parseCredentialEnv } from "../schemas/env.js";
+import {
+  JIRA_CREDENTIAL_HEADER,
+  parsePersonalJiraCredential,
+} from "../lib/personal-jira-credential.js";
 import type { AppEnv } from "../types.js";
 
 const createJiraService: CreateJiraService = (config) =>
@@ -44,6 +48,9 @@ export const injectRepos = createMiddleware<AppEnv>(async (c, next) => {
     workspaces,
     vault: getVault,
     createJiraService,
+    personalCredential: parsePersonalJiraCredential(
+      c.req.header(JIRA_CREDENTIAL_HEADER),
+    ),
   });
   c.set("jiraClients", clients);
   c.set("jiraTickets", new JiraTicketService({ repo, screenshots, clients }));

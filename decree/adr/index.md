@@ -30,3 +30,4 @@
 | ADR-0028 | ADR-0028 Show selections as one tree in the sidebar and the comments menu | accepted | 2026-11-16 |  |
 | ADR-0029 | ADR-0029 Build the Jira ticket description as ADF on the sync server | accepted | 2026-11-16 |  |
 | ADR-0030 | ADR-0030 Archive a ticketed group | accepted | 2026-11-17 |  |
+| ADR-0031 | ADR-0031 Each extension user signs in to Jira with their own API token | accepted | 2026-11-18 |  |

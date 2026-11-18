@@ -110,6 +110,9 @@ export interface SelectionCardBodyProps {
   jiraAssignee?: string | null;
   jiraAssigneeAvatar?: string | null;
 
+  /** Who made the selection, by their Jira name (ADR-0031). */
+  capturedBy?: string;
+
   /** How the ticket shows among the properties: its key ("key", the default)
    *  or only a link to Jira ("link"), when a list row already shows the key. */
   ticketDisplay?: "key" | "link";
@@ -203,6 +206,15 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
       }
       facts={
         <>
+          <Show when={props.capturedBy}>
+            {(name) => (
+              <span class="flex basis-full min-w-0 items-center gap-1 text-muted-foreground">
+                Captured by
+                <Avatar name={name()} size="sm" />
+                <span class="truncate text-foreground">{name()}</span>
+              </span>
+            )}
+          </Show>
           <Show when={hasTicket()}>
             <StatusChip {...statusChip()} />
             <Show
@@ -248,6 +260,7 @@ export const SelectionCardBody: Component<SelectionCardBodyProps> = (props) => {
           </Show>
           <Show when={props.jiraAssignee}>
             <span class="flex min-w-0 items-center gap-1">
+              <span class="text-muted-foreground">Assignee</span>
               <Avatar
                 name={props.jiraAssignee}
                 src={props.jiraAssigneeAvatar}

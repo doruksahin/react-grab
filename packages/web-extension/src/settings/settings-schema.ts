@@ -48,3 +48,8 @@ export const siteSettingsSchema = z.strictObject({
   recordSteps: z.boolean(),
   recordSession: z.boolean(),
 }) satisfies z.ZodType<SiteSettings>;
+
+export const personalJiraCredentialSchema = z.strictObject({
+  email: z.string().trim().email("Enter the email of your Atlassian account"),
+  apiToken: z.string().trim().min(1, "Paste your Jira API token"),
+});

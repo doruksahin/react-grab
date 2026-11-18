@@ -10,6 +10,7 @@ import {
 import { AddSiteForm } from "./add-site-form.jsx";
 import { linkedSiteOrigin } from "./add-site-link.js";
 import { JiraAccountsSection } from "./jira-accounts-section.jsx";
+import { PersonalJiraSection } from "./personal-jira-section.jsx";
 import { loadOptionsState } from "./load-options-state.js";
 import { ServerSettingsForm } from "./server-settings-form.jsx";
 import { SettingsNav } from "./settings-nav.jsx";
@@ -69,6 +70,7 @@ export const OptionsApp = () => {
           sectionOfHash(hash(), isConnected() ? "sites" : "sync-server");
         const badges = (): Record<SectionId, string> => ({
           "sync-server": CONNECTION_BADGES[connection().kind],
+          "your-jira-account": state().personalJira ? "OK" : "Not set",
           sites: String(Object.keys(state().sites).length),
           workspaces: isConnected() ? String(workspaces().length) : "",
           "jira-accounts": accounts()?.length.toString() ?? "",
@@ -97,6 +99,13 @@ export const OptionsApp = () => {
                   hasAdminToken={state().hasAdminToken}
                   connection={connection()}
                   onSaved={reload}
+                />,
+              )}
+              {panel(
+                "your-jira-account",
+                <PersonalJiraSection
+                  identity={state().personalJira}
+                  onChanged={reload}
                 />,
               )}
               {panel(

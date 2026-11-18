@@ -15,7 +15,10 @@ import {
   type SyncGateway,
   createSyncGateway,
 } from "../gateway/sync-gateway.js";
-import { sitesItem } from "../settings/settings-items.js";
+import {
+  personalJiraAccountItem,
+  sitesItem,
+} from "../settings/settings-items.js";
 import {
   readOverlayState,
   toolbarStateItem,
@@ -37,6 +40,18 @@ const handleOverlayStateRequests = (ready: Promise<void>): void => {
       await toolbarStateItem.setValue(toolbarStateSchema.parse(data));
     },
   );
+
+  extensionRequestMessenger.onMessage("getJiraUser", async ({ sender }) => {
+    await ready;
+    assertTopFrameSender(sender);
+    const personalJira = await personalJiraAccountItem.getValue();
+    return personalJira
+      ? {
+          accountId: personalJira.accountId,
+          displayName: personalJira.displayName,
+        }
+      : null;
+  });
 
   extensionRequestMessenger.onMessage("getSiteSettings", async ({ sender }) => {
     await ready;

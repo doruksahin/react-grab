@@ -885,6 +885,7 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
         revealed: visibility.selectionsRevealed(),
         ...getPageContext(),
         steps: stepCapture?.take(),
+        capturedBy: syncLayer.currentUser()?.displayName,
       };
       const groupId = selectionGroups.ensureGroupForItem(
         itemSeed,

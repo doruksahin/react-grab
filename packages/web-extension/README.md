@@ -27,7 +27,8 @@ To make a ZIP for the Chrome Web Store, run `pnpm --filter @react-grab/web-exten
    - **Record session**: each new comment links a replay of the last minutes (ADR-0021). Inputs are masked.
 
    Both are off by default.
-5. Open or reload the site. The overlay starts and loads the workspace's comments.
+5. Optionally, under **Your Jira account**, enter your own Atlassian email and API token, then click **Connect** (ADR-0031). The server checks who the token signs in as on your first site's Jira site. From then on, tickets and comments you make go to Jira as you, and your selections show your name (**Captured by**). Without it, they go through the workspace's account. Only the service worker reads the token.
+6. Open or reload the site. The overlay starts and loads the workspace's comments.
 
 To get the token, see "Environment variables" in the root `CLAUDE.md`. Do not put the token in a file in this repository.
 

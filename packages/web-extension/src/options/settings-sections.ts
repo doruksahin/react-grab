@@ -2,12 +2,14 @@ import { ADD_SITE_ANCHOR_ID } from "./anchor-id.js";
 
 export type SectionId =
   | "sync-server"
+  | "your-jira-account"
   | "sites"
   | "workspaces"
   | "jira-accounts";
 
 export const SECTION_TITLES: Record<SectionId, string> = {
   "sync-server": "Sync server",
+  "your-jira-account": "Your Jira account",
   sites: "Sites",
   workspaces: "Workspaces",
   "jira-accounts": "Jira accounts",
@@ -15,6 +17,7 @@ export const SECTION_TITLES: Record<SectionId, string> = {
 
 export const SECTION_ORDER: SectionId[] = [
   "sync-server",
+  "your-jira-account",
   "sites",
   "workspaces",
   "jira-accounts",

@@ -9,6 +9,18 @@ export interface SiteSettings {
 
 export type SiteSettingsByOrigin = Record<string, SiteSettings>;
 
+/** Who a personal Jira token signs in as (ADR-0031). Safe to show in a page. */
+export interface JiraUserIdentity {
+  accountId: string;
+  displayName: string;
+}
+
+/** The user's own Jira credential and who it signs in as; read only by the service worker (ADR-0031). */
+export interface PersonalJiraAccount extends JiraUserIdentity {
+  email: string;
+  apiToken: string;
+}
+
 export interface SyncSettings {
   serverUrl: string | null;
   apiToken: string | null;

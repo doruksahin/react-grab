@@ -1,5 +1,5 @@
 import type { CommentItem } from "../../shared-types.js";
-export type { SyncConfig, SyncStatus } from "../../types.js";
+export type { SyncConfig, SyncStatus, SyncUser } from "../../types.js";
 import type { SelectionGroup } from "../selection-groups/types.js";
 import type {
   AddJiraComment200,
@@ -101,6 +101,12 @@ export interface SyncServerConfig {
   serverUrl: string;
   apiToken: string;
   workspace: string;
+  /**
+   * The caller's own Jira credential, `base64(email:apiToken)`, sent as
+   * `X-Jira-Credential` so the server acts in Jira as that person (ADR-0031).
+   * Only the extension's service worker sets it; a page never holds it.
+   */
+  jiraCredential?: string;
 }
 
 /**

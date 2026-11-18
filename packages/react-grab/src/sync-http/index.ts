@@ -9,7 +9,12 @@ export {
   type NewJiraAccount,
   type WorkspaceSummary,
 } from "./http-jira-admin-port.js";
-export { SyncHttpError } from "./request.js";
+export { JIRA_CREDENTIAL_HEADER, SyncHttpError } from "./request.js";
+export {
+  encodeJiraCredential,
+  fetchJiraMe,
+  type JiraMe,
+} from "./fetch-jira-me.js";
 export {
   JIRA_ARGUMENTS,
   STORAGE_ARGUMENTS,

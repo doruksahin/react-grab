@@ -842,6 +842,11 @@ export interface SelectionLabelProps
  * Configuration for sync. Passed to initSync().
  * Optional `options` field is forwarded to init() when it auto-fires.
  */
+/** The person using the overlay, as their Jira account names them (ADR-0031). */
+export interface SyncUser {
+  displayName: string;
+}
+
 export interface SyncConfig {
   enabled: boolean;
   /** Required when an HTTP port has to be built (no injected `storage` or `jira`). */
@@ -863,6 +868,8 @@ export interface SyncConfig {
   jira?: JiraPort;
   syncRevealedState: boolean;
   onSyncError: (error: Error) => void;
+  /** Who makes new selections; stored as each one's `capturedBy` (ADR-0031). */
+  user?: SyncUser;
   /** Options forwarded to init() — use this to set screenshot config etc. */
   options?: Options;
 }

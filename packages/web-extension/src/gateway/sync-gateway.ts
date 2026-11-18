@@ -5,13 +5,17 @@ import {
   type SyncHttpConfig,
   createHttpAdapter,
   createHttpJiraPort,
+  encodeJiraCredential,
 } from "react-grab/sync-http";
 import {
   JIRA_METHODS,
   type PortName,
   STORAGE_METHODS,
 } from "../messaging/port-requests.js";
-import { readSyncSettings } from "../settings/settings-items.js";
+import {
+  personalJiraAccountItem,
+  readSyncSettings,
+} from "../settings/settings-items.js";
 import {
   GatewayRefusalError,
   assertTopFrameSender,
@@ -80,10 +84,20 @@ const resolveConnection = async (
   if (!settings.serverUrl || !settings.apiToken) {
     throw new GatewayRefusalError("the sync server is not configured");
   }
+  const personalJira = await personalJiraAccountItem.getValue();
   return {
     serverUrl: settings.serverUrl,
     apiToken: settings.apiToken,
     workspace: site.workspace,
+    // The user's own Jira token, so the server acts as them (ADR-0031).
+    ...(personalJira
+      ? {
+          jiraCredential: encodeJiraCredential(
+            personalJira.email,
+            personalJira.apiToken,
+          ),
+        }
+      : {}),
   };
 };
 

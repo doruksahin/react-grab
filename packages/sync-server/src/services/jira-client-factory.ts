@@ -4,6 +4,7 @@ import type {
   TicketOrigin,
   WorkspaceRepository,
 } from "../repositories/types.js";
+import type { PersonalJiraCredential } from "../lib/personal-jira-credential.js";
 import type { CredentialVault } from "./credential-vault.js";
 import { JiraError } from "./jira-errors.js";
 import type { JiraConfig, JiraService } from "./jira.service.js";
@@ -29,6 +30,8 @@ export interface JiraClientFactoryDeps {
   /** Built on first use, so a request that needs no account decrypts nothing. */
   vault: () => CredentialVault;
   createJiraService: CreateJiraService;
+  /** The caller's own Jira credential, used in place of the account's (ADR-0031). */
+  personalCredential?: PersonalJiraCredential;
 }
 
 /**
@@ -39,8 +42,25 @@ export interface JiraClientFactoryDeps {
 export class JiraClientFactory {
   constructor(private readonly deps: JiraClientFactoryDeps) {}
 
-  /** A client for a stored account; decrypts its credential for this request only. */
+  /**
+   * A client on a stored account's site. It signs in with the caller's
+   * personal credential when the request carries one (ADR-0031), else with
+   * the account's, decrypted for this request only.
+   */
   async forAccount(account: JiraAccount): Promise<JiraAccountClient> {
+    const personal = this.deps.personalCredential;
+    if (personal) {
+      return {
+        jira: this.deps.createJiraService({
+          baseUrl: account.siteUrl,
+          email: personal.email,
+          apiToken: personal.apiToken,
+        }),
+        accountId: account.id,
+        siteUrl: account.siteUrl,
+        signsInAs: personal.email,
+      };
+    }
     const credential = await this.deps
       .vault()
       .open(account.id, account.credential);

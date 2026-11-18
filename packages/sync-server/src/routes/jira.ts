@@ -7,6 +7,7 @@ import {
   AddJiraCommentRequest,
   AddJiraCommentResponse,
   JiraUser,
+  JiraMe,
   JiraIssueType,
   JiraPriority,
   JiraTicketStatus,
@@ -152,6 +153,24 @@ const searchUsers = createRoute({
   },
 });
 
+const getJiraMe = createRoute({
+  method: "get",
+  path: "/workspaces/{id}/jira/me",
+  tags: ["jira"],
+  summary: "Who the request's Jira credential signs in as",
+  description:
+    "The caller's personal credential (X-Jira-Credential) when it sends one, else the workspace's account (ADR-0031)",
+  operationId: "getJiraMe",
+  request: { params: WorkspaceIdParam },
+  responses: {
+    200: {
+      description: "The Jira user",
+      content: { "application/json": { schema: JiraMe } },
+    },
+    ...jiraErrorResponses,
+  },
+});
+
 export const jiraRoutes = createRouter()
   .openapi(createTicket, async (c) => {
     const { id, groupId } = c.req.valid("param");
@@ -187,6 +206,10 @@ export const jiraRoutes = createRouter()
     const { id } = c.req.valid("param");
     const { query } = c.req.valid("query");
     return c.json(await c.var.jiraTickets.searchUsers(id, query), 200);
+  })
+  .openapi(getJiraMe, async (c) => {
+    const { id } = c.req.valid("param");
+    return c.json(await c.var.jiraTickets.whoAmI(id), 200);
   });
 
 // A ticket attachment, streamed through the ticket's own account so the
