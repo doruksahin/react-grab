@@ -3,6 +3,7 @@ import type {
   WorkspaceSummary,
 } from "react-grab/sync-http";
 import type { SiteSettingsByOrigin } from "../settings/types.js";
+import { ADD_SITE_ANCHOR_ID } from "./anchor-id.js";
 
 export interface SetupStep {
   title: string;
@@ -32,7 +33,7 @@ export const setupSteps = (input: SetupInput): SetupStep[] => {
   };
   const siteStep: SetupStep = {
     title: "Enable a site",
-    target: "add-site",
+    target: ADD_SITE_ANCHOR_ID,
     done: Object.keys(input.sites).length > 0,
   };
   if (!input.accounts) return [serverStep, siteStep];
@@ -45,7 +46,7 @@ export const setupSteps = (input: SetupInput): SetupStep[] => {
     },
     {
       title: "Choose where a workspace's tickets go",
-      target: "add-site",
+      target: ADD_SITE_ANCHOR_ID,
       done: input.workspaces.some((workspace) =>
         Boolean(workspace.jiraAccountId && workspace.jiraProjectKey),
       ),

@@ -8,6 +8,7 @@ import {
   siteSettingsSchema,
 } from "../settings/settings-schema.js";
 import { settingsMessenger } from "../messaging/extension-messengers.js";
+import { ADD_SITE_ANCHOR_ID } from "./anchor-id.js";
 import { describeDestination } from "./describe-destination.js";
 import { describeError } from "./describe-error.js";
 import { formCheckbox, formField } from "./form-field.js";
@@ -24,6 +25,8 @@ interface AddSiteFormProps {
   canManageJira: boolean;
   /** Open on first run, closed once a site exists. */
   startsOpen: boolean;
+  /** The site address to start with, such as the one the popup links to. */
+  initialOrigin: string;
   onSaved: () => void;
 }
 
@@ -81,7 +84,7 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
   };
 
   return (
-    <details id="add-site" open={startsOpen}>
+    <details id={ADD_SITE_ANCHOR_ID} open={startsOpen}>
       <summary id="add-site-heading">Enable a site</summary>
       <form
         onSubmit={handleSubmit}
@@ -94,6 +97,7 @@ export const AddSiteForm = (props: AddSiteFormProps) => {
             <input
               name="origin"
               type="url"
+              value={props.initialOrigin}
               required
               placeholder="https://app.example.com"
             />

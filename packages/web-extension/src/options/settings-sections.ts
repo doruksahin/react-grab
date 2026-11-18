@@ -1,3 +1,5 @@
+import { ADD_SITE_ANCHOR_ID } from "./anchor-id.js";
+
 export type SectionId =
   | "sync-server"
   | "sites"
@@ -26,7 +28,7 @@ const SECTION_BY_PREFIX: ReadonlyArray<[string, SectionId]> = [
   ["workspace-", "workspaces"],
   ["jira-account-", "jira-accounts"],
   ["add-jira-account", "jira-accounts"],
-  ["add-site", "sites"],
+  [ADD_SITE_ANCHOR_ID, "sites"],
 ];
 
 /**

@@ -59,16 +59,13 @@ describe("registerBackground", () => {
     settingsMessenger.removeAllListeners();
   });
 
-  it("toggles the enabled flag, badges the action and tells every tab when the action is clicked", async () => {
+  it("badges the action and tells every tab when the overlay is turned off", async () => {
     const { firstTabId, secondTabId } = await createTabs();
     const sendEvent = spyOnEvents();
 
-    await fakeBrowser.action.onClicked.trigger(
-      await fakeBrowser.tabs.get(firstTabId),
-    );
+    await enabledItem.setValue(false);
 
     await vi.waitFor(async () => {
-      expect(await enabledItem.getValue()).toBe(false);
       expect(await fakeBrowser.action.getBadgeText({})).toBe("OFF");
       expect(await fakeBrowser.action.getTitle({})).toBe(
         "React Grab (Inactive)",
@@ -124,19 +121,16 @@ describe("registerBackground", () => {
     });
   });
 
-  it("answers getOverlayState with the enabled flag as the only source of enabled", async () => {
+  it("answers getOverlayState with the enabled flag and the saved toolbar state", async () => {
     sendAsOwnContentScript();
     await enabledItem.setValue(false);
-    await toolbarStateItem.setValue({
-      ...TOOLBAR_STATE_FIXTURE,
-      enabled: true,
-    });
+    await toolbarStateItem.setValue(TOOLBAR_STATE_FIXTURE);
 
     expect(
       await extensionRequestMessenger.sendMessage("getOverlayState"),
     ).toEqual({
       enabled: false,
-      toolbarState: { ...TOOLBAR_STATE_FIXTURE, enabled: false },
+      toolbarState: TOOLBAR_STATE_FIXTURE,
     });
   });
 

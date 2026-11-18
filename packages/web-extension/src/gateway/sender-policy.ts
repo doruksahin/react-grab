@@ -1,4 +1,5 @@
 import { type Browser, browser } from "wxt/browser";
+import { findSite } from "../settings/find-site.js";
 import type { SiteSettings, SiteSettingsByOrigin } from "../settings/types.js";
 
 const TOP_FRAME_ID = 0;
@@ -39,7 +40,5 @@ export const assertExtensionPageSender = (
 export const findSenderSite = (
   sender: Browser.runtime.MessageSender,
   sites: SiteSettingsByOrigin,
-): SiteSettings | null => {
-  if (!sender.origin || !Object.hasOwn(sites, sender.origin)) return null;
-  return sites[sender.origin] ?? null;
-};
+): SiteSettings | null =>
+  sender.origin ? findSite(sites, sender.origin) : null;

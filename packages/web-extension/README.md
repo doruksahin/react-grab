@@ -19,7 +19,7 @@ To make a ZIP for the Chrome Web Store, run `pnpm --filter @react-grab/web-exten
 
 ## Configure
 
-1. Right-click the extension icon and click **Options**. Until everything is set up, a checklist at the top links to each step, in the order they depend on each other.
+1. Click the extension icon and click **Settings**. Until everything is set up, a checklist at the top links to each step, in the order they depend on each other.
 2. Under **Sync server**, enter the server URL and the API token, then click **Save server**. Chrome asks for access to the server's origin. Accept it. If you set up Jira for your team, also enter the **admin token** (`SYNC_ADMIN_TOKEN`, ADR-0027). Only the service worker reads it.
 3. With the admin token, **Jira accounts** shows: enter a Jira Cloud site, an email and an API token, then click **Connect**. The server signs in to Jira before it saves the account, and never shows the token again. Create the token at id.atlassian.com → Security → API tokens. Tickets are created as that account.
 4. In **Sites**, open **Enable a site**, enter the site address and choose its workspace. With the admin token, choose **New workspace…** to name one and pick its Jira account and project; an existing workspace shows where its tickets go. Without the admin token, type the workspace name: the server's workspaces are suggested. Click **Enable site**. Chrome asks for access to the site. Accept it. Optionally select:
@@ -39,7 +39,7 @@ To change a site's workspace or what it records, enable the site again with the 
 
 On a `localhost` site the host app owns the overlay and its sync (`initSync` with its own token, ADR-0020). The extension then only relays the enabled flag and the toolbar state; it starts no overlay and no sync of its own there.
 
-Clicking the extension icon turns the overlay's enabled flag on or off. The badge shows **OFF** when it is off.
+Clicking the extension icon opens a small popup: its **Overlay on** switch turns the overlay on or off, and **Settings** opens the options page. When the site in the current tab is not enabled, the popup says so, and **Add this site** opens the **Enable a site** form with that site's address filled in, in the settings tab that is already open if there is one. Turning it off removes the overlay and stops its sync in every open tab. The badge shows **OFF** when it is off.
 
 ## How it works
 

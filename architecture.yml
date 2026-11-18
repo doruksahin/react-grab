@@ -140,6 +140,7 @@ packages:
       overlay: packages/web-extension/src/entrypoints/overlay.content.ts
       relay: packages/web-extension/src/entrypoints/relay.content.ts
       options: packages/web-extension/src/entrypoints/options/main.tsx
+      popup: packages/web-extension/src/entrypoints/popup/main.tsx
     background: packages/web-extension/src/background/register-background.ts
     request_handlers: packages/web-extension/src/background/handle-overlay-requests.ts
     gateway: packages/web-extension/src/gateway/sync-gateway.ts
