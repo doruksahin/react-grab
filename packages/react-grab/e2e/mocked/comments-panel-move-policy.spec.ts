@@ -113,7 +113,7 @@ test.describe("Comments panel — move policy", { tag: ["@SPEC-011"] }, () => {
         description: "SPEC-011 amendment AC-1: the move goes where it was told",
       },
     },
-    async ({ page, reactGrab }) => {
+    async ({ page }) => {
       const price = row(page, "Price is open");
       await price.hover();
       await price.getByRole("button", { name: "Selection actions" }).click();
@@ -127,13 +127,20 @@ test.describe("Comments panel — move policy", { tag: ["@SPEC-011"] }, () => {
         .locator("[data-react-grab-group-collapsible]")
         .filter({ hasText: "Checkout" });
       await expect(checkout).toContainText("Price is open");
-      // Selecting a row whose element is on the page opens its comment.
-      expect(await reactGrab.isPromptModeActive()).toBe(false);
+      // Selecting a row shows or hides its selection on the page; the
+      // fixture starts it shown, and the move left it so.
+      await expect(row(page, "Price is open")).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
 
-      // Control: selecting the row does open it, so the check above means
+      // Control: selecting the row does toggle it, so the check above means
       // something.
       await row(page, "Price is open").click();
-      await expect.poll(() => reactGrab.isPromptModeActive()).toBe(true);
+      await expect(row(page, "Price is open")).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
     },
   );
 

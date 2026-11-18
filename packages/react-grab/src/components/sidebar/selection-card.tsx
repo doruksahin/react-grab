@@ -3,6 +3,7 @@ import type { CommentItem } from "../../types.js";
 import { selectionRowFields } from "../../features/selection-groups/business/selection-row-fields.js";
 import { FLAGGED_BORDER_CLASS } from "../../features/sidebar/resolve-display-color.js";
 import { useImageLightbox } from "../../features/image-lightbox/index.js";
+import { useSelectionHover } from "../../features/selection-hover/index.js";
 import { cn } from "../../utils/cn.js";
 import { FlagIndicator } from "../flag-indicator.js";
 import { SelectionDevInsights } from "../dev-insights/selection-dev-insights.jsx";
@@ -29,6 +30,7 @@ export interface SelectionCardProps {
 export const SelectionCard: Component<SelectionCardProps> = (props) => {
   const lightbox = useImageLightbox();
   const rowFields = () => selectionRowFields(props.item);
+  const hoverHandlers = useSelectionHover(() => props.item.id);
 
   return (
     <div
@@ -38,6 +40,8 @@ export const SelectionCard: Component<SelectionCardProps> = (props) => {
         props.jiraFlagged && FLAGGED_BORDER_CLASS,
       )}
       style={{ "pointer-events": "auto" }}
+      onMouseEnter={hoverHandlers.onMouseEnter}
+      onMouseLeave={hoverHandlers.onMouseLeave}
     >
       <SelectionCardBody
         leading={

@@ -125,7 +125,7 @@ test.describe("Comment selector reacquire", () => {
     expectCloseTo(hoverBox!.bounds.height, afterRect!.height, 8);
   });
 
-  test("should show copied label feedback when selecting a reacquired comment item", async ({
+  test("should show a reacquired comment item on the page when clicking it", async ({
     reactGrab,
   }) => {
     const toggleableSelector = '[data-testid="toggleable-element"]';
@@ -149,8 +149,8 @@ test.describe("Comment selector reacquire", () => {
 
     await expect
       .poll(async () => {
-        const labels = await reactGrab.getLabelInstancesInfo();
-        return labels.filter((label) => label.status === "copied").length;
+        const { boxes } = await reactGrab.getGrabbedBoxInfo();
+        return boxes.filter((box) => box.id.startsWith("reveal-pinned")).length;
       })
       .toBeGreaterThan(0);
   });

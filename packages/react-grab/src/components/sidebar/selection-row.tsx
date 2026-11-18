@@ -13,6 +13,7 @@ import { Avatar } from "../ui/avatar.js";
 import { LocationChip } from "../selection-location/location-chip.jsx";
 import { IconFlag } from "../icons/icon-flag.jsx";
 import { IconPlay } from "../icons/icon-play.jsx";
+import { useSelectionHover } from "../../features/selection-hover/index.js";
 import {
   SELECTION_ROW_TEXT_INSET_NO_LEADING_PX,
   SELECTION_ROW_TEXT_INSET_PX,
@@ -46,6 +47,7 @@ export const SelectionRow: Component<SelectionRowProps> = (props) => {
   // Read once: each read of a JSX prop would build the checkbox again.
   const leading = children(() => props.leading);
   const statusColor = () => getStatusLabelColor(props.status).hex;
+  const hoverHandlers = useSelectionHover(() => props.item.id);
 
   return (
     <Collapsible
@@ -54,6 +56,8 @@ export const SelectionRow: Component<SelectionRowProps> = (props) => {
       onOpenChange={props.onOpenChange}
       data-react-grab-selection-card
       tabIndex={-1}
+      onMouseEnter={hoverHandlers.onMouseEnter}
+      onMouseLeave={hoverHandlers.onMouseLeave}
       class="border-b border-border/60 outline-none transition-colors data-[expanded]:bg-foreground/[0.035] data-[expanded]:shadow-[inset_2px_0_0_var(--row-status)]"
       classList={{ "ring-1 ring-inset ring-selection": props.highlighted }}
       style={{ "--row-status": statusColor() }}

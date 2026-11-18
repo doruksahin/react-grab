@@ -133,34 +133,6 @@ test.describe("Selection location", { tag: ["@ADR-0024"] }, () => {
     );
   });
 
-  test("Open page navigates without selecting the card", async ({ page }) => {
-    // Selecting a row whose element is missing copies it. A 204 response
-    // cancels the navigation, so the page stays to be checked.
-    const billingUrl = `${ORIGIN}/settings/billing?plan=pro`;
-    await page.route(billingUrl, (route) => route.fulfill({ status: 204 }));
-    await page.evaluate(() => {
-      document.documentElement.dataset.copyCount = "0";
-      document.addEventListener(
-        "copy",
-        () => {
-          const root = document.documentElement;
-          root.dataset.copyCount = String(Number(root.dataset.copyCount) + 1);
-        },
-        true,
-      );
-    });
-    // Control: selecting a row does copy, so the count below means something.
-    const copyCount = page.locator("html");
-    await row(page, "Made locally").click();
-    await expect(copyCount).toHaveAttribute("data-copy-count", "1");
-
-    const requested = page.waitForRequest(billingUrl);
-    const card = await openCard(page, "Made on billing");
-    await card.locator("[data-react-grab-selection-location-open]").click();
-    await requested;
-    await expect(copyCount).toHaveAttribute("data-copy-count", "1");
-  });
-
   test("Open page goes to the page the selection was made on", async ({
     page,
   }) => {

@@ -543,6 +543,11 @@ features:
     description: TODO
     status: discovered
     files: []
+  selection-hover:
+    description: TODO
+    status: discovered
+    files:
+      - packages/react-grab/src/features/selection-hover/index.ts
 
 data_flows:
   sync_layer:
@@ -910,7 +915,7 @@ data_attrs:
     comments-dropdown: {scope: comments, src: 3, tests: 11}
     comments-error: {scope: comments, src: 1, tests: 1}
     comments-list: {scope: comments, src: 1, tests: 1}
-    comments-open-sidebar: {scope: comments, src: 1, tests: 1}
+    comments-open-sidebar: {scope: comments, src: 1, tests: 2}
     comments-section: {scope: comments, src: 1, tests: 1}
     inline-reply: {scope: comments, src: 1, tests: 2}
     jira-comment: {scope: comments, src: 1, tests: 0}
@@ -948,7 +953,7 @@ data_attrs:
     error-retry: {scope: error, src: 1, tests: 1}
     filter-badge: {scope: filter, src: 1, tests: 1}
     filter-clear: {scope: filter, src: 1, tests: 0}
-    filter-row: {scope: filter, src: 5, tests: 3}
+    filter-row: {scope: filter, src: 6, tests: 3}
     composer-footer: {scope: generation, src: 1, tests: 0}
     context-input: {scope: generation, src: 1, tests: 0}
     generation-abort: {scope: generation, src: 1, tests: 1}
@@ -989,7 +994,7 @@ data_attrs:
     step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 76, tests: 6}
+    ignore-events: {scope: reserved, src: 75, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     archived-section: {scope: selection, src: 1, tests: 1}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
@@ -1018,11 +1023,11 @@ data_attrs:
     selection-content: {scope: selection, src: 1, tests: 0}
     selection-delete-group: {scope: selection, src: 1, tests: 0}
     selection-header: {scope: selection, src: 3, tests: 0}
-    selection-label: {scope: selection, src: 1, tests: 19}
+    selection-label: {scope: selection, src: 1, tests: 20}
     selection-menu: {scope: selection, src: 2, tests: 0}
     selection-remove: {scope: selection, src: 2, tests: 0}
     selection-restore: {scope: selection, src: 1, tests: 0}
-    selection-row: {scope: selection, src: 1, tests: 2}
+    selection-row: {scope: selection, src: 1, tests: 3}
     unread-indicator: {scope: selection, src: 1, tests: 0}
     selection-location: {scope: selection-location, src: 2, tests: 4}
     selection-location-kind: {scope: selection-location, src: 2, tests: 1}
