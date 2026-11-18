@@ -238,7 +238,7 @@ features:
   reproduce-steps:
     description: Captures the clicks and field changes that lead to each new comment as Chrome DevTools Recorder steps, stored on the comment; values never stored; markers in the rrweb recording (ADR-0025)
     status: implemented
-    adrs: [ADR-0025, ADR-0026, ADR-0021, ADR-0023]
+    adrs: [ADR-0025, ADR-0026, ADR-0032, ADR-0021, ADR-0023]
     files:
       - packages/react-grab/src/features/reproduce-steps/business/build-step.ts
       - packages/react-grab/src/features/reproduce-steps/business/find-step-target.ts
@@ -248,6 +248,7 @@ features:
       - packages/react-grab/src/features/reproduce-steps/business/selection-press.ts
       - packages/react-grab/src/features/reproduce-steps/business/step-buffer.ts
       - packages/react-grab/src/features/reproduce-steps/business/step-selectors.ts
+      - packages/react-grab/src/features/reproduce-steps/business/steps-on-current-page.ts
       - packages/react-grab/src/features/reproduce-steps/business/to-reproduce-steps.ts
       - packages/react-grab/src/features/reproduce-steps/business/to-user-flow.ts
       - packages/react-grab/src/features/reproduce-steps/business/user-input.ts
@@ -547,7 +548,10 @@ features:
     description: TODO
     status: discovered
     files:
+      - packages/react-grab/src/features/selection-hover/context.ts
       - packages/react-grab/src/features/selection-hover/index.ts
+      - packages/react-grab/src/features/selection-hover/types.ts
+      - packages/react-grab/src/features/selection-hover/use-selection-hover.ts
 
 data_flows:
   sync_layer:
@@ -1031,7 +1035,7 @@ data_attrs:
     unread-indicator: {scope: selection, src: 1, tests: 0}
     selection-location: {scope: selection-location, src: 2, tests: 4}
     selection-location-kind: {scope: selection-location, src: 2, tests: 1}
-    selection-location-open: {scope: selection-location, src: 1, tests: 6}
+    selection-location-open: {scope: selection-location, src: 1, tests: 5}
     active-group-picker: {scope: sidebar, src: 1, tests: 1}
     active-group-picker-locked: {scope: sidebar, src: 1, tests: 0}
     bulk-action-bar: {scope: sidebar, src: 1, tests: 0}
@@ -1291,4 +1295,8 @@ decree:
     ADR-0031:
       title: Each extension user signs in to Jira with their own API token
       file: decree/adr/0031-personal-jira-token-per-extension-user.md
+      status: accepted
+    ADR-0032:
+      title: Start a selection's steps where its page was last entered
+      file: decree/adr/0032-start-a-selections-steps-where-its-page-was-last-entered.md
       status: accepted

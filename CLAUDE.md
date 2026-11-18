@@ -352,6 +352,7 @@ test.describe('JIRA comment write-back', { tag: ['@SPEC-013'] }, () => {
 | `@ADR-0024` | Where a selection is | `selection-location.spec.ts` |
 | `@ADR-0025` | Record steps, steps on the card | `reproduce-steps.spec.ts`, `reproduce-steps-sidebar.spec.ts` |
 | `@ADR-0026` | Step guide | `step-guide.spec.ts` |
+| `@ADR-0032` | Steps start on the selection's page | `reproduce-steps.spec.ts` |
 | `@SPEC-021` | Jira ticket description as ADF | `jira-create-dialog.spec.ts` |
 
 A feature decided by an ADR with no SPEC is tagged with that ADR.
