@@ -15,6 +15,7 @@ import {
   TEST_PAGE_URL,
   TEST_WORKSPACE,
   expect,
+  openExtensionPage,
   test,
   waitForOverlay,
 } from "./fixtures.js";
@@ -256,9 +257,11 @@ test.describe(
     }) => {
       await page.goto(TEST_PAGE_URL);
       await waitForOverlay(page);
-      const extensionId = new URL(serviceWorker.url()).host;
-      const optionsPage = await context.newPage();
-      await optionsPage.goto(`chrome-extension://${extensionId}/options.html`);
+      const optionsPage = await openExtensionPage(
+        context,
+        serviceWorker,
+        "options.html",
+      );
 
       const pageReloaded = page.waitForEvent("load");
       await optionsPage
@@ -290,9 +293,11 @@ test.describe(
       context,
       serviceWorker,
     }) => {
-      const extensionId = new URL(serviceWorker.url()).host;
-      const optionsPage = await context.newPage();
-      await optionsPage.goto(`chrome-extension://${extensionId}/options.html`);
+      const optionsPage = await openExtensionPage(
+        context,
+        serviceWorker,
+        "options.html",
+      );
 
       // A site is already enabled, so the form starts closed.
       await optionsPage
@@ -328,9 +333,11 @@ test.describe(
           siteUrl: "https://acme.atlassian.net",
         },
       ]);
-      const extensionId = new URL(serviceWorker.url()).host;
-      const optionsPage = await context.newPage();
-      await optionsPage.goto(`chrome-extension://${extensionId}/options.html`);
+      const optionsPage = await openExtensionPage(
+        context,
+        serviceWorker,
+        "options.html",
+      );
 
       const siteRow = optionsPage.getByRole("row", {
         name: new URL(TEST_PAGE_URL).origin,

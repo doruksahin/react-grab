@@ -35,7 +35,7 @@ export default defineConfig({
       default_title: "React Grab (Active)",
       default_icon: ICONS,
     },
-    permissions: ["storage", "scripting"],
+    permissions: ["storage", "scripting", "activeTab"],
     optional_host_permissions: ["https://*/*", "http://*/*"],
     host_permissions: mode === E2E_MODE ? E2E_HOST_PERMISSIONS : [],
   }),

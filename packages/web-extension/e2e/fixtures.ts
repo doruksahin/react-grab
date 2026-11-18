@@ -125,6 +125,22 @@ const configureSync = async (serviceWorker: Worker): Promise<void> => {
     );
 };
 
+export const extensionPageUrl = (
+  serviceWorker: Worker,
+  pagePath: string,
+): string =>
+  `chrome-extension://${new URL(serviceWorker.url()).host}/${pagePath}`;
+
+export const openExtensionPage = async (
+  context: BrowserContext,
+  serviceWorker: Worker,
+  pagePath: string,
+): Promise<Page> => {
+  const extensionPage = await context.newPage();
+  await extensionPage.goto(extensionPageUrl(serviceWorker, pagePath));
+  return extensionPage;
+};
+
 export const setExtensionEnabled = (
   serviceWorker: Worker,
   enabled: boolean,

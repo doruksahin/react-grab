@@ -8,6 +8,7 @@ import {
   on,
 } from "solid-js";
 import { AddSiteForm } from "./add-site-form.jsx";
+import { linkedSiteOrigin } from "./add-site-link.js";
 import { JiraAccountsSection } from "./jira-accounts-section.jsx";
 import { loadOptionsState } from "./load-options-state.js";
 import { ServerSettingsForm } from "./server-settings-form.jsx";
@@ -36,20 +37,19 @@ export const OptionsApp = () => {
   };
   const hash = useLocationHash();
 
-  // The section shows only after the hash changes, so reveal the linked row or form then.
-  createEffect(
-    on(hash, (current) => {
-      queueMicrotask(() => {
-        const target = document.getElementById(current.replace(/^#/, ""));
-        if (target instanceof HTMLDetailsElement) target.open = true;
-        target?.scrollIntoView({ block: "nearest" });
-      });
-    }),
-  );
-
   return (
     <Show when={optionsState()} fallback={<p>Loading settings…</p>}>
       {(state) => {
+        // Runs once the settings show, so a link from the popup (#add-site) finds its form too.
+        createEffect(
+          on(hash, (current) => {
+            queueMicrotask(() => {
+              const target = document.getElementById(current.replace(/^#/, ""));
+              if (target instanceof HTMLDetailsElement) target.open = true;
+              target?.scrollIntoView({ block: "nearest" });
+            });
+          }),
+        );
         const connection = () => state().connection;
         const isConnected = () => connection().kind === "connected";
         const workspaces = () => {
@@ -113,6 +113,7 @@ export const OptionsApp = () => {
                     accounts={accounts() ?? []}
                     canManageJira={accounts() !== null}
                     startsOpen={Object.keys(state().sites).length === 0}
+                    initialOrigin={linkedSiteOrigin(window.location.search)}
                     onSaved={reload}
                   />
                 </>,

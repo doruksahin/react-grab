@@ -59,16 +59,13 @@ describe("registerBackground", () => {
     settingsMessenger.removeAllListeners();
   });
 
-  it("toggles the enabled flag, badges the action and tells every tab when the action is clicked", async () => {
+  it("badges the action and tells every tab when the overlay is turned off", async () => {
     const { firstTabId, secondTabId } = await createTabs();
     const sendEvent = spyOnEvents();
 
-    await fakeBrowser.action.onClicked.trigger(
-      await fakeBrowser.tabs.get(firstTabId),
-    );
+    await enabledItem.setValue(false);
 
     await vi.waitFor(async () => {
-      expect(await enabledItem.getValue()).toBe(false);
       expect(await fakeBrowser.action.getBadgeText({})).toBe("OFF");
       expect(await fakeBrowser.action.getTitle({})).toBe(
         "React Grab (Inactive)",

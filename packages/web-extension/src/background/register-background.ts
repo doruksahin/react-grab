@@ -14,7 +14,6 @@ import { handleJiraAdminRequests } from "./handle-jira-admin-requests.js";
 import { siteTrustQueue } from "./queues.js";
 import { restrictStorageToExtension } from "./restrict-storage-to-extension.js";
 import { showEnabledState } from "./show-enabled-state.js";
-import { toggleEnabled } from "./toggle-enabled.js";
 
 const reportBackgroundError = (error: unknown): void => {
   console.error("[react-grab extension]", error);
@@ -41,10 +40,6 @@ export const registerBackground = (gateway?: SyncGateway): void => {
   });
   browser.runtime.onStartup.addListener(() => {
     restoreExtensionState().catch(reportBackgroundError);
-  });
-
-  browser.action.onClicked.addListener(() => {
-    toggleEnabled().catch(reportBackgroundError);
   });
 
   enabledItem.watch((enabled) => {
