@@ -28,6 +28,10 @@ const buttonVariantOptions = {
       "contain-layout bg-popover-foreground text-popover interactive-scale",
     toolbar: "contain-layout flex bg-transparent interactive-scale",
     bulk: "bg-bulk-bar-foreground/20 text-bulk-bar-foreground hover:bg-bulk-bar-foreground/30",
+    // A list row's primary action. Its ::after stretches over the nearest
+    // positioned ancestor (the row), so the whole row is the hit area, while
+    // the row's other buttons sit beside it, positioned above the ::after.
+    row: "flex-col items-stretch justify-start gap-0 whitespace-normal rounded-none text-left font-normal focus-visible:ring-0 after:absolute after:inset-0 after:content-['']",
   },
   size: {
     default: "h-9 px-4 py-2",
@@ -61,6 +65,7 @@ const createButtonVariants = (defaultVariants: {
       { variant: "chip", size: "default", class: CHIP_SIZE_CLASS },
       { variant: "chip-destructive", size: "default", class: CHIP_SIZE_CLASS },
       { variant: "toolbar", size: "default", class: "h-auto p-0" },
+      { variant: "row", size: "default", class: "h-auto p-0" },
     ],
     defaultVariants,
   });

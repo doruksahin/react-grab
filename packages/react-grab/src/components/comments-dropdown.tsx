@@ -57,8 +57,8 @@ interface CommentsDropdownProps extends Pick<
 > {
   position: DropdownAnchor | null;
   items: CommentItem[];
-  /** A click on a row shows or hides that selection on the page. */
-  onSelectItem?: (item: CommentItem) => void;
+  /** The row's eye: shows or hides that selection on the page. */
+  onToggleItemRevealed?: (commentItemId: string) => void;
   onItemHover?: (commentItemId: string | null) => void;
   onCopyAll?: () => void;
   onCopyAllHover?: (isHovered: boolean) => void;
@@ -72,7 +72,7 @@ interface CommentsDropdownProps extends Pick<
   onDropdownHover?: (isHovered: boolean) => void;
   onCopyGroup?: (groupId: string) => void;
   copyableCount?: number;
-  /** Opens the sidebar, on this selection's card when one is given. */
+  /** Opens the sidebar, on this selection's card when one is given; a row's click. */
   onOpenInSidebar?: (itemId: string | null) => void;
   /** Archive (ADR-0030). */
   archive?: ArchiveHandlers;
@@ -128,105 +128,116 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
     moveDestinations(item, props.groups ?? []);
 
   // The menu's row; the tree around it is SelectionTreeView (ADR-0028).
-  const renderRow = (item: CommentItem) => (
-    <div
-      data-react-grab-ignore-events
-      data-react-grab-comment-item
-      class="group/row relative z-1 contain-layout flex items-start justify-between w-full px-2 py-1 cursor-pointer text-left gap-2"
-      role="button"
-      aria-pressed={item.revealed}
-      tabindex="0"
-      onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => {
-        event.stopPropagation();
-        props.onSelectItem?.(item);
-      }}
-      onKeyDown={(event) => {
-        if (event.code === "Space" && event.currentTarget === event.target) {
-          event.preventDefault();
-          event.stopPropagation();
-          props.onSelectItem?.(item);
-        }
-      }}
-      onMouseEnter={(event) => {
-        props.onItemHover?.(item.id);
-        updateHighlight(event.currentTarget);
-      }}
-      onMouseLeave={() => {
-        props.onItemHover?.(null);
-        clearHighlight();
-      }}
-      onFocus={(event) => updateHighlight(event.currentTarget)}
-      onBlur={clearHighlight}
-    >
-      <span class="flex flex-col min-w-0 flex-1">
-        <span class="text-caption leading-4 font-medium text-popover-foreground truncate">
-          {selectionRowFields(item).title}
-        </span>
-        <Show when={selectionRowFields(item).detail}>
-          {(detail) => (
-            <span class="text-meta leading-3 text-muted-foreground truncate mt-0.5">
-              {detail()}
-            </span>
-          )}
-        </Show>
-        <LocationChip
-          selectionId={item.id}
-          class="mt-1 max-w-full min-w-0 shrink self-start"
-        />
-      </span>
-      <span
-        class="flex h-4 shrink-0 items-center"
-        title={item.revealed ? "Shown on the page" : "Hidden on the page"}
+  // A click opens the selection in the sidebar; the eye and ⋯ are their own
+  // buttons beside it, never inside it (Button variant "row": stretched link).
+  const renderRow = (item: CommentItem) => {
+    let rowRef: HTMLDivElement | undefined;
+    const highlightRow = () => {
+      if (rowRef) updateHighlight(rowRef);
+    };
+
+    return (
+      <div
+        ref={rowRef}
+        data-react-grab-ignore-events
+        data-react-grab-comment-item
+        class="group/row relative z-1 contain-layout flex items-start justify-between w-full px-2 py-1 gap-2"
+        onMouseEnter={() => {
+          props.onItemHover?.(item.id);
+          highlightRow();
+        }}
+        onMouseLeave={() => {
+          props.onItemHover?.(null);
+          clearHighlight();
+        }}
+        onFocusIn={highlightRow}
+        onFocusOut={clearHighlight}
       >
-        <Show when={item.revealed} fallback={<IconEyeOff size={12} />}>
-          <IconEyeFilled size={12} class="text-selection-strong" />
-        </Show>
-      </span>
-      <div class="grid shrink-0 [&>*]:col-start-1 [&>*]:row-start-1">
-        <span
-          class={cn(
-            "flex h-4 items-center justify-end gap-1 text-meta text-muted-foreground group-hover/row:invisible group-focus-within/row:invisible",
-            openMenuId() === item.id && "invisible",
-          )}
+        <Button
+          type="button"
+          variant="row"
+          data-react-grab-ignore-events
+          data-react-grab-comment-item-open
+          class="min-w-0 flex-1"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            props.onOpenInSidebar?.(item.id);
+          }}
         >
-          {formatRelativeTime(item.timestamp)}
-        </span>
-        <div
-          class={cn(
-            "flex h-4 items-center justify-end gap-1 opacity-0 pointer-events-none group-hover/row:opacity-100 group-hover/row:pointer-events-auto group-focus-within/row:opacity-100 group-focus-within/row:pointer-events-auto",
-            openMenuId() === item.id && "opacity-100 pointer-events-auto",
-          )}
-        >
-          <Show
-            when={
-              props.onOpenInSidebar ||
-              moveDestinationsFor(item).length > 0 ||
-              props.canRemoveItem?.(item.id)
-            }
-          >
-            <SelectionMenu
-              archive={archiveActionFor(item)}
-              onOpenInSidebar={
-                props.onOpenInSidebar
-                  ? () => props.onOpenInSidebar?.(item.id)
-                  : undefined
-              }
-              open={openMenuId() === item.id}
-              onOpenChange={(open) => setOpenMenuId(open ? item.id : null)}
-              destinations={moveDestinationsFor(item)}
-              onMove={(groupId) => props.onMoveItem?.(item.id, groupId)}
-              onRemove={
-                props.canRemoveItem?.(item.id)
-                  ? () => props.onRemoveItem?.(item.id)
-                  : undefined
-              }
-            />
+          <span class="text-caption leading-4 font-medium text-popover-foreground truncate">
+            {selectionRowFields(item).title}
+          </span>
+          <Show when={selectionRowFields(item).detail}>
+            {(detail) => (
+              <span class="text-meta leading-3 text-muted-foreground truncate mt-0.5">
+                {detail()}
+              </span>
+            )}
           </Show>
+          <LocationChip
+            selectionId={item.id}
+            class="mt-1 max-w-full min-w-0 shrink self-start"
+          />
+        </Button>
+        <IconButton
+          data-react-grab-ignore-events
+          data-react-grab-comment-item-reveal
+          label="Show on the page"
+          aria-pressed={item.revealed}
+          size="icon-xs"
+          class="relative shrink-0"
+          on:click={(event) => {
+            event.stopPropagation();
+            props.onToggleItemRevealed?.(item.id);
+          }}
+          on:pointerdown={(event) => event.stopPropagation()}
+        >
+          <Show when={item.revealed} fallback={<IconEyeOff size={12} />}>
+            <IconEyeFilled size={12} class="text-selection-strong" />
+          </Show>
+        </IconButton>
+        <div class="pointer-events-none relative grid shrink-0 [&>*]:col-start-1 [&>*]:row-start-1">
+          <span
+            class={cn(
+              "pointer-events-none flex h-4 items-center justify-end gap-1 text-meta text-muted-foreground group-hover/row:invisible group-focus-within/row:invisible",
+              openMenuId() === item.id && "invisible",
+            )}
+          >
+            {formatRelativeTime(item.timestamp)}
+          </span>
+          <div
+            class={cn(
+              "flex h-4 items-center justify-end gap-1 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100",
+              openMenuId() === item.id && "opacity-100",
+            )}
+          >
+            <Show
+              when={
+                archiveActionFor(item) ||
+                moveDestinationsFor(item).length > 0 ||
+                props.canRemoveItem?.(item.id)
+              }
+            >
+              <SelectionMenu
+                class="pointer-events-auto"
+                archive={archiveActionFor(item)}
+                open={openMenuId() === item.id}
+                onOpenChange={(open) => setOpenMenuId(open ? item.id : null)}
+                destinations={moveDestinationsFor(item)}
+                onMove={(groupId) => props.onMoveItem?.(item.id, groupId)}
+                onRemove={
+                  props.canRemoveItem?.(item.id)
+                    ? () => props.onRemoveItem?.(item.id)
+                    : undefined
+                }
+              />
+            </Show>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // The group search narrows the group sections; Ungrouped always shows.
   const visibleTree = createMemo(() => {

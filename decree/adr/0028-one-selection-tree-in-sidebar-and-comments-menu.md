@@ -56,3 +56,13 @@ The "Bad" consequence above, a long tree needs a lot of scrolling, is addressed 
 ### Update: from the comments menu to the sidebar (2026-11-16)
 
 The comments menu is the quick list; the full card lives in the sidebar. A row's ⋯ menu has "Open in sidebar", which closes the menu and opens the sidebar on that selection's card (the same focus request as a pin's "Open thread"), and the menu's header has an "Open in sidebar" button that opens the sidebar plainly.
+
+### Update: a row's click opens the sidebar (2026-11-19)
+
+The user chose to make the sidebar the comments menu row's main action. This replaces two things: the row's ⋯ "Open in sidebar" above, and the row click that showed or hid the selection on the page (commit #34).
+
+- **A click on a row** closes the menu and opens the sidebar on that selection's card, the same focus request as before. Enter or Space on the focused row does the same.
+- **The eye is its own button again.** It shows or hides the selection on the page, and the menu stays open and the sidebar stays closed. It is a toggle button: its label stays "Show on the page" and `aria-pressed` gives the state, as the [WAI-ARIA APG Button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/button/) asks.
+- **⋯ keeps the rest:** move, archive, remove. "Open in sidebar" is no longer in it. The menu's header button still opens the sidebar plainly.
+- **Hover is unchanged.** Hovering a row shows its element on the page.
+- **Markup.** A row is not a button that holds other buttons: interactive content inside a `<button>` is invalid HTML, and nested controls are announced badly. The row's main action is a real `<button>` (`Button` variant `row`), and its `::after` stretches over the row, so the whole row is the hit area. The eye and ⋯ are sibling buttons, positioned above that overlay. This is the "stretched link" pattern, as described by Bootstrap's [Stretched link helper](https://getbootstrap.com/docs/5.3/helpers/stretched-link/) and Heydon Pickering's [Inclusive Components: Cards](https://inclusive-components.design/cards/) ("the pseudo-content trick"). The sidebar's `SelectionRow` already keeps its trigger and its actions as siblings.
