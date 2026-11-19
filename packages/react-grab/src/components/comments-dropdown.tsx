@@ -183,7 +183,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
         <IconButton
           data-react-grab-ignore-events
           data-react-grab-comment-item-reveal
-          label={item.revealed ? "Hide on the page" : "Show on the page"}
+          label="Show on the page"
           aria-pressed={item.revealed}
           size="icon-xs"
           class="relative shrink-0"
@@ -197,7 +197,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
             <IconEyeFilled size={12} class="text-selection-strong" />
           </Show>
         </IconButton>
-        <div class="relative grid shrink-0 [&>*]:col-start-1 [&>*]:row-start-1">
+        <div class="pointer-events-none relative grid shrink-0 [&>*]:col-start-1 [&>*]:row-start-1">
           <span
             class={cn(
               "pointer-events-none flex h-4 items-center justify-end gap-1 text-meta text-muted-foreground group-hover/row:invisible group-focus-within/row:invisible",
@@ -208,8 +208,8 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
           </span>
           <div
             class={cn(
-              "flex h-4 items-center justify-end gap-1 opacity-0 pointer-events-none group-hover/row:opacity-100 group-hover/row:pointer-events-auto group-focus-within/row:opacity-100 group-focus-within/row:pointer-events-auto",
-              openMenuId() === item.id && "opacity-100 pointer-events-auto",
+              "flex h-4 items-center justify-end gap-1 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100",
+              openMenuId() === item.id && "opacity-100",
             )}
           >
             <Show
@@ -220,6 +220,7 @@ export const CommentsDropdown: Component<CommentsDropdownProps> = (props) => {
               }
             >
               <SelectionMenu
+                class="pointer-events-auto"
                 archive={archiveActionFor(item)}
                 open={openMenuId() === item.id}
                 onOpenChange={(open) => setOpenMenuId(open ? item.id : null)}

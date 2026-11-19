@@ -45,15 +45,17 @@ test.describe("Open in sidebar", { tag: ["@ADR-0028"] }, () => {
     ).toBeInViewport();
   });
 
-  test("the keyboard opens it too: Enter on the focused row", async ({
-    page,
-  }) => {
-    await row(page).locator("[data-react-grab-comment-item-open]").focus();
-    await page.keyboard.press("Enter");
+  for (const key of ["Enter", "Space"]) {
+    test(`the keyboard opens it too: ${key} on the focused row`, async ({
+      page,
+    }) => {
+      await row(page).locator("[data-react-grab-comment-item-open]").focus();
+      await page.keyboard.press(key);
 
-    await expect(dashboard(page)).toBeVisible();
-    await expect(panel(page)).toHaveCount(0);
-  });
+      await expect(dashboard(page)).toBeVisible();
+      await expect(panel(page)).toHaveCount(0);
+    });
+  }
 
   test("the row's eye toggles visibility and does not open the sidebar", async ({
     page,

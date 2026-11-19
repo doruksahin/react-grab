@@ -51,8 +51,7 @@ export const SelectionMenu: Component<SelectionMenuProps> = (props) => {
   const hasDestructive = () =>
     Boolean(props.onRemove) || Boolean(props.deleteGroup);
   // The menu is portaled, but Solid's delegated events still bubble to where
-  // it sits in the tree (the row); stop them so picking an item does not
-  // also select the row.
+  // it sits in the tree (the row and the panel around it); stop them there.
   const stopBubbling = (event: Event) => event.stopPropagation();
 
   return (
