@@ -127,20 +127,16 @@ test.describe("Comments panel — move policy", { tag: ["@SPEC-011"] }, () => {
         .locator("[data-react-grab-group-collapsible]")
         .filter({ hasText: "Checkout" });
       await expect(checkout).toContainText("Price is open");
-      // Selecting a row shows or hides its selection on the page; the
+      // The row's eye shows or hides its selection on the page; the
       // fixture starts it shown, and the move left it so.
-      await expect(row(page, "Price is open")).toHaveAttribute(
-        "aria-pressed",
-        "true",
+      const eye = row(page, "Price is open").locator(
+        "[data-react-grab-comment-item-reveal]",
       );
+      await expect(eye).toHaveAttribute("aria-pressed", "true");
 
-      // Control: selecting the row does toggle it, so the check above means
-      // something.
-      await row(page, "Price is open").click();
-      await expect(row(page, "Price is open")).toHaveAttribute(
-        "aria-pressed",
-        "false",
-      );
+      // Control: the eye does toggle it, so the check above means something.
+      await eye.click();
+      await expect(eye).toHaveAttribute("aria-pressed", "false");
     },
   );
 
@@ -159,7 +155,7 @@ test.describe("Comments panel — move policy", { tag: ["@SPEC-011"] }, () => {
       await reactGrab.screenshot("locked-row-hovered", "page");
       await header.getByRole("button", { name: "Selection actions" }).click();
       await expect(
-        page.getByRole("menuitem", { name: "Open in sidebar" }),
+        page.getByRole("menuitem", { name: /^Archive/ }),
       ).toBeVisible();
       await expect(
         page.getByRole("menuitem", { name: "Move to group" }),

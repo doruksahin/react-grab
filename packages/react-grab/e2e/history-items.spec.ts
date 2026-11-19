@@ -133,8 +133,8 @@ test.describe("Comment Items", () => {
     });
   });
 
-  test.describe("Item Selection", () => {
-    test("should show and hide the selection on the page when clicking a comment item", async ({
+  test.describe("Item Visibility", () => {
+    test("should show and hide the selection on the page with the row's eye", async ({
       reactGrab,
     }) => {
       const pinnedBoxCount = async () =>
@@ -146,14 +146,14 @@ test.describe("Comment Items", () => {
       await reactGrab.clickCommentsButton();
       expect(await pinnedBoxCount()).toBe(0);
 
-      await reactGrab.clickCommentItem(0);
+      await reactGrab.toggleCommentItemRevealed(0);
       await expect.poll(pinnedBoxCount, { timeout: 3000 }).toBeGreaterThan(0);
 
-      await reactGrab.clickCommentItem(0);
+      await reactGrab.toggleCommentItemRevealed(0);
       await expect.poll(pinnedBoxCount, { timeout: 3000 }).toBe(0);
     });
 
-    test("should keep the dropdown open after selecting an item", async ({
+    test("should keep the dropdown open and the sidebar closed after the eye", async ({
       reactGrab,
     }) => {
       await copyElement(reactGrab, "li:first-child");
@@ -161,9 +161,12 @@ test.describe("Comment Items", () => {
 
       expect(await reactGrab.isCommentsDropdownVisible()).toBe(true);
 
-      await reactGrab.clickCommentItem(0);
+      await reactGrab.toggleCommentItemRevealed(0);
 
       expect(await reactGrab.isCommentsDropdownVisible()).toBe(true);
+      await expect(
+        reactGrab.page.getByRole("dialog", { name: "React Grab Dashboard" }),
+      ).toHaveCount(0);
     });
   });
 
@@ -456,7 +459,7 @@ test.describe("Comment Items", () => {
   });
 
   test.describe("Item Row Click", () => {
-    test("should keep the dropdown open after clicking a row", async ({
+    test("should close the dropdown and open the sidebar after clicking a row", async ({
       reactGrab,
     }) => {
       await copyElement(reactGrab, "li:first-child");
@@ -464,7 +467,12 @@ test.describe("Comment Items", () => {
       await reactGrab.clickCommentsButton();
       await reactGrab.clickCommentItem(0);
 
-      expect(await reactGrab.isCommentsDropdownVisible()).toBe(true);
+      await expect
+        .poll(() => reactGrab.isCommentsDropdownVisible())
+        .toBe(false);
+      await expect(
+        reactGrab.page.getByRole("dialog", { name: "React Grab Dashboard" }),
+      ).toBeVisible();
     });
   });
 
@@ -731,14 +739,14 @@ test.describe("Comment Items", () => {
       expect(allHoverBoxes.length).toBe(0);
     });
 
-    test("should allow item hover after clicking a row", async ({
+    test("should allow item hover after toggling a row's eye", async ({
       reactGrab,
     }) => {
       await copyElement(reactGrab, "li:first-child");
       await copyElement(reactGrab, "li:last-child");
 
       await reactGrab.clickCommentsButton();
-      await reactGrab.clickCommentItem(0);
+      await reactGrab.toggleCommentItemRevealed(0);
       await reactGrab.page.waitForTimeout(200);
 
       await reactGrab.hoverCommentItem(1);
@@ -828,7 +836,7 @@ test.describe("Comment Items", () => {
         .toBeGreaterThanOrEqual(1);
     });
 
-    test("should replace the hover preview with the pinned selection after a row click", async ({
+    test("should replace the hover preview with the pinned selection after the eye", async ({
       reactGrab,
     }) => {
       await copyElement(reactGrab, "li:first-child");
@@ -846,7 +854,7 @@ test.describe("Comment Items", () => {
         )
         .toBeGreaterThan(0);
 
-      await reactGrab.clickCommentItem(0);
+      await reactGrab.toggleCommentItemRevealed(0);
 
       await expect
         .poll(

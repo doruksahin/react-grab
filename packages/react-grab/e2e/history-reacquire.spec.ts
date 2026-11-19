@@ -145,7 +145,7 @@ test.describe("Comment selector reacquire", () => {
     await expect(reactGrab.page.locator(toggleableSelector)).toHaveCount(1);
 
     await reactGrab.clickCommentsButton();
-    await reactGrab.clickCommentItem(0);
+    await reactGrab.toggleCommentItemRevealed(0);
 
     await expect
       .poll(async () => {

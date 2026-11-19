@@ -53,8 +53,9 @@ test.describe(
           );
 
           await reactGrab.clickCommentsButton();
-          const row = panelRow(page, hidden);
-          await row.click();
+          await panelRow(page, hidden)
+            .locator("[data-react-grab-comment-item-reveal]")
+            .click();
 
           await expect(pins(page)).toHaveCount(1);
           await expect(pinFor(page, kept)).toHaveAttribute(

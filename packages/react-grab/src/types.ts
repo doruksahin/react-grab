@@ -656,7 +656,7 @@ export interface ReactGrabRendererProps extends SelectionGroupsViewProps {
   onCopyAll?: () => void;
   onCopyAllHover?: (isHovered: boolean) => void;
   onCommentsButtonHover?: (isHovered: boolean) => void;
-  onCommentItemSelect?: (item: CommentItem) => void;
+  onToggleCommentItemRevealed?: (commentItemId: string) => void;
   onCommentItemHover?: (commentItemId: string | null) => void;
   onCommentsCopyAll?: () => void;
   onCommentsCopyAllHover?: (isHovered: boolean) => void;

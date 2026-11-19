@@ -174,7 +174,10 @@ export interface ReactGrabPageObject {
   clickCommentsButton: () => Promise<void>;
   isCommentsDropdownVisible: () => Promise<boolean>;
   getCommentsDropdownInfo: () => Promise<CommentsDropdownInfo>;
+  /** Clicks a comments-menu row, which opens it in the sidebar. */
   clickCommentItem: (index: number) => Promise<void>;
+  /** Clicks a comments-menu row's eye, which shows or hides it on the page. */
+  toggleCommentItemRevealed: (index: number) => Promise<void>;
   clickCommentsCopyAll: () => Promise<void>;
   clickCommentsClear: () => Promise<void>;
   hoverCommentItem: (index: number) => Promise<void>;
@@ -1215,22 +1218,26 @@ const createReactGrabPageObject = (
     }, ATTRIBUTE_NAME);
   };
 
-  const clickCommentItem = async (index: number) => {
+  const clickCommentItemPart = async (index: number, partSelector: string) => {
     await page.evaluate(
-      ({ attrName, itemIndex }) => {
+      ({ attrName, itemIndex, selector }) => {
         const host = document.querySelector(`[${attrName}]`);
         const shadowRoot = host?.shadowRoot;
         if (!shadowRoot) return;
         const root = shadowRoot.querySelector(`[${attrName}]`);
         if (!root) return;
-        const items = root.querySelectorAll<HTMLButtonElement>(
-          "[data-react-grab-comment-item]",
-        );
-        items[itemIndex]?.click();
+        const items = root.querySelectorAll("[data-react-grab-comment-item]");
+        items[itemIndex]?.querySelector<HTMLButtonElement>(selector)?.click();
       },
-      { attrName: ATTRIBUTE_NAME, itemIndex: index },
+      { attrName: ATTRIBUTE_NAME, itemIndex: index, selector: partSelector },
     );
   };
+
+  const clickCommentItem = (index: number) =>
+    clickCommentItemPart(index, "[data-react-grab-comment-item-open]");
+
+  const toggleCommentItemRevealed = (index: number) =>
+    clickCommentItemPart(index, "[data-react-grab-comment-item-reveal]");
 
   const clickCommentsCopyAll = async () => {
     await clickShadowRootButton("[data-react-grab-comments-copy-all]");
@@ -2443,6 +2450,7 @@ const createReactGrabPageObject = (
     isCommentsDropdownVisible,
     getCommentsDropdownInfo,
     clickCommentItem,
+    toggleCommentItemRevealed,
     clickCommentsCopyAll,
     clickCommentsClear,
     hoverCommentItem,

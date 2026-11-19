@@ -739,7 +739,6 @@ data_attrs:
         - archived-section
         - group-archive
         - group-detail-archive
-        - open-in-sidebar
         - move-destination
         - selection-card-facts
         - jira-open
@@ -814,6 +813,8 @@ data_attrs:
         - comment-composer
         - comment-editor
         - comment-item
+        - comment-item-open
+        - comment-item-reveal
         - comment-thread
         - comment-body
         - comment-avatar
@@ -909,6 +910,8 @@ data_attrs:
     comment-hint: {scope: comments, src: 1, tests: 1}
     comment-image: {scope: comments, src: 1, tests: 0}
     comment-item: {scope: comments, src: 1, tests: 10}
+    comment-item-open: {scope: comments, src: 1, tests: 2}
+    comment-item-reveal: {scope: comments, src: 1, tests: 4}
     comment-reply: {scope: comments, src: 1, tests: 0}
     comment-submit: {scope: comments, src: 1, tests: 1}
     comment-thread: {scope: comments, src: 1, tests: 0}
@@ -998,7 +1001,7 @@ data_attrs:
     step-guide-stop: {scope: reproduce-steps, src: 1, tests: 1}
     step-guide-text: {scope: reproduce-steps, src: 1, tests: 0}
     ignore: {scope: reserved, src: 2, tests: 0}
-    ignore-events: {scope: reserved, src: 75, tests: 6}
+    ignore-events: {scope: reserved, src: 77, tests: 6}
     action-cycle-item: {scope: selection, src: 1, tests: 4}
     archived-section: {scope: selection, src: 1, tests: 1}
     arrow-nav-index: {scope: selection, src: 2, tests: 0}
@@ -1012,7 +1015,6 @@ data_attrs:
     jira-open: {scope: selection, src: 1, tests: 0}
     latest-comment: {scope: selection, src: 1, tests: 1}
     move-destination: {scope: selection, src: 1, tests: 2}
-    open-in-sidebar: {scope: selection, src: 1, tests: 0}
     open-thread: {scope: selection, src: 1, tests: 1}
     recording-link: {scope: selection, src: 1, tests: 1}
     screenshot-pair: {scope: selection, src: 1, tests: 0}

@@ -522,7 +522,7 @@ export const ReactGrabRenderer: Component<ReactGrabRendererProps> = (props) => {
         position={props.commentsDropdownPosition ?? null}
         items={props.commentItems ?? []}
         groups={props.groups ?? []}
-        onSelectItem={props.onCommentItemSelect}
+        onToggleItemRevealed={props.onToggleCommentItemRevealed}
         onItemHover={props.onCommentItemHover}
         onCopyAll={props.onCommentsCopyAll}
         onCopyAllHover={props.onCommentsCopyAllHover}

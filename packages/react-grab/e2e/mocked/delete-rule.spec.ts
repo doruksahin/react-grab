@@ -159,7 +159,7 @@ test.describe(
       await locked.hover();
       await locked.getByRole("button", { name: "Selection actions" }).click();
       await expect(
-        page.getByRole("menuitem", { name: "Open in sidebar" }),
+        page.getByRole("menuitem", { name: /^Archive/ }),
       ).toBeVisible();
       await expect(
         page.getByRole("menuitem", { name: "Remove selection" }),

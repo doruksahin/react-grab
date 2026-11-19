@@ -3054,11 +3054,11 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
       showCommentItemPreview(item, "comment-hover");
     };
 
-    // A row's click shows or hides that selection on the page; the hover
+    // A row's eye shows or hides that selection on the page; the hover
     // that was already on the row is redone so it matches the new state.
-    const handleCommentItemSelect = (item: CommentItem) => {
-      visibility.handleToggleItem(item.id);
-      handleCommentItemHover(item.id);
+    const handleToggleCommentItemRevealed = (commentItemId: string) => {
+      visibility.handleToggleItem(commentItemId);
+      handleCommentItemHover(commentItemId);
     };
 
     const handleCommentsButtonHover = (isHovered: boolean) => {
@@ -3322,7 +3322,9 @@ export const init = (rawOptions?: Options): ReactGrabAPI => {
                       onCopyAll={handleCommentsCopyAll}
                       onCopyAllHover={handleCommentsCopyAllHover}
                       onCommentsButtonHover={handleCommentsButtonHover}
-                      onCommentItemSelect={handleCommentItemSelect}
+                      onToggleCommentItemRevealed={
+                        handleToggleCommentItemRevealed
+                      }
                       onCommentItemHover={handleCommentItemHover}
                       onCommentsCopyAll={handleCommentsCopyAll}
                       onCommentsCopyAllHover={handleCommentsCopyAllHover}

@@ -14,7 +14,6 @@ import { ChevronIcon } from "../ui/chevron-icon.jsx";
 import { IconEllipsis } from "../icons/icon-ellipsis.jsx";
 import { IconFolder } from "../icons/icon-folder.jsx";
 import { IconTrash } from "../icons/icon-trash.jsx";
-import { IconDashboard } from "../icons/icon-dashboard.jsx";
 import { IconArchive } from "../icons/icon-archive.jsx";
 import { IconRestore } from "../icons/icon-restore.jsx";
 
@@ -29,8 +28,6 @@ interface SelectionMenuProps {
   onMove?: (groupId: string | null) => void;
   /** Shown only when the membership policy allows it (ADR-0008). */
   onRemove?: () => void;
-  /** Opens the selection's full card in the sidebar. */
-  onOpenInSidebar?: () => void;
   /** Archives the selection's group (ADR-0030); its label says what. */
   archive?: MenuAction;
   /** Restores an archived group or selection to the board. */
@@ -43,8 +40,7 @@ interface SelectionMenuProps {
 }
 
 /**
- * A selection's less frequent actions behind ⋯: open it in the sidebar, move
- * it, archive or restore it or its group (ADR-0030), and remove it or delete
+ * A selection's less frequent actions behind ⋯: move it, archive or restore it or its group (ADR-0030), and remove it or delete
  * its archived group. The destructive actions sit here, away from the header
  * and the row, so they are never mistaken for closing.
  */
@@ -84,22 +80,6 @@ export const SelectionMenu: Component<SelectionMenuProps> = (props) => {
         onPointerDown={stopBubbling}
         onClick={stopBubbling}
       >
-        <Show when={props.onOpenInSidebar}>
-          {(openInSidebar) => (
-            <>
-              <MenuItem
-                data-react-grab-open-in-sidebar
-                onSelect={() => openInSidebar()()}
-              >
-                <IconDashboard size={12} />
-                Open in sidebar
-              </MenuItem>
-              <Show when={hasOrganize() || hasDestructive()}>
-                <MenuSeparator class="-mx-1 my-1 border-border" />
-              </Show>
-            </>
-          )}
-        </Show>
         <Show when={canMove()}>
           <MenuSub>
             <MenuSubTrigger>
